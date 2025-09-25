@@ -23,6 +23,7 @@ use App\Events\RSVP\RSVPUpdated;
 use App\Events\ScheduleEntityLifeCycleEvent;
 use App\Events\SummitAttendeeCheckInStateUpdated;
 use App\Events\TicketUpdated;
+use App\Jobs\CleanMemberCacheJob;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCanceledEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationCreatedEmail;
 use App\Jobs\Emails\BookableRooms\BookableRoomReservationPaymentConfirmedEmail;
@@ -175,6 +176,10 @@ final class EventServiceProvider extends ServiceProvider
                 logContext: ['member_id' => $event->getMemberId()]
             );
 
+            JobDispatcher::withDbFallback(
+                job: new CleanMemberCacheJob($event->getMemberId()),
+                logContext: ['member_id' => $event->getMemberId()]
+            );
 
         });
 

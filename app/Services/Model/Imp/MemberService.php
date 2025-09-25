@@ -21,8 +21,10 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\dto\ExternalUserDTO;
 use DateTime;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use libs\utils\CacheRegions;
 use libs\utils\ICacheService;
 use libs\utils\ITransactionService;
 use libs\utils\TextUtils;
@@ -785,4 +787,24 @@ final class MemberService
         });
     }
 
+    /**
+     * @param int $member_id
+     * @return void
+     * @throws \Exception
+     */
+    public function cleanMemberRelatedCacheData(int $member_id): void
+    {
+        Log::debug(sprintf("MemberService::cleanMemberRelatedCacheData member id %s.", $member_id));
+
+        $this->tx_service->transaction(function() use($member_id) {
+            $member = $this->member_repository->getById($member_id);
+            if(!$member instanceof Member)
+                throw new EntityNotFoundException("Member not found.");
+            if(!$member->hasSpeaker()) return;
+            $cache_region_key = CacheRegions::getCacheRegionFor(CacheRegions::CacheRegionSpeakers, $member->getSpeakerId());
+            if (!empty($cache_region_key)) {
+                $this->cache_service->clearCacheRegion($cache_region_key);
+            }
+        });
+    }
 }

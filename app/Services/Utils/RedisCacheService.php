@@ -63,19 +63,25 @@ class RedisCacheService implements ICacheService
                     if (is_resource($res)) $metadata = @stream_get_meta_data($res);
                 }
             } catch (\Throwable $ignored) {}
-            Log::error
-            (
-                sprintf
+            // Check if Laravel app is still available before logging
+            if (app()->bound('config')) {
+                Log::error
                 (
-                    "RedisCacheService::__destruct %s %s %s",
-                    $ex->getCode(),
-                    $ex->getMessage(),
-                    var_export($metadata, true)
-                )
-            );
+                    sprintf
+                    (
+                        "RedisCacheService::__destruct %s %s %s",
+                        $ex->getCode(),
+                        $ex->getMessage(),
+                        var_export($metadata, true)
+                    )
+                );
+            }
         }
         catch(\Exception $ex){
-            Log::warning($ex);
+            // Check if Laravel app is still available before logging
+            if (app()->bound('config')) {
+                Log::warning($ex);
+            }
         }
     }
 

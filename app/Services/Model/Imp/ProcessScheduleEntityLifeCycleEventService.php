@@ -38,6 +38,10 @@ final class ProcessScheduleEntityLifeCycleEventService
 
 {
 
+    const EntityTypesToSkipDupesCheck = [
+        Presentation::PresentationOverflowEntityType
+    ];
+
     const CacheTTL = 2;
     /**
      * @var ISummitRepository
@@ -151,35 +155,37 @@ final class ProcessScheduleEntityLifeCycleEventService
                 return;
             }
 
-            $cache_key = sprintf("%s:%s:%s:%s", $summit_id, $entity_id, $entity_type, $entity_operator);
+            if(!in_array($entity_type, self::EntityTypesToSkipDupesCheck)) {
 
-            if ($this->cache_service->exists($cache_key)) {
-                Log::warning
-                (
-                    sprintf
+                $cache_key = sprintf("%s:%s:%s:%s", $summit_id, $entity_id, $entity_type, $entity_operator);
+                if ($this->cache_service->exists($cache_key)) {
+                    Log::warning
                     (
-                        "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s already processed.",
-                        $summit_id,
-                        $entity_id,
-                        $entity_type,
-                        $entity_operator
-                    ));
-                return;
-            }
+                        sprintf
+                        (
+                            "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s already processed.",
+                            $summit_id,
+                            $entity_id,
+                            $entity_type,
+                            $entity_operator
+                        ));
+                    return;
+                }
 
-            $res = $this->cache_service->addSingleValue($cache_key, $cache_key, self::CacheTTL);
-            if (!$res) {
-                Log::warning
-                (
-                    sprintf
+                $res = $this->cache_service->addSingleValue($cache_key, $cache_key, self::CacheTTL);
+                if (!$res) {
+                    Log::warning
                     (
-                        "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s can not add value to cache ( already exists ).",
-                        $summit_id,
-                        $entity_id,
-                        $entity_type,
-                        $entity_operator
-                    ));
-                return;
+                        sprintf
+                        (
+                            "ProcessScheduleEntityLifeCycleEventService::process %s %s %s %s can not add value to cache ( already exists ).",
+                            $summit_id,
+                            $entity_id,
+                            $entity_type,
+                            $entity_operator
+                        ));
+                    return;
+                }
             }
 
             if ($entity_type === 'PresentationSpeaker') {

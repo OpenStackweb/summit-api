@@ -2,6 +2,8 @@
 
 namespace Tests\OpenTelemetry;
 
+use Tests\OpenTelemetry\Support\OpenTelemetryTestingServiceProvider;
+use Keepsuit\LaravelOpenTelemetry\Instrumentation\HttpClientInstrumentation;
 use Tests\TestCase;
 
 /**
@@ -17,7 +19,7 @@ abstract class OpenTelemetryTestCase extends TestCase
         parent::setUp();
 
         // Register the OpenTelemetry testing ServiceProvider
-        $this->app->register(\Tests\Support\OpenTelemetryTestingServiceProvider::class);
+        $this->app->register(OpenTelemetryTestingServiceProvider::class);
 
         // Enable OpenTelemetry in testing environment
         config(['opentelemetry.enabled' => true]);
@@ -25,7 +27,7 @@ abstract class OpenTelemetryTestCase extends TestCase
         // Configure necessary instrumentations
         config([
             'opentelemetry.instrumentation' => [
-                \Keepsuit\LaravelOpenTelemetry\Instrumentation\HttpClientInstrumentation::class => [
+                HttpClientInstrumentation::class => [
                     'enabled' => true,
                     'manual' => false,
                     'allowed_headers' => [],

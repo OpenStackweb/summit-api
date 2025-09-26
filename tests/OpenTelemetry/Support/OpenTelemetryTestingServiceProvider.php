@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Support;
+namespace Tests\OpenTelemetry\Support;
 
 use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider;

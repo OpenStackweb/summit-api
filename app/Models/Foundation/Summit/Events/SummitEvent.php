@@ -1925,7 +1925,7 @@ SQL;
             $stmt->executeQuery();
 
             $sql = <<<SQL
-INSERT INTO `Presentation` (`ID`, `Status`, `OtherTopic`, `Progress`, `Views`, `BeenEmailed`, `ProblemAddressed`, `AttendeesExpectedLearnt`, `Legacy`, `ToRecord`, `AttendingMedia`, `Slug`, `ModeratorID`, `SelectionPlanID`, `WillAllSpeakersAttend`, `DisclaimerAcceptedDate`, `CustomOrder`) 
+INSERT INTO `Presentation` (`ID`, `Status`, `OtherTopic`, `Progress`, `Views`, `BeenEmailed`, `ProblemAddressed`, `AttendeesExpectedLearnt`, `Legacy`, `ToRecord`, `AttendingMedia`, `Slug`, `ModeratorID`, `SelectionPlanID`, `WillAllSpeakersAttend`, `DisclaimerAcceptedDate`, `CustomOrder`)
 VALUES (:id, NULL, NULL, '0', '0', '0', NULL, NULL, '0', '0', '0', NULL, NULL, NULL, '0', NULL, '0')
 SQL;
 
@@ -1991,11 +1991,7 @@ SQL;
 
     public function clearOverflow(string $occupancy = self::OccupancyEmpty): void
     {
-        $this->overflow_streaming_url = null;
-        $this->overflow_stream_is_secure = false;
         $this->overflow_stream_key = null;
-        $this->streaming_url = null;
-        $this->stream_is_secure = false;
         $this->occupancy = $occupancy;
     }
 

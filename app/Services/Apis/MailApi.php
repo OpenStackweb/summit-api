@@ -19,6 +19,7 @@ use GuzzleRetry\GuzzleRetryMiddleware;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Keepsuit\LaravelOpenTelemetry\Support\HttpClient\GuzzleTraceMiddleware;
 use libs\utils\ICacheService;
 use models\exceptions\ValidationException;
 /**
@@ -58,6 +59,7 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
         parent::__construct($cacheService);
         $stack = HandlerStack::create();
         $stack->push(GuzzleRetryMiddleware::factory());
+        $stack->push(GuzzleTraceMiddleware::make());
 
         $this->client = new Client([
             'handler'         => $stack,

@@ -3,6 +3,12 @@
   <testsuites>
     <testsuite name="Application Test Suite">
       <directory>./tests/</directory>
+      <exclude>./tests/OpenTelemetry/</exclude>
+      <exclude>./tests/TestCase.php</exclude>
+    </testsuite>
+    <testsuite name="OTEL">
+      <directory>./tests/OpenTelemetry/</directory>
+      <exclude>./tests/OpenTelemetry/ExampleTest.php</exclude>
     </testsuite>
   </testsuites>
   <php>

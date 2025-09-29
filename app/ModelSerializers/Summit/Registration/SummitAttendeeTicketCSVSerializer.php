@@ -53,6 +53,10 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         'FinalAmountAdjusted' => 'total_paid:json_float',
     ];
 
+    // cache per request
+    private static array $niceValueCache = [];
+    private static array $questionLabelCache = [];
+
     /**
      * @param null $expand
      * @param array $fields
@@ -78,12 +82,20 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         if (isset($params['ticket_questions'])) {
             foreach ($params['ticket_questions'] as $question) {
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
-                $question_label = html_entity_decode(strip_tags($question->getLabel()));
+
+                $question_label = self::$questionLabelCache[$question->getId()]
+                    ??= html_entity_decode(strip_tags($question->getLabel()));
                 $values[$question_label] = '';
+
                 if (!is_null($ticket_owner)) {
                     $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);
                     if(is_null($value)) continue;
-                    $values[$question_label] = $question->getNiceValue($value);
+
+                    $cacheKey = $question->getId() . '|' . $value;
+                    $value = self::$niceValueCache[$cacheKey]
+                        ??= $question->getNiceValue($value);
+
+                    $values[$question_label] = $value;
                 }
             }
         }

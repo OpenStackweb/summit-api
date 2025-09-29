@@ -157,8 +157,5 @@ return [
             'enabled' => env('OTEL_INSTRUMENTATION_CONSOLE', true),
             'excluded' => [],
         ],
-    ],
-
-    'enhance_requests' => env('OTEL_ENHANCE_REQUESTS', true),
-
+    ]
 ];

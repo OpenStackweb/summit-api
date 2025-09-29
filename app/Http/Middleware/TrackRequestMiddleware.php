@@ -23,8 +23,7 @@ class TrackRequestMiddleware
     public function __construct(LogManager $logger)
     {
         $this->logger = $logger;
-        $this->shouldTrack = env('APP_ENV') !== 'testing' &&
-            config('opentelemetry.enhance_requests', true);
+        $this->shouldTrack =  env('OTEL_SERVICE_ENABLED', false);
     }
 
     public function handle(Request $request, Closure $next)
@@ -54,7 +53,7 @@ class TrackRequestMiddleware
                 ]);
             }
         } catch (\Throwable $e) {
-            $this->logger->channel('single')->error("Error on request tracking: " . $e->getMessage());
+            $this->logger->channel('daily')->error("Error on request tracking: " . $e->getMessage());
         }
 
         return $next($request);
@@ -76,7 +75,7 @@ class TrackRequestMiddleware
                 $span->addEvent(self::EVENT_REQUEST_FINISHED, ['response_ms' => $ms]);
             }
         } catch (\Throwable $e) {
-            $this->logger->channel('single')->error("Error on request tracking: " . $e->getMessage());
+            $this->logger->channel('daily')->error("Error on request tracking: " . $e->getMessage());
         } finally {
             if ($this->baggageScope) {
                 $this->baggageScope->detach();

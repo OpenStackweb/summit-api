@@ -26,6 +26,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\IOrderConstants;
+use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -71,9 +72,12 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      */
     private $service;
 
+    private $attendee_repository;
+
     /**
      * OAuth2SummitTicketApiController constructor.
      * @param ISummitRepository $summit_repository
+     * @param ISummitAttendeeRepository $attendee_repository,
      * @param ISummitAttendeeTicketRepository $repository
      * @param ISummitOrderService $service
      * @param IResourceServerContext $resource_server_context
@@ -81,6 +85,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     public function __construct
     (
         ISummitRepository               $summit_repository,
+        ISummitAttendeeRepository $attendee_repository,
         ISummitAttendeeTicketRepository $repository,
         ISummitOrderService             $service,
         IResourceServerContext          $resource_server_context
@@ -89,6 +94,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
+        $this->attendee_repository = $attendee_repository;
         $this->service = $service;
     }
 
@@ -274,7 +280,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
-
+        $questions = $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
         return $this->_getAllCSV(
             function () {
                 return [
@@ -446,8 +452,25 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             sprintf('tickets-%s-', $summit_id),
             [
                 'features_types' => $summit->getBadgeFeaturesTypes(),
-                'ticket_questions' => $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage)
-            ]
+                'ticket_questions' => $questions
+            ],
+            null,
+            function($data, $serializerParams) use($questions){
+
+                $owners = [];
+                foreach ($data->getItems() as $t){
+                    if ($t->hasOwner()) $owners[] = $t->getOwner()->getId();
+                }
+                $questionIds = [];
+                foreach ($questions as $q) {
+                    $questionIds[] = $q->getId();
+                }
+                $questionIds = array_values(array_unique($questionIds));
+                $owners = array_values(array_unique($owners));
+
+                $serializerParams['answers_by_owner'] = $this->attendee_repository->getExtraQuestionAnswersByOwners($owners, $questionIds);
+                return $serializerParams;
+            }
         );
     }
 

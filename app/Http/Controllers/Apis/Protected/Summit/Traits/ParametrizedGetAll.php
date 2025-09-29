@@ -178,7 +178,8 @@ trait ParametrizedGetAll
         callable $getColumns,
         string   $file_prefix = 'file-',
         array    $serializerParams = [],
-        callable $queryCallable = null
+        callable $queryCallable = null,
+        callable $preProcessSerializerParams = null,
     )
     {
 
@@ -192,7 +193,8 @@ trait ParametrizedGetAll
             $getColumns,
             $file_prefix,
             $serializerParams,
-            $queryCallable
+            $queryCallable,
+            $preProcessSerializerParams
         ) {
 
             $values = Request::all();
@@ -246,6 +248,9 @@ trait ParametrizedGetAll
             $filename = $file_prefix . date('Ymd');
 
             $serializerParams['filter'] = $filter;
+
+            if(!is_null($preProcessSerializerParams))
+                $serializerParams = call_user_func($preProcessSerializerParams, $data, $serializerParams);
 
             $list = $data->toArray
             (

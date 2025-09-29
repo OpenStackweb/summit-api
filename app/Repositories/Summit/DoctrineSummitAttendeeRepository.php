@@ -285,7 +285,7 @@ SQL,
             'member_id'         => 'm.id',
             'status'            => 'e.status',
             'email'             => <<<SQL
-COALESCE(LOWER(m.email), LOWER(e.email)) 
+COALESCE(LOWER(m.email), LOWER(e.email))
 SQL,
             'presentation_votes_count' => 'COUNT(pv.id)',
             'summit_hall_checked_in_date' => 'e.summit_hall_checked_in_date',
@@ -556,4 +556,41 @@ SQL;
         return $query->getQuery()->getOneOrNullResult();
     }
 
+    /**
+     * @param array $owners
+     * @param array $questions
+     * @return array
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getExtraQuestionAnswersByOwners(array $owners, array $questions): array
+    {
+        $sql = <<<SQL
+SELECT SOEQA.SummitAttendeeID AS owner_id, EQA.QuestionID AS question_id, EQA.Value AS value
+FROM SummitOrderExtraQuestionAnswer SOEQA
+JOIN ExtraQuestionAnswer EQA ON EQA.ID = SOEQA.ID
+WHERE SOEQA.SummitAttendeeID IN (:owner_ids)
+  AND EQA.QuestionID IN (:question_ids)
+SQL;
+
+        $stmt = $this->getEntityManager()->getConnection()->executeQuery
+        (
+            $sql,
+            [
+                'owner_ids' => $owners,
+                'question_ids' => $questions
+            ],
+            [
+                'owner_ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER,
+                'question_ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER
+            ]
+        );
+
+        $answersByOwner = [];
+        foreach ($stmt->fetchAllAssociative() as $r) {
+            $answersByOwner[(int)$r['owner_id']][(int)$r['question_id']] = (string)$r['value'];
+        }
+
+        return $answersByOwner;
+
+    }
 }

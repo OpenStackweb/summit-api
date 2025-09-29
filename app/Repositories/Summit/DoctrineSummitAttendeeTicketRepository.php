@@ -16,7 +16,10 @@ use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
+use Illuminate\Support\Facades\Log;
 use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRefundRequestConstants;
@@ -30,6 +33,7 @@ use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
+use utils\PagingResponse;
 
 /**
  * Class DoctrineSummitAttendeeTicketRepository
@@ -39,6 +43,147 @@ final class DoctrineSummitAttendeeTicketRepository
     extends SilverStripeDoctrineRepository
     implements ISummitAttendeeTicketRepository
 {
+    public function __construct(EntityManagerInterface $em, ClassMetadata $class)
+    {
+        parent::__construct($em, $class);
+        $this->fetchJoinCollection = false;
+    }
+
+
+    /** @var array<string, array{0:string,1:'join'|'leftJoin',2:array<int,string>}> */
+    private array $joinCatalog = [
+        'o'      => ['e.order',               'join',     []],
+        's'      => ['o.summit',              'join',     ['o']],
+        'ord_m'  => ['o.owner',               'leftJoin', ['o']],
+        'a'      => ['e.owner',               'leftJoin', []],
+        'a_c'    => ['a.company',             'leftJoin', ['a']],
+        'm'      => ['a.member',              'leftJoin', ['a']],
+        'am'     => ['a.manager',             'leftJoin', ['a']],
+        'm2'     => ['am.member',             'leftJoin', ['am']],
+        'b'      => ['e.badge',               'leftJoin', []],
+        'bt'     => ['b.type',                'leftJoin', ['b']],
+        'al'     => ['bt.access_levels',      'leftJoin', ['bt']],
+        'bf'     => ['b.features',            'leftJoin', ['b']],
+        'bt_bf'  => ['bt.badge_features',     'leftJoin', ['bt']],
+        'prt'    => ['b.prints',              'leftJoin', ['b']],
+        'rr'     => ['e.refund_requests',     'leftJoin', []],
+        'ta'     => ['e.applied_taxes',       'leftJoin', []],
+        'tt'     => ['e.ticket_type',         'join',     []],
+        'pc'     => ['e.promo_code',          'leftJoin', []],
+        'pct'    => ['pc.tags',               'leftJoin', ['pc']],
+        'avt'    => ['bt.allowed_view_types', 'join',     ['bt']],
+    ];
+
+    private function ensureJoin(QueryBuilder $qb, string $alias): void
+    {
+        if (\in_array($alias, $qb->getAllAliases(), true)) return;
+
+        [$path, $type, $deps] = $this->joinCatalog[$alias] ?? [null, null, []];
+        foreach ($deps as $dep) $this->ensureJoin($qb, $dep);
+
+        if ($type === 'join') $qb->join($path, $alias);
+        else                  $qb->leftJoin($path, $alias);
+    }
+
+    /**
+     * choose alias needed
+     * @return string[]
+     */
+    private function requiredAliases(?Filter $filter, ?Order $order): array
+    {
+        $need = []; // owner always
+
+        $has = fn(string $f) => $filter?->hasFilter($f) ?? false;
+        $ord = fn(string $f) => $order?->hasOrder($f) ?? false;
+        $val = fn(string $f) => $filter?->getValue($f)[0] ?? null;
+
+        // --- Filters ---
+        if ($has('order_number') || $has('order_id') || $has('order_owner_id') || $has('bought_date') || $has('summit_id')) {
+            $need['o'] = true;
+            if($has('order_owner_id')){
+                $this->joinCatalog['ord_m'][1] = 'join';
+                $need['ord_m'] = true;
+            }
+        }
+        if ($has('summit_id')) $need['s'] = true;
+
+        if ($has('owner_first_name') || $has('owner_last_name') || $has('owner_name') || $has('owner_id') || $has('member_id')) {
+            $need['a'] = true;
+            if($has('owner_first_name') || $has('owner_last_name') || $has('owner_name') || $has('member_id')) $need['m'] = true;
+        }
+
+        if ($has('owner_email')) {
+            $need['a'] = $need['m'] = $need['am'] = $need['m2'] = true;
+        }
+
+        if ($has('owner_company') || $has('has_owner_company')) { $need['a'] = $need['a_c'] = true; }
+
+        if ($has('has_owner')) {
+            if ((string)$val('has_owner') === '1') $this->joinCatalog['a'][1] = 'join';
+            $need['a'] = true;
+        }
+
+        if ($has('owner_status')) {
+            $this->joinCatalog['a'][1] = 'join';
+            $need['a'] = true;
+        }
+
+        if ($has('has_order_owner')) {
+            if ((string)$val('has_order_owner') === '1') $this->joinCatalog['ord_m'][1] = 'join';
+            $need['o'] = $need['ord_m'] = true;
+        }
+
+        if ($has('assigned_to')) { $need['a'] = true; $need['m'] = true; } // usa m.id y a.email
+
+        if ($has('promo_code') || $has('promo_code_id') || $has('promo_code_description')) {
+            $need['pc'] = true;
+        }
+        if ($has('promo_code_tag') || $has('promo_code_tag_id')) {
+            $need['pc'] = $need['pct'] = true;
+        }
+
+        if ($has('ticket_type_id') || $ord('ticket_type')) $need['tt'] = true;
+
+        if ($has('has_badge') || $ord('badge_type') || $ord('badge_type_id') || $has('badge_type_id')) {
+            $need['b'] = $need['bt'] = true;
+        }
+
+        if ($has('access_level_type_id') || $has('access_level_type_name') || $has('is_printable')) {
+            $need['b'] = $need['bt'] = $need['al'] = $need['a'] = true;
+            if ($has('is_printable') && (string)$val('is_printable') === '1') {
+                $this->joinCatalog['a'][1]  = 'join';
+                $this->joinCatalog['bt'][1] = 'join';
+                $this->joinCatalog['al'][1] = 'join';
+            }
+        }
+
+        if ($has('badge_features_id')) {
+            $need['b'] = $need['bt'] = $need['bf'] = $need['bt_bf'] = true;
+        }
+
+        if ($has('has_badge_prints') || $ord('badge_prints_count')) {
+            $need['b'] = $need['prt'] = true;
+        }
+
+        if ($has('has_requested_refund_requests') || $ord('refunded_amount') || $ord('final_amount_adjusted')) {
+            $need['rr'] = true;
+        }
+
+        if ($has('view_type_id')) {
+            $need['b'] = $need['bt'] = $need['avt'] = true;
+        }
+
+        // --- Orders ---
+        if ($ord('owner_first_name') || $ord('owner_last_name') || $ord('owner_name')) {
+            $need['a'] = $need['m'] = true;
+        }
+        if ($ord('owner_company')) { $need['a'] = $need['a_c'] = true; }
+        if ($ord('owner_email'))   { $need['a'] = $need['m']   = true; }
+        if ($ord('promo_code'))    { $need['pc'] = true; }
+
+        return array_keys($need);
+    }
+
 
     /**
      * @return string
@@ -55,24 +200,34 @@ final class DoctrineSummitAttendeeTicketRepository
      * @return QueryBuilder
      */
     protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder{
-        //$query = $query->addSelect("COALESCE(SUM(ta.amount),0) AS HIDDEN HIDDEN_APPLIED_TAXES");
 
-        if(!is_null($order)){
-            if ($order->hasOrder('final_amount'))
-                $query = $query->addSelect("(e.raw_cost - e.discount) AS HIDDEN HIDDEN_FINAL_AMOUNT");
+        $needsAggregation = false;
 
-            if ($order->hasOrder('refunded_amount'))
-                $query = $query->addSelect("COALESCE(SUM(rr.refunded_amount),0) AS HIDDEN HIDDEN_REFUNDED_AMOUNT");
-
-            if ($order->hasOrder('final_amount_adjusted'))
-                $query = $query->addSelect("( (e.raw_cost - e.discount) - COALESCE(SUM(rr.refunded_amount),0) ) AS HIDDEN HIDDEN_FINAL_AMOUNT_ADJUSTED");
-
-            if ($order->hasOrder('badge_prints_count'))
-                $query = $query->addSelect("COUNT(prt.id) AS HIDDEN HIDDEN_BADGE_PRINTS_COUNT");
+        if ($order) {
+            if ($order->hasOrder('final_amount')) {
+                $query->addSelect("(e.raw_cost - e.discount) AS HIDDEN HIDDEN_FINAL_AMOUNT");
+            }
+            if ($order->hasOrder('refunded_amount')) {
+                $query->addSelect("COALESCE(SUM(rr.refunded_amount),0) AS HIDDEN HIDDEN_REFUNDED_AMOUNT");
+                $needsAggregation = true;
+            }
+            if ($order->hasOrder('final_amount_adjusted')) {
+                $query->addSelect("((e.raw_cost - e.discount) - COALESCE(SUM(rr.refunded_amount),0)) AS HIDDEN HIDDEN_FINAL_AMOUNT_ADJUSTED");
+                $needsAggregation = true;
+            }
+            if ($order->hasOrder('badge_prints_count')) {
+                $query->addSelect("COUNT(prt.id) AS HIDDEN HIDDEN_BADGE_PRINTS_COUNT");
+                $needsAggregation = true;
+            }
         }
-        $query->groupBy("e");
+
+        if ($needsAggregation) {
+            $query->groupBy('e.id');
+        }
+
         return $query;
     }
+
     /**
      * @return array
      */
@@ -82,6 +237,7 @@ final class DoctrineSummitAttendeeTicketRepository
         $filter = count($args) > 0 ? $args[0] : null;
         $owner_member_id = 0;
         $owner_member_email = null;
+
         if($filter instanceof Filter) {
             if ($filter->hasFilter("owner_member_id")) {
                 $owner_member_id = $filter->getValue("owner_member_id")[0];
@@ -276,37 +432,16 @@ final class DoctrineSummitAttendeeTicketRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
-        $query->join("e.order", "o");
-        $query = $query->join("o.summit", "s");
-        $query = $query->leftJoin("o.owner", "ord_m");
-        $query = $query->leftJoin("e.owner", "a");
-        $query = $query->leftJoin("a.company", "a_c");
-        $query = $query->leftJoin("e.badge", "b");
-        $query = $query->leftJoin("b.features", "bf");
-        $query = $query->leftJoin("b.prints", "prt");
-        $query = $query->leftJoin("b.type", "bt");
-        $query = $query->leftJoin("bt.access_levels", "al");
-        $query = $query->leftJoin('bt.badge_features','bt_bf');
-        $query = $query->leftJoin("a.member", "m");
-        $query = $query->leftJoin("e.refund_requests", "rr");
-        $query = $query->leftJoin("e.applied_taxes", "ta");
-        $query = $query->join("e.ticket_type", "tt");
-        $query = $query->leftJoin("e.promo_code", "pc");
+        $this->joinCatalog['a'][1]  = 'leftJoin';
+        $this->joinCatalog['bt'][1] = 'leftJoin';
+        $this->joinCatalog['al'][1] = 'leftJoin';
+        $this->joinCatalog['ord_m'][1] = 'leftJoin';
 
-        if ($filter->hasFilter('promo_code_tag_id') || $filter->hasFilter('promo_code_tag')) {
-            if (!collect($query->getAllAliases())->contains('pc')) {
-                $query = $query->leftJoin("e.promo_code", "pc");
-            }
-            $query = $query->leftJoin("pc.tags", "pct");
+        foreach ($this->requiredAliases($filter, $order) as $alias) {
+            $this->ensureJoin($query, $alias);
         }
-        if ($filter->hasFilter('view_type_id')) {
-            $query = $query->join("bt.allowed_view_types", "avt");
-        }
-        if($filter->hasFilter("owner_email")){
-            // add all managed tickets too
-            $query = $query->leftJoin("a.manager", "am");
-            $query = $query->leftJoin("am.member", "m2");
-        }
+
+
         return $query;
     }
 
@@ -580,5 +715,46 @@ SQL,
 
         $res = $query->getQuery()->getArrayResult();
         return array_column($res, 'id');
+    }
+
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null){
+        $start = time();
+        Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage'));
+        $total = $this->getFastCount($filter, $order);
+        $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
+        $query = $this->getEntityManager()->createQueryBuilder()
+                        ->select('e, a, o, tt, pc, b, bt, a_c, m')
+                    ->from($this->getBaseEntity(), 'e')
+                    ->leftJoin('e.owner', 'a')->addSelect('a')
+                    ->leftJoin('e.order', 'o')->addSelect('o')
+                    ->leftJoin('e.ticket_type', 'tt')->addSelect('tt')
+                    ->leftJoin('e.promo_code', 'pc')->addSelect('pc')
+                    ->leftJoin('e.badge', 'b')->addSelect('b')
+                    ->leftJoin('b.type', 'bt')->addSelect('bt')
+                    ->leftJoin('a.company', 'a_c')->addSelect('a_c')
+                    ->leftJoin('a.member', 'm')->addSelect('m')
+                    ->where('e.id IN (:ids)')
+                    ->setParameter('ids', $ids);
+
+        $data = [];
+        foreach( $query->getQuery()->getResult() as $entity)
+            array_push($data, $entity);
+        $end = time() - $start;
+        Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage %s seconds', $end));
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
     }
 }

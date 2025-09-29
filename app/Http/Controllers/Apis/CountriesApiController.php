@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Request;
 final class CountriesApiController extends JsonController
 {
     #[OA\Get(
-        path: "/api/v1/countries",
+        path: "/api/public/v1/countries",
         description: "Get all countries with ISO codes",
         summary: 'Get all countries',
         operationId: 'getAllCountries',

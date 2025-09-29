@@ -729,6 +729,35 @@ class SummitAttendee extends SilverstripeBaseModel
         return $answer ? $answer : null;
     }
 
+
+
+    private ?array $extraQuestionAnswersCache = null;
+    private function warmExtraQuestionAnswersCache():void{
+        try {
+            if ($this->extraQuestionAnswersCache !== null) {
+                return;
+            }
+
+            $sql = <<<SQL
+SELECT ExtraQuestionAnswer.QuestionID, ExtraQuestionAnswer.Value FROM `SummitOrderExtraQuestionAnswer`
+INNER JOIN ExtraQuestionAnswer ON ExtraQuestionAnswer.ID = SummitOrderExtraQuestionAnswer.ID
+WHERE SummitOrderExtraQuestionAnswer.SummitAttendeeID = :owner_id
+SQL;
+
+            $stmt = $this->prepareRawSQL($sql, ['owner_id' => $this->getId()]);
+            $rows = $stmt->executeQuery()->fetchAllAssociative();
+
+            $map = [];
+            foreach ($rows as $row) {
+                // QuestionID es int; Value es string (para multiselect puede ser CSV/JSON según tu modelo)
+                $map[(int)$row['QuestionID']] = $row['Value'];
+            }
+            $this->extraQuestionAnswersCache = $map;
+        }
+        catch (\PDOException $e) {
+            Log::error($e->getMessage());
+        }
+    }
     /**
      * @param SummitOrderExtraQuestionType $question
      * @return string|null
@@ -736,28 +765,17 @@ class SummitAttendee extends SilverstripeBaseModel
     public function getExtraQuestionAnswerValueByQuestion(SummitOrderExtraQuestionType $question): ?string
     {
         try {
-            $sql = <<<SQL
-SELECT ExtraQuestionAnswer.Value FROM `SummitOrderExtraQuestionAnswer`
-INNER JOIN ExtraQuestionAnswer ON ExtraQuestionAnswer.ID = SummitOrderExtraQuestionAnswer.ID
-WHERE SummitOrderExtraQuestionAnswer.SummitAttendeeID = :owner_id AND ExtraQuestionAnswer.QuestionID = :question_id
-SQL;
-            $stmt = $this->prepareRawSQL($sql, [
-                'owner_id' => $this->getId(),
-                'question_id' => $question->getId()
-            ]);
-            $res = $stmt->executeQuery();
-            $res = $res->fetchFirstColumn();
-            $res = count($res) > 0 ? $res[0] : null;
-            return !is_null($res) ? $res : null;
+            $this->warmExtraQuestionAnswersCache();
+            $qid = $question->getId();
+            return $this->extraQuestionAnswersCache[$qid] ?? null;
         } catch (\Exception $ex) {
-            Log::debug($ex);
+            \Log::debug($ex);
+            return null;
         }
-        return null;
     }
 
     public function clearExtraQuestionAnswers(): void
     {
-        Log::debug(sprintf("SummitAttendee::clearExtraQuestionAnswers for attendee %s", $this->getId()));
         $this->extra_question_answers->clear();
     }
 

@@ -23,4 +23,8 @@
 # BREAKING CHANGE: <describe the breaking change and migration path>
 # Closes #123
 # Relates-to #456
+<<<<<<< HEAD
 # Co-authored-by: Name <email>
+=======
+# Co-authored-by: Name <email>
+>>>>>>> cab387aa (fix: Attendee Ticket Serializer)

@@ -12,7 +12,9 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\IConsultantRepository;
+use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
+use OpenApi\Attributes as OA;
 
 /**
  * Class ConsultantsApiController
@@ -30,6 +32,89 @@ final class ConsultantsApiController extends AbstractCompanyServiceApiController
         parent::__construct($repository, $resource_server_context);
     }
 
+    #[OA\Get(
+        path: "/api/public/v1/marketplace/consultants",
+        description: "Get all marketplace consultants and consulting services",
+        summary: 'Get all consultants',
+        operationId: 'getAllConsultants',
+        tags: ['Consultants'],
+        parameters: [
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Available fields: name, company. Operators: =@, ==, @@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'name@@consulting')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'name,-id')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include. Available relations: company, type, offices, clients, spoken_languages, configuration_management_expertise, expertise_areas, services_offered, supported_regions',
+                schema: new OA\Schema(type: 'string', example: 'company,offices')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to load eagerly',
+                schema: new OA\Schema(type: 'string', example: 'company,offices')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of fields to return',
+                schema: new OA\Schema(type: 'string', example: 'id,name,company.name')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success - Returns paginated list of consultants',
+                content: new OA\JsonContent(
+                    properties: [
+                        'total' => new OA\Property(property: 'total', type: 'integer', example: 15),
+                        'per_page' => new OA\Property(property: 'per_page', type: 'integer', example: 15),
+                        'current_page' => new OA\Property(property: 'current_page', type: 'integer', example: 1),
+                        'last_page' => new OA\Property(property: 'last_page', type: 'integer', example: 1),
+                        'data' => new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    'id' => new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    'class_name' => new OA\Property(property: 'class_name', type: 'string', example: 'Consultant'),
+                                    'name' => new OA\Property(property: 'name', type: 'string', example: 'OpenStack Consulting Services'),
+                                    'overview' => new OA\Property(property: 'overview', type: 'string', example: 'Professional OpenStack consulting and support services'),
+                                    'call_2_action_url' => new OA\Property(property: 'call_2_action_url', type: 'string', example: 'https://example.com/contact'),
+                                    'slug' => new OA\Property(property: 'slug', type: 'string', example: 'openstack-consulting'),
+                                    'company_id' => new OA\Property(property: 'company_id', type: 'integer', example: 1),
+                                    'type_id' => new OA\Property(property: 'type_id', type: 'integer', example: 1)
+                                ],
+                                type: 'object'
+                            )
+                        )
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAll()
     {
         return parent::getAll();

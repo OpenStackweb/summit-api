@@ -31,7 +31,7 @@ final class CountriesApiController extends JsonController
         description: "Get all countries with ISO codes",
         summary: 'Get all countries',
         operationId: 'getAllCountries',
-        tags: ['country', 'countries', 'ISO'],
+        tags: ['Country'],
         parameters: [
             new OA\Parameter(
                 name: 'expand',

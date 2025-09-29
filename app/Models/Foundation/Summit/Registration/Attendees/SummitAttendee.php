@@ -749,7 +749,6 @@ SQL;
 
             $map = [];
             foreach ($rows as $row) {
-                // QuestionID es int; Value es string (para multiselect puede ser CSV/JSON según tu modelo)
                 $map[(int)$row['QuestionID']] = $row['Value'];
             }
             $this->extraQuestionAnswersCache = $map;

@@ -40,7 +40,7 @@ final class LanguagesApiController extends JsonController
     }
 
     #[OA\Get(
-        path: "/api/v1/languages",
+        path: "/api/public/v1/languages",
         description: "Get all available languages with ISO codes",
         summary: 'Get all languages',
         operationId: 'getAllLanguages',

@@ -96,4 +96,11 @@ interface ISummitAttendeeRepository extends IBaseRepository
      */
     public function getBySummitAndFirstNameAndLastNameAndManager(Summit $summit, string $first_name, string $last_name, SummitAttendee $manager):?SummitAttendee;
 
+
+    /**
+     * @param array $owners
+     * @param array $questions
+     * @return array
+     */
+    public function getExtraQuestionAnswersByOwners(array $owners, array $questions):array;
 }

@@ -17,6 +17,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\LazyCriteriaCollection;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\NativeQuery;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
@@ -39,6 +40,12 @@ use utils\PagingResponse;
  */
 abstract class DoctrineRepository extends EntityRepository implements IBaseRepository
 {
+    protected $fetchJoinCollection = true;
+
+    public function __construct(EntityManagerInterface $em, ClassMetadata $class)
+    {
+        parent::__construct($em, $class);
+    }
 
     /**
      * @var string
@@ -189,7 +196,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
         Log::debug(sprintf("DoctrineRepository::getParametrizedAllByPage DQL %s", $query->getDQL()));
         $start  = time();
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
+        $paginator = new Paginator($query, $this->fetchJoinCollection);
         $total     = $paginator->count();
         $end = time();
         $delta = $end - $start;
@@ -283,7 +290,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
+        $paginator = new Paginator($query, $this->fetchJoinCollection);
         $total     = $paginator->count();
         $data      = [];
 
@@ -298,6 +305,35 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             $paging_info->getLastPage($total),
             $data
         );
+    }
+
+    /**
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return int
+     */
+    public function getFastCount(Filter $filter = null, Order $order = null){
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(DISTINCT e.id)')
+            ->from($this->getBaseEntity(), "e")
+            ->distinct(false);
+
+        $query = $this->applyExtraJoins($query, $filter, $order);
+
+        $query = $this->applyExtraSelects($query, $filter, $order);
+
+        if(!is_null($filter)){
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
+        }
+
+        $query = $this->applyExtraFilters($query);
+
+        if(!is_null($order)){
+            $order->apply2Query($query, $this->getOrderMappings($filter));
+        }
+
+        return (int) $query->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -518,7 +554,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
+        $paginator = new Paginator($query, $this->fetchJoinCollection);
         $total     = $paginator->count();
         $data      = array();
 

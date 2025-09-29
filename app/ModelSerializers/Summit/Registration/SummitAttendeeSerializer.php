@@ -84,7 +84,6 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 $serializer_type = $params['serializer_type'];
             $summit         = $attendee->getSummit();
 
-            $attendee->updateStatus();
             $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
             $endVotingDate   = $params['end_attendee_voting_period_date'] ?? null;
             $track_group_id  = $params['presentation_votes_track_group_id'] ?? null;

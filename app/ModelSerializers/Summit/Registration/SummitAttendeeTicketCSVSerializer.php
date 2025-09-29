@@ -80,6 +80,7 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         $ticket_owner = $ticket->getOwner();
 
         if (isset($params['ticket_questions'])) {
+            $answersByOwner  = $params['answers_by_owner']  ?? null;
             foreach ($params['ticket_questions'] as $question) {
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
 
@@ -88,7 +89,7 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
                 $values[$question_label] = '';
 
                 if (!is_null($ticket_owner)) {
-                    $value = $ticket_owner->getExtraQuestionAnswerValueByQuestion($question);
+                    $value = $answersByOwner[$ticket_owner->getId()][$question->getId()] ?? null;
                     if(is_null($value)) continue;
 
                     $cacheKey = $question->getId() . '|' . $value;

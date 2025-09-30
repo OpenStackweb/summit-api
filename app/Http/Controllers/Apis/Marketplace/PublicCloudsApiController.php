@@ -83,7 +83,7 @@ final class PublicCloudsApiController extends AbstractCompanyServiceApiControlle
             new OA\Response(
                 response: 200,
                 description: 'Success - Returns paginated list of public clouds',
-                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPublicCloudsResponseSchema')
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPublicOrPrivateCloudsResponseSchema')
             ),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")

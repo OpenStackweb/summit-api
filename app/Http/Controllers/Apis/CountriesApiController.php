@@ -54,13 +54,7 @@ final class CountriesApiController extends JsonController
                         'data' => new OA\Property(
                             property: 'data',
                             type: 'array',
-                            items: new OA\Items(
-                                properties: [
-                                    'iso_code' => new OA\Property(property: 'iso_code', type: 'string', example: 'US'),
-                                    'name' => new OA\Property(property: 'name', type: 'string', example: 'United States')
-                                ],
-                                type: 'object'
-                            )
+                            items: new OA\Items(ref: "#/components/schemas/ISOElementSchema")
                         )
                     ],
                     type: 'object'

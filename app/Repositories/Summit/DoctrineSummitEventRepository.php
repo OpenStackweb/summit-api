@@ -98,20 +98,12 @@ final class DoctrineSummitEventRepository
         return SummitEvent::class;
     }
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
-    {
 
+    private function prepareRegularQuery($query, Filter $filter = null, Order $order = null){
         $current_track_id = 0;
         $current_member_id = 0;
 
         if (!is_null($filter)) {
-            Log::debug(sprintf("DoctrineSummitEventRepository::getAllByPage filter %s", $filter));
             // check for dependant filtering
             $track_id_filter = $filter->getUniqueFilter('track_id');
             if (!is_null($track_id_filter)) {
@@ -122,12 +114,7 @@ final class DoctrineSummitEventRepository
                 $current_member_id = intval($current_member_id_filter->getValue());
             }
         }
-
-        $query = $this->getEntityManager()->createQueryBuilder()
-            ->select("e")
-            ->distinct(true)
-            ->from($this->getBaseEntity(), "e")
-            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
+        $query = $query->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
         if (is_null($order) || !$order->hasOrder("votes_count")) {
             $query = $query
@@ -167,23 +154,6 @@ final class DoctrineSummitEventRepository
             }
         }
 
-        $shouldPerformRandomOrderingByPage = false;
-        if (!is_null($order)) {
-            if ($order->hasOrder("page_random")) {
-                $shouldPerformRandomOrderingByPage = true;
-                $order->removeOrder("page_random");
-            }
-            $order->apply2Query($query, $this->getOrderMappings());
-            if (!$order->hasOrder('id')) {
-                $query = $query->addOrderBy("e.id", 'ASC');
-            }
-        } else {
-            //default order
-            $query = $query->addOrderBy("e.start_date", 'ASC');
-            $query = $query->addOrderBy("e.end_date", 'ASC');
-            $query = $query->addOrderBy("e.id", 'ASC');
-        }
-
         $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
 
         if (!$can_view_private_events) {
@@ -196,16 +166,102 @@ final class DoctrineSummitEventRepository
             }
         }
 
+        if (!is_null($order)) {
+            $order->apply2Query($query, $this->getOrderMappings());
+            if (!$order->hasOrder('id')) {
+                $query = $query->addOrderBy("e.id", 'ASC');
+            }
+        } else {
+            //default order
+            $query = $query->addOrderBy("e.start_date", 'ASC');
+            $query = $query->addOrderBy("e.end_date", 'ASC');
+            $query = $query->addOrderBy("e.id", 'ASC');
+        }
+
+        return $query;
+    }
+    /**
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return int
+     */
+    public function getFastCount(Filter $filter = null, Order $order = null){
+
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(DISTINCT e.id)')
+            ->from($this->getBaseEntity(), "e")
+            ->distinct(false);
+
+        $query = $this->prepareRegularQuery($query, $filter, null);
+
+        return (int) $query->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return array
+     */
+    public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):array {
+
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->distinct(true)
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e");
+
+        $query = $this->prepareRegularQuery($query, $filter, $order);
+
         $query = $query
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total = $paginator->count();
-        $data = [];
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
+    }
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
 
-        foreach ($paginator as $entity)
-            $data[] = $entity;
+        $start = time();
+        $shouldPerformRandomOrderingByPage = false;
+        if (!is_null($order)) {
+            if ($order->hasOrder("page_random")) {
+                $shouldPerformRandomOrderingByPage = true;
+                $order->removeOrder("page_random");
+            }
+        }
+        Log::debug(sprintf('DoctrineSummitEventRepository::getAllByPage'));
+        $total = $this->getFastCount($filter, null);
+        if(!$total) return new PagingResponse(0, $paging_info->getPerPage(), $paging_info->getCurrentPage(), 0, []);
+        $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
+
+        $query = $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e");
+
+        $query = $this->prepareRegularQuery($query, $filter, $order)
+        ->andWhere('e.id IN (:ids)')
+        ->setParameter('ids', $ids);
+
+        $rows = $query->getQuery()->getResult();
+        $byId = [];
+        foreach ($rows as $e) $byId[$e->getId()] = $e;
+
+        $data = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) $data[] = $byId[$id];
+        }
+
+        $end = time() - $start;
+        Log::debug(sprintf('DoctrineSummitEventRepository::getAllByPage %s seconds', $end));
 
         if ($shouldPerformRandomOrderingByPage)
             shuffle($data);

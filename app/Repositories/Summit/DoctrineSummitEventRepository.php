@@ -98,20 +98,12 @@ final class DoctrineSummitEventRepository
         return SummitEvent::class;
     }
 
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
-    {
 
+    private function prepareRegularQuery($query, Filter $filter = null, Order $order = null){
         $current_track_id = 0;
         $current_member_id = 0;
 
         if (!is_null($filter)) {
-            Log::debug(sprintf("DoctrineSummitEventRepository::getAllByPage filter %s", $filter));
             // check for dependant filtering
             $track_id_filter = $filter->getUniqueFilter('track_id');
             if (!is_null($track_id_filter)) {
@@ -122,12 +114,7 @@ final class DoctrineSummitEventRepository
                 $current_member_id = intval($current_member_id_filter->getValue());
             }
         }
-
-        $query = $this->getEntityManager()->createQueryBuilder()
-            ->select("e")
-            ->distinct(true)
-            ->from($this->getBaseEntity(), "e")
-            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
+        $query = $query->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
 
         if (is_null($order) || !$order->hasOrder("votes_count")) {
             $query = $query
@@ -167,23 +154,6 @@ final class DoctrineSummitEventRepository
             }
         }
 
-        $shouldPerformRandomOrderingByPage = false;
-        if (!is_null($order)) {
-            if ($order->hasOrder("page_random")) {
-                $shouldPerformRandomOrderingByPage = true;
-                $order->removeOrder("page_random");
-            }
-            $order->apply2Query($query, $this->getOrderMappings());
-            if (!$order->hasOrder('id')) {
-                $query = $query->addOrderBy("e.id", 'ASC');
-            }
-        } else {
-            //default order
-            $query = $query->addOrderBy("e.start_date", 'ASC');
-            $query = $query->addOrderBy("e.end_date", 'ASC');
-            $query = $query->addOrderBy("e.id", 'ASC');
-        }
-
         $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
 
         if (!$can_view_private_events) {
@@ -196,16 +166,102 @@ final class DoctrineSummitEventRepository
             }
         }
 
+        if (!is_null($order)) {
+            $order->apply2Query($query, $this->getOrderMappings());
+            if (!$order->hasOrder('id')) {
+                $query = $query->addOrderBy("e.id", 'ASC');
+            }
+        } else {
+            //default order
+            $query = $query->addOrderBy("e.start_date", 'ASC');
+            $query = $query->addOrderBy("e.end_date", 'ASC');
+            $query = $query->addOrderBy("e.id", 'ASC');
+        }
+
+        return $query;
+    }
+    /**
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return int
+     */
+    public function getFastCount(Filter $filter = null, Order $order = null){
+
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(DISTINCT e.id)')
+            ->from($this->getBaseEntity(), "e")
+            ->distinct(false);
+
+        $query = $this->prepareRegularQuery($query, $filter, null);
+
+        return (int) $query->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return array
+     */
+    public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):array {
+
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->distinct(true)
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e");
+
+        $query = $this->prepareRegularQuery($query, $filter, $order);
+
         $query = $query
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total = $paginator->count();
-        $data = [];
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
+    }
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
 
-        foreach ($paginator as $entity)
-            $data[] = $entity;
+        $start = time();
+        $shouldPerformRandomOrderingByPage = false;
+        if (!is_null($order)) {
+            if ($order->hasOrder("page_random")) {
+                $shouldPerformRandomOrderingByPage = true;
+                $order->removeOrder("page_random");
+            }
+        }
+        Log::debug(sprintf('DoctrineSummitEventRepository::getAllByPage'));
+        $total = $this->getFastCount($filter, null);
+        if(!$total) return new PagingResponse(0, $paging_info->getPerPage(), $paging_info->getCurrentPage(), 0, []);
+        $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
+
+        $query = $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e");
+
+        $query = $this->prepareRegularQuery($query, $filter, $order)
+        ->andWhere('e.id IN (:ids)')
+        ->setParameter('ids', $ids);
+
+        $rows = $query->getQuery()->getResult();
+        $byId = [];
+        foreach ($rows as $e) $byId[$e->getId()] = $e;
+
+        $data = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) $data[] = $byId[$id];
+        }
+
+        $end = time() - $start;
+        Log::debug(sprintf('DoctrineSummitEventRepository::getAllByPage %s seconds', $end));
 
         if ($shouldPerformRandomOrderingByPage)
             shuffle($data);
@@ -381,11 +437,11 @@ final class DoctrineSummitEventRepository
                     'rejected' => new DoctrineCaseFilterMapping(
                         'rejected',
                         sprintf('selp is not null AND  selp.selection_begin_date is not null AND selp.selection_begin_date <= UTC_TIMESTAMP() AND e.published = 0 AND NOT EXISTS (
-                                            SELECT ___sp31.id 
+                                            SELECT ___sp31.id
                                             FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
-                                            WHERE ___p31.id = e.id 
+                                            WHERE ___p31.id = e.id
                                             AND ___sp31.collection = \'%1$s\'
                                         )',
                             SummitSelectedPresentation::CollectionSelected,
@@ -451,17 +507,17 @@ final class DoctrineSummitEventRepository
                         'moved',
                         sprintf
                         (
-                            "not exists 
+                            "not exists
                             (
-                                select vw1 from models\summit\PresentationTrackChairView vw1 
+                                select vw1 from models\summit\PresentationTrackChairView vw1
                                 inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s
-                            ) 
-                            and exists 
-                            ( 
-                                select cch from models\summit\SummitCategoryChange cch 
+                            )
+                            and exists
+                            (
+                                select cch from models\summit\SummitCategoryChange cch
                                 inner join cch.presentation p2
-                                inner join cch.new_category nc 
-                                where p2.id = p.id and 
+                                inner join cch.new_category nc
+                                where p2.id = p.id and
                                 cch.status = %s and
                                 nc.id = %s
                             ) ",
@@ -510,7 +566,7 @@ final class DoctrineSummitEventRepository
              */
             'has_media_upload_with_type' => new DoctrineFilterMapping(
                 'EXISTS (
-                    SELECT pm1:i.id 
+                    SELECT pm1:i.id
                     FROM models\summit\PresentationMediaUpload pm1:i
                     JOIN pm1:i.media_upload_type mut1:i
                     JOIN pm1:i.presentation p3:i
@@ -519,7 +575,7 @@ final class DoctrineSummitEventRepository
             ),
             'has_not_media_upload_with_type' => new DoctrineFilterMapping(
                 'NOT EXISTS (
-                    SELECT pm2:i.id 
+                    SELECT pm2:i.id
                     FROM models\summit\PresentationMediaUpload pm2:i
                     JOIN pm2:i.media_upload_type mut2:i
                     JOIN pm2:i.presentation p4:i
@@ -561,10 +617,10 @@ SQL,
             'created_by_company' => 'cb.company',
             'speaker_company' => "sp.company",
             'level' => <<<SQL
-COALESCE(LOWER(e.level), '') 
+COALESCE(LOWER(e.level), '')
 SQL,
             'etherpad_link' => <<<SQL
-COALESCE(LOWER(e.etherpad_link), '') 
+COALESCE(LOWER(e.etherpad_link), '')
 SQL,
             'streaming_url' => <<<SQL
 COALESCE(LOWER(e.streaming_url), '')
@@ -593,12 +649,12 @@ SQL,
                                             SELECT ___sp331.id
                                             FROM models\summit\SummitSelectedPresentation ___sp331
                                             JOIN ___sp331.presentation ___p331
-                                            JOIN ___p331.category ___pc331                  
+                                            JOIN ___p331.category ___pc331
                                             JOIN ___sp331.list ___spl331 WITH ___spl331.list_type = 'Group' AND ___spl331.list_class = 'Session'
-                                            WHERE 
+                                            WHERE
                                             ___p331.id = e.id
                                             AND ___sp331.collection = 'selected'
-                                            AND ___sp331.order <= ___pc331.session_count                  
+                                            AND ___sp331.order <= ___pc331.session_count
                                    )  THEN 'accepted'
     WHEN e.published = 0 AND NOT EXISTS (
                                             SELECT ___sp332.id
@@ -608,17 +664,17 @@ SQL,
                                             WHERE ___p332.id = e.id
                                             AND ___sp332.collection = 'selected'
                                         ) THEN 'rejected'
-    WHEN 
+    WHEN
      EXISTS (
                                             SELECT ___sp333.id
                                             FROM models\summit\SummitSelectedPresentation ___sp333
                                             JOIN ___sp333.presentation ___p333
-                                            JOIN ___p333.category ___pc333                  
+                                            JOIN ___p333.category ___pc333
                                             JOIN ___sp333.list ___spl333 WITH ___spl333.list_type = 'Group' AND ___spl333.list_class = 'Session'
-                                            WHERE 
+                                            WHERE
                                             ___p333.id = e.id
                                             AND ___sp333.collection = 'selected'
-                                            AND ___sp333.order > ___pc333.session_count                  
+                                            AND ___sp333.order > ___pc333.session_count
                                    ) THEN 'alternate'
     ELSE 'pending'
 END
@@ -633,7 +689,7 @@ SQL,*/
             'review_status' => 'REVIEW_STATUS(e.id)',
             'submission_source' => 'e.submission_source',
             'submission_status' => <<<SQL
-    CASE 
+    CASE
     WHEN p.status = 'Received' AND e.published = 1 THEN 'Accepted'
     WHEN p.status = 'Received' AND e.published = 0 THEN 'Received'
     WHEN p.status is null THEN 'NonReceived'

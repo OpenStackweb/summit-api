@@ -84,32 +84,7 @@ final class ConsultantsApiController extends AbstractCompanyServiceApiController
             new OA\Response(
                 response: 200,
                 description: 'Success - Returns paginated list of consultants',
-                content: new OA\JsonContent(
-                    properties: [
-                        'total' => new OA\Property(property: 'total', type: 'integer', example: 15),
-                        'per_page' => new OA\Property(property: 'per_page', type: 'integer', example: 15),
-                        'current_page' => new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                        'last_page' => new OA\Property(property: 'last_page', type: 'integer', example: 1),
-                        'data' => new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(
-                                properties: [
-                                    'id' => new OA\Property(property: 'id', type: 'integer', example: 1),
-                                    'class_name' => new OA\Property(property: 'class_name', type: 'string', example: 'Consultant'),
-                                    'name' => new OA\Property(property: 'name', type: 'string', example: 'OpenStack Consulting Services'),
-                                    'overview' => new OA\Property(property: 'overview', type: 'string', example: 'Professional OpenStack consulting and support services'),
-                                    'call_2_action_url' => new OA\Property(property: 'call_2_action_url', type: 'string', example: 'https://example.com/contact'),
-                                    'slug' => new OA\Property(property: 'slug', type: 'string', example: 'openstack-consulting'),
-                                    'company_id' => new OA\Property(property: 'company_id', type: 'integer', example: 1),
-                                    'type_id' => new OA\Property(property: 'type_id', type: 'integer', example: 1)
-                                ],
-                                type: 'object'
-                            )
-                        )
-                    ],
-                    type: 'object'
-                )
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedConsultantsResponse')
             ),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")

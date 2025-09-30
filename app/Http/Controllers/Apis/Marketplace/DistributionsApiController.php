@@ -84,39 +84,7 @@ final class DistributionsApiController extends AbstractCompanyServiceApiControll
             new OA\Response(
                 response: 200,
                 description: 'Success - Returns paginated list of distributions',
-                content: new OA\JsonContent(
-                    properties: [
-                        'total' => new OA\Property(property: 'total', type: 'integer', example: 20),
-                        'per_page' => new OA\Property(property: 'per_page', type: 'integer', example: 20),
-                        'current_page' => new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                        'last_page' => new OA\Property(property: 'last_page', type: 'integer', example: 1),
-                        'data' => new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(
-                                properties: [
-                                    'id' => new OA\Property(property: 'id', type: 'integer', example: 1),
-                                    'class_name' => new OA\Property(property: 'class_name', type: 'string', example: 'Distribution'),
-                                    'name' => new OA\Property(property: 'name', type: 'string', example: 'Ubuntu OpenStack'),
-                                    'overview' => new OA\Property(property: 'overview', type: 'string', example: 'Ubuntu-based OpenStack distribution'),
-                                    'call_2_action_url' => new OA\Property(property: 'call_2_action_url', type: 'string', example: 'https://example.com/download'),
-                                    'slug' => new OA\Property(property: 'slug', type: 'string', example: 'ubuntu-openstack'),
-                                    'company_id' => new OA\Property(property: 'company_id', type: 'integer', example: 1),
-                                    'type_id' => new OA\Property(property: 'type_id', type: 'integer', example: 1),
-                                    'is_compatible_with_storage' => new OA\Property(property: 'is_compatible_with_storage', type: 'boolean', example: true),
-                                    'is_compatible_with_compute' => new OA\Property(property: 'is_compatible_with_compute', type: 'boolean', example: true),
-                                    'is_compatible_with_federated_identity' => new OA\Property(property: 'is_compatible_with_federated_identity', type: 'boolean', example: false),
-                                    'is_compatible_with_platform' => new OA\Property(property: 'is_compatible_with_platform', type: 'boolean', example: true),
-                                    'is_openstack_powered' => new OA\Property(property: 'is_openstack_powered', type: 'boolean', example: true),
-                                    'is_openstack_tested' => new OA\Property(property: 'is_openstack_tested', type: 'boolean', example: true),
-                                    'openstack_tested_info' => new OA\Property(property: 'openstack_tested_info', type: 'string', example: 'Tested with OpenStack Zed')
-                                ],
-                                type: 'object'
-                            )
-                        )
-                    ],
-                    type: 'object'
-                )
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedMarketplaceDistributionResponseSchema")
             ),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")

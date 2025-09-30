@@ -458,7 +458,10 @@ class SummitRSVPService extends AbstractService
             $rsvp = $event->getRSVPById($rsvp_id);
             if (is_null($rsvp))
                 throw new EntityNotFoundException("RSVP not found.");
-
+             $event = $rsvp->getEvent();
+             $member = $rsvp->getOwner();
+             if(!is_null($member) && !is_null($event) && $member->isOnSchedule($event))
+                $member->removeFromSchedule($event);
              $this->rsvp_repository->delete($rsvp);
 
         });

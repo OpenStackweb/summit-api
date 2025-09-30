@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Apis\IMailApi;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -89,14 +90,22 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
             })->toArray();
 
         $payload[IMailTemplatesConstants::main_venue_address] = implode(' - ', $main_venue_addresses);
-
-        $payload = array_merge($payload, self::getMarketingVariables($summit));
         parent::__construct($payload, $template_identifier, $to_email, $subject, $cc_email, $bcc_email);
     }
 
-    private static function getMarketingVariables(Summit $summit) {
+    public function handle
+    (
+        IMailApi $api
+    ){
+        $summit_id = $this->payload[IMailTemplatesConstants::summit_id];
+        Log::debug(sprintf("AbstractSummitEmailJob::handle summit %s", $summit_id));
+        $this->payload = array_merge($this->payload, self::getMarketingVariables($summit_id));
+        parent::handle($api);
+    }
 
-        Log::debug(sprintf("AbstractSummitEmailJob::getMarketingVariables summit %s", $summit->getId()));
+    private static function getMarketingVariables(int $summit_id) {
+
+        Log::debug(sprintf("AbstractSummitEmailJob::getMarketingVariables summit %s", $summit_id));
 
         $default_email_template_vars = collect(Config::get('marketing.default_email_template_vars'))
             ->mapWithKeys(function ($value, $key) {
@@ -117,7 +126,7 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
         }
 
         try {
-            $marketing_vars = $marketing_api->getConfigValues($summit->getId(), 'EMAIL_TEMPLATE_');
+            $marketing_vars = $marketing_api->getConfigValues($summit_id, 'EMAIL_TEMPLATE_');
         } catch(\Exception $ex){
             Log::error($ex);
             Log::warning
@@ -138,7 +147,7 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
                     sprintf
                     (
                         "AbstractSummitEmailJob::getMarketingVariables summit %s marketing var %s not found or empty, using default value (%s).",
-                        $summit->getId(),
+                        $summit_id,
                         $key,
                         $value
                     )
@@ -153,7 +162,7 @@ abstract class AbstractSummitEmailJob extends AbstractEmailJob
                 sprintf
                 (
                     "AbstractSummitEmailJob::getMarketingVariables summit %s injecting marketing_vars %s",
-                    $summit->getId(),
+                    $summit_id,
                     json_encode($marketing_vars)
                 )
             );

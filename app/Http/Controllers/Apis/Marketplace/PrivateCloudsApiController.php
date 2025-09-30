@@ -83,39 +83,7 @@ final class PrivateCloudsApiController extends AbstractCompanyServiceApiControll
             new OA\Response(
                 response: 200,
                 description: 'Success - Returns paginated list of hosted private clouds',
-                content: new OA\JsonContent(
-                    properties: [
-                        'total' => new OA\Property(property: 'total', type: 'integer', example: 10),
-                        'per_page' => new OA\Property(property: 'per_page', type: 'integer', example: 10),
-                        'current_page' => new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                        'last_page' => new OA\Property(property: 'last_page', type: 'integer', example: 1),
-                        'data' => new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(
-                                properties: [
-                                    'id' => new OA\Property(property: 'id', type: 'integer', example: 1),
-                                    'class_name' => new OA\Property(property: 'class_name', type: 'string', example: 'PrivateCloudService'),
-                                    'name' => new OA\Property(property: 'name', type: 'string', example: 'Enterprise Private Cloud'),
-                                    'overview' => new OA\Property(property: 'overview', type: 'string', example: 'Hosted private OpenStack cloud service'),
-                                    'call_2_action_url' => new OA\Property(property: 'call_2_action_url', type: 'string', example: 'https://example.com/private-cloud'),
-                                    'slug' => new OA\Property(property: 'slug', type: 'string', example: 'enterprise-private-cloud'),
-                                    'company_id' => new OA\Property(property: 'company_id', type: 'integer', example: 1),
-                                    'type_id' => new OA\Property(property: 'type_id', type: 'integer', example: 1),
-                                    'is_compatible_with_storage' => new OA\Property(property: 'is_compatible_with_storage', type: 'boolean', example: true),
-                                    'is_compatible_with_compute' => new OA\Property(property: 'is_compatible_with_compute', type: 'boolean', example: true),
-                                    'is_compatible_with_federated_identity' => new OA\Property(property: 'is_compatible_with_federated_identity', type: 'boolean', example: true),
-                                    'is_compatible_with_platform' => new OA\Property(property: 'is_compatible_with_platform', type: 'boolean', example: true),
-                                    'is_openstack_powered' => new OA\Property(property: 'is_openstack_powered', type: 'boolean', example: true),
-                                    'is_openstack_tested' => new OA\Property(property: 'is_openstack_tested', type: 'boolean', example: true),
-                                    'openstack_tested_info' => new OA\Property(property: 'openstack_tested_info', type: 'string', example: 'Tested with OpenStack Antelope')
-                                ],
-                                type: 'object'
-                            )
-                        )
-                    ],
-                    type: 'object'
-                )
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPublicOrPrivateCloudsResponseSchema')
             ),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")

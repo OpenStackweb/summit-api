@@ -351,7 +351,7 @@ class RSVPUpdateRequestSchema_{
 class RSVPAdminAddRequestSchema {}
 
 #[OA\Schema(
-    schema: 'PublicCloudsResponseSchema',
+    schema: 'PublicOrPrivateCloudsResponseSchema',
     type: 'object',
     properties: [
         'id' => new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -371,10 +371,10 @@ class RSVPAdminAddRequestSchema {}
         'openstack_tested_info' => new OA\Property(property: 'openstack_tested_info', type: 'string', example: 'Compatible with OpenStack APIs')
     ]
 )]
-class PublicCloudsResponseSchema {}
+class PublicOrPrivateCloudsResponseSchema {}
 
 #[OA\Schema(
-    schema: 'PaginatedPublicCloudsResponseSchema',
+    schema: 'PaginatedPublicOrPrivateCloudsResponseSchema',
     allOf: [
         new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
         new OA\Schema(
@@ -383,10 +383,10 @@ class PublicCloudsResponseSchema {}
                 new OA\Property(
                     property: 'data',
                     type: 'array',
-                    items: new OA\Items(ref: '#/components/schemas/PublicCloudsResponseSchema')
+                    items: new OA\Items(ref: '#/components/schemas/PublicOrPrivateCloudsResponseSchema')
                 )
             ]
         )
     ]
 )]
-class PaginatedPublicCloudsResponseSchema {}
+class PaginatedPublicOrPrivateCloudsResponseSchema {}

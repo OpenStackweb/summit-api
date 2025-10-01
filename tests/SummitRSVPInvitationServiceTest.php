@@ -315,6 +315,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $event = Mockery::mock(SummitEvent::class)->makePartial();
 
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
+        $inv->shouldReceive('isAccepted')->andReturnFalse();
+        $inv->shouldReceive('isRejected')->andReturnFalse();
         $inv->shouldReceive('isPending')->andReturnTrue();
         $inv->shouldReceive('getInvitee->getEmail')->andReturn('e@example.org');
 
@@ -336,6 +338,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
         $this->expectException(ValidationException::class);
         $event = Mockery::mock(SummitEvent::class)->makePartial();
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
+        $inv->shouldReceive('isAccepted')->andReturnTrue();
+        $inv->shouldReceive('isRejected')->andReturnFalse();
         $inv->shouldReceive('isPending')->andReturnFalse();
         $inv->shouldReceive('getInvitee->getEmail')->andReturn('e@example.org');
 
@@ -382,6 +386,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
         // Invitation
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
         $inv->shouldReceive('getInvitee')->andReturn($invitee);
+        $inv->shouldReceive('isAccepted')->andReturnFalse();
+        $inv->shouldReceive('isRejected')->andReturnFalse();
         $inv->shouldReceive('isPending')->andReturnTrue();
         $inv->shouldReceive('markAsAccepted')->once();
         $inv->shouldReceive('getEvent')->andReturn($event);
@@ -439,6 +445,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
 
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
         $inv->shouldReceive('getInvitee')->andReturn($invitee);
+        $inv->shouldReceive('isAccepted')->andReturnTrue();
+        $inv->shouldReceive('isRejected')->andReturnFalse();
         $inv->shouldReceive('isPending')->andReturnFalse();
 
         $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->andReturn($inv);
@@ -462,6 +470,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
 
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
         $inv->shouldReceive('getInvitee')->andReturn($invitee);
+        $inv->shouldReceive('isAccepted')->andReturnFalse();
+        $inv->shouldReceive('isRejected')->andReturnFalse();
         $inv->shouldReceive('isPending')->andReturnTrue();
 
         $this->invitation_repository->shouldReceive('getByHashAndSummitEvent')->andReturn($inv);
@@ -486,6 +496,8 @@ class SummitRSVPInvitationServiceTest extends TestCase
 
         $inv = Mockery::mock(RSVPInvitation::class)->makePartial();
         $inv->shouldReceive('getInvitee')->andReturn($invitee);
+        $inv->shouldReceive('isAccepted')->andReturnFalse();
+        $inv->shouldReceive('isRejected')->andReturnFalse();
         $inv->shouldReceive('isPending')->andReturnTrue();
         $inv->shouldReceive('markAsRejected')->once();
 

@@ -238,20 +238,26 @@ class SummitRSVPInvitationService
      */
     public function add(SummitEvent $summit_event, array $payload): array
     {
-        return $this->tx_service->transaction(function () use ($summit_event, $payload) {
             $invitee_ids = $payload['invitee_ids'] ?? [];
             $invitations = [];
+            $errors = [];
             foreach ($invitee_ids as $invitee_id) {
                 try {
                     Log::debug(sprintf("SummitRSVPInvitationService::add trying to add process invitee id %s.", $invitee_id));
-
                     $invitations[] = $this->_add($summit_event, $invitee_id);
-                } catch (\Exception $ex) {
+                }
+                catch(ValidationException $ex1){
+                    Log::warning($ex1);
+                    $errors[] = $ex1->getMessages();
+                }
+                catch (\Exception $ex) {
                     Log::warning($ex);
                 }
             }
+            if(count($errors) > 0) {
+                throw new ValidationException($errors);
+            }
             return $invitations;
-        });
     }
 
     /**

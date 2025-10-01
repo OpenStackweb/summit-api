@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use App\Repositories\SilverStripeDoctrineRepository;
+use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -39,9 +40,23 @@ final class DoctrineSummitRepository
     protected function getFilterMappings()
     {
         return [
+            // base entity
             'name' => 'e.name',
             'start_date' => Filter::buildDateTimeEpochField('e.begin_date'),
             'end_date' => Filter::buildDateTimeEpochField('e.end_date'),
+            'registration_begin_date' => Filter::buildDateTimeEpochField('e.registration_begin_date'),
+            'registration_end_date' => Filter::buildDateTimeEpochField('e.registration_end_date'),
+            'available_on_api' => Filter::buildBooleanField('e.available_on_api'),
+            'summit_id' => Filter::buildIntField('e.id'),
+            'end_allow_booking_date' => Filter::buildDateTimeEpochField('e.end_allow_booking_date'),
+            'mark_as_deleted' => Filter::buildBooleanField('e.mark_as_deleted'),
+            'begin_allow_booking_date' => Filter::buildDateTimeEpochField('e.begin_allow_booking_date'),
+            // ticket type
+            'ticket_types_count' => new DoctrineFilterMapping(
+             '(SELECT COUNT(tt.id)
+      FROM models\summit\SummitTicketType tt
+      WHERE tt.summit = e) :operator :value'),
+            // sp
             'submission_begin_date' => Filter::buildDateTimeEpochField('sp.submission_begin_date'),
             'submission_end_date' => Filter::buildDateTimeEpochField('sp.submission_end_date'),
             'voting_begin_date' => Filter::buildDateTimeEpochField('sp.voting_begin_date'),
@@ -49,14 +64,6 @@ final class DoctrineSummitRepository
             'selection_begin_date' => Filter::buildDateTimeEpochField('sp.selection_begin_date'),
             'selection_end_date' => Filter::buildDateTimeEpochField('sp.selection_end_date'),
             'selection_plan_enabled' => Filter::buildIntField( 'sp.is_enabled'),
-            'registration_begin_date' => Filter::buildDateTimeEpochField('e.registration_begin_date'),
-            'registration_end_date' => Filter::buildDateTimeEpochField('e.registration_end_date'),
-            'available_on_api' => Filter::buildBooleanField('e.available_on_api'),
-            'summit_id' => Filter::buildIntField('e.id'),
-            'ticket_types_count' => new DoctrineHavingFilterMapping("", "tt.summit", "count(tt.id) :operator :value"),
-            'begin_allow_booking_date' => Filter::buildDateTimeEpochField('e.begin_allow_booking_date'),
-            'end_allow_booking_date' => Filter::buildDateTimeEpochField('e.end_allow_booking_date'),
-            'mark_as_deleted' => Filter::buildBooleanField('e.mark_as_deleted'),
         ];
     }
 
@@ -88,8 +95,14 @@ final class DoctrineSummitRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
-        $query = $query->leftJoin("e.ticket_types", "tt");
-        $query = $query->leftJoin("e.selection_plans", "sp");
+        $has = fn(string $f) => $filter?->hasFilter($f) ?? false;
+
+        if (
+            $has('submission_begin_date') || $has('submission_end_date') || $has('voting_begin_date') ||
+            $has('voting_end_date') || $has('selection_begin_date') || $has('selection_end_date')
+            || $has('selection_plan_enabled')
+        )
+            $query = $query->leftJoin("e.selection_plans", "sp");
         return $query;
     }
 
@@ -384,7 +397,7 @@ SELECT COUNT(DISTINCT(ID)) AS QTY
 FROM (
 	SELECT C.*
 	FROM Summit_RegistrationCompanies SC
-	INNER JOIN Company C ON SC.CompanyID = C.ID AND SC.SummitID = {$summit->getId()}	
+	INNER JOIN Company C ON SC.CompanyID = C.ID AND SC.SummitID = {$summit->getId()}
 )
 SUMMIT_COMPANIES
 {$extra_filters}
@@ -404,7 +417,7 @@ SELECT *
 FROM (
 	SELECT C.*
     FROM Summit_RegistrationCompanies SC
-	INNER JOIN Company C ON SC.CompanyID = C.ID AND SC.SummitID = {$summit->getId()}	
+	INNER JOIN Company C ON SC.CompanyID = C.ID AND SC.SummitID = {$summit->getId()}
 )
 SUMMIT_COMPANIES
 {$extra_filters} {$extra_orders} limit :per_page offset :offset;

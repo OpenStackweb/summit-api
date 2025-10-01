@@ -18,6 +18,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use utils\PagingResponse;
 use Illuminate\Support\Facades\Request;
+use OpenApi\Attributes as OA;
 /**
  * Class OAuth2SpeakerActiveInvolvementApiController
  * @package App\Http\Controllers
@@ -40,6 +41,32 @@ final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedC
         $this->repository = $repository;
     }
 
+    #[OA\Get(
+        path: '/api/v1/speakers/active-involvements',
+        summary: 'Get all default speaker active involvements',
+        description: 'Retrieves a list of default active involvements for speakers. These are predefined involvement types that speakers can select to describe their current activities (e.g., "Active Contributor", "User", "Evaluator"). Public endpoint accessible without authentication.',
+        operationId: 'getAllSpeakerActiveInvolvements',
+        tags: ['Speakers'],
+        parameters: [
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to expand',
+                schema: new OA\Schema(type: 'string', example: '')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Active involvements retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SpeakerActiveInvolvementsResponse')
+            ),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
     /**
      * @return mixed
      */

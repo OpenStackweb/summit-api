@@ -381,11 +381,11 @@ final class DoctrineSummitEventRepository
                     'rejected' => new DoctrineCaseFilterMapping(
                         'rejected',
                         sprintf('selp is not null AND  selp.selection_begin_date is not null AND selp.selection_begin_date <= UTC_TIMESTAMP() AND e.published = 0 AND NOT EXISTS (
-                                            SELECT ___sp31.id 
+                                            SELECT ___sp31.id
                                             FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
-                                            WHERE ___p31.id = e.id 
+                                            WHERE ___p31.id = e.id
                                             AND ___sp31.collection = \'%1$s\'
                                         )',
                             SummitSelectedPresentation::CollectionSelected,
@@ -451,17 +451,17 @@ final class DoctrineSummitEventRepository
                         'moved',
                         sprintf
                         (
-                            "not exists 
+                            "not exists
                             (
-                                select vw1 from models\summit\PresentationTrackChairView vw1 
+                                select vw1 from models\summit\PresentationTrackChairView vw1
                                 inner join vw1.presentation p1 join vw1.viewer v1 where p1.id = p.id and v1.id = %s
-                            ) 
-                            and exists 
-                            ( 
-                                select cch from models\summit\SummitCategoryChange cch 
+                            )
+                            and exists
+                            (
+                                select cch from models\summit\SummitCategoryChange cch
                                 inner join cch.presentation p2
-                                inner join cch.new_category nc 
-                                where p2.id = p.id and 
+                                inner join cch.new_category nc
+                                where p2.id = p.id and
                                 cch.status = %s and
                                 nc.id = %s
                             ) ",
@@ -510,7 +510,7 @@ final class DoctrineSummitEventRepository
              */
             'has_media_upload_with_type' => new DoctrineFilterMapping(
                 'EXISTS (
-                    SELECT pm1:i.id 
+                    SELECT pm1:i.id
                     FROM models\summit\PresentationMediaUpload pm1:i
                     JOIN pm1:i.media_upload_type mut1:i
                     JOIN pm1:i.presentation p3:i
@@ -519,7 +519,7 @@ final class DoctrineSummitEventRepository
             ),
             'has_not_media_upload_with_type' => new DoctrineFilterMapping(
                 'NOT EXISTS (
-                    SELECT pm2:i.id 
+                    SELECT pm2:i.id
                     FROM models\summit\PresentationMediaUpload pm2:i
                     JOIN pm2:i.media_upload_type mut2:i
                     JOIN pm2:i.presentation p4:i
@@ -561,10 +561,10 @@ SQL,
             'created_by_company' => 'cb.company',
             'speaker_company' => "sp.company",
             'level' => <<<SQL
-COALESCE(LOWER(e.level), '') 
+COALESCE(LOWER(e.level), '')
 SQL,
             'etherpad_link' => <<<SQL
-COALESCE(LOWER(e.etherpad_link), '') 
+COALESCE(LOWER(e.etherpad_link), '')
 SQL,
             'streaming_url' => <<<SQL
 COALESCE(LOWER(e.streaming_url), '')
@@ -593,12 +593,12 @@ SQL,
                                             SELECT ___sp331.id
                                             FROM models\summit\SummitSelectedPresentation ___sp331
                                             JOIN ___sp331.presentation ___p331
-                                            JOIN ___p331.category ___pc331                  
+                                            JOIN ___p331.category ___pc331
                                             JOIN ___sp331.list ___spl331 WITH ___spl331.list_type = 'Group' AND ___spl331.list_class = 'Session'
-                                            WHERE 
+                                            WHERE
                                             ___p331.id = e.id
                                             AND ___sp331.collection = 'selected'
-                                            AND ___sp331.order <= ___pc331.session_count                  
+                                            AND ___sp331.order <= ___pc331.session_count
                                    )  THEN 'accepted'
     WHEN e.published = 0 AND NOT EXISTS (
                                             SELECT ___sp332.id
@@ -608,17 +608,17 @@ SQL,
                                             WHERE ___p332.id = e.id
                                             AND ___sp332.collection = 'selected'
                                         ) THEN 'rejected'
-    WHEN 
+    WHEN
      EXISTS (
                                             SELECT ___sp333.id
                                             FROM models\summit\SummitSelectedPresentation ___sp333
                                             JOIN ___sp333.presentation ___p333
-                                            JOIN ___p333.category ___pc333                  
+                                            JOIN ___p333.category ___pc333
                                             JOIN ___sp333.list ___spl333 WITH ___spl333.list_type = 'Group' AND ___spl333.list_class = 'Session'
-                                            WHERE 
+                                            WHERE
                                             ___p333.id = e.id
                                             AND ___sp333.collection = 'selected'
-                                            AND ___sp333.order > ___pc333.session_count                  
+                                            AND ___sp333.order > ___pc333.session_count
                                    ) THEN 'alternate'
     ELSE 'pending'
 END
@@ -633,11 +633,22 @@ SQL,*/
             'review_status' => 'REVIEW_STATUS(e.id)',
             'submission_source' => 'e.submission_source',
             'submission_status' => <<<SQL
-    CASE 
+    CASE
     WHEN p.status = 'Received' AND e.published = 1 THEN 'Accepted'
     WHEN p.status = 'Received' AND e.published = 0 THEN 'Received'
     WHEN p.status is null THEN 'NonReceived'
     ELSE 'NonReceived'
+    END
+SQL,
+            'occupancy' => <<<SQL
+    CASE
+    WHEN e.occupancy = 'EMPTY'  THEN 1
+    WHEN e.occupancy = '25%'  THEN 2
+    WHEN e.occupancy = '50%'  THEN 3
+    WHEN e.occupancy = '75%'  THEN 4
+    WHEN e.occupancy = 'FULL'  THEN 5
+    WHEN e.occupancy = 'OVERFLOW'  THEN 6
+    ELSE 0
     END
 SQL,
         ];

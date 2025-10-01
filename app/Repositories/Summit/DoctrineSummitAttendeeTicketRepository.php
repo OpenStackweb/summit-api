@@ -728,6 +728,7 @@ SQL,
         $start = time();
         Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage'));
         $total = $this->getFastCount($filter, $order);
+        if(!$total) return new PagingResponse(0, $paging_info->getPerPage(), $paging_info->getCurrentPage(), 0, []);
         $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
         $query = $this->getEntityManager()->createQueryBuilder()
                         ->select('e, a, o, tt, pc, b, bt, a_c, m')
@@ -743,9 +744,15 @@ SQL,
                     ->where('e.id IN (:ids)')
                     ->setParameter('ids', $ids);
 
+        $rows = $query->getQuery()->getResult();
+        $byId = [];
+        foreach ($rows as $e) $byId[$e->getId()] = $e;
+
         $data = [];
-        foreach( $query->getQuery()->getResult() as $entity)
-            array_push($data, $entity);
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) $data[] = $byId[$id];
+        }
+
         $end = time() - $start;
         Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage %s seconds', $end));
         return new PagingResponse

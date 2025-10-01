@@ -34,7 +34,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
 
         $this->enabled = env('OTEL_SERVICE_ENABLED', false);
 
-        $this->elasticIndex = env('AUDIT_ELASTICSEARCH_INDEX', 'logs-audit');
+        $this->elasticIndex = env('OTEL_AUDIT_ELASTICSEARCH_INDEX', 'logs-audit');
     }
 
     public function audit($subject, array $change_set, string $event_type): void

@@ -18,7 +18,9 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'last_name', type: 'string'),
     ]
 )]
-class OwnerSchema {}
+class OwnerSchema
+{
+}
 
 #[OA\Schema(
     schema: 'Ticket',
@@ -29,7 +31,9 @@ class OwnerSchema {}
         new OA\Property(property: 'owner', ref: '#/components/schemas/Owner'),
     ]
 )]
-class TicketSchema {}
+class TicketSchema
+{
+}
 
 #[OA\Schema(
     schema: 'Feature',
@@ -40,7 +44,9 @@ class TicketSchema {}
         new OA\Property(property: 'description', type: 'string'),
     ]
 )]
-class FeatureSchema {}
+class FeatureSchema
+{
+}
 
 #[OA\Schema(
     schema: 'ValidateBadgeResponse',
@@ -55,7 +61,9 @@ class FeatureSchema {}
         new OA\Property(property: 'ticket', ref: '#/components/schemas/Ticket'),
     ]
 )]
-class ValidateBadgeResponseSchema {}
+class ValidateBadgeResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginateDataSchemaResponse',
@@ -68,7 +76,9 @@ class ValidateBadgeResponseSchema {}
     ],
     description: 'Base pagination metadata'
 )]
-class PaginateDataSchemaResponseSchema {}
+class PaginateDataSchemaResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedRSVPInvitationsResponse',
@@ -86,7 +96,9 @@ class PaginateDataSchemaResponseSchema {}
         )
     ]
 )]
-class PaginatedRSVPInvitationsResponseSchema {}
+class PaginatedRSVPInvitationsResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedCSVRSVPInvitationsResponse',
@@ -104,7 +116,9 @@ class PaginatedRSVPInvitationsResponseSchema {}
         )
     ]
 )]
-class PaginatedCSVRSVPInvitationsResponseSchema {}
+class PaginatedCSVRSVPInvitationsResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'RSVPInvitation',
@@ -120,7 +134,9 @@ class PaginatedCSVRSVPInvitationsResponseSchema {}
         new OA\Property(property: 'event', ref: '#/components/schemas/SummitEvent'),
     ]
 )]
-class RSVPInvitationSchema {}
+class RSVPInvitationSchema
+{
+}
 
 #[OA\Schema(
     schema: 'RSVPInvitationCSV',
@@ -133,10 +149,12 @@ class RSVPInvitationSchema {}
         new OA\Property(property: 'is_accepted', type: 'boolean', example: false),
         new OA\Property(property: 'is_sent', type: 'boolean', example: false),
         new OA\Property(property: 'invitee_id', type: 'integer', example: 123),
-        new OA\Property(property: 'event_id',  type: 'integer', example: 123),
+        new OA\Property(property: 'event_id', type: 'integer', example: 123),
     ]
 )]
-class RSVPInvitationCSVSchema {}
+class RSVPInvitationCSVSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitAttendee',
@@ -150,7 +168,9 @@ class RSVPInvitationCSVSchema {}
         new OA\Property(property: 'status', type: 'string', example: 'Complete'),
     ]
 )]
-class SummitAttendeeSchema {}
+class SummitAttendeeSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitEvent',
@@ -163,13 +183,15 @@ class SummitAttendeeSchema {}
         new OA\Property(property: 'description', type: 'string', example: 'This is a Description'),
     ]
 )]
-class SummitEventSchema {}
+class SummitEventSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SendRSVPInvitationsRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'email_flow_event', type: 'string', example: RSVPInviteEmail::EVENT_SLUG, enum:[RSVPInviteEmail::EVENT_SLUG, ReRSVPInviteEmail::EVENT_SLUG]),
+        new OA\Property(property: 'email_flow_event', type: 'string', example: RSVPInviteEmail::EVENT_SLUG, enum: [RSVPInviteEmail::EVENT_SLUG, ReRSVPInviteEmail::EVENT_SLUG]),
         new OA\Property(
             property: 'invitations_ids',
             type: 'array',
@@ -186,7 +208,9 @@ class SummitEventSchema {}
         new OA\Property(property: 'outcome_email_recipient', type: 'string', example: 'result@test.com'),
     ]
 )]
-class SendRSVPInvitationsRequestSchema {}
+class SendRSVPInvitationsRequestSchema
+{
+}
 
 
 #[OA\Schema(
@@ -197,7 +221,9 @@ class SendRSVPInvitationsRequestSchema {}
         new OA\Property(property: 'outcome_email_recipient', type: 'string', example: 'result@test.com'),
     ]
 )]
-class ReSendRSVPConfirmationRequestSchema {}
+class ReSendRSVPConfirmationRequestSchema
+{
+}
 
 
 #[OA\Schema(
@@ -218,55 +244,60 @@ class ReSendRSVPConfirmationRequestSchema {}
         ),
     ]
 )]
-class BulkRSVPInvitationsRequestSchema{
+class BulkRSVPInvitationsRequestSchema
+{
 
 }
 
 
 #[
     OA\SecurityScheme(
-        type: 'oauth2',
-        securityScheme: 'summit_rsvp_oauth2',
-        flows: [
-            new OA\Flow(
-                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
-                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
-                flow: 'authorizationCode',
-                scopes: [
-                    SummitScopes::AddMyRSVP => 'RSVP',
-                    SummitScopes::DeleteMyRSVP => 'UnRSVP',
-                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
-                    SummitScopes::ReadSummitData => 'Read Summit Data',
-                    SummitScopes::WriteSummitData => 'Write Summit Data',
-                ],
-            ),
-        ],
-    )
+    type: 'oauth2',
+    securityScheme: 'summit_rsvp_oauth2',
+    flows: [
+        new OA\Flow(
+            authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+            tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+            flow: 'authorizationCode',
+            scopes: [
+                SummitScopes::AddMyRSVP => 'RSVP',
+                SummitScopes::DeleteMyRSVP => 'UnRSVP',
+                SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                SummitScopes::ReadSummitData => 'Read Summit Data',
+                SummitScopes::WriteSummitData => 'Write Summit Data',
+            ],
+        ),
+    ],
+)
 ]
-class RSVPAuthSchema{}
+class RSVPAuthSchema
+{
+}
 
 
 #[
     OA\SecurityScheme(
-        type: 'oauth2',
-        securityScheme: 'summit_rsvp_invitations_oauth2',
-        flows: [
-            new OA\Flow(
-                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
-                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
-                flow: 'authorizationCode',
-                scopes: [
-                    RSVPInvitationsScopes::Read => 'Read RSVP Invitations Data',
-                    RSVPInvitationsScopes::Write => 'Write RSVP Invitations Data',
-                    RSVPInvitationsScopes::Send => 'Send RSVP Invitations',
-                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
-                    SummitScopes::WriteSummitData => 'Write Summit Data',
-                ],
-            ),
-        ],
-    )
+    type: 'oauth2',
+    securityScheme: 'summit_rsvp_invitations_oauth2',
+    flows: [
+        new OA\Flow(
+            authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+            tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+            flow: 'authorizationCode',
+            scopes: [
+                RSVPInvitationsScopes::Read => 'Read RSVP Invitations Data',
+                RSVPInvitationsScopes::Write => 'Write RSVP Invitations Data',
+                RSVPInvitationsScopes::Send => 'Send RSVP Invitations',
+                SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                SummitScopes::WriteSummitData => 'Write Summit Data',
+            ],
+        ),
+    ],
+)
 ]
-class RSVPInvitationsAuthSchema{}
+class RSVPInvitationsAuthSchema
+{
+}
 
 #[OA\Schema(
     schema: 'Member',
@@ -279,7 +310,9 @@ class RSVPInvitationsAuthSchema{}
         new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
     ]
 )]
-class MemberSchema {}
+class MemberSchema
+{
+}
 
 #[OA\Schema(
     schema: 'RSVP',
@@ -295,7 +328,9 @@ class MemberSchema {}
         new OA\Property(property: 'event', ref: '#/components/schemas/SummitEvent'),
     ]
 )]
-class RSVPSchema {}
+class RSVPSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedRSVPsResponse',
@@ -313,29 +348,36 @@ class RSVPSchema {}
         )
     ]
 )]
-class PaginatedRSVPsResponseSchema {}
+class PaginatedRSVPsResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'RSVPInvitationRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'invitee_ids',    type: 'array',
+        new OA\Property(
+            property: 'invitee_ids',
+            type: 'array',
             items: new OA\Items(type: 'integer', example: 123),
             example: [1, 2, 3]
         ),
     ]
 )]
-class RSVPInvitationRequestSchema {}
+class RSVPInvitationRequestSchema
+{
+}
 
 #[OA\Schema(
     schema: 'RSVPUpdateRequest',
     type: 'object',
     properties: [
-        new OA\Property(property: 'seat_type', type: 'string', example: RSVP::SeatTypeRegular,  enum: RSVP::ValidSeatTypes),
+        new OA\Property(property: 'seat_type', type: 'string', example: RSVP::SeatTypeRegular, enum: RSVP::ValidSeatTypes),
         new OA\Property(property: 'status', type: 'string', example: RSVP::Status_Active, enum: RSVP::AllowedStatus),
     ]
 )]
-class RSVPUpdateRequestSchema_{
+class RSVPUpdateRequestSchema_
+{
 
 }
 
@@ -348,7 +390,9 @@ class RSVPUpdateRequestSchema_{
 
     ]
 )]
-class RSVPAdminAddRequestSchema {}
+class RSVPAdminAddRequestSchema
+{
+}
 
 // Legal Documents
 
@@ -362,7 +406,9 @@ class RSVPAdminAddRequestSchema {}
         new OA\Property(property: 'content', type: 'string', example: 'This privacy policy describes how we handle your data...'),
     ]
 )]
-class LegalDocumentSchema {}
+class LegalDocumentSchema
+{
+}
 
 #[OA\Schema(
     schema: 'ChunkedFileUploadProgressResponse',
@@ -371,7 +417,9 @@ class LegalDocumentSchema {}
         new OA\Property(property: 'done', type: 'number', format: 'float', example: 45.5, description: 'Upload progress percentage (0-100)'),
     ]
 )]
-class ChunkedFileUploadProgressResponseSchema {}
+class ChunkedFileUploadProgressResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'ChunkedFileUploadCompleteResponse',
@@ -382,7 +430,9 @@ class ChunkedFileUploadProgressResponseSchema {}
         new OA\Property(property: 'mime_type', type: 'string', example: 'image-jpeg', description: 'MIME type of the uploaded file (slashes replaced with hyphens)'),
     ]
 )]
-class ChunkedFileUploadCompleteResponseSchema {}
+class ChunkedFileUploadCompleteResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'ChunkedFileUploadRequest',
@@ -415,8 +465,54 @@ class ChunkedFileUploadCompleteResponseSchema {}
         ),
     ]
 )]
-class ChunkedFileUploadRequestSchema {}
+class ChunkedFileUploadRequestSchema
+{
+}
 
+#[OA\Schema(
+    schema: 'Organization',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', format: 'int64', example: 1633024800),
+        new OA\Property(property: 'last_edited', type: 'integer', format: 'int64', example: 1633024800),
+        new OA\Property(property: 'name', type: 'string', example: 'OpenStack Foundation'),
+    ]
+)]
+class OrganizationSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'PaginatedOrganizationsResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Organization')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedOrganizationsResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'OrganizationCreateRequest',
+    required: ['name'],
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', maxLength: 255, example: 'OpenStack Foundation'),
+    ]
+)]
+class OrganizationCreateRequestSchema
+{
+}
 // User Stories
 
 

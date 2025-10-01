@@ -3,17 +3,17 @@
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
-    schema: 'ISOCountryElementSchema',
+    schema: 'ISOLanguageElementSchema',
     type: 'object',
     properties: [
         'iso_code' => new OA\Property(property: 'iso_code', type: 'string', example: 'US'),
         'name' => new OA\Property(property: 'name', type: 'string', example: 'United States')
     ]
 )]
-class ISOCountryElementSchema {};
+class ISOLanguageElementSchema {};
 
 #[OA\Schema(
-    schema: 'PaginatedISOCountryElementResponseSchema',
+    schema: 'PaginatedISOLanguageElementResponseSchema',
     type: 'object',
     allOf: [
         new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
@@ -23,10 +23,10 @@ class ISOCountryElementSchema {};
                 new OA\Property(
                     property: 'data',
                     type: 'array',
-                    items: new OA\Items(ref: "#/components/schemas/ISOCountryElementSchema")
+                    items: new OA\Items(ref: "#/components/schemas/ISOLanguageElementSchema")
                 )
             ]
         )
     ]
 )]
-class PaginatedISOCountryElementResponseSchema {};
+class PaginatedISOLanguageElementResponseSchema {};

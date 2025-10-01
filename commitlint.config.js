@@ -1,6 +1,6 @@
 const WIP_REGEX = /^wip[:]?$/i;
 const RULE_ERROR_LEVEL = 2;
-const HEADER_MAX_LENGTH = 100;
+const HEADER_MAX_LENGTH = 150;
 const SUBJECT_MIN_LENGTH = 5;
 
 module.exports = {

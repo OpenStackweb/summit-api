@@ -350,13 +350,3 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
-
-#[OA\Schema(
-    schema: 'ISOElementSchema',
-    type: 'object',
-    properties: [
-        'iso_code' => new OA\Property(property: 'iso_code', type: 'string', example: 'US'),
-        'name' => new OA\Property(property: 'name', type: 'string', example: 'United States')
-    ]
-)]
-class ISOElementSchema {};

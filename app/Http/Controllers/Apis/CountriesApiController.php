@@ -11,14 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Main\CountryCodes;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
 use OpenApi\Attributes as OA;
 use utils\PagingResponse;
-use Illuminate\Support\Facades\Request;
 
 /**
  * Class CountriesApiController
@@ -26,56 +23,37 @@ use Illuminate\Support\Facades\Request;
  */
 final class CountriesApiController extends JsonController
 {
+    use RequestProcessor;
+
     #[OA\Get(
         path: "/api/public/v1/countries",
         description: "Get all countries with ISO codes",
         summary: 'Get all countries',
         operationId: 'getAllCountries',
-        tags: ['Country'],
-        parameters: [
-            new OA\Parameter(
-                name: 'expand',
-                in: 'query',
-                required: false,
-                description: 'Parameter for expanding related entity properties through serialization. Note: Has no effect on this endpoint since countries are returned as simple arrays, not complex entities. Always returns iso_code and name regardless of this parameter.',
-                schema: new OA\Schema(type: 'string', example: '')
-            ),
-        ],
+        tags: ['Countries'],
         responses: [
             new OA\Response(
                 response: 200,
                 description: 'Success - Returns paginated list of countries',
-                content: new OA\JsonContent(
-                    properties: [
-                        'total' => new OA\Property(property: 'total', type: 'integer', example: 195),
-                        'per_page' => new OA\Property(property: 'per_page', type: 'integer', example: 195),
-                        'current_page' => new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                        'last_page' => new OA\Property(property: 'last_page', type: 'integer', example: 1),
-                        'data' => new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(ref: "#/components/schemas/ISOElementSchema")
-                        )
-                    ],
-                    type: 'object'
-                )
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedISOCountryElementResponseSchema'),
             ),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function getAll(){
-        try {
+    public function getAll()
+    {
+        return $this->processRequest(function () {
             $countries = [];
-            foreach(CountryCodes::$iso_3166_countryCodes as $iso_code => $name){
+            foreach (CountryCodes::$iso_3166_countryCodes as $iso_code => $name) {
                 $countries[] = [
                     'iso_code' => $iso_code,
                     'name' => $name,
                 ];
             }
 
-            $response    = new PagingResponse
+            $response = new PagingResponse
             (
                 count($countries),
                 count($countries),
@@ -84,20 +62,8 @@ final class CountriesApiController extends JsonController
                 $countries
             );
 
-            return $this->ok($response->toArray($expand = Request::input('expand','')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok($response->toArray());
+        });
+
     }
 }

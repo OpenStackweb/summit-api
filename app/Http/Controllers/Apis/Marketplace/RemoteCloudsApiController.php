@@ -36,7 +36,7 @@ final class RemoteCloudsApiController extends AbstractCompanyServiceApiControlle
         description: "Get all marketplace remotely managed private cloud services (OpenStack implementations)",
         summary: 'Get all remotely managed private clouds',
         operationId: 'getAllRemotelyManagedPrivateClouds',
-        tags: ['Remote Clouds'],
+        tags: ['Remote Clouds', 'Marketplace'],
         parameters: [
             new OA\Parameter(
                 name: 'filter[]',

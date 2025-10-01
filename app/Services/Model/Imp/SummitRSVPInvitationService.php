@@ -287,8 +287,12 @@ class SummitRSVPInvitationService
             $invitee = $invitation->getInvitee();
             Log::debug(sprintf("got invitation %s for email %s", $invitation->getId(), $invitee->getEmail()));
 
-            if (!$invitation->isPending()) {
+            if ($invitation->isAccepted()) {
                 throw new ValidationException("This Invitation is already accepted.");
+            }
+
+            if ($invitation->isRejected()) {
+                throw new ValidationException("This Invitation is already rejected.");
             }
 
             return $invitation;
@@ -316,8 +320,12 @@ class SummitRSVPInvitationService
             if (!$invitee->hasMember())
                 throw new EntityNotFoundException("Attendee has not Member associated with it");
 
-            if (!$invitation->isPending()) {
+            if ($invitation->isAccepted()) {
                 throw new ValidationException("This Invitation is already accepted.");
+            }
+
+            if ($invitation->isRejected()) {
+                throw new ValidationException("This Invitation is already rejected.");
             }
 
             if (!$invitee->hasTicketsPaidTickets())
@@ -360,8 +368,12 @@ class SummitRSVPInvitationService
             if (!$invitee->hasMember())
                 throw new EntityNotFoundException("Attendee has not Member associated with it");
 
-            if (!$invitation->isPending()) {
+            if ($invitation->isAccepted()) {
                 throw new ValidationException("This Invitation is already accepted.");
+            }
+
+            if ($invitation->isRejected()) {
+                throw new ValidationException("This Invitation is already rejected.");
             }
 
             $invitation->markAsRejected();

@@ -58,27 +58,7 @@ final class LanguagesApiController extends JsonController
             new OA\Response(
                 response: 200,
                 description: 'Success - Returns paginated list of languages',
-                content: new OA\JsonContent(
-                    properties: [
-                        'total' => new OA\Property(property: 'total', type: 'integer', example: 50),
-                        'per_page' => new OA\Property(property: 'per_page', type: 'integer', example: 50),
-                        'current_page' => new OA\Property(property: 'current_page', type: 'integer', example: 1),
-                        'last_page' => new OA\Property(property: 'last_page', type: 'integer', example: 1),
-                        'data' => new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(
-                                properties: [
-                                    'id' => new OA\Property(property: 'id', type: 'integer', example: 1),
-                                    'name' => new OA\Property(property: 'name', type: 'string', example: 'English'),
-                                    'iso_code' => new OA\Property(property: 'iso_code', type: 'string', example: 'en')
-                                ],
-                                type: 'object'
-                            )
-                        )
-                    ],
-                    type: 'object'
-                )
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedISOElementResponseSchema'),
             ),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),

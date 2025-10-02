@@ -13,7 +13,9 @@
  **/
 
 use App\ModelSerializers\SerializerUtils;
+use http\Env\Response;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use libs\utils\PaginationValidationRules;
 use models\exceptions\ValidationException;
@@ -119,7 +121,7 @@ trait ParametrizedGetAll
                     $order = call_user_func($defaultOrderRules);
                 }
             }
-
+            $dbStart = microtime(true);
             if (!is_null($queryCallable))
                 $data = call_user_func($queryCallable,
                     $page,
@@ -136,21 +138,26 @@ trait ParametrizedGetAll
                     $order,
                     $applyExtraFilters
                 );
-
+            $dbEnd = (microtime(true)-$dbStart)*1000;
+            $transformStart = microtime(true);
             $serializerParams['filter'] = $filter;
-
-            return $this->ok
+            $res = $data->toArray
             (
-                $data->toArray
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    $serializerParams,
-                    $serializerType  && is_callable($serializerType) ? call_user_func($serializerType) : SerializerRegistry::SerializerType_Public
-                )
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations(),
+                $serializerParams,
+                $serializerType  && is_callable($serializerType) ? call_user_func($serializerType) : SerializerRegistry::SerializerType_Public
             );
-
+            $transformEnd = (microtime(true)-$transformStart)*1000;
+            $encodeStart = microtime(true);
+            $json_response = $this->ok($res);
+            $encodeEnd = (microtime(true)-$encodeStart)*1000;
+            Session::put("db_time", $dbEnd );
+            Session::put("transform_time", $transformEnd );
+            Session::put("encode_time", $encodeEnd );
+            Session::save();
+            return $json_response;
         });
     }
 

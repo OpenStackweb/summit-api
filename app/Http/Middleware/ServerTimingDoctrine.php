@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Doctrine\ORM\EntityManagerInterface;
+use Illuminate\Support\Facades\Session;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\SilverstripeBaseModel;
 use Psr\Log\LoggerInterface;
@@ -87,16 +88,15 @@ class ServerTimingDoctrine
             $response = $next($request);
         }
 
-
         $totalMs = (microtime(true) - $start) * 1000.0;
         $bootMs  = defined('LARAVEL_START') ? max(($start - LARAVEL_START) * 1000.0, 0.0) : 0.0;
         $appMs   = max($totalMs - $dbMs, 0.0);
-
-        // Al setear el header:
-        $response->headers->set(
-            'Server-Timing',
-            sprintf('boot;dur=%.1f, db;dur=%.1f, app;dur=%.1f, total;dur=%.1f', $bootMs, $dbMs, $appMs, $totalMs)
-        );
+        $dbMs = Session::has("db_time") ? (float) Session::get("db_time") : $dbMs;
+        $transformMs = Session::has("transform_time") ? (float) Session::get("transform_time") : 0.0;
+        $encodeMs = Session::has("encode_time") ? (float) Session::get("encode_time") : 0.0;
+        $response->headers->set('Server-Timing',
+            sprintf('boot;dur=%.1f,db;dur=%.1f,transform;dur=%.1f,encode;dur=%.1f,app;dur=%.1f,total;dur=%.1f',
+                $bootMs,$dbMs,$transformMs,$encodeMs,$appMs,$totalMs));
         $response->headers->set('Timing-Allow-Origin', '*');
 
         return $response;

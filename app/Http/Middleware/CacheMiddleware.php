@@ -100,6 +100,11 @@ final class CacheMiddleware
         $response->setMaxAge(0);
         $response->headers->addCacheControlDirective('must-revalidate', true);
         $response->headers->addCacheControlDirective('proxy-revalidate', true);
+        Log::debug( "CacheMiddleware: returning response", [
+            'ip' => $ip,
+            'agent' => $agent,
+            'key' => $key,
+        ]);
 
         return $response;
     }

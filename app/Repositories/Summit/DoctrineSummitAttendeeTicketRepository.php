@@ -53,7 +53,7 @@ final class DoctrineSummitAttendeeTicketRepository
     /** @var array<string, array{0:string,1:'join'|'leftJoin',2:array<int,string>}> */
     private array $joinCatalog = [
         'o'      => ['e.order',               'join',     []],
-        's'      => ['o.summit',              'join',     ['o']],
+        's'      => ['e.summit',              'join',     []],
         'ord_m'  => ['o.owner',               'leftJoin', ['o']],
         'a'      => ['e.owner',               'leftJoin', []],
         'a_c'    => ['a.company',             'leftJoin', ['a']],

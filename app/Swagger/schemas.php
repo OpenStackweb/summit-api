@@ -349,3 +349,61 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+#[OA\Schema(
+    schema: 'OpenStackRelease',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', example: 'Yoga'),
+        new OA\Property(property: 'release_number', type: 'string', example: '2023.1'),
+        new OA\Property(property: 'release_date', type: 'integer', example: 1679875200),
+        new OA\Property(property: 'status', type: 'string', example: 'Current'),
+        new OA\Property(
+            property: 'components',
+            type: 'array',
+            items: new OA\Items(type: 'integer'),
+            nullable: true
+        ),
+    ]
+)]
+class OpenStackReleaseSchema {}
+
+#[OA\Schema(
+    schema: 'OpenStackComponent',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'name', type: 'string', example: 'Nova'),
+        new OA\Property(property: 'code_name', type: 'string', example: 'nova'),
+        new OA\Property(property: 'description', type: 'string', example: 'Compute service'),
+    ]
+)]
+class OpenStackComponentSchema {}
+
+#[OA\Schema(
+    schema: 'OpenStackMilestone',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'name', type: 'string', example: 'M1'),
+        new OA\Property(property: 'due_date', type: 'integer', example: 1679875200),
+        new OA\Property(property: 'description', type: 'string', example: 'First milestone'),
+    ]
+)]
+class OpenStackMilestoneSchema {}
+
+#[
+    OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'releases_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [],
+            ),
+        ],
+    )
+]
+class ReleasesAuthSchema{}

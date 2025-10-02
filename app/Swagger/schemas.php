@@ -349,3 +349,21 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+#[OA\Schema(
+    schema: "PaginatedTimezonesResponse",
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: "object",
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(type: "string", example: "America/Argentina/Buenos_Aires")
+                ),
+            ]
+        )
+    ]
+)]
+class PaginatedTimezonesResponseSchema {}

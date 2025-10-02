@@ -89,7 +89,12 @@ Route::group(['prefix' => 'speakers'], function () {
 
 // summits
 Route::group(['prefix' => 'summits'], function () {
-    Route::get('', ['middleware' => 'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 600), 'uses' => 'OAuth2SummitApiController@getSummits']);
+    Route::get('', [
+        'middleware' =>[
+            'server.timing.doctrine',
+            'cache:' . Config::get('cache_api_response.get_summit_response_lifetime', 1200)
+        ],
+        'uses' => 'OAuth2SummitApiController@getSummits']);
 
     Route::group(['prefix' => 'all'], function () {
 

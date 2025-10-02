@@ -91,6 +91,7 @@ class Kernel extends HttpKernel
         'cache'            => \App\Http\Middleware\CacheMiddleware::class,
         'ssl'              => \App\Http\Middleware\SSLMiddleware::class,
         'auth.user'        => \App\Http\Middleware\UserAuthEndpoint::class,
+        'server.timing.doctrine' => \App\Http\Middleware\ServerTimingDoctrine::class,
     ];
 
 }

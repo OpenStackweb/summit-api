@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use utils\PagingResponse;
+use OpenApi\Attributes as OA;
+use Illuminate\Http\Response;
+
 /**
  * Class TimezonesApiController
  * @package App\Http\Controllers
@@ -26,6 +29,45 @@ final class TimezonesApiController extends JsonController
     /**
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/timezones",
+        summary: "Get all available timezones",
+        description: "Returns a paginated list of all supported timezone identifiers.",
+        operationId: "getAllTimezones",
+        tags: ["Timezones"],
+        parameters: [
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related resources (not used here, for compatibility)",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Paginated list of timezone identifiers",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedTimezonesResponse")
+            ),
+            new OA\Response(
+                response: Response::HTTP_UNAUTHORIZED,
+                description: "Unauthorized"
+            ),
+            new OA\Response(
+                response: Response::HTTP_NOT_FOUND,
+                description: "Not found"
+            ),
+            new OA\Response(
+                response: Response::HTTP_INTERNAL_SERVER_ERROR,
+                description: "Server Error"
+            ),
+            new OA\Response(
+                response: Response::HTTP_PRECONDITION_FAILED,
+                description: "Validation Error"
+            ),
+        ]
+    )]
     public function getAll(){
         try {
             $timezones   = \DateTimeZone::listIdentifiers();

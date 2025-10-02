@@ -58,6 +58,7 @@ final class CacheMiddleware
                 'tag' => $regionTag,
                 'ip' => $ip,
                 'agent' => $agent,
+                'key' => $key,
             ]);
 
             $data = Cache::tags($regionTag)
@@ -77,6 +78,7 @@ final class CacheMiddleware
             Log::debug($wasHit ? "CacheMiddleware: cache HIT" : "CacheMiddleware: cache MISS", [
                 'ip' => $ip,
                 'agent' => $agent,
+                'key' => $key,
             ]);
 
             $data = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key, &$status, $ip, $agent) {

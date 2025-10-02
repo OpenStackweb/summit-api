@@ -12,10 +12,12 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitMediaFileTypeRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitMediaFileTypeService;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 /**
  * Class OAuth2SummitMediaFileTypeApiController
  * @package App\Http\Controllers
@@ -55,6 +57,181 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         $this->repository = $repository;
     }
 
+    // OpenAPI Documentation
+
+    #[OA\Get(
+        path: '/api/v1/summit-media-file-types',
+        summary: 'Get all summit media file types',
+        description: 'Retrieves a paginated list of summit media file types. Media file types define categories of files that can be uploaded to summits (e.g., presentations, videos, documents) along with their allowed file extensions.',
+        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Media File Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions. Format: field<op>value. Available field: name (=@, ==). Operators: == (equals), =@ (starts with)',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'name@@presentation')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s). Available fields: name, id. Use "-" prefix for descending order.',
+                schema: new OA\Schema(type: 'string', example: 'name')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Media file types retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitMediaFileTypesResponse')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
+
+    #[OA\Get(
+        path: '/api/v1/summit-media-file-types/{id}',
+        summary: 'Get a summit media file type by ID',
+        description: 'Retrieves detailed information about a specific summit media file type.',
+        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Media File Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit Media File Type ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Media file type retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileType')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
+
+    #[OA\Post(
+        path: '/api/v1/summit-media-file-types',
+        summary: 'Create a new summit media file type',
+        description: 'Creates a new summit media file type with specified name, description, and allowed file extensions.',
+        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        tags: ['Summit Media File Types'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileTypeCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Media file type created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileType')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 422, ref: '#/components/responses/422'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
+
+    #[OA\Put(
+        path: '/api/v1/summit-media-file-types/{id}',
+        summary: 'Update a summit media file type',
+        description: 'Updates an existing summit media file type.',
+        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        tags: ['Summit Media File Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit Media File Type ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileTypeUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Media file type updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileType')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 422, ref: '#/components/responses/422'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
+
+    #[OA\Delete(
+        path: '/api/v1/summit-media-file-types/{id}',
+        summary: 'Delete a summit media file type',
+        description: 'Deletes an existing summit media file type. System-defined types cannot be deleted.',
+        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        tags: ['Summit Media File Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit Media File Type ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Media file type deleted successfully'
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
 
     /**
      * @inheritDoc

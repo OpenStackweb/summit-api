@@ -13,6 +13,7 @@
  **/
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitPresentationActionService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -109,12 +110,11 @@ final class OAuth2SummitPresentationActionApiController
                 description: 'Presentation action marked as completed successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PresentationAction')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403', description: 'Forbidden - User must be a track chair or track chair admin'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - User must be a track chair or track chair admin"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -204,12 +204,11 @@ final class OAuth2SummitPresentationActionApiController
                 description: 'Presentation action marked as incomplete successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PresentationAction')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403', description: 'Forbidden - User must be a track chair or track chair admin'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - User must be a track chair or track chair admin"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 

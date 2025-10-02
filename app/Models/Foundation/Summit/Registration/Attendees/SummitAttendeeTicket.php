@@ -39,6 +39,8 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     implements IQREntity
 {
 
+    use SummitOwned;
+
     use FinancialTrait;
 
     /**
@@ -360,6 +362,7 @@ class SummitAttendeeTicket extends SilverstripeBaseModel
     public function setOrder(SummitOrder $order): void
     {
         $this->order = $order;
+        $this->setSummit($order->getSummit());
     }
 
     /**

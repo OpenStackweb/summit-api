@@ -37,6 +37,12 @@ final class CacheMiddleware
         $key            = $this->buildKey($request);
         $regionTag      = null;
 
+        // --- add per-request log context (agent, ip, etc.) ---
+        $agent  = $request->userAgent() ?? 'unknown';
+        // optional: avoid huge headers flooding logs
+        $agent  = mb_substr($agent, 0, 300);
+        $ip     = $request->ip();
+
         // If we have a region (e.g. summits/69 → CacheRegionEvents:69):
         if ($cache_region && $param_id) {
             $id = $request->route($param_id);
@@ -46,10 +52,17 @@ final class CacheMiddleware
         }
         $status = 200;
         if ($regionTag) {
-            Log::debug("CacheMiddleware: using region tag {$regionTag}");
+            Log::debug("CacheMiddleware: using region tag {$regionTag} ip {$ip} agent {$agent}");
+            $wasHit = Cache::tags($regionTag)->has($key);
+            Log::debug($wasHit ? "CacheMiddleware: cache HIT (tagged)" : "CacheMiddleware: cache MISS (tagged)", [
+                'tag' => $regionTag,
+                'ip' => $ip,
+                'agent' => $agent,
+                'key' => $key,
+            ]);
+
             $data = Cache::tags($regionTag)
-                ->remember($key, $cache_lifetime, function() use ($next, $request, $regionTag, $key, $cache_lifetime, &$status) {
-                    Log::debug("CacheMiddleware: cache miss for {$key} in tag {$regionTag}");
+                ->remember($key, $cache_lifetime, function() use ($next, $request, $regionTag, $key, $cache_lifetime, &$status,$ip, $agent) {
                     $resp = $next($request);
                     if ($resp instanceof JsonResponse) {
                         $status = $resp->getStatusCode();
@@ -60,8 +73,15 @@ final class CacheMiddleware
                     return Cache::get($key);
                 });
         } else {
-            $data = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key, &$status) {
-                Log::debug("CacheMiddleware: cache miss for {$key}");
+            $wasHit = Cache::has($key);
+
+            Log::debug($wasHit ? "CacheMiddleware: cache HIT" : "CacheMiddleware: cache MISS", [
+                'ip' => $ip,
+                'agent' => $agent,
+                'key' => $key,
+            ]);
+
+            $data = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key, &$status, $ip, $agent) {
                 $resp = $next($request);
                 if ($resp instanceof JsonResponse) {
                     $status = $resp->getStatusCode();
@@ -80,6 +100,11 @@ final class CacheMiddleware
         $response->setMaxAge(0);
         $response->headers->addCacheControlDirective('must-revalidate', true);
         $response->headers->addCacheControlDirective('proxy-revalidate', true);
+        Log::debug( "CacheMiddleware: returning response", [
+            'ip' => $ip,
+            'agent' => $agent,
+            'key' => $key,
+        ]);
 
         return $response;
     }

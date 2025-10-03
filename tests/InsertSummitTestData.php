@@ -487,6 +487,7 @@ trait InsertSummitTestData
                 $reminder_set_date->sub(new \DateInterval("P20D"));
                 $order->setLastReminderEmailSentDate($reminder_set_date);
                 $order->setOwner(self::$defaultMember);
+                $order->setSummit(self::$summit);
 
                 $ticket = new SummitAttendeeTicket();
                 $ticket->setTicketType(self::$default_ticket_type);

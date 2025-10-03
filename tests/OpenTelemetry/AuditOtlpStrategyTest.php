@@ -167,7 +167,7 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
         ];
     }
 
-    private function createSummitEventChangeSet($summitEvent): array
+    private function createSummitEventChangeSet(object $summitEvent): array
     {
         return [
             'title' => [$summitEvent->getTitle(), $summitEvent->getTitle() . ' [TEST]']

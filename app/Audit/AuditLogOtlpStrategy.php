@@ -154,11 +154,17 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         $data = ['class' => get_class($entity)];
         
         if (method_exists($entity, 'getId')) {
-            $data['id'] = $entity->getId();
+            $id = $entity->getId();
+            if ($id !== null) {
+                $data['id'] = $id;
+            }
         }
         
         if (method_exists($entity, 'getTitle')) {
-            $data['title'] = $entity->getTitle();
+            $title = $entity->getTitle();
+            if ($title !== null) {
+                $data['title'] = $title;
+            }
         }
         
         if (method_exists($entity, 'getName')) {
@@ -166,7 +172,10 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         }
 
         if (method_exists($entity, 'getSlug')) {
-            $data['slug'] = $entity->getSlug();
+            $slug = $entity->getSlug();
+            if ($slug !== null) {
+                $data['slug'] = $slug;
+            }
         }
 
         return $data;

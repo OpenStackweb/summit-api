@@ -79,15 +79,11 @@ class AuditEventListener
                 Log::warning('Failed to create OTLP audit strategy, falling back to database', [
                     'error' => $e->getMessage()
                 ]);
-                // Fall through to database strategy
             }
-        } else {
-            return new AuditLogStrategy($em);
         }
+        
+        // Use database strategy (either as default or fallback)
+        return new AuditLogStrategy($em);
 
-
-        Log::warning('No audit strategy enabled');
-
-        return null;
     }
 }

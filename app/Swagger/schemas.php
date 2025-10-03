@@ -349,3 +349,26 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+#[OA\Schema(
+    schema: 'OAuth2Endpoint',
+    type: 'object',
+    description: 'OAuth2 endpoint definition',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'name', type: 'string', example: 'getSummit'),
+        new OA\Property(property: 'description', type: 'string', example: 'Returns summit data'),
+    ]
+)]
+class OAuth2EndpointSchema {}
+
+#[OA\Schema(
+    schema: 'PublicEndpoint',
+    type: 'object',
+    description: 'Public endpoint definition',
+    properties: [
+        new OA\Property(property: 'route', type: 'string', example: 'api/public/v1/example'),
+        new OA\Property(property: 'http_methods', type: 'array', items: new OA\Items(type: 'string'), example: ['GET', 'POST']),
+    ]
+)]
+class PublicEndpointSchema {}

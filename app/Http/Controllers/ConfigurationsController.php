@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use Exception;
+use OpenApi\Attributes as OA;
 /**
  * Class ConfigurationsController
  * @package App\Http\Controllers
@@ -39,6 +40,39 @@ final class ConfigurationsController extends JsonController
         $this->repository = $repository;
     }
 
+    #[OA\Get(
+        path: "/api/public/v1/configurations/endpoints-definitions",
+        summary: "Get OAuth2 and public endpoints definitions",
+        description: "Returns the list of OAuth2 endpoints and public endpoints available in the API.",
+        operationId: "getEndpointsDefinitions",
+        tags: ["Configurations"],
+        security: [],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "List of OAuth2 and public endpoints",
+                content: new OA\JsonContent(
+                    type: "object",
+                    properties: [
+                        new OA\Property(
+                            property: "oauth2_endpoints",
+                            type: "array",
+                            items: new OA\Items(ref: "#/components/schemas/OAuth2Endpoint")
+                        ),
+                        new OA\Property(
+                            property: "public_endpoints",
+                            type: "array",
+                            items: new OA\Items(ref: "#/components/schemas/PublicEndpoint")
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                description: "Internal server error"
+            )
+        ]
+    )]
     /**
      * @return \Illuminate\Http\JsonResponse|mixed
      */

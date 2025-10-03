@@ -40,21 +40,19 @@ class AuditEventListener
 
         try {
             foreach ($uow->getScheduledEntityInsertions() as $entity) {
-
-                $strategy->audit($entity, [], $strategy::EVENT_ENTITY_CREATION);
+                $strategy->audit($entity, [], AuditLogOtlpStrategy::EVENT_ENTITY_CREATION);
             }
 
             foreach ($uow->getScheduledEntityUpdates() as $entity) {
-                $change_set = $uow->getEntityChangeSet($entity);
-                $strategy->audit($entity, $change_set, $strategy::EVENT_ENTITY_UPDATE);
+                $strategy->audit($entity, $uow->getEntityChangeSet($entity), AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE);
             }
 
             foreach ($uow->getScheduledEntityDeletions() as $entity) {
-                $strategy->audit($entity, [], $strategy::EVENT_ENTITY_DELETION);
+                $strategy->audit($entity, [], AuditLogOtlpStrategy::EVENT_ENTITY_DELETION);
             }
 
             foreach ($uow->getScheduledCollectionUpdates() as $col) {
-                $strategy->audit($col, [], $strategy::EVENT_COLLECTION_UPDATE);
+                $strategy->audit($col, [], AuditLogOtlpStrategy::EVENT_COLLECTION_UPDATE);
             }
         } catch (\Exception $e) {
             Log::error('Audit event listener failed', [

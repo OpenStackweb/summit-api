@@ -26,6 +26,18 @@ class AuditLogOtlpStrategy implements IAuditStrategy
     public const EVENT_ENTITY_DELETION = 'event_entity_deletion';
     public const EVENT_ENTITY_UPDATE = 'event_entity_update';
 
+    public const ACTION_CREATE = 'create';
+    public const ACTION_UPDATE = 'update';
+    public const ACTION_DELETE = 'delete';
+    public const ACTION_COLLECTION_UPDATE = 'collection_update';
+    public const ACTION_UNKNOWN = 'unknown';
+
+    public const LOG_MESSAGE_CREATED = 'audit.entity.created';
+    public const LOG_MESSAGE_UPDATED = 'audit.entity.updated';
+    public const LOG_MESSAGE_DELETED = 'audit.entity.deleted';
+    public const LOG_MESSAGE_COLLECTION_UPDATED = 'audit.collection.updated';
+    public const LOG_MESSAGE_CHANGED = 'audit.entity.changed';
+
     private bool $enabled;
     private string $elasticIndex;
 
@@ -43,7 +55,9 @@ class AuditLogOtlpStrategy implements IAuditStrategy
 
         try {
             $entity = $this->resolveAuditableEntity($subject);
-            if (is_null($entity)) return;
+            if (is_null($entity)) {
+                return;
+            }
 
             $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
             $user_id = $resource_server_ctx->getCurrentUserId();
@@ -129,12 +143,6 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         ];
 
         switch ($event_type) {
-            case self::EVENT_ENTITY_CREATION:
-                $auditData['audit.created_data'] = $this->getEntityData($entity);
-                break;
-            case self::EVENT_ENTITY_DELETION:
-                $auditData['audit.deleted_data'] = $this->getEntityData($subject);
-                break;
             case self::EVENT_COLLECTION_UPDATE:
                 if ($subject instanceof PersistentCollection) {
                     $auditData['audit.collection_type'] = $this->getCollectionType($subject);
@@ -145,41 +153,6 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         }
 
         return $auditData;
-    }
-
-    private function getEntityData($entity): array
-    {
-        $data = ['class' => get_class($entity)];
-        
-        if (method_exists($entity, 'getId')) {
-            $id = $entity->getId();
-            if ($id !== null) {
-                $data['id'] = $id;
-            }
-        }
-        
-        if (method_exists($entity, 'getTitle')) {
-            $title = $entity->getTitle();
-            if ($title !== null) {
-                $data['title'] = $title;
-            }
-        }
-        
-        if (method_exists($entity, 'getName')) {
-            $name = $entity->getName();
-            if ($name !== null) {
-                $data['name'] = $name;
-            }
-        }
-
-        if (method_exists($entity, 'getSlug')) {
-            $slug = $entity->getSlug();
-            if ($slug !== null) {
-                $data['slug'] = $slug;
-            }
-        }
-
-        return $data;
     }
 
     private function getCollectionType(PersistentCollection $collection): string
@@ -204,22 +177,22 @@ class AuditLogOtlpStrategy implements IAuditStrategy
     private function mapEventTypeToAction(string $event_type): string
     {
         return match($event_type) {
-            self::EVENT_ENTITY_CREATION => 'create',
-            self::EVENT_ENTITY_UPDATE => 'update',
-            self::EVENT_ENTITY_DELETION => 'delete',
-            self::EVENT_COLLECTION_UPDATE => 'collection_update',
-            default => 'unknown'
+            self::EVENT_ENTITY_CREATION => self::ACTION_CREATE,
+            self::EVENT_ENTITY_UPDATE => self::ACTION_UPDATE,
+            self::EVENT_ENTITY_DELETION => self::ACTION_DELETE,
+            self::EVENT_COLLECTION_UPDATE => self::ACTION_COLLECTION_UPDATE,
+            default => self::ACTION_UNKNOWN
         };
     }
 
     private function getLogMessage(string $event_type): string
     {
         return match($event_type) {
-            self::EVENT_ENTITY_CREATION => 'audit.entity.created',
-            self::EVENT_ENTITY_UPDATE => 'audit.entity.updated',
-            self::EVENT_ENTITY_DELETION => 'audit.entity.deleted',
-            self::EVENT_COLLECTION_UPDATE => 'audit.collection.updated',
-            default => 'audit.entity.changed'
+            self::EVENT_ENTITY_CREATION => self::LOG_MESSAGE_CREATED,
+            self::EVENT_ENTITY_UPDATE => self::LOG_MESSAGE_UPDATED,
+            self::EVENT_ENTITY_DELETION => self::LOG_MESSAGE_DELETED,
+            self::EVENT_COLLECTION_UPDATE => self::LOG_MESSAGE_COLLECTION_UPDATED,
+            default => self::LOG_MESSAGE_CHANGED
         };
     }
 

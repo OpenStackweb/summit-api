@@ -130,7 +130,7 @@ service:
     logs:
       receivers: [otlp]
       processors: [memory_limiter, resource, attributes, batch]
-      exporters: [debug, file]
+      exporters: [debug, file, elasticsearch]
 
   # Telemetry configuration for the collector itself
   telemetry:

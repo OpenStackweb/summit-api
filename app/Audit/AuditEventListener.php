@@ -15,36 +15,72 @@ namespace App\Audit;
  * limitations under the License.
  **/
 
+use App\Audit\AuditLogOtlpStrategy;
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class AuditEventListener
  * @package App\Audit
  */
-class AuditEventListener {
+class AuditEventListener
+{
 
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
         $em = $eventArgs->getObjectManager();
         $uow = $em->getUnitOfWork();
+        // Strategy selection based on environment configuration
+        $strategy = $this->getAuditStrategy($em);
 
-        $strategy = new AuditLogStrategy($em);
-
-        foreach ($uow->getScheduledEntityInsertions() as $entity) {
-            $strategy->audit($entity, null, $strategy::EVENT_ENTITY_CREATION);
+        if (!$strategy) {
+            return; // No audit strategy enabled
         }
 
-        foreach ($uow->getScheduledEntityUpdates() as $entity) {
-            $change_set = $uow->getEntityChangeSet($entity);
-            $strategy->audit($entity, $change_set, $strategy::EVENT_ENTITY_UPDATE);
-        }
+        try {
+            foreach ($uow->getScheduledEntityInsertions() as $entity) {
+                $strategy->audit($entity, [], AuditLogOtlpStrategy::EVENT_ENTITY_CREATION);
+            }
 
-        foreach ($uow->getScheduledEntityDeletions() as $entity) {
-            $strategy->audit($entity, null, $strategy::EVENT_ENTITY_DELETION);
-        }
+            foreach ($uow->getScheduledEntityUpdates() as $entity) {
+                $strategy->audit($entity, $uow->getEntityChangeSet($entity), AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE);
+            }
 
-        foreach ($uow->getScheduledCollectionUpdates() as $col) {
-            $strategy->audit($col, null, $strategy::EVENT_COLLECTION_UPDATE);
+            foreach ($uow->getScheduledEntityDeletions() as $entity) {
+                $strategy->audit($entity, [], AuditLogOtlpStrategy::EVENT_ENTITY_DELETION);
+            }
+
+            foreach ($uow->getScheduledCollectionUpdates() as $col) {
+                $strategy->audit($col, [], AuditLogOtlpStrategy::EVENT_COLLECTION_UPDATE);
+            }
+        } catch (\Exception $e) {
+            Log::error('Audit event listener failed', [
+                'error' => $e->getMessage(),
+                'strategy_class' => get_class($strategy),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
+    }
+
+    /**
+     * Get the appropriate audit strategy based on environment configuration
+     */
+    private function getAuditStrategy($em)
+    {
+        // Check if OTLP audit is enabled
+        if (config('opentelemetry.enabled', false)) {
+            try {
+                return App::make(AuditLogOtlpStrategy::class);
+            } catch (\Exception $e) {
+                Log::warning('Failed to create OTLP audit strategy, falling back to database', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        // Use database strategy (either as default or fallback)
+        return new AuditLogStrategy($em);
+
     }
 }

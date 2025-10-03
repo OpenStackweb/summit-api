@@ -115,11 +115,18 @@ final class CacheMiddleware
     private function buildKey($request): string
     {
         $path   = $request->getPathInfo();
+        $csvKeys = ['fields','expand','relations'];
+
         $params = collect($request->query())
             ->except(['access_token','token_type','q','t','evict_cache'])
             ->sortKeys()
-            ->map(function($v) {
-                return is_array($v) ? implode(',', $v) : $v;
+            ->map(function($v, $k) use ($csvKeys) {
+                $str = is_array($v) ? implode(',', $v) : (string)$v;
+                if (in_array($k, $csvKeys, true)) {
+                    // "a, b ,  c" -> "a,b,c"
+                    $str = preg_replace('/\s*,\s*/', ',', trim($str));
+                }
+                return $str;
             })
             ->all();
 

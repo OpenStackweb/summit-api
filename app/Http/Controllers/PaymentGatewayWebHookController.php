@@ -24,6 +24,8 @@ use models\summit\Summit;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use Exception;
+use OpenApi\Attributes as OA;
+
 /**
  * Class PaymentGatewayWebHookController
  * @package App\Http\Controllers
@@ -96,6 +98,45 @@ final class PaymentGatewayWebHookController extends JsonController
      * @param LaravelRequest $request
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/public/v1/summits/all/payments/{application_type}/confirm",
+        summary: "Generic payment gateway webhook confirmation",
+        description: "Handles payment gateway webhook callbacks for a given application type.",
+        operationId: "genericConfirm",
+        tags: ["PaymentGatewayHook"],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: "application_type",
+                in: "path",
+                required: true,
+                description: "Application type (e.g., registration, bookable-rooms)",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent()
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Payment processed successfully"
+            ),
+            new OA\Response(
+                response: 208,
+                description: "Already reported",
+            ),
+            new OA\Response(
+                response: 400,
+                description: "Payload error",
+            ),
+            new OA\Response(
+                response: 412,
+                description: "Precondition failed",
+            )
+        ]
+    )]
     public function genericConfirm($application_type, LaravelRequest $request){
         try {
 
@@ -141,6 +182,52 @@ final class PaymentGatewayWebHookController extends JsonController
      * @param LaravelRequest $request
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/public/v1/summits/{summit_id}/payments/{application_type}/confirm",
+        summary: "Summit payment gateway webhook confirmation",
+        description: "Handles payment gateway webhook callbacks for a given summit and application type.",
+        operationId: "confirm",
+        tags: ["PaymentGatewayHook"],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: "summit_id",
+                in: "path",
+                required: true,
+                description: "Summit identifier",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "application_type",
+                in: "path",
+                required: true,
+                description: "Application type (e.g., registration, bookable-rooms)",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent()
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Payment processed successfully"
+            ),
+            new OA\Response(
+                response: 208,
+                description: "Already reported",
+            ),
+            new OA\Response(
+                response: 400,
+                description: "Payload error",
+            ),
+            new OA\Response(
+                response: 412,
+                description: "Precondition failed",
+            )
+        ]
+    )]
     public function confirm($summit_id, $application_type, LaravelRequest $request){
 
         try {

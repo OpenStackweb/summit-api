@@ -70,9 +70,8 @@ class AuditEventListener
      */
     private function getAuditStrategy($em)
     {
-
         // Check if OTLP audit is enabled
-        if (env('OTEL_SERVICE_ENABLED', false)) {
+        if (config('opentelemetry.enabled', false)) {
             try {
                 return App::make(AuditLogOtlpStrategy::class);
             } catch (\Exception $e) {

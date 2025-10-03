@@ -31,10 +31,8 @@ class AuditLogOtlpStrategy implements IAuditStrategy
 
     public function __construct()
     {
-
-        $this->enabled = env('OTEL_SERVICE_ENABLED', false);
-
-        $this->elasticIndex = env('OTEL_AUDIT_ELASTICSEARCH_INDEX', 'logs-audit');
+        $this->enabled = config('opentelemetry.enabled', false);
+        $this->elasticIndex = config('opentelemetry.logs.elasticsearch_index', 'logs-audit');
     }
 
     public function audit($subject, array $change_set, string $event_type): void
@@ -168,7 +166,10 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         }
         
         if (method_exists($entity, 'getName')) {
-            $data['name'] = $entity->getName();
+            $name = $entity->getName();
+            if ($name !== null) {
+                $data['name'] = $name;
+            }
         }
 
         if (method_exists($entity, 'getSlug')) {

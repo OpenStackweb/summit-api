@@ -15,6 +15,7 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\MultipartFormDataCleaner;
+use App\libs\Utils\Doctrine\ReplicaAwareTrait;
 use App\ModelSerializers\SerializerUtils;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
@@ -56,6 +57,8 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     use ValidateEventUri;
 
     use ParametrizedGetAll;
+
+    use ReplicaAwareTrait;
 
     /**
      * @var ISummitService
@@ -135,21 +138,25 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getEvents($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
-            $strategy = new RetrieveAllSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
-            $response = $strategy->getEvents(['summit_id' => $summit_id]);
-            return $this->ok
-            (
-                $response->toArray
+            $current_user = $this->resource_server_context->getCurrentUser(true);
+            return $this->withReplica(function() use ($summit_id, $current_user) {
+                $strategy = new RetrieveAllSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+                $response = $strategy->getEvents(['summit_id' => $summit_id]);
+                return $this->ok
                 (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    [
-                        'current_user' => $this->resource_server_context->getCurrentUser(true)
+                    $response->toArray
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        [
+                            'current_user' => $current_user
                     ],
-                    $this->getSerializerType()
-                )
-            );
+                        $this->getSerializerType()
+                    )
+                );
+            });
+
         });
     }
 
@@ -160,44 +167,48 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getEventsCSV($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
-            $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            $current_user = $this->resource_server_context->getCurrentUser(true);
+            return $this->withReplica(function() use ($summit_id, $current_user) {
+                $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+                if (is_null($summit)) return $this->error404();
 
-            $strategy = new RetrieveAllSummitEventsBySummitCSVStrategy
-            (
-                $this->repository,
-                $this->event_repository,
-                $this->resource_server_context
-            );
-            $response = $strategy->getEvents(['summit_id' => $summit_id]);
+                $strategy = new RetrieveAllSummitEventsBySummitCSVStrategy
+                (
+                    $this->repository,
+                    $this->event_repository,
+                    $this->resource_server_context
+                );
+                $response = $strategy->getEvents(['summit_id' => $summit_id]);
 
-            $filename = "activities-" . date('Ymd');
-            $list = $response->toArray
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                ['none'],
-                [
-                    'current_user' => $this->resource_server_context->getCurrentUser(true)
-                ],
-                SerializerRegistry::SerializerType_CSV
-            );
+                $filename = "activities-" . date('Ymd');
+                $list = $response->toArray
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    ['none'],
+                    [
+                        'current_user' => $current_user,
+                    ],
+                    SerializerRegistry::SerializerType_CSV
+                );
 
-            return $this->export
-            (
-                'csv',
-                $filename,
-                $list['data'],
-                [
-                    'created' => new EpochCellFormatter(),
-                    'last_edited' => new EpochCellFormatter(),
-                    'start_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
-                    'end_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
-                    'allow_feedback' => new BooleanCellFormatter(),
-                    'is_published' => new BooleanCellFormatter(),
-                    'rsvp_external' => new BooleanCellFormatter(),
-                ]
-            );
+                return $this->export
+                (
+                    'csv',
+                    $filename,
+                    $list['data'],
+                    [
+                        'created' => new EpochCellFormatter(),
+                        'last_edited' => new EpochCellFormatter(),
+                        'start_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                        'end_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                        'allow_feedback' => new BooleanCellFormatter(),
+                        'is_published' => new BooleanCellFormatter(),
+                        'rsvp_external' => new BooleanCellFormatter(),
+                    ]
+                );
+            });
+
         });
     }
 
@@ -209,26 +220,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id) {
 
-            $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            $current_user = $this->resource_server_context->getCurrentUser(true);
 
-            $params = [
-                'summit_id'    => $summit_id,
-                'summit'       => $summit,
-                'published'    => true,
-                'current_user' => $this->resource_server_context->getCurrentUser(true)
-            ];
+            return $this->withReplica(function() use($summit_id, $current_user){
 
-            $strategy = new RetrievePublishedSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
-            $response = $strategy->getEvents($params);
-            return $this->ok($response->toArray
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations(),
-                $params,
-                $this->getSerializerType()
-            ));
+                $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+                if (is_null($summit)) return $this->error404();
+
+                $params = [
+                    'summit_id'    => $summit_id,
+                    'summit'       => $summit,
+                    'published'    => true,
+                    'current_user' => $current_user
+                ];
+
+                $strategy = new RetrievePublishedSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+                $response = $strategy->getEvents($params);
+                return $this->ok($response->toArray
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    $params,
+                    $this->getSerializerType()
+                ));
+            });
+
         });
     }
 
@@ -287,21 +304,25 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getAllEvents()
     {
         return $this->processRequest(function(){
-            $strategy = new RetrieveAllSummitEventsStrategy($this->event_repository);
-            $response = $strategy->getEvents();
-            return $this->ok
-            (
-                $response->toArray
+            $current_user = $this->resource_server_context->getCurrentUser(true);
+
+            return $this->withReplica(function() use($current_user){
+                $strategy = new RetrieveAllSummitEventsStrategy($this->event_repository);
+                $response = $strategy->getEvents();
+                return $this->ok
                 (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    [
-                        'current_user' => $this->resource_server_context->getCurrentUser(true)
-                    ],
-                    $this->getSerializerType()
-                )
-            );
+                    $response->toArray
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        [
+                            'current_user' => $current_user
+                        ],
+                        $this->getSerializerType()
+                    )
+                );
+            });
         });
     }
 
@@ -311,22 +332,27 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getAllPresentations($summit_id)
     {
         return $this->processRequest(function() use($summit_id){
-            $strategy = new RetrieveAllSummitPresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
-            $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
-            $params = [
-                'current_user' => $this->resource_server_context->getCurrentUser(true),
-            ];
-            return $this->ok
-            (
-                $response->toArray
+            $current_user = $this->resource_server_context->getCurrentUser(true);
+
+            return $this->withReplica(function() use($current_user, $summit_id){
+                $strategy = new RetrieveAllSummitPresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+                $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+                $params = [
+                    'current_user' => $current_user,
+                ];
+                return $this->ok
                 (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    $params,
-                    $this->getSerializerType()
-                )
-            );
+                    $response->toArray
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        $params,
+                        $this->getSerializerType()
+                    )
+                );
+            });
+
         });
     }
 
@@ -514,21 +540,26 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getAllScheduledEvents()
     {
         return $this->processRequest(function(){
-            $strategy = new RetrieveAllPublishedSummitEventsStrategy($this->event_repository);
-            $response = $strategy->getEvents();
-            return $this->ok
-            (
-                $response->toArray
+            $current_user = $this->resource_server_context->getCurrentUser(true);
+
+            return $this->withReplica(function () use ($current_user) {
+                $strategy = new RetrieveAllPublishedSummitEventsStrategy($this->event_repository);
+                $response = $strategy->getEvents();
+                return $this->ok
                 (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    [
-                        'current_user' => $this->resource_server_context->getCurrentUser(true)
-                    ],
-                    $this->getSerializerType()
-                )
-            );
+                    $response->toArray
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        [
+                            'current_user' => $current_user
+                        ],
+                        $this->getSerializerType()
+                    )
+                );
+            });
+
         });
     }
 
@@ -541,22 +572,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getEvent($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) throw new EntityNotFoundException;
 
-            $event = $summit->getEvent(intval($event_id));
+            $current_user = $this->resource_server_context->getCurrentUser(true);
 
-            if (is_null($event)) throw new EntityNotFoundException;
+            return $this->withReplica(function () use ($current_user, $summit_id, $event_id){
+                $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+                if (is_null($summit)) throw new EntityNotFoundException;
 
-            return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations(),
-                [
-                    'current_user' => $this->resource_server_context->getCurrentUser(true)
-                ]
-            );
+                $event = $summit->getEvent(intval($event_id));
+
+                if (is_null($event)) throw new EntityNotFoundException;
+
+                return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    [
+                        'current_user' => $current_user
+                    ]
+                );
+            });
+
         });
     }
 
@@ -568,20 +605,22 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getScheduledEvent($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) throw new EntityNotFoundException;
+            return $this->withReplica(function () use ($summit_id, $event_id){
+                $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+                if (is_null($summit)) throw new EntityNotFoundException;
 
-            $event = $summit->getScheduleEvent(intval($event_id));
+                $event = $summit->getScheduleEvent(intval($event_id));
 
-            if (is_null($event))
-                throw new EntityNotFoundException;
+                if (is_null($event))
+                    throw new EntityNotFoundException;
 
-            return SerializerRegistry::getInstance()->getSerializer($event)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations(),
-            );
+                return SerializerRegistry::getInstance()->getSerializer($event)->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                );
+            });
         });
     }
 
@@ -824,59 +863,61 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getEventFeedback($summit_id, $event_id)
     {
 
-        $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        return $this->withReplica(function() use($summit_id, $event_id){
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
 
-        $event = $summit->getScheduleEvent(intval($event_id));
+            $event = $summit->getScheduleEvent(intval($event_id));
 
-        if (is_null($event)) {
-            return $this->error404();
-        }
-
-        return $this->_getAll(
-            function(){
-                return [
-                    'owner_full_name' => ['=@', '==', '@@'],
-                    'note' => ['=@', '==', '@@'],
-                    'owner_id' => ['=='],
-                ];
-            },
-            function(){
-                return [
-                    'owner_full_name' =>  'sometimes|required|string',
-                    'note' =>  'sometimes|required|string',
-                    'owner_id' =>  'sometimes|required|integer',
-                ];
-            },
-            function(){
-                return [
-                    'created',
-                    'owner_id',
-                    'owner_full_name',
-                    'rate',
-                    'id',
-                ];
-            },
-            function($filter){
-                return $filter;
-            },
-            function(){
-                return SerializerRegistry::SerializerType_Public;
-            },
-            function(){
-                return new Order([
-                    OrderElement::buildDescFor("created"),
-                ]);
-            },
-            null,
-            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($event) {
-                return $this->event_feedback_repository->getByEvent($event,
-                    new PagingInfo($page, $per_page),
-                    call_user_func($applyExtraFilters, $filter),
-                    $order
-                );
+            if (is_null($event)) {
+                return $this->error404();
             }
-        );
+
+            return $this->_getAll(
+                function(){
+                    return [
+                        'owner_full_name' => ['=@', '==', '@@'],
+                        'note' => ['=@', '==', '@@'],
+                        'owner_id' => ['=='],
+                    ];
+                },
+                function(){
+                    return [
+                        'owner_full_name' =>  'sometimes|required|string',
+                        'note' =>  'sometimes|required|string',
+                        'owner_id' =>  'sometimes|required|integer',
+                    ];
+                },
+                function(){
+                    return [
+                        'created',
+                        'owner_id',
+                        'owner_full_name',
+                        'rate',
+                        'id',
+                    ];
+                },
+                function($filter){
+                    return $filter;
+                },
+                function(){
+                    return SerializerRegistry::SerializerType_Public;
+                },
+                function(){
+                    return new Order([
+                        OrderElement::buildDescFor("created"),
+                    ]);
+                },
+                null,
+                function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($event) {
+                    return $this->event_feedback_repository->getByEvent($event,
+                        new PagingInfo($page, $per_page),
+                        call_user_func($applyExtraFilters, $filter),
+                        $order
+                    );
+                }
+            );
+        });
     }
 
     /**
@@ -887,64 +928,67 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getEventFeedbackCSV($summit_id, $event_id)
     {
 
-        $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        return $this->withReplica(function() use($summit_id, $event_id){
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
 
-        $event = $summit->getScheduleEvent(intval($event_id));
+            $event = $summit->getScheduleEvent(intval($event_id));
 
-        if (is_null($event)) {
-            return $this->error404();
-        }
+            if (is_null($event)) {
+                return $this->error404();
+            }
 
-        return $this->_getAllCSV(
-            function(){
-                return [
-                    'owner_full_name' => ['=@', '==', '@@'],
-                    'note' => ['=@', '==', '@@'],
-                    'owner_id' => ['=='],
-                ];
-            },
-            function(){
-                return [
-                    'owner_full_name' =>  'sometimes|required|string',
-                    'note' =>  'sometimes|required|string',
-                    'owner_id' =>  'sometimes|required|integer',
-                ];
-            },
-            function(){
-                return [
-                    'created',
-                    'owner_id',
-                    'owner_full_name',
-                    'rate',
-                    'id',
-                ];
-            },
-            function($filter){
-                return $filter;
-            },
-            function(){
-                return SerializerRegistry::SerializerType_CSV;
-            },
-            function () {
-                return [
-                    'created_date' => new EpochCellFormatter(),
-                    'last_edited' => new EpochCellFormatter(),
-                ];
-            },
-            function () {
-                return [];
-            },
-            sprintf('event-%s-feedback', $event_id),
-            [],
-            function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($event) {
-                return $this->event_feedback_repository->getByEvent($event,
-                    new PagingInfo($page, $per_page),
-                    call_user_func($applyExtraFilters, $filter),
-                    $order
-                );
-            },
-        );
+            return $this->_getAllCSV(
+                function(){
+                    return [
+                        'owner_full_name' => ['=@', '==', '@@'],
+                        'note' => ['=@', '==', '@@'],
+                        'owner_id' => ['=='],
+                    ];
+                },
+                function(){
+                    return [
+                        'owner_full_name' =>  'sometimes|required|string',
+                        'note' =>  'sometimes|required|string',
+                        'owner_id' =>  'sometimes|required|integer',
+                    ];
+                },
+                function(){
+                    return [
+                        'created',
+                        'owner_id',
+                        'owner_full_name',
+                        'rate',
+                        'id',
+                    ];
+                },
+                function($filter){
+                    return $filter;
+                },
+                function(){
+                    return SerializerRegistry::SerializerType_CSV;
+                },
+                function () {
+                    return [
+                        'created_date' => new EpochCellFormatter(),
+                        'last_edited' => new EpochCellFormatter(),
+                    ];
+                },
+                function () {
+                    return [];
+                },
+                sprintf('event-%s-feedback', $event_id),
+                [],
+                function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($event) {
+                    return $this->event_feedback_repository->getByEvent($event,
+                        new PagingInfo($page, $per_page),
+                        call_user_func($applyExtraFilters, $filter),
+                        $order
+                    );
+                },
+            );
+        });
+
     }
 
     /**
@@ -1102,25 +1146,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getMyEventFeedback($summit_id, $member_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
 
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
-            $feedback = $this->service->getMyEventFeedback
-            (
-                $current_member,
-                $summit,
-                intval($event_id)
-            );
+            return $this->withReplica(function() use($summit_id, $event_id, $current_member){
+                $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+                if (is_null($summit)) return $this->error404();
+                $feedback = $this->service->getMyEventFeedback
+                (
+                    $current_member,
+                    $summit,
+                    intval($event_id)
+                );
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($feedback)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
+                return $this->ok(SerializerRegistry::getInstance()->getSerializer($feedback)->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+            });
+
         });
     }
 
@@ -1182,7 +1229,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
 
         return $this->processRequest(function() use($summit_id){
-            $strategy = new RetrieveAllUnPublishedSummitEventsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
 
             $serializer_type = SerializerRegistry::SerializerType_Public;
             $current_member = $this->resource_server_context->getCurrentUser();
@@ -1190,16 +1236,21 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 $serializer_type = SerializerRegistry::SerializerType_Private;
             }
 
-            $response = $strategy->getEvents(['summit_id' => $summit_id]);
-            return $this->ok($response->toArray
-            (
+            return $this->withReplica(function() use($summit_id, $serializer_type){
+                $strategy = new RetrieveAllUnPublishedSummitEventsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
 
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations(),
-                [],
-                $serializer_type
-            ));
+                $response = $strategy->getEvents(['summit_id' => $summit_id]);
+                return $this->ok($response->toArray
+                (
+
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    [],
+                    $serializer_type
+                ));
+            });
+
         });
     }
 
@@ -1210,36 +1261,38 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getScheduleEmptySpots($summit_id)
     {
         return $this->processRequest(function() use($summit_id){
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            $filter = null;
-            if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'location_id' => ['=='],
-                    'start_date' => ['>='],
-                    'end_date' => ['<='],
-                    'gap' => ['>', '<', '<=', '>=', '=='],
-                ]);
-            }
+            return $this->withReplica(function() use($summit_id){
+                $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+                if (is_null($summit)) return $this->error404();
+                $filter = null;
+                if (Request::has('filter')) {
+                    $filter = FilterParser::parse(Request::input('filter'), [
+                        'location_id' => ['=='],
+                        'start_date' => ['>='],
+                        'end_date' => ['<='],
+                        'gap' => ['>', '<', '<=', '>=', '=='],
+                    ]);
+                }
 
-            if (empty($filter))
-                throw new ValidationException("filter param is mandatory!");
+                if (empty($filter))
+                    throw new ValidationException("filter param is mandatory!");
 
-            $gaps = [];
-            foreach ($this->service->getSummitScheduleEmptySpots($summit, $filter) as $gap) {
-                $gaps[] = SerializerRegistry::getInstance()->getSerializer($gap)->serialize();
-            }
+                $gaps = [];
+                foreach ($this->service->getSummitScheduleEmptySpots($summit, $filter) as $gap) {
+                    $gaps[] = SerializerRegistry::getInstance()->getSerializer($gap)->serialize();
+                }
 
-            $response = new PagingResponse
-            (
-                count($gaps),
-                count($gaps),
-                1,
-                1,
-                $gaps
-            );
+                $response = new PagingResponse
+                (
+                    count($gaps),
+                    count($gaps),
+                    1,
+                    1,
+                    $gaps
+                );
 
-            return $this->ok($response->toArray());
+                return $this->ok($response->toArray());
+            });
         });
     }
 
@@ -1498,33 +1551,36 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getScheduledEventJWT($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
-            Log::debug(sprintf("OAuth2SummitEventsApiController::getScheduledEventJWT summit id %s event id %s", $summit_id, $event_id));
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) throw new EntityNotFoundException;
+            $current_user = $this->resource_server_context->getCurrentUser(true);
+            return $this->withReplica(function() use($summit_id, $event_id, $current_user){
+                Log::debug(sprintf("OAuth2SummitEventsApiController::getScheduledEventJWT summit id %s event id %s", $summit_id, $event_id));
+                $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+                if (is_null($summit)) throw new EntityNotFoundException;
 
-            $event = $summit->getScheduleEvent(intval($event_id));
+                $event = $summit->getScheduleEvent(intval($event_id));
 
-            if (is_null($event)) throw new EntityNotFoundException;
+                if (is_null($event)) throw new EntityNotFoundException;
 
-            if(!$summit->hasMuxPrivateKey())
-                throw new ValidationException(sprintf("Summit %s has not set a private key.", $summit_id));
+                if(!$summit->hasMuxPrivateKey())
+                    throw new ValidationException(sprintf("Summit %s has not set a private key.", $summit_id));
 
-            if(!$event->isMuxStream())
-                throw new ValidationException(sprintf("Event %s has not set a valid MUX url", $event_id));
+                if(!$event->isMuxStream())
+                    throw new ValidationException(sprintf("Event %s has not set a valid MUX url", $event_id));
 
-            if(!$event->IsSecureStream()){
-                throw new ValidationException(sprintf("Event %s is not marked as secure.", $event_id));
-            }
+                if(!$event->IsSecureStream()){
+                    throw new ValidationException(sprintf("Event %s is not marked as secure.", $event_id));
+                }
 
-            return SerializerRegistry::getInstance()->getSerializer($event, IPresentationSerializerTypes::SecureStream)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations(),
-                [
-                    'current_user' => $this->resource_server_context->getCurrentUser(true)
-                ]
-            );
+                return SerializerRegistry::getInstance()->getSerializer($event, IPresentationSerializerTypes::SecureStream)->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    [
+                        'current_user' => $current_user
+                    ]
+                );
+            });
         });
     }
 
@@ -1572,43 +1628,44 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (!Request::has($query_string_key))
                 return $this->error400(sprintf("Missing overflow query string key in %s", $query_string_key));
 
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404("Summit not found.");
+            return $this->withReplica(function() use ($summit_id) {
+                $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+                if (is_null($summit))
+                    return $this->error404("Summit not found.");
 
+                $overflow_stream_key = Request::get($query_string_key);
 
-            $overflow_stream_key = Request::get($query_string_key);
-
-            Log::debug
-            (
-                sprintf
+                Log::debug
                 (
-                    "OAuth2SummitEventsApiController::getOverflowStreamingInfo summit %s %s %s",
-                    $summit_id,
-                    $overflow_stream_key,
-                    $query_string_key
-                )
-            );
+                    sprintf
+                    (
+                        "OAuth2SummitEventsApiController::getOverflowStreamingInfo summit %s %s %s",
+                        $summit_id,
+                        $overflow_stream_key,
+                        $query_string_key
+                    )
+                );
 
-            $event = $this->event_repository->getBySummitAndOverflowStreamKey($summit, $overflow_stream_key);
-            if(is_null($event)){
-                Log::debug(sprintf("OAuth2SummitEventsApiController::getOverflowStreamingInfo Event %s not found.", $overflow_stream_key));
-            }
-            if (!$event instanceof SummitEvent)
-                return $this->error404("Summit event not found.");
+                $event = $this->event_repository->getBySummitAndOverflowStreamKey($summit, $overflow_stream_key);
+                if(is_null($event)){
+                    Log::debug(sprintf("OAuth2SummitEventsApiController::getOverflowStreamingInfo Event %s not found.", $overflow_stream_key));
+                }
+                if (!$event instanceof SummitEvent)
+                    return $this->error404("Summit event not found.");
 
-            if(!$event->isOnOverflow())
-                return $this->error412("Summit event has not overflow set.");
+                if(!$event->isOnOverflow())
+                    return $this->error412("Summit event has not overflow set.");
 
-            return $this->ok(SerializerRegistry::getInstance()
-                ->getSerializer($event, IPresentationSerializerTypes::OverflowStream)
-                ->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                )
-            );
+                return $this->ok(SerializerRegistry::getInstance()
+                    ->getSerializer($event, IPresentationSerializerTypes::OverflowStream)
+                    ->serialize
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                    )
+                );
+            });
         });
     }
 
@@ -1689,18 +1746,21 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if(!$current_user instanceof Member)
                 throw new \HTTP401UnauthorizedException();
 
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) throw new EntityNotFoundException;
+            return $this->withReplica(function() use($summit_id, $event_id, $current_user){
+                $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+                if (is_null($summit)) throw new EntityNotFoundException;
 
-            $event = $this->service->getEventForStreamingInfo($summit, $current_user, intval($event_id));
-            if (is_null($event)) throw new EntityNotFoundException;
+                $event = $this->service->getEventForStreamingInfo($summit, $current_user, intval($event_id));
+                if (is_null($event)) throw new EntityNotFoundException;
 
-            return SerializerRegistry::getInstance()->getSerializer($event, IPresentationSerializerTypes::StreamingInfo)->serialize
-            (
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            );
+                return SerializerRegistry::getInstance()->getSerializer($event, IPresentationSerializerTypes::StreamingInfo)->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                );
+            });
+
         });
     }
 }

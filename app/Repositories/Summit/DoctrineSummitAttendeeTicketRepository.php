@@ -14,7 +14,6 @@
 
 use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
-use App\libs\Utils\Doctrine\ReplicaAwareRepositoryTrait;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
@@ -53,26 +52,26 @@ final class DoctrineSummitAttendeeTicketRepository
 
     /** @var array<string, array{0:string,1:'join'|'leftJoin',2:array<int,string>}> */
     private array $joinCatalog = [
-        'o'      => ['e.order',               'join',     []],
-        's'      => ['e.summit',              'join',     []],
-        'ord_m'  => ['o.owner',               'leftJoin', ['o']],
-        'a'      => ['e.owner',               'leftJoin', []],
-        'a_c'    => ['a.company',             'leftJoin', ['a']],
-        'm'      => ['a.member',              'leftJoin', ['a']],
-        'am'     => ['a.manager',             'leftJoin', ['a']],
-        'm2'     => ['am.member',             'leftJoin', ['am']],
-        'b'      => ['e.badge',               'leftJoin', []],
-        'bt'     => ['b.type',                'leftJoin', ['b']],
-        'al'     => ['bt.access_levels',      'leftJoin', ['bt']],
-        'bf'     => ['b.features',            'leftJoin', ['b']],
-        'bt_bf'  => ['bt.badge_features',     'leftJoin', ['bt']],
-        'prt'    => ['b.prints',              'leftJoin', ['b']],
-        'rr'     => ['e.refund_requests',     'leftJoin', []],
-        'ta'     => ['e.applied_taxes',       'leftJoin', []],
-        'tt'     => ['e.ticket_type',         'join',     []],
-        'pc'     => ['e.promo_code',          'leftJoin', []],
-        'pct'    => ['pc.tags',               'leftJoin', ['pc']],
-        'avt'    => ['bt.allowed_view_types', 'join',     ['bt']],
+        'o' => ['e.order', 'join', []],
+        's' => ['e.summit', 'join', []],
+        'ord_m' => ['o.owner', 'leftJoin', ['o']],
+        'a' => ['e.owner', 'leftJoin', []],
+        'a_c' => ['a.company', 'leftJoin', ['a']],
+        'm' => ['a.member', 'leftJoin', ['a']],
+        'am' => ['a.manager', 'leftJoin', ['a']],
+        'm2' => ['am.member', 'leftJoin', ['am']],
+        'b' => ['e.badge', 'leftJoin', []],
+        'bt' => ['b.type', 'leftJoin', ['b']],
+        'al' => ['bt.access_levels', 'leftJoin', ['bt']],
+        'bf' => ['b.features', 'leftJoin', ['b']],
+        'bt_bf' => ['bt.badge_features', 'leftJoin', ['bt']],
+        'prt' => ['b.prints', 'leftJoin', ['b']],
+        'rr' => ['e.refund_requests', 'leftJoin', []],
+        'ta' => ['e.applied_taxes', 'leftJoin', []],
+        'tt' => ['e.ticket_type', 'join', []],
+        'pc' => ['e.promo_code', 'leftJoin', []],
+        'pct' => ['pc.tags', 'leftJoin', ['pc']],
+        'avt' => ['bt.allowed_view_types', 'join', ['bt']],
     ];
 
     private function ensureJoin(QueryBuilder $qb, string $alias): void
@@ -101,7 +100,7 @@ final class DoctrineSummitAttendeeTicketRepository
         // --- Filters ---
         if ($has('order_number') || $has('order_id') || $has('order_owner_id') || $has('bought_date') || $has('summit_id')) {
             $need['o'] = true;
-            if($has('order_owner_id')){
+            if ($has('order_owner_id')) {
                 $this->joinCatalog['ord_m'][1] = 'join';
                 $need['ord_m'] = true;
             }
@@ -110,14 +109,16 @@ final class DoctrineSummitAttendeeTicketRepository
 
         if ($has('owner_first_name') || $has('owner_last_name') || $has('owner_name') || $has('owner_id') || $has('member_id')) {
             $need['a'] = true;
-            if($has('owner_first_name') || $has('owner_last_name') || $has('owner_name') || $has('member_id')) $need['m'] = true;
+            if ($has('owner_first_name') || $has('owner_last_name') || $has('owner_name') || $has('member_id')) $need['m'] = true;
         }
 
         if ($has('owner_email')) {
             $need['a'] = $need['m'] = $need['am'] = $need['m2'] = true;
         }
 
-        if ($has('owner_company') || $has('has_owner_company')) { $need['a'] = $need['a_c'] = true; }
+        if ($has('owner_company') || $has('has_owner_company')) {
+            $need['a'] = $need['a_c'] = true;
+        }
 
         if ($has('has_owner')) {
             if ((string)$val('has_owner') === '1') $this->joinCatalog['a'][1] = 'join';
@@ -134,7 +135,10 @@ final class DoctrineSummitAttendeeTicketRepository
             $need['o'] = $need['ord_m'] = true;
         }
 
-        if ($has('assigned_to')) { $need['a'] = true; $need['m'] = true; } // usa m.id y a.email
+        if ($has('assigned_to')) {
+            $need['a'] = true;
+            $need['m'] = true;
+        } // usa m.id y a.email
 
         if ($has('promo_code') || $has('promo_code_id') || $has('promo_code_description')) {
             $need['pc'] = true;
@@ -152,7 +156,7 @@ final class DoctrineSummitAttendeeTicketRepository
         if ($has('access_level_type_id') || $has('access_level_type_name') || $has('is_printable')) {
             $need['b'] = $need['bt'] = $need['al'] = $need['a'] = true;
             if ($has('is_printable') && (string)$val('is_printable') === '1') {
-                $this->joinCatalog['a'][1]  = 'join';
+                $this->joinCatalog['a'][1] = 'join';
                 $this->joinCatalog['bt'][1] = 'join';
                 $this->joinCatalog['al'][1] = 'join';
             }
@@ -178,9 +182,15 @@ final class DoctrineSummitAttendeeTicketRepository
         if ($ord('owner_first_name') || $ord('owner_last_name') || $ord('owner_name')) {
             $need['a'] = $need['m'] = true;
         }
-        if ($ord('owner_company')) { $need['a'] = $need['a_c'] = true; }
-        if ($ord('owner_email'))   { $need['a'] = $need['m']   = true; }
-        if ($ord('promo_code'))    { $need['pc'] = true; }
+        if ($ord('owner_company')) {
+            $need['a'] = $need['a_c'] = true;
+        }
+        if ($ord('owner_email')) {
+            $need['a'] = $need['m'] = true;
+        }
+        if ($ord('promo_code')) {
+            $need['pc'] = true;
+        }
 
         return array_keys($need);
     }
@@ -200,7 +210,8 @@ final class DoctrineSummitAttendeeTicketRepository
      * @param Order|null $order
      * @return QueryBuilder
      */
-    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder{
+    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null): QueryBuilder
+    {
 
         $needsAggregation = false;
 
@@ -239,7 +250,7 @@ final class DoctrineSummitAttendeeTicketRepository
         $owner_member_id = 0;
         $owner_member_email = null;
 
-        if($filter instanceof Filter) {
+        if ($filter instanceof Filter) {
             if ($filter->hasFilter("owner_member_id")) {
                 $owner_member_id = $filter->getValue("owner_member_id")[0];
             }
@@ -348,7 +359,7 @@ final class DoctrineSummitAttendeeTicketRepository
                     ),
                 ]
             ),
-            'final_amount' =>  "(e.raw_cost - e.discount) :operator :value",
+            'final_amount' => "(e.raw_cost - e.discount) :operator :value",
             'is_printable' =>
                 new DoctrineSwitchFilterMapping([
                         '1' => new DoctrineCaseFilterMapping(
@@ -362,7 +373,7 @@ final class DoctrineSummitAttendeeTicketRepository
                     ]
                 ),
             'badge_type_id' => 'bt.id:json_int',
-            'has_badge_prints' =>  new DoctrineSwitchFilterMapping([
+            'has_badge_prints' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
                         "SIZE(prt) > 0"
@@ -374,17 +385,17 @@ final class DoctrineSummitAttendeeTicketRepository
                 ]
             ),
             'badge_prints_count' => 'SIZE(prt) :operator :value',
-            'exclude_is_printable_free_unassigned' =>    new DoctrineSwitchFilterMapping([
+            'exclude_is_printable_free_unassigned' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
                         sprintf
                         (
-                            "NOT EXISTS ( select e2 from %s e2 ".
-                            " left join e2.owner a2 ".
-                            " left join e2.badge b2 ".
-                            " left join b2.type bt2 ".
-                            " left join bt2.access_levels al2 ".
-                            " where e2.id = e.id and al2.name = '%s' and a2 is null ".
+                            "NOT EXISTS ( select e2 from %s e2 " .
+                            " left join e2.owner a2 " .
+                            " left join e2.badge b2 " .
+                            " left join b2.type bt2 " .
+                            " left join bt2.access_levels al2 " .
+                            " where e2.id = e.id and al2.name = '%s' and a2 is null " .
                             " and (e2.raw_cost - e2.discount) = 0 )",
                             $this->getBaseEntity(),
                             SummitAccessLevelType::IN_PERSON
@@ -398,7 +409,7 @@ final class DoctrineSummitAttendeeTicketRepository
                 ]
             ),
             'owner_status' => 'a.status:json_string',
-            'badge_features_id' => ['bf.id:json_int','bt_bf.id:json_int'],
+            'badge_features_id' => ['bf.id:json_int', 'bt_bf.id:json_int'],
             'assigned_to' => new DoctrineSwitchFilterMapping([
                     'Me' => new DoctrineCaseFilterMapping(
                         'Me',
@@ -433,7 +444,7 @@ final class DoctrineSummitAttendeeTicketRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
     {
-        $this->joinCatalog['a'][1]  = 'leftJoin';
+        $this->joinCatalog['a'][1] = 'leftJoin';
         $this->joinCatalog['bt'][1] = 'leftJoin';
         $this->joinCatalog['al'][1] = 'leftJoin';
         $this->joinCatalog['ord_m'][1] = 'leftJoin';
@@ -710,7 +721,7 @@ SQL,
             ->where('o.id = :order_id')
             ->setParameter("order_id", $order_id);
 
-        $query= $query
+        $query = $query
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
@@ -718,7 +729,6 @@ SQL,
         return array_column($res, 'id');
     }
 
-    use ReplicaAwareRepositoryTrait;
 
     /**
      * @param PagingInfo $paging_info
@@ -727,48 +737,46 @@ SQL,
      * @return mixed|PagingResponse
      * @throws \Doctrine\DBAL\Exception
      */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null){
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
 
-        return $this->withReplica(function () use ($paging_info, $filter, $order) {
+        $start = time();
+        Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage'));
+        $total = $this->getFastCount($filter, $order);
+        $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
+        $query = $this->getEntityManager()->createQueryBuilder()
+            ->select('e, a, o, tt, pc, b, bt, a_c, m')
+            ->from($this->getBaseEntity(), 'e')
+            ->leftJoin('e.owner', 'a')->addSelect('a')
+            ->leftJoin('e.order', 'o')->addSelect('o')
+            ->leftJoin('e.ticket_type', 'tt')->addSelect('tt')
+            ->leftJoin('e.promo_code', 'pc')->addSelect('pc')
+            ->leftJoin('e.badge', 'b')->addSelect('b')
+            ->leftJoin('b.type', 'bt')->addSelect('bt')
+            ->leftJoin('a.company', 'a_c')->addSelect('a_c')
+            ->leftJoin('a.member', 'm')->addSelect('m')
+            ->where('e.id IN (:ids)')
+            ->setParameter('ids', $ids);
 
-            $start = time();
-            Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage'));
-            $total = $this->getFastCount($filter, $order);
-            $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
-            $query = $this->getEntityManager()->createQueryBuilder()
-                ->select('e, a, o, tt, pc, b, bt, a_c, m')
-                ->from($this->getBaseEntity(), 'e')
-                ->leftJoin('e.owner', 'a')->addSelect('a')
-                ->leftJoin('e.order', 'o')->addSelect('o')
-                ->leftJoin('e.ticket_type', 'tt')->addSelect('tt')
-                ->leftJoin('e.promo_code', 'pc')->addSelect('pc')
-                ->leftJoin('e.badge', 'b')->addSelect('b')
-                ->leftJoin('b.type', 'bt')->addSelect('bt')
-                ->leftJoin('a.company', 'a_c')->addSelect('a_c')
-                ->leftJoin('a.member', 'm')->addSelect('m')
-                ->where('e.id IN (:ids)')
-                ->setParameter('ids', $ids);
+        $rows = $query->getQuery()->getResult();
+        $byId = [];
+        foreach ($rows as $e) $byId[$e->getId()] = $e;
 
+        $data = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) $data[] = $byId[$id];
+        }
 
-            $rows = $query->getQuery()->getResult();
-            $byId = [];
-            foreach ($rows as $e) $byId[$e->getId()] = $e;
+        $end = time() - $start;
+        Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage %s seconds', $end));
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
 
-            $data = [];
-            foreach ($ids as $id) {
-                if (isset($byId[$id])) $data[] = $byId[$id];
-            }
-
-            $end = time() - $start;
-            Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage %s seconds', $end));
-            return new PagingResponse
-            (
-                $total,
-                $paging_info->getPerPage(),
-                $paging_info->getCurrentPage(),
-                $paging_info->getLastPage($total),
-                $data
-            );
-        });
     }
 }

@@ -13,6 +13,7 @@
  **/
 
 use App\Http\Renderers\IRenderersFormats;
+use App\libs\Utils\Doctrine\ReplicaAwareTrait;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundRequestRepository;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
@@ -59,6 +60,8 @@ final class OAuth2SummitOrdersApiController
     use DeleteSummitChildElement;
 
     use RequestProcessor;
+
+    use ReplicaAwareTrait;
 
     /**
      * @var ISummitRepository
@@ -412,69 +415,72 @@ final class OAuth2SummitOrdersApiController
     public function getAllMyOrdersBySummit($summit_id)
     {
         $owner = $this->getResourceServerContext()->getCurrentUser();
-        return $this->_getAll(
-            function () {
-                return [
-                    'number' => ['=@', '=='],
-                    'summit_id' => ['=='],
-                    'status' => ['==', '<>'],
-                    'owner_id' => ['=='],
-                    'created' => ['>', '<', '<=', '>=', '==','[]'],
-                    'tickets_assigned_to' =>  ['=='],
-                    'tickets_owner_status' =>  ['=='],
-                    'tickets_badge_features_id' =>  ['=='],
-                    'tickets_type_id' =>  ['=='],
-                    'amount' => ['==', '<>', '>=', '>'],
-                    'tickets_promo_code' => ['=@', '=='],
-                ];
-            },
-            function () {
-                return [
-                    'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
-                    'number' => 'sometimes|string',
-                    'summit_id' => 'sometimes|integer',
-                    'owner_id' => 'sometimes|integer',
-                    'created' => 'sometimes|required|date_format:U|epoch_seconds',
-                    'tickets_assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
-                    'tickets_owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
-                    'tickets_badge_features_id' => 'sometimes|integer',
-                    'tickets_type_id' => 'sometimes|integer',
-                    'amount' => 'sometimes|numeric',
-                    'tickets_promo_code' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'number',
-                    'status',
-                    'owner_name',
-                    'owner_email',
-                    'owner_company',
-                    'owner_id',
-                    'created',
-                ];
-            },
-            function ($filter) use ($owner, $summit_id) {
-                if ($filter instanceof Filter) {
-                    if (is_numeric($summit_id)) {
-                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
-                    }
-                    $filter->addFilterCondition(FilterElement::makeEqual('owner_id', $owner->getId()));
-                    if($filter->hasFilter("tickets_assigned_to")){
-                        $assigned_to = $filter->getValue("tickets_assigned_to")[0];
-                        if(in_array($assigned_to, ['Me','SomeoneElse'])){
-                            $filter->addFilterCondition(FilterElement::makeEqual('tickets_owner_member_id', $owner->getId()));
-                            $filter->addFilterCondition(FilterElement::makeEqual('tickets_owner_member_email', $owner->getEmail()));
+
+        return $this->withReplica(function() use ($owner, $summit_id) {
+            return $this->_getAll(
+                function () {
+                    return [
+                        'number' => ['=@', '=='],
+                        'summit_id' => ['=='],
+                        'status' => ['==', '<>'],
+                        'owner_id' => ['=='],
+                        'created' => ['>', '<', '<=', '>=', '==','[]'],
+                        'tickets_assigned_to' =>  ['=='],
+                        'tickets_owner_status' =>  ['=='],
+                        'tickets_badge_features_id' =>  ['=='],
+                        'tickets_type_id' =>  ['=='],
+                        'amount' => ['==', '<>', '>=', '>'],
+                        'tickets_promo_code' => ['=@', '=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
+                        'number' => 'sometimes|string',
+                        'summit_id' => 'sometimes|integer',
+                        'owner_id' => 'sometimes|integer',
+                        'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                        'tickets_assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
+                        'tickets_owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
+                        'tickets_badge_features_id' => 'sometimes|integer',
+                        'tickets_type_id' => 'sometimes|integer',
+                        'amount' => 'sometimes|numeric',
+                        'tickets_promo_code' => 'sometimes|string',
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'number',
+                        'status',
+                        'owner_name',
+                        'owner_email',
+                        'owner_company',
+                        'owner_id',
+                        'created',
+                    ];
+                },
+                function ($filter) use ($owner, $summit_id) {
+                    if ($filter instanceof Filter) {
+                        if (is_numeric($summit_id)) {
+                            $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
+                        }
+                        $filter->addFilterCondition(FilterElement::makeEqual('owner_id', $owner->getId()));
+                        if($filter->hasFilter("tickets_assigned_to")){
+                            $assigned_to = $filter->getValue("tickets_assigned_to")[0];
+                            if(in_array($assigned_to, ['Me','SomeoneElse'])){
+                                $filter->addFilterCondition(FilterElement::makeEqual('tickets_owner_member_id', $owner->getId()));
+                                $filter->addFilterCondition(FilterElement::makeEqual('tickets_owner_member_email', $owner->getEmail()));
+                            }
                         }
                     }
+                    return $filter;
+                },
+                function () {
+                    return ISummitOrderSerializerTypes::OwnType;
                 }
-                return $filter;
-            },
-            function () {
-                return ISummitOrderSerializerTypes::OwnType;
-            }
-        );
+            );
+        });
     }
 
     /**
@@ -501,44 +507,47 @@ final class OAuth2SummitOrdersApiController
             if ($order->getOwnerEmail() != $current_user->getEmail())
                 $isOrderOwner = false;
 
-            $ticket = $order->getTicketById(intval($ticket_id));
-            if (!$ticket instanceof SummitAttendeeTicket)
-                throw new EntityNotFoundException("Ticket not found.");
+            return $this->withReplica(function() use ($order, $ticket_id, $isOrderOwner, $current_user) {
+                $ticket = $order->getTicketById(intval($ticket_id));
+                if (!$ticket instanceof SummitAttendeeTicket)
+                    throw new EntityNotFoundException("Ticket not found.");
 
-            if(!$ticket->hasOwner() && !$isOrderOwner)
-                throw new EntityNotFoundException("Order not found.");
+                if(!$ticket->hasOwner() && !$isOrderOwner)
+                    throw new EntityNotFoundException("Order not found.");
 
-            $isTicketOwner = true;
-            $ticketOwnerEmail = $ticket->getOwnerEmail();
-            Log::debug
-            (
-                sprintf
+                $isTicketOwner = true;
+                $ticketOwnerEmail = $ticket->getOwnerEmail();
+                Log::debug
                 (
-                    "OAuth2SummitOrdersApiController::getMyTicketById ticketOwnerEmail %s current email %s",
-                    $ticketOwnerEmail,
-                    $current_user->getEmail()
-                )
-            );
+                    sprintf
+                    (
+                        "OAuth2SummitOrdersApiController::getMyTicketById ticketOwnerEmail %s current email %s",
+                        $ticketOwnerEmail,
+                        $current_user->getEmail()
+                    )
+                );
 
-            if(!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail())
-                $isTicketOwner = false;
+                if(!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail())
+                    $isTicketOwner = false;
 
-            if(!$isTicketOwner){
-                // check if we are the manager
-                $isTicketOwner = $ticket->hasOwner() && $ticket->getOwner()->isManagedBy($current_user);
-                Log::debug(sprintf("OAuth2SummitOrdersApiController::getMyTicketById isTicketOwner %b (manager)" , $isTicketOwner));
-            }
+                if(!$isTicketOwner){
+                    // check if we are the manager
+                    $isTicketOwner = $ticket->hasOwner() && $ticket->getOwner()->isManagedBy($current_user);
+                    Log::debug(sprintf("OAuth2SummitOrdersApiController::getMyTicketById isTicketOwner %b (manager)" , $isTicketOwner));
+                }
 
-            if(!$isOrderOwner && !$isTicketOwner)
-                throw new EntityNotFoundException("Ticket not found.");
+                if(!$isOrderOwner && !$isTicketOwner)
+                    throw new EntityNotFoundException("Ticket not found.");
 
-            return $this->ok(SerializerRegistry::getInstance()
-                ->getSerializer($ticket, SerializerRegistry::SerializerType_Private)
-                ->serialize(
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                ));
+                return $this->ok(SerializerRegistry::getInstance()
+                    ->getSerializer($ticket, SerializerRegistry::SerializerType_Private)
+                    ->serialize(
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
+                    ));
+            });
+
         });
     }
 

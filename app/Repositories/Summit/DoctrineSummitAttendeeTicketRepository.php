@@ -14,6 +14,7 @@
 
 use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
+use App\libs\Utils\Doctrine\ReplicaAwareRepositoryTrait;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
@@ -717,51 +718,57 @@ SQL,
         return array_column($res, 'id');
     }
 
+    use ReplicaAwareRepositoryTrait;
 
     /**
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
-     * @return PagingResponse
+     * @return mixed|PagingResponse
+     * @throws \Doctrine\DBAL\Exception
      */
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null){
-        $start = time();
-        Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage'));
-        $total = $this->getFastCount($filter, $order);
-        $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
-        $query = $this->getEntityManager()->createQueryBuilder()
-                        ->select('e, a, o, tt, pc, b, bt, a_c, m')
-                    ->from($this->getBaseEntity(), 'e')
-                    ->leftJoin('e.owner', 'a')->addSelect('a')
-                    ->leftJoin('e.order', 'o')->addSelect('o')
-                    ->leftJoin('e.ticket_type', 'tt')->addSelect('tt')
-                    ->leftJoin('e.promo_code', 'pc')->addSelect('pc')
-                    ->leftJoin('e.badge', 'b')->addSelect('b')
-                    ->leftJoin('b.type', 'bt')->addSelect('bt')
-                    ->leftJoin('a.company', 'a_c')->addSelect('a_c')
-                    ->leftJoin('a.member', 'm')->addSelect('m')
-                    ->where('e.id IN (:ids)')
-                    ->setParameter('ids', $ids);
+
+        return $this->withReplica(function () use ($paging_info, $filter, $order) {
+
+            $start = time();
+            Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage'));
+            $total = $this->getFastCount($filter, $order);
+            $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
+            $query = $this->getEntityManager()->createQueryBuilder()
+                ->select('e, a, o, tt, pc, b, bt, a_c, m')
+                ->from($this->getBaseEntity(), 'e')
+                ->leftJoin('e.owner', 'a')->addSelect('a')
+                ->leftJoin('e.order', 'o')->addSelect('o')
+                ->leftJoin('e.ticket_type', 'tt')->addSelect('tt')
+                ->leftJoin('e.promo_code', 'pc')->addSelect('pc')
+                ->leftJoin('e.badge', 'b')->addSelect('b')
+                ->leftJoin('b.type', 'bt')->addSelect('bt')
+                ->leftJoin('a.company', 'a_c')->addSelect('a_c')
+                ->leftJoin('a.member', 'm')->addSelect('m')
+                ->where('e.id IN (:ids)')
+                ->setParameter('ids', $ids);
 
 
-        $rows = $query->getQuery()->getResult();
-        $byId = [];
-        foreach ($rows as $e) $byId[$e->getId()] = $e;
+            $rows = $query->getQuery()->getResult();
+            $byId = [];
+            foreach ($rows as $e) $byId[$e->getId()] = $e;
 
-        $data = [];
-        foreach ($ids as $id) {
-            if (isset($byId[$id])) $data[] = $byId[$id];
-        }
+            $data = [];
+            foreach ($ids as $id) {
+                if (isset($byId[$id])) $data[] = $byId[$id];
+            }
 
-        $end = time() - $start;
-        Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage %s seconds', $end));
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
+            $end = time() - $start;
+            Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage %s seconds', $end));
+            return new PagingResponse
+            (
+                $total,
+                $paging_info->getPerPage(),
+                $paging_info->getCurrentPage(),
+                $paging_info->getLastPage($total),
+                $data
+            );
+        });
     }
 }

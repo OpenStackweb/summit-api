@@ -14,6 +14,7 @@
 
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\libs\Utils\Doctrine\ReplicaAwareTrait;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
@@ -53,6 +54,10 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     use GetAndValidateJsonPayload;
 
     use RequestProcessor;
+
+    use ParseAndGetFilter;
+
+    use ReplicaAwareTrait;
 
     /**
      * @return string
@@ -98,7 +103,6 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         $this->service = $service;
     }
 
-    use ParseAndGetFilter;
 
     /**
      * @param $summit_id
@@ -109,115 +113,117 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
-        return $this->_getAll(
-            function () {
-                return [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'number' => ['@@', '=@', '=='],
-                    'order_number' => ['@@', '=@', '=='],
-                    'owner_name' => ['@@', '=@', '=='],
-                    'owner_first_name' => ['@@', '=@', '=='],
-                    'owner_last_name' => ['@@', '=@', '=='],
-                    'owner_email' => ['@@', '=@', '=='],
-                    'owner_company' => ['@@', '=@', '=='],
-                    'summit_id' => ['=='],
-                    'owner_id' => ['=='],
-                    'order_id' => ['=='],
-                    'status' => ['==', '<>'],
-                    'is_active' => ['=='],
-                    'has_requested_refund_requests' => ['=='],
-                    'access_level_type_name' => ['=='],
-                    'access_level_type_id' => ['=='],
-                    'ticket_type_id' => ['=='],
-                    'has_owner' => ['=='],
-                    'owner_status' => ['=='],
-                    'has_badge' => ['=='],
-                    'view_type_id' => ['=='],
-                    'promo_code_id' => ['=='],
-                    'promo_code' => ['==', '@@', '=@'],
-                    'promo_code_description' => ['@@', '=@'],
-                    'promo_code_tag_id' => ['=='],
-                    'promo_code_tag' => ['==', '@@', '=@'],
-                    'final_amount' => ['==', '<>', '>=', '>'],
-                    'is_printable' => ['=='],
-                    'badge_type_id' => ['=='],
-                    'has_badge_prints' => ['=='],
-                    'badge_prints_count' =>  ['==', '>=', '<=', '>', '<'],
-                    'has_owner_company' => ['=='],
-                    'exclude_is_printable_free_unassigned' => ['=='],
-                ];
-            },
-            function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'not_id' => 'sometimes|integer',
-                    'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
-                    'number' => 'sometimes|string',
-                    'order_number' => 'sometimes|string',
-                    'owner_name' => 'sometimes|string',
-                    'owner_first_name' => 'sometimes|string',
-                    'owner_last_name' => 'sometimes|string',
-                    'owner_email' => 'sometimes|string',
-                    'owner_company' => 'sometimes|string',
-                    'summit_id' => 'sometimes|integer',
-                    'owner_id' => 'sometimes|integer',
-                    'order_id' => 'sometimes|integer',
-                    'is_active' => 'sometimes|boolean',
-                    'has_requested_refund_requests' => 'sometimes|boolean',
-                    'access_level_type_name' => 'sometimes|string',
-                    'access_level_type_id' => 'sometimes|integer',
-                    'ticket_type_id' => 'sometimes|integer',
-                    'view_type_id' => 'sometimes|integer',
-                    'has_owner' => 'sometimes|boolean',
-                    'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
-                    'has_badge' => 'sometimes|boolean',
-                    'promo_code_id' => 'sometimes|integer',
-                    'promo_code' => 'sometimes|string',
-                    'promo_code_description' => 'sometimes|string',
-                    'promo_code_tag_id' => 'sometimes|integer',
-                    'promo_code_tag' => 'sometimes|string',
-                    'final_amount' => 'sometimes|numeric',
-                    'is_printable' => ['sometimes', new Boolean()],
-                    'badge_type_id' => 'sometimes|integer',
-                    'has_badge_prints' => ['sometimes', new Boolean()],
-                    'badge_prints_count' => 'sometimes|integer',
-                    'has_owner_company' => ['sometimes', new Boolean()],
-                    'exclude_is_printable_free_unassigned' => ['sometimes', new Boolean()],
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'number',
-                    'status',
-                    'owner_name',
-                    'owner_first_name',
-                    'owner_last_name',
-                    'ticket_type',
-                    'final_amount',
-                    'owner_email',
-                    'owner_company',
-                    'promo_code',
-                    'bought_date',
-                    'refunded_amount',
-                    'final_amount_adjusted',
-                    'badge_type_id',
-                    'badge_type',
-                    'badge_prints_count',
-                    'created',
-                ];
-            },
-            function ($filter) use ($summit) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+        return $this->withReplica(function() use($summit) {
+            return $this->_getAll(
+                function () {
+                    return [
+                        'id' => ['=='],
+                        'not_id' => ['=='],
+                        'number' => ['@@', '=@', '=='],
+                        'order_number' => ['@@', '=@', '=='],
+                        'owner_name' => ['@@', '=@', '=='],
+                        'owner_first_name' => ['@@', '=@', '=='],
+                        'owner_last_name' => ['@@', '=@', '=='],
+                        'owner_email' => ['@@', '=@', '=='],
+                        'owner_company' => ['@@', '=@', '=='],
+                        'summit_id' => ['=='],
+                        'owner_id' => ['=='],
+                        'order_id' => ['=='],
+                        'status' => ['==', '<>'],
+                        'is_active' => ['=='],
+                        'has_requested_refund_requests' => ['=='],
+                        'access_level_type_name' => ['=='],
+                        'access_level_type_id' => ['=='],
+                        'ticket_type_id' => ['=='],
+                        'has_owner' => ['=='],
+                        'owner_status' => ['=='],
+                        'has_badge' => ['=='],
+                        'view_type_id' => ['=='],
+                        'promo_code_id' => ['=='],
+                        'promo_code' => ['==', '@@', '=@'],
+                        'promo_code_description' => ['@@', '=@'],
+                        'promo_code_tag_id' => ['=='],
+                        'promo_code_tag' => ['==', '@@', '=@'],
+                        'final_amount' => ['==', '<>', '>=', '>'],
+                        'is_printable' => ['=='],
+                        'badge_type_id' => ['=='],
+                        'has_badge_prints' => ['=='],
+                        'badge_prints_count' =>  ['==', '>=', '<=', '>', '<'],
+                        'has_owner_company' => ['=='],
+                        'exclude_is_printable_free_unassigned' => ['=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'id' => 'sometimes|integer',
+                        'not_id' => 'sometimes|integer',
+                        'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
+                        'number' => 'sometimes|string',
+                        'order_number' => 'sometimes|string',
+                        'owner_name' => 'sometimes|string',
+                        'owner_first_name' => 'sometimes|string',
+                        'owner_last_name' => 'sometimes|string',
+                        'owner_email' => 'sometimes|string',
+                        'owner_company' => 'sometimes|string',
+                        'summit_id' => 'sometimes|integer',
+                        'owner_id' => 'sometimes|integer',
+                        'order_id' => 'sometimes|integer',
+                        'is_active' => 'sometimes|boolean',
+                        'has_requested_refund_requests' => 'sometimes|boolean',
+                        'access_level_type_name' => 'sometimes|string',
+                        'access_level_type_id' => 'sometimes|integer',
+                        'ticket_type_id' => 'sometimes|integer',
+                        'view_type_id' => 'sometimes|integer',
+                        'has_owner' => 'sometimes|boolean',
+                        'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
+                        'has_badge' => 'sometimes|boolean',
+                        'promo_code_id' => 'sometimes|integer',
+                        'promo_code' => 'sometimes|string',
+                        'promo_code_description' => 'sometimes|string',
+                        'promo_code_tag_id' => 'sometimes|integer',
+                        'promo_code_tag' => 'sometimes|string',
+                        'final_amount' => 'sometimes|numeric',
+                        'is_printable' => ['sometimes', new Boolean()],
+                        'badge_type_id' => 'sometimes|integer',
+                        'has_badge_prints' => ['sometimes', new Boolean()],
+                        'badge_prints_count' => 'sometimes|integer',
+                        'has_owner_company' => ['sometimes', new Boolean()],
+                        'exclude_is_printable_free_unassigned' => ['sometimes', new Boolean()],
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'number',
+                        'status',
+                        'owner_name',
+                        'owner_first_name',
+                        'owner_last_name',
+                        'ticket_type',
+                        'final_amount',
+                        'owner_email',
+                        'owner_company',
+                        'promo_code',
+                        'bought_date',
+                        'refunded_amount',
+                        'final_amount_adjusted',
+                        'badge_type_id',
+                        'badge_type',
+                        'badge_prints_count',
+                        'created',
+                    ];
+                },
+                function ($filter) use ($summit) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    }
+                    return $filter;
+                },
+                function () {
+                    return ISummitAttendeeTicketSerializerTypes::AdminType;
                 }
-                return $filter;
-            },
-            function () {
-                return ISummitAttendeeTicketSerializerTypes::AdminType;
-            }
-        );
+            );
+        });
     }
 
     /**
@@ -228,47 +234,52 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id) {
 
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404("Summit not found.");
+            return $this->withReplica(function() use ($summit_id) {
+                $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+                if (is_null($summit))
+                    return $this->error404("Summit not found.");
 
-            $external_feed_type = $summit->getExternalRegistrationFeedType();
-            if (is_null($external_feed_type) ||
-            $external_feed_type == ISummitExternalRegistrationFeedType::NoneType)
-                return $this->error412("Summit has no external feed.");
+                $external_feed_type = $summit->getExternalRegistrationFeedType();
+                if (is_null($external_feed_type) ||
+                    $external_feed_type == ISummitExternalRegistrationFeedType::NoneType)
+                    return $this->error412("Summit has no external feed.");
 
-            $filter = self::getFilter(
-                function(){ return [ 'owner_email' => ['==']];},
-                function(){ return ['owner_email' => 'required|string'];}
-            );
+                $filter = self::getFilter(
+                    function () {
+                        return ['owner_email' => ['==']];
+                    },
+                    function () {
+                        return ['owner_email' => 'required|string'];
+                    }
+                );
 
-            $filterVal = $filter->getUniqueFilter('owner_email');
-            if(is_null($filterVal)) return $this->error400("missing owner_email parameter.");
+                $filterVal = $filter->getUniqueFilter('owner_email');
+                if (is_null($filterVal)) return $this->error400("missing owner_email parameter.");
 
-            try {
-                $ticket = $this->service->getTicket($summit, $filterVal->getRawValue());
-            }
-            catch (EntityNotFoundException $ex){
-                Log::error($ex);
-                $ticket = null;
-            }
+                try {
+                    $ticket = $this->service->getTicket($summit, $filterVal->getRawValue());
+                } catch (EntityNotFoundException $ex) {
+                    Log::error($ex);
+                    $ticket = null;
+                }
 
-            $data = is_null($ticket) ? [] : [$ticket];
+                $data = is_null($ticket) ? [] : [$ticket];
 
-            $response = new PagingResponse
-            (
-                1,
-                1,
-                1,
-                1,
-                $data
-            );
+                $response = new PagingResponse
+                (
+                    1,
+                    1,
+                    1,
+                    1,
+                    $data
+                );
 
-            return $this->ok($response->toArray(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
+                return $this->ok($response->toArray(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+            });
         });
     }
 
@@ -278,200 +289,202 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      */
     public function getAllBySummitCSV($summit_id)
     {
-        $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
-        $questions = $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
-        return $this->_getAllCSV(
-            function () {
-                return [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'number' => ['@@', '=@', '=='],
-                    'order_number' => ['@@', '=@', '=='],
-                    'owner_name' => ['@@', '=@', '=='],
-                    'owner_first_name' => ['@@', '=@', '=='],
-                    'owner_last_name' => ['@@', '=@', '=='],
-                    'owner_email' => ['@@', '=@', '=='],
-                    'owner_company' => ['@@', '=@', '=='],
-                    'summit_id' => ['=='],
-                    'owner_id' => ['=='],
-                    'order_id' => ['=='],
-                    'status' => ['==', '<>'],
-                    'is_active' => ['=='],
-                    'has_requested_refund_requests' => ['=='],
-                    'access_level_type_name' => ['=='],
-                    'access_level_type_id' => ['=='],
-                    'ticket_type_id' => ['=='],
-                    'has_owner' => ['=='],
-                    'owner_status' => ['=='],
-                    'has_badge' => ['=='],
-                    'view_type_id' => ['=='],
-                    'promo_code_id' => ['=='],
-                    'promo_code' => ['==', '@@', '=@'],
-                    'promo_code_tag' => ['==', '@@', '=@'],
-                    'promo_code_tag_id' => ['=='],
-                    'promo_code_description' => ['@@', '=@'],
-                    'final_amount' => ['==', '<>', '>=', '>'],
-                    'is_printable' => ['=='],
-                    'badge_type_id' => ['=='],
-                    'has_badge_prints' => ['=='],
-                    'badge_prints_count' =>  ['==', '>=', '<=', '>', '<'],
-                    'has_owner_company' => ['=='],
-                    'exclude_is_printable_free_unassigned' => ['=='],
-                ];
-            },
-            function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'not_id' =>  'sometimes|integer',
-                    'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
-                    'number' => 'sometimes|string',
-                    'order_number' => 'sometimes|string',
-                    'owner_name' => 'sometimes|string',
-                    'owner_first_name' => 'sometimes|string',
-                    'owner_last_name' => 'sometimes|string',
-                    'owner_email' => 'sometimes|string',
-                    'owner_company' => 'sometimes|string',
-                    'summit_id' => 'sometimes|integer',
-                    'owner_id' => 'sometimes|integer',
-                    'order_id' => 'sometimes|integer',
-                    'is_active' => 'sometimes|boolean',
-                    'has_requested_refund_requests' => 'sometimes|boolean',
-                    'access_level_type_name' => 'sometimes|string',
-                    'access_level_type_id' => 'sometimes|integer',
-                    'ticket_type_id' => 'sometimes|integer',
-                    'has_owner' => 'sometimes|boolean',
-                    'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
-                    'has_badge' => 'sometimes|boolean',
-                    'view_type_id' => 'sometimes|integer',
-                    'promo_code_id' => 'sometimes|integer',
-                    'promo_code' => 'sometimes|string',
-                    'promo_code_tag' => 'sometimes|string',
-                    'promo_code_description' => 'sometimes|string',
-                    'promo_code_tag_id' => 'sometimes|integer',
-                    'final_amount' => 'sometimes|numeric',
-                    'is_printable' => ['sometimes', new Boolean()],
-                    'badge_type_id' => 'sometimes|integer',
-                    'has_badge_prints' => ['sometimes', new Boolean()],
-                    'badge_prints_count' => 'sometimes|integer',
-                    'has_owner_company' => ['sometimes', new Boolean()],
-                    'exclude_is_printable_free_unassigned' => ['sometimes', new Boolean()],
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'number',
-                    'status',
-                    'owner_name',
-                    'owner_first_name',
-                    'owner_last_name',
-                    'ticket_type',
-                    'final_amount',
-                    'owner_email',
-                    'owner_company',
-                    'promo_code',
-                    'bought_date',
-                    'refunded_amount',
-                    'final_amount_adjusted',
-                    'badge_type_id',
-                    'badge_type',
-                    'badge_prints_count',
-                    'created',
-                ];
-            },
-            function ($filter) use ($summit) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                }
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_CSV;
-            },
-            function () use($summit) {
-                return [
-                    'created' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
-                    'last_edited' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
-                    'purchase_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
-                    'attendee_checked_in' => new BooleanCellFormatter(),
-                    'is_active' => new BooleanCellFormatter(),
-                ];
-            },
-            function () use ($summit) {
-                $allowed_columns = [
-                    'id',
-                    'created',
-                    'last_edited',
-                    'number',
-                    'status',
-                    'attendee_id',
-                    'attendee_first_name',
-                    'attendee_last_name',
-                    'attendee_email',
-                    'attendee_company',
-                    'external_order_id',
-                    'external_attendee_id',
-                    'purchase_date',
-                    'ticket_type_id',
-                    'ticket_type_name',
-                    'order_id',
-                    'badge_id',
-                    'promo_code_id',
-                    'promo_code',
-                    'raw_cost',
-                    'final_amount',
-                    'discount',
-                    'refunded_amount',
-                    'currency',
-                    'badge_type_id',
-                    'badge_type_name',
-                    'promo_code_tags',
-                ];
+        return $this->withReplica(function() use ($summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            $questions = $summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+            return $this->_getAllCSV(
+                function () {
+                    return [
+                        'id' => ['=='],
+                        'not_id' => ['=='],
+                        'number' => ['@@', '=@', '=='],
+                        'order_number' => ['@@', '=@', '=='],
+                        'owner_name' => ['@@', '=@', '=='],
+                        'owner_first_name' => ['@@', '=@', '=='],
+                        'owner_last_name' => ['@@', '=@', '=='],
+                        'owner_email' => ['@@', '=@', '=='],
+                        'owner_company' => ['@@', '=@', '=='],
+                        'summit_id' => ['=='],
+                        'owner_id' => ['=='],
+                        'order_id' => ['=='],
+                        'status' => ['==', '<>'],
+                        'is_active' => ['=='],
+                        'has_requested_refund_requests' => ['=='],
+                        'access_level_type_name' => ['=='],
+                        'access_level_type_id' => ['=='],
+                        'ticket_type_id' => ['=='],
+                        'has_owner' => ['=='],
+                        'owner_status' => ['=='],
+                        'has_badge' => ['=='],
+                        'view_type_id' => ['=='],
+                        'promo_code_id' => ['=='],
+                        'promo_code' => ['==', '@@', '=@'],
+                        'promo_code_tag' => ['==', '@@', '=@'],
+                        'promo_code_tag_id' => ['=='],
+                        'promo_code_description' => ['@@', '=@'],
+                        'final_amount' => ['==', '<>', '>=', '>'],
+                        'is_printable' => ['=='],
+                        'badge_type_id' => ['=='],
+                        'has_badge_prints' => ['=='],
+                        'badge_prints_count' =>  ['==', '>=', '<=', '>', '<'],
+                        'has_owner_company' => ['=='],
+                        'exclude_is_printable_free_unassigned' => ['=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'id' => 'sometimes|integer',
+                        'not_id' =>  'sometimes|integer',
+                        'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
+                        'number' => 'sometimes|string',
+                        'order_number' => 'sometimes|string',
+                        'owner_name' => 'sometimes|string',
+                        'owner_first_name' => 'sometimes|string',
+                        'owner_last_name' => 'sometimes|string',
+                        'owner_email' => 'sometimes|string',
+                        'owner_company' => 'sometimes|string',
+                        'summit_id' => 'sometimes|integer',
+                        'owner_id' => 'sometimes|integer',
+                        'order_id' => 'sometimes|integer',
+                        'is_active' => 'sometimes|boolean',
+                        'has_requested_refund_requests' => 'sometimes|boolean',
+                        'access_level_type_name' => 'sometimes|string',
+                        'access_level_type_id' => 'sometimes|integer',
+                        'ticket_type_id' => 'sometimes|integer',
+                        'has_owner' => 'sometimes|boolean',
+                        'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
+                        'has_badge' => 'sometimes|boolean',
+                        'view_type_id' => 'sometimes|integer',
+                        'promo_code_id' => 'sometimes|integer',
+                        'promo_code' => 'sometimes|string',
+                        'promo_code_tag' => 'sometimes|string',
+                        'promo_code_description' => 'sometimes|string',
+                        'promo_code_tag_id' => 'sometimes|integer',
+                        'final_amount' => 'sometimes|numeric',
+                        'is_printable' => ['sometimes', new Boolean()],
+                        'badge_type_id' => 'sometimes|integer',
+                        'has_badge_prints' => ['sometimes', new Boolean()],
+                        'badge_prints_count' => 'sometimes|integer',
+                        'has_owner_company' => ['sometimes', new Boolean()],
+                        'exclude_is_printable_free_unassigned' => ['sometimes', new Boolean()],
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'number',
+                        'status',
+                        'owner_name',
+                        'owner_first_name',
+                        'owner_last_name',
+                        'ticket_type',
+                        'final_amount',
+                        'owner_email',
+                        'owner_company',
+                        'promo_code',
+                        'bought_date',
+                        'refunded_amount',
+                        'final_amount_adjusted',
+                        'badge_type_id',
+                        'badge_type',
+                        'badge_prints_count',
+                        'created',
+                    ];
+                },
+                function ($filter) use ($summit) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    }
+                    return $filter;
+                },
+                function () {
+                    return SerializerRegistry::SerializerType_CSV;
+                },
+                function () use($summit) {
+                    return [
+                        'created' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                        'last_edited' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                        'purchase_date' => new EpochCellFormatter(EpochCellFormatter::DefaultFormat, $summit->getTimeZone()),
+                        'attendee_checked_in' => new BooleanCellFormatter(),
+                        'is_active' => new BooleanCellFormatter(),
+                    ];
+                },
+                function () use ($summit) {
+                    $allowed_columns = [
+                        'id',
+                        'created',
+                        'last_edited',
+                        'number',
+                        'status',
+                        'attendee_id',
+                        'attendee_first_name',
+                        'attendee_last_name',
+                        'attendee_email',
+                        'attendee_company',
+                        'external_order_id',
+                        'external_attendee_id',
+                        'purchase_date',
+                        'ticket_type_id',
+                        'ticket_type_name',
+                        'order_id',
+                        'badge_id',
+                        'promo_code_id',
+                        'promo_code',
+                        'raw_cost',
+                        'final_amount',
+                        'discount',
+                        'refunded_amount',
+                        'currency',
+                        'badge_type_id',
+                        'badge_type_name',
+                        'promo_code_tags',
+                    ];
 
-                foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
-                    $allowed_columns[] = $featuresType->getName();
-                }
+                    foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
+                        $allowed_columns[] = $featuresType->getName();
+                    }
 
-                foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question) {
-                    $allowed_columns[] = $question->getLabel();
-                }
+                    foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question) {
+                        $allowed_columns[] = $question->getLabel();
+                    }
 
-                $columns_param = Request::input("columns", "");
-                $columns = [];
-                if (!empty($columns_param))
-                    $columns = explode(',', $columns_param);
-                $diff = array_diff($columns, $allowed_columns);
-                if (count($diff) > 0) {
-                    throw new ValidationException(sprintf("columns %s are not allowed!", implode(",", $diff)));
-                }
-                if (empty($columns))
-                    $columns = $allowed_columns;
-                return $columns;
-            },
-            sprintf('tickets-%s-', $summit_id),
-            [
-                'features_types' => $summit->getBadgeFeaturesTypes(),
-                'ticket_questions' => $questions
-            ],
-            null,
-            function($data, $serializerParams) use($questions){
+                    $columns_param = Request::input("columns", "");
+                    $columns = [];
+                    if (!empty($columns_param))
+                        $columns = explode(',', $columns_param);
+                    $diff = array_diff($columns, $allowed_columns);
+                    if (count($diff) > 0) {
+                        throw new ValidationException(sprintf("columns %s are not allowed!", implode(",", $diff)));
+                    }
+                    if (empty($columns))
+                        $columns = $allowed_columns;
+                    return $columns;
+                },
+                sprintf('tickets-%s-', $summit_id),
+                [
+                    'features_types' => $summit->getBadgeFeaturesTypes(),
+                    'ticket_questions' => $questions
+                ],
+                null,
+                function($data, $serializerParams) use($questions){
 
-                $owners = [];
-                foreach ($data->getItems() as $t){
-                    if ($t->hasOwner()) $owners[] = $t->getOwner()->getId();
-                }
-                $questionIds = [];
-                foreach ($questions as $q) {
-                    $questionIds[] = $q->getId();
-                }
-                $questionIds = array_values(array_unique($questionIds));
-                $owners = array_values(array_unique($owners));
+                    $owners = [];
+                    foreach ($data->getItems() as $t){
+                        if ($t->hasOwner()) $owners[] = $t->getOwner()->getId();
+                    }
+                    $questionIds = [];
+                    foreach ($questions as $q) {
+                        $questionIds[] = $q->getId();
+                    }
+                    $questionIds = array_values(array_unique($questionIds));
+                    $owners = array_values(array_unique($owners));
 
-                $serializerParams['answers_by_owner'] = $this->attendee_repository->getExtraQuestionAnswersByOwners($owners, $questionIds);
-                return $serializerParams;
-            }
-        );
+                    $serializerParams['answers_by_owner'] = $this->attendee_repository->getExtraQuestionAnswersByOwners($owners, $questionIds);
+                    return $serializerParams;
+                }
+            );
+        });
     }
 
     /**
@@ -603,71 +616,75 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     public function getAllMyTicketsBySummit($summit_id)
     {
         $owner = $this->getResourceServerContext()->getCurrentUser();
-        return $this->_getAll(
-            function () {
-                return [
-                    'number' => ['=@', '=='],
-                    'order_number' => ['=@', '=='],
-                    'summit_id' => ['=='],
-                    'order_id' => ['=='],
-                    'status' => ['==', '<>'],
-                    'order_owner_id' => ['==', '<>'],
-                    'has_order_owner' => ['=='],
-                    'final_amount' => ['==', '<>', '>=', '>'],
-                    'assigned_to' =>  ['=='],
-                    'owner_status' =>  ['=='],
-                    'badge_features_id' =>  ['=='],
-                    'ticket_type_id' =>  ['=='],
-                    'promo_code' => ['=@', '=='],
-                ];
-            },
-            function () {
-                return [
-                    'number' => 'sometimes|string',
-                    'order_number' => 'sometimes|string',
-                    'summit_id' => 'sometimes|integer',
-                    'order_id' => 'sometimes|integer',
-                    'order_owner_id' => 'sometimes|integer',
-                    'has_order_owner' => 'sometimes|boolean',
-                    'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
-                    'final_amount' => 'sometimes|numeric',
-                    'assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
-                    'owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
-                    'badge_features_id' => 'sometimes|integer',
-                    'ticket_type_id' => 'sometimes|integer',
-                    'promo_code' => 'sometimes|string',
-                ];
-            },
-            function () {
-                return [
-                    'id',
-                    'number',
-                    'status',
-                    'created',
-                ];
-            },
-            function ($filter) use ($owner, $summit_id) {
-                if ($filter instanceof Filter) {
-                    if (is_numeric($summit_id)) {
-                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
-                    }
-                    $filter->addFilterCondition(FilterElement::makeEqual('member_id', $owner->getId()));
-                    $filter->addFilterCondition(FilterElement::makeEqual('is_active', true));
 
-                    if($filter->hasFilter("assigned_to")){
-                        $assigned_to = $filter->getValue("assigned_to")[0];
-                        if(in_array($assigned_to, ['Me','SomeoneElse'])){
-                            $filter->addFilterCondition(FilterElement::makeEqual('owner_member_id', $owner->getId()));
-                            $filter->addFilterCondition(FilterElement::makeEqual('owner_member_email', $owner->getEmail()));
+        return $this->withReplica(function() use($owner, $summit_id) {
+            return $this->_getAll(
+                function () {
+                    return [
+                        'number' => ['=@', '=='],
+                        'order_number' => ['=@', '=='],
+                        'summit_id' => ['=='],
+                        'order_id' => ['=='],
+                        'status' => ['==', '<>'],
+                        'order_owner_id' => ['==', '<>'],
+                        'has_order_owner' => ['=='],
+                        'final_amount' => ['==', '<>', '>=', '>'],
+                        'assigned_to' =>  ['=='],
+                        'owner_status' =>  ['=='],
+                        'badge_features_id' =>  ['=='],
+                        'ticket_type_id' =>  ['=='],
+                        'promo_code' => ['=@', '=='],
+                    ];
+                },
+                function () {
+                    return [
+                        'number' => 'sometimes|string',
+                        'order_number' => 'sometimes|string',
+                        'summit_id' => 'sometimes|integer',
+                        'order_id' => 'sometimes|integer',
+                        'order_owner_id' => 'sometimes|integer',
+                        'has_order_owner' => 'sometimes|boolean',
+                        'status' => sprintf('sometimes|in:%s', implode(',', IOrderConstants::ValidStatus)),
+                        'final_amount' => 'sometimes|numeric',
+                        'assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
+                        'owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
+                        'badge_features_id' => 'sometimes|integer',
+                        'ticket_type_id' => 'sometimes|integer',
+                        'promo_code' => 'sometimes|string',
+                    ];
+                },
+                function () {
+                    return [
+                        'id',
+                        'number',
+                        'status',
+                        'created',
+                    ];
+                },
+                function ($filter) use ($owner, $summit_id) {
+                    if ($filter instanceof Filter) {
+                        if (is_numeric($summit_id)) {
+                            $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
+                        }
+                        $filter->addFilterCondition(FilterElement::makeEqual('member_id', $owner->getId()));
+                        $filter->addFilterCondition(FilterElement::makeEqual('is_active', true));
+
+                        if($filter->hasFilter("assigned_to")){
+                            $assigned_to = $filter->getValue("assigned_to")[0];
+                            if(in_array($assigned_to, ['Me','SomeoneElse'])){
+                                $filter->addFilterCondition(FilterElement::makeEqual('owner_member_id', $owner->getId()));
+                                $filter->addFilterCondition(FilterElement::makeEqual('owner_member_email', $owner->getEmail()));
+                            }
                         }
                     }
+                    return $filter;
+                },
+                function () {
+                    return ISummitAttendeeTicketSerializerTypes::AdminType;
                 }
-                return $filter;
-            },
-            function () {
-                return ISummitAttendeeTicketSerializerTypes::AdminType;
-            }
-        );
+            );
+        });
+
     }
 
     /**
@@ -686,7 +703,10 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
      */
     protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
     {
-        return $this->service->getTicket($summit, $child_id);
+        return $this->withReplica(function() use($summit, $child_id) {
+            return $this->service->getTicket($summit, $child_id);
+        });
+
     }
 
     /**
@@ -739,19 +759,22 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     public function getAttendeeBadge($summit_id, $ticket_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id) {
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
 
-            $ticket = is_int($ticket_id) ? $this->repository->getById(intval($ticket_id)) : $this->repository->getByNumber($ticket_id);
-            if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket) return $this->error404();;
-            if ($ticket->getOrder()->getSummitId() != $summit->getId()) return $this->error404();
-            if (!$ticket->hasBadge()) return $this->error404();
+            return $this->withReplica(function() use($summit_id, $ticket_id) {
+                $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
+                if (is_null($summit)) return $this->error404();
 
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($ticket->getBadge())->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
+                $ticket = is_int($ticket_id) ? $this->repository->getById(intval($ticket_id)) : $this->repository->getByNumber($ticket_id);
+                if (is_null($ticket) || !$ticket instanceof SummitAttendeeTicket) return $this->error404();;
+                if ($ticket->getOrder()->getSummitId() != $summit->getId()) return $this->error404();
+                if (!$ticket->hasBadge()) return $this->error404();
+
+                return $this->ok(SerializerRegistry::getInstance()->getSerializer($ticket->getBadge())->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
+            });
         });
     }
 

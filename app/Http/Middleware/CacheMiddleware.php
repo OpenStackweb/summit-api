@@ -117,14 +117,36 @@ final class CacheMiddleware
         $path   = $request->getPathInfo();
         $csvKeys = ['fields','expand','relations'];
 
+        // apply patch only when request is /api/v1/summits/{id}
+        $applyTracksCompat = (preg_match('#^/api/v1/summits/\d+/?$#', $path) === 1);
+
         $params = collect($request->query())
             ->except(['access_token','token_type','q','t','evict_cache'])
             ->sortKeys()
-            ->map(function($v, $k) use ($csvKeys) {
+            ->map(function($v, $k) use ($csvKeys, $applyTracksCompat) {
                 $str = is_array($v) ? implode(',', $v) : (string)$v;
                 if (in_array($k, $csvKeys, true)) {
                     // "a, b ,  c" -> "a,b,c"
-                    $str = preg_replace('/\s*,\s*/', ',', trim($str));
+                    $items = preg_split('/\s*,\s*/', trim($str), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+                    if ($k === 'relations' && $applyTracksCompat) {
+                        $set = array_flip($items);
+                        /**
+                         * legacy: tracks,tracks.subtracks.none
+                         * new: tracks,tracks.subtracks,tracks.subtracks.none
+                         */
+                        if (isset($set['tracks']) &&
+                            !isset($set['tracks.subtracks'])
+                            && isset($set['tracks.subtracks.none'])) {
+                            $set['tracks.subtracks'] = true;
+                        }
+                        $items = array_keys($set);
+                    } else {
+                        $items = array_values(array_unique($items));
+                    }
+
+                    sort($items, SORT_STRING);
+                    $str = implode(',', $items);
                 }
                 return $str;
             })

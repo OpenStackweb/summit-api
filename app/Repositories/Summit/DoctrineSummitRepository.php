@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\libs\Utils\Doctrine\GraphLoaderTrait;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\ORM\QueryBuilder;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,6 @@ use models\summit\ISummitRepository;
 use models\summit\Summit;
 use App\Repositories\SilverStripeDoctrineRepository;
 use utils\DoctrineFilterMapping;
-use utils\DoctrineHavingFilterMapping;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -33,6 +33,8 @@ final class DoctrineSummitRepository
     extends SilverStripeDoctrineRepository
     implements ISummitRepository
 {
+    use GraphLoaderTrait;
+
 
     /**
      * @return array
@@ -437,5 +439,60 @@ SQL;
         $last_page = (int) ceil($total / $paging_info->getPerPage());
 
         return new PagingResponse($total, $paging_info->getPerPage(), $paging_info->getCurrentPage(), $last_page, $companies);
+    }
+
+    public function getBySlugAndRelations(string $slug, array $relations = []): ?Summit
+    {
+        try {
+            return $this->loadGraphBy(
+                $this->getEntityManager(),
+                Summit::class,
+                $relations,
+                // WHERE configurator
+                function ($qb, string $rootAlias) use ($slug): void {
+                    $qb->where("$rootAlias.slug = :slug")
+                        ->setParameter('slug', strtolower($slug));
+                }
+            );
+        } catch (\Throwable $e) {
+            Log::warning($e);
+            return null;
+        }
+    }
+
+    public function getByIdAndRelations(int $id, array $relations = []): ?Summit
+    {
+        try {
+            return $this->loadGraphBy(
+                $this->getEntityManager(),
+                Summit::class,
+                $relations,
+                function ($qb, string $rootAlias) use ($id): void {
+                    $qb->where("$rootAlias.id = :id")
+                        ->setParameter('id', $id);
+                }
+            );
+        } catch (\Throwable $e) {
+            Log::warning($e);
+            return null;
+        }
+    }
+
+    public function getCurrentAndRelations(array $relations = []): ?Summit
+    {
+        try {
+            return $this->loadGraphBy(
+                $this->getEntityManager(),
+                Summit::class,
+                $relations,
+                function ($qb, string $rootAlias): void {
+                    $qb->where('s.active = 1')
+                        ->orderBy('s.begin_date', 'DESC');
+                }
+            );
+        } catch (\Throwable $e) {
+            Log::warning($e);
+            return null;
+        }
     }
 }

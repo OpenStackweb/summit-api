@@ -306,6 +306,49 @@ final class OAuth2SummitApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
     }
 
+    public function testGetSummit3()
+    {
+
+        $params = [
+            'fields' => '
+id,name,start_date,end_date,time_zone_id,time_zone_label,secondary_logo,slug,support_email,start_showing_venues_date,dates_with_events,logo,dates_label,registration_allowed_refund_request_till_date,allow_update_attendee_extra_questions,is_virtual,registration_disclaimer_mandatory,registration_disclaimer_content,reassign_ticket_till_date,is_main,title,description,time_zone,event_types.id,tracks.id,tracks.name,tracks.code,tracks.order,tracks.parent_id,tracks.color,tracks.text_color,tracks.subtracks.id,tracks.subtracks.name,tracks.subtracks.code,tracks.subtracks.order,tracks.subtracks.parent_id,tracks.subtracks.color,tracks.subtracks.text_color,ticket_types.id,ticket_types.name,ticket_types.created,ticket_types.cost,track_groups.id,track_groups.name,track_groups.color,locations.id,locations.class_name,locations.is_main,locations.name,locations.city,locations.country,locations.venue.name',
+            'expand' => 'event_types,badge_features_types,tracks,track_groups,presentation_levels,locations,schedule_settings,ticket_types,schedule_settings.filters,schedule_settings.pre_filters,tracks.subtracks,locations.venue',
+            'relations' => 'dates_with_events,locations,payment_profiles,time_zone,ticket_types.none,tracks,tracks.subtracks,tracks.subtracks.none,track_groups.none,locations.none,locations.venue.none,event_types.none',
+            'id'     => self::$summit->getId()
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getSummit",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+        $content = $response->getContent();
+        $summit = json_decode($content);
+        $this->assertTrue(!is_null($summit));
+        $this->assertResponseStatus(200);
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getSummit",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $summit  = json_decode($content);
+        $this->assertTrue(!is_null($summit));
+        $this->assertTrue(count($summit->event_types) > 0);
+        $this->assertTrue(count($summit->tracks) > 0);
+        $this->assertResponseStatus(200);
+    }
+
 
     public function testAddSummitAlreadyExistsName(){
         $params = [

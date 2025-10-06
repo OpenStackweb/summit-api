@@ -329,7 +329,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id) {
 
             Log::debug(sprintf("OAuth2SummitApiController::getSummit %s", $summit_id));
-            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)
+                ->find($summit_id, ['event_types','badge_features_types','badge_features_types.image','presentation_categories','ticket_types','locations','category_groups','badge_access_level_types']);
             if (!$summit instanceof Summit || $summit->isDeleting()) return $this->error404();
             $current_member = $this->resource_server_context->getCurrentUser();
 

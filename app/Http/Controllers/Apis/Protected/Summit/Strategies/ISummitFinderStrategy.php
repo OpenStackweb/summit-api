@@ -23,8 +23,9 @@ use models\summit\Summit;
 interface ISummitFinderStrategy
 {
     /**
-     * @param mixed $summit_id
-     * @return null|Summit
+     * @param $summit_id
+     * @param array $relations
+     * @return mixed
      */
-    public function find($summit_id);
+    public function find($summit_id, array $relations = []);
 }

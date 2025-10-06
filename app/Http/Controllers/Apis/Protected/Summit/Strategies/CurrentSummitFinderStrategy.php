@@ -49,11 +49,18 @@ class CurrentSummitFinderStrategy implements ISummitFinderStrategy
     }
 
     /**
-     * @param mixed $summit_id
-     * @return null|Summit
+     * @param $summit_id
+     * @param array $relations
+     * @return mixed|Summit|\models\utils\IEntity|null
      */
-    public function find($summit_id)
+    public function find($summit_id, array $relations = [])
     {
+        if(count($relations) > 0){
+            $summit = $summit_id === 'current' ? $this->repository->getCurrentAndRelations($relations) : $this->repository->getByIdAndRelations(intval($summit_id), $relations);
+            if(is_null($summit))
+                $summit = $this->repository->getBySlugAndRelations(strval($summit_id), $relations);
+            return $summit;
+        }
         $summit = $summit_id === 'current' ? $this->repository->getCurrent() : $this->repository->getById(intval($summit_id));
         if(is_null($summit))
             $summit = $this->repository->getBySlug(strval($summit_id));

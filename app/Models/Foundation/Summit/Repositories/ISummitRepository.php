@@ -105,4 +105,15 @@ interface ISummitRepository extends IBaseRepository
      * @return PagingResponse
      */
     public function getRegistrationCompanies(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null):PagingResponse;
+
+    public function getBySlugAndRelations(string $slug, array $relations = []): ?Summit;
+
+    public function getByIdAndRelations(int $id, array $relations = []): ?Summit;
+
+    /**
+     * @param array $relations
+     * @return Summit|null
+     */
+    public function getCurrentAndRelations(array $relations = []):?Summit;
+
 }

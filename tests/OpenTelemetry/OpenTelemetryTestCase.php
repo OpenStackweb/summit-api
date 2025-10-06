@@ -55,6 +55,8 @@ abstract class OpenTelemetryTestCase extends TestCase
         putenv('OTEL_INSTRUMENTATION_CONSOLE=false');
         putenv('OTEL_TRACES_EXPORTER=none');
         putenv('OTEL_METRICS_EXPORTER=none');
+        putenv('OTEL_LOGS_EXPORTER=none');
+
     }
 
     protected function tearDown(): void

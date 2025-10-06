@@ -121,8 +121,8 @@ final class CacheMiddleware
         $path   = $request->getPathInfo();
         $csvKeys = ['fields','expand','relations'];
 
-        // apply patch only when request is /api/v1/summits/{id}
-        $applyTracksCompat = (preg_match('#^/api/v1/summits/\d+/?$#', $path) === 1);
+        // apply patch only when request is /api/v1/summits/{id} or  /api/public/v1/summits/{id}
+        $applyTracksCompat = (preg_match('#^/api/(public/)?v1/summits/\d+/?$#', $path) === 1);
 
         $params = collect($request->query())
             ->except(['access_token','token_type','q','t','evict_cache'])
@@ -133,7 +133,15 @@ final class CacheMiddleware
                     // "a, b ,  c" -> "a,b,c"
                     $items = preg_split('/\s*,\s*/', trim($str), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
-                    if ($k === 'relations' && $applyTracksCompat) {
+                    if($k ==='fields' && $applyTracksCompat){
+                        $set = array_flip($items);
+                        if (!isset($set['dates_label'])) {
+                            Log::warning(sprintf("CacheMiddleware: normalizing fields for path %s", $path));
+                            $set['dates_label'] = true;
+                        }
+                        $items = array_keys($set);
+                    }
+                    else if ($k === 'relations' && $applyTracksCompat) {
                         $set = array_flip($items);
                         /**
                          * legacy: tracks,tracks.subtracks.none

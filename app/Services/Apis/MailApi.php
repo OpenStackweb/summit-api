@@ -59,7 +59,8 @@ final class MailApi extends AbstractOAuth2Api implements IMailApi
         parent::__construct($cacheService);
         $stack = HandlerStack::create();
         $stack->push(GuzzleRetryMiddleware::factory());
-        $stack->push(GuzzleTraceMiddleware::make());
+        if (config('opentelemetry.enabled', false))
+            $stack->push(GuzzleTraceMiddleware::make());
 
         $this->client = new Client([
             'handler'         => $stack,

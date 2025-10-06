@@ -51,6 +51,7 @@ final class CacheMiddleware
             }
         }
         $status = 200;
+        $wasHit = false;
         if ($regionTag) {
             Log::debug("CacheMiddleware: using region tag {$regionTag} ip {$ip} agent {$agent}");
             $wasHit = Cache::tags($regionTag)->has($key);
@@ -100,6 +101,9 @@ final class CacheMiddleware
         $response->setMaxAge(0);
         $response->headers->addCacheControlDirective('must-revalidate', true);
         $response->headers->addCacheControlDirective('proxy-revalidate', true);
+        $response->headers->add([
+            'X-Cache-Result' => $wasHit ? 'HIT':'MISS',
+        ]);
         Log::debug( "CacheMiddleware: returning response", [
             'ip' => $ip,
             'agent' => $agent,
@@ -123,7 +127,7 @@ final class CacheMiddleware
         $params = collect($request->query())
             ->except(['access_token','token_type','q','t','evict_cache'])
             ->sortKeys()
-            ->map(function($v, $k) use ($csvKeys, $applyTracksCompat) {
+            ->map(function($v, $k) use ($csvKeys, $applyTracksCompat, $path) {
                 $str = is_array($v) ? implode(',', $v) : (string)$v;
                 if (in_array($k, $csvKeys, true)) {
                     // "a, b ,  c" -> "a,b,c"
@@ -138,6 +142,7 @@ final class CacheMiddleware
                         if (isset($set['tracks']) &&
                             !isset($set['tracks.subtracks'])
                             && isset($set['tracks.subtracks.none'])) {
+                            Log::warning(sprintf("CacheMiddleware: normalizing relations for path %s", $path));
                             $set['tracks.subtracks'] = true;
                         }
                         $items = array_keys($set);

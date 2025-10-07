@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
 use models\summit\IOrderConstants;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeTicket;
 use models\summit\SummitOrder;
 use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
@@ -72,6 +73,11 @@ final class DoctrineSummitOrderRepository
             'tickets_owner_status' => 'to.status:json_string',
             'tickets_promo_code' => 'pc.code:json_string',
             'tickets_type_id' => 'tt.id',
+            'tickets_owner_email' => sprintf('EXISTS ( SELECT 1 FROM %s to1:i
+            JOIN to1:i.owner to1_o:i
+            LEFT JOIN  to1_o:i.member to1_o_m:i
+            WHERE to1:i.order = e AND COALESCE(LOWER(to1_o:i.email), LOWER(to1_o_m:i.email)) :operator :value )',SummitAttendeeTicket::class),
+            'tickets_number' => sprintf('EXISTS ( SELECT 1 FROM %s to1:i where to1:i.order = e )',SummitAttendeeTicket::class),
             'tickets_badge_features_id' => ['bf.id:json_int','bt_bf.id:json_int'],
             'tickets_assigned_to' => new DoctrineSwitchFilterMapping([
                     'Me' => new DoctrineCaseFilterMapping(

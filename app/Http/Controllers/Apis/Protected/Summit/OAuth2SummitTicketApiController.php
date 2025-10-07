@@ -621,8 +621,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             return $this->_getAll(
                 function () {
                     return [
-                        'number' => ['=@', '=='],
-                        'order_number' => ['=@', '=='],
+                        'number' => ['=@', '==', '@@'],
+                        'order_number' => ['=@', '==', '@@'],
                         'summit_id' => ['=='],
                         'order_id' => ['=='],
                         'status' => ['==', '<>'],

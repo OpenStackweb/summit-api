@@ -98,9 +98,10 @@ final class DoctrineSummitAttendeeTicketRepository
         $val = fn(string $f) => $filter?->getValue($f)[0] ?? null;
 
         // --- Filters ---
-        if ($has('order_number') || $has('order_id') || $has('order_owner_id') || $has('bought_date') || $has('summit_id')) {
+        if ($has('order_number') || $has('order_id') || $has('order_owner_id')  || $has('order_owner_email')
+            || $has('bought_date') || $has('summit_id')) {
             $need['o'] = true;
-            if ($has('order_owner_id')) {
+            if ($has('order_owner_id') ||  $has('order_owner_email')) {
                 $this->joinCatalog['ord_m'][1] = 'join';
                 $need['ord_m'] = true;
             }
@@ -265,6 +266,7 @@ final class DoctrineSummitAttendeeTicketRepository
             'number' => 'e.number:json_string',
             'is_active' => 'e.is_active',
             'order_number' => 'o.number:json_string',
+            'order_owner_email' => 'COALESCE(ord_m.email, o.owner_email)',
             'owner_name' => "COALESCE(LOWER(CONCAT(a.first_name, ' ', a.surname)),LOWER(CONCAT(m.first_name, ' ', m.last_name)))",
             'owner_company' => 'COALESCE(a.company_name, a_c.name)',
             'has_owner_company' => new DoctrineSwitchFilterMapping([

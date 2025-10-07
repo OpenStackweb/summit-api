@@ -117,12 +117,12 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
                 description: 'Attendee badges retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitAttendeeBadgesResponse')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: 400, description: "Bad Request"),
+            new OA\Response(response: 401, description: "Unauthorized"),
+            new OA\Response(response: 403, description: "Forbidden"),
+            new OA\Response(response: 404, description: "Not Found"),
+            new OA\Response(response: 412, description: "Precondition Failed"),
+            new OA\Response(response: 500, description: "Internal Server Error"),
         ]
     )]
 
@@ -223,12 +223,12 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
                     )
                 )
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: 400, description: "Bad Request"),
+            new OA\Response(response: 401, description: "Unauthorized"),
+            new OA\Response(response: 403, description: "Forbidden"),
+            new OA\Response(response: 404, description: "Not Found"),
+            new OA\Response(response: 412, description: "Precondition Failed"),
+            new OA\Response(response: 500, description: "Internal Server Error"),
         ]
     )]
 

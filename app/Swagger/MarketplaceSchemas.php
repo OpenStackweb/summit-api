@@ -149,8 +149,6 @@ class PaginatedAppliancesResponseSchema
         'overview' => new OA\Property(property: 'overview', type: 'string', example: 'Remotely managed private OpenStack cloud'),
         'call_2_action_url' => new OA\Property(property: 'call_2_action_url', type: 'string', example: 'https://example.com/managed-cloud'),
         'slug' => new OA\Property(property: 'slug', type: 'string', example: 'managed-openstack-service'),
-        'company_id' => new OA\Property(property: 'company_id', type: 'integer', example: 1),
-        'type_id' => new OA\Property(property: 'type_id', type: 'integer', example: 1),
         'is_compatible_with_storage' => new OA\Property(property: 'is_compatible_with_storage', type: 'boolean', example: true),
         'is_compatible_with_compute' => new OA\Property(property: 'is_compatible_with_compute', type: 'boolean', example: true),
         'is_compatible_with_federated_identity' => new OA\Property(property: 'is_compatible_with_federated_identity', type: 'boolean', example: true),
@@ -162,6 +160,13 @@ class PaginatedAppliancesResponseSchema
         'pricing_models' => new OA\Property(property: 'pricing_models', type: 'string', example: 'Monthly subscription, Pay-as-you-use'),
         'published_sla' => new OA\Property(property: 'published_sla', type: 'string', example: '99.9% uptime guarantee'),
         'is_vendor_managed_upgrades' => new OA\Property(property: 'is_vendor_managed_upgrades', type: 'boolean', example: true)
+    ],
+    anyOf: [
+        'company_id' => new OA\Property(property: 'company_id', type: 'integer', example: 1),
+        'company' => new OA\Property(property: 'company', type: 'Company'),
+        'type_id' => new OA\Property(property: 'type_id', type: 'integer'),
+        'type' => new OA\Property(property: 'type', type: 'MarketPlaceType'),
+        'reviews' => new OA\Property(property: 'reviews', type: 'array', items: new OA\Items(type: 'MarketPlaceReview')),
     ]
 )]
 class RemoteCloudsResponseSchema

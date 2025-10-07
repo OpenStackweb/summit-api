@@ -351,3 +351,23 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+#[OA\Schema(
+    schema: 'ChunkedFileUploadProgressResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'done', type: 'number', format: 'float', example: 45.5, description: 'Upload progress percentage (0-100)'),
+    ]
+)]
+class ChunkedFileUploadProgressResponseSchema {}
+
+#[OA\Schema(
+    schema: 'ChunkedFileUploadCompleteResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'path', type: 'string', example: 'upload/image-jpeg/2025-09-30/', description: 'Directory path where the file was saved'),
+        new OA\Property(property: 'name', type: 'string', example: 'myfile_abc123def456.jpg', description: 'Generated filename with timestamp hash'),
+        new OA\Property(property: 'mime_type', type: 'string', example: 'image-jpeg', description: 'MIME type of the uploaded file (slashes replaced with hyphens)'),
+    ]
+)]
+class ChunkedFileUploadCompleteResponseSchema {}

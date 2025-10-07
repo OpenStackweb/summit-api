@@ -87,7 +87,7 @@ final class AppliancesApiController extends AbstractCompanyServiceApiController
             new OA\Response(
                 response: 200,
                 description: 'Success - Returns paginated list of appliances',
-                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedAppliancesListResponse')
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedMarketplaceAppliancesResponse')
             ),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")

@@ -1,4 +1,6 @@
-<?php namespace App\Swagger\schemas;
+<?php
+
+namespace App\Swagger\schemas;
 
 use App\Jobs\Emails\Schedule\RSVP\ReRSVPInviteEmail;
 use App\Jobs\Emails\Schedule\RSVP\RSVPInviteEmail;
@@ -7,6 +9,31 @@ use App\Security\RSVPInvitationsScopes;
 use App\Security\SummitScopes;
 use models\summit\RSVP;
 use OpenApi\Attributes as OA;
+
+
+require __DIR__ . DIRECTORY_SEPARATOR . "AuditSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "CCLASchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "ChatTeamsSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "CompaniesSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "ElectionsSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "LocationsSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "MarketplaceSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "ResourceServerSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SoftwareSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitMetricsSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitPresentationSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitPresentationTrackQuestionsSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitProposedScheduleSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitRSVPSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitRSVPTemplatesSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationPrintSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationPromoCodesSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationRefundsSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitSpeakersSchemas.php";
+require __DIR__ . DIRECTORY_SEPARATOR . "SummitTrackTagGroupsSchemas.php";
+
 
 #[OA\Schema(
     schema: 'Owner',

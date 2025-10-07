@@ -1739,8 +1739,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     public function getScheduledEventStreamingInfo($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
-
+            throw new EntityNotFoundException("Summit Event Not found.");
+            /*
             Log::debug(sprintf("getScheduledEventStreamingInfo::getScheduledEventStreamingInfo summit id %s event id %s", $summit_id, $event_id));
+
 
             $current_user = $this->resource_server_context->getCurrentUser(false);
             if(!$current_user instanceof Member)
@@ -1760,6 +1762,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     SerializerUtils::getRelations()
                 );
             });
+            */
 
         });
     }

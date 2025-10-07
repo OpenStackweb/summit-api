@@ -67,6 +67,8 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
 
     use StreamableEventTrait;
 
+    use ScheduleEntity;
+
     const ClassName = 'SummitEvent';
 
     protected $getIdMappings = [
@@ -1191,6 +1193,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         if (!in_array($occupancy, self::ValidOccupanciesValues))
             throw new ValidationException(sprintf("occupancy %s is not valid", $occupancy));
         $this->occupancy = $occupancy;
+        $this->skipDateUpdate();
     }
 
     /**
@@ -1423,6 +1426,7 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         $this->streaming_url = $streaming_url;
         $this->overflow_streaming_url = $streaming_url;;
         $key = $this->getSecureStreamCacheKey();
+        $this->skipDateUpdate();
         if (Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->has($key))
             Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->forget($key);
     }
@@ -1822,8 +1826,6 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         return $track->getProposedScheduleTransitionTime();
     }
 
-    use ScheduleEntity;
-
     public function getSummitEventId(): int
     {
         return $this->id;
@@ -1987,12 +1989,14 @@ SQL;
         $this->streaming_url = $overflow_streaming_url;
         $this->stream_is_secure = $overflow_stream_is_secure;
         $this->occupancy = self::OccupancyOverflow;
+        $this->skipDateUpdate();
     }
 
     public function clearOverflow(string $occupancy = self::OccupancyEmpty): void
     {
         $this->overflow_stream_key = null;
         $this->occupancy = $occupancy;
+        $this->skipDateUpdate();
     }
 
     /**

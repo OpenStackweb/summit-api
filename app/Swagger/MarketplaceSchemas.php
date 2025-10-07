@@ -39,7 +39,7 @@ class ConsultantsResponseSchema {}
 )]
 class PaginatedConsultantsResponseSchema {}
 #[OA\Schema(
-    schema: 'MarketplaceAppliancesResponseSchema',
+    schema: 'MarketplaceAppliancesResponse',
     type: 'object',
     properties: [
         'id' => new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -72,7 +72,7 @@ class PaginatedConsultantsResponseSchema {}
 class MarketplaceAppliancesResponseSchema {}
 
 #[OA\Schema(
-    schema: 'PaginatedMarketplaceAppliancesResponseSchema',
+    schema: 'PaginatedMarketplaceAppliancesResponse',
     allOf: [
         new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
         new OA\Schema(
@@ -81,7 +81,7 @@ class MarketplaceAppliancesResponseSchema {}
                 new OA\Property(
                     property: 'data',
                     type: 'array',
-                    items: new OA\Items(ref: '#/components/schemas/MarketplaceAppliancesResponseSchema')
+                    items: new OA\Items(ref: '#/components/schemas/MarketplaceAppliancesResponse')
                 )
             ]
         )

@@ -31,6 +31,16 @@ trait ScheduleEntity
         updated as protected cachedUpdated;
     }
 
+    protected bool $skip_data_update = false;
+
+
+    public function skipDateUpdate():void{
+        $this->skip_data_update = true;
+    }
+
+    public function shouldSkipDataUpdate():bool{
+        return $this->skip_data_update;
+    }
 
     /**
      * @return int
@@ -81,6 +91,10 @@ trait ScheduleEntity
     #[ORM\PostUpdate]
     public function updated($args)
     {
+        if($this->shouldSkipDataUpdate()){
+            Log::debug(sprintf("ScheduleEntity::updated skipping data update for id %s type %s ...", $this->id, $this->_getClassName()));
+            return;
+        };
         Log::debug(sprintf("ScheduleEntity::updated id %s", $this->id));
         $this->cachedUpdated($args);
         Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Update,

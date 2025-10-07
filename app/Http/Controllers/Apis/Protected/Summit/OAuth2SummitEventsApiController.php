@@ -1628,7 +1628,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (!Request::has($query_string_key))
                 return $this->error400(sprintf("Missing overflow query string key in %s", $query_string_key));
 
-            return $this->withReplica(function() use ($summit_id) {
+            return $this->withReplica(function() use ($summit_id, $query_string_key) {
                 $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
                 if (is_null($summit))
                     return $this->error404("Summit not found.");

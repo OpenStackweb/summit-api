@@ -193,7 +193,13 @@ Route::group(['prefix' => 'summits'], function () {
             Route::group(['prefix' => 'all'], function () {
                 Route::group(['prefix' => 'published'], function () {
                     Route::get('tags', 'OAuth2SummitEventsApiController@getScheduledEventsTags');
-                    Route::get('overflow', [ 'uses' =>'OAuth2SummitEventsApiController@getOverflowStreamingInfo']);
+                    Route::get('overflow', [
+                        'middleware' =>
+                            sprintf('cache:%s,%s,event_id',
+                                Config::get('cache_api_response.get_published_event_response_lifetime', 600),
+                                CacheRegions::CacheRegionEvents,
+                            ),
+                        'uses' =>'OAuth2SummitEventsApiController@getOverflowStreamingInfo']);
                 });
             });
         });

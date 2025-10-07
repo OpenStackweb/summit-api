@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
+use App\Security\SummitScopes;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use utils\Filter;
 use utils\FilterElement;
 
@@ -51,6 +53,78 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
     {
         return $this->summit_repository;
     }
+
+    // OpenAPI Documentation
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/badges',
+        summary: 'Get all attendee badges for a summit',
+        description: 'Retrieves a paginated list of attendee badges for a specific summit. Badges are issued to attendees and contain ticket information, badge type, printing details, and feature assignments (ribbons, special access indicators, etc.).',
+        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Badges'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions. Format: field<op>value. Available fields: owner_first_name, owner_last_name, owner_full_name, owner_email, ticket_number, order_number (all support =@, ==). Operators: == (equals), =@ (contains)',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'owner_email==john@example.com')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s). Available fields: id, ticket_number, order_number, created. Use "-" prefix for descending order.',
+                schema: new OA\Schema(type: 'string', example: 'created')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships. Available: ticket, type, features',
+                schema: new OA\Schema(type: 'string', example: 'ticket,type,features')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Attendee badges retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitAttendeeBadgesResponse')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -102,6 +176,61 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
             }
         );
     }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/badges/csv',
+        summary: 'Export all attendee badges for a summit to CSV',
+        description: 'Exports a CSV file containing all attendee badges for a specific summit. Supports the same filtering and ordering capabilities as the standard list endpoint.',
+        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Badges'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions. Format: field<op>value. Available fields: owner_first_name, owner_last_name, owner_full_name, owner_email, ticket_number, order_number (all support =@, ==)',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'owner_email=@example.com')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s). Available fields: id, ticket_number, order_number, created',
+                schema: new OA\Schema(type: 'string', example: '-created')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'CSV file generated successfully',
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(
+                        type: 'string',
+                        format: 'binary'
+                    )
+                )
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
 
     /**
      * @param $summit_id

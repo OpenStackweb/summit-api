@@ -19,7 +19,6 @@ require __DIR__ . DIRECTORY_SEPARATOR . "ElectionsSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "LocationsSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "MarketplaceSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "ResourceServerSchemas.php";
-require __DIR__ . DIRECTORY_SEPARATOR . "SummitSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitMetricsSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitPresentationSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitPresentationTrackQuestionsSchemas.php";

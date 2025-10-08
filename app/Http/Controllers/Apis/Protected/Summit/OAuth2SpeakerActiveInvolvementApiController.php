@@ -16,6 +16,7 @@ use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use utils\PagingResponse;
 use Illuminate\Support\Facades\Request;
 use OpenApi\Attributes as OA;

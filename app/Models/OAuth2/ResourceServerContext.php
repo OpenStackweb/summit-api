@@ -180,7 +180,7 @@ final class ResourceServerContext implements IResourceServerContext
         }
         // first we check by external id
         $member = $this->tx_service->transaction(function () use ($user_external_id) {
-            return $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
+            return $this->member_repository->getByExternalId(intval($user_external_id));
         });
 
         if (is_null($member)) {
@@ -190,7 +190,7 @@ final class ResourceServerContext implements IResourceServerContext
                 $user_email = $this->getAuthContextVar(IResourceServerContext::UserEmail);
                 // at last resort try to get by email
                 Log::debug(sprintf("ResourceServerContext::getCurrentUser getting user by email %s", $user_email));
-                return $this->member_repository->getByEmailExclusiveLock($user_email);
+                return $this->member_repository->getByEmail($user_email);
             });
         }
 
@@ -224,7 +224,7 @@ final class ResourceServerContext implements IResourceServerContext
                 Log::warning($ex);
                 // race condition lost
                 $member = $this->tx_service->transaction(function () use ($user_external_id) {
-                    return $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
+                    return $this->member_repository->getByExternalId(intval($user_external_id));
                 });
             }
         }

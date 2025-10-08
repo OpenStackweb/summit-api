@@ -351,3 +351,17 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+// Legal Documents
+
+#[OA\Schema(
+    schema: 'LegalDocument',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'title', type: 'string', example: 'Privacy Policy'),
+        new OA\Property(property: 'slug', type: 'string', example: 'privacy-policy'),
+        new OA\Property(property: 'content', type: 'string', example: 'This privacy policy describes how we handle your data...'),
+    ]
+)]
+class LegalDocumentSchema {}

@@ -12,11 +12,13 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\Repositories\ILegalDocumentRepository;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use Exception;
 /**
  * Class OAuth2LegalDocumentsApiController
@@ -38,6 +40,37 @@ final class OAuth2LegalDocumentsApiController extends OAuth2ProtectedController
         parent::__construct($resource_server_context);
         $this->repository = $repository;
     }
+
+    // OpenAPI Documentation
+
+    #[OA\Get(
+        path: '/api/public/v1/legal-documents/{id}',
+        summary: 'Get a legal document by ID or slug',
+        description: 'Retrieves a legal document (privacy policy, terms of service, etc.) by its numeric ID or URL-friendly slug. This is a public endpoint that does not require authentication.',
+        tags: ['Legal Documents'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Legal document ID (numeric) or slug (string)',
+                schema: new OA\Schema(
+                    type: 'string',
+                    example: 'privacy-policy'
+                )
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Legal document retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/LegalDocument')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Legal document not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
 
     /**
      * @param $id

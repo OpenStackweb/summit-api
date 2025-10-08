@@ -16,6 +16,7 @@ use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use utils\PagingResponse;
 use Illuminate\Support\Facades\Request;
 use OpenApi\Attributes as OA;
@@ -62,9 +63,9 @@ final class OAuth2SpeakerOrganizationalRoleApiController extends OAuth2Protected
                 description: 'Organizational roles retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SpeakerOrganizationalRolesResponse')
             ),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     /**

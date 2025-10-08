@@ -16,8 +16,10 @@ use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use utils\PagingResponse;
 use Illuminate\Support\Facades\Request;
+use OpenApi\Attributes as OA;
 /**
  * Class OAuth2SpeakerOrganizationalRoleApiController
  * @package App\Http\Controllers
@@ -40,6 +42,32 @@ final class OAuth2SpeakerOrganizationalRoleApiController extends OAuth2Protected
         $this->repository = $repository;
     }
 
+    #[OA\Get(
+        path: '/api/v1/speakers/organizational-roles',
+        summary: 'Get all default speaker organizational roles',
+        description: 'Retrieves a list of default organizational roles for speakers. These are predefined role types that speakers can select to describe their position or role within an organization (e.g., "Developer", "Manager", "Architect", "Executive"). Public endpoint accessible without authentication.',
+        operationId: 'getAllSpeakerOrganizationalRoles',
+        tags: ['Speakers'],
+        parameters: [
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to expand',
+                schema: new OA\Schema(type: 'string', example: '')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Organizational roles retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SpeakerOrganizationalRolesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @return mixed
      */

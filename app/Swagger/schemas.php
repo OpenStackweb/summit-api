@@ -31,7 +31,6 @@ require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationPrintSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationPromoCodesSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationRefundsSchemas.php";
-require __DIR__ . DIRECTORY_SEPARATOR . "SummitSpeakersSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitTrackTagGroupsSchemas.php";
 
 

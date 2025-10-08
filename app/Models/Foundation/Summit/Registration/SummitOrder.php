@@ -330,6 +330,7 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     /**
      * @param array|null $payload
      * @return void
+     * @throws ValidationException
      */
     public function setPaid(array $payload = null):void
     {
@@ -341,7 +342,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
 
         $this->setPaidStatus();
 
+        if(!$this->tickets->count())
+            throw new ValidationException(sprintf("Order %s has no tickets.", $this->id));
         foreach ($this->tickets as $ticket) {
+            Log::debug(sprintf("SummitOrder::setPaid order %s ticket %s", $this->id, $ticket->getId()));
             $ticket->setPaid();
         }
 

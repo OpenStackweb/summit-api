@@ -143,7 +143,7 @@ final class DoctrineSummitOrderRepository
             'status' => 'e.status',
             'created' => 'e.created',
             'owner_name' =>  <<<SQL
-COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname))) 
+COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)))
 SQL,
             'owner_email' =>  <<<SQL
 COALESCE(LOWER(o.email), LOWER(e.owner_email))
@@ -201,12 +201,15 @@ SQL,
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->where("e.payment_gateway_cart_id = :payment_gateway_cart_id");
+            ->select("o, t")
+            ->from($this->getBaseEntity(), "o")
+            ->leftJoin('o.tickets', 't')
+            ->where("e.payment_gateway_cart_id = :payment_gateway_cart_id")
+            ->setParameter("payment_gateway_cart_id", trim($payment_gateway_cart_id))
+            ->setMaxResults(1);
 
-        $query->setParameter("payment_gateway_cart_id", $payment_gateway_cart_id);
         return $query->getQuery()
+            // with this lock concurrent queries will not see the record once the lock is on
             ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
             ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
             ->getOneOrNullResult();

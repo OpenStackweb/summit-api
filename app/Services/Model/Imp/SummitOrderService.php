@@ -2512,7 +2512,7 @@ final class SummitOrderService
 
             $order = $this->order_repository->getByPaymentGatewayCartIdExclusiveLock($payload['cart_id']);
 
-            if (is_null($order) || !$order instanceof SummitOrder || (!is_null($summit) && $order->getSummitId() != $summit->getId())) {
+            if (!$order instanceof SummitOrder || (!is_null($summit) && $order->getSummitId() != $summit->getId())) {
                 throw new EntityNotFoundException
                 (
                     sprintf("There is no order with cart_id %s.", $payload['cart_id'])
@@ -3983,7 +3983,7 @@ final class SummitOrderService
         if (!$ticket_data_present && !$attendee_data_present)
             throw new ValidationException
             (
-                "you must define a ticket id [id], ticket number [number] or 
+                "you must define a ticket id [id], ticket number [number] or
                 attendee data [attendee_email, attendee_first_name, attendee_last_name] on csv columns"
             );
 
@@ -5297,7 +5297,7 @@ final class SummitOrderService
                 // if proposed manager already has a manager then short circuit
                 throw new ValidationException("You can not delegate this ticket ( proposed manager already has a manager).");
             }
-            
+
 
             if (empty($new_attendee_email) || $new_attendee_email == $manager->getEmail()) {
                 // delegate email to manager

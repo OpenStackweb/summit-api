@@ -16,6 +16,7 @@ use App\Services\Model\ILocationService;
 use App\Services\Model\IProcessPaymentService;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Facades\Cache;
 use models\oauth2\IResourceServerContext;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitRepository;
@@ -154,7 +155,7 @@ final class PaymentGatewayWebHookController extends JsonController
                 $this->resource_server_context
             )->find($summit_id);
 
-            if (is_null($summit) || !$summit instanceof Summit){
+            if (!$summit instanceof Summit){
                 Log::debug(sprintf("PaymentGatewayWebHookController::confirm summit %s not found.", $summit_id));
                 return $this->error412([sprintf("application_type %s summit not found.", $application_type)]);
             }
@@ -174,8 +175,20 @@ final class PaymentGatewayWebHookController extends JsonController
                 return $this->error412([sprintf("application_type %s service not found.", $application_type)]);
             }
 
-            $service->processPayment($paymentGatewayApi->processCallback($request), $summit);
+            $payload = $paymentGatewayApi->processCallback($request);
+            $cart_id = $payload['cart_id'] ?? null;
+            if(is_null($cart_id)) {
+                Log::debug(sprintf("PaymentGatewayWebHookController::confirm summit %s cart id is null.", $summit_id));
+                return $this->error412("cart id is null");
+            }
 
+            $lock = Cache::lock("stripe:pi:{$cart_id}", 30); // 30s is enough
+            if (!$lock->get()) {
+                Log::warning("PaymentGatewayWebHookController::confirm  Skip concurrent webhook for {$cart_id}");
+                return $this->ok(); // idempotent no-op
+            }
+            Log::debug(sprintf("PaymentGatewayWebHookController::confirm summit %s cart id %s processing payment.", $summit_id, $cart_id));
+            $service->processPayment($payload, $summit);
             return $this->ok();
         }
         catch(EntityNotFoundException $ex){

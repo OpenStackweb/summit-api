@@ -2553,6 +2553,8 @@ final class SummitOrderService
             return $this->order_repository->getAllConfirmedOlderThanXMinutes($minutes, $max);
         });
 
+        Log::debug(sprintf("SummitOrderService::confirmOrdersOlderThanNMinutes got %s orders", count($orders)));
+
         foreach ($orders as $order) {
             $this->tx_service->transaction(function () use ($order) {
 

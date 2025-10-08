@@ -283,7 +283,17 @@ SQL,
     public function getAllConfirmedOlderThanXMinutes(int $minutes, int $max = 100)
     {
         $eol = new \DateTime('now', new \DateTimeZone(SilverstripeBaseModel::DefaultTimeZone));
-        $eol->sub(new \DateInterval('PT' . $minutes . 'M'));
+        $eol = $eol->sub(new \DateInterval('PT' . $minutes . 'M'));
+
+        Log::debug
+        (
+            sprintf
+            (
+                "DoctrineSummitOrderRepository::getAllConfirmedOlderThanXMinutes minutes %s eol %s",
+                $minutes,
+                $eol->format("Y-m-d H:i:s")
+            )
+        );
 
         $query = $this->getEntityManager()
             ->createQueryBuilder()

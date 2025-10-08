@@ -62,9 +62,9 @@ final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedC
                 description: 'Active involvements retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SpeakerActiveInvolvementsResponse')
             ),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     /**

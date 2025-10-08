@@ -436,4 +436,11 @@ interface ISummitOrderService extends IProcessPaymentService
      * @return void
      */
     public function ingestPaymentInfoForRegistrationOrders():void;
+
+    /**
+     * @param int $order_id
+     * @param int $request_id
+     * @return void
+     */
+    public function processPaymentGatewayRefundRequest(int $order_id, int $request_id):void;
 }

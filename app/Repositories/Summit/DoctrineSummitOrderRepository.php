@@ -204,7 +204,7 @@ SQL,
             ->select("o, t")
             ->from($this->getBaseEntity(), "o")
             ->leftJoin('o.tickets', 't')
-            ->where("e.payment_gateway_cart_id = :payment_gateway_cart_id")
+            ->where("o.payment_gateway_cart_id = :payment_gateway_cart_id")
             ->setParameter("payment_gateway_cart_id", trim($payment_gateway_cart_id))
             ->setMaxResults(1);
 

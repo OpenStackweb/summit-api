@@ -17,6 +17,7 @@ use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 use utils\Filter;
 use utils\FilterElement;
 
@@ -117,12 +118,12 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
                 description: 'Attendee badges retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitAttendeeBadgesResponse')
             ),
-            new OA\Response(response: 400, description: "Bad Request"),
-            new OA\Response(response: 401, description: "Unauthorized"),
-            new OA\Response(response: 403, description: "Forbidden"),
-            new OA\Response(response: 404, description: "Not Found"),
-            new OA\Response(response: 412, description: "Precondition Failed"),
-            new OA\Response(response: 500, description: "Internal Server Error"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -223,12 +224,12 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
                     )
                 )
             ),
-            new OA\Response(response: 400, description: "Bad Request"),
-            new OA\Response(response: 401, description: "Unauthorized"),
-            new OA\Response(response: 403, description: "Forbidden"),
-            new OA\Response(response: 404, description: "Not Found"),
-            new OA\Response(response: 412, description: "Precondition Failed"),
-            new OA\Response(response: 500, description: "Internal Server Error"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 

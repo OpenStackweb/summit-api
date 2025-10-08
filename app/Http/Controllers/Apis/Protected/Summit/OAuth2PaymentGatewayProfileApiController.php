@@ -20,6 +20,7 @@ use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class OAuth2PaymentGatewayProfileApiController
@@ -125,12 +126,13 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 description: 'Payment gateway profiles retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPaymentGatewayProfilesResponse')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -162,12 +164,13 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 description: 'Payment gateway profile retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfile')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -196,13 +199,12 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 description: 'Payment gateway profile created successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfile')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 422, ref: '#/components/responses/422'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -238,13 +240,12 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 description: 'Payment gateway profile updated successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfile')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 422, ref: '#/components/responses/422'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -275,12 +276,12 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 response: 204,
                 description: 'Payment gateway profile deleted successfully'
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 

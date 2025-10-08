@@ -117,7 +117,21 @@ final class PaymentGatewayWebHookController extends JsonController
                 return $this->error412([sprintf("application_type %s service not found.", $application_type)]);
             }
 
-            $service->processPayment($paymentGatewayApi->buildPaymentGatewayApi()->processCallback($request));
+            $payload = $paymentGatewayApi->buildPaymentGatewayApi()->processCallback($request);
+            $cart_id = $payload['cart_id'] ?? null;
+            if(is_null($cart_id)) {
+                Log::debug("PaymentGatewayWebHookController::genericConfirm cart id is null.");
+                return $this->error412("cart id is null");
+            }
+
+            $lock = Cache::lock("stripe:pi:{$cart_id}", 30); // 30s is enough
+            if (!$lock->get()) {
+                Log::warning("PaymentGatewayWebHookController::genericConfirm  Skip concurrent webhook for {$cart_id}");
+                return $this->ok(); // idempotent no-op
+            }
+            Log::debug(sprintf("PaymentGatewayWebHookController::genericConfirm  cart id %s processing payment.", $cart_id));
+
+            $service->processPayment($payload);
 
             return $this->ok();
         }

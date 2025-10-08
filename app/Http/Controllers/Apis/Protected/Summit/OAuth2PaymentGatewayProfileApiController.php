@@ -12,12 +12,14 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\IPaymentGatewayProfileRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\IPaymentGatewayProfileService;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2PaymentGatewayProfileApiController
@@ -66,6 +68,221 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
     use UpdateSummitChildElement;
 
     use DeleteSummitChildElement;
+
+    // OpenAPI Documentation
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/payment-gateway-profiles',
+        summary: 'Get all payment gateway profiles for a summit',
+        description: 'Retrieves a paginated list of payment gateway profiles configured for a specific summit. Payment profiles manage payment processing for registrations and bookable rooms.',
+        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        tags: ['Payment Gateway Profiles'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions. Format: field<op>value. Available fields: application_type (=@, ==), active (==). Operators: == (equals), =@ (starts with)',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'application_type==Registration')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s). Available fields: id, application_type. Use "-" prefix for descending order.',
+                schema: new OA\Schema(type: 'string', example: 'id')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Payment gateway profiles retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPaymentGatewayProfilesResponse')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
+        summary: 'Get a payment gateway profile by ID',
+        description: 'Retrieves detailed information about a specific payment gateway profile.',
+        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        tags: ['Payment Gateway Profiles'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'payment_profile_id',
+                in: 'path',
+                required: true,
+                description: 'Payment Gateway Profile ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Payment gateway profile retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfile')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
+
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/payment-gateway-profiles',
+        summary: 'Create a new payment gateway profile',
+        description: 'Creates a new payment gateway profile for the summit. Supports Stripe and LawPay providers.',
+        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        tags: ['Payment Gateway Profiles'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfileCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Payment gateway profile created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfile')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 422, ref: '#/components/responses/422'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
+        summary: 'Update a payment gateway profile',
+        description: 'Updates an existing payment gateway profile.',
+        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        tags: ['Payment Gateway Profiles'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'payment_profile_id',
+                in: 'path',
+                required: true,
+                description: 'Payment Gateway Profile ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfileUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Payment gateway profile updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfile')
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 422, ref: '#/components/responses/422'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
+
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
+        summary: 'Delete a payment gateway profile',
+        description: 'Deletes an existing payment gateway profile from the summit.',
+        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        tags: ['Payment Gateway Profiles'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'payment_profile_id',
+                in: 'path',
+                required: true,
+                description: 'Payment Gateway Profile ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Payment gateway profile deleted successfully'
+            ),
+            new OA\Response(response: 400, ref: '#/components/responses/400'),
+            new OA\Response(response: 401, ref: '#/components/responses/401'),
+            new OA\Response(response: 403, ref: '#/components/responses/403'),
+            new OA\Response(response: 404, ref: '#/components/responses/404'),
+            new OA\Response(response: 412, ref: '#/components/responses/412'),
+            new OA\Response(response: 500, ref: '#/components/responses/500'),
+        ]
+    )]
 
     /**
      * @return ISummitRepository

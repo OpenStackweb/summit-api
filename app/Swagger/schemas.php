@@ -417,3 +417,50 @@ class ChunkedFileUploadCompleteResponseSchema {}
 )]
 class ChunkedFileUploadRequestSchema {}
 
+// User Stories
+
+#[OA\Schema(
+    schema: 'UserStory',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', example: 1633024800, description: 'Unix timestamp when created'),
+        new OA\Property(property: 'last_edited', type: 'integer', example: 1633111200, description: 'Unix timestamp when last updated'),
+        new OA\Property(property: 'name', type: 'string', example: 'Large Scale Cloud Infrastructure'),
+        new OA\Property(property: 'description', type: 'string', example: 'Full description of how this organization uses OpenStack...'),
+        new OA\Property(property: 'short_description', type: 'string', example: 'Brief overview of the use case'),
+        new OA\Property(property: 'link', type: 'string', nullable: true, example: 'https://example.com/case-study'),
+        new OA\Property(property: 'active', type: 'boolean', example: true),
+        new OA\Property(property: 'is_million_core_club', type: 'boolean', example: false, description: 'Whether this is a million core club member'),
+        new OA\Property(property: 'organization', type: 'Organization'),
+        new OA\Property(property: 'industry', type: 'Industry'),
+        new OA\Property(property: 'location', type: 'Location'),
+        new OA\Property(property: 'image', type: 'Image'),
+        new OA\Property(
+            property: 'tags',
+            type: 'array',
+            description: 'Array of tag IDs (use expand=tags for full details)',
+            items: new OA\Items(type: 'integer'),
+            example: [1, 2, 3]
+        ),
+    ]
+)]
+class UserStorySchema {}
+
+#[OA\Schema(
+    schema: 'PaginatedUserStoriesResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/UserStory')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedUserStoriesResponseSchema {}

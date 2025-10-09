@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use models\summit\IOrderConstants;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeTicket;
 use models\summit\SummitOrder;
 use models\utils\SilverstripeBaseModel;
 use utils\DoctrineCaseFilterMapping;
@@ -28,6 +30,7 @@ use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
 use utils\PagingResponse;
+
 /**
  * Class DoctrineSummitOrderRepository
  * @package App\Repositories\Summit
@@ -36,143 +39,6 @@ final class DoctrineSummitOrderRepository
     extends SilverStripeDoctrineRepository
     implements ISummitOrderRepository
 {
-
-    /**
-     * @return array
-     */
-    protected function getFilterMappings()
-    {
-        $args = func_get_args();
-        $filter = count($args) > 0 ? $args[0] : null;
-        $tickets_owner_member_id = 0;
-        $tickets_owner_member_email = null;
-        if(!is_null($filter) && $filter instanceof Filter) {
-            if ($filter->hasFilter("tickets_owner_member_id")) {
-                $tickets_owner_member_id = $filter->getValue("tickets_owner_member_id")[0];
-            }
-            if ($filter->hasFilter("tickets_owner_member_email")) {
-                $tickets_owner_member_email = $filter->getValue("tickets_owner_member_email")[0];
-            }
-        }
-        return [
-            'number'             => 'e.number:json_string',
-            'summit_id'          =>  new DoctrineFilterMapping("s.id :operator :value"),
-            'owner_id'           =>  new DoctrineFilterMapping("o.id :operator :value"),
-            'owner_name'         => "COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)))",
-            'owner_email'        => "COALESCE(LOWER(o.email), LOWER(e.owner_email))",
-            'owner_company'      => ['e.owner_company_name:json_string', 'oc.name:json_string'],
-            'status'             => 'e.status:json_string',
-            'ticket_owner_name'  => "COALESCE(LOWER(CONCAT(to.first_name, ' ', to.surname)), LOWER(CONCAT(tom.first_name, ' ', tom.last_name)))",
-            'ticket_owner_email' => "COALESCE(LOWER(to.email), LOWER(tom.email))",
-            'ticket_number'      =>  new DoctrineFilterMapping("t.number :operator :value"),
-            'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-            'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-            'amount'            => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
-            'payment_method'    => 'e.payment_method:json_string',
-            'tickets_owner_status' => 'to.status:json_string',
-            'tickets_promo_code' => 'pc.code:json_string',
-            'tickets_type_id' => 'tt.id',
-            'tickets_badge_features_id' => ['bf.id:json_int','bt_bf.id:json_int'],
-            'tickets_assigned_to' => new DoctrineSwitchFilterMapping([
-                    'Me' => new DoctrineCaseFilterMapping(
-                        'Me',
-                        sprintf
-                        (
-                            "( to is not null and ( tom.id = %s or to.email = '%s' ))",
-                            $tickets_owner_member_id,
-                            $tickets_owner_member_email
-                        ),
-                    ),
-                    'SomeoneElse' => new DoctrineCaseFilterMapping(
-                        'SomeoneElse',
-                        sprintf
-                        (
-                            "( to is not null and tom.id <> %s and to.email <> '%s' )",
-                            $tickets_owner_member_id,
-                            $tickets_owner_member_email
-                        ),
-                    ),
-                    'Nobody' => new DoctrineCaseFilterMapping(
-                        'Nobody',
-                        "to is null"
-                    ),
-                ]
-            ),
-        ];
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
-        $query
-            ->join('e.tickets','t')
-            ->join('e.summit','s')
-            ->leftJoin('e.owner','o')
-            ->leftJoin('t.owner','to')
-            ->leftJoin('to.member', 'tom');
-
-        if((!is_null($filter) && $filter->hasFilter("owner_company")) ||
-            (!is_null($order)) && $order->hasOrder("owner_company")){
-            $query = $query->leftJoin("e.owner_company","oc");
-        }
-        if((!is_null($filter) && $filter->hasFilter("tickets_badge_features_id"))){
-            $query = $query->leftJoin('t.badge','b')
-                ->leftJoin('b.features','bf')
-                ->leftJoin('b.type','bt')
-                ->leftJoin('bt.badge_features','bt_bf');
-        }
-        if((!is_null($filter) && $filter->hasFilter("tickets_type_id"))){
-            $query = $query->leftJoin('t.ticket_type','tt');
-        }
-        if((!is_null($filter) && $filter->hasFilter("tickets_promo_code"))){
-            $query = $query->leftJoin('t.promo_code','pc');
-        }
-        return $query;
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOrderMappings()
-    {
-        return [
-            'number' => 'e.number',
-            'id'     => 'e.id',
-            'status' => 'e.status',
-            'created' => 'e.created',
-            'owner_name' =>  <<<SQL
-COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)))
-SQL,
-            'owner_email' =>  <<<SQL
-COALESCE(LOWER(o.email), LOWER(e.owner_email))
-SQL,
-            'owner_company' => <<<SQL
-COALESCE(LOWER(oc.name),LOWER(e.owner_company_name))
-SQL,
-            'owner_id' => 'o.id',
-            'amount'   => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
-            'payment_method' => 'e.payment_method'
-        ];
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraFilters(QueryBuilder $query){
-        $query = $query->andWhere("e.status <> :cancelled")->setParameter("cancelled", IOrderConstants::CancelledStatus);
-        return $query;
-    }
-
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
-    {
-        return SummitOrder::class;
-    }
 
     /**
      * @param string $hash
@@ -194,6 +60,14 @@ SQL,
     }
 
     /**
+     * @return string
+     */
+    protected function getBaseEntity()
+    {
+        return SummitOrder::class;
+    }
+
+    /**
      * @param string $payment_gateway_cart_id
      * @return SummitOrder|null
      */
@@ -201,9 +75,10 @@ SQL,
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("DISTINCT o, t")
+            ->select("o")
             ->from($this->getBaseEntity(), "o")
             ->leftJoin('o.tickets', 't')
+            ->addSelect('t')
             ->where("o.payment_gateway_cart_id = :payment_gateway_cart_id")
             ->setParameter("payment_gateway_cart_id", trim($payment_gateway_cart_id));
 
@@ -237,7 +112,8 @@ SQL,
      * @param string $email
      * @return mixed
      */
-    public function getAllByOwnerEmailAndOwnerNotSet(string $email){
+    public function getAllByOwnerEmailAndOwnerNotSet(string $email)
+    {
 
         $query = $this->getEntityManager()
             ->createQueryBuilder()
@@ -340,12 +216,10 @@ SQL,
             ->from($this->getBaseEntity(), "e")
             ->join('e.summit', 's')
             ->where("e.external_id = :external_id")
-            ->andWhere('s.id = :summit_id')
-        ;
+            ->andWhere('s.id = :summit_id');
 
         $query->setParameter("external_id", $externalId);
-        $query->setParameter("summit_id", $summit->getId())
-        ;
+        $query->setParameter("summit_id", $summit->getId());
         return $query->getQuery()
             ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
             ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
@@ -357,15 +231,15 @@ SQL,
      * @param PagingInfo $paging_info
      * @return PagingResponse
      */
-    public function getAllOrderThatNeedsEmailActionReminder(Summit $summit, PagingInfo $paging_info):PagingResponse
+    public function getAllOrderThatNeedsEmailActionReminder(Summit $summit, PagingInfo $paging_info): PagingResponse
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
-            ->join("e.tickets","t")
-            ->join("e.summit","s")
-            ->leftJoin("t.owner","o")
+            ->join("e.tickets", "t")
+            ->join("e.summit", "s")
+            ->leftJoin("t.owner", "o")
             ->where('e.status = :order_status')
             ->andWhere('s.id = :summit_id')
             ->andWhere("o is null OR o.status = :attendee_status");
@@ -374,15 +248,15 @@ SQL,
         $query->setParameter("summit_id", $summit->getId());
         $query->setParameter("attendee_status", SummitAttendee::StatusIncomplete);
 
-        $query= $query
+        $query = $query
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
         $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total     = $paginator->count();
-        $data      = [];
+        $total = $paginator->count();
+        $data = [];
 
-        foreach($paginator as $entity)
+        foreach ($paginator as $entity)
             $data[] = $entity;
 
         return new PagingResponse
@@ -400,7 +274,8 @@ SQL,
      * @return bool
      * @throws \Doctrine\DBAL\Driver\Exception
      */
-    public function deleteAllBySummit(int $summit_id):bool{
+    public function deleteAllBySummit(int $summit_id): bool
+    {
         try {
             $sql = <<<SQL
 DELETE O FROM SummitOrder O WHERE O.SummitID = :summit_id;
@@ -408,12 +283,10 @@ SQL;
 
             $stmt = $this->getEntityManager()->getConnection()->prepare($sql);
             return $stmt->executeStatement([
-                'summit_id' => $summit_id,
-            ]) > 0;
+                    'summit_id' => $summit_id,
+                ]) > 0;
 
-        }
-        catch (\Exception $ex)
-        {
+        } catch (\Exception $ex) {
             Log::error($ex);
         }
     }
@@ -425,9 +298,9 @@ SQL;
             ->distinct(true)
             ->select("e.id")
             ->from($this->getBaseEntity(), "e")
-            ->join("e.tickets","t")
-            ->join("e.summit","s")
-            ->leftJoin("t.owner","o")
+            ->join("e.tickets", "t")
+            ->join("e.summit", "s")
+            ->leftJoin("t.owner", "o")
             ->where('e.status = :order_status')
             ->andWhere('s.id = :summit_id')
             ->andWhere("o is null OR o.status = :attendee_status");
@@ -436,7 +309,7 @@ SQL;
         $query->setParameter("summit_id", $summit->getId());
         $query->setParameter("attendee_status", SummitAttendee::StatusIncomplete);
 
-        $query= $query
+        $query = $query
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
@@ -456,7 +329,7 @@ SQL;
             ->distinct(true)
             ->select("e.id")
             ->from($this->getBaseEntity(), "e")
-            ->join("e.summit","s")
+            ->join("e.summit", "s")
             ->where('e.status = :order_status')
             ->andWhere('s.id = :summit_id')
             ->andWhere("e.payment_info_type is null")
@@ -465,11 +338,144 @@ SQL;
         $query->setParameter("order_status", IOrderConstants::PaidStatus);
         $query->setParameter("summit_id", $summit->getId());
 
-        $query= $query
+        $query = $query
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
 
         $res = $query->getQuery()->getArrayResult();
         return array_column($res, 'id');
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings()
+    {
+        $args = func_get_args();
+        $filter = count($args) > 0 ? $args[0] : null;
+        $tickets_owner_member_id = 0;
+        $tickets_owner_member_email = null;
+        if (!is_null($filter) && $filter instanceof Filter) {
+            if ($filter->hasFilter("tickets_owner_member_id")) {
+                $tickets_owner_member_id = $filter->getValue("tickets_owner_member_id")[0];
+            }
+            if ($filter->hasFilter("tickets_owner_member_email")) {
+                $tickets_owner_member_email = $filter->getValue("tickets_owner_member_email")[0];
+            }
+        }
+        return [
+            'number' => 'e.number:json_string',
+            'summit_id' => new DoctrineFilterMapping("s.id :operator :value"),
+            'owner_id' => new DoctrineFilterMapping("o.id :operator :value"),
+            'owner_name' => "COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)))",
+            'owner_email' => "COALESCE(LOWER(o.email), LOWER(e.owner_email))",
+            'owner_company' => ['e.owner_company_name:json_string', 'oc.name:json_string'],
+            'status' => 'e.status:json_string',
+            'ticket_owner_name' => "COALESCE(LOWER(CONCAT(to.first_name, ' ', to.surname)), LOWER(CONCAT(tom.first_name, ' ', tom.last_name)))",
+            'ticket_owner_email' => "COALESCE(LOWER(to.email), LOWER(tom.email))",
+            'ticket_number' => new DoctrineFilterMapping("t.number :operator :value"),
+            'created' => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'last_edited' => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
+            'amount' => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
+            'payment_method' => 'e.payment_method:json_string',
+            'tickets_owner_status' => 'to.status:json_string',
+            'tickets_promo_code' => 'pc.code:json_string',
+            'tickets_type_id' => 'tt.id',
+            'tickets_owner_email' => new DoctrineFilterMapping(sprintf('EXISTS ( SELECT 1 FROM %s to1 JOIN to1.owner to1_o LEFT JOIN  to1_o.member to1_o_m WHERE to1.order = e AND COALESCE(LOWER(to1_o.email), LOWER(to1_o_m.email)) :operator :value )', SummitAttendeeTicket::class)),
+            'tickets_number' => new DoctrineFilterMapping(sprintf('EXISTS ( SELECT 1 FROM %s to2 where to2.order = e AND to2.number :operator :value )', SummitAttendeeTicket::class)),
+            'tickets_badge_features_id' => ['bf.id:json_int', 'bt_bf.id:json_int'],
+            'tickets_assigned_to' => new DoctrineSwitchFilterMapping([
+                    'Me' => new DoctrineCaseFilterMapping(
+                        'Me',
+                        sprintf
+                        (
+                            "( to is not null and ( tom.id = %s or to.email = '%s' ))",
+                            $tickets_owner_member_id,
+                            $tickets_owner_member_email
+                        ),
+                    ),
+                    'SomeoneElse' => new DoctrineCaseFilterMapping(
+                        'SomeoneElse',
+                        sprintf
+                        (
+                            "( to is not null and tom.id <> %s and to.email <> '%s' )",
+                            $tickets_owner_member_id,
+                            $tickets_owner_member_email
+                        ),
+                    ),
+                    'Nobody' => new DoctrineCaseFilterMapping(
+                        'Nobody',
+                        "to is null"
+                    ),
+                ]
+            ),
+        ];
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
+    {
+        $query
+            ->join('e.tickets', 't')
+            ->join('e.summit', 's')
+            ->leftJoin('e.owner', 'o')
+            ->leftJoin('t.owner', 'to')
+            ->leftJoin('to.member', 'tom');
+
+        if ((!is_null($filter) && $filter->hasFilter("owner_company")) ||
+            (!is_null($order)) && $order->hasOrder("owner_company")) {
+            $query = $query->leftJoin("e.owner_company", "oc");
+        }
+        if ((!is_null($filter) && $filter->hasFilter("tickets_badge_features_id"))) {
+            $query = $query->leftJoin('t.badge', 'b')
+                ->leftJoin('b.features', 'bf')
+                ->leftJoin('b.type', 'bt')
+                ->leftJoin('bt.badge_features', 'bt_bf');
+        }
+        if ((!is_null($filter) && $filter->hasFilter("tickets_type_id"))) {
+            $query = $query->leftJoin('t.ticket_type', 'tt');
+        }
+        if ((!is_null($filter) && $filter->hasFilter("tickets_promo_code"))) {
+            $query = $query->leftJoin('t.promo_code', 'pc');
+        }
+        return $query;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return [
+            'number' => 'e.number',
+            'id' => 'e.id',
+            'status' => 'e.status',
+            'created' => 'e.created',
+            'owner_name' => <<<SQL
+COALESCE(LOWER(CONCAT(o.first_name, ' ', o.last_name)), LOWER(CONCAT(e.owner_first_name, ' ', e.owner_surname)))
+SQL,
+            'owner_email' => <<<SQL
+COALESCE(LOWER(o.email), LOWER(e.owner_email))
+SQL,
+            'owner_company' => <<<SQL
+COALESCE(LOWER(oc.name),LOWER(e.owner_company_name))
+SQL,
+            'owner_id' => 'o.id',
+            'amount' => 'SUMMIT_ORDER_FINAL_AMOUNT(e.id)',
+            'payment_method' => 'e.payment_method'
+        ];
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraFilters(QueryBuilder $query)
+    {
+        $query = $query->andWhere("e.status <> :cancelled")->setParameter("cancelled", IOrderConstants::CancelledStatus);
+        return $query;
     }
 }

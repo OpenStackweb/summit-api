@@ -420,13 +420,15 @@ final class OAuth2SummitOrdersApiController
             return $this->_getAll(
                 function () {
                     return [
-                        'number' => ['=@', '=='],
+                        'number' => ['=@', '==','@@'],
                         'summit_id' => ['=='],
                         'status' => ['==', '<>'],
                         'owner_id' => ['=='],
                         'created' => ['>', '<', '<=', '>=', '==','[]'],
+                        'tickets_number' => ['=@', '==','@@'],
                         'tickets_assigned_to' =>  ['=='],
                         'tickets_owner_status' =>  ['=='],
+                        'tickets_owner_email' =>  ['=@', '==','@@'],
                         'tickets_badge_features_id' =>  ['=='],
                         'tickets_type_id' =>  ['=='],
                         'amount' => ['==', '<>', '>=', '>'],
@@ -440,7 +442,9 @@ final class OAuth2SummitOrdersApiController
                         'summit_id' => 'sometimes|integer',
                         'owner_id' => 'sometimes|integer',
                         'created' => 'sometimes|required|date_format:U|epoch_seconds',
+                        'tickets_number' => 'sometimes|string',
                         'tickets_assigned_to' => sprintf('sometimes|in:%s', implode(',', ['Me', 'SomeoneElse', 'Nobody'])),
+                        'tickets_owner_email' => 'sometimes|string',
                         'tickets_owner_status' => sprintf('sometimes|in:%s', implode(',', SummitAttendee::AllowedStatus)),
                         'tickets_badge_features_id' => 'sometimes|integer',
                         'tickets_type_id' => 'sometimes|integer',
@@ -1121,6 +1125,8 @@ final class OAuth2SummitOrdersApiController
         return $this->_getAll(
             function () {
                 return [
+                    'number' => ['=@', '==', '@@'],
+                    'owner_email' =>  ['=@', '==', '@@'],
                     'order_id' => ['=='],
                     'order_owner_id' => ['=='],
                     'is_active' => ['=='],
@@ -1134,6 +1140,8 @@ final class OAuth2SummitOrdersApiController
             },
             function () {
                 return [
+                    'number' => 'sometimes|string',
+                    'owner_email' => 'sometimes|string',
                     'order_id' => 'sometimes|integer',
                     'order_owner_id' => 'sometimes|integer',
                     'is_active' => ['sometimes', new Boolean()],

@@ -22,14 +22,17 @@ use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
 use App\Jobs\Emails\UnregisteredMemberOrderPaidMail;
 use App\Jobs\IngestSummitExternalRegistrationData;
+use App\Jobs\ProcessPaymentGatewayRefundJob;
 use App\Jobs\ProcessTicketDataImport;
 use App\Jobs\SendAttendeeInvitationEmail;
+use App\Jobs\Utils\JobDispatcher;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRefundRequestRepository;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
@@ -63,6 +66,7 @@ use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitAttendeeTicketRefundRequest;
 use models\summit\SummitBadgeType;
 use models\summit\SummitBadgeViewType;
 use models\summit\SummitOrder;
@@ -1538,6 +1542,11 @@ final class SummitOrderService
     private $tags_repository;
 
     /**
+     * @var ISummitRefundRequestRepository
+     */
+    private $refund_request_repository;
+
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -1553,6 +1562,7 @@ final class SummitOrderService
      * @param IFileDownloadStrategy $download_strategy
      * @param ICompanyRepository $company_repository
      * @param ITagRepository $tags_repository
+     * @param ISummitRefundRequestRepository $refund_request_repository
      * @param ICompanyService $company_service
      * @param ITicketFinderStrategyFactory $ticket_finder_strategy_factory
      * @param ITransactionService $tx_service
@@ -1575,6 +1585,7 @@ final class SummitOrderService
         IFileDownloadStrategy                      $download_strategy,
         ICompanyRepository                         $company_repository,
         ITagRepository                             $tags_repository,
+        ISummitRefundRequestRepository             $refund_request_repository,
         ICompanyService                            $company_service,
         ITicketFinderStrategyFactory               $ticket_finder_strategy_factory,
         ITransactionService                        $tx_service,
@@ -1600,6 +1611,7 @@ final class SummitOrderService
         $this->company_service = $company_service;
         $this->ticket_finder_strategy_factory = $ticket_finder_strategy_factory;
         $this->tags_repository = $tags_repository;
+        $this->refund_request_repository = $refund_request_repository;
     }
 
     /**
@@ -1853,11 +1865,11 @@ final class SummitOrderService
                 throw new ValidationException("Ticket can not be revoked due badge its already printed.");
             }
 
-            if(!$ticket->getTicketType()->isAllowsToReassignRelatedTickets()){
+            if (!$ticket->getTicketType()->isAllowsToReassignRelatedTickets()) {
                 throw new ValidationException("You cannot reassign this ticket. Please contact support.");
             }
 
-            if($ticket->hasPromoCode() && !$ticket->getPromoCode()->isAllowsToReassign()){
+            if ($ticket->hasPromoCode() && !$ticket->getPromoCode()->isAllowsToReassign()) {
                 throw new ValidationException("You cannot reassign this ticket. Please contact support.");
             }
 
@@ -1950,12 +1962,11 @@ final class SummitOrderService
             $member = $this->member_repository->getByEmail($email);
             $attendee = $summit->getAttendeeByEmail($email);
 
-            if(is_null($member)){
+            if (is_null($member)) {
                 $user = $this->member_service->checkExternalUser($email);
 
                 //If user exists => update it
-                if (!is_null($user))
-                {
+                if (!is_null($user)) {
                     $member = $this->member_service->registerExternalUserByPayload($user);
                 }
             }
@@ -2027,9 +2038,9 @@ final class SummitOrderService
             $ticket->generateHash();
             $attendee->updateStatus();
             $member_company = !is_null($member) ? $member->getCompany() : null;
-            if(!$attendee->hasCompany() && !empty($member_company)){
+            if (!$attendee->hasCompany() && !empty($member_company)) {
                 $company = $this->company_repository->getByName($member_company);
-                if(!is_null($company)){
+                if (!is_null($company)) {
                     $attendee->setCompany($company);
                 } else {
                     $company = $this->company_service->addCompany(['name' => $member_company]);
@@ -2329,16 +2340,26 @@ final class SummitOrderService
     /**
      * @param Summit $summit
      * @param Member $currentUser
-     * @param int|string $ticket_id
+     * @param $ticket_id
      * @param float $amount_2_refund
      * @param string|null $notes
      * @return SummitAttendeeTicket
-     * @throws EntityNotFoundException
-     * @throws ValidationException
+     * @throws \Throwable
      */
     public function refundTicket(Summit $summit, Member $currentUser, $ticket_id, float $amount_2_refund, ?string $notes): SummitAttendeeTicket
     {
-        return $this->tx_service->transaction(function () use ($summit, $currentUser, $ticket_id, $amount_2_refund, $notes) {
+        $res = $this->tx_service->transaction(function () use ($summit, $currentUser, $ticket_id, $amount_2_refund, $notes) {
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SummitOrderService::refundTicket summit %s current user %s amount_2_refund %s",
+                    $summit->getId(),
+                    $currentUser->getId(),
+                    $amount_2_refund
+                )
+            );
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
 
@@ -2368,10 +2389,54 @@ final class SummitOrderService
             if ($order->getSummitId() != $summit->getId())
                 throw new EntityNotFoundException('Ticket not found.');
 
-            $paymentGatewayRes = null;
-            $request = $ticket->refund($currentUser, $amount_2_refund, $paymentGatewayRes, $notes);
+            $request = $ticket->refund($currentUser, $amount_2_refund, null, $notes);
+
+            return [$ticket, $order, $request];
+        });
+
+        list($ticket, $order, $request) = $res;
+
+        $job = new ProcessPaymentGatewayRefundJob($order, $request);
+        JobDispatcher::withDbFallback(
+            job: $job,
+            logContext: ['order_id' => $order->getId(), 'ticket_id' => $ticket->getId()]
+        );
+        return $ticket;
+    }
+
+    /**
+     * @param int $order_id
+     * @param int $request_id
+     * @return void
+     * @throws \Exception
+     */
+    public function processPaymentGatewayRefundRequest(int $order_id, int $request_id): void
+    {
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::processPaymentGatewayRefundRequest order id %s request id %s",
+                $order_id,
+                $request_id
+            )
+        );
+
+        $this->tx_service->transaction(function () use ($order_id, $request_id) {
+
+            $order = $this->order_repository->getById($order_id);
+            if (!$order instanceof SummitOrder)
+                throw new EntityNotFoundException('Order not found.');
+
+            $request = $this->refund_request_repository->getByIdExclusiveLock(intval($request_id));
+            if (!$request instanceof SummitAttendeeTicketRefundRequest)
+                throw new EntityNotFoundException('Refund Request not found.');
 
             if ($order->hasPaymentInfo()) {
+
+                $ticket = $request->getTicket();
+                $summit = $order->getSummit();
 
                 try {
                     $payment_gateway = $summit->getPaymentGateWayPerApp
@@ -2388,7 +2453,7 @@ final class SummitOrderService
                     (
                         sprintf
                         (
-                            "SummitOrderService::refundTicket trying to refund on payment gateway cart id %s final amount %s",
+                            "SummitOrderService::processPaymentGatewayRefundRequest trying to refund on payment gateway cart id %s final amount %s",
                             $order->getPaymentGatewayCartId(),
                             $request->getTotalRefundedAmount()
                         )
@@ -2405,7 +2470,7 @@ final class SummitOrderService
                     (
                         sprintf
                         (
-                            "SummitOrderService::refundTicket refunded payment gateway cart id %s payment gateway response %s",
+                            "SummitOrderService::processPaymentGatewayRefundRequest refunded payment gateway cart id %s payment gateway response %s",
                             $order->getPaymentGatewayCartId(),
                             $paymentGatewayRes
                         )
@@ -2418,9 +2483,35 @@ final class SummitOrderService
                     throw new ValidationException($ex->getMessage());
                 }
             }
-
-            return $ticket;
         });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param $ticket_id
+     * @return SummitAttendeeTicket|null
+     * @throws \Exception
+     */
+    public function getTicket(Summit $summit, $ticket_id): ?SummitAttendeeTicket
+    {
+
+        Log::debug(sprintf("SummitOrderService::getTicket summit %s ticket id %s", $summit->getId(), $ticket_id));
+
+        $strategy = $this->ticket_finder_strategy_factory->build($summit, $ticket_id);
+        if (is_null($strategy))
+            throw new EntityNotFoundException("Ticket not found.");
+
+        $ticket = $strategy->find();
+
+        if (!$ticket instanceof SummitAttendeeTicket)
+            throw new EntityNotFoundException("Ticket not found.");
+
+        if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
+            throw new ValidationException("Ticket does not belong to summit.");
+        }
+
+        return $ticket;
+
     }
 
     /**
@@ -2591,7 +2682,7 @@ final class SummitOrderService
                                 )
                             );
 
-                            if($payment_gateway->isSucceeded($status)) {
+                            if ($payment_gateway->isSucceeded($status)) {
                                 Log::debug
                                 (
                                     sprintf
@@ -2604,8 +2695,7 @@ final class SummitOrderService
                                 $order->setPaid($payment_gateway->getPaymentDetailsInfo($cart_id));
                                 // invoke now to avoid delays
                                 $this->processInvitation($order);
-                            }
-                            else if($payment_gateway->isDeclined($status)) {
+                            } else if ($payment_gateway->isDeclined($status)) {
                                 Log::warning
                                 (
                                     sprintf
@@ -3207,34 +3297,6 @@ final class SummitOrderService
             }
         }
         return true;
-    }
-
-    /**
-     * @param Summit $summit
-     * @param $ticket_id
-     * @return SummitAttendeeTicket|null
-     * @throws \Exception
-     */
-    public function getTicket(Summit $summit, $ticket_id): ?SummitAttendeeTicket
-    {
-
-        Log::debug(sprintf("SummitOrderService::getTicket summit %s ticket id %s", $summit->getId(), $ticket_id));
-
-        $strategy = $this->ticket_finder_strategy_factory->build($summit, $ticket_id);
-        if (is_null($strategy))
-            throw new EntityNotFoundException("Ticket not found.");
-
-        $ticket = $strategy->find();
-
-        if (!$ticket instanceof SummitAttendeeTicket)
-            throw new EntityNotFoundException("Ticket not found.");
-
-        if ($ticket->getOrder()->getSummitId() != $summit->getId()) {
-            throw new ValidationException("Ticket does not belong to summit.");
-        }
-
-        return $ticket;
-
     }
 
     /**
@@ -3936,7 +3998,7 @@ final class SummitOrderService
     {
         Log::debug(sprintf("SummitOrderService::importTicketData - summit %s", $summit->getId()));
 
-        $allowed_extensions = ['txt','csv'];
+        $allowed_extensions = ['txt', 'csv'];
 
         if (!in_array($csv_file->extension(), $allowed_extensions)) {
             throw new ValidationException("file does not has a valid extension ('csv').");
@@ -4179,7 +4241,7 @@ final class SummitOrderService
                         if ($reader->hasColumn('promo_code_id')) {
                             Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by id %s", $row['promo_code_id']));
                             $promo_code = $this->promo_code_repository->getById(intval($row['promo_code_id']));
-                            if($promo_code instanceof SummitRegistrationPromoCode && $promo_code->getSummitId() != $summit->getId()){
+                            if ($promo_code instanceof SummitRegistrationPromoCode && $promo_code->getSummitId() != $summit->getId()) {
                                 Log::debug
                                 (
                                     sprintf
@@ -4202,7 +4264,7 @@ final class SummitOrderService
                         if (is_null($ticket_type) && $reader->hasColumn('ticket_type_id')) {
                             Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket type by id %s", $row['ticket_type_id']));
                             $ticket_type = $this->ticket_type_repository->getById(intval($row['ticket_type_id']));
-                            if($ticket_type instanceof SummitTicketType && $ticket_type->getSummitId() != $summit->getId()){
+                            if ($ticket_type instanceof SummitTicketType && $ticket_type->getSummitId() != $summit->getId()) {
                                 Log::debug(
                                     sprintf
                                     (
@@ -4551,8 +4613,8 @@ final class SummitOrderService
 
     /**
      * @param Summit $summit
-     * @throws \Exception
      * @return array
+     * @throws \Exception
      */
     public function processSummitOrderReminders(Summit $summit): array
     {
@@ -4561,7 +4623,7 @@ final class SummitOrderService
 
         if ($summit->isEnded()) {
             Log::warning(sprintf("SummitOrderService::processSummitOrderReminders - summit %s has ended already", $summit->getId()));
-            return [0,0];
+            return [0, 0];
         }
 
         $page = 1;
@@ -4580,7 +4642,7 @@ final class SummitOrderService
                 Log::debug(sprintf("SummitOrderService::processSummitOrderReminders processing summit %s order %s", $summit->getId(), $order_id));
 
                 try {
-                    if($this->processOrderReminder($order_id))
+                    if ($this->processOrderReminder($order_id))
                         ++$qty_order_sent;
                 } catch (\Exception $ex) {
                     Log::error($ex);
@@ -4606,7 +4668,7 @@ final class SummitOrderService
 
                     foreach ($tickets_ids as $ticket_id) {
                         try {
-                            if($this->processTicketReminder($ticket_id))
+                            if ($this->processTicketReminder($ticket_id))
                                 ++$qty_ticket_sent;
                         } catch (\Exception $ex) {
                             Log::error($ex);
@@ -4639,8 +4701,8 @@ final class SummitOrderService
 
     /**
      * @param int $order_id
-     * @throws \Exception
      * @return bool
+     * @throws \Exception
      */
     public function processOrderReminder(int $order_id): bool
     {
@@ -4649,8 +4711,8 @@ final class SummitOrderService
             Log::debug(sprintf("SummitOrderService::processOrderReminder order %s", $order_id));
 
             $order = $this->order_repository->getById($order_id);
-            if(!$order instanceof SummitOrder) {
-                return  null;
+            if (!$order instanceof SummitOrder) {
+                return null;
             }
             $order_tickets = $order->getTickets();
             //specific case check: don't send order reminder if there is one ticket per order and is the same owner
@@ -4758,7 +4820,7 @@ final class SummitOrderService
             return null;
         });
 
-        if(!is_null($order)){
+        if (!is_null($order)) {
             Log::debug(sprintf("SummitOrderService::processOrderReminder sending reminder email for order %s", $order->getId()));
             SummitOrderReminderEmail::dispatch($order);
             return true;
@@ -4768,8 +4830,8 @@ final class SummitOrderService
 
     /**
      * @param int $ticket_id
-     * @throws \Exception
      * @return bool
+     * @throws \Exception
      */
     public function processTicketReminder(int $ticket_id): bool
     {
@@ -4778,7 +4840,7 @@ final class SummitOrderService
             Log::debug(sprintf("SummitOrderService::processTicketReminder processing ticket %s", $ticket_id));
 
             $ticket = $this->ticket_repository->getById($ticket_id);
-            if(!$ticket instanceof SummitAttendeeTicket) return null;
+            if (!$ticket instanceof SummitAttendeeTicket) return null;
 
             if (!$ticket->isActive()) {
                 Log::warning(sprintf("SummitOrderService::processTicketReminder %s is not active.", $ticket_id));
@@ -4866,7 +4928,7 @@ final class SummitOrderService
             return null;
         });
 
-        if(!is_null($ticket)) {
+        if (!is_null($ticket)) {
             Log::debug(sprintf("SummitOrderService::processTicketReminder sending reminder email for ticket %s", $ticket->getId()));
             SummitTicketReminderEmail::dispatch($ticket);
             return true;
@@ -5271,13 +5333,13 @@ final class SummitOrderService
             $ticket_owner = $ticket->getOwner();
             $former_manager = !is_null($ticket_owner) ? $ticket_owner->getManager() : null;
             // check current manager against new manager
-            if(!is_null($former_manager) && $current_user->getEmail() !== $former_manager->getEmail()){
+            if (!is_null($former_manager) && $current_user->getEmail() !== $former_manager->getEmail()) {
                 throw new ValidationException("You can not delegate this ticket ( it has already assigned a different Manager).");
             }
             // try to get attendee for current user
             $manager = $this->attendee_repository->getBySummitAndEmail($summit, $current_user->getEmail());
 
-            if(is_null($manager)){
+            if (is_null($manager)) {
                 // create the manager attendee
                 Log::debug
                 (
@@ -5295,7 +5357,7 @@ final class SummitOrderService
                     'email' => $current_user->getEmail(),
                 ], $current_user);
             }
-            if($manager->hasManager()){
+            if ($manager->hasManager()) {
                 // if proposed manager already has a manager then short circuit
                 throw new ValidationException("You can not delegate this ticket ( proposed manager already has a manager).");
             }
@@ -5306,7 +5368,7 @@ final class SummitOrderService
                 Log::debug(sprintf("SummitOrderService::delegateTicket - delegate email to manager %s (%s)", $manager->getId(), $manager->getEmail()));
                 // check if the attendee exists already
                 $attendee = null;
-                if($manager->getId() > 0) {
+                if ($manager->getId() > 0) {
                     Log::debug
                     (
                         sprintf
@@ -5326,7 +5388,7 @@ final class SummitOrderService
                         $manager
                     );
                 }
-                if(is_null($attendee)) {
+                if (is_null($attendee)) {
                     Log::debug
                     (
                         sprintf
@@ -5423,8 +5485,9 @@ final class SummitOrderService
      * @return void
      * @throws \Exception
      */
-    private function getOrderPaymentInfo(int $order_id):void{
-        $this->tx_service->transaction(function() use($order_id){
+    private function getOrderPaymentInfo(int $order_id): void
+    {
+        $this->tx_service->transaction(function () use ($order_id) {
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
             if (!$order instanceof SummitOrder) return;
 

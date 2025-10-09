@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitPresentationActionService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use models\exceptions\EntityNotFoundException;
@@ -19,6 +21,7 @@ use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use Exception;
 /**
  * Class OAuth2SummitPresentationActionApiController
@@ -56,6 +59,65 @@ final class OAuth2SummitPresentationActionApiController
         parent::__construct($resource_server_context);
     }
 
+    // OpenAPI Documentation
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/complete',
+        summary: 'Mark a presentation action as completed',
+        description: 'Marks a specific action for a presentation as completed by a track chair. Track chairs use presentation actions to manage the review process (e.g., "Review Video", "Check Speakers", "Verify Content"). Only track chairs and track chair admins can perform this action.',
+        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        tags: ['Presentation Actions'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'selection_plan_id',
+                in: 'path',
+                required: true,
+                description: 'Selection Plan ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'presentation_id',
+                in: 'path',
+                required: true,
+                description: 'Presentation ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'action_type_id',
+                in: 'path',
+                required: true,
+                description: 'Action Type ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships. Available: presentation, type, created_by, updated_by',
+                schema: new OA\Schema(type: 'string', example: 'type,created_by')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Presentation action marked as completed successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PresentationAction')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - User must be a track chair or track chair admin"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $selection_plan_id
@@ -92,6 +154,63 @@ final class OAuth2SummitPresentationActionApiController
             return $this->error500($ex);
         }
     }
+
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/incomplete',
+        summary: 'Mark a presentation action as incomplete',
+        description: 'Unmarks a completed presentation action, setting it back to incomplete status. This allows track chairs to revert an action they previously marked as done. Only track chairs and track chair admins can perform this action.',
+        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        tags: ['Presentation Actions'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'selection_plan_id',
+                in: 'path',
+                required: true,
+                description: 'Selection Plan ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'presentation_id',
+                in: 'path',
+                required: true,
+                description: 'Presentation ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'action_type_id',
+                in: 'path',
+                required: true,
+                description: 'Action Type ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships. Available: presentation, type, created_by, updated_by',
+                schema: new OA\Schema(type: 'string', example: 'type,created_by')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Presentation action marked as incomplete successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PresentationAction')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - User must be a track chair or track chair admin"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
 
     /**
      * @param $summit_id

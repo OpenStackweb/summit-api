@@ -16,11 +16,13 @@ use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitSponsorshipTypeService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2SummitSponsorshipTypeApiController
@@ -68,6 +70,144 @@ final class OAuth2SummitSponsorshipTypeApiController
     use UpdateSummitChildElement;
 
     use DeleteSummitChildElement;
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/sponsorships-types',
+        summary: 'Get all sponsorship types for a summit',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/page'),
+            new OA\Parameter(ref: '#/components/parameters/per_page'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by name, label, or size (name=@value, label==value, size=@value)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-name, +/-order, +/-label, +/-size', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful response',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitSponsorshipTypesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function getAllBySummit($summit_id){
+        return parent::getAllBySummit($summit_id);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/sponsorships-types',
+        summary: 'Create a new sponsorship type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorshipTypeCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Sponsorship type created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorshipType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function add($summit_id){
+        return parent::add($summit_id);
+    }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
+        summary: 'Get a sponsorship type by ID',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful response',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorshipType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function get($summit_id, $type_id){
+        return parent::get($summit_id, $type_id);
+    }
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
+        summary: 'Update a sponsorship type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorshipTypeUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Sponsorship type updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorshipType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function update($summit_id, $type_id){
+        return parent::update($summit_id, $type_id);
+    }
+
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
+        summary: 'Delete a sponsorship type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function delete($summit_id, $type_id){
+        return parent::delete($summit_id, $type_id);
+    }
 
     /**
      * @return array
@@ -184,6 +324,47 @@ final class OAuth2SummitSponsorshipTypeApiController
      * @throws \models\exceptions\EntityNotFoundException
      * @throws \models\exceptions\ValidationException
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
+        summary: 'Upload a badge image for a sponsorship type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file'],
+                    properties: [
+                        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'Image file to upload')
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Badge image uploaded successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 123),
+                        new OA\Property(property: 'url', type: 'string', example: 'https://example.com/badge.png'),
+                        new OA\Property(property: 'filename', type: 'string', example: 'badge.png'),
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addBadgeImage(LaravelRequest $request, $summit_id, $type_id){
         return $this->processRequest(function () use ($request, $summit_id, $type_id) {
 
@@ -214,6 +395,24 @@ final class OAuth2SummitSponsorshipTypeApiController
      * @throws \models\exceptions\EntityNotFoundException
      * @throws \models\exceptions\ValidationException
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
+        summary: 'Remove the badge image from a sponsorship type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeBadgeImage($summit_id, $type_id){
         return $this->processRequest(function () use ($summit_id, $type_id) {
 

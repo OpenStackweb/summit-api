@@ -2425,7 +2425,7 @@ final class SummitOrderService
 
         $this->tx_service->transaction(function () use ($order_id, $request_id) {
 
-            $order = $this->ticket_repository->getById($order_id);
+            $order = $this->order_repository->getById($order_id);
             if (!$order instanceof SummitOrder)
                 throw new EntityNotFoundException('Order not found.');
 

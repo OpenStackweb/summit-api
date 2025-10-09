@@ -19,6 +19,7 @@ use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfile
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitRefundRequestRepository;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\ICompanyService;
@@ -116,6 +117,7 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
         $company_repository = Mockery::mock(ICompanyRepository::class);
         $tags_repository = Mockery::mock(ITagRepository::class);
+        $refund_request_repository = Mockery::mock(ISummitRefundRequestRepository::class)->makePartial();
         $company_service = Mockery::mock(ICompanyService::class);
         $ticket_finder_strategy_factory = Mockery::mock(ITicketFinderStrategyFactory::class);
         $tx_service = Mockery::mock(ITransactionService::class);
@@ -229,6 +231,7 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             $download_strategy,
             $company_repository,
             $tags_repository,
+            $refund_request_repository,
             $company_service,
             $ticket_finder_strategy_factory,
             $tx_service,

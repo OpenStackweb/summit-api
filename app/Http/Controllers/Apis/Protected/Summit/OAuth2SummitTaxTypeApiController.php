@@ -21,7 +21,9 @@ use models\summit\Summit;
 use models\utils\IBaseRepository;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use OpenApi\Attributes as OA;
 use Exception;
 /**
  * Class OAuth2SummitTaxTypeApiController
@@ -48,6 +50,145 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     use UpdateSummitChildElement;
 
     use DeleteSummitChildElement;
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tax-types',
+        summary: 'Get all tax types for a summit',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Tax Types'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/page'),
+            new OA\Parameter(ref: '#/components/parameters/per_page'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by name (name=@value, name==value)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-name', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', description: 'Relations to include: ticket_types', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful response',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitTaxTypesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function getAllBySummit($summit_id){
+        return parent::getAllBySummit($summit_id);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/tax-types',
+        summary: 'Create a new tax type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Tax Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitTaxTypeCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Tax type created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitTaxType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function add($summit_id){
+        return parent::add($summit_id);
+    }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tax-types/{tax_id}',
+        summary: 'Get a tax type by ID',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Tax Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful response',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitTaxType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function get($summit_id, $tax_id){
+        return parent::get($summit_id, $tax_id);
+    }
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/tax-types/{tax_id}',
+        summary: 'Update a tax type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Tax Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitTaxTypeUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Tax type updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitTaxType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function update($summit_id, $tax_id){
+        return parent::update($summit_id, $tax_id);
+    }
+
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/tax-types/{tax_id}',
+        summary: 'Delete a tax type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Tax Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function delete($summit_id, $tax_id){
+        return parent::delete($summit_id, $tax_id);
+    }
 
     /**
      * @return array
@@ -163,6 +304,30 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
      * @param $ticket_type_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
+        summary: 'Add a tax type to a ticket type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Tax Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_type_id', in: 'path', required: true, description: 'Ticket Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Tax type added to ticket type successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitTaxType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addTaxToTicketType($summit_id, $tax_id, $ticket_type_id){
         try {
 
@@ -193,6 +358,30 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
      * @param $ticket_type_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
+        summary: 'Remove a tax type from a ticket type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Tax Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_type_id', in: 'path', required: true, description: 'Ticket Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Tax type removed from ticket type successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitTaxType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeTaxFromTicketType($summit_id, $tax_id, $ticket_type_id){
         try {
 

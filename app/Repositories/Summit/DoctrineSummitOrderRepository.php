@@ -201,12 +201,11 @@ SQL,
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("o, t")
+            ->select("DISTINCT o, t")
             ->from($this->getBaseEntity(), "o")
             ->leftJoin('o.tickets', 't')
             ->where("o.payment_gateway_cart_id = :payment_gateway_cart_id")
-            ->setParameter("payment_gateway_cart_id", trim($payment_gateway_cart_id))
-            ->setMaxResults(1);
+            ->setParameter("payment_gateway_cart_id", trim($payment_gateway_cart_id));
 
         return $query->getQuery()
             // with this lock concurrent queries will not see the record once the lock is on

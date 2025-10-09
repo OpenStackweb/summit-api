@@ -137,17 +137,28 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             'audit.entity_class' => get_class($entity),
             'audit.timestamp' => now()->toISOString(),
             'audit.event_type' => $event_type,
-            'auth.user.id' => $user_id,
-            'auth.user.email' => $user_email,
+            'auth.user.id' => $user_id ?? 'unknown',
+            'auth.user.email' => $user_email ?? 'unknown',
             'elasticsearch.index' => $this->elasticIndex,
         ];
+
+        if (method_exists($entity, 'getSummitId')) {
+            $summitId = $entity->getSummitId();
+            if ($summitId !== null) {
+                $auditData['audit.summit_id'] = (string) $summitId;
+            }
+        }
 
         switch ($event_type) {
             case self::EVENT_COLLECTION_UPDATE:
                 if ($subject instanceof PersistentCollection) {
                     $auditData['audit.collection_type'] = $this->getCollectionType($subject);
                     $auditData['audit.collection_count'] = count($subject);
-                    $auditData['audit.collection_changes'] = $this->getCollectionChanges($subject, $change_set);
+                    
+                    $changes = $this->getCollectionChanges($subject, $change_set);
+                    $auditData['audit.collection_current_count'] = $changes['current_count'];
+                    $auditData['audit.collection_snapshot_count'] = $changes['snapshot_count'];
+                    $auditData['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
                 }
                 break;
         }

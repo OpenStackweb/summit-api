@@ -38,17 +38,22 @@ final class DoctrineApiEndpointRepository
     public function getApiEndpointByUrlAndMethod($url, $http_method)
     {
         try {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->select("e")
-                ->from(\App\Models\ResourceServer\ApiEndpoint::class, "e")
+            $em = $this->getEntityManager();
+
+            $qb = $em->createQueryBuilder();
+            $qb->select('e')
+                ->from(ApiEndpoint::class, 'e')
+                ->leftJoin('e.scopes', 's', 'WITH', 's.active = true')
+                ->addSelect('s')
                 ->where('e.route = :route')
-                ->andWhere('e.http_method = :http_method')
+                ->andWhere('e.http_method = :method')
                 ->setParameter('route', trim($url))
-                ->setParameter('http_method', trim($http_method))
-                ->setCacheable(true)
-                ->setCacheRegion('resource_server_region')
-                ->getQuery()
-                ->getOneOrNullResult();
+                ->setParameter('method', strtoupper(trim($http_method)));
+
+            $q = $qb->getQuery();
+            $q->setCacheable(false);
+
+            return $q->getOneOrNullResult();
         }
         catch(\Exception $ex){
             Log::error($ex);

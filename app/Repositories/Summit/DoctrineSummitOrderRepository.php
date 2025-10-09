@@ -73,11 +73,11 @@ final class DoctrineSummitOrderRepository
             'tickets_owner_status' => 'to.status:json_string',
             'tickets_promo_code' => 'pc.code:json_string',
             'tickets_type_id' => 'tt.id',
-            'tickets_owner_email' => sprintf('EXISTS ( SELECT 1 FROM %s to1:i
-            JOIN to1:i.owner to1_o:i
-            LEFT JOIN  to1_o:i.member to1_o_m:i
-            WHERE to1:i.order = e AND COALESCE(LOWER(to1_o:i.email), LOWER(to1_o_m:i.email)) :operator :value )',SummitAttendeeTicket::class),
-            'tickets_number' => sprintf('EXISTS ( SELECT 1 FROM %s to1:i where to1:i.order = e )',SummitAttendeeTicket::class),
+            'tickets_owner_email' => new DoctrineFilterMapping(sprintf('EXISTS ( SELECT 1 FROM %s to1
+            JOIN to1.owner to1_o
+            LEFT JOIN  to1_o.member to1_o_m
+            WHERE to1.order = e AND COALESCE(LOWER(to1_o.email), LOWER(to1_o_m.email)) :operator :value )',SummitAttendeeTicket::class)),
+            'tickets_number' => sprintf('EXISTS ( SELECT 1 FROM %s to2 where to2.order = e )',SummitAttendeeTicket::class),
             'tickets_badge_features_id' => ['bf.id:json_int','bt_bf.id:json_int'],
             'tickets_assigned_to' => new DoctrineSwitchFilterMapping([
                     'Me' => new DoctrineCaseFilterMapping(
@@ -207,9 +207,10 @@ SQL,
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select("DISTINCT o, t")
+            ->select("o")
             ->from($this->getBaseEntity(), "o")
             ->leftJoin('o.tickets', 't')
+            ->addSelect('t')
             ->where("o.payment_gateway_cart_id = :payment_gateway_cart_id")
             ->setParameter("payment_gateway_cart_id", trim($payment_gateway_cart_id));
 

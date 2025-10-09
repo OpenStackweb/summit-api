@@ -27,7 +27,6 @@ require __DIR__ . DIRECTORY_SEPARATOR . "SummitPresentationTrackQuestionsSchemas
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitProposedScheduleSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitRSVPSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitRSVPTemplatesSchemas.php";
-require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationPrintSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationPromoCodesSchemas.php";
 require __DIR__ . DIRECTORY_SEPARATOR . "SummitRegistrationRefundsSchemas.php";

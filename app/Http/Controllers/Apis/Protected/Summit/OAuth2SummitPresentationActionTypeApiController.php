@@ -15,6 +15,7 @@
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\IPresentationActionTypeRepository;
 use App\Services\Model\ISummitPresentationActionTypeService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Input;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
@@ -22,6 +23,7 @@ use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use utils\Filter;
 use utils\FilterElement;
 
@@ -84,7 +86,7 @@ final class OAuth2SummitPresentationActionTypeApiController
     /**
      * @inheritDoc
      */
-    function getAddValidationRules(array $payload): array
+    public function getAddValidationRules(array $payload): array
     {
         return SummitPresentationActionTypeValidationRulesFactory::build($payload, false);
     }
@@ -116,7 +118,7 @@ final class OAuth2SummitPresentationActionTypeApiController
     /**
      * @inheritDoc
      */
-    function getUpdateValidationRules(array $payload): array
+    public function getUpdateValidationRules(array $payload): array
     {
         return SummitPresentationActionTypeValidationRulesFactory::build($payload, true);
     }
@@ -133,6 +135,160 @@ final class OAuth2SummitPresentationActionTypeApiController
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/presentation-action-types',
+        summary: 'Create a new presentation action type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Presentation Action Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PresentationActionTypeCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Presentation action type created',
+                content: new OA\JsonContent(ref: '#/components/schemas/PresentationActionType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function add($summit_id){
+        return parent::add($summit_id);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $action_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
+        summary: 'Get a presentation action type by ID',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Presentation Action Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'action_id', in: 'path', required: true, description: 'Presentation Action Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful response',
+                content: new OA\JsonContent(ref: '#/components/schemas/PresentationActionType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function get($summit_id, $action_id){
+        return parent::get($summit_id, $action_id);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $action_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
+        summary: 'Update a presentation action type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Presentation Action Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'action_id', in: 'path', required: true, description: 'Presentation Action Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PresentationActionTypeUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Presentation action type updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/PresentationActionType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function update($summit_id, $action_id){
+        return parent::update($summit_id, $action_id);
+    }
+
+    /**
+     * @param $summit_id
+     * @param $action_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
+        summary: 'Delete a presentation action type',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Presentation Action Types'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'action_id', in: 'path', required: true, description: 'Presentation Action Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function delete($summit_id, $action_id){
+        return parent::delete($summit_id, $action_id);
+    }
+
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/presentation-action-types',
+        summary: 'Get all presentation action types for a summit',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Presentation Action Types'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/page'),
+            new OA\Parameter(ref: '#/components/parameters/per_page'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by label (label=@value, label==value)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-label, +/-order', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'selection_plan_id', in: 'query', description: 'Filter by selection plan and include order field', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful response',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPresentationActionTypesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllBySummit($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -178,6 +334,37 @@ final class OAuth2SummitPresentationActionTypeApiController
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/presentation-action-types/csv',
+        summary: 'Get all presentation action types for a summit in CSV format',
+        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        tags: ['Summits', 'Presentation Action Types'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/page'),
+            new OA\Parameter(ref: '#/components/parameters/per_page'),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by label (label=@value, label==value)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-label, +/-order', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'selection_plan_id', in: 'query', description: 'Filter by selection plan and include order field', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'columns', in: 'query', description: 'Comma-separated list of columns (allowed: id, created, last_edited, label, order)', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'CSV file',
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllBySummitCSV($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);

@@ -1398,7 +1398,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 );
             }
 
-            $this->service->updateEvents($summit, $data->all());
+            $this->service->updateEvents($summit, $data->all(), false);
 
             return $this->updated();
         });

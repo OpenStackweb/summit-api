@@ -606,9 +606,9 @@ final class SummitService
      * @param array $data
      * @return SummitEvent
      */
-    public function updateEvent(Summit $summit, $event_id, array $data)
+    public function updateEvent(Summit $summit, $event_id, array $data, bool $trigger_data_update = true)
     {
-        return $this->saveOrUpdateEvent($summit, $data, $event_id);
+        return $this->saveOrUpdateEvent($summit, $data, $event_id, $trigger_data_update);
     }
 
     /**
@@ -645,21 +645,23 @@ final class SummitService
      * @param Summit $summit
      * @param array $data
      * @param null|int $event_id
+     * @param bool $trigger_data_update
      * @return SummitEvent
      * @throws Exception
      */
-    private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null)
+    private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null, bool $trigger_data_update = true)
     {
-        return $this->tx_service->transaction(function () use ($summit, $data, $event_id) {
+        return $this->tx_service->transaction(function () use ($summit, $data, $event_id, $trigger_data_update) {
 
             Log::debug
             (
                 sprintf
                 (
-                    "SummitService::saveOrUpdateEvent summit %s event_id %s data %s",
+                    "SummitService::saveOrUpdateEvent summit %s event_id %s data %s trigger_data_update %b",
                     $summit->getId(),
                     $event_id ?? "NEW",
-                    json_encode($data)
+                    json_encode($data),
+                    $trigger_data_update
                 )
             );
 
@@ -746,6 +748,9 @@ final class SummitService
                 SummitEventFactory::populate($summit, $event, $data);
             }
 
+            if(!$trigger_data_update){
+                $event->skipDateUpdate();
+            }
             $created_by = null;
             if (isset($data['created_by_id'])) {
                 $created_by = $this->member_repository->getById(intval($data['created_by_id']));
@@ -841,6 +846,7 @@ final class SummitService
 
             $this->event_repository->add($event);
             $event->updateLastEdited();
+
             return $event;
         });
     }
@@ -1473,18 +1479,20 @@ final class SummitService
     /**
      * @param Summit $summit
      * @param array $data
+     * @param bool $trigger_data_update
      * @return bool
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function updateEvents(Summit $summit, array $data)
+    public function updateEvents(Summit $summit, array $data, bool $trigger_data_update = true)
     {
         return $this->tx_service->transaction(function () use (
             $summit,
-            $data
+            $data,
+            $trigger_data_update
         ) {
             foreach ($data['events'] as $event_data) {
-                $this->updateEvent($summit, intval($event_data['id']), $event_data);
+                $this->updateEvent($summit, intval($event_data['id']), $event_data, $trigger_data_update);
             }
 
             return true;

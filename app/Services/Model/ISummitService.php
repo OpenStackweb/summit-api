@@ -52,9 +52,10 @@ interface ISummitService
      * @param Summit $summit
      * @param int $event_id
      * @param array $data
+     * @param bool $trigger_data_update
      * @return SummitEvent
      */
-    public function updateEvent(Summit $summit, $event_id, array $data);
+    public function updateEvent(Summit $summit, $event_id, array $data, bool $trigger_data_update = true);
 
     /**
      * @param Summit $summit
@@ -147,7 +148,7 @@ interface ISummitService
      * @throws ValidationException
      */
     public function deleteEventFeedback(Summit $summit, int $event_id, int $feedback_id):void;
-    
+
     /**
      * @param Summit $summit
      * @param $external_order_id
@@ -221,11 +222,12 @@ interface ISummitService
     /**
      * @param Summit $summit
      * @param array $data
+     * @param bool $trigger_data_update
      * @throws ValidationException
      * @throws EntityNotFoundException
      * @return bool
      */
-    public function updateEvents(Summit $summit, array $data);
+    public function updateEvents(Summit $summit, array $data, bool $trigger_data_update = true);
 
     /**
      * @param array $data

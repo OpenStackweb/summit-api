@@ -17,6 +17,42 @@ final class CacheMiddleware
         $this->context = $context;
     }
 
+    private const ENC_DF = 'DF1:';  // gzdeflate/gzinflate
+    private const ENC_P0 = 'P0:';   // without compression
+    private int $gzipLevel = 9;           //
+
+    private function encode(array $payload):string{
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $bin = gzdeflate($json, $this->gzipLevel);
+        return $bin === false ? self::ENC_P0.$json : self::ENC_DF.$bin;
+    }
+
+    private function decode($value):?array{
+        if (is_array($value)) return $value;     // back compat
+        if (!is_string($value)) return null;
+
+        if (str_starts_with($value, self::ENC_DF)) {
+            Log::debug("CacheMiddleware::decode gzinflate");
+            $bin  = substr($value, strlen(self::ENC_DF));
+            $json = gzinflate($bin);
+            if ($json === false) return null;
+            $arr = json_decode($json, true);
+            return is_array($arr) ? $arr : null;
+        }
+
+        if (str_starts_with($value, self::ENC_P0)) {
+            Log::debug("CacheMiddleware::decode raw");
+            $json = substr($value, strlen(self::ENC_P0));
+            $arr = json_decode($json, true);
+            if (is_array($arr)) return $arr;
+        }
+
+        // compat: JSON plano o serialize
+        $arr = json_decode($value, true);
+        if (is_array($arr)) return $arr;
+        $un  = @unserialize($value);
+        return is_array($un) ? $un : null;
+    }
     /**
      * @param  \Illuminate\Http\Request  $request
      * @param  Closure                   $next
@@ -62,17 +98,19 @@ final class CacheMiddleware
                 'key' => $key,
             ]);
 
-            $data = Cache::tags($regionTag)
+            $encoded = Cache::tags($regionTag)
                 ->remember($key, $cache_lifetime, function() use ($next, $request, $regionTag, $key, $cache_lifetime, &$status,$ip, $agent) {
                     $resp = $next($request);
                     if ($resp instanceof JsonResponse) {
                         $status = $resp->getStatusCode();
-                        if($status === 200)
-                            return $resp->getData(true);
+                        if($status === 200) {
+                            return $this->encode($resp->getData(true));
+                        }
                     }
                     // don’t cache non-200 or non-JSON
                     return Cache::get($key);
                 });
+            $data = $this->decode($encoded);
         } else {
             $wasHit = Cache::has($key);
 
@@ -82,16 +120,19 @@ final class CacheMiddleware
                 'key' => $key,
             ]);
 
-            $data = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key, &$status, $ip, $agent) {
+            $encoded = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key, &$status, $ip, $agent) {
                 $resp = $next($request);
                 if ($resp instanceof JsonResponse) {
                     $status = $resp->getStatusCode();
                     if($status === 200)
-                        return $resp->getData(true);
+                        return $this->encode($resp->getData(true));
                 }
                 return Cache::get($key);
             });
+            $data = $this->decode($encoded);
         }
+        // safe guard
+        if ($data === null) $data = is_array($encoded) ? $encoded : [];
 
         // Build the JsonResponse (either from cache or fresh)
         $response = new JsonResponse($data, $status, ['Content-Type' => 'application/json']);
@@ -176,6 +217,6 @@ final class CacheMiddleware
 
         // build a normalized query string
         $qs = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
-        return "{$path}.{$qs}";
+        return sha1("{$path}.{$qs}");
     }
 }

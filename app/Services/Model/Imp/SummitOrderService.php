@@ -4154,7 +4154,7 @@ final class SummitOrderService
                         return;
                     }
 
-                    if (!is_null($ticket) && !$ticket->getOrder()->getSummitId() != $summit->getId()) {
+                    if (!is_null($ticket) && $ticket->getOrder()->getSummitId() != $summit->getId()) {
                         Log::warning
                         (
                             sprintf

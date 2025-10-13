@@ -617,8 +617,6 @@ SQL,
 
         $query = $this->applyExtraJoins($query, $filter, $order);
 
-        $query = $this->applyExtraSelects($query, $filter, $order);
-
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings($filter));
         }
@@ -634,10 +632,6 @@ SQL,
         }
 
         $query = $this->applyExtraFilters($query);
-
-        if(!is_null($order)){
-            $order->apply2Query($query, $this->getOrderMappings($filter));
-        }
 
         return (int) $query->getQuery()->getSingleScalarResult();
     }

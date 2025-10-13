@@ -58,7 +58,27 @@ final class OAuth2SummitAttendeeBadgePrintApiController
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Badge Prints"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'page_size',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of pages in each page',
+            ),
             new OA\Parameter(
                 name: "ticket_id",
                 in: "path",
@@ -66,8 +86,6 @@ final class OAuth2SummitAttendeeBadgePrintApiController
                 description: "Ticket ID",
                 schema: new OA\Schema(type: "integer")
             ),
-            new OA\Parameter(ref: "#/components/parameters/page_number_param"),
-            new OA\Parameter(ref: "#/components/parameters/page_size_param"),
             new OA\Parameter(
                 name: "filter[]",
                 in: "query",
@@ -156,7 +174,13 @@ final class OAuth2SummitAttendeeBadgePrintApiController
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Badge Prints"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
             new OA\Parameter(
                 name: "ticket_id",
                 in: "path",
@@ -262,7 +286,13 @@ final class OAuth2SummitAttendeeBadgePrintApiController
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Badge Prints"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
             new OA\Parameter(
                 name: "ticket_id",
                 in: "path",

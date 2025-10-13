@@ -33,7 +33,9 @@ use OpenApi\Attributes as OA;
         )
     ]
 )]
-class SummitScheduleConfigContentSchema {}
+class SummitScheduleConfigContentSchema
+{
+}
 
 
 #[OA\Schema(
@@ -50,7 +52,9 @@ class SummitScheduleConfigContentSchema {}
         )
     ]
 )]
-class SummitScheduleConfigSchema {}
+class SummitScheduleConfigSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedSummitScheduleConfigsResponse',
@@ -68,7 +72,9 @@ class SummitScheduleConfigSchema {}
         )
     ]
 )]
-class PaginatedSummitScheduleConfigsResponseSchema {}
+class PaginatedSummitScheduleConfigsResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitScheduleFilterElementConfig',
@@ -88,7 +94,9 @@ class PaginatedSummitScheduleConfigsResponseSchema {}
         ),
     ]
 )]
-class SummitScheduleFilterElementConfigSchema {}
+class SummitScheduleFilterElementConfigSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitSchedulePreFilterElementConfig',
@@ -111,7 +119,9 @@ class SummitScheduleFilterElementConfigSchema {}
         )
     ]
 )]
-class SummitSchedulePreFilterElementConfigSchema {}
+class SummitSchedulePreFilterElementConfigSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitScheduleConfigCreateRequest',
@@ -153,7 +163,9 @@ class SummitSchedulePreFilterElementConfigSchema {}
         )
     ]
 )]
-class SummitScheduleConfigCreateRequestSchema {}
+class SummitScheduleConfigCreateRequestSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitScheduleConfigUpdateRequest',
@@ -194,7 +206,9 @@ class SummitScheduleConfigCreateRequestSchema {}
         )
     ]
 )]
-class SummitScheduleConfigUpdateRequestSchema {}
+class SummitScheduleConfigUpdateRequestSchema
+{
+}
 
 // Summit Documents
 
@@ -222,7 +236,9 @@ class SummitScheduleConfigUpdateRequestSchema {}
         new OA\Property(property: "summit_id", type: "integer", description: "Summit ID, full object description when ?expand=summit (summit)"),
     ]
 )]
-class SummitDocumentSchema {}
+class SummitDocumentSchema
+{
+}
 
 #[OA\Schema(
     schema: "PaginatedSummitDocumentsResponse",
@@ -240,7 +256,9 @@ class SummitDocumentSchema {}
         )
     ]
 )]
-class PaginatedSummitDocumentsResponseSchema {}
+class PaginatedSummitDocumentsResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: "SummitDocumentCreateRequest",
@@ -270,7 +288,9 @@ class PaginatedSummitDocumentsResponseSchema {}
         ),
     ]
 )]
-class SummitDocumentCreateRequest {}
+class SummitDocumentCreateRequest
+{
+}
 
 #[OA\Schema(
     schema: "SummitDocumentUpdateRequest",
@@ -292,7 +312,9 @@ class SummitDocumentCreateRequest {}
         ),
     ]
 )]
-class SummitDocumentUpdateRequest {}
+class SummitDocumentUpdateRequest
+{
+}
 
 // Summit Attendee Badges
 
@@ -341,10 +363,54 @@ class SummitAttendeeBadgeSchema
         )
     ]
 )]
-class PaginatedSummitAttendeeBadgesResponseSchema {}
+class PaginatedSummitAttendeeBadgesResponseSchema
+{
+}
 
 // Summit Media Upload Type Schemas
 
+#[OA\Schema(
+    schema: "SummitMediaUploadType",
+    description: "Summit Media Upload Type",
+    type: "object",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "created", type: "integer", format: "int64", description: "Creation timestamp (epoch)", example: 1234567890),
+        new OA\Property(property: "last_edited", type: "integer", format: "int64", description: "Last edit timestamp (epoch)", example: 1234567890),
+        new OA\Property(property: "name", type: "string", maxLength: 255, example: "Speaker Photo"),
+        new OA\Property(property: "description", type: "string", maxLength: 5120, nullable: true, example: "High resolution photo of the speaker"),
+        new OA\Property(property: "max_size", type: "integer", description: "Maximum file size in KB", example: 10240),
+        new OA\Property(property: "is_mandatory", type: "boolean", example: true),
+        new OA\Property(property: "min_uploads_qty", type: "integer", minimum: 0, example: 1),
+        new OA\Property(property: "max_uploads_qty", type: "integer", minimum: 0, example: 1),
+        new OA\Property(property: "use_temporary_links_on_public_storage", type: "boolean", example: false),
+        new OA\Property(property: "temporary_links_public_storage_ttl", type: "integer", description: "TTL in seconds", nullable: true, example: 3600),
+        new OA\Property(property: "private_storage_type", type: "string", example: "local"),
+        new OA\Property(property: "public_storage_type", type: "string", example: "s3"),
+        new OA\Property(property: "type_id", type: "integer", example: 456),
+        new OA\Property(property: "is_editable", type: "boolean", example: true),
+    ],
+    anyOf: [
+        new OA\Property(property: "summit_id", type: "integer", example: 123, description: "Summit ID, only when expand does NOT include 'summit' in it."),
+        new OA\Property(property: "summit", type: "Summit", description: "Summit expand (only when relations=presentation_types) and expand includes 'summit' in it."),
+        new OA\Property(
+            property: "presentation_types",
+            type: "array",
+            items: new OA\Items(type: "integer"),
+            description: "Array of presentation type IDs (only when relations=presentation_types and expand does not include 'presentation_types' in it)",
+            example: [1, 2, 3]
+        ),
+        new OA\Property(
+            property: "presentation_types",
+            type: "array",
+            items: new OA\Items(type: "PresentationType"),
+            description: "Array of PresentationType (only when relations=presentation_types and expand includes 'presentation_types' in it)",
+        ),
+    ],
+)]
+class SummitMediaUploadTypeSchema
+{
+}
 
 #[OA\Schema(
     schema: "PaginatedSummitMediaUploadTypesResponse",
@@ -362,7 +428,9 @@ class PaginatedSummitAttendeeBadgesResponseSchema {}
     ],
     type: "object"
 )]
-class PaginatedSummitMediaUploadTypesResponseSchema {}
+class PaginatedSummitMediaUploadTypesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: "SummitMediaUploadTypeCreateRequest",
@@ -392,7 +460,9 @@ class PaginatedSummitMediaUploadTypesResponseSchema {}
     ],
     type: "object"
 )]
-class SummitMediaUploadTypeCreateRequestSchema {}
+class SummitMediaUploadTypeCreateRequestSchema
+{
+}
 
 #[OA\Schema(
     schema: "SummitMediaUploadTypeUpdateRequest",
@@ -421,7 +491,9 @@ class SummitMediaUploadTypeCreateRequestSchema {}
     ],
     type: "object"
 )]
-class SummitMediaUploadTypeUpdateRequestSchema {}
+class SummitMediaUploadTypeUpdateRequestSchema
+{
+}
 
 
 #[OA\Schema(
@@ -440,7 +512,9 @@ class SummitMediaUploadTypeUpdateRequestSchema {}
         )
     ]
 )]
-class PaginatedSummitSponsorshipTypesResponseSchema {}
+class PaginatedSummitSponsorshipTypesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitSponsorshipTypeCreateRequest',
@@ -452,7 +526,9 @@ class PaginatedSummitSponsorshipTypesResponseSchema {}
         new OA\Property(property: 'size', type: 'string', example: ISponsorshipTypeConstants::BigSize, enum: ISponsorshipTypeConstants::AllowedSizes),
     ]
 )]
-class SummitSponsorshipTypeCreateRequestSchema {}
+class SummitSponsorshipTypeCreateRequestSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitSponsorshipTypeUpdateRequest',
@@ -464,8 +540,31 @@ class SummitSponsorshipTypeCreateRequestSchema {}
         new OA\Property(property: 'order', type: 'integer', example: 1, minimum: 1),
     ]
 )]
-class SummitSponsorshipTypeUpdateRequestSchema {}
+class SummitSponsorshipTypeUpdateRequestSchema
+{
+}
 
+#[OA\Schema(
+    schema: 'SummitMediaFileType',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', format: 'int64', example: 1633024800),
+        new OA\Property(property: 'last_edited', type: 'integer', format: 'int64', example: 1633024800),
+        new OA\Property(property: 'name', type: 'string', example: 'Presentation'),
+        new OA\Property(property: 'description', type: 'string', example: 'Presentation files for events'),
+        new OA\Property(property: 'is_system_defined', type: 'boolean', example: false),
+        new OA\Property(
+            property: 'allowed_extensions',
+            type: 'array',
+            items: new OA\Items(type: 'string'),
+            example: ['pdf', 'ppt', 'pptx']
+        ),
+    ]
+)]
+class SummitMediaFileTypeSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedSummitMediaFileTypesResponse',
@@ -483,7 +582,9 @@ class SummitSponsorshipTypeUpdateRequestSchema {}
         )
     ]
 )]
-class PaginatedSummitMediaFileTypesResponseSchema {}
+class PaginatedSummitMediaFileTypesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitMediaFileTypeCreateRequest',
@@ -501,7 +602,9 @@ class PaginatedSummitMediaFileTypesResponseSchema {}
         ),
     ]
 )]
-class SummitMediaFileTypeCreateRequestSchema {}
+class SummitMediaFileTypeCreateRequestSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitMediaFileTypeUpdateRequest',
@@ -519,4 +622,6 @@ class SummitMediaFileTypeCreateRequestSchema {}
         ),
     ]
 )]
-class SummitMediaFileTypeUpdateRequestSchema {}
+class SummitMediaFileTypeUpdateRequestSchema
+{
+}

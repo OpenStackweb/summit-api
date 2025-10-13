@@ -1,5 +1,4 @@
 <?php namespace App\Http\Controllers;
-
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +13,7 @@
  **/
 use HTTP401UnauthorizedException;
 use App\Http\Exceptions\HTTP403ForbiddenException;
-use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitMediaUploadTypeRepository;
-use App\Security\SummitScopes;
 use App\Services\Model\ISummitMediaUploadTypeService;
 use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
@@ -25,7 +22,6 @@ use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
-
 
 /**
  * Class OAuth2SummitMediaUploadTypeApiController
@@ -59,7 +55,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
     (
         ISummitMediaUploadTypeRepository $repository,
         ISummitRepository $summit_repository,
-        ISummitMediaUploadTypeService $service,
+        ISummitMediaUploadTypeService  $service,
         IResourceServerContext $resource_server_context
     )
     {
@@ -71,46 +67,14 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/media-upload-types",
-        operationId: "getAllMediaUploadTypes",
         summary: "Get all media upload types for a summit",
         description: "Returns a paginated list of media upload types configured for a specific summit. Allows ordering, filtering and pagination.",
-        security: [
-            [
-                "summit_media_upload_type_oauth2" => [
-                    SummitScopes::ReadAllSummitData,
-                ]
-            ]
-        ],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit ID'
-            ),
-            new OA\Parameter(
-                name: 'page',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The page number'
-            ),
-            new OA\Parameter(
-                name: 'per_page',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The number of items per page',
-            ),
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(ref: "#/components/parameters/page_number_param"),
+            new OA\Parameter(ref: "#/components/parameters/page_size_param"),
             new OA\Parameter(
                 name: "filter[]",
                 in: "query",
@@ -150,39 +114,25 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
         ]
     )]
-    // public function getAllBySummit($summit_id)
+    public function getAllBySummit($summit_id)
+    {
+        $this->summit_id = $summit_id;
+        $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($this->summit_id);
+        if (is_null($summit)) return $this->error404();
+        return $this->getAll();
+    }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}",
-        operationId: "getMediaUploadType",
         summary: "Get a specific media upload type",
         description: "Returns detailed information about a specific media upload type",
-        security: [
-            [
-                "summit_media_upload_type_oauth2" => [
-                    SummitScopes::ReadAllSummitData,
-                ]
-            ]
-        ],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit ID'
-            ),
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -213,39 +163,22 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
         ]
     )]
-    // public function get($summit_id, $media_upload_type_id)
+    public function get($summit_id, $media_upload_type_id)
+    {
+        return $this->getById($summit_id, $media_upload_type_id);
+    }
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/media-upload-types",
-        operationId: "createMediaUploadType",
         summary: "Create a new media upload type",
         description: "Creates a new media upload type for the specified summit",
-        security: [
-            [
-                "summit_media_upload_type_oauth2" => [
-                    SummitScopes::WriteSummitData,
-                ]
-            ]
-        ],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit ID'
-            ),
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -260,40 +193,23 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
         ]
     )]
-    // public function add($summit_id)
+    public function add($summit_id)
+    {
+        return $this->addChild($summit_id);
+    }
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}",
-        operationId: "updateMediaUploadType",
         summary: "Update a media upload type",
         description: "Updates an existing media upload type",
-        security: [
-            [
-                "summit_media_upload_type_oauth2" => [
-                    SummitScopes::WriteSummitData,
-                ]
-            ]
-        ],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit ID'
-            ),
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -315,40 +231,23 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
         ]
     )]
-    // public function update($summit_id, $media_upload_type_id)
+    public function update($summit_id, $media_upload_type_id)
+    {
+        return $this->updateChild($summit_id, $media_upload_type_id);
+    }
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}",
-        operationId: "deleteMediaUploadType",
         summary: "Delete a media upload type",
         description: "Deletes a media upload type from the summit",
-        security: [
-            [
-                "summit_media_upload_type_oauth2" => [
-                    SummitScopes::WriteSummitData,
-                ]
-            ]
-        ],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit ID'
-            ),
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -361,10 +260,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted successfully"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
         ]
     )]
-    // public function delete($summit_id, $media_upload_type_id)
+    public function delete($summit_id, $media_upload_type_id)
+    {
+        return $this->deleteChild($summit_id, $media_upload_type_id);
+    }
 
     /**
      * @return array
@@ -402,10 +304,10 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         // authz
         // check that we have a current member ( not service account )
         $current_member = $this->getResourceServerContext()->getCurrentUser();
-        if (is_null($current_member))
+        if(is_null($current_member))
             throw new HTTP401UnauthorizedException();
         // check summit access
-        if (!$current_member->isSummitAllowed($summit))
+        if(!$current_member->isSummitAllowed($summit))
             throw new HTTP403ForbiddenException();
         return $this->service->add($summit, $payload);
     }
@@ -434,10 +336,10 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         // authz
         // check that we have a current member ( not service account )
         $current_member = $this->getResourceServerContext()->getCurrentUser();
-        if (is_null($current_member))
+        if(is_null($current_member))
             throw new HTTP401UnauthorizedException();
         // check summit access
-        if (!$current_member->isSummitAllowed($summit))
+        if(!$current_member->isSummitAllowed($summit))
             throw new HTTP403ForbiddenException();
 
         $this->service->delete($summit, $child_id);
@@ -451,13 +353,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         // authz
         // check that we have a current member ( not service account )
         $current_member = $this->getResourceServerContext()->getCurrentUser();
-        if (is_null($current_member))
+        if(is_null($current_member))
             throw new HTTP401UnauthorizedException();
         // check summit access
-        if (!$current_member->isSummitAllowed($summit))
+        if(!$current_member->isSummitAllowed($summit))
             throw new HTTP403ForbiddenException();
 
-        return $summit->getMediaUploadTypeById($child_id);
+       return $summit->getMediaUploadTypeById($child_id);
     }
 
     /**
@@ -476,10 +378,10 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         // authz
         // check that we have a current member ( not service account )
         $current_member = $this->getResourceServerContext()->getCurrentUser();
-        if (is_null($current_member))
+        if(is_null($current_member))
             throw new HTTP401UnauthorizedException();
         // check summit access
-        if (!$current_member->isSummitAllowed($summit))
+        if(!$current_member->isSummitAllowed($summit))
             throw new HTTP403ForbiddenException();
 
         return $this->service->update($summit, $child_id, $payload);
@@ -487,32 +389,12 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}/presentation-types/{event_type_id}",
-        operationId: "addMediaUploadTypeToPresentationType",
         summary: "Add media upload type to presentation type",
         description: "Associates a media upload type with a specific presentation type",
-        security: [
-            [
-                "summit_media_upload_type_oauth2" => [
-                    SummitScopes::WriteSummitData,
-                ]
-            ]
-        ],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit ID'
-            ),
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -536,28 +418,22 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
         ]
     )]
-    /**
-     * @param $summit_id
-     * @param $media_upload_type_id
-     * @param $presentation_type_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
     public function addToPresentationType($summit_id, $media_upload_type_id, $presentation_type_id){
-        return $this->processRequest(function () use ($summit_id, $media_upload_type_id, $presentation_type_id) {
+       return $this->processRequest(function() use($summit_id, $media_upload_type_id, $presentation_type_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
-            // authz
-            // check that we have a current member ( not service account )
-            $current_member = $this->getResourceServerContext()->getCurrentUser();
-            if (is_null($current_member))
-                throw new HTTP401UnauthorizedException();
-            // check summit access
-            if (!$current_member->isSummitAllowed($summit))
-                throw new HTTP403ForbiddenException();
+           // authz
+           // check that we have a current member ( not service account )
+           $current_member = $this->getResourceServerContext()->getCurrentUser();
+           if(is_null($current_member))
+               throw new HTTP401UnauthorizedException();
+           // check summit access
+           if(!$current_member->isSummitAllowed($summit))
+               throw new HTTP403ForbiddenException();
 
             $presentation_type = $this->service->addToPresentationType($summit, intval($media_upload_type_id), intval($presentation_type_id));
 
@@ -570,32 +446,12 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}/presentation-types/{event_type_id}",
-        operationId: "removeMediaUploadTypeFromPresentationType",
         summary: "Remove media upload type from presentation type",
         description: "Removes the association between a media upload type and a presentation type",
-        security: [
-            [
-                "summit_media_upload_type_oauth2" => [
-                    SummitScopes::WriteSummitData,
-                ]
-            ]
-        ],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit ID'
-            ),
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -619,27 +475,21 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
         ]
     )]
-    /**
-     * @param $summit_id
-     * @param $media_upload_type_id
-     * @param $presentation_type_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
     public function deleteFromPresentationType($summit_id, $media_upload_type_id, $presentation_type_id){
-        return $this->processRequest(function () use ($summit_id, $media_upload_type_id, $presentation_type_id) {
+        return $this->processRequest(function() use($summit_id, $media_upload_type_id, $presentation_type_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
             // authz
             // check that we have a current member ( not service account )
             $current_member = $this->getResourceServerContext()->getCurrentUser();
-            if (is_null($current_member))
+            if(is_null($current_member))
                 throw new HTTP401UnauthorizedException();
             // check summit access
-            if (!$current_member->isSummitAllowed($summit))
+            if(!$current_member->isSummitAllowed($summit))
                 throw new HTTP403ForbiddenException();
 
             $presentation_type = $this->service->deleteFromPresentationType($summit, intval($media_upload_type_id), intval($presentation_type_id));
@@ -652,32 +502,12 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/media-upload-types/all/clone/{to_summit_id}",
-        operationId: "cloneMediaUploadTypes",
         summary: "Clone media upload types to another summit",
         description: "Clones all media upload types from one summit to another summit",
-        security: [
-            [
-                "summit_media_upload_type_oauth2" => [
-                    SummitScopes::WriteSummitData,
-                ]
-            ]
-        ],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit ID'
-            ),
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
             new OA\Parameter(
                 name: "to_summit_id",
                 in: "path",
@@ -690,20 +520,15 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             new OA\Response(
                 response: Response::HTTP_CREATED,
                 description: "Success - Returns the target summit with cloned media upload types",
-                content: new OA\JsonContent(ref: "#/components/schemas/Summit")
+                content: new OA\JsonContent(type: "object")
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Source or target summit Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Source or target summit not found"),
         ]
     )]
-    /**
-     * @param $summit_id
-     * @param $to_summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
     public function cloneMediaUploadTypes($summit_id, $to_summit_id){
-        return $this->processRequest(function () use ($summit_id, $to_summit_id) {
+        return $this->processRequest(function() use($summit_id, $to_summit_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
 
@@ -713,14 +538,14 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
             // authz
             // check that we have a current member ( not service account )
             $current_member = $this->getResourceServerContext()->getCurrentUser();
-            if (is_null($current_member))
+            if(is_null($current_member))
                 throw new HTTP401UnauthorizedException();
             // check summit access
-            if (!$current_member->isSummitAllowed($summit))
+            if(!$current_member->isSummitAllowed($summit))
                 throw new HTTP403ForbiddenException();
 
             // check summit access
-            if (!$current_member->isSummitAllowed($to_summit))
+            if(!$current_member->isSummitAllowed($to_summit))
                 throw new HTTP403ForbiddenException();
 
             $to_summit = $this->service->cloneMediaUploadTypes($summit, $to_summit);

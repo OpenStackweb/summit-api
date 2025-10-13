@@ -40,6 +40,7 @@ use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
@@ -421,7 +422,10 @@ final class ReserveOrderTask extends AbstractTask
             $owner_email = $this->payload['owner_email'];
             $owner_first_name = $this->payload['owner_first_name'];
             $owner_last_name = $this->payload['owner_last_name'];
-
+            // todo: move to IOC
+            $summit_repository = App::make(ISummitRepository::class);
+            // re attach
+            $this->summit = $summit_repository->getById($this->summit->getId());
             Log::debug(sprintf("ReserveOrderTask::run payload %s", json_encode($this->payload)));
 
             $owner_company_name = TaskUtils::getOwnerCompanyName($this->summit, $this->payload);
@@ -740,6 +744,10 @@ final class ApplyPromoCodeTask extends AbstractTask
         $this->formerState = $formerState;
         $promo_codes_usage = $this->formerState['promo_codes_usage'];
         $owner_email = $this->payload['owner_email'];
+        // todo: move to IOC
+        $summit_repository = App::make(ISummitRepository::class);
+        // re attach
+        $this->summit = $summit_repository->getById($this->summit->getId());
         $owner_company_name = TaskUtils::getOwnerCompanyName($this->summit, $this->payload);
 
         foreach ($promo_codes_usage as $promo_code_value => $info) {

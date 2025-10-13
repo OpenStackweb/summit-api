@@ -36,6 +36,8 @@ use Cocur\Slugify\Slugify;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -1728,9 +1730,9 @@ class Summit extends SilverstripeBaseModel
             $selection_plan_cond = " and sp.id = :selection_plan_id";
         }
 
-        $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+        $query = $this->createQuery("SELECT p from models\summit\Presentation p
         JOIN p.summit s
-        JOIN p.moderator m 
+        JOIN p.moderator m
         JOIN p.selection_plan sp
         WHERE s.id = :summit_id and m.id = :moderator_id" . $selection_plan_cond);
 
@@ -1757,9 +1759,9 @@ class Summit extends SilverstripeBaseModel
             $selection_plan_cond = " and sp.id = :selection_plan_id";
         }
 
-        $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+        $query = $this->createQuery("SELECT p from models\summit\Presentation p
         JOIN p.summit s
-        JOIN p.created_by c 
+        JOIN p.created_by c
         JOIN p.selection_plan sp
         WHERE s.id = :summit_id and c.id = :creator_id" . $selection_plan_cond);
 
@@ -2265,7 +2267,7 @@ class Summit extends SilverstripeBaseModel
             $sql = <<<SQL
     SELECT URLSegment,ParentID FROM SiteTree
     INNER JOIN
-    SummitPage ON SummitPage.ID = SiteTree.ID 
+    SummitPage ON SummitPage.ID = SiteTree.ID
     WHERE SummitID = :summit_id AND ClassName = 'SummitAppSchedPage';
 SQL;
             $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
@@ -2928,9 +2930,9 @@ SQL;
     public function getScheduleEventsIds(): array
     {
         $query = <<<SQL
-SELECT e.id  
+SELECT e.id
 FROM  models\summit\SummitEvent e
-WHERE 
+WHERE
 e.published = 1
 AND e.summit = :summit
 SQL;
@@ -2960,12 +2962,12 @@ SQL;
         );
 
         $query = <<<SQL
-SELECT e.id  
+SELECT e.id
 FROM  models\summit\SummitEvent e
-WHERE 
-e.published = 1 
-    and e.streaming_url <> '' 
-    and e.streaming_type = 'Live' 
+WHERE
+e.published = 1
+    and e.streaming_url <> ''
+    and e.streaming_type = 'Live'
     and e.start_date >= :now
     and e.start_date <= :starting_date
 AND e.summit = :summit
@@ -2990,9 +2992,9 @@ SQL;
     public function getScheduleEventsIdsPerLocation(SummitAbstractLocation $location)
     {
         $query = <<<SQL
-SELECT e.id  
+SELECT e.id
 FROM  models\summit\SummitEvent e
-WHERE 
+WHERE
 e.published = 1
 AND e.summit = :summit
 AND e.location = :location
@@ -3363,10 +3365,10 @@ SQL;
     public function getTrackTagGroupForTag(Tag $tag)
     {
         $query = <<<SQL
-SELECT tg  
+SELECT tg
 FROM  App\Models\Foundation\Summit\TrackTagGroup tg
 JOIN tg.allowed_tags t
-WHERE 
+WHERE
 tg.summit = :summit
 AND t.tag = :tag
 SQL;
@@ -3389,11 +3391,11 @@ SQL;
     public function isTagValueAllowedOnTrackTagGroups($tag_value)
     {
         $query = <<<SQL
-SELECT COUNT(tg.id) 
+SELECT COUNT(tg.id)
 FROM  App\Models\Foundation\Summit\TrackTagGroup tg
 JOIN tg.allowed_tags t
 JOIN t.tag tag
-WHERE 
+WHERE
 tg.summit = :summit
 AND tag.tag = :tag_value
 SQL;
@@ -3414,11 +3416,11 @@ SQL;
     public function getAllowedTagOnTagTrackGroup($tag_value)
     {
         $query = <<<SQL
-SELECT allowed_tag 
+SELECT allowed_tag
 FROM   App\Models\Foundation\Summit\TrackTagGroupAllowedTag allowed_tag
 JOIN allowed_tag.track_tag_group tg
 JOIN allowed_tag.tag tag
-WHERE 
+WHERE
 tg.summit = :summit
 AND tag.tag = :tag_value
 SQL;
@@ -3439,11 +3441,11 @@ SQL;
     public function getTrackTagGroupForTagId($tag_id)
     {
         $query = <<<SQL
-SELECT tg  
+SELECT tg
 FROM  App\Models\Foundation\Summit\TrackTagGroup tg
 JOIN tg.allowed_tags tgs
 JOIN tgs.tag t
-WHERE 
+WHERE
 tg.summit = :summit
 AND t.id = :tag_id
 SQL;
@@ -4481,8 +4483,8 @@ SQL;
     public function getMainOrderExtraQuestionsByUsage(string $usage): array
     {
         $dql = <<<DQL
-SELECT q from models\summit\SummitOrderExtraQuestionType q 
-JOIN q.summit s 
+SELECT q from models\summit\SummitOrderExtraQuestionType q
+JOIN q.summit s
 WHERE s.id = :summit_id
 AND ( q.usage = :usage1 OR q.usage = :usage2 )
 AND not exists (select r from App\Models\Foundation\Main\ExtraQuestions\SubQuestionRule r where r.sub_question = q)
@@ -5207,10 +5209,10 @@ DQL;
         $identifier = null;
         try {
             $sql = <<<SQL
-           SELECT SummitEmailEventFlow.EmailTemplateIdentifier AS Template 
-           FROM `SummitEmailEventFlow` 
-           inner join SummitEmailEventFlowType ON SummitEmailEventFlowType.ID = SummitEmailEventFlowTypeID 
-           where SummitID = :summit_id 
+           SELECT SummitEmailEventFlow.EmailTemplateIdentifier AS Template
+           FROM `SummitEmailEventFlow`
+           inner join SummitEmailEventFlowType ON SummitEmailEventFlowType.ID = SummitEmailEventFlowTypeID
+           where SummitID = :summit_id
            AND SummitEmailEventFlowType.Slug = :slug LIMIT 0,1;
 SQL;
             $stmt = $this->prepareRawSQL($sql, [
@@ -5269,10 +5271,10 @@ SQL;
 
         try {
             $sql = <<<SQL
-           SELECT SummitEmailEventFlow.EmailRecipients AS Template 
-           FROM `SummitEmailEventFlow` 
-           inner join SummitEmailEventFlowType ON SummitEmailEventFlowType.ID = SummitEmailEventFlowTypeID 
-           where SummitID = :summit_id 
+           SELECT SummitEmailEventFlow.EmailRecipients AS Template
+           FROM `SummitEmailEventFlow`
+           inner join SummitEmailEventFlowType ON SummitEmailEventFlowType.ID = SummitEmailEventFlowTypeID
+           where SummitID = :summit_id
            AND SummitEmailEventFlowType.Slug = :slug LIMIT 0,1;
 SQL;
             $stmt = $this->prepareRawSQL($sql, [
@@ -5745,8 +5747,8 @@ SQL;
             $sql = <<<SQL
             SELECT COUNT(SummitMediaUploadType.ID) AS QTY
             FROM SummitMediaUploadType
-            WHERE 
-            SummitMediaUploadType.SummitID = :summit_id 
+            WHERE
+            SummitMediaUploadType.SummitID = :summit_id
             AND SummitMediaUploadType.IsMandatory = 1
 SQL;
             $stmt = $this->prepareRawSQL($sql, [
@@ -5999,8 +6001,8 @@ SQL;
                 $sql = <<<SQL
             SELECT COUNT(SummitEvent.ID) AS QTY
             FROM SummitEvent
-            WHERE 
-            SummitEvent.SummitID = :summit_id 
+            WHERE
+            SummitEvent.SummitID = :summit_id
             AND SummitEvent.Published = 1
             AND (SummitEvent.StartDate <= :end and SummitEvent.EndDate >= :begin)
 SQL;
@@ -6459,10 +6461,27 @@ SQL;
      */
     public function getRegistrationCompanyById(int $id): ?Company
     {
+        /*
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('id', $id));
         $res = $this->registration_companies->matching($criteria)->first();
         return $res === false ? null : $res;
+        */
+           try {
+               $query = $this->createQuery(" SELECT c
+          FROM models\main\Company c
+          JOIN models\summit\Summit s WITH c MEMBER OF s.registration_companies
+         WHERE s.id = :summit_id AND c.id = :company_id");
+               return $query
+                   ->setParameter('summit_id', $this->id)
+                   ->setParameter('event_id', $id)
+                   ->getOneOrNullResult();
+           } catch (NoResultException $ex1) {
+               return null;
+           } catch (NonUniqueResultException $ex2) {
+               // should never happen
+               return null;
+           }
     }
 
     /**
@@ -6548,12 +6567,12 @@ SQL;
             $sql = <<<SQL
             SELECT COUNT(DISTINCT(T.ID)) AS ticket_count
             FROM SummitAttendeeTicket AS T
-            INNER JOIN SummitAttendee AS A ON A.ID = T.OwnerID   
-            LEFT JOIN Member AS M ON M.ID = A.MemberID    
+            INNER JOIN SummitAttendee AS A ON A.ID = T.OwnerID
+            LEFT JOIN Member AS M ON M.ID = A.MemberID
             INNER JOIN SummitTicketType AS TT ON TT.ID = T.TicketTypeID
             INNER JOIN SummitOrder AS O ON O.ID = T.OrderID
-            WHERE 
-                  O.SummitID = :summit_id 
+            WHERE
+                  O.SummitID = :summit_id
                   AND TT.ID = :type_id
                   AND ( A.Email = :email OR M.Email = :email )
 SQL;

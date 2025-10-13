@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Validator;
 use ModelSerializers\SerializerRegistry;
 use Illuminate\Support\Facades\Request;
 use App\Services\Model\ITagService;
+use Illuminate\Http\Response;
+use OpenApi\Attributes as OA;
 /**
  * Class OAuth2TagsApiController
  * @package App\Http\Controllers
@@ -54,6 +56,40 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         $this->tag_service = $tag_service;
     }
 
+    #[OA\Get(
+        path: "/api/v1/tags",
+        summary: "Get all tags",
+        description: "Returns a paginated list of tags. Allows ordering, filtering and pagination.",
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+        tags: ["Tags"],
+        parameters: [
+            new OA\Parameter(ref: "#/components/parameters/page_number_param"),
+            new OA\Parameter(ref: "#/components/parameters/page_size_param"),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter tags. Available filters: tag (=@, ==, @@)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, tag",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedTagsResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+        ]
+    )]
     public function getAll(){
         return $this->_getAll(
             function () {
@@ -88,6 +124,50 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/tags/{id}",
+        summary: "Get a specific tag",
+        description: "Returns detailed information about a specific tag",
+        tags: ["Tags"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Tag ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "fields",
+                in: "query",
+                required: false,
+                description: "Fields to include in response",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Relations to include",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Tag")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Tag not found"),
+        ]
+    )]
     public function getTag($tag_id){
         return $this->processRequest(function () use ($tag_id) {
             $tag = $this->repository->getById(intval($tag_id));
@@ -104,6 +184,28 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Post(
+        path: "/api/v1/tags",
+        summary: "Create a new tag",
+        description: "Creates a new tag",
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+        tags: ["Tags"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/TagRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/Tag")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     public function addTag(){
         return $this->processRequest(function () {
             if(!Request::isJson()) return $this->error400();
@@ -134,6 +236,38 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: "/api/v1/tags/{id}",
+        summary: "Update a tag",
+        description: "Updates an existing tag",
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+        tags: ["Tags"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Tag ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/TagRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Tag")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Tag not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     public function updateTag($tag_id){
         return $this->processRequest(function () use ($tag_id) {
             if(!Request::isJson()) return $this->error400();
@@ -166,6 +300,28 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Delete(
+        path: "/api/v1/tags/{id}",
+        summary: "Delete a tag",
+        description: "Deletes a tag",
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+        tags: ["Tags"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Tag ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Tag not found"),
+        ]
+    )]
     public function deleteTag($tag_id){
         return $this->processRequest(function () use ($tag_id) {
 

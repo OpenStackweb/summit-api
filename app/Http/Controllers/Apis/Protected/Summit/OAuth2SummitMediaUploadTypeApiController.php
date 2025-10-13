@@ -72,9 +72,27 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
-            new OA\Parameter(ref: "#/components/parameters/page_number_param"),
-            new OA\Parameter(ref: "#/components/parameters/page_size_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit ID'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'page_size',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of pages in each page',
+            ),
             new OA\Parameter(
                 name: "filter[]",
                 in: "query",
@@ -132,7 +150,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit ID'
+            ),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -178,7 +202,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit ID'
+            ),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -209,7 +239,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit ID'
+            ),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -247,7 +283,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit ID'
+            ),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -394,7 +436,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit ID'
+            ),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -451,7 +499,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit ID'
+            ),
             new OA\Parameter(
                 name: "media_upload_type_id",
                 in: "path",
@@ -507,7 +561,13 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Summit Media Upload Types"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: 'summit_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit ID'
+            ),
             new OA\Parameter(
                 name: "to_summit_id",
                 in: "path",

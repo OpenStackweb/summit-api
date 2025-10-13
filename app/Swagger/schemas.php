@@ -469,6 +469,41 @@ class ChunkedFileUploadRequestSchema
 {
 }
 
+// Tag Schemas
+
+#[OA\Schema(
+    schema: "PaginatedTagsResponse",
+    description: "Paginated response for Tags",
+    properties: [
+        new OA\Property(property: "total", type: "integer", example: 100),
+        new OA\Property(property: "per_page", type: "integer", example: 15),
+        new OA\Property(property: "current_page", type: "integer", example: 1),
+        new OA\Property(property: "last_page", type: "integer", example: 7),
+        new OA\Property(
+            property: "data",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/Tag")
+        ),
+    ],
+    type: "object"
+)]
+class PaginatedTagsResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: "TagRequest",
+    description: "Request to create or update a Tag",
+    required: ["tag"],
+    properties: [
+        new OA\Property(property: "tag", type: "string", maxLength: 100, example: "Cloud Computing"),
+    ],
+    type: "object"
+)]
+class TagRequestSchema
+{
+}
+
 #[OA\Schema(
     schema: 'PaginatedOrganizationsResponse',
     allOf: [
@@ -598,4 +633,6 @@ class PaymentGatewayProfileUpdateRequestSchema
         )
     ]
 )]
-class PaginatedUserStoriesResponseSchema {}
+class PaginatedUserStoriesResponseSchema
+{
+}

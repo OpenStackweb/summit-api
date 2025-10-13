@@ -519,7 +519,7 @@ SQL,
         if($ord('speakers_count') || $ord('speaker_company'))
             $need['sp'] = true;
 
-        if($has("speakers")){
+        if($has("speaker")){
             $need['sp'] = $need['spm'] = $need['spmm'] = true;
         }
         if($has('speaker_email')){

@@ -87,11 +87,11 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
                 description: 'The page number'
             ),
             new OA\Parameter(
-                name: 'page_size',
+                name: 'per_page',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
-                description: 'The number of pages in each page',
+                description: 'The number of items per page',
             ),
             new OA\Parameter(
                 name: "filter[]",

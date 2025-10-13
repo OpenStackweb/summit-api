@@ -22,6 +22,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Illuminate\Support\Facades\Log;
 use models\main\Tag;
+use models\summit\IOrderConstants;
 use models\summit\ISummitCategoryChangeStatus;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;
@@ -38,7 +39,6 @@ use utils\DoctrineFilterMapping;
 use utils\DoctrineHavingFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\DoctrineJoinFilterMapping;
-use utils\DoctrineLeftJoinFilterMapping;
 use utils\DoctrineSwitchFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -58,60 +58,27 @@ final class DoctrineSummitEventRepository
         SummitGroupEvent::ClassName,
     ];
 
-    /**
-     * @param IPublishableEvent $event
-     * @return IPublishableEvent[]
-     */
-    public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array
+
+    private function ensureJoin(QueryBuilder $qb, string $alias): void
     {
-        $summit = $event->getSummit();
-        $end_date = $event->getEndDate();
-        $start_date = $event->getStartDate();
+        if (\in_array($alias, $qb->getAllAliases(), true)) return;
 
-        $query = $this->getEntityManager()->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
-            ->where('e.published = 1')
-            ->andWhere('e.start_date < :end_date')
-            ->andWhere('e.end_date > :start_date')
-            ->setParameter('summit_id', $summit->getId())
-            ->setParameter('start_date', $start_date)
-            ->setParameter('end_date', $end_date);
+        [$path, $type, $deps] = $this->joinCatalog[$alias] ?? [null, null, []];
+        foreach ($deps as $dep) $this->ensureJoin($qb, $dep);
 
-        $idx = 1;
-        foreach (self::$forbidden_classes as $forbidden_class) {
-            $query = $query
-                ->andWhere("not e INSTANCE OF :forbidden_class" . $idx);
-            $query->setParameter("forbidden_class" . $idx, $forbidden_class);
-            $idx++;
-        }
-
-        return $query->getQuery()->getResult();
+        if ($type === 'join') $qb->join($path, $alias);
+        else                  $qb->leftJoin($path, $alias);
     }
 
-    /**
-     * @return string
-     */
-    protected function getBaseEntity()
+    protected function getFilterMappings()
     {
-        return SummitEvent::class;
-    }
-
-    /**
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
-    {
+        $args = func_get_args();
+        $filter = count($args) > 0 ? $args[0] : null;
 
         $current_track_id = 0;
         $current_member_id = 0;
 
         if (!is_null($filter)) {
-            Log::debug(sprintf("DoctrineSummitEventRepository::getAllByPage filter %s", $filter));
             // check for dependant filtering
             $track_id_filter = $filter->getUniqueFilter('track_id');
             if (!is_null($track_id_filter)) {
@@ -123,145 +90,6 @@ final class DoctrineSummitEventRepository
             }
         }
 
-        $query = $this->getEntityManager()->createQueryBuilder()
-            ->select("e")
-            ->distinct(true)
-            ->from($this->getBaseEntity(), "e")
-            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id');
-
-        if (is_null($order) || !$order->hasOrder("votes_count")) {
-            $query = $query
-                ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
-                ->leftJoin("e.created_by", 'cb', Join::LEFT_JOIN)
-                ->leftJoin("e.sponsors", "sprs", Join::LEFT_JOIN)
-                ->leftJoin("p.speakers", "sp_presentation", Join::LEFT_JOIN)
-                ->leftJoin("sp_presentation.speaker", "sp", Join::LEFT_JOIN)
-                ->leftJoin('p.selected_presentations', "ssp", Join::LEFT_JOIN)
-                ->leftJoin('ssp.member', "ssp_member", Join::LEFT_JOIN)
-                ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
-                ->leftJoin('ssp.list', "sspl", Join::LEFT_JOIN)
-                ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
-                ->leftJoin('spm.member', "spmm2", Join::LEFT_JOIN)
-                ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
-                ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
-                ->leftJoin('spm.registration_request', "sprr2", Join::LEFT_JOIN);
-        }
-
-        if (!is_null($order) && $order->hasOrder("actions") && !$filter->hasFilter("actions")) {
-            $query = $query->leftJoin("p.actions", 'a', Join::LEFT_JOIN);
-        }
-
-        $query = $this->applyExtraJoins($query, $filter, $order);
-
-        $query = $this->applyExtraSelects($query, $filter, $order);
-
-        if (!is_null($filter)) {
-            $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
-            if($filter->hasFilter('actions')){
-                // if actions filter is required, we should do an inner join with the allowed
-                // actions of the selection plan of the presentation
-                $query = $query->innerJoin("p.selection_plan","sp_i")
-                    ->innerJoin("sp_i.allowed_presentation_action_types","allowed_at")
-                    ->innerJoin("allowed_at.type","allowed_at_type")
-                    ->andWhere("allowed_at_type = at");
-            }
-        }
-
-        $shouldPerformRandomOrderingByPage = false;
-        if (!is_null($order)) {
-            if ($order->hasOrder("page_random")) {
-                $shouldPerformRandomOrderingByPage = true;
-                $order->removeOrder("page_random");
-            }
-            $order->apply2Query($query, $this->getOrderMappings());
-            if (!$order->hasOrder('id')) {
-                $query = $query->addOrderBy("e.id", 'ASC');
-            }
-        } else {
-            //default order
-            $query = $query->addOrderBy("e.start_date", 'ASC');
-            $query = $query->addOrderBy("e.end_date", 'ASC');
-            $query = $query->addOrderBy("e.id", 'ASC');
-        }
-
-        $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
-
-        if (!$can_view_private_events) {
-            $idx = 1;
-            foreach (self::$forbidden_classes as $forbidden_class) {
-                $query = $query
-                    ->andWhere("not e INSTANCE OF :forbidden_class" . $idx);
-                $query->setParameter("forbidden_class" . $idx, $forbidden_class);
-                $idx++;
-            }
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $paginator = new Paginator($query, $fetchJoinCollection = true);
-        $total = $paginator->count();
-        $data = [];
-
-        foreach ($paginator as $entity)
-            $data[] = $entity;
-
-        if ($shouldPerformRandomOrderingByPage)
-            shuffle($data);
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return QueryBuilder
-     */
-    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder
-    {
-        if(!is_null($order) && $order->hasOrder('actions')) {
-            //Weighted sub-query using the following distribution:
-            // - Action is completed     => weight = 2
-            // - Action is not completed => weight = 1
-            // - No associated actions   => weight = 0
-            $query = $query->addSelect(
-                "SUM(CASE WHEN (a.is_completed = 1) THEN 2 WHEN (a.is_completed = 0) THEN 1 ELSE 0 END) AS HIDDEN HIDDEN_COMPLETED_ACTIONS_COUNT");
-            $query->groupBy("e");
-        }
-        return $query;
-    }
-
-    /**
-     * @param QueryBuilder $query
-     * @return QueryBuilder
-     */
-    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
-    {
-        $query = $query->innerJoin("e.type", "et", Join::ON);
-        $query = $query->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id');
-        // if we delete the track, its set to null
-        $query = $query->leftJoin("e.category", "c", Join::ON);
-        $query = $query->leftJoin("p.attendees_votes", 'av', Join::ON);
-        $query = $query->leftJoin("e.tags", "t", Join::ON);
-        return $query;
-    }
-
-    /**
-     * @param int $current_member_id
-     * @param int $current_track_id
-     * @return array
-     */
-    protected function getCustomFilterMappings(int $current_member_id, int $current_track_id)
-    {
         return [
             'id' => new DoctrineInFilterMapping('e.id'),
             'not_id' => new DoctrineNotInFilterMapping('e.id'),
@@ -274,20 +102,12 @@ final class DoctrineSummitEventRepository
             'level' => 'e.level:json_string',
             'status' => 'p.status:json_string',
             'progress' => 'p.progress:json_int',
-            'is_chair_visible' => Filter::buildBooleanField("c.chair_visible"),
-            'is_voting_visible' => Filter::buildBooleanField("c.voting_visible"),
-            'social_summary' => 'e.social_summary:json_string',
-            'published' =>  Filter::buildBooleanField('e.published'),
-            'type_allows_publishing_dates' => Filter::buildBooleanField('et.allows_publishing_dates'),
-            'type_allows_location' =>  Filter::buildBooleanField('et.allows_location'),
-            'type_allows_attendee_vote' =>  Filter::buildBooleanField('et2.allow_attendee_vote'),
-            'type_allows_custom_ordering' =>  Filter::buildBooleanField('et2.allow_custom_ordering'),
-            'type_show_always_on_schedule' => Filter::buildBooleanField('et.show_always_on_schedule'),
             'start_date' => 'e.start_date:datetime_epoch',
             'end_date' => 'e.end_date:datetime_epoch',
             'created'           => sprintf('e.created:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
             'last_edited'       => sprintf('e.last_edited:datetime_epoch|%s', SilverstripeBaseModel::DefaultTimeZone),
-            'tags' => "t.tag",
+            'social_summary' => 'e.social_summary:json_string',
+            'published' =>  Filter::buildBooleanField('e.published'),
             'submission_status' => new DoctrineSwitchFilterMapping
             (
                 [
@@ -305,30 +125,30 @@ final class DoctrineSummitEventRepository
                     )
                 ]
             ),
-            'summit_id' => new DoctrineJoinFilterMapping
-            (
-                'e.summit',
-                's',
-                "s.id  :operator :value"
+            'class_name' => new DoctrineInstanceOfFilterMapping(
+                "e",
+                [
+                    SummitEvent::ClassName => SummitEvent::class,
+                    Presentation::ClassName => Presentation::class,
+                ]
             ),
+            'review_status' => 'REVIEW_STATUS(e.id)',
+            'submission_source' => 'e.submission_source:json_string',
+            'rsvp_type' => 'e.rsvp_type:json_string',
+            'summit_id' =>  "s.id",
+            'tags' => "t.tag",
+            'is_chair_visible' => Filter::buildBooleanField("c.chair_visible"),
+            'is_voting_visible' => Filter::buildBooleanField("c.voting_visible"),
+            'track_id' => "c.id",
             'event_type_id' => "et.id :operator :value",
-            'track_id' => "c.id :operator :value",
-            'track_group_id' => new DoctrineJoinFilterMapping
-            (
-                'c.groups',
-                'cg',
-                "cg.id :operator :value"
-            ),
-            'selection_plan_id' => new DoctrineFilterMapping
-            (
-                "(selp.id :operator :value)"
-            ),
-            'location_id' => new DoctrineLeftJoinFilterMapping
-            (
-                'e.location',
-                'l',
-                "l.id :operator :value"
-            ),
+            'type_allows_publishing_dates' => Filter::buildBooleanField('et.allows_publishing_dates'),
+            'type_allows_location' =>  Filter::buildBooleanField('et.allows_location'),
+            'type_show_always_on_schedule' => Filter::buildBooleanField('et.show_always_on_schedule'),
+            'type_allows_attendee_vote' =>  Filter::buildBooleanField('et2.allow_attendee_vote'),
+            'type_allows_custom_ordering' =>  Filter::buildBooleanField('et2.allow_custom_ordering'),
+            'track_group_id' => "cg.id",
+            'selection_plan_id' => 'selp.id',
+            'location_id' => 'l.id',
             'speaker' => new DoctrineFilterMapping
             (
                 "( concat(sp.first_name, ' ', sp.last_name) :operator :value " .
@@ -357,18 +177,44 @@ final class DoctrineSummitEventRepository
             (
                 "(sp.id :operator :value OR spm.id :operator :value)"
             ),
-            'sponsor_id' => new DoctrineFilterMapping
-            (
-                "(sprs.id :operator :value)"
+            'sponsor_id' => 'sprs.id',
+            'sponsor' => "sprs.name",
+            /*
+            * The :i suffix is used to have Doctrine replace it with the current subquery index in order to avoid alias
+            * duplications when there is more than one subquery of the same kind.
+            */
+            'has_media_upload_with_type' => new DoctrineFilterMapping(
+                'EXISTS (
+                    SELECT pm1:i.id
+                    FROM models\summit\PresentationMediaUpload pm1:i
+                    JOIN pm1:i.media_upload_type mut1:i
+                    JOIN pm1:i.presentation p3:i
+                    WHERE p3:i.id = p.id AND mut1:i.id :operator :value
+                )'
             ),
-            'sponsor' => new DoctrineFilterMapping
-            (
-                "(sprs.name :operator :value)"
+            'has_not_media_upload_with_type' => new DoctrineFilterMapping(
+                'NOT EXISTS (
+                    SELECT pm2:i.id
+                    FROM models\summit\PresentationMediaUpload pm2:i
+                    JOIN pm2:i.media_upload_type mut2:i
+                    JOIN pm2:i.presentation p4:i
+                    WHERE p4:i.id = p.id AND mut2:i.id :operator :value
+                )'
             ),
+
+            'created_by_fullname' => new DoctrineFilterMapping
+            (
+                "concat(cb.first_name, ' ', cb.last_name) :operator :value "
+            ),
+            'created_by_email' => 'cb.email',
+            'created_by_company' => 'cb.company',
+            'presentation_attendee_vote_date' => 'av.created:datetime_epoch|' . SilverstripeBaseModel::DefaultTimeZone,
+            'votes_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value"),
+            'speakers_count' => "SIZE(p.speakers) :operator :value",
             'selection_status' => new DoctrineSwitchFilterMapping([
                     'pending' => new DoctrineCaseFilterMapping(
                         "pending",
-                              "selp is null OR selp.selection_begin_date is null OR selp.selection_begin_date > UTC_TIMESTAMP()"
+                        "selp is null OR selp.selection_begin_date is null OR selp.selection_begin_date > UTC_TIMESTAMP()"
                     ),
                     'selected' => new DoctrineCaseFilterMapping(
                         'selected',
@@ -405,7 +251,8 @@ final class DoctrineSummitEventRepository
                         'lightning-alternate',
                         "ssp.order is not null and ssp.order > c.lightning_count and sspl.list_type = 'Group' and sspl.list_class = 'Lightning' and sspl.category = e.category"
                     ),
-                ]
+                ],
+
             ),
             'track_chairs_status' => new DoctrineSwitchFilterMapping
             (
@@ -484,52 +331,8 @@ final class DoctrineSummitEventRepository
                     'is_completed' => 'a.is_completed'
                 ]
             ),
-            'created_by_fullname' => new DoctrineFilterMapping
-            (
-                "concat(cb.first_name, ' ', cb.last_name) :operator :value "
-            ),
-            'created_by_email' => 'cb.email',
-            'created_by_company' => 'cb.company',
-            'class_name' => new DoctrineInstanceOfFilterMapping(
-                "e",
-                [
-                    SummitEvent::ClassName => SummitEvent::class,
-                    Presentation::ClassName => Presentation::class,
-                ]
-            ),
-            'presentation_attendee_vote_date' => 'av.created:datetime_epoch|' . SilverstripeBaseModel::DefaultTimeZone,
-            'votes_count' => new DoctrineHavingFilterMapping("", "av.presentation", "count(av.id) :operator :value"),
-            'duration' => new DoctrineFilterMapping
-            (
-                "( ( (e.start_date IS NULL OR e.end_date IS NULL ) AND e.duration :operator :value ) OR TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) :operator :value)"
-            ),
-            'speakers_count' => "SIZE(p.speakers) :operator :value",
-            /*
-             * The :i suffix is used to have Doctrine replace it with the current subquery index in order to avoid alias
-             * duplications when there is more than one subquery of the same kind.
-             */
-            'has_media_upload_with_type' => new DoctrineFilterMapping(
-                'EXISTS (
-                    SELECT pm1:i.id
-                    FROM models\summit\PresentationMediaUpload pm1:i
-                    JOIN pm1:i.media_upload_type mut1:i
-                    JOIN pm1:i.presentation p3:i
-                    WHERE p3:i.id = p.id AND mut1:i.id :operator :value
-                )'
-            ),
-            'has_not_media_upload_with_type' => new DoctrineFilterMapping(
-                'NOT EXISTS (
-                    SELECT pm2:i.id
-                    FROM models\summit\PresentationMediaUpload pm2:i
-                    JOIN pm2:i.media_upload_type mut2:i
-                    JOIN pm2:i.presentation p4:i
-                    WHERE p4:i.id = p.id AND mut2:i.id :operator :value
-                )'
-            ),
-           'review_status' => 'REVIEW_STATUS(e.id)',
-           'submission_source' => 'e.submission_source:json_string',
-            'rsvp_type' => 'e.rsvp_type:json_string',
         ];
+
     }
 
     /**
@@ -543,23 +346,14 @@ final class DoctrineSummitEventRepository
             'start_date' => 'e.start_date',
             'end_date' => 'e.end_date',
             'created' => 'e.created',
-            'track' => 'c.title',
-            'trackchairsel' => 'ssp.order',
             'last_edited' => 'e.last_edited',
-            'page_random' => 'RAND()',
-            'random' => 'RAND()',
             'custom_order' => 'p.custom_order',
-            'votes_count' => 'COUNT(av.id)',
             'duration' => <<<SQL
 CASE WHEN e.start_date is NULL OR e.end_date IS NULL THEN e.duration
 ELSE TIMESTAMPDIFF(SECOND, e.start_date, e.end_date) END
 SQL,
-            'speakers_count' => 'COUNT(DISTINCT(sp.id))',
-            'created_by_fullname' => "concat(cb.first_name, ' ', cb.last_name)",
-            'created_by_email' => 'cb.email',
-            'sponsor' => 'sprs.name',
-            'created_by_company' => 'cb.company',
-            'speaker_company' => "sp.company",
+            'page_random' => 'RAND()',
+            'random' => 'RAND()',
             'level' => <<<SQL
 COALESCE(LOWER(e.level), '')
 SQL,
@@ -575,16 +369,51 @@ SQL,
             'meeting_url' => <<<SQL
 COALESCE(LOWER(e.meeting_url), '')
 SQL,
+            'published_date' => 'e.published_date',
+            'is_published' => 'e.is_published',
+            'review_status' => 'REVIEW_STATUS(e.id)',
+            'submission_source' => 'e.submission_source',
+            'submission_status' => <<<SQL
+    CASE
+    WHEN p.status = 'Received' AND e.published = 1 THEN 'Accepted'
+    WHEN p.status = 'Received' AND e.published = 0 THEN 'Received'
+    WHEN p.status is null THEN 'NonReceived'
+    ELSE 'NonReceived'
+    END
+SQL,
+            'occupancy' => <<<SQL
+    CASE
+    WHEN e.occupancy = 'EMPTY'  THEN 1
+    WHEN e.occupancy = '25%'  THEN 2
+    WHEN e.occupancy = '50%'  THEN 3
+    WHEN e.occupancy = '75%'  THEN 4
+    WHEN e.occupancy = 'FULL'  THEN 5
+    WHEN e.occupancy = 'OVERFLOW'  THEN 6
+    ELSE 0
+    END
+SQL,
+            // deps from joins
+            'track' => 'c.title',
+            'selection_plan' => 'selp.name',
+            'trackchairsel' => 'ssp.order',
+            'votes_count' => 'COUNT(av.id)',
+            'speakers_count' => 'COUNT(DISTINCT(sp.id))',
+            'speaker_company' => "sp.company",
+            'created_by_company' => 'cb.company',
+            'created_by_fullname' => "concat(cb.first_name, ' ', cb.last_name)",
+            'created_by_email' => 'cb.email',
+            'actions' => 'HIDDEN_COMPLETED_ACTIONS_COUNT',
+            'sponsor' => 'sprs.name',
             'location' => <<<SQL
 COALESCE(LOWER(l.name), '')
 SQL,
+
             'event_type' => 'et.type',
             'type' => 'et.type',
             'tags' => <<<SQL
     LOWER(t.tag)
 SQL,
-            'published_date' => 'e.published_date',
-            'is_published' => 'e.is_published',
+
             'selection_status' => <<<SQL
     CASE
     WHEN p is null THEN ''
@@ -623,36 +452,348 @@ SQL,
     ELSE 'pending'
 END
 SQL,
-            'selection_plan' => 'selp.name',
-            'actions' => 'HIDDEN_COMPLETED_ACTIONS_COUNT',
-            /*
-            'event_type_capacity' => <<<SQL
-SQL,
-            'speakers' => <<<SQL
-SQL,*/
-            'review_status' => 'REVIEW_STATUS(e.id)',
-            'submission_source' => 'e.submission_source',
-            'submission_status' => <<<SQL
-    CASE
-    WHEN p.status = 'Received' AND e.published = 1 THEN 'Accepted'
-    WHEN p.status = 'Received' AND e.published = 0 THEN 'Received'
-    WHEN p.status is null THEN 'NonReceived'
-    ELSE 'NonReceived'
-    END
-SQL,
-            'occupancy' => <<<SQL
-    CASE
-    WHEN e.occupancy = 'EMPTY'  THEN 1
-    WHEN e.occupancy = '25%'  THEN 2
-    WHEN e.occupancy = '50%'  THEN 3
-    WHEN e.occupancy = '75%'  THEN 4
-    WHEN e.occupancy = 'FULL'  THEN 5
-    WHEN e.occupancy = 'OVERFLOW'  THEN 6
-    ELSE 0
-    END
-SQL,
+
+
         ];
     }
+
+    private array $joinCatalog = [
+        't' => ['e.tags', 'leftJoin', []],
+        'c' => ['e.category', 'join', []],
+        'cg' => ['c.groups', 'leftJoin', ['c']],
+        'cb' => ['e.created_by', 'leftJoin', []],
+        'a' =>  ['p.actions', 'leftJoin', []],
+        'l' => ['e.location', 'leftJoin', []],
+        's' => ['e.summit', 'join', []],
+        'sprs' => ['e.sponsors', 'leftJoin', []],
+        'sp_presentation' => ['p.speakers', 'leftJoin', []],
+        'av' => ['p.attendees_votes', 'leftJoin', []],
+        'spm' => ['p.moderator', 'leftJoin', []],
+        'spmm2' => ['spm.member', 'leftJoin', ['spm']],
+        'sprr2' => ['spm.registration_request', 'leftJoin', ['spm']],
+        'ssp' => ['p.selected_presentations', 'leftJoin', []],
+        'ssp_member' => ['ssp.member', 'leftJoin', ['ssp']],
+        'sspl' => ['ssp.list', 'leftJoin', ['ssp']],
+        'selp' => ['p.selection_plan', 'leftJoin', []],
+        'sp' => ['sp_presentation.speaker', 'leftJoin', ['sp_presentation']],
+        'spmm' => ['sp.member', 'leftJoin', ['sp']],
+        'sprr' => ['sp.registration_request', 'leftJoin', ['sp']],
+        'allowed_at' => ['selp.allowed_presentation_action_types', 'join', ['selp']],
+        'allowed_at_type' => ['allowed_at.type', 'join', ['allowed_at']],
+    ];
+
+    private function requiredAliases(?Filter $filter, ?Order $order): array
+    {
+        $need = []; // owner always
+
+        $has = fn(string $f) => $filter?->hasFilter($f) ?? false;
+        $ord = fn(string $f) => $order?->hasOrder($f) ?? false;
+        $val = fn(string $f) => $filter?->getValue($f)[0] ?? null;
+
+        // --- Filters ---
+
+        if ($has('summit_id')) $need['s'] = true;
+        if($has('tags') || $ord('tags')) $need['t'] = true;
+        if ($has('is_chair_visible') || $has('is_voting_visible') || $has('track_id') || $ord('track'))
+            $need['c'] = true;
+
+        if ($ord("actions") && !$has("actions")) {
+            $need['a'] = true;
+        }
+
+        if($has("actions")){
+            $need['allowed_at_type'] = true;
+        }
+
+        if($has('track_group_id'))
+            $need['cg'] = true;
+
+        if($has("selection_plan_id") || $ord('selection_plan'))
+            $need['selp'] = true;
+
+        if($has("location_id") || $ord('location'))
+            $need['l'] = true;
+
+        // speakers
+
+        if($ord('speakers_count') || $ord('speaker_company'))
+            $need['sp'] = true;
+
+        if($has("speakers")){
+            $need['sp'] = $need['spm'] = $need['spmm'] = true;
+        }
+        if($has('speaker_email')){
+            $need['sprr'] = $need['spmm'] = $need['spmm2'] = $need['sprr2'] = true;
+        }
+        if($has('speaker_title') || $has('speaker_company') || $has('speaker_id')){
+            $need['sp'] = $need['spm']  = true;
+        }
+        if($has('sponsor') || $has('sponsor_id') || $ord('sponsor')){
+            $need['sprs'] = true;
+        }
+
+        if($has('created_by_fullname') || $has('created_by_email') || $has('created_by_company')
+        || $ord('created_by_company') || $ord('created_by_fullname')  || $ord('created_by_email') ){
+            $need['cb'] = true;
+        }
+
+        if($has('presentation_attendee_vote_date') || $has('votes_count') || $ord('votes_count'))
+            $need['av'] = true;
+
+        if($has("selection_status") || $ord('selection_status')){
+            $need['selp'] = $need['ssp'] = $need['sspl'] = true;
+        }
+
+        if($has('track_chairs_status'))
+            $need['sspl'] = $need['ssp'] = true;
+
+        if($ord('trackchairsel'))
+            $need['ssp'] = true;
+
+        return array_keys($need);
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null)
+    {
+        foreach ($this->requiredAliases($filter, $order) as $alias) {
+            $this->ensureJoin($query, $alias);
+        }
+        return $query;
+    }
+
+    /**
+     * @param IPublishableEvent $event
+     * @return IPublishableEvent[]
+     */
+    public function getPublishedOnSameTimeFrame(IPublishableEvent $event): array
+    {
+        $summit = $event->getSummit();
+        $end_date = $event->getEndDate();
+        $start_date = $event->getStartDate();
+
+        $query = $this->getEntityManager()->createQueryBuilder()
+            ->select("e")
+            ->from($this->getBaseEntity(), "e")
+            ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
+            ->where('e.published = 1')
+            ->andWhere('e.start_date < :end_date')
+            ->andWhere('e.end_date > :start_date')
+            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('start_date', $start_date)
+            ->setParameter('end_date', $end_date);
+
+        $idx = 1;
+        foreach (self::$forbidden_classes as $forbidden_class) {
+            $query = $query
+                ->andWhere("not e INSTANCE OF :forbidden_class" . $idx);
+            $query->setParameter("forbidden_class" . $idx, $forbidden_class);
+            $idx++;
+        }
+
+        return $query->getQuery()->getResult();
+    }
+
+    /**
+     * @return string
+     */
+    protected function getBaseEntity()
+    {
+        return SummitEvent::class;
+    }
+
+    public function getFastCount(Filter $filter = null, Order $order = null){
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(DISTINCT e.id)')
+            ->from($this->getBaseEntity(), "e")
+            ->innerJoin("e.type", "et")
+            ->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id')
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
+            ->distinct(false);
+
+        $query = $this->applyExtraJoins($query, $filter, $order);
+
+        $query = $this->applyExtraSelects($query, $filter, $order);
+
+        if(!is_null($filter)){
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
+        }
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
+
+            if($filter->hasFilter('actions')) {
+                // if actions filter is required, we should do an inner join with the allowed
+                // actions of the selection plan of the presentation
+                $query = $query->andWhere("allowed_at_type = at");
+            }
+        }
+
+        $query = $this->applyExtraFilters($query);
+
+        if(!is_null($order)){
+            $order->apply2Query($query, $this->getOrderMappings($filter));
+        }
+
+        return (int) $query->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @return QueryBuilder
+     */
+    protected function applyExtraFilters(QueryBuilder $query)
+    {
+        $can_view_private_events = self::isCurrentMemberOnGroup(IGroup::SummitAdministrators);
+
+        if (!$can_view_private_events) {
+            $idx = 1;
+            foreach (self::$forbidden_classes as $forbidden_class) {
+                $query = $query
+                    ->andWhere("not e INSTANCE OF :forbidden_class" . $idx);
+                $query->setParameter("forbidden_class" . $idx, $forbidden_class);
+                $idx++;
+            }
+        }
+
+        return $query;
+    }
+
+    public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):array {
+
+        $query  = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->distinct(true)
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e")
+            ->innerJoin("e.type", "et")
+            ->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id')
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
+        ;
+
+        $query = $this->applyExtraJoins($query, $filter, $order);
+
+        $query = $this->applyExtraSelects($query, $filter, $order);
+
+        if(!is_null($filter)){
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
+        }
+
+        $query = $this->applyExtraFilters($query);
+
+        if(!is_null($order)){
+            $order->apply2Query($query, $this->getOrderMappings($filter));
+        }
+
+        $shouldPerformRandomOrderingByPage = false;
+        if (!is_null($order)) {
+            if ($order->hasOrder("page_random")) {
+                $shouldPerformRandomOrderingByPage = true;
+                $order->removeOrder("page_random");
+            }
+            $order->apply2Query($query, $this->getOrderMappings());
+            if (!$order->hasOrder('id')) {
+                $query = $query->addOrderBy("e.id", 'ASC');
+            }
+        } else {
+            //default order
+            $query = $query->addOrderBy("e.start_date", 'ASC');
+            $query = $query->addOrderBy("e.end_date", 'ASC');
+            $query = $query->addOrderBy("e.id", 'ASC');
+        }
+
+        $query = $query
+            ->setFirstResult($paging_info->getOffset())
+            ->setMaxResults($paging_info->getPerPage());
+
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
+    }
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return PagingResponse
+     */
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    {
+
+        $start = time();
+        Log::debug("DoctrineSummitEventRepository::getAllByPage");
+        $total = $this->getFastCount($filter, $order);
+        $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
+        Log::debug("DoctrineSummitEventRepository::getAllByPage ids", ['ids' => $ids]);
+        $query = $this->getEntityManager()->createQueryBuilder()
+            ->select('e, p , et, et2')
+            ->from($this->getBaseEntity(), "e")
+            ->innerJoin("e.type", "et")->addSelect("et")
+            ->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id')->addSelect("et2")
+            ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')->addSelect("p")
+            ->where('e.id IN (:ids)')
+            ->setParameter('ids', $ids);
+
+
+
+        $rows = $query->getQuery()->getResult();
+        $byId = [];
+        foreach ($rows as $row) {
+            $event = $row instanceof SummitEvent
+                ? $row
+                : (is_array($row) ? ($row['e'] ?? $row[0] ?? null) : null);
+
+            if ($event instanceof SummitEvent) {
+                $byId[$event->getId()] = $event;
+            } else {
+                Log::warning('DoctrineSummitEventRepository::getAllByPage unexpected hydration row', [
+                    'type' => is_object($row) ? get_class($row) : gettype($row),
+                    'keys' => is_array($row) ? array_keys($row) : null,
+                ]);
+            }
+        }
+
+        $data = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) $data[] = $byId[$id];
+        }
+
+        $end = time() - $start;
+        Log::debug("DoctrineSummitEventRepository::getAllByPage", ['seconds'=>$end]);
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
+
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return QueryBuilder
+     */
+    protected function applyExtraSelects(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null):QueryBuilder
+    {
+        if(!is_null($order) && $order->hasOrder('actions')) {
+            //Weighted sub-query using the following distribution:
+            // - Action is completed     => weight = 2
+            // - Action is not completed => weight = 1
+            // - No associated actions   => weight = 0
+            $query = $query->addSelect(
+                "SUM(CASE WHEN (a.is_completed = 1) THEN 2 WHEN (a.is_completed = 0) THEN 1 ELSE 0 END) AS HIDDEN HIDDEN_COMPLETED_ACTIONS_COUNT");
+            $query->groupBy("e");
+        }
+        return $query;
+    }
+
 
     /**
      * @param int $event_id
@@ -676,21 +817,6 @@ SQL,
     public function getAllByPageLocationTBD(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
 
-        $current_track_id = 0;
-        $current_member_id = 0;
-
-        if (!is_null($filter)) {
-            // check for dependant filtering
-            $track_id_filter = $filter->getUniqueFilter('track_id');
-            if (!is_null($track_id_filter)) {
-                $current_track_id = intval($track_id_filter->getValue());
-            }
-            $current_member_id_filter = $filter->getUniqueFilter('current_member_id');
-            if (!is_null($current_member_id_filter)) {
-                $current_member_id = intval($current_member_id_filter->getValue());
-            }
-        }
-
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
@@ -698,17 +824,10 @@ SQL,
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')
             ->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id')
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
-            ->leftJoin("e.category", "c", Join::ON)
-            ->leftJoin("p.speakers", "sp_presentation", Join::LEFT_JOIN)
-            ->leftJoin("sp_presentation.speaker", "sp", Join::LEFT_JOIN)
-            ->leftJoin('p.selection_plan', "selp", Join::LEFT_JOIN)
-            ->leftJoin('p.moderator', "spm", Join::LEFT_JOIN)
-            ->leftJoin('sp.member', "spmm", Join::LEFT_JOIN)
-            ->leftJoin('sp.registration_request', "sprr", Join::LEFT_JOIN)
             ->where("l.id is null or l.id = 0");
 
         if (!is_null($filter)) {
-            $filter->apply2Query($query, $this->getCustomFilterMappings($current_member_id, $current_track_id));
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
         }
 
         if (!is_null($order)) {
@@ -762,7 +881,6 @@ SQL,
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e")
-            ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
             ->join('e.summit', 's', Join::WITH, " s.id = :summit_id")
             ->where('e.published = 1')
             ->andWhere('e.external_id not in (:external_ids)')

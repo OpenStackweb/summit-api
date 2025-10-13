@@ -116,7 +116,7 @@ class PresentationSerializer extends SummitEventSerializer
 
         $use_cache = $params['use_cache'] ?? false;
 
-        if(Cache::has($key) && $use_cache){
+        if($use_cache && Cache::has($key)){
             $values = json_decode(Cache::get($key), true);
             Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
             if (!empty($expand)) {
@@ -398,7 +398,8 @@ class PresentationSerializer extends SummitEventSerializer
             }
         }
 
-        Cache::put($key, json_encode($values), self::CacheTTL);
+        if($use_cache)
+            Cache::put($key, json_encode($values), self::CacheTTL);
 
         return $values;
     }

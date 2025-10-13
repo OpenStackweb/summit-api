@@ -14,9 +14,11 @@
 
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRepository;
+use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use services\model\ISummitAttendeeBadgePrintService;
 use utils\Filter;
 use utils\FilterElement;
@@ -49,6 +51,58 @@ final class OAuth2SummitAttendeeBadgePrintApiController
 
     use ParametrizedGetAll;
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints",
+        summary: "Get all badge prints for a ticket",
+        description: "Returns a paginated list of badge print records for a specific ticket. Allows ordering, filtering and pagination.",
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+        tags: ["Summit Badge Prints"],
+        parameters: [
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: "ticket_id",
+                in: "path",
+                required: true,
+                description: "Ticket ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(ref: "#/components/parameters/page_number_param"),
+            new OA\Parameter(ref: "#/components/parameters/page_size_param"),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter badge prints. Available filters: id==, view_type_id==, created (>, <, <=, >=, ==, []), print_date (>, <, <=, >=, ==, []), requestor_full_name (==, @@, =@), requestor_email (==, @@, =@)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, created, view_type_id, print_date, requestor_full_name, requestor_email",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: requestor, badge, view_type",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitAttendeeBadgePrintsResponse")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or ticket not found"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Invalid filter or order parameter"),
+        ]
+    )]
     public function getAllBySummitAndTicket($summit_id, $ticket_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -95,6 +149,52 @@ final class OAuth2SummitAttendeeBadgePrintApiController
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints/csv",
+        summary: "Export badge prints to CSV",
+        description: "Exports all badge print records for a specific ticket to CSV format. Allows ordering and filtering.",
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+        tags: ["Summit Badge Prints"],
+        parameters: [
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: "ticket_id",
+                in: "path",
+                required: true,
+                description: "Ticket ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter badge prints. Available filters: id==, view_type_id==, created (>, <, <=, >=, ==, []), print_date (>, <, <=, >=, ==, []), requestor_full_name (==, @@, =@), requestor_email (==, @@, =@)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, created, view_type_id, print_date, requestor_full_name, requestor_email",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "CSV file",
+                content: new OA\MediaType(
+                    mediaType: "text/csv",
+                    schema: new OA\Schema(type: "string", format: "binary")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or ticket not found"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Invalid filter or order parameter"),
+        ]
+    )]
     public function getAllBySummitAndTicketCSV($summit_id, $ticket_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -155,11 +255,29 @@ final class OAuth2SummitAttendeeBadgePrintApiController
         );
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints",
+        summary: "Delete all badge prints for a ticket",
+        description: "Deletes all badge print records for a specific ticket",
+        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+        tags: ["Summit Badge Prints"],
+        parameters: [
+            new OA\Parameter(ref: "#/components/parameters/summit_id_path_param"),
+            new OA\Parameter(
+                name: "ticket_id",
+                in: "path",
+                required: true,
+                description: "Ticket ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Badge prints deleted successfully"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or ticket not found"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+        ]
+    )]
     public function deleteBadgePrints($summit_id, $ticket_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id) {

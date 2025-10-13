@@ -387,10 +387,11 @@ class PaginatedSummitAttendeeBadgesResponseSchema
         new OA\Property(property: "temporary_links_public_storage_ttl", type: "integer", description: "TTL in seconds", nullable: true, example: 3600),
         new OA\Property(property: "private_storage_type", type: "string", example: "local"),
         new OA\Property(property: "public_storage_type", type: "string", example: "s3"),
-        new OA\Property(property: "type_id", type: "integer", example: 456),
         new OA\Property(property: "is_editable", type: "boolean", example: true),
     ],
     anyOf: [
+        new OA\Property(property: "type_id", type: "integer", example: 456),
+        new OA\Property(property: "type", type: "SummitMediaFileType", description: "Only present when relations=presentation_types and expand includes 'type' in it."),
         new OA\Property(property: "summit_id", type: "integer", example: 123, description: "Summit ID, only when expand does NOT include 'summit' in it."),
         new OA\Property(property: "summit", type: "Summit", description: "Summit expand (only when relations=presentation_types) and expand includes 'summit' in it."),
         new OA\Property(

@@ -183,8 +183,20 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Companies"],
         parameters: [
-            new OA\Parameter(ref: "#/components/parameters/page_number_param"),
-            new OA\Parameter(ref: "#/components/parameters/page_size_param"),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of pages in each page',
+            ),
             new OA\Parameter(
                 name: "filter[]",
                 in: "query",

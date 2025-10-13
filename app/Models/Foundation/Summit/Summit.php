@@ -6474,7 +6474,7 @@ SQL;
          WHERE s.id = :summit_id AND c.id = :company_id");
                return $query
                    ->setParameter('summit_id', $this->id)
-                   ->setParameter('event_id', $id)
+                   ->setParameter('company_id', $id)
                    ->getOneOrNullResult();
            } catch (NoResultException $ex1) {
                return null;

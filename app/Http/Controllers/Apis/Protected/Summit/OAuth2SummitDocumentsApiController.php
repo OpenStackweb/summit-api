@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
+
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +20,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitDocumentRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitDocumentService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use libs\utils\HTMLCleaner;
@@ -27,6 +31,7 @@ use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 /**
  * Class OAuth2SummitDocumentsApiController
  * @package App\Http\Controllers
@@ -35,11 +40,17 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
 {
     // traits
 
-    use GetAllBySummit;
+    use GetAllBySummit {
+        getAllBySummit as protected traitGetAllBySummit;
+    }
 
-    use GetSummitChildElementById;
+    use GetSummitChildElementById {
+        get as protected traitGet;
+    }
 
-    use DeleteSummitChildElement;
+    use DeleteSummitChildElement {
+        delete as protected traitDelete;
+    }
 
     use RequestProcessor;
 
@@ -74,11 +85,176 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         $this->service = $service;
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/summit-documents",
+        description: "Get all summit documents",
+        summary: "Get summit documents",
+        operationId: "getAllSummitDocuments",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1),
+                description: 'Page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10),
+                description: 'Items per page'
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Filter operators: name=@/==, description=@/==, label=@/==, event_type=@/==, selection_plan_id=='
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Order by fields: id, name, label'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to expand: event_types, summit, selection_plan'
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to include: event_types, summit, selection_plan'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitDocumentsResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function getAllBySummit($summit_id) {
+        return $this->traitGetAllBySummit($summit_id);
+    }
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/summit-documents/{document_id}",
+        description: "Get a specific summit document",
+        summary: "Get summit document",
+        operationId: "getSummitDocument",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'document_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The document id'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to expand: event_types, summit, selection_plan'
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to include: event_types, summit, selection_plan'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitDocument")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function get($summit_id, $document_id) {
+        return $this->traitGet($summit_id, $document_id);
+    }
+
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/summit-documents",
+        description: "Create a new summit document",
+        summary: "Create summit document",
+        operationId: "addSummitDocument",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: "#/components/schemas/SummitDocumentCreateRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitDocument")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function add(LaravelRequest $request, $summit_id){
         try {
 
@@ -140,12 +316,50 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         }
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $document_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/summit-documents/{document_id}",
+        description: "Update an existing summit document",
+        summary: "Update summit document",
+        operationId: "updateSummitDocument",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'document_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The document id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: "#/components/schemas/SummitDocumentUpdateRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitDocument")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function update(LaravelRequest $request, $summit_id, $document_id){
         try {
 
@@ -206,6 +420,41 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             Log::error($ex);
             return $this->error500($ex);
         }
+    }
+
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/summit-documents/{document_id}",
+        description: "Delete a summit document",
+        summary: "Delete summit document",
+        operationId: "deleteSummitDocument",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'document_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The document id'
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'No Content'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function delete($summit_id, $document_id) {
+        return $this->traitDelete($summit_id, $document_id);
     }
 
     /**
@@ -269,12 +518,50 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         ];
     }
 
-    /**
-     * @param $summit_id
-     * @param $document_id
-     * @param $event_type_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/summit-documents/{document_id}/event-types/{event_type_id}",
+        description: "Add an event type to a summit document",
+        summary: "Add event type to document",
+        operationId: "addEventTypeToDocument",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'document_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The document id'
+            ),
+            new OA\Parameter(
+                name: 'event_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The event type id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitDocument")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addEventType($summit_id, $document_id, $event_type_id){
         try {
 
@@ -307,12 +594,50 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         }
     }
 
-    /**
-     * @param $summit_id
-     * @param $document_id
-     * @param $event_type_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/summit-documents/{document_id}/event-types/{event_type_id}",
+        description: "Remove an event type from a summit document",
+        summary: "Remove event type from document",
+        operationId: "removeEventTypeFromDocument",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'document_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The document id'
+            ),
+            new OA\Parameter(
+                name: 'event_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The event type id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitDocument")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeEventType($summit_id, $document_id, $event_type_id){
         try {
 
@@ -345,12 +670,60 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         }
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $document_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/summit-documents/{document_id}/file",
+        description: "Add or replace a file for a summit document",
+        summary: "Add file to document",
+        operationId: "addFileToDocument",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'document_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The document id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file'],
+                    properties: [
+                        new OA\Property(
+                            property: 'file',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Document file to upload'
+                        )
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitDocument")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addFile(LaravelRequest $request, $summit_id, $document_id){
         return $this->processRequest(function () use ($request, $summit_id, $document_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -371,11 +744,37 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $document_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/summit-documents/{document_id}/file",
+        description: "Remove a file from a summit document",
+        summary: "Remove file from document",
+        operationId: "removeFileFromDocument",
+        tags: ['Summit Documents'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'document_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The document id'
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'No Content'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeFile($summit_id, $document_id){
         return $this->processRequest(function () use ($summit_id, $document_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);

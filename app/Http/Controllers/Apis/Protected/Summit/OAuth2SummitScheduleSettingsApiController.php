@@ -16,6 +16,7 @@ use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Summit\Repositories\ISummitScheduleConfigRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitScheduleSettingsService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -25,6 +26,7 @@ use models\summit\Summit;
 use models\summit\SummitScheduleConfig;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use utils\PagingResponse;
 
 /**
@@ -190,10 +192,338 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         return SerializerRegistry::SerializerType_Private;
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/schedule-settings",
+        description: "Get all schedule settings for a summit",
+        summary: "Get all schedule settings",
+        operationId: "getAllSummitScheduleSettings",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1),
+                description: 'Page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10),
+                description: 'Items per page'
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Filter expression (e.g., key=@schedule,is_enabled==true)'
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Order by field (e.g., +id, -key)'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Expand relationships (filters,pre_filters)'
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to include (filters,pre_filters)'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitScheduleConfigsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function getAllBySummit($summit_id)
+    {
+        return $this->traitGetAllBySummit($summit_id);
+    }
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
+        description: "Get a specific schedule setting by id",
+        summary: "Get schedule setting",
+        operationId: "getSummitScheduleSetting",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'config_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The schedule config id'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Expand relationships (filters,pre_filters)'
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to include (filters,pre_filters)'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleConfig')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function get($summit_id, $config_id)
+    {
+        return $this->traitGet($summit_id, $config_id);
+    }
+
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/schedule-settings",
+        description: "Create a new schedule setting for a summit",
+        summary: "Create schedule setting",
+        operationId: "createSummitScheduleSetting",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleConfigCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleConfig')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function add($summit_id)
+    {
+        return $this->traitAdd($summit_id);
+    }
+
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
+        description: "Update an existing schedule setting",
+        summary: "Update schedule setting",
+        operationId: "updateSummitScheduleSetting",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'config_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The schedule config id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleConfigUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleConfig')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function update($summit_id, $config_id)
+    {
+        return $this->traitUpdate($summit_id, $config_id);
+    }
+
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
+        description: "Delete a schedule setting",
+        summary: "Delete schedule setting",
+        operationId: "deleteSummitScheduleSetting",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'config_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The schedule config id'
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'No Content'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function delete($summit_id, $config_id)
+    {
+        return $this->traitDelete($summit_id, $config_id);
+    }
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/schedule-settings/metadata",
+        description: "Get metadata for schedule settings",
+        summary: "Get schedule settings metadata",
+        operationId: "getSummitScheduleSettingsMetadata",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            )
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Success'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getMetadata($summit_id){
 
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/schedule-settings/{config_id}/filters",
+        description: "Add a filter to a schedule setting",
+        summary: "Add schedule setting filter",
+        operationId: "addSummitScheduleSettingFilter",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'config_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The schedule config id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['type'],
+                properties: [
+                    new OA\Property(
+                        property: 'type',
+                        type: 'string',
+                        enum: ['DATE', 'TRACK', 'TRACK_GROUPS', 'COMPANY', 'LEVEL', 'SPEAKERS', 'VENUES', 'EVENT_TYPES', 'TITLE', 'CUSTOM_ORDER', 'ABSTRACT', 'TAGS']
+                    ),
+                    new OA\Property(property: 'is_enabled', type: 'boolean'),
+                    new OA\Property(property: 'label', type: 'string', nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleFilterElementConfig')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addFilter($summit_id, $config_id){
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -212,6 +542,66 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         );
     }
 
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/schedule-settings/{config_id}/filters/{filter_id}",
+        description: "Update a filter of a schedule setting",
+        summary: "Update schedule setting filter",
+        operationId: "updateSummitScheduleSettingFilter",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'config_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The schedule config id'
+            ),
+            new OA\Parameter(
+                name: 'filter_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The filter id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(
+                        property: 'type',
+                        type: 'string',
+                        enum: ['DATE', 'TRACK', 'TRACK_GROUPS', 'COMPANY', 'LEVEL', 'SPEAKERS', 'VENUES', 'EVENT_TYPES', 'TITLE', 'CUSTOM_ORDER', 'ABSTRACT', 'TAGS'],
+                        nullable: true
+                    ),
+                    new OA\Property(property: 'is_enabled', type: 'boolean', nullable: true),
+                    new OA\Property(property: 'label', type: 'string', nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleFilterElementConfig')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function updateFilter($summit_id, $config_id, $filter_id){
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
         if (is_null($summit)) return $this->error404();
@@ -232,11 +622,35 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             }, ...$args);
     }
 
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     * @throws \Exception
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/schedule-settings/seed",
+        description: "Seed default schedule settings for a summit",
+        summary: "Seed default schedule settings",
+        operationId: "seedDefaultSummitScheduleSettings",
+        tags: ['Summit Schedule Settings'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Created',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitScheduleConfigsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function seedDefaults($summit_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);

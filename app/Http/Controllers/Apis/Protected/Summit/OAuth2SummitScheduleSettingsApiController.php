@@ -201,17 +201,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Get all schedule settings",
         operationId: "getAllSummitScheduleSettings",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -271,11 +261,15 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
+    public function getAllBySummit($summit_id)
+    {
+        return $this->traitGetAllBySummit($summit_id);
+    }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
@@ -283,17 +277,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Get schedule setting",
         operationId: "getSummitScheduleSetting",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -332,10 +316,14 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
+    public function get($summit_id, $config_id)
+    {
+        return $this->traitGet($summit_id, $config_id);
+    }
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/schedule-settings",
@@ -343,16 +331,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Create schedule setting",
         operationId: "createSummitScheduleSetting",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -375,11 +354,15 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
+    public function add($summit_id)
+    {
+        return $this->traitAdd($summit_id);
+    }
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
@@ -387,16 +370,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Update schedule setting",
         operationId: "updateSummitScheduleSetting",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -426,11 +400,15 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
+    public function update($summit_id, $config_id)
+    {
+        return $this->traitUpdate($summit_id, $config_id);
+    }
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
@@ -438,16 +416,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Delete schedule setting",
         operationId: "deleteSummitScheduleSetting",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -465,13 +434,17 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             )
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'No Content'),
+            new OA\Response(response: 204, description: 'No Content'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
+    public function delete($summit_id, $config_id)
+    {
+        return $this->traitDelete($summit_id, $config_id);
+    }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/schedule-settings/metadata",
@@ -479,17 +452,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Get schedule settings metadata",
         operationId: "getSummitScheduleSettingsMetadata",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -500,9 +463,11 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             )
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Success with an empty response body'),
+            new OA\Response(response: 200, description: 'Success'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
     public function getMetadata($summit_id){
@@ -515,16 +480,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Add schedule setting filter",
         operationId: "addSummitScheduleSettingFilter",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -566,7 +522,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -595,16 +551,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Update schedule setting filter",
         operationId: "updateSummitScheduleSettingFilter",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -653,7 +600,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -684,16 +631,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Seed default schedule settings",
         operationId: "seedDefaultSummitScheduleSettings",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_schedule_settings_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-            ]
-        ],
+        security: [['summit_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -711,7 +649,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]

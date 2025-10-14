@@ -6,7 +6,7 @@ use models\summit\ISponsorshipTypeConstants;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
-    schema: 'SummitScheduleConfigContent',
+    schema: 'SummitScheduleConfig',
     type: 'object',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -30,23 +30,6 @@ use OpenApi\Attributes as OA;
             property: 'pre_filters',
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/SummitSchedulePreFilterElementConfig')
-        )
-    ]
-)]
-class SummitScheduleConfigContentSchema {}
-
-
-#[OA\Schema(
-    schema: 'SummitScheduleConfig',
-    type: 'object',
-    properties: [
-        new OA\Property(
-            property: '<type>',
-            description: 'Dynamic property name with SummitScheduleFilterElementConfig->type as key',
-            type: 'object',
-            allOf: [
-                new OA\Schema(ref: '#/components/schemas/SummitScheduleConfigContent')
-            ]
         )
     ]
 )]
@@ -77,15 +60,14 @@ class PaginatedSummitScheduleConfigsResponseSchema {}
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'created', type: 'integer', description: 'Unix timestamp', example: 1640995200),
         new OA\Property(property: 'last_edited', type: 'integer', description: 'Unix timestamp', example: 1640995200),
-        new OA\Property(property: 'label', type: 'string', example: 'Date'),
-        new OA\Property(property: 'is_enabled', type: 'boolean', example: true),
-        new OA\Property(property: 'order', type: 'integer', example: 1),
         new OA\Property(
             property: 'type',
             type: 'string',
             enum: ['DATE', 'TRACK', 'TRACK_GROUPS', 'COMPANY', 'LEVEL', 'SPEAKERS', 'VENUES', 'EVENT_TYPES', 'TITLE', 'CUSTOM_ORDER', 'ABSTRACT', 'TAGS'],
             example: 'DATE'
         ),
+        new OA\Property(property: 'is_enabled', type: 'boolean', example: true),
+        new OA\Property(property: 'label', type: 'string', example: 'Date'),
     ]
 )]
 class SummitScheduleFilterElementConfigSchema {}

@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
+
 /**
  * Copyright 2019 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +17,15 @@
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitBadgeTypeService;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
+use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\IBaseRepository;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
-use Exception;
+use OpenApi\Attributes as OA;
+
 /**
  * Class OAuth2SummitBadgeTypeApiController
  * @package App\Http\Controllers
@@ -93,15 +95,276 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         ];
     }
 
-    use GetAllBySummit;
+    use GetAllBySummit {
+        getAllBySummit as protected traitGetAllBySummit;
+    }
 
-    use GetSummitChildElementById;
+    use GetSummitChildElementById {
+        get as protected traitGet;
+    }
 
-    use AddSummitChildElement;
+    use AddSummitChildElement {
+        add as protected traitAdd;
+    }
 
-    use UpdateSummitChildElement;
+    use UpdateSummitChildElement {
+        update as protected traitUpdate;
+    }
 
-    use DeleteSummitChildElement;
+    use DeleteSummitChildElement {
+        delete as protected traitDelete;
+    }
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/badge-types",
+        description: "Get all badge types for a summit",
+        summary: "Get badge types",
+        operationId: "getAllBySummitBadgeTypes",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1),
+                description: 'Page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10),
+                description: 'Items per page'
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Filter operators: name=@/==, is_default=='
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Order by fields: id, name'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to expand: access_levels, badge_features, allowed_view_types'
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to include: access_levels, badge_features, allowed_view_types'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitBadgeTypesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function getAllBySummit($summit_id) {
+        return $this->traitGetAllBySummit($summit_id);
+    }
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}",
+        description: "Get a specific badge type",
+        summary: "Get badge type",
+        operationId: "getSummitBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to expand: access_levels, badge_features, allowed_view_types'
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to include: access_levels, badge_features, allowed_view_types'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function get($summit_id, $badge_type_id) {
+        return $this->traitGet($summit_id, $badge_type_id);
+    }
+
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/badge-types",
+        description: "Create a new badge type",
+        summary: "Create badge type",
+        operationId: "addSummitBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeTypeCreateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function add($summit_id) {
+        return $this->traitAdd($summit_id);
+    }
+
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}",
+        description: "Update an existing badge type",
+        summary: "Update badge type",
+        operationId: "updateSummitBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeTypeUpdateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function update($summit_id, $badge_type_id) {
+        return $this->traitUpdate($summit_id, $badge_type_id);
+    }
+
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}",
+        description: "Delete a badge type",
+        summary: "Delete badge type",
+        operationId: "deleteSummitBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'No Content'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function delete($summit_id, $badge_type_id) {
+        return $this->traitDelete($summit_id, $badge_type_id);
+    }
 
     /**
      * @param array $payload
@@ -181,12 +444,49 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         return $this->service->updateBadgeType($summit, $child_id, $payload);
     }
 
-    /**
-     * @param $summit_id
-     * @param $badge_type_id
-     * @param $access_level_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}/access-levels/{access_level_id}",
+        description: "Add an access level to a badge type",
+        summary: "Add access level to badge type",
+        operationId: "addAccessLevelToBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            ),
+            new OA\Parameter(
+                name: 'access_level_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The access level id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addAccessLevelToBadgeType($summit_id, $badge_type_id, $access_level_id){
        return $this->processRequest(function() use( $summit_id, $badge_type_id, $access_level_id){
 
@@ -203,12 +503,49 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
        });
     }
 
-    /**
-     * @param $summit_id
-     * @param $badge_type_id
-     * @param $access_level_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}/access-levels/{access_level_id}",
+        description: "Remove an access level from a badge type",
+        summary: "Remove access level from badge type",
+        operationId: "removeAccessLevelFromBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            ),
+            new OA\Parameter(
+                name: 'access_level_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The access level id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeAccessLevelFromBadgeType($summit_id, $badge_type_id, $access_level_id){
         return $this->processRequest(function() use($summit_id, $badge_type_id, $access_level_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
@@ -223,12 +560,49 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $badge_type_id
-     * @param $feature_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}/features/{feature_id}",
+        description: "Add a feature to a badge type",
+        summary: "Add feature to badge type",
+        operationId: "addFeatureToBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            ),
+            new OA\Parameter(
+                name: 'feature_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The feature id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addFeatureToBadgeType($summit_id, $badge_type_id, $feature_id){
         return $this->processRequest(function() use($summit_id, $badge_type_id, $feature_id){
 
@@ -244,12 +618,49 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $badge_type_id
-     * @param $feature_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}/features/{feature_id}",
+        description: "Remove a feature from a badge type",
+        summary: "Remove feature from badge type",
+        operationId: "removeFeatureFromBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            ),
+            new OA\Parameter(
+                name: 'feature_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The feature id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeFeatureFromBadgeType($summit_id, $badge_type_id, $feature_id){
         return $this->processRequest(function() use ($summit_id, $badge_type_id, $feature_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
@@ -264,12 +675,49 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $badge_type_id
-     * @param $view_type_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}/view-types/{badge_view_type_id}",
+        description: "Add a view type to a badge type",
+        summary: "Add view type to badge type",
+        operationId: "addViewTypeToBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            ),
+            new OA\Parameter(
+                name: 'badge_view_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge view type id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addViewTypeToBadgeType($summit_id, $badge_type_id, $view_type_id){
         return $this->processRequest(function() use($summit_id, $badge_type_id, $view_type_id){
 
@@ -285,12 +733,49 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $badge_type_id
-     * @param $view_type_id
-     * @return mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/badge-types/{badge_type_id}/view-types/{badge_view_type_id}",
+        description: "Remove a view type from a badge type",
+        summary: "Remove view type from badge type",
+        operationId: "removeViewTypeFromBadgeType",
+        tags: ['Badge Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'badge_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge type id'
+            ),
+            new OA\Parameter(
+                name: 'badge_view_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The badge view type id'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitBadgeType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeViewTypeFromBadgeType($summit_id, $badge_type_id, $view_type_id){
         return $this->processRequest(function() use ($summit_id, $badge_type_id, $view_type_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);

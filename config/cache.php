@@ -49,12 +49,18 @@ return [
 
         'memcached' => [
             'driver' => 'memcached',
-            'servers' => [
+            //'persistent_id' => 'host-cache',
+            'sasl'          => [null, null],
+            'servers'       => [
+                // UNIX socket (fastest)
                 [
-                    'host' => env('MEMCACHED_HOST', '127.0.0.1'),
-                    'port' => env('MEMCACHED_PORT', 11211),
-                    'weight' => 100,
+                    'host' => '/var/run/memcached/memcached.sock',
+                    'port' => 0,
+                    'weight' => 100
                 ],
+
+                // or TCP if you prefer:
+                // ['host' => '127.0.0.1', 'port' => 11211, 'weight' => 100],
             ],
         ],
 

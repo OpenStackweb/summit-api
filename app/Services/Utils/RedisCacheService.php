@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Utils\Cache\MemCache;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ICacheService;
@@ -331,15 +332,17 @@ class RedisCacheService implements ICacheService
             return (int)$conn->ttl($key);
         }, 0);
     }
-  
+
     /**
      * @param string $cache_region_key
      * @return void
      */
     public function clearCacheRegion(string $cache_region_key): void
     {
+        Log::debug("RedisCacheService::clearCacheRegion", ["key" => $cache_region_key]);
         if (!empty($cache_region_key)) {
             Cache::tags($cache_region_key)->flush();
+            MemCache::apcClearRegion($cache_region_key);
             if($this->exists($cache_region_key)){
                 Log::debug(sprintf("RedisCacheService::clearCacheRegion will clear cache region %s", $cache_region_key));
                 $region_data = $this->getSingleValue($cache_region_key);

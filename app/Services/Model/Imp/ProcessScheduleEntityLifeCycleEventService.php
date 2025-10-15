@@ -151,6 +151,7 @@ final class ProcessScheduleEntityLifeCycleEventService
             }
 
             if (!empty($cache_region_key)) {
+                Log::debug("ProcessScheduleEntityLifeCycleEventService::process", ['cache_region_key' => $cache_region_key]);
                 $this->cache_service->clearCacheRegion($cache_region_key);
             }
 

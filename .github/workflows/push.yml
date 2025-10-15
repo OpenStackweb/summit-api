@@ -7,160 +7,171 @@ on: push
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "unit-tests"
-  unit-tests:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    env:
-      OTEL_SERVICE_ENABLED: false
-      APP_ENV: testing
-      APP_DEBUG: true
-      APP_KEY: base64:4vh0op/S1dAsXKQ2bbdCfWRyCI9r8NNIdPXyZWt9PX4=
-      DEV_EMAIL_TO: smarcet@gmail.com
-      APP_URL: http://localhost
-      DB_CONNECTION: model
-      DB_HOST:  127.0.0.1
-      DB_PORT: 3306
-      DB_DATABASE: api_config
-      DB_USERNAME: root
-      DB_PASSWORD: 1qaz2wsx
-      SS_DB_HOST:  127.0.0.1
-      SS_DB_PORT: 3310
-      SS_DATABASE: api_model
-      SS_DB_USERNAME: root
-      SS_DB_PASSWORD: 1qaz2wsx
-      REDIS_HOST: 127.0.0.1
-      REDIS_PORT: 6379
-      REDIS_DB: 0
-      REDIS_PASSWORD: 1qaz2wsx
-      REDIS_DATABASES: 16
-      SSL_ENABLED: false
-      SESSION_DRIVER: redis
-      PHP_VERSION: 8.3
-      CACHE_DRIVER: redis
-      SESSION_COOKIE_DOMAIN: localhost
-      SESSION_COOKIE_SECURE: false
-      QUEUE_DRIVER: redis
-      REGISTRATION_DEFAULT_PAYMENT_PROVIDER: Stripe
-      REGISTRATION_DEFAULT_STRIPE_TEST_MODE: true
-      REGISTRATION_DEFAULT_LIVE_STRIPE_PRIVATE_KEY:
-      REGISTRATION_DEFAULT_LIVE_STRIPE_PUBLISHABLE_KEY:
-      REGISTRATION_DEFAULT_LIVE_WEBHOOK_SECRET:
-      REGISTRATION_DEFAULT_TEST_STRIPE_PRIVATE_KEY: sk_test_12345
-      REGISTRATION_DEFAULT_TEST_STRIPE_PUBLISHABLE_KEY: pk_12345
-      REGISTRATION_DEFAULT_TEST_WEBHOOK_SECRET: whsec_12345
-      BOOKABLE_ROOMS_DEFAULT_PAYMENT_PROVIDER: Stripe
-      BOOKABLE_ROOMS_DEFAULT_STRIPE_TEST_MODE: true
-      BOOKABLE_ROOMS_DEFAULT_LIVE_STRIPE_PRIVATE_KEY:
-      BOOKABLE_ROOMS_DEFAULT_LIVE_STRIPE_PUBLISHABLE_KEY:
-      BOOKABLE_ROOMS_DEFAULT_LIVE_WEBHOOK_SECRET:
-      BOOKABLE_ROOMS_DEFAULT_TEST_STRIPE_PRIVATE_KEY: sk_test_12345
-      BOOKABLE_ROOMS_DEFAULT_TEST_STRIPE_PUBLISHABLE_KEY: pk_12345
-      BOOKABLE_ROOMS_DEFAULT_TEST_WEBHOOK_SECRET: whsec_12345
-      REGISTRATION_VALIDATE_TICKET_TYPE_REMOVAL: false
-    services:
-      mysql_api_model:
-        image: mysql:8.0
+    # This workflow contains a single job called "unit-tests"
+    unit-tests:
+        # The type of runner that the job will run on
+        runs-on: ubuntu-latest
         env:
-          MYSQL_ROOT_PASSWORD: ${{env.SS_DB_PASSWORD}}
-          MYSQL_DATABASE: ${{env.SS_DATABASE}}
-        ports:
-          - 3310:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10 --name=mysql_api_model
-      mysql_api_config:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD:  ${{env.DB_PASSWORD}}
-          MYSQL_DATABASE: ${{env.DB_DATABASE}}
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+            OTEL_SERVICE_ENABLED: false
+            APP_ENV: testing
+            APP_DEBUG: true
+            APP_KEY: base64:4vh0op/S1dAsXKQ2bbdCfWRyCI9r8NNIdPXyZWt9PX4=
+            DEV_EMAIL_TO: smarcet@gmail.com
+            APP_URL: http://localhost
+            DB_CONNECTION: model
+            DB_HOST: 127.0.0.1
+            DB_PORT: 3306
+            DB_DATABASE: api_config
+            DB_USERNAME: root
+            DB_PASSWORD: 1qaz2wsx
+            SS_DB_HOST: 127.0.0.1
+            SS_DB_PORT: 3310
+            SS_DATABASE: api_model
+            SS_DB_USERNAME: root
+            SS_DB_PASSWORD: 1qaz2wsx
+            REDIS_HOST: 127.0.0.1
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+            REDIS_PASSWORD: 1qaz2wsx
+            REDIS_DATABASES: 16
+            SSL_ENABLED: false
+            SESSION_DRIVER: redis
+            PHP_VERSION: 8.3
+            CACHE_DRIVER: redis
+            SESSION_COOKIE_DOMAIN: localhost
+            SESSION_COOKIE_SECURE: false
+            QUEUE_DRIVER: redis
+            REGISTRATION_DEFAULT_PAYMENT_PROVIDER: Stripe
+            REGISTRATION_DEFAULT_STRIPE_TEST_MODE: true
+            REGISTRATION_DEFAULT_LIVE_STRIPE_PRIVATE_KEY:
+            REGISTRATION_DEFAULT_LIVE_STRIPE_PUBLISHABLE_KEY:
+            REGISTRATION_DEFAULT_LIVE_WEBHOOK_SECRET:
+            REGISTRATION_DEFAULT_TEST_STRIPE_PRIVATE_KEY: sk_test_12345
+            REGISTRATION_DEFAULT_TEST_STRIPE_PUBLISHABLE_KEY: pk_12345
+            REGISTRATION_DEFAULT_TEST_WEBHOOK_SECRET: whsec_12345
+            BOOKABLE_ROOMS_DEFAULT_PAYMENT_PROVIDER: Stripe
+            BOOKABLE_ROOMS_DEFAULT_STRIPE_TEST_MODE: true
+            BOOKABLE_ROOMS_DEFAULT_LIVE_STRIPE_PRIVATE_KEY:
+            BOOKABLE_ROOMS_DEFAULT_LIVE_STRIPE_PUBLISHABLE_KEY:
+            BOOKABLE_ROOMS_DEFAULT_LIVE_WEBHOOK_SECRET:
+            BOOKABLE_ROOMS_DEFAULT_TEST_STRIPE_PRIVATE_KEY: sk_test_12345
+            BOOKABLE_ROOMS_DEFAULT_TEST_STRIPE_PUBLISHABLE_KEY: pk_12345
+            BOOKABLE_ROOMS_DEFAULT_TEST_WEBHOOK_SECRET: whsec_12345
+            REGISTRATION_VALIDATE_TICKET_TYPE_REMOVAL: false
+            MEMCACHED_SERVER_HOST: 127.0.0.1
+            MEMCACHED_SERVER_PORT: 11211
+        services:
+            mysql_api_model:
+                image: mysql:8.0
+                env:
+                    MYSQL_ROOT_PASSWORD: ${{env.SS_DB_PASSWORD}}
+                    MYSQL_DATABASE: ${{env.SS_DATABASE}}
+                ports:
+                    - 3310:3306
+                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10 --name=mysql_api_model
+            mysql_api_config:
+                image: mysql:8.0
+                env:
+                    MYSQL_ROOT_PASSWORD: ${{env.DB_PASSWORD}}
+                    MYSQL_DATABASE: ${{env.DB_DATABASE}}
+                ports:
+                    - 3306:3306
+                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
 
-    steps:
-      - name: Create Redis
-        uses: supercharge/redis-github-action@1.7.0
-        with:
-          redis-port: ${{env.REDIS_PORT}}
-          redis-password: ${{env.REDIS_PASSWORD}}
-      # Downloads a copy of the code in your repository before running CI tests
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Change MYSQL sql_mode
-        run: >
-          docker exec mysql_api_model mysql -u root --password=${{env.SS_DB_PASSWORD}} -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';"
-      - name: Install PHP
-        uses: "shivammathur/setup-php@v2"
-        with:
-          php-version:  ${{env.PHP_VERSION}}
-          extensions: pdo_mysql, mbstring, exif, pcntl, bcmath, sockets, gettext, apcu, redis, igbinary
-      - name: Install dependencies
-        uses: "ramsey/composer-install@v3"
-        env:
-          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"} }'
-      - name: 'Run Tests'
-        run: |
-          ./update_doctrine.sh
-          php artisan db:create_test_db --schema=config
-          php artisan db:create_test_db --schema=model
-          php artisan doctrine:migrations:migrate --no-interaction --em=model_write
-          echo "running OAuth2SummitApiTest"
-          vendor/bin/phpunit --filter "OAuth2SummitApiTest" --log-junit results_summit_api_test.xml
-          echo "running OAuth2SummitEventsApiTest"
-          vendor/bin/phpunit --filter "OAuth2SummitEventsApiTest" --log-junit results_events_api_test.xml
-          echo "running OAuth2PresentationSubmissionTest"
-          vendor/bin/phpunit --filter "OAuth2PresentationSubmissionTest" --log-junit results_presentation_submissions_api_test.xml
-          echo "running OAuth2EventTypesApiTest"
-          vendor/bin/phpunit --filter "OAuth2EventTypesApiTest" --log-junit results_event_types_api_test.xml
-          echo "running model unit tests"
-          vendor/bin/phpunit tests/Unit/Entities/ --log-junit results_model_unit_tests.xml
-          echo "running OAuth2SummitBadgeScanApiControllerTest"
-          vendor/bin/phpunit --filter "OAuth2SummitBadgeScanApiControllerTest" --log-junit results_badge_scan_api_test.xml
-          echo "running SummitOrderService tests"
-          vendor/bin/phpunit --filter "SummitOrderServiceTest" --log-junit results_summitorder_service_unit_tests.xml
-          echo "running SummitRSVPServiceTest tests"
-          vendor/bin/phpunit --filter "SummitRSVPServiceTest" --log-junit results_rsvp_service_unit_tests.xml
-          echo "running SummitRSVPInvitationServiceTest tests"
-          vendor/bin/phpunit --filter "SummitRSVPInvitationServiceTest" --log-junit results_rsvp_invitation_service_unit_tests.xml
-          echo "running OAuth2RSVPApiTest tests"
-          vendor/bin/phpunit --filter "OAuth2RSVPApiTest" --log-junit results_rsvp_api_test_unit_tests.xml
-          echo "running OAuth2RSVPApiWithMocksTest tests"
-          vendor/bin/phpunit --filter "OAuth2RSVPApiWithMocksTest" --log-junit results_rsvp_api_with_mocks_test_unit_tests.xml
-          echo "running OAuth2RSVPInvitationApiTest tests"
-          vendor/bin/phpunit --filter "OAuth2RSVPInvitationApiTest" --log-junit results_rsvp_invitations_api_test_unit_tests.xml
+        steps:
+            -   name: Start Memcached (with larger item size)
+                run: |
+                    docker run -d --name ci-memcached -p 11211:11211 memcached:1.6-alpine \
+                    memcached -m 256 -I 5m -c 4096 -t 2
+                    # wait until ready
+                    for i in {1..20}; do
+                        printf "version\r\nquit\r\n" | nc 127.0.0.1 11211 >/dev/null 2>&1 && break
+                        sleep 0.5
+                    done
+            -   name: Create Redis
+            uses: supercharge/redis-github-action@1.7.0
+            with:
+                redis-port: ${{env.REDIS_PORT}}
+                redis-password: ${{env.REDIS_PASSWORD}}
+            # Downloads a copy of the code in your repository before running CI tests
+            -   name: Check out repository code
+                uses: actions/checkout@v4
+            -   name: Change MYSQL sql_mode
+                run: >
+                    docker exec mysql_api_model mysql -u root --password=${{env.SS_DB_PASSWORD}} -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';"
+            -   name: Install PHP
+                uses: "shivammathur/setup-php@v2"
+                with:
+                    php-version: ${{env.PHP_VERSION}}
+                    extensions: pdo_mysql, mbstring, exif, pcntl, bcmath, sockets, gettext, apcu, redis, igbinary, memcached
+            -   name: Install dependencies
+                uses: "ramsey/composer-install@v3"
+                env:
+                    COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"} }'
+            -   name: 'Run Tests'
+                run: |
+                    ./update_doctrine.sh
+                    php artisan db:create_test_db --schema=config
+                    php artisan db:create_test_db --schema=model
+                    php artisan doctrine:migrations:migrate --no-interaction --em=model_write
+                    echo "running OAuth2SummitApiTest"
+                    vendor/bin/phpunit --filter "OAuth2SummitApiTest" --log-junit results_summit_api_test.xml
+                    echo "running OAuth2SummitEventsApiTest"
+                    vendor/bin/phpunit --filter "OAuth2SummitEventsApiTest" --log-junit results_events_api_test.xml
+                    echo "running OAuth2PresentationSubmissionTest"
+                    vendor/bin/phpunit --filter "OAuth2PresentationSubmissionTest" --log-junit results_presentation_submissions_api_test.xml
+                    echo "running OAuth2EventTypesApiTest"
+                    vendor/bin/phpunit --filter "OAuth2EventTypesApiTest" --log-junit results_event_types_api_test.xml
+                    echo "running model unit tests"
+                    vendor/bin/phpunit tests/Unit/Entities/ --log-junit results_model_unit_tests.xml
+                    echo "running OAuth2SummitBadgeScanApiControllerTest"
+                    vendor/bin/phpunit --filter "OAuth2SummitBadgeScanApiControllerTest" --log-junit results_badge_scan_api_test.xml
+                    echo "running SummitOrderService tests"
+                    vendor/bin/phpunit --filter "SummitOrderServiceTest" --log-junit results_summitorder_service_unit_tests.xml
+                    echo "running SummitRSVPServiceTest tests"
+                    vendor/bin/phpunit --filter "SummitRSVPServiceTest" --log-junit results_rsvp_service_unit_tests.xml
+                    echo "running SummitRSVPInvitationServiceTest tests"
+                    vendor/bin/phpunit --filter "SummitRSVPInvitationServiceTest" --log-junit results_rsvp_invitation_service_unit_tests.xml
+                    echo "running OAuth2RSVPApiTest tests"
+                    vendor/bin/phpunit --filter "OAuth2RSVPApiTest" --log-junit results_rsvp_api_test_unit_tests.xml
+                    echo "running OAuth2RSVPApiWithMocksTest tests"
+                    vendor/bin/phpunit --filter "OAuth2RSVPApiWithMocksTest" --log-junit results_rsvp_api_with_mocks_test_unit_tests.xml
+                    echo "running OAuth2RSVPInvitationApiTest tests"
+                    vendor/bin/phpunit --filter "OAuth2RSVPInvitationApiTest" --log-junit results_rsvp_invitations_api_test_unit_tests.xml
 
-      - name: 'Upload Unit Test Output For OAuth2SummitApiTest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: results_summit_api_test
-          path: results_summit_api_test.xml
-          retention-days: 5
-      - name: 'Upload Unit Test Output For OAuth2SummitEventsApiTest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: results_events_api_test
-          path: results_events_api_test.xml
-          retention-days: 5
-      - name: 'Upload Unit Test Output For OAuth2PresentationSubmissionTest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: results_presentation_submissions_api_test
-          path: results_presentation_submissions_api_test.xml
-          retention-days: 5
-      - name: 'Upload Entity Model Unit Tests Output'
-        uses: actions/upload-artifact@v4
-        with:
-          name: results_model_unit_tests
-          path: results_model_unit_tests.xml
-          retention-days: 5
-      - name: 'Upload Unit Test Output For OAuth2SummitBadgeScanApiControllerTest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: results_badge_scan_api_test
-          path: results_badge_scan_api_test.xml
-          retention-days: 5
-      - name: 'Upload Unit Test Output For SummitOrderServiceTest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: results_summitorder_service_unit_tests
-          path: results_summitorder_service_unit_tests.xml
-          retention-days: 5
+            -   name: 'Upload Unit Test Output For OAuth2SummitApiTest'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: results_summit_api_test
+                    path: results_summit_api_test.xml
+                    retention-days: 5
+            -   name: 'Upload Unit Test Output For OAuth2SummitEventsApiTest'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: results_events_api_test
+                    path: results_events_api_test.xml
+                    retention-days: 5
+            -   name: 'Upload Unit Test Output For OAuth2PresentationSubmissionTest'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: results_presentation_submissions_api_test
+                    path: results_presentation_submissions_api_test.xml
+                    retention-days: 5
+            -   name: 'Upload Entity Model Unit Tests Output'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: results_model_unit_tests
+                    path: results_model_unit_tests.xml
+                    retention-days: 5
+            -   name: 'Upload Unit Test Output For OAuth2SummitBadgeScanApiControllerTest'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: results_badge_scan_api_test
+                    path: results_badge_scan_api_test.xml
+                    retention-days: 5
+            -   name: 'Upload Unit Test Output For SummitOrderServiceTest'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: results_summitorder_service_unit_tests
+                    path: results_summitorder_service_unit_tests.xml
+                    retention-days: 5

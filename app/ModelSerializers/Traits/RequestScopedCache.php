@@ -24,6 +24,9 @@ use Ramsey\Uuid\Uuid;
 trait RequestScopedCache
 {
 
+    static function store(){
+        return  Cache::store(config('cache.request_scope_cache_store', 'array'));
+    }
     /**
      * @return string
      */
@@ -36,33 +39,11 @@ trait RequestScopedCache
             $time = time();
             $sessionId = Session::getId();
             $uuid = Uuid::uuid4()->toString();
-            /*Log::debug
-            (
-                sprintf
-                (
-                    "RequestScopedCache::getScopeId scope is empty ip %s time %s sessionId %s uuid%s .",
-                    $ip , $time, $sessionId, $uuid
-                )
-            );*/
-
             $requestId = md5(sprintf("%s.%s.%s.%s", $ip, $time, $sessionId, $uuid));
-
-            /*Log::debug
-            (
-                sprintf
-                (
-                    "RequestScopedCache::getScopeId setting request id %s.",
-                    $requestId
-                )
-            );*/
-
             $request->headers->set('X-Request-ID', $requestId);
-
             $_SERVER['HTTP_X_REQUEST_ID'] = $requestId;
 
         }
-
-        //Log::debug(sprintf("RequestScopedCache::getScopeId retrieving request id %s" , $requestId));
 
         return $requestId;
     }
@@ -86,23 +67,21 @@ trait RequestScopedCache
      * @return mixed
      */
     function cache(string $key, Closure $callback){
+        $key   = self::getScopeId().':'.$key;
+        $store = self::store();
 
-        $scope = self::getScopeId();
+        $computed = false;
 
-        //Log::debug(sprintf("RequestScopedCache::cache scope %s key %s.", $scope, $key));
+        $value = $store->remember($key, now()->addSeconds(30), function () use ($callback, &$computed, $key) {
+            $computed = true; // closure ran => MISS
+            Log::debug('RequestScopedCache MISS', ['key' => $key]);
+            return $callback();
+        });
 
-        $res = Cache::tags($scope)->get($key);
-        if(!empty($res)){
-            $json_res = gzinflate($res);
-            $res = json_decode($json_res,true);
-            //Log::debug(sprintf("RequestScopedCache::cache scope %s key %s cache hit res %s.", $scope, $key, $json_res));
-            return $res;
+        if (!$computed) {
+            Log::debug('RequestScopedCache HIT', ['key' => $key]);
         }
 
-        $res = $callback();
-        $json = json_encode($res);
-        //Log::debug(sprintf("RequestScopedCache::cache scope %s key %s res %s adding to cache.", $scope, $key, $json));
-        Cache::tags($scope)->add($key, gzdeflate($json, 9));
-        return $res;
+        return $value;
     }
 }

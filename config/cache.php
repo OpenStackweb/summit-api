@@ -88,5 +88,5 @@ return [
     */
 
     'prefix' => 'laravel',
-
+    'request_scope_cache_store' => env('REQUEST_SCOPE_CACHE_STORE', 'array'),
 ];

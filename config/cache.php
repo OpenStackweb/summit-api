@@ -54,11 +54,10 @@ return [
             'servers'       => [
                 // UNIX socket (fastest)
                 [
-                    'host' => '/var/run/memcached/memcached.sock',
-                    'port' => 0,
-                    'weight' => 100
+                    'host' => env('MEMCACHED_SERVER_HOST', '/var/run/memcached/memcached.sock'),
+                    'port' => env('MEMCACHED_SERVER_PORT',0),
+                    'weight' => env('MEMCACHED_SERVER_WEIGHT',100)
                 ],
-
                 // or TCP if you prefer:
                 // ['host' => '127.0.0.1', 'port' => 11211, 'weight' => 100],
             ],

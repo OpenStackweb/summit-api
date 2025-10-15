@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Log;
 
 final class MemCache
 {
-    private const CM_REGION = 'cm:region:';
+    private const CM_REGION = 'mem:region:';
 
     private static function store(): \Illuminate\Contracts\Cache\Repository
     {

@@ -13,7 +13,6 @@
  **/
 
 use App\ModelSerializers\Traits\RequestScopedCache;
-use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitTicketType;
 
 /**

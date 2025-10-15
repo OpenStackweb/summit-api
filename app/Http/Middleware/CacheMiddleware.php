@@ -94,7 +94,7 @@ final class CacheMiddleware
 
         if ($regionTag) {
             Log::debug("CacheMiddleware: using region tag {$regionTag} ip {$ip} agent {$agent}");
-            // try L1 APC
+            // try L1
             $encoded = MemCache::get($key);
             $wasMemCacheHit = $encoded !== null;
             if($wasMemCacheHit){
@@ -124,14 +124,14 @@ final class CacheMiddleware
                     });
 
 
-                // backfill APC only if we actually have a value
+                // backfill Memcache only if we actually have a value
                 if ($encoded !== null) { // avoid null writes
                     MemCache::put($key, $encoded, $cache_lifetime, $regionTag);
                 }
             }
             $data = $this->decode($encoded);
         } else {
-            // try L1 APC
+            // try L1
             $encoded = MemCache::get($key);
             $wasMemCacheHit = !is_null($encoded);
             if($wasMemCacheHit){
@@ -157,7 +157,7 @@ final class CacheMiddleware
                     }
                     return Cache::get($key);
                 });
-                // store at APC
+                // store at MemCache
                 if ($encoded !== null) { // avoid null writes
                     MemCache::put($key, $encoded, $cache_lifetime);
                 }
@@ -177,7 +177,8 @@ final class CacheMiddleware
         $response->headers->addCacheControlDirective('must-revalidate', true);
         $response->headers->addCacheControlDirective('proxy-revalidate', true);
         $response->headers->add([
-            'X-Cache-Result' => $wasMemCacheHit ? 'HIT MemcCache' : ($wasHit ? 'HIT REDIS' : 'MISS'),
+            'X-Cache-Result' => ($wasMemCacheHit || $wasHit) ? 'HIT' : 'MISS',
+            'X-Cache-Type' =>  $wasMemCacheHit ? 'M' : ($wasHit ? 'R' : 'N'),
         ]);
         Log::debug( "CacheMiddleware: returning response", [
             'ip' => $ip,

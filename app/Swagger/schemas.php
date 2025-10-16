@@ -351,3 +351,53 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+// Tag Schemas
+
+#[OA\Schema(
+    schema: "Tag",
+    description: "Tag",
+    properties: [
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "created", type: "integer", format: "int64", description: "Creation timestamp (epoch)", example: 1234567890),
+        new OA\Property(property: "last_edited", type: "integer", format: "int64", description: "Last edit timestamp (epoch)", example: 1234567890),
+        new OA\Property(property: "tag", type: "string", maxLength: 100, example: "Cloud Computing"),
+    ],
+    type: "object"
+)]
+class TagSchema
+{
+}
+
+#[OA\Schema(
+    schema: "PaginatedTagsResponse",
+    description: "Paginated response for Tags",
+    properties: [
+        new OA\Property(property: "total", type: "integer", example: 100),
+        new OA\Property(property: "per_page", type: "integer", example: 15),
+        new OA\Property(property: "current_page", type: "integer", example: 1),
+        new OA\Property(property: "last_page", type: "integer", example: 7),
+        new OA\Property(
+            property: "data",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/Tag")
+        ),
+    ],
+    type: "object"
+)]
+class PaginatedTagsResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: "TagRequest",
+    description: "Request to create or update a Tag",
+    required: ["tag"],
+    properties: [
+        new OA\Property(property: "tag", type: "string", maxLength: 100, example: "Cloud Computing"),
+    ],
+    type: "object"
+)]
+class TagRequestSchema
+{
+}

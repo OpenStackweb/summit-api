@@ -20,6 +20,8 @@ use models\oauth2\IResourceServerContext;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 use utils\Filter;
 use utils\FilterElement;
 
@@ -74,10 +76,59 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         $this->attendee_service = $attendee_service;
     }
 
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/attendees/notes",
+        summary: "Get all attendee notes for a summit",
+        description: "Returns all notes for all attendees in the summit. Admin access required.",
+        security: [["bearer_token" => []]],
+        tags: ["AttendeeNotes"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(
+                name: "filter",
+                description: "Filter query (owner_id==value, owner_fullname=@value, owner_email=@value, ticket_id==value, content=@value, author_fullname=@value, author_email=@value, created>=timestamp, edited<=timestamp)",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "order",
+                description: "Order by (+id, -created, +author_fullname, +author_email, +owner_fullname, +owner_email)",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(name: "expand", description: "Expand relations (author, owner, ticket)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(
+                    allOf: [
+                        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+                        new OA\Schema(
+                            type: "object",
+                            properties: [
+                                new OA\Property(
+                                    property: "data",
+                                    type: "array",
+                                    items: new OA\Items(ref: "#/components/schemas/SummitAttendeeNote")
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllAttendeeNotes($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -133,10 +184,32 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         );
     }
 
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/attendees/notes/csv",
+        summary: "Export all attendee notes for a summit in CSV format",
+        security: [["bearer_token" => []]],
+        tags: ["AttendeeNotes"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "filter", description: "Filter query", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK - CSV file download",
+                content: new OA\MediaType(
+                    mediaType: "text/csv",
+                    schema: new OA\Schema(type: "string", format: "binary")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllAttendeeNotesCSV($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -202,11 +275,54 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         );
     }
 
-    /**
-     * @param $summit_id
-     * @param $attendee_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/attendees/{attendee_id}/notes",
+        summary: "Get all notes for a specific attendee",
+        security: [["bearer_token" => []]],
+        tags: ["AttendeeNotes"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(
+                name: "filter",
+                description: "Filter query (ticket_id==value, content=@value, author_fullname=@value, author_email=@value, created>=timestamp)",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(name: "order", description: "Order by (+id, -created, +author_fullname, +author_email)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "expand", description: "Expand relations (author, owner, ticket)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(
+                    allOf: [
+                        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+                        new OA\Schema(
+                            type: "object",
+                            properties: [
+                                new OA\Property(
+                                    property: "data",
+                                    type: "array",
+                                    items: new OA\Items(ref: "#/components/schemas/SummitAttendeeNote")
+                                )
+                            ]
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Attendee does not belong to summit"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAttendeeNotes($summit_id, $attendee_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -260,11 +376,34 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         );
     }
 
-    /**
-     * @param $summit_id
-     * @param $attendee_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/attendees/{attendee_id}/notes/csv",
+        summary: "Export notes for a specific attendee in CSV format",
+        security: [["bearer_token" => []]],
+        tags: ["AttendeeNotes"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "filter", description: "Filter query", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK - CSV file download",
+                content: new OA\MediaType(
+                    mediaType: "text/csv",
+                    schema: new OA\Schema(type: "string", format: "binary")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Attendee does not belong to summit"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAttendeeNotesCSV($summit_id, $attendee_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -328,12 +467,30 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         );
     }
 
-    /**
-     * @param $summit_id
-     * @param $attendee_id
-     * @param $note_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}",
+        summary: "Get a specific attendee note",
+        security: [["bearer_token" => []]],
+        tags: ["AttendeeNotes"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "note_id", description: "Note ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "expand", description: "Expand relations (author, owner, ticket)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAttendeeNote")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAttendeeNote($summit_id, $attendee_id, $note_id)
     {
         return $this->processRequest(function () use ($summit_id, $attendee_id, $note_id) {
@@ -363,11 +520,39 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $attendee_id
-     * @return mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/attendees/{attendee_id}/notes",
+        summary: "Add a note to an attendee",
+        security: [["bearer_token" => []]],
+        tags: ["AttendeeNotes"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["content"],
+                properties: [
+                    new OA\Property(property: "content", type: "string", description: "Note content"),
+                    new OA\Property(property: "ticket_id", type: "integer", description: "Optional ticket ID to associate with the note"),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAttendeeNote")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addAttendeeNote($summit_id, $attendee_id)
     {
         return $this->processRequest(function () use ($summit_id, $attendee_id) {
@@ -389,12 +574,39 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $attendee_id
-     * @param $note_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}",
+        summary: "Update an attendee note",
+        security: [["bearer_token" => []]],
+        tags: ["AttendeeNotes"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "note_id", description: "Note ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "content", type: "string", description: "Note content"),
+                    new OA\Property(property: "ticket_id", type: "integer", description: "Optional ticket ID to associate with the note"),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAttendeeNote")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateAttendeeNote($summit_id, $attendee_id, $note_id)
     {
         return $this->processRequest(function () use ($summit_id, $attendee_id, $note_id) {
@@ -416,12 +628,25 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $attendee_id
-     * @param $note_id
-     * @return mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}",
+        summary: "Delete an attendee note",
+        security: [["bearer_token" => []]],
+        tags: ["AttendeeNotes"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "note_id", description: "Note ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deleteAttendeeNote($summit_id, $attendee_id, $note_id)
     {
         return $this->processRequest(function () use ($summit_id, $attendee_id, $note_id) {

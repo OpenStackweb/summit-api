@@ -12,20 +12,46 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\CountryCodes;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use OpenApi\Attributes as OA;
 use utils\PagingResponse;
 use Illuminate\Support\Facades\Request;
+
 /**
  * Class CountriesApiController
  * @package App\Http\Controllers
  */
 final class CountriesApiController extends JsonController
 {
-    /**
-     * @return mixed
-     */
+    #[OA\Get(
+        path: "/api/public/v1/countries",
+        description: "Get all countries with ISO codes",
+        summary: 'Get all countries',
+        operationId: 'getAllCountries',
+        tags: ['Country'],
+        parameters: [
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Parameter for expanding related entity properties through serialization. Note: Has no effect on this endpoint since countries are returned as simple arrays, not complex entities. Always returns iso_code and name regardless of this parameter.',
+                schema: new OA\Schema(type: 'string', example: '')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success - Returns paginated list of countries',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedISOElementResponseSchema'),
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAll(){
         try {
             $countries = [];

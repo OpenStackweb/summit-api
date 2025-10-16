@@ -28,6 +28,9 @@ use utils\PagingInfo;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Request;
 use Exception;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
+
 /**
  * Class OAuth2SummitNotificationsApiController
  * @package App\Http\Controllers
@@ -81,6 +84,63 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/notifications',
+        operationId: 'getNotifications',
+        description: 'Get all push notifications for a summit',
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand relations (event,group,recipients)',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        tags: ['Summit Notifications'],
+        security: [['oauth2' => ['summit-read']]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of notifications',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/SummitPushNotificationResponse')
+                        ),
+                        new OA\Property(property: 'total', type: 'integer'),
+                        new OA\Property(property: 'per_page', type: 'integer'),
+                        new OA\Property(property: 'current_page', type: 'integer'),
+                        new OA\Property(property: 'last_page', type: 'integer'),
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getAll($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -142,8 +202,65 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
 
     /**
      * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/notifications/sent',
+        operationId: 'getApprovedNotifications',
+        description: 'Get all approved push notifications sent to current user',
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand relations (event,group,recipients)',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        tags: ['Summit Notifications'],
+        security: [['oauth2' => ['summit-read']]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of approved notifications',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(ref: '#/components/schemas/SummitPushNotificationResponse')
+                        ),
+                        new OA\Property(property: 'total', type: 'integer'),
+                        new OA\Property(property: 'per_page', type: 'integer'),
+                        new OA\Property(property: 'current_page', type: 'integer'),
+                        new OA\Property(property: 'last_page', type: 'integer'),
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getAllApprovedByUser($summit_id){
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);

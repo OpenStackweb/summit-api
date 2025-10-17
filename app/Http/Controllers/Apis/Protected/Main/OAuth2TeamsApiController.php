@@ -30,12 +30,19 @@ use utils\FilterParser;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
+
 /**
  * Class OAuth2TeamsApiController
  * @package App\Http\Controllers
  */
+#[OA\Tag(name: "Teams", description: "Teams Management Endpoints")]
 final class OAuth2TeamsApiController extends OAuth2ProtectedController
 {
+    use ParametrizedGetAll;
+    use RequestProcessor;
+    use GetAndValidateJsonPayload;
 
     /**
      * @var IChatTeamService
@@ -76,6 +83,30 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
         $this->member_repository  = $member_repository;
     }
 
+    #[OA\Get(
+        path: "/api/v1/teams/me",
+        operationId: "getMyTeams",
+        description: "Get all teams for the authenticated user",
+        tags: ["Teams"],
+        parameters: [
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships: company, members"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "User teams retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/TeamsList")
+            ),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - User not authenticated"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @return mixed
      */
@@ -125,6 +156,38 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
         }
     }
 
+    #[OA\Get(
+        path: "/api/v1/teams/me/{team_id}",
+        operationId: "getMyTeam",
+        description: "Get a specific team by ID for the authenticated user",
+        tags: ["Teams"],
+        parameters: [
+            new OA\Parameter(
+                name: "team_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Team ID"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships: company, members"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Team retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/Team")
+            ),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - User not authenticated"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Team not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $team_id
      * @return mixed
@@ -173,6 +236,45 @@ final class OAuth2TeamsApiController extends OAuth2ProtectedController
         }
     }
 
+    #[OA\Post(
+        path: "/api/v1/teams",
+        operationId: "addTeam",
+        description: "Create a new team",
+        tags: ["Teams"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: "object",
+                required: ["name", "company_id"],
+                properties: [
+                    new OA\Property(
+                        property: "name",
+                        type: "string",
+                        description: "Team name",
+                        example: "Development Team"
+                    ),
+                    new OA\Property(
+                        property: "company_id",
+                        type: "integer",
+                        format: "int64",
+                        description: "Company ID",
+                        example: 123
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Team created successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/Team")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - User not authenticated"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @return mixed
      */

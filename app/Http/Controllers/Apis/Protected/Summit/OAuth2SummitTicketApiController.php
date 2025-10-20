@@ -151,6 +151,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                         'badge_prints_count' =>  ['==', '>=', '<=', '>', '<'],
                         'has_owner_company' => ['=='],
                         'exclude_is_printable_free_unassigned' => ['=='],
+                        'has_promo_code' => ['=='],
                     ];
                 },
                 function () {
@@ -189,6 +190,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                         'badge_prints_count' => 'sometimes|integer',
                         'has_owner_company' => ['sometimes', new Boolean()],
                         'exclude_is_printable_free_unassigned' => ['sometimes', new Boolean()],
+                        'has_promo_code' => ['sometimes', new Boolean()],
                     ];
                 },
                 function () {
@@ -330,6 +332,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                         'badge_prints_count' =>  ['==', '>=', '<=', '>', '<'],
                         'has_owner_company' => ['=='],
                         'exclude_is_printable_free_unassigned' => ['=='],
+                        'has_promo_code' => ['=='],
                     ];
                 },
                 function () {
@@ -368,6 +371,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                         'badge_prints_count' => 'sometimes|integer',
                         'has_owner_company' => ['sometimes', new Boolean()],
                         'exclude_is_printable_free_unassigned' => ['sometimes', new Boolean()],
+                        'has_promo_code' => ['sometimes', new Boolean()],
                     ];
                 },
                 function () {

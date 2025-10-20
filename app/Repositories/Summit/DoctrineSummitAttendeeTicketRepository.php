@@ -141,7 +141,7 @@ final class DoctrineSummitAttendeeTicketRepository
             $need['m'] = true;
         } // usa m.id y a.email
 
-        if ($has('promo_code') || $has('promo_code_id') || $has('promo_code_description')) {
+        if ($has('promo_code') || $has('promo_code_id') || $has('promo_code_description') || $has('has_promo_code')) {
             $need['pc'] = true;
         }
         if ($has('promo_code_tag') || $has('promo_code_tag_id')) {
@@ -434,6 +434,17 @@ final class DoctrineSummitAttendeeTicketRepository
                     'Nobody' => new DoctrineCaseFilterMapping(
                         'Nobody',
                         "a is null"
+                    ),
+                ]
+            ),
+            'has_promo_code' => new DoctrineSwitchFilterMapping([
+                    '1' => new DoctrineCaseFilterMapping(
+                        'true',
+                        "pc is not null"
+                    ),
+                    '0' => new DoctrineCaseFilterMapping(
+                        'false',
+                        "pc is null"
                     ),
                 ]
             ),

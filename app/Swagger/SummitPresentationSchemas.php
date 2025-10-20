@@ -149,6 +149,7 @@ class PresentationTrackChairScoreTypeUpdateRequest {}
 
 #[OA\Schema(
     schema: "SummitSelectedPresentationList",
+    required: ["id", "created", "last_edited", "name", "type", "hash", "selected_presentations", "interested_presentations"],
     properties: [
         new OA\Property(property: "id", type: "integer", example: 1),
         new OA\Property(property: "created", type: "integer", description: "Unix timestamp", example: 1640995200),
@@ -158,8 +159,6 @@ class PresentationTrackChairScoreTypeUpdateRequest {}
         new OA\Property(property: "hash", type: "string", example: "abc123def456"),
         new OA\Property(property: "selected_presentations", type: "array", items: new OA\Items(type: "integer"), description: "Array of selected presentation IDs"),
         new OA\Property(property: "interested_presentations", type: "array", items: new OA\Items(type: "integer"), description: "Array of interested presentation IDs (only for Individual lists)", nullable: true),
-    ],
-    anyOf: [
         new OA\Property(property: "category_id", type: "integer", example: 5),
         new OA\Property(property: "category", ref: "#/components/schemas/PresentationCategory"),
         new OA\Property(property: "owner_id", type: "integer", example: 10),

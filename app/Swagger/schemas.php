@@ -498,6 +498,56 @@ class RSVPAdminAddRequestSchema
 {
 }
 
+#[OA\Schema(
+    schema: "ExtraQuestionTypeValue",
+    description: "Extra Question Type Value",
+    type: "object"
+)]
+class ExtraQuestionTypeValue
+{
+    #[OA\Property(property: "id", type: "integer", format: "int64")]
+    public int $id;
+
+    #[OA\Property(property: "value", type: "string")]
+    public string $value;
+
+    #[OA\Property(property: "label", type: "string")]
+    public string $label;
+
+    #[OA\Property(property: "order", type: "integer", format: "int32")]
+    public int $order;
+
+    #[OA\Property(property: "question_id", type: "integer", format: "int64")]
+    public int $question_id;
+}
+
+// SubQuestionRule Schema
+#[OA\Schema(
+    schema: "SubQuestionRule",
+    description: "Sub Question Rule",
+    type: "object"
+)]
+class SubQuestionRule
+{
+    #[OA\Property(property: "id", type: "integer", format: "int64")]
+    public int $id;
+
+    #[OA\Property(property: "parent_question_id", type: "integer", format: "int64")]
+    public int $parent_question_id;
+
+    #[OA\Property(property: "parent_question_value_id", type: "integer", format: "int64")]
+    public int $parent_question_value_id;
+
+    #[OA\Property(property: "sub_question_id", type: "integer", format: "int64")]
+    public int $sub_question_id;
+
+    #[OA\Property(property: "visibility", type: "string", enum: ["Visible", "Hidden"])]
+    public string $visibility;
+
+    #[OA\Property(property: "logic", type: "string", enum: ["And", "Or"])]
+    public string $logic;
+}
+
 // Legal Documents
 
 #[OA\Schema(

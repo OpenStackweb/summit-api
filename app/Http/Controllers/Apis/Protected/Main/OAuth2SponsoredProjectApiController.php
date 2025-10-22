@@ -17,6 +17,7 @@ use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
 use App\Services\Model\ISponsoredProjectService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
@@ -28,6 +29,8 @@ use Psr\Log\LogLevel;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
+use OpenApi\Attributes as OA;
+
 /**
  * Class OAuth2SponsoredProjectApiController
  * @package App\Http\Controllers
@@ -180,6 +183,71 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
 
     // sponsorship types
 
+    #[OA\Get(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types",
+        description: "Get all sponsorship types for a sponsored project",
+        summary: 'Read All Sponsorship Types',
+        operationId: 'getAllSponsorshipTypes',
+        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        security: [['oauth2' => ['read']]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsored project id or slug'
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'name@@type')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'order,name')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of sponsorship types',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedProjectSponsorshipTypesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $id string|int
      */
@@ -232,6 +300,47 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}",
+        description: "Get a specific sponsorship type",
+        summary: 'Read Sponsorship Type',
+        operationId: 'getSponsorshipType',
+        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        security: [['oauth2' => ['read']]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsored project id or slug'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsorship type id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sponsorship type details',
+                content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipType')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $id
      * @param $sponsorship_type_id
@@ -299,6 +408,78 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
 
     //  supporting companies
 
+    #[OA\Get(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies",
+        description: "Get all supporting companies for a sponsorship type",
+        summary: 'Read All Supporting Companies',
+        operationId: 'getSupportingCompanies',
+        tags: ['Sponsored Projects', 'Supporting Companies'],
+        security: [['oauth2' => ['read']]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsored project id or slug'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsorship type id or slug'
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'order,name')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of supporting companies',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSupportingCompaniesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getSupportingCompanies($id, $sponsorship_type_id){
         return $this->_getAll(
             function () {

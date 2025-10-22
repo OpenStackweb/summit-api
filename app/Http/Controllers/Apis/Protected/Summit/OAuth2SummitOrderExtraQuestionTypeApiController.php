@@ -28,6 +28,8 @@ use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
@@ -37,6 +39,7 @@ use utils\PagingResponse;
  * Class OAuth2SummitOrderExtraQuestionTypeApiController
  * @package App\Http\Controllers
  */
+#[OA\Tag(name: "Order Extra Questions", description: "Summit Order Extra Questions Management")]
 final class OAuth2SummitOrderExtraQuestionTypeApiController
     extends OAuth2ProtectedController
 {
@@ -92,6 +95,29 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/order-extra-questions/metadata",
+        operationId: "getOrderExtraQuestionsMetadata",
+        description: "Get metadata for order extra questions",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Metadata retrieved successfully",
+                content: new OA\JsonContent(type: "object")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
     public function getMetadata($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -164,6 +190,37 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/order-extra-questions",
+        operationId: "addOrderExtraQuestion",
+        description: "Add a new order extra question",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SummitOrderExtraQuestionType")
+        ),
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Order extra question created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitOrderExtraQuestionType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     protected function addChild(Summit $summit, array $payload): IEntity
     {
         return $this->service->addOrderExtraQuestion($summit, HTMLCleaner::cleanData($payload, ['label']));
@@ -183,6 +240,34 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}",
+        operationId: "deleteOrderExtraQuestion",
+        description: "Delete an order extra question",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Question deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Question or Summit not found"),
+        ]
+    )]
     protected function deleteChild(Summit $summit, $child_id): void
     {
         $this->service->deleteOrderExtraQuestion($summit, $child_id);
@@ -210,6 +295,44 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @throws \models\exceptions\EntityNotFoundException
      * @throws \models\exceptions\ValidationException
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}",
+        operationId: "updateOrderExtraQuestion",
+        description: "Update an order extra question",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SummitOrderExtraQuestionType")
+        ),
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Question updated successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitOrderExtraQuestionType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Question or Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
     {
         return $this->service->updateOrderExtraQuestion
@@ -224,6 +347,44 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $question_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/values",
+        operationId: "addOrderExtraQuestionValue",
+        description: "Add a value to an order extra question",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/ExtraQuestionTypeValue")
+        ),
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Value created successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/ExtraQuestionTypeValue")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Question or Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     public function addQuestionValue($summit_id, $question_id)
     {
         return $this->processRequest(function () use ($summit_id, $question_id) {
@@ -251,6 +412,51 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $value_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/values/{value_id}",
+        operationId: "updateOrderExtraQuestionValue",
+        description: "Update a value of an order extra question",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/ExtraQuestionTypeValue")
+        ),
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "value_id",
+                description: "Value ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Value updated successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/ExtraQuestionTypeValue")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Value, Question or Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     public function updateQuestionValue($summit_id, $question_id, $value_id)
     {
         return $this->processRequest(function () use ($summit_id, $question_id, $value_id) {
@@ -276,6 +482,41 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $value_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/values/{value_id}",
+        operationId: "deleteOrderExtraQuestionValue",
+        description: "Delete a value from an order extra question",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "value_id",
+                description: "Value ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Value deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Value, Question or Summit not found"),
+        ]
+    )]
     public function deleteQuestionValue($summit_id, $question_id, $value_id)
     {
         return $this->processRequest(function () use ($summit_id, $question_id, $value_id) {
@@ -292,6 +533,31 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/order-extra-questions/seed-defaults",
+        operationId: "seedDefaultOrderExtraQuestions",
+        description: "Seed default order extra questions from EventBrite",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Default questions seeded successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
     public function seedDefaultSummitExtraOrderQuestionTypesBySummit($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -322,6 +588,36 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $question_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules",
+        operationId: "getSubQuestionRules",
+        description: "Get sub question rules for an order extra question",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Sub question rules retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Question or Summit not found"),
+        ]
+    )]
     public function getSubQuestionRules($summit_id, $question_id)
     {
         return $this->processRequest(function () use ($summit_id, $question_id) {
@@ -358,6 +654,44 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $summit_id
      * @param $question_id
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules",
+        operationId: "addSubQuestionRule",
+        description: "Add a sub question rule to an order extra question",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SubQuestionRule")
+        ),
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Sub question rule created successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/SubQuestionRule")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Question or Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     public function addSubQuestionRule($summit_id, $question_id)
     {
         return $this->processRequest(function () use ($summit_id, $question_id) {
@@ -385,6 +719,51 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $question_id
      * @param $rule_id
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}",
+        operationId: "updateSubQuestionRule",
+        description: "Update a sub question rule",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SubQuestionRule")
+        ),
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "rule_id",
+                description: "Rule ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Sub question rule updated successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/SubQuestionRule")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Rule, Question or Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     public function updateSubQuestionRule($summit_id, $question_id, $rule_id)
     {
         return $this->processRequest(function () use ($summit_id, $question_id, $rule_id) {
@@ -414,6 +793,43 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $rule_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}",
+        operationId: "getSubQuestionRule",
+        description: "Get a specific sub question rule",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "rule_id",
+                description: "Rule ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Sub question rule retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/SubQuestionRule")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Rule, Question or Summit not found"),
+        ]
+    )]
     public function getSubQuestionRule($summit_id, $question_id, $rule_id)
     {
         return $this->processRequest(function () use ($summit_id, $question_id, $rule_id) {
@@ -446,6 +862,41 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $rule_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}",
+        operationId: "deleteSubQuestionRule",
+        description: "Delete a sub question rule",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "rule_id",
+                description: "Rule ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Sub question rule deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Rule, Question or Summit not found"),
+        ]
+    )]
     public function deleteSubQuestionRule($summit_id, $question_id, $rule_id)
     {
         return $this->processRequest(function () use ($summit_id, $question_id, $rule_id) {
@@ -461,6 +912,29 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/attendees/me/allowed-extra-questions",
+        operationId: "getOwnAttendeeAllowedExtraQuestions",
+        description: "Get allowed extra questions for the current user's attendance",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Allowed questions retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or attendee not found"),
+        ]
+    )]
     public function getOwnAttendeeAllowedExtraQuestions($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -480,6 +954,38 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
      * @param $attendee_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/attendees/{attendee_id}/allowed-extra-questions",
+        operationId: "getAttendeeAllowedExtraQuestions",
+        description: "Get allowed extra questions for a specific attendee",
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "attendee_id",
+                description: "Attendee ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Allowed questions retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "You are not Authorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or attendee not found"),
+        ]
+    )]
     public function getAttendeeExtraQuestions($summit_id, $attendee_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);

@@ -107,4 +107,14 @@ interface IResourceServerContext
      */
     public function getCurrentUserEmail():?string;
 
+    /**
+     * @return string|null
+     */
+    public function getCurrentUserFirstName():?string;
+
+    /**
+     * @return string|null
+     */
+    public function getCurrentUserLastName():?string;
+
 }

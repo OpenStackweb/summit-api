@@ -312,4 +312,14 @@ final class ResourceServerContext implements IResourceServerContext
     {
         return $this->getAuthContextVar(IResourceServerContext::UserEmail);
     }
+
+    public function getCurrentUserFirstName(): ?string
+    {
+        return $this->getAuthContextVar(IResourceServerContext::UserFirstName);
+    }
+
+    public function getCurrentUserLastName(): ?string
+    {
+        return $this->getAuthContextVar(IResourceServerContext::UserLastName);
+    }
 }

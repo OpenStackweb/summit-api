@@ -14,11 +14,13 @@
 
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\IMemberService;
+use Illuminate\Http\Response;
 use models\exceptions\EntityNotFoundException;
 use models\main\IMemberRepository;
 use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use utils\PagingInfo;
 use utils\PagingResponse;
 
@@ -55,9 +57,29 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         $this->member_service = $member_service;
     }
 
-    /**
-     * @return mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/members',
+        summary: 'Get all members',
+        description: 'Returns a paginated list of members with optional filtering, sorting and search capabilities',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by irc, twitter, first_name, last_name, email, group_slug, group_id, email_verified, active, github_user, full_name, created, last_edited, membership_type', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by first_name, last_name, id, created, last_edited, membership_type', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedMembersResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+        ]
+    )]
     public function getAll()
     {
 
@@ -125,9 +147,28 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         );
     }
 
-    /**
-     * @return mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/members/companies',
+        summary: 'Get all member companies',
+        description: 'Returns a paginated list of companies from member profiles',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by company', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by company', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedMemberCompaniesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+        ]
+    )]
     public function getAllCompanies(){
         return $this->_getAll(
             function () {
@@ -163,9 +204,25 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             }
         );
     }
-    /**
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/members/me',
+        summary: 'Get current authenticated member',
+        description: 'Returns the profile of the currently authenticated member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (groups, affiliations, all_affiliations, ccla_teams, election_applications, candidate_profile, election_nominations)', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/Member')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function getMyMember()
     {
         return $this->processRequest(function () {
@@ -192,10 +249,27 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     use GetAndValidateJsonPayload;
 
-    /**
-     * @param $member_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/members/me',
+        summary: 'Update current authenticated member',
+        description: 'Updates the profile of the currently authenticated member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/MemberUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Member updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/Member')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Invalid input'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function updateMyMember()
     {
         return $this->processRequest(function () {
@@ -226,10 +300,26 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $member_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/members/{member_id}',
+        summary: 'Get member by ID',
+        description: 'Returns a member profile by ID',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/Member')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function getById($member_id)
     {
         return $this->processRequest(function () use ($member_id) {
@@ -259,18 +349,50 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @return mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/members/me/affiliations',
+        summary: 'Get current member affiliations',
+        description: 'Returns all affiliations for the currently authenticated member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (organization)', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedAffiliationsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function getMyMemberAffiliations()
     {
         return $this->getMemberAffiliations('me');
     }
 
-    /**
-     * @param $member_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/members/{member_id}/affiliations',
+        summary: 'Get member affiliations',
+        description: 'Returns all affiliations for a specific member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (organization)', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedAffiliationsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function getMemberAffiliations($member_id)
     {
         return $this->processRequest(function () use ($member_id) {
@@ -300,18 +422,56 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @return mixed
-     */
+    #[OA\Post(
+        path: '/api/v1/members/me/affiliations',
+        summary: 'Add affiliation to current member',
+        description: 'Creates a new affiliation for the currently authenticated member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AffiliationRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Affiliation created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/Affiliation')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Invalid input'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function addMyAffiliation()
     {
         return $this->addAffiliation('me');
     }
 
-    /**
-     * @param $member_id
-     * @return mixed
-     */
+    #[OA\Post(
+        path: '/api/v1/members/{member_id}/affiliations',
+        summary: 'Add affiliation to member',
+        description: 'Creates a new affiliation for a specific member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AffiliationRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Affiliation created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/Affiliation')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Invalid input'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function addAffiliation($member_id)
     {
         return $this->processRequest(function () use ($member_id) {
@@ -342,20 +502,60 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $affiliation_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/members/me/affiliations/{affiliation_id}',
+        summary: 'Update current member affiliation',
+        description: 'Updates an affiliation for the currently authenticated member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'affiliation_id', in: 'path', required: true, description: 'Affiliation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AffiliationRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Affiliation updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/Affiliation')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Invalid input'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member or affiliation not found'),
+        ]
+    )]
     public function updateMyAffiliation($affiliation_id)
     {
         return $this->updateAffiliation('me', $affiliation_id);
     }
 
-    /**
-     * @param int $member_id
-     * @param int $affiliation_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/members/{member_id}/affiliations/{affiliation_id}',
+        summary: 'Update member affiliation',
+        description: 'Updates an affiliation for a specific member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'affiliation_id', in: 'path', required: true, description: 'Affiliation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AffiliationRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Affiliation updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/Affiliation')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Invalid input'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member or affiliation not found'),
+        ]
+    )]
     public function updateAffiliation($member_id, $affiliation_id)
     {
         return $this->processRequest(function () use ($member_id, $affiliation_id) {
@@ -386,16 +586,42 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     }
 
 
+    #[OA\Delete(
+        path: '/api/v1/members/me/affiliations/{affiliation_id}',
+        summary: 'Delete current member affiliation',
+        description: 'Deletes an affiliation for the currently authenticated member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'affiliation_id', in: 'path', required: true, description: 'Affiliation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Affiliation deleted successfully'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member or affiliation not found'),
+        ]
+    )]
     public function deleteMyAffiliation($affiliation_id)
     {
         return $this->deleteAffiliation('me', $affiliation_id);
     }
 
-    /**
-     * @param $member_id
-     * @param $affiliation_id
-     * @return mixed
-     */
+    #[OA\Delete(
+        path: '/api/v1/members/{member_id}/affiliations/{affiliation_id}',
+        summary: 'Delete member affiliation',
+        description: 'Deletes an affiliation for a specific member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'affiliation_id', in: 'path', required: true, description: 'Affiliation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Affiliation deleted successfully'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member or affiliation not found'),
+        ]
+    )]
     public function deleteAffiliation($member_id, $affiliation_id)
     {
         return $this->processRequest(function () use ($member_id, $affiliation_id) {
@@ -412,11 +638,22 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $member_id
-     * @param $rsvp_id
-     * @return mixed
-     */
+    #[OA\Delete(
+        path: '/api/v1/members/{member_id}/rsvp/{rsvp_id}',
+        summary: 'Delete member RSVP',
+        description: 'Deletes an RSVP for a specific member',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        parameters: [
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'rsvp_id', in: 'path', required: true, description: 'RSVP ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'RSVP deleted successfully'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member or RSVP not found'),
+        ]
+    )]
     public function deleteRSVP($member_id, $rsvp_id)
     {
         return $this->processRequest(function () use ($member_id, $rsvp_id) {
@@ -430,10 +667,22 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $member_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/members/me/membership/foundation',
+        summary: 'Sign foundation membership',
+        description: 'Signs the currently authenticated member up for foundation membership',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Foundation membership signed successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/Member')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function signFoundationMembership()
     {
         return $this->processRequest(function () {
@@ -456,10 +705,22 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $member_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/members/me/membership/community',
+        summary: 'Sign community membership',
+        description: 'Signs the currently authenticated member up for community membership',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Community membership signed successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/Member')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function signCommunityMembership()
     {
         return $this->processRequest(function () {
@@ -482,10 +743,18 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $member_id
-     * @return mixed
-     */
+    #[OA\Delete(
+        path: '/api/v1/members/me/membership/resign',
+        summary: 'Resign membership',
+        description: 'Resigns the currently authenticated member from their membership',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Membership resigned successfully'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function resignMembership()
     {
         return $this->processRequest(function () {
@@ -499,6 +768,22 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: '/api/v1/members/me/membership/individual',
+        summary: 'Sign individual membership',
+        description: 'Signs the currently authenticated member up for individual membership',
+        security: [['bearer' => []]],
+        tags: ['members'],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Individual membership signed successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/Member')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
     public function signIndividualMembership()
     {
         return $this->processRequest(function () {

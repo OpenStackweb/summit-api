@@ -302,12 +302,55 @@ class RSVPInvitationsAuthSchema
 #[OA\Schema(
     schema: 'Member',
     type: 'object',
+    required: ['id', 'created', 'last_edited', 'first_name', 'last_name', 'bio', 'gender', 'github_user', 'linked_in', 'irc', 'twitter', 'state', 'country', 'active', 'email_verified', 'pic', 'membership_type', 'candidate_profile_id', 'company', ],
     properties: [
-        new OA\Property(property: 'id', type: 'integer'),
+        new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'created', type: 'integer', example: 1630500518),
         new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
         new OA\Property(property: 'first_name', type: 'string', example: 'John'),
         new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
+        new OA\Property(property: 'bio', type: 'string'),
+        new OA\Property(property: 'gender', type: 'string'),
+        new OA\Property(property: 'github_user', type: 'string'),
+        new OA\Property(property: 'linked_in', type: 'string'),
+        new OA\Property(property: 'irc', type: 'string'),
+        new OA\Property(property: 'twitter', type: 'string'),
+        new OA\Property(property: 'state', type: 'string'),
+        new OA\Property(property: 'country', type: 'string'),
+        new OA\Property(property: 'active', type: 'boolean', example: true),
+        new OA\Property(property: 'email_verified', type: 'boolean', example: true),
+        new OA\Property(property: 'pic', type: 'string'),
+        new OA\Property(property: 'membership_type', type: 'string', example: 'Foundation'),
+        new OA\Property(property: 'candidate_profile_id', type: 'integer', example: 1465),
+        new OA\Property(property: 'company', type: 'string'),
+        new OA\Property(property: 'speaker_id', type: 'integer', example: 187),
+        new OA\Property(property: 'attendee_id', type: 'integer', example: 1287),
+        new OA\Property(property: 'groups_events', type: 'array', items: new OA\Items(type: 'GroupEvent')),
+        new OA\Property(property: 'groups', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'affiliations', type: 'array', items: new OA\Items(type: 'Organization')),
+        new OA\Property(property: 'all_affiliations', type: 'array', items: new OA\Items(type: 'Affiliation')),
+        new OA\Property(property: 'ccla_teams', type: 'array', items: new OA\Items(type: 'Team')),
+        new OA\Property(property: 'election_applications', type: 'array', items: new OA\Items(type: 'Nomination')),
+        new OA\Property(property: 'candidate_profile', type: 'array', items: new OA\Items(type: 'Candidate')),
+        new OA\Property(property: 'election_nominations', type: 'array', items: new OA\Items(type: 'Nomination')),
+        new OA\Property(property: 'team_memberships', type: 'array', items: new OA\Items(type: 'ChatTeamMember')),
+        new OA\Property(property: 'sponsor_memberships', type: 'array', items: new OA\Items(type: 'Sponsor')),
+        new OA\Property(property: 'favorite_summit_events', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'schedule_summit_events', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'summit_tickets', type: 'array', items: new OA\Items(type: 'SummitAttendeeTicket')),
+        new OA\Property(property: 'schedule_shareable_link', type: 'array', items: new OA\Items(type: 'PersonalCalendarShareInfo')),
+        new OA\Property(property: 'legal_agreements', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'track_chairs', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'summit_permission_groups', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'speaker', type: 'array', items: new OA\Items(type: 'PresentationSpeaker')),
+        new OA\Property(property: 'attendee', type: 'array', items: new OA\Items(type: 'SummitAttendee')),
+        new OA\Property(property: 'feedback', type: 'array', items: new OA\Items(type: 'SummitEventFeedback')),
+        new OA\Property(property: 'rsvp', type: 'array', items: new OA\Items(type: 'RSVP')),
+        new OA\Property(property: 'rsvp_invitations', type: 'array', items: new OA\Items(type: 'RSVPInvitation')),
+        new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
+        new OA\Property(property: 'second_email', type: 'string', example: 'user@example.com'),
+        new OA\Property(property: 'third_email', type: 'string', example: 'user@example.com'),
+        new OA\Property(property: 'user_external_id', type: 'integer'),
     ]
 )]
 class MemberSchema
@@ -331,6 +374,113 @@ class MemberSchema
 class RSVPSchema
 {
 }
+
+#[OA\Schema(
+    schema: 'PaginatedMembersResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Member')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedMembersResponse {}
+
+#[OA\Schema(
+    schema: 'PaginatedMemberCompaniesResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'company', type: 'string', example: 'Acme Corp')
+                        ]
+                    )
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedMemberCompaniesResponse {}
+
+#[OA\Schema(
+    schema: 'PaginatedAffiliationsResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Affiliation')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedAffiliationsResponse {}
+
+#[OA\Schema(
+    schema: 'Affiliation',
+    type: 'object',
+    required: ['id', 'created', 'last_edited', 'is_current', 'owner_id'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'last_edited', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'start_date', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'end_date', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'job_title', type: 'string', example: 'Software Engineer'),
+        new OA\Property(property: 'is_current', type: 'boolean', example: true),
+        new OA\Property(property: 'owner_id', type: 'integer', example: 1),
+        new OA\Property(property: 'organization_id', type: 'integer', example: 1),
+    ]
+)]
+class Affiliation {}
+
+#[OA\Schema(
+    schema: 'MemberUpdateRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'projects', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'other_project', type: 'string', maxLength: 100),
+        new OA\Property(property: 'display_on_site', type: 'boolean'),
+        new OA\Property(property: 'subscribed_to_newsletter', type: 'boolean'),
+        new OA\Property(property: 'shirt_size', type: 'string', enum: ['Small', 'Medium', 'Large', 'XL', 'XXL']),
+        new OA\Property(property: 'food_preference', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'other_food_preference', type: 'string', maxLength: 100),
+    ]
+)]
+class MemberUpdateRequest {}
+
+#[OA\Schema(
+    schema: 'AffiliationRequest',
+    type: 'object',
+    required: ['is_current', 'start_date'],
+    properties: [
+        new OA\Property(property: 'is_current', type: 'boolean', example: true),
+        new OA\Property(property: 'start_date', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'end_date', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'organization_id', type: 'integer', example: 1),
+        new OA\Property(property: 'organization_name', type: 'string', maxLength: 255),
+        new OA\Property(property: 'job_title', type: 'string', maxLength: 255),
+    ]
+)]
+class AffiliationRequest {}
 
 #[OA\Schema(
     schema: 'PaginatedRSVPsResponse',

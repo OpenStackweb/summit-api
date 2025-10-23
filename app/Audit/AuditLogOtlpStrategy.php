@@ -63,6 +63,10 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             $user_id = $resource_server_ctx->getCurrentUserId();
             $user_email = $resource_server_ctx->getCurrentUserEmail();
 
+            $user = $resource_server_ctx->getCurrentUser(false, false);
+            $user_first_name = $user ? $user->getFirstName() : null;
+            $user_last_name = $user ? $user->getLastName() : null;
+            
             $formatter = null;
             switch ($event_type) {
                 case self::EVENT_COLLECTION_UPDATE:
@@ -94,7 +98,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 $description = $formatter->format($subject, $change_set);
             }
 
-            $auditData = $this->buildAuditLogData($entity, $subject, $change_set, $event_type, $user_id, $user_email);
+            $auditData = $this->buildAuditLogData($entity, $subject, $change_set, $event_type, $user_id, $user_email, $user_first_name, $user_last_name);
             if (!empty($description)) {
                 $auditData['audit.description'] = $description;
             }
@@ -128,7 +132,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         return null;
     }
 
-    private function buildAuditLogData($entity, $subject, array $change_set, string $event_type, ?string $user_id, ?string $user_email): array
+    private function buildAuditLogData($entity, $subject, array $change_set, string $event_type, ?string $user_id, ?string $user_email, ?string $user_first_name, ?string $user_last_name): array
     {
         $auditData = [
             'audit.action' => $this->mapEventTypeToAction($event_type),
@@ -139,6 +143,8 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             'audit.event_type' => $event_type,
             'auth.user.id' => $user_id ?? 'unknown',
             'auth.user.email' => $user_email ?? 'unknown',
+            'auth.user.first_name' => $user_first_name ?? 'unknown',
+            'auth.user.last_name' => $user_last_name ?? 'unknown',
             'elasticsearch.index' => $this->elasticIndex,
         ];
 

@@ -20,6 +20,7 @@ use App\Rules\Boolean;
 use App\Services\Model\ISummitTrackService;
 use Exception;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -33,11 +34,13 @@ use utils\FilterParser;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2SummitTracksApiController
  * @package App\Http\Controllers
  */
+#[OA\Tag(name: "Summit Tracks", description: "Manage Summit Tracks/Categories")]
 final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
 {
     /**
@@ -81,6 +84,30 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks",
+        operationId: "getAllBySummit",
+        description: "Get all tracks for a specific summit",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "filter", description: "Filter by fields (not_id, name, description, code, group_name, voting_visible, chair_visible, has_parent, has_subtracks, has_proposed_schedule_allowed_locations)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by fields (id, code, name, order)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        tags: ["Summit Tracks"],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "List of tracks",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllBySummit($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -148,6 +175,31 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks/csv",
+        operationId: "getAllBySummitCSV",
+        description: "Export all tracks for a specific summit as CSV",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "filter", description: "Filter by fields", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by fields", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        tags: ["Summit Tracks"],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "CSV file with tracks data",
+                content: new OA\MediaType(mediaType: "text/csv")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllBySummitCSV($summit_id)
     {
         $values = Request::all();
@@ -261,6 +313,26 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $track_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks/{track_id}",
+        operationId: "getTrackBySummit",
+        description: "Get a specific track by ID",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "expand", description: "Expand related data", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        tags: ["Summit Tracks"],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Track details",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationCategory")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getTrackBySummit($summit_id, $track_id)
     {
         try {
@@ -292,6 +364,25 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $track_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/extra-questions",
+        operationId: "getTrackExtraQuestionsBySummit",
+        description: "Get extra questions for a specific track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        tags: ["Summit Tracks"],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "List of extra questions",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getTrackExtraQuestionsBySummit($summit_id, $track_id)
     {
         try {
@@ -329,6 +420,25 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $question_id
      * @return mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/extra-questions/{question_id}",
+        operationId: "addTrackExtraQuestion",
+        description: "Add an extra question to a track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "question_id", description: "Question ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: "Question added successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track, Summit, or Question not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addTrackExtraQuestion($summit_id, $track_id, $question_id)
     {
         try {
@@ -358,6 +468,25 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $question_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/extra-questions/{question_id}",
+        operationId: "removeTrackExtraQuestion",
+        description: "Remove an extra question from a track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "question_id", description: "Question ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Question removed successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track, Summit, or Question not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeTrackExtraQuestion($summit_id, $track_id, $question_id)
     {
         try {
@@ -381,6 +510,30 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @param $track_id
+     * @return mixed
+     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/allowed-tags",
+        operationId: "getTrackAllowedTagsBySummit",
+        description: "Get allowed tags for a specific track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        tags: ["Summit Tracks"],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "List of allowed tags",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getTrackAllowedTagsBySummit($summit_id, $track_id)
     {
         try {
@@ -424,6 +577,32 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/tracks",
+        operationId: "addTrackBySummit",
+        description: "Create a new track for a summit",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationCategory")
+        ),
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Track created successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationCategory")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addTrackBySummit($summit_id)
     {
         try {
@@ -469,6 +648,28 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $to_summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/tracks/copy/{to_summit_id}",
+        operationId: "copyTracksToSummit",
+        description: "Copy all tracks from one summit to another",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Source Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "to_summit_id", description: "Target Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Tracks copied successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Source or Target Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function copyTracksToSummit($summit_id, $to_summit_id)
     {
         try {
@@ -508,6 +709,33 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $track_id
      * @return mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/tracks/{track_id}",
+        operationId: "updateTrackBySummit",
+        description: "Update a specific track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationCategory")
+        ),
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Track updated successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationCategory")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateTrackBySummit($summit_id, $track_id)
     {
         try {
@@ -553,6 +781,24 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      * @param $track_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tracks/{track_id}",
+        operationId: "deleteTrackBySummit",
+        description: "Delete a specific track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Track deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deleteTrackBySummit($summit_id, $track_id)
     {
         try {
@@ -574,6 +820,45 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @param $track_id
+     * @return mixed
+     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/icon",
+        operationId: "addTrackIcon",
+        description: "Add or update an icon for a track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(mediaType: "multipart/form-data", schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: "file", description: "Icon file", type: "string", format: "binary"),
+                ]
+            ))
+        ),
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Icon added successfully",
+                content: new OA\JsonContent(
+                                    type: "object",
+                                    description: "Track icon object (see File schema)"
+                                )            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addTrackIcon(LaravelRequest $request, $summit_id, $track_id)
     {
         try {
@@ -605,6 +890,29 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @param $track_id
+     * @return mixed
+     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/icon",
+        operationId: "deleteTrackIcon",
+        description: "Delete the icon for a track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Icon deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deleteTrackIcon($summit_id, $track_id)
     {
         try {
@@ -624,6 +932,42 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         }
     }
 
+    /**
+     * @param $summit_id
+     * @param $track_id
+     * @param $child_track_id
+     * @return mixed
+     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/sub-tracks/{child_track_id}",
+        operationId: "addSubTrack",
+        description: "Add a sub-track to a parent track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Parent Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "child_track_id", description: "Child Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(properties: [
+                new OA\Property(property: "order", description: "Display order", type: "integer", minimum: 1),
+            ])
+        ),
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Sub-track added successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationCategory")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addSubTrack($summit_id, $track_id, $child_track_id)
     {
         return $this->processRequest(function () use ($summit_id, $track_id, $child_track_id) {
@@ -645,6 +989,31 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         });
     }
 
+    /**
+     * @param $summit_id
+     * @param $track_id
+     * @param $child_track_id
+     * @return mixed
+     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/sub-tracks/{child_track_id}",
+        operationId: "removeSubTrack",
+        description: "Remove a sub-track from a parent track",
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "track_id", description: "Parent Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "child_track_id", description: "Child Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        tags: ["Summit Tracks"],
+        security: [["oauth2" => ["write"]]],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Sub-track removed successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track or Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeSubTrack($summit_id, $track_id, $child_track_id)
     {
         return $this->processRequest(function () use ($summit_id, $track_id, $child_track_id) {

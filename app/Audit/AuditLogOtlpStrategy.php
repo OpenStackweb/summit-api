@@ -62,11 +62,9 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
             $user_id = $resource_server_ctx->getCurrentUserId();
             $user_email = $resource_server_ctx->getCurrentUserEmail();
+            $user_first_name = $resource_server_ctx->getCurrentUserFirstName();
+            $user_last_name = $resource_server_ctx->getCurrentUserLastName();
 
-            $user = $resource_server_ctx->getCurrentUser(false, false);
-            $user_first_name = $user ? $user->getFirstName() : null;
-            $user_last_name = $user ? $user->getLastName() : null;
-            
             $formatter = null;
             switch ($event_type) {
                 case self::EVENT_COLLECTION_UPDATE:

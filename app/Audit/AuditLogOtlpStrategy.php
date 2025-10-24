@@ -5,6 +5,8 @@ namespace App\Audit;
 use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\App;
+use models\main\IMemberRepository;
+use models\main\Member;
 use models\summit\PresentationAction;
 use models\summit\PresentationExtraQuestionAnswer;
 use models\summit\SummitAttendeeBadgePrint;
@@ -63,12 +65,18 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             Log::debug("AuditLogOtlpStrategy::audit getting current user");
 
             $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
-            $user = $resource_server_ctx->getCurrentUser(false, false);
+            $user_external_id = $resource_server_ctx->getCurrentUserId();
+            $user = null;
+            if (!is_null($user_external_id)) {
+                $member_repository = App::make(IMemberRepository::class);
+                $user = $member_repository->findOneBy(["user_external_id" => $user_external_id]);
+            }
 
             $user_id = $user ? $user->getId() : null;
             $user_email = $user ? $user->getEmail() : null;
             $user_first_name = $user ? $user->getFirstName() : null;
             $user_last_name = $user ? $user->getLastName() : null;
+
             Log::debug("AuditLogOtlpStrategy::audit current user", ["user_id" => $user_id, "user_email" => $user_email]);
             $formatter = null;
             switch ($event_type) {

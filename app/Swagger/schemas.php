@@ -740,3 +740,28 @@ class PaymentGatewayProfileUpdateRequestSchema
 class PaginatedUserStoriesResponseSchema
 {
 }
+
+#[OA\Schema(
+    schema: 'FileUploadCompleteResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'path', type: 'string', example: 'upload/application-pdf/2025-10-24/', description: 'File path'),
+        new OA\Property(property: 'name', type: 'string', example: 'document_abc123def456.pdf', description: 'Generated filename'),
+        new OA\Property(property: 'mime_type', type: 'string', example: 'application-pdf', description: 'MIME type (normalized with dashes)'),
+    ]
+)]
+class FileUploadCompleteResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'FileUploadProgressResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'done', type: 'number', format: 'float', example: 45.5, description: 'Upload progress percentage'),
+        new OA\Property(property: 'status', type: 'boolean', example: true, description: 'Upload status'),
+    ]
+)]
+class FileUploadProgressResponseSchema
+{
+}

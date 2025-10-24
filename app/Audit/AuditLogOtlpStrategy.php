@@ -15,7 +15,7 @@ use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
 use Keepsuit\LaravelOpenTelemetry\Facades\Logger;
-
+use Illuminate\Support\Facades\Log;
 /**
  * OpenTelemetry Logs Audit Strategy
  */
@@ -53,11 +53,14 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             return;
         }
 
+        Log::debug("AuditLogOtlpStrategy::audit", ['subject' => $subject, 'change_set' => $change_set, 'event_type' => $event_type]);
         try {
             $entity = $this->resolveAuditableEntity($subject);
             if (is_null($entity)) {
                 return;
             }
+
+            Log::debug("AuditLogOtlpStrategy::audit getting current user");
 
             $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
             $user = $resource_server_ctx->getCurrentUser(false, false);
@@ -66,7 +69,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             $user_email = $user ? $user->getEmail() : null;
             $user_first_name = $user ? $user->getFirstName() : null;
             $user_last_name = $user ? $user->getLastName() : null;
-
+            Log::debug("AuditLogOtlpStrategy::audit current user", ["user_id" => $user_id, "user_email" => $user_email]);
             $formatter = null;
             switch ($event_type) {
                 case self::EVENT_COLLECTION_UPDATE:
@@ -102,7 +105,9 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             if (!empty($description)) {
                 $auditData['audit.description'] = $description;
             }
+            Log::debug("AuditLogOtlpStrategy::audit sending entry to OTEL", ["user_id" => $user_id, "user_email" => $user_email]);
             Logger::info($this->getLogMessage($event_type), $auditData);
+            Log::debug("AuditLogOtlpStrategy::audit entry sent to OTEL", ["user_id" => $user_id, "user_email" => $user_email]);
 
         } catch (\Exception $ex) {
             Logger::warning('OTEL audit logging error: ' . $ex->getMessage(), [
@@ -160,7 +165,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 if ($subject instanceof PersistentCollection) {
                     $auditData['audit.collection_type'] = $this->getCollectionType($subject);
                     $auditData['audit.collection_count'] = count($subject);
-                    
+
                     $changes = $this->getCollectionChanges($subject, $change_set);
                     $auditData['audit.collection_current_count'] = $changes['current_count'];
                     $auditData['audit.collection_snapshot_count'] = $changes['snapshot_count'];
@@ -177,7 +182,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         if (empty($collection) && empty($collection->getSnapshot())) {
             return 'unknown';
         }
-        
+
         $item = !empty($collection) ? $collection->first() : $collection->getSnapshot()[0];
         return class_basename($item);
     }

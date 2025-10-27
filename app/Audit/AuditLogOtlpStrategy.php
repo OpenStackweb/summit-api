@@ -187,12 +187,21 @@ class AuditLogOtlpStrategy implements IAuditStrategy
 
     private function getCollectionType(PersistentCollection $collection): string
     {
-        if (empty($collection) && empty($collection->getSnapshot())) {
+        try {
+            if (!method_exists($collection, 'getMapping')) {
+                return 'unknown';
+            }
+            
+            $mapping = $collection->getMapping();
+            
+            if (!isset($mapping['targetEntity']) || empty($mapping['targetEntity'])) {
+                return 'unknown';
+            }
+            
+            return class_basename($mapping['targetEntity']);
+        } catch (\Exception $ex) {
             return 'unknown';
         }
-
-        $item = !empty($collection) ? $collection->first() : $collection->getSnapshot()[0];
-        return class_basename($item);
     }
 
     private function getCollectionChanges(PersistentCollection $collection, array $change_set): array

@@ -197,11 +197,39 @@ class AuditLogOtlpStrategy implements IAuditStrategy
 
     private function getCollectionChanges(PersistentCollection $collection, array $change_set): array
     {
-        return [
-            'current_count' => count($collection),
-            'snapshot_count' => count($collection->getSnapshot()),
-            'is_dirty' => $collection->isDirty(),
-        ];
+        try {
+            $isInitialized = $collection->isInitialized();
+            
+            if (!$isInitialized) {
+                $snapshotCount = count($collection->getSnapshot());
+                $currentCount = $snapshotCount;
+                $isDirty = !empty($collection->getSnapshot()) || count($change_set) > 0;                
+            } else {
+                $currentCount = count($collection);
+                $snapshotCount = count($collection->getSnapshot());
+                $isDirty = $collection->isDirty();
+            }
+            
+            return [
+                'current_count' => $currentCount,
+                'snapshot_count' => $snapshotCount,
+                'is_dirty' => $isDirty,
+                'is_initialized' => $isInitialized 
+            ];
+            
+        } catch (\Exception $ex) {
+            Log::warning('Error getting collection changes', [
+                'error' => $ex->getMessage()
+            ]);
+            
+            return [
+                'current_count' => 0,
+                'snapshot_count' => 0,
+                'is_dirty' => false,
+                'is_initialized' => false,
+                'error' => 'Failed to get collection changes'
+            ];
+        }
     }
 
     private function mapEventTypeToAction(string $event_type): string

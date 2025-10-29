@@ -102,7 +102,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations",
         summary: "Get all allowed locations for a track's proposed schedule",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -212,7 +212,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations",
         summary: "Add an allowed location to a track's proposed schedule",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -284,7 +284,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}",
         summary: "Get a specific allowed location from a track's proposed schedule",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -349,7 +349,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}",
         summary: "Remove an allowed location from a track's proposed schedule",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -407,7 +407,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/all",
         summary: "Remove all allowed locations from a track's proposed schedule",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -459,7 +459,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames",
         summary: "Add a time frame to an allowed location",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -537,7 +537,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames",
         summary: "Get all time frames for an allowed location",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -685,7 +685,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}",
         summary: "Get a specific time frame from an allowed location",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -767,7 +767,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}",
         summary: "Remove a time frame from an allowed location",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -833,7 +833,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/all",
         summary: "Remove all time frames from an allowed location",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -893,7 +893,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}",
         summary: "Update a time frame for an allowed location",
         security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
         parameters: [
             new OA\Parameter(
                 name: "id",

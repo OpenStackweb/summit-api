@@ -15,6 +15,7 @@
 use App\Models\Exceptions\AuthzException;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitSelectedPresentationListService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use models\main\IMemberRepository;
@@ -22,6 +23,7 @@ use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\SummitSelectedPresentation;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2SummitSelectedPresentationListApiController
@@ -73,6 +75,46 @@ class OAuth2SummitSelectedPresentationListApiController
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/team",
+        summary: "Get team selection list for a track",
+        security: [["Bearer" => []]],
+        tags: ["summit-selected-presentation-lists"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "selection_plan_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The selection plan id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitSelectedPresentationList")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getTeamSelectionList($summit_id, $selection_plan_id, $track_id){
         return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id){
 
@@ -101,6 +143,47 @@ class OAuth2SummitSelectedPresentationListApiController
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/team",
+        summary: "Create team selection list for a track",
+        security: [["Bearer" => []]],
+        tags: ["summit-selected-presentation-lists"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "selection_plan_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The selection plan id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitSelectedPresentationList")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function createTeamSelectionList($summit_id, $selection_plan_id, $track_id){
         return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id){
 
@@ -125,6 +208,53 @@ class OAuth2SummitSelectedPresentationListApiController
      * @param $owner_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/individual/owner/{owner_id}",
+        summary: "Get individual selection list for a specific owner",
+        security: [["Bearer" => []]],
+        tags: ["summit-selected-presentation-lists"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "selection_plan_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The selection plan id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "owner_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The owner/member id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitSelectedPresentationList")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getIndividualSelectionList($summit_id, $selection_plan_id, $track_id, $owner_id){
         return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id, $owner_id){
 
@@ -149,6 +279,47 @@ class OAuth2SummitSelectedPresentationListApiController
      * @param $owner_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/individual/owner/me",
+        summary: "Create individual selection list for current user",
+        security: [["Bearer" => []]],
+        tags: ["summit-selected-presentation-lists"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "selection_plan_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The selection plan id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitSelectedPresentationList")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function createIndividualSelectionList($summit_id, $selection_plan_id, $track_id){
         return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id) {
 
@@ -172,6 +343,62 @@ class OAuth2SummitSelectedPresentationListApiController
      * @param $list_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/{list_id}/reorder",
+        summary: "Reorder presentations in a selection list",
+        security: [["Bearer" => []]],
+        tags: ["summit-selected-presentation-lists"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "selection_plan_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The selection plan id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "list_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The selection list id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitSelectedPresentationListReorderRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitSelectedPresentationList")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function reorderSelectionList($summit_id, $selection_plan_id, $track_id, $list_id){
         return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id, $list_id) {
 
@@ -219,6 +446,61 @@ class OAuth2SummitSelectedPresentationListApiController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}",
+        summary: "Assign a presentation to current user's individual selection list",
+        security: [["Bearer" => []]],
+        tags: ["summit-selected-presentation-lists"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "selection_plan_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The selection plan id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "collection",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string", enum: ["selected", "maybe"]),
+                description: "The collection type (selected or maybe)"
+            ),
+            new OA\Parameter(
+                name: "presentation_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The presentation id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitSelectedPresentationList")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function assignPresentationToMyIndividualList($summit_id, $selection_plan_id, $track_id, $collection, $presentation_id){
         return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id, $collection,$presentation_id) {
 
@@ -244,6 +526,61 @@ class OAuth2SummitSelectedPresentationListApiController
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}",
+        summary: "Remove a presentation from current user's individual selection list",
+        security: [["Bearer" => []]],
+        tags: ["summit-selected-presentation-lists"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "selection_plan_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The selection plan id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "collection",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string", enum: ["selected", "maybe"]),
+                description: "The collection type (selected or maybe)"
+            ),
+            new OA\Parameter(
+                name: "presentation_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The presentation id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitSelectedPresentationList")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removePresentationFromMyIndividualList($summit_id, $selection_plan_id, $track_id, $collection, $presentation_id){
         return $this->processRequest(function () use($summit_id, $selection_plan_id, $track_id, $collection,$presentation_id) {
 

@@ -16,8 +16,8 @@ use App\Audit\ConcreteFormatters\EntityCollectionUpdateAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
-use Keepsuit\LaravelOpenTelemetry\Facades\Logger;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\EmitAuditLogJob;
 /**
  * OpenTelemetry Logs Audit Strategy
  */
@@ -114,11 +114,11 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 $auditData['audit.description'] = $description;
             }
             Log::debug("AuditLogOtlpStrategy::audit sending entry to OTEL", ["user_id" => $user_id, "user_email" => $user_email]);
-            Logger::info($this->getLogMessage($event_type), $auditData);
+            EmitAuditLogJob::dispatch($this->getLogMessage($event_type), $auditData);
             Log::debug("AuditLogOtlpStrategy::audit entry sent to OTEL", ["user_id" => $user_id, "user_email" => $user_email]);
 
         } catch (\Exception $ex) {
-            Logger::warning('OTEL audit logging error: ' . $ex->getMessage(), [
+            Log::error('OTEL audit logging error: ' . $ex->getMessage(), [
                 'exception' => $ex,
                 'subject_class' => get_class($subject),
                 'event_type' => $event_type,

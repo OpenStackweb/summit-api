@@ -13,6 +13,7 @@
  **/
 
 use App\Events\SponsorServices\SponsorDomainEvents;
+use App\Events\SponsorServices\SummitSponsorCreatedEventDTO;
 use App\Events\SponsorServices\SummitSponsorshipAddOnCreatedEventDTO;
 use App\Events\SponsorServices\SummitSponsorshipCreatedEventDTO;
 use App\Events\SponsorServices\DeletedEventDTO;
@@ -51,6 +52,10 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
                 $summit_sponsor->addSponsorship($sponsorship);
                 $res[] = $sponsorship;
             }
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+                SponsorDomainEvents::SponsorUpdated);
+
             return $res;
         });
 
@@ -81,6 +86,10 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
             $summit_sponsor->removeSponsorship($sponsorship);
 
             PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+                SponsorDomainEvents::SponsorUpdated);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
                 DeletedEventDTO::fromEntity($sponsorship)->serialize(),
                 SponsorDomainEvents::SponsorshipRemoved);
         });
@@ -103,8 +112,19 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
 
             $add_on = SummitSponsorshipAddOnFactory::build($payload);
             $sponsorship->addAddOn($add_on);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+                SponsorDomainEvents::SponsorUpdated);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+                SponsorDomainEvents::SponsorshipUpdated);
+
             return $add_on;
         });
+
+
 
         PublishSponsorServiceDomainEventsJob::dispatch(
             SummitSponsorshipAddOnCreatedEventDTO::fromSponsorshipAddOn($add_on)->serialize(),
@@ -148,6 +168,14 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
             $res = SummitSponsorshipAddOnFactory::populate($add_on, $payload);
 
             PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+                SponsorDomainEvents::SponsorUpdated);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+                SponsorDomainEvents::SponsorshipUpdated);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
                 SummitSponsorshipAddOnCreatedEventDTO::fromSponsorshipAddOn($res)->serialize(),
                 SponsorDomainEvents::SponsorshipAddOnUpdated);
 
@@ -176,6 +204,14 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
                 throw new EntityNotFoundException("AddOn {$add_on_id} not found for sponsorship {$sponsorship_id}.");
 
             $sponsorship->removeAddOn($add_on);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+                SponsorDomainEvents::SponsorUpdated);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+                SponsorDomainEvents::SponsorshipUpdated);
 
             PublishSponsorServiceDomainEventsJob::dispatch(
                 DeletedEventDTO::fromEntity($add_on)->serialize(),

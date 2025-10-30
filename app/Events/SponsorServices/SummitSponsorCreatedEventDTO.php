@@ -16,22 +16,34 @@
 class SummitSponsorCreatedEventDTO
 {
     private int $id;
+
+    private int $company_id;
     private string $company_name;
+
+    private int $summit_id;
+
 
     public function __construct(
         int    $id,
+        int    $company_id,
         string $company_name,
+        int    $summit_id,
+
     )
     {
         $this->id = $id;
+        $this->company_id = $company_id;
         $this->company_name = $company_name;
+        $this->summit_id = $summit_id;
     }
 
     public static function fromSummitSponsor($sponsor): self
     {
         return new self(
             $sponsor->getId(),
-            $sponsor->getCompany()->getName()
+            $sponsor->getCompanyId(),
+            $sponsor->getCompany()->getName(),
+            $sponsor->getSummitId()
         );
     }
 
@@ -39,6 +51,8 @@ class SummitSponsorCreatedEventDTO
     {
         return [
             'id' => $this->id,
+            'summit_id' => $this->summit_id,
+            'company_id' => $this->company_id,
             'company_name' => $this->company_name
         ];
     }

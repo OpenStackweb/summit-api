@@ -13,6 +13,8 @@
  * limitations under the License.
  **/
 
+use models\summit\SummitSponsorshipAddOn;
+
 class SummitSponsorshipAddOnCreatedEventDTO
 {
     private int $id;
@@ -20,26 +22,36 @@ class SummitSponsorshipAddOnCreatedEventDTO
     private string $type;
     private string $name;
 
+    private int $sponsor_id;
+
+    private int $summit_id;
+
     public function __construct(
         int    $id,
         int    $sponsorship_id,
         string $type,
-        string $name
+        string $name,
+        int $sponsor_id,
+        int $summit_id,
     )
     {
         $this->id = $id;
         $this->sponsorship_id = $sponsorship_id;
         $this->type = $type;
         $this->name = $name;
+        $this->sponsor_id = $sponsor_id;
+        $this->summit_id = $summit_id;
     }
 
-    public static function fromSponsorshipAddOn($add_on): self
+    public static function fromSponsorshipAddOn(SummitSponsorshipAddOn $add_on): self
     {
         return new self(
             $add_on->getId(),
             $add_on->getSponsorship()->getId(),
             $add_on->getType(),
-            $add_on->getName()
+            $add_on->getName(),
+            $add_on->getSponsorship()->getSponsor()->getId(),
+            $add_on->getSponsorship()->getSponsor()->getSummitId(),
         );
     }
 
@@ -50,6 +62,8 @@ class SummitSponsorshipAddOnCreatedEventDTO
             'type' => $this->type,
             'name' => $this->name,
             'sponsorship_id' => $this->sponsorship_id,
+            'sponsor_id' => $this->sponsor_id,
+            'summit_id' => $this->summit_id,
         ];
     }
 }

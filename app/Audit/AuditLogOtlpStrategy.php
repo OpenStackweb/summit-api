@@ -112,10 +112,10 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             $auditData = $this->buildAuditLogData($entity, $subject, $change_set, $event_type, $user_id, $user_email, $user_first_name, $user_last_name);
             if (!empty($description)) {
                 $auditData['audit.description'] = $description;
+                Log::debug("AuditLogOtlpStrategy::audit sending entry to OTEL", ["user_id" => $user_id, "user_email" => $user_email]);
+                EmitAuditLogJob::dispatch($this->getLogMessage($event_type), $auditData);
+                Log::debug("AuditLogOtlpStrategy::audit entry sent to OTEL", ["user_id" => $user_id, "user_email" => $user_email]);
             }
-            Log::debug("AuditLogOtlpStrategy::audit sending entry to OTEL", ["user_id" => $user_id, "user_email" => $user_email]);
-            EmitAuditLogJob::dispatch($this->getLogMessage($event_type), $auditData);
-            Log::debug("AuditLogOtlpStrategy::audit entry sent to OTEL", ["user_id" => $user_id, "user_email" => $user_email]);
 
         } catch (\Exception $ex) {
             Log::error('OTEL audit logging error: ' . $ex->getMessage(), [

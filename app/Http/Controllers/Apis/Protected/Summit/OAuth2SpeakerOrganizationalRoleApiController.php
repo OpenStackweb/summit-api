@@ -45,8 +45,12 @@ final class OAuth2SpeakerOrganizationalRoleApiController extends OAuth2Protected
     #[OA\Get(
         path: '/api/v1/speakers/organizational-roles',
         summary: 'Get all default speaker organizational roles',
-        description: 'Retrieves a list of default organizational roles for speakers. These are predefined role types that speakers can select to describe their position or role within an organization (e.g., "Developer", "Manager", "Architect", "Executive"). Public endpoint accessible without authentication.',
+        description: 'Retrieves a list of default organizational roles for speakers. These are predefined role types that speakers can select to describe their position or role within an organization (e.g., "Developer", "Manager", "Architect", "Executive").',
         operationId: 'getAllSpeakerOrganizationalRoles',
+        security: [['summit_rsvp_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
         tags: ['Speakers'],
         parameters: [
             new OA\Parameter(

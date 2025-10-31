@@ -53,12 +53,11 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
                 description: 'Organization created successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/Organization')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 422, ref: '#/components/responses/422'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -137,10 +136,9 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
                 description: 'Success - Returns paginated list of organizations',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedOrganizationsResponse')
             ),
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request - Invalid parameters"),
-            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized - Invalid or missing access token"),
-            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - Insufficient permissions"),
-            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]

@@ -79,7 +79,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles',
         summary: 'Get all payment gateway profiles for a summit',
         description: 'Retrieves a paginated list of payment gateway profiles configured for a specific summit. Payment profiles manage payment processing for registrations and bookable rooms.',
-        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        security: [['summit_payment_gateway_oauth2' => [SummitScopes::ReadPaymentProfiles]]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -129,12 +129,9 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 description: 'Payment gateway profiles retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPaymentGatewayProfilesResponse')
             ),
-
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
-            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -143,7 +140,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Get a payment gateway profile by ID',
         description: 'Retrieves detailed information about a specific payment gateway profile.',
-        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        security: [['summit_payment_gateway_oauth2' => [SummitScopes::ReadPaymentProfiles]]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -167,12 +164,9 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 description: 'Payment gateway profile retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayProfile')
             ),
-
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
-            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -181,7 +175,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles',
         summary: 'Create a new payment gateway profile',
         description: 'Creates a new payment gateway profile for the summit. Supports Stripe and LawPay providers.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        security: [['summit_payment_gateway_oauth2' => [SummitScopes::WritePaymentProfiles]]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -205,7 +199,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -215,7 +209,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Update a payment gateway profile',
         description: 'Updates an existing payment gateway profile.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        security: [['summit_payment_gateway_oauth2' => [SummitScopes::WritePaymentProfiles]]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -246,7 +240,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -256,7 +250,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Delete a payment gateway profile',
         description: 'Deletes an existing payment gateway profile from the summit.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        security: [['summit_payment_gateway_oauth2' => [SummitScopes::WritePaymentProfiles]]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -279,11 +273,9 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 response: 204,
                 description: 'Payment gateway profile deleted successfully'
             ),
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
-            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]

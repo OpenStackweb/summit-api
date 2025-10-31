@@ -29,7 +29,7 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
     use ParametrizedGetAll;
 
     /**
-     * OAuth2MembersApiController constructor.
+     * OAuth2GroupsApiController constructor.
      * @param IGroupRepository $group_repository
      * @param IResourceServerContext $resource_server_context
      */

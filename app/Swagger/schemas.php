@@ -469,6 +469,24 @@ class ChunkedFileUploadRequestSchema
 {
 }
 
+#[OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'summit_payment_gateway_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::ReadPaymentProfiles => 'Read Payment Profiles',
+                    SummitScopes::WritePaymentProfiles => 'Write Payment Profiles',
+                ],
+            ),
+        ],
+    )
+]
+class PaymentGatewayAuthSchema{}
+
 #[OA\Schema(
     schema: 'PaginatedOrganizationsResponse',
     allOf: [

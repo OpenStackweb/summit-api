@@ -17,11 +17,13 @@ use Tests\InsertMemberTestData;
 use Tests\InsertSummitTestData;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\API\Trace\TracerInterface;
+use Illuminate\Support\Facades\DB;
+use Doctrine\ORM\PersistentCollection;
 
 class AuditOtlpStrategyTest extends OpenTelemetryTestCase
 {
-    use InsertSummitTestData;
-    use InsertMemberTestData;
+    public static $summit;
+    public static $em;
 
     private AuditLogOtlpStrategy $auditStrategy;
 
@@ -29,17 +31,20 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
     {
         parent::setUp();
 
-        self::insertMemberTestData(IGroup::TrackChairs);
-        self::$defaultMember = self::$member;
-        self::insertSummitTestData();
-
         $this->auditStrategy = $this->app->make(AuditLogOtlpStrategy::class);
+
+        if (!self::$em) {
+            self::$em = \LaravelDoctrine\ORM\Facades\EntityManager::getFacadeRoot();
+        }
+
+        if (!self::$summit) {
+            $summitRepo = self::$em->getRepository(\models\summit\Summit::class);
+            self::$summit = $summitRepo->findOneBy([]);
+        }
     }
 
     protected function tearDown(): void
     {
-        self::clearSummitTestData();
-        self::clearMemberTestData();
         parent::tearDown();
     }
 
@@ -65,13 +70,15 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
                 AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE
             );
 
+            $this->assertNotNull($span, 'Span should be created');
+            $this->assertNotEmpty($simulatedChangeSet, 'ChangeSet should not be empty');
+
             $span->setStatus(StatusCode::STATUS_OK, 'Summit audit completed');
-            $this->assertTrue(true);
 
         } catch (\Exception $e) {
             $span->recordException($e);
             $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
-            throw $e;
+            $this->fail('Audit failed: ' . $e->getMessage());
         } finally {
             $span->end();
             $spanScope->detach();
@@ -87,7 +94,12 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
         $spanScope = $span->activate();
 
         try {
-            $summitEvent = self::$summit->getEvents()[0];
+            $events = self::$summit->getEvents();
+            $this->assertNotEmpty($events, 'Summit must have events');
+            
+            $summitEvent = $events[0];
+            $this->assertNotNull($summitEvent, 'Summit event should exist');
+            
             $simulatedChangeSet = $this->createSummitEventChangeSet($summitEvent);
 
             $this->auditStrategy->audit(
@@ -96,13 +108,14 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
                 AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE
             );
 
+            $this->assertNotEmpty($simulatedChangeSet, 'Event changeSet should not be empty');
+
             $span->setStatus(StatusCode::STATUS_OK, 'SummitEvent audit completed');
-            $this->assertTrue(true);
 
         } catch (\Exception $e) {
             $span->recordException($e);
             $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
-            throw $e;
+            $this->fail('Event audit failed: ' . $e->getMessage());
         } finally {
             $span->end();
             $spanScope->detach();
@@ -115,13 +128,18 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
 
         $simulatedChangeSet = ['name' => ['Old Name', 'New Name']];
 
-        $this->auditStrategy->audit(
-            self::$summit,
-            $simulatedChangeSet,
-            AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE
-        );
+        try {
+            $this->auditStrategy->audit(
+                self::$summit,
+                $simulatedChangeSet,
+                AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE
+            );
+            $this->assertTrue(true, 'Audit works without active span');
+        } catch (\Exception $e) {
+            $this->fail('Audit should work without active span: ' . $e->getMessage());
+        }
 
-        $this->assertTrue(true);
+        $this->assertNotNull(self::$summit, 'Summit should exist');
     }
 
     public function testAuditStrategyWithEmptyChangeSet(): void
@@ -140,16 +158,90 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
             );
 
             $span->setStatus(StatusCode::STATUS_OK, 'Empty changeset audit completed');
-            $this->assertTrue(true);
+            $this->assertNotNull(self::$summit, 'Summit should still exist after empty audit');
 
         } catch (\Exception $e) {
             $span->recordException($e);
             $span->setStatus(StatusCode::STATUS_ERROR, $e->getMessage());
-            throw $e;
+            $this->fail('Audit should handle empty changeSet: ' . $e->getMessage());
         } finally {
             $span->end();
             $spanScope->detach();
         }
+    }
+
+    public function testGetCollectionTypeDoesNotTriggerLazyLoading(): void
+    {
+        $this->skipIfOpenTelemetryDisabled();
+
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+
+        $eventsCollection = self::$summit->getEvents();
+        
+        $this->assertInstanceOf(
+            PersistentCollection::class, 
+            $eventsCollection,
+            'Events should be a PersistentCollection'
+        );
+
+        DB::flushQueryLog();
+        
+        $this->auditStrategy->audit(
+            $eventsCollection,
+            ['events' => [[], [1, 2, 3]]],
+            AuditLogOtlpStrategy::EVENT_COLLECTION_UPDATE
+        );
+
+        $queries = DB::getQueryLog();
+        $queryCount = count($queries);
+
+        DB::disableQueryLog();
+
+        $this->assertLessThanOrEqual(
+            2,
+            $queryCount,
+            "getCollectionType() ejecutó $queryCount queries, máximo 2 permitidas"
+        );
+    }
+
+    public function testAuditSummitEventTagsCollectionWithOtlp(): void
+    {
+        $this->skipIfOpenTelemetryDisabled();
+
+        \DB::enableQueryLog();
+        \DB::flushQueryLog();
+
+        // Usa el summit ya gestionado
+        $events = self::$summit->getEvents();
+        $this->assertNotEmpty($events, 'Summit must have events');
+        $event = $events[0];
+
+        $tagsCollection = $event->getTags();
+        $this->assertInstanceOf(\Doctrine\ORM\PersistentCollection::class, $tagsCollection);
+
+        $this->assertGreaterThanOrEqual(2, count($tagsCollection), "El evento debe tener al menos 2 tags para el test");
+
+        $tags = [];
+        foreach ($tagsCollection as $tag) {
+            $tags[] = $tag;
+            if (count($tags) === 2) break;
+        }
+
+        \DB::flushQueryLog();
+
+        $this->auditStrategy->audit(
+            $tagsCollection,
+            ['tags' => [[], [$tags[0]->getId(), $tags[1]->getId()]]],
+            AuditLogOtlpStrategy::EVENT_COLLECTION_UPDATE
+        );
+
+        $queries = \DB::getQueryLog();
+        $this->assertLessThanOrEqual(
+            2,
+            count($queries),
+            "getCollectionType() ejecutó demasiadas queries"
+        );
     }
 
     private function skipIfOpenTelemetryDisabled(): void

@@ -74,7 +74,7 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         path: '/api/v1/summits/{id}/badge-feature-types',
         summary: 'Get all badge feature types for a summit',
         description: 'Retrieves a paginated list of badge feature types for a specific summit. Badge feature types define visual elements and features that can be applied to attendee badges (e.g., speaker ribbons, sponsor logos, special access indicators).',
-        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        security: [['Bearer' => [SummitScopes::ReadAllSummitData]]],
         tags: ['Badge Feature Types'],
         parameters: [
             new OA\Parameter(

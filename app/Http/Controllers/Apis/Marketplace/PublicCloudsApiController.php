@@ -26,7 +26,7 @@ use OpenApi\Attributes as OA;
 final class PublicCloudsApiController extends AbstractCompanyServiceApiController
 {
     /**
-     * PrivateCloudsApiController constructor.
+     * PublicCloudsApiController constructor.
      * @param IPublicCloudServiceRepository $repository
      */
     public function __construct(IPublicCloudServiceRepository $repository, IResourceServerContext $resource_server_context)

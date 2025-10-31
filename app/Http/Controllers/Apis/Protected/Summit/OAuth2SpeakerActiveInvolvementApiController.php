@@ -50,6 +50,7 @@ final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedC
         summary: 'Get all default speaker active involvements',
         description: 'Retrieves a list of default active involvements for speakers. These are predefined involvement types that speakers can select to describe their current activities (e.g., "Active Contributor", "User", "Evaluator"). Public endpoint accessible without authentication.',
         operationId: 'getAllSpeakerActiveInvolvements',
+        security: [['Bearer' => []]],
         tags: ['Speakers'],
         parameters: [
             new OA\Parameter(

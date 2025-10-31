@@ -67,7 +67,7 @@ class PaginatedMarketplaceDistributionResponseSchema
 }
 
 #[OA\Schema(
-    schema: 'PublicOrPrivateCloudsResponseSchema',
+    schema: 'PublicOrPrivateCloudsResponse',
     type: 'object',
     properties: [
         'id' => new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -90,7 +90,7 @@ class PaginatedMarketplaceDistributionResponseSchema
 class PublicOrPrivateCloudsResponseSchema {}
 
 #[OA\Schema(
-    schema: 'PaginatedPublicOrPrivateCloudsResponseSchema',
+    schema: 'PaginatedPublicOrPrivateCloudsResponse',
     allOf: [
         new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
         new OA\Schema(
@@ -99,7 +99,7 @@ class PublicOrPrivateCloudsResponseSchema {}
                 new OA\Property(
                     property: 'data',
                     type: 'array',
-                    items: new OA\Items(ref: '#/components/schemas/PublicOrPrivateCloudsResponseSchema')
+                    items: new OA\Items(ref: '#/components/schemas/PublicOrPrivateCloudsResponse')
                 )
             ]
         )

@@ -351,3 +351,93 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+#[OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'summit_payment_gateway_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::ReadPaymentProfiles => 'Read Payment Profiles',
+                    SummitScopes::WritePaymentProfiles => 'Write Payment Profiles',
+                ],
+            ),
+        ],
+    )
+]
+class PaymentGatewayAuthSchema{}
+
+#[OA\Schema(
+    schema: 'PaymentGatewayProfile',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', format: 'int64', example: 1633024800),
+        new OA\Property(property: 'last_edited', type: 'integer', format: 'int64', example: 1633024800),
+        new OA\Property(property: 'active', type: 'boolean', example: true),
+        new OA\Property(property: 'provider', type: 'string', enum: ['Stripe', 'LawPay'], example: 'Stripe'),
+        new OA\Property(property: 'application_type', type: 'string', enum: ['Registration', 'BookableRooms'], example: 'Registration'),
+        new OA\Property(property: 'test_mode_enabled', type: 'boolean', example: false, description: 'Only for Stripe provider'),
+        new OA\Property(property: 'live_publishable_key', type: 'string', example: 'pk_live_...', description: 'Only for Stripe provider'),
+        new OA\Property(property: 'test_publishable_key', type: 'string', example: 'pk_test_...', description: 'Only for Stripe provider'),
+    ]
+)]
+class PaymentGatewayProfileSchema {}
+
+#[OA\Schema(
+    schema: 'PaginatedPaymentGatewayProfilesResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/PaymentGatewayProfile')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedPaymentGatewayProfilesResponseSchema {}
+
+#[OA\Schema(
+    schema: 'PaymentGatewayProfileCreateRequest',
+    required: ['active', 'provider', 'application_type'],
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'active', type: 'boolean', example: true),
+        new OA\Property(property: 'provider', type: 'string', enum: ['Stripe', 'LawPay'], example: 'Stripe'),
+        new OA\Property(property: 'application_type', type: 'string', enum: ['Registration', 'BookableRooms'], example: 'Registration'),
+        new OA\Property(property: 'test_mode_enabled', type: 'boolean', example: false, description: 'Required for Stripe provider'),
+        new OA\Property(property: 'live_secret_key', type: 'string', example: 'sk_live_...', description: 'Optional for Stripe provider'),
+        new OA\Property(property: 'live_publishable_key', type: 'string', example: 'pk_live_...', description: 'Required with live_secret_key for Stripe'),
+        new OA\Property(property: 'test_secret_key', type: 'string', example: 'sk_test_...', description: 'Optional for Stripe provider'),
+        new OA\Property(property: 'test_publishable_key', type: 'string', example: 'pk_test_...', description: 'Required with test_secret_key for Stripe'),
+        new OA\Property(property: 'send_email_receipt', type: 'boolean', example: true, description: 'Optional for Stripe provider'),
+        new OA\Property(property: 'merchant_account_id', type: 'string', example: 'merchant_123', description: 'Optional for LawPay provider'),
+    ]
+)]
+class PaymentGatewayProfileCreateRequestSchema {}
+
+#[OA\Schema(
+    schema: 'PaymentGatewayProfileUpdateRequest',
+    required: ['provider'],
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'active', type: 'boolean', example: true),
+        new OA\Property(property: 'provider', type: 'string', enum: ['Stripe', 'LawPay'], example: 'Stripe'),
+        new OA\Property(property: 'application_type', type: 'string', enum: ['Registration', 'BookableRooms'], example: 'Registration'),
+        new OA\Property(property: 'test_mode_enabled', type: 'boolean', example: false, description: 'Required for Stripe provider'),
+        new OA\Property(property: 'live_secret_key', type: 'string', example: 'sk_live_...', description: 'Optional for Stripe provider'),
+        new OA\Property(property: 'live_publishable_key', type: 'string', example: 'pk_live_...', description: 'Required with live_secret_key for Stripe'),
+        new OA\Property(property: 'test_secret_key', type: 'string', example: 'sk_test_...', description: 'Optional for Stripe provider'),
+        new OA\Property(property: 'test_publishable_key', type: 'string', example: 'pk_test_...', description: 'Required with test_secret_key for Stripe'),
+        new OA\Property(property: 'send_email_receipt', type: 'boolean', example: true, description: 'Optional for Stripe provider'),
+        new OA\Property(property: 'merchant_account_id', type: 'string', example: 'merchant_123', description: 'Optional for LawPay provider'),
+    ]
+)]
+class PaymentGatewayProfileUpdateRequestSchema {}

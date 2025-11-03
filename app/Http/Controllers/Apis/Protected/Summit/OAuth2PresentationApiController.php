@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
+
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +22,10 @@ use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitPresentationCommentRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -36,6 +41,7 @@ use models\summit\SummitPresentationComment;
 use models\utils\IEntity;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use services\model\IPresentationService;
 use utils\Filter;
 use utils\FilterElement;
@@ -111,6 +117,28 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
     //videos
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/videos",
+        summary: "Get all videos from a presentation",
+        operationId: "getPresentationVideos",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/PresentationVideo")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationVideos($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -142,12 +170,26 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $video_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/videos/{video_id}",
+        summary: "Get a video from a presentation",
+        operationId: "getPresentationVideo",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'video_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationVideo")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationVideo($summit_id, $presentation_id, $video_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $video_id) {
@@ -172,12 +214,33 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/videos",
+        summary: "Add a video to a presentation",
+        operationId: "addPresentationVideo",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationVideoRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationVideo")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addVideo(LaravelRequest $request, $summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
@@ -201,13 +264,34 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $video_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/videos/{video_id}",
+        summary: "Update a video from a presentation",
+        operationId: "updatePresentationVideo",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'video_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationVideoRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationVideo")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateVideo(LaravelRequest $request, $summit_id, $presentation_id, $video_id)
     {
         return $this->processRequest(function () use ($request, $summit_id, $presentation_id, $video_id) {
@@ -231,12 +315,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $video_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/videos/{video_id}",
+        summary: "Delete a video from a presentation",
+        operationId: "deletePresentationVideo",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'video_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deleteVideo($summit_id, $presentation_id, $video_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $video_id) {
@@ -251,10 +348,32 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations",
+        summary: "Submit a presentation",
+        operationId: "submitPresentation",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationSubmissionRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/Presentation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function submitPresentation($summit_id)
     {
 
@@ -284,11 +403,27 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}",
+        summary: "Get a presentation submission",
+        operationId: "getPresentationSubmission",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationSubmission")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationSubmission($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -318,11 +453,33 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}",
+        summary: "Update a presentation submission",
+        operationId: "updatePresentationSubmission",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationSubmissionRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/Presentation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updatePresentationSubmission($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -357,11 +514,28 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/completed",
+        summary: "Mark a presentation submission as completed",
+        operationId: "completePresentationSubmission",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/Presentation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function completePresentationSubmission($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -386,11 +560,24 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}",
+        summary: "Delete a presentation",
+        operationId: "deletePresentation",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deletePresentation($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -415,11 +602,28 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
     // Slides
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/slides",
+        summary: "Get all slides from a presentation",
+        operationId: "getPresentationSlides",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/PresentationSlide")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationSlides($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -450,12 +654,26 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $slide_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/slides/{slide_id}",
+        summary: "Get a slide from a presentation",
+        operationId: "getPresentationSlide",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'slide_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationSlide")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationSlide($summit_id, $presentation_id, $slide_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $slide_id) {
@@ -479,12 +697,36 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/slides",
+        summary: "Add a slide to a presentation",
+        operationId: "addPresentationSlide",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(ref: "#/components/schemas/PresentationSlideRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationSlide")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addPresentationSlide(LaravelRequest $request, $summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
@@ -541,13 +783,37 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $slide_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/slides/{slide_id}",
+        summary: "Update a slide from a presentation",
+        operationId: "updatePresentationSlide",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'slide_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(ref: "#/components/schemas/PresentationSlideRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationSlide")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updatePresentationSlide(LaravelRequest $request, $summit_id, $presentation_id, $slide_id)
     {
         return $this->processRequest(function () use ($request, $summit_id, $presentation_id, $slide_id) {
@@ -604,12 +870,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $slide_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/slides/{slide_id}",
+        summary: "Delete a slide from a presentation",
+        operationId: "deletePresentationSlide",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'slide_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deletePresentationSlide($summit_id, $presentation_id, $slide_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $slide_id) {
@@ -638,11 +917,28 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
     // Links
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/links",
+        summary: "Get all links from a presentation",
+        operationId: "getPresentationLinks",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/PresentationLink")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationLinks($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -673,12 +969,26 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $link_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/links/{link_id}",
+        summary: "Get a link from a presentation",
+        operationId: "getPresentationLink",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'link_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationLink")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationLink($summit_id, $presentation_id, $link_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $link_id) {
@@ -704,12 +1014,36 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/links",
+        summary: "Add a link to a presentation",
+        operationId: "addPresentationLink",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(ref: "#/components/schemas/PresentationLinkRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationLink")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addPresentationLink(LaravelRequest $request, $summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
@@ -758,13 +1092,37 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $link_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/links/{link_id}",
+        summary: "Update a link from a presentation",
+        operationId: "updatePresentationLink",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'link_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(ref: "#/components/schemas/PresentationLinkRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationLink")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updatePresentationLink(LaravelRequest $request, $summit_id, $presentation_id, $link_id)
     {
         return $this->processRequest(function () use ($request, $summit_id, $presentation_id, $link_id) {
@@ -814,12 +1172,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $link_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/links/{link_id}",
+        summary: "Delete a link from a presentation",
+        operationId: "deletePresentationLink",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'link_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deletePresentationLink($summit_id, $presentation_id, $link_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $link_id) {
@@ -847,11 +1218,28 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
     // MediaUploads
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads",
+        summary: "Get all media uploads from a presentation",
+        operationId: "getPresentationMediaUploads",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/PresentationMediaUpload")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationMediaUploads($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -882,12 +1270,26 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $media_upload_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}",
+        summary: "Get a media upload from a presentation",
+        operationId: "getPresentationMediaUpload",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'media_upload_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationMediaUpload")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationMediaUpload($summit_id, $presentation_id, $media_upload_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $media_upload_id) {
@@ -912,12 +1314,36 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads",
+        summary: "Add a media upload to a presentation",
+        operationId: "addPresentationMediaUpload",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(ref: "#/components/schemas/PresentationMediaUploadRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationMediaUpload")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addPresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($request, $summit_id, $presentation_id) {
@@ -978,13 +1404,37 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $media_upload_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}",
+        summary: "Update a media upload from a presentation",
+        operationId: "updatePresentationMediaUpload",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'media_upload_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(ref: "#/components/schemas/PresentationMediaUploadRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationMediaUpload")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updatePresentationMediaUpload(LaravelRequest $request, $summit_id, $presentation_id, $media_upload_id)
     {
         return $this->processRequest(function () use ($request, $summit_id, $presentation_id, $media_upload_id) {
@@ -1045,12 +1495,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $media_upload_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}",
+        summary: "Delete a media upload from a presentation",
+        operationId: "deletePresentationMediaUpload",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'media_upload_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deletePresentationMediaUpload($summit_id, $presentation_id, $media_upload_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $media_upload_id) {
@@ -1078,10 +1541,29 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations/all/import/mux",
+        summary: "Import assets from MUX",
+        operationId: "importAssetsFromMUX",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/MuxImportRequest")
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function importAssetsFromMUX($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -1126,11 +1608,21 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * Attendees Votes
      */
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/votes",
+        summary: "Get attendee votes for a presentation",
+        operationId: "getAttendeeVotes",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAttendeeVotes($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -1142,11 +1634,28 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/vote",
+        summary: "Cast an attendee vote for a presentation",
+        operationId: "castAttendeeVote",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationVote")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function castAttendeeVote($summit_id, $presentation_id)
     {
 
@@ -1173,11 +1682,24 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/vote",
+        summary: "Remove an attendee vote for a presentation",
+        operationId: "unCastAttendeeVote",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function unCastAttendeeVote($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -1194,13 +1716,29 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $presentation_id
-     * @param $score_type_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/scores/{score_type_id}",
+        summary: "Add a track chair score to a presentation",
+        operationId: "addTrackChairScore",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'selection_plan_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'score_type_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationTrackChairScore")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addTrackChairScore($summit_id, $selection_plan_id, $presentation_id, $score_type_id)
     {
 
@@ -1229,13 +1767,26 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $presentation_id
-     * @param $score_type_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/scores/{score_type_id}",
+        summary: "Remove a track chair score from a presentation",
+        operationId: "removeTrackChairScore",
+        security: [['summit_oauth2' => [SummitScopes::WriteTrackChairData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'selection_plan_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'score_type_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeTrackChairScore($summit_id, $selection_plan_id, $presentation_id, $score_type_id)
     {
 
@@ -1255,12 +1806,33 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $speaker_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}",
+        summary: "Add a speaker to a presentation",
+        operationId: "addSpeaker2Presentation",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'speaker_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationSpeakerRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/Presentation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addSpeaker2Presentation($summit_id, $presentation_id, $speaker_id)
     {
 
@@ -1287,12 +1859,33 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $speaker_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}",
+        summary: "Update a speaker in a presentation",
+        operationId: "updateSpeakerInPresentation",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'speaker_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationSpeakerRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/Presentation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateSpeakerInPresentation($summit_id, $presentation_id, $speaker_id)
     {
 
@@ -1322,12 +1915,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $speaker_id
-     * @return JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}",
+        summary: "Remove a speaker from a presentation",
+        operationId: "removeSpeakerFromPresentation",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'speaker_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeSpeakerFromPresentation($summit_id, $presentation_id, $speaker_id)
     {
 
@@ -1349,11 +1955,29 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
 
     use ParametrizedGetAll;
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return JsonResponse
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/comments",
+        summary: "Get all comments from a presentation",
+        operationId: "getPresentationComments",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedPresentationComments")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getComments($summit_id, $presentation_id)
     {
 
@@ -1405,6 +2029,26 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}",
+        summary: "Get a comment from a presentation",
+        operationId: "getPresentationComment",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'comment_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitPresentationComment")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getComment($summit_id, $presentation_id, $comment_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
@@ -1427,12 +2071,25 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $comment_id
-     * @return mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}",
+        summary: "Delete a comment from a presentation",
+        operationId: "deletePresentationComment",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'comment_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deleteComment($summit_id, $presentation_id, $comment_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
@@ -1446,11 +2103,33 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     }
 
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/comments",
+        summary: "Add a comment to a presentation",
+        operationId: "addPresentationComment",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationCommentRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitPresentationComment")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addComment($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {
@@ -1471,12 +2150,34 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @param $comment_id
-     * @return mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}",
+        summary: "Update a comment from a presentation",
+        operationId: "updatePresentationComment",
+        security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'comment_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationCommentRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitPresentationComment")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateComment($summit_id, $presentation_id, $comment_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id, $comment_id) {
@@ -1497,11 +2198,28 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $presentation_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/extra-questions",
+        summary: "Get extra question answers from a presentation",
+        operationId: "getPresentationsExtraQuestions",
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filter by selection_plan_id'),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedExtraQuestionAnswers")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getPresentationsExtraQuestions($summit_id, $presentation_id)
     {
         return $this->processRequest(function () use ($summit_id, $presentation_id) {

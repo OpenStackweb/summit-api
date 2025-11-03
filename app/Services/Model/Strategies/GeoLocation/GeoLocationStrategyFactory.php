@@ -20,11 +20,19 @@ final class GeoLocationStrategyFactory
 {
     /**
      * @param SummitGeoLocatedLocation $location
-     * @return IGeoLocationStrategy
+     * @return IGeoLocationStrategy|null
      */
-    public static function build(SummitGeoLocatedLocation $location){
-        if (!empty($location->getAddress1()))
+    public static function build(SummitGeoLocatedLocation $location):?IGeoLocationStrategy{
+        $has_address = !empty($location->getAddress1()) &&
+                !empty($location->getZipCode())&&
+                !empty($location->getState()) &&
+                !empty($location->getCity()) &&
+                !empty($location->getCountry());
+        $has_lat_lng = !empty($location->getLat()) && !empty($location->getLng());
+        if ($has_address && !$has_lat_lng)
             return new GeoLocationAddressInfoStrategy();
-        return new GeoLocationReverseStrategy();
+        if($has_lat_lng && !$has_address)
+            return new GeoLocationReverseStrategy();
+        return null;
     }
 }

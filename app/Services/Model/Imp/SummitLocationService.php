@@ -164,7 +164,8 @@ final class SummitLocationService
             if ($location instanceof SummitGeoLocatedLocation) {
                 try {
                     $geo_location_strategy = GeoLocationStrategyFactory::build($location);
-                    $geo_location_strategy->doGeoLocation($location, $this->geo_coding_api);
+                    if(!is_null($geo_location_strategy))
+                        $geo_location_strategy->doGeoLocation($location, $this->geo_coding_api);
                 } catch (GeoCodingApiException $ex1) {
                     Log::warning($ex1->getMessage());
                     $validation_msg = trans('validation_errors.LocationService.addLocation.geoCodingGenericError');

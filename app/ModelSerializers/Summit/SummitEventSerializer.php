@@ -122,7 +122,7 @@ class SummitEventSerializer extends SilverStripeSerializer
     ];
 
     /**
-     * @param null $expand
+     * @param string|null $expand
      * @param array $fields
      * @param array $relations
      * @param array $params

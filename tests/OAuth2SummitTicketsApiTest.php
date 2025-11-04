@@ -950,4 +950,38 @@ CSV;
         $this->assertTrue(!is_null($tickets));
         return $tickets;
     }
+
+    public function testGetAllTicketsWithoutPromoCode()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 10,
+            'filter' => [
+                'has_promo_code==0',
+            ],
+            'order' => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $tickets = json_decode($content);
+        $this->assertTrue(!is_null($tickets));
+        return $tickets;
+    }
 }

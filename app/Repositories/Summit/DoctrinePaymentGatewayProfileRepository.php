@@ -54,4 +54,15 @@ final class DoctrinePaymentGatewayProfileRepository
             'application_type' => 'e.application_type',
         ];
     }
+
+    /**
+     * @param $external_id
+     * @return PaymentGatewayProfile|null
+     */
+    public function getByExternalId($external_id): ?PaymentGatewayProfile
+    {
+        return $this->findOneBy([
+            'external_id' => $external_id
+        ]);
+    }
 }

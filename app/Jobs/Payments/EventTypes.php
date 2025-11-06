@@ -1,6 +1,6 @@
-<?php namespace App\Models\Foundation\Summit\Repositories;
-/**
- * Copyright 2020 OpenStack Foundation
+<?php namespace App\Jobs\Payments;
+/*
+ * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,17 +12,13 @@
  * limitations under the License.
  **/
 
-use models\summit\PaymentGatewayProfile;
-use models\utils\IBaseRepository;
 /**
- * Interface IPaymentGatewayProfileRepository
- * @package App\Models\Foundation\Summit\Repositories
+ * Class EventTypes
+ * @package App\Jobs\SponsorServices
  */
-interface IPaymentGatewayProfileRepository extends IBaseRepository
+final class EventTypes
 {
-    /**
-     * @param $external_id
-     * @return PaymentGatewayProfile|null
-     */
-    public function getByExternalId($external_id):?PaymentGatewayProfile;
+    const string PAYMENT_PROFILE_CREATED = 'payment_profile_created';
+    const string PAYMENT_PROFILE_UPDATED = 'payment_profile_updated';
+    const string PAYMENT_PROFILE_DELETED = 'payment_profile_deleted';
 }

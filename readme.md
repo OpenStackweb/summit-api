@@ -25,10 +25,10 @@ run following commands on root folder
    * php artisan route:cache
    * give proper rights to storage folder (775 and proper users)
    * chmod 777 vendor/ezyang/htmlpurifier/library/HTMLPurifier/DefinitionCache/Serializer
-   
+
 ## Permissions
 
-Laravel may require some permissions to be configured: folders within storage and vendor require write access by the web server.   
+Laravel may require some permissions to be configured: folders within storage and vendor require write access by the web server.
 
 ## create SS schema
 
@@ -60,15 +60,17 @@ php artisan doctrine:migrations:generate --connection=model --create=<table-name
 php artisan doctrine:migrations:status --connection=model
 
 ## run
-php artisan doctrine:migrations:migrate --connection=model 
+php artisan doctrine:migrations:migrate --connection=model
 
 ## Queues
 
 php artisan queue:work
 
 ## message brokers
+
 - php artisan queue:work message_broker
 - php artisan queue:work sponsor_users_sync_consumer
+- php artisan queue:work payments_sync_consumer
 
 ### Set up rabbitmq exchange, queue and bindings for Domain Events
 - php artisan mq:setup_domain_events_message_broker

@@ -1,6 +1,6 @@
-<?php namespace App\Models\Foundation\Summit\Repositories;
+<?php namespace App\Services\Apis;
 /**
- * Copyright 2020 OpenStack Foundation
+ * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,18 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-use models\summit\PaymentGatewayProfile;
-use models\utils\IBaseRepository;
-/**
- * Interface IPaymentGatewayProfileRepository
- * @package App\Models\Foundation\Summit\Repositories
- */
-interface IPaymentGatewayProfileRepository extends IBaseRepository
+interface IPaymentsApi
 {
     /**
-     * @param $external_id
-     * @return PaymentGatewayProfile|null
+     * @param int $summit_id
+     * @param int $id
+     * @return mixed|null
+     * @throws \Exception
      */
-    public function getByExternalId($external_id):?PaymentGatewayProfile;
+    public function getPaymentProfile(int $summit_id, int $id);
 }

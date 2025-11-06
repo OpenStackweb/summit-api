@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Services\Apis\IPaymentGatewayAPI;
-use App\Services\Apis\PaymentGateways\StripeApi;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 use models\utils\SilverstripeBaseModel;
@@ -36,6 +35,12 @@ abstract class PaymentGatewayProfile extends SilverstripeBaseModel
      */
     #[ORM\Column(name: 'IsActive', type: 'boolean')]
     protected $active;
+
+    /**
+     * @var string
+     */
+    #[ORM\Column(name: 'ExternalId', type: 'string')]
+    protected $external_id;
 
     /**
      * @var string
@@ -324,4 +329,12 @@ abstract class PaymentGatewayProfile extends SilverstripeBaseModel
     abstract public function buildWebHook(): void;
 
     abstract protected function clearWebHooks():void;
+
+    public function setExternalId(string $external_id): void{
+        $this->external_id = $external_id;
+    }
+
+    public function getExternalId(): ?string{
+        return $this->external_id;
+    }
 }

@@ -58,6 +58,10 @@ final class PaymentGatewayProfileFactory
             $profile->setSummit($params['summit']);
         }
 
+        if(isset($params['external_id'])){
+            $profile->setExternalId(trim($params['external_id']));
+        }
+
         $profile->setTestKeys([
             'publishable_key' => $test_publishable_key,
             'secret_key'      => $test_secret_key

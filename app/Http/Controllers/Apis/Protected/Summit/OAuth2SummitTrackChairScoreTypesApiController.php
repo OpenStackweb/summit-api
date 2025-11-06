@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
+
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +15,17 @@
  * limitations under the License.
  **/
 
-use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairScoreTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ITrackChairRankingService;
+use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\utils\IBaseRepository;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use utils\Filter;
 use utils\FilterElement;
 
@@ -90,12 +94,94 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         return $this->repository;
     }
 
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $type_id Track Chair Rating Type Id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types",
+        description: "Get all track chair score types for a rating type",
+        summary: "Get track chair score types",
+        operationId: "getTrackChairScoreTypes",
+        tags: ['Track Chair Score Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'selection_plan_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The selection plan id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The rating type id'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1),
+                description: 'Page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10),
+                description: 'Items per page'
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Filter operators: type_id==, name@@/=@/=='
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Order by fields: id, score, name'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to expand: type'
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to include: type'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedPresentationTrackChairScoreTypesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getTrackChairScoreTypes($summit_id, $selection_plan_id, $type_id) {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -139,13 +225,71 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         );
     }
 
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $type_id Track Chair Rating Type Id
-     * @param $score_type_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}",
+        description: "Get a specific track chair score type",
+        summary: "Get track chair score type",
+        operationId: "getTrackChairScoreType",
+        tags: ['Track Chair Score Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'selection_plan_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The selection plan id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The rating type id'
+            ),
+            new OA\Parameter(
+                name: 'score_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The score type id'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to expand: type'
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Relations to include: type'
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationTrackChairScoreType")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getTrackChairScoreType($summit_id, $selection_plan_id, $type_id, $score_type_id) {
 
         return $this->processRequest(function () use ($summit_id, $selection_plan_id, $type_id, $score_type_id) {
@@ -171,12 +315,54 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $type_id Track Chair Rating Type Id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types",
+        description: "Create a new track chair score type",
+        summary: "Create track chair score type",
+        operationId: "addTrackChairScoreType",
+        tags: ['Track Chair Score Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'selection_plan_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The selection plan id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The rating type id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationTrackChairScoreTypeCreateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationTrackChairScoreType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addTrackChairScoreType($summit_id, $selection_plan_id, $type_id) {
 
         return $this->processRequest(function () use ($summit_id, $selection_plan_id, $type_id) {
@@ -200,13 +386,61 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $type_id Track Chair Rating Type Id
-     * @param $score_type_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}",
+        description: "Update an existing track chair score type",
+        summary: "Update track chair score type",
+        operationId: "updateTrackChairScoreType",
+        tags: ['Track Chair Score Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'selection_plan_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The selection plan id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The rating type id'
+            ),
+            new OA\Parameter(
+                name: 'score_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The score type id'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/PresentationTrackChairScoreTypeUpdateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationTrackChairScoreType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function updateTrackChairScoreType($summit_id, $selection_plan_id, $type_id, $score_type_id) {
 
         return $this->processRequest(function () use ($summit_id, $selection_plan_id, $type_id, $score_type_id) {
@@ -230,13 +464,51 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $selection_plan_id
-     * @param $type_id Track Chair Rating Type Id
-     * @param $score_type_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}",
+        description: "Delete a track chair score type",
+        summary: "Delete track chair score type",
+        operationId: "deleteTrackChairScoreType",
+        tags: ['Track Chair Score Types'],
+        security: [['summit_oauth2' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'selection_plan_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The selection plan id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The rating type id'
+            ),
+            new OA\Parameter(
+                name: 'score_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The score type id'
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'No Content'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function deleteTrackChairScoreType($summit_id, $selection_plan_id, $type_id, $score_type_id) {
 
         return $this->processRequest(function () use ($summit_id, $selection_plan_id, $type_id, $score_type_id) {

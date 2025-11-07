@@ -79,7 +79,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles',
         summary: 'Get all payment gateway profiles for a summit',
         description: 'Retrieves a paginated list of payment gateway profiles configured for a specific summit. Payment profiles manage payment processing for registrations and bookable rooms.',
-        security: [['summit_payment_gateway_oauth2' => [SummitScopes::ReadPaymentProfiles]]],
+        security: [['summit_payment_gateway_oauth2' =>
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadPaymentProfiles
+        ]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -140,7 +143,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Get a payment gateway profile by ID',
         description: 'Retrieves detailed information about a specific payment gateway profile.',
-        security: [['summit_payment_gateway_oauth2' => [SummitScopes::ReadPaymentProfiles]]],
+        security: [['summit_payment_gateway_oauth2' =>
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadPaymentProfiles
+        ]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -175,7 +181,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles',
         summary: 'Create a new payment gateway profile',
         description: 'Creates a new payment gateway profile for the summit. Supports Stripe and LawPay providers.',
-        security: [['summit_payment_gateway_oauth2' => [SummitScopes::WritePaymentProfiles]]],
+        security: [['summit_payment_gateway_oauth2' =>
+            SummitScopes::WriteSummitData,
+            SummitScopes::WritePaymentProfiles
+        ]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -209,7 +218,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Update a payment gateway profile',
         description: 'Updates an existing payment gateway profile.',
-        security: [['summit_payment_gateway_oauth2' => [SummitScopes::WritePaymentProfiles]]],
+        security: [['summit_payment_gateway_oauth2' =>
+            SummitScopes::WriteSummitData,
+            SummitScopes::WritePaymentProfiles
+        ]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -250,7 +262,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Delete a payment gateway profile',
         description: 'Deletes an existing payment gateway profile from the summit.',
-        security: [['summit_payment_gateway_oauth2' => [SummitScopes::WritePaymentProfiles]]],
+        security: [['summit_payment_gateway_oauth2' =>
+            SummitScopes::WriteSummitData,
+            SummitScopes::WritePaymentProfiles
+        ]],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(

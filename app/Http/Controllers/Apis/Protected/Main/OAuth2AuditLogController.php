@@ -58,8 +58,8 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
         summary: 'Get all audit logs',
         operationId: 'getAllAuditLogs',
         tags: ['Audit Logs'],
-        security: [['summit_rsvp_oauth2' => [
-            SummitScopes::ReadAllSummitData,
+        security: [['audit_logs_oauth2' => [
+            SummitScopes::ReadAuditLogs,
         ]]],
         parameters: [
             new OA\Parameter(

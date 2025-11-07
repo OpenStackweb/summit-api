@@ -371,3 +371,36 @@ class ChunkedFileUploadProgressResponseSchema {}
     ]
 )]
 class ChunkedFileUploadCompleteResponseSchema {}
+
+#[OA\Schema(
+    schema: 'ChunkedFileUploadRequest',
+    type: 'object',
+    required: ['file'],
+    properties: [
+        new OA\Property(
+            property: 'file',
+            type: 'string',
+            format: 'binary',
+            description: 'File to upload (can be a chunk of a larger file)'
+        ),
+        new OA\Property(
+            property: 'resumableChunkNumber',
+            type: 'integer',
+            description: 'Current chunk number (for resumable.js library)',
+            example: 1
+        ),
+        new OA\Property(
+            property: 'resumableTotalChunks',
+            type: 'integer',
+            description: 'Total number of chunks (for resumable.js library)',
+            example: 5
+        ),
+        new OA\Property(
+            property: 'resumableIdentifier',
+            type: 'string',
+            description: 'Unique identifier for the file upload session (for resumable.js library)',
+            example: '12345-myfile-jpg'
+        ),
+    ]
+)]
+class ChunkedFileUploadRequestSchema {}

@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,35 +46,7 @@ class OAuth2ChunkedFilesApiController extends UploadController
             required: true,
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
-                schema: new OA\Schema(
-                    required: ['file'],
-                    properties: [
-                        new OA\Property(
-                            property: 'file',
-                            type: 'string',
-                            format: 'binary',
-                            description: 'File to upload (can be a chunk of a larger file)'
-                        ),
-                        new OA\Property(
-                            property: 'resumableChunkNumber',
-                            type: 'integer',
-                            description: 'Current chunk number (for resumable.js library)',
-                            example: 1
-                        ),
-                        new OA\Property(
-                            property: 'resumableTotalChunks',
-                            type: 'integer',
-                            description: 'Total number of chunks (for resumable.js library)',
-                            example: 5
-                        ),
-                        new OA\Property(
-                            property: 'resumableIdentifier',
-                            type: 'string',
-                            description: 'Unique identifier for the file upload session (for resumable.js library)',
-                            example: '12345-myfile-jpg'
-                        ),
-                    ]
-                )
+                schema: new OA\Schema(ref: '#/components/schemas/ChunkedFileUploadRequest')
             )
         ),
         responses: [

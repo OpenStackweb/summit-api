@@ -41,7 +41,7 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
     #[OA\Post(
         path: '/api/v1/organizations',
         summary: 'Creates a new organization',
-        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData, SummitScopes::WriteSummitData]]],
+        security: [['oauth2_security_scope' => [SummitScopes::WriteOrganizationData]]],
         tags: ['organizations'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -85,8 +85,8 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
         summary: 'Get all organizations',
         operationId: 'getAllOrganizations',
         tags: ['Organizations'],
-        security: [['summit_rsvp_oauth2' => [
-            SummitScopes::ReadAllSummitData,
+        security: [['oauth2_security_scope' => [
+            SummitScopes::ReadOrganizationData,
         ]]],
         parameters: [
             new OA\Parameter(

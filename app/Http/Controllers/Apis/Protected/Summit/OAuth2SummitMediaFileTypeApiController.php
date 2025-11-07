@@ -67,7 +67,7 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         path: '/api/v1/summit-media-file-types',
         summary: 'Get all summit media file types',
         description: 'Retrieves a paginated list of summit media file types. Media file types define categories of files that can be uploaded to summits (e.g., presentations, videos, documents) along with their allowed file extensions.',
-        security: [['Bearer' => [SummitScopes::ReadSummitMediaFileTypes]]],
+        security: [['oauth2_security_scope' => [SummitScopes::ReadSummitMediaFileTypes]]],
         tags: ['Summit Media File Types'],
         parameters: [
             new OA\Parameter(

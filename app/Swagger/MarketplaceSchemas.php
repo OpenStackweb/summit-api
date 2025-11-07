@@ -159,9 +159,7 @@ class PaginatedAppliancesResponseSchema
         'hardware_spec' => new OA\Property(property: 'hardware_spec', type: 'string', example: 'High-performance servers with SSD storage'),
         'pricing_models' => new OA\Property(property: 'pricing_models', type: 'string', example: 'Monthly subscription, Pay-as-you-use'),
         'published_sla' => new OA\Property(property: 'published_sla', type: 'string', example: '99.9% uptime guarantee'),
-        'is_vendor_managed_upgrades' => new OA\Property(property: 'is_vendor_managed_upgrades', type: 'boolean', example: true)
-    ],
-    anyOf: [
+        'is_vendor_managed_upgrades' => new OA\Property(property: 'is_vendor_managed_upgrades', type: 'boolean', example: true),
         'company_id' => new OA\Property(property: 'company_id', type: 'integer', example: 1),
         'company' => new OA\Property(property: 'company', type: 'Company'),
         'type_id' => new OA\Property(property: 'type_id', type: 'integer'),

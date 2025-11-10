@@ -30,7 +30,7 @@ use utils\FilterElement;
 
 #[OA\SecurityScheme(
     type: 'oauth2',
-    securityScheme: 'OAuth2SummitAttendeeBadgePrintApiController_security_scheme',
+    securityScheme: 'OAuth2SummitAttendeeBadgePrintApiControllerSecurity',
     flows: [
         new OA\Flow(
             authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
@@ -45,7 +45,7 @@ use utils\FilterElement;
     ],
 )
 ]
-class RSVPAuthSchema
+class OAuth2SummitAttendeeBadgePrintApiControllerSecurityScheme
 {
 }
 
@@ -82,7 +82,7 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
         description: "Returns a paginated list of badge print records for a specific ticket. Allows ordering, filtering and pagination.",
         security: [
             [
-                "OAuth2SummitAttendeeBadgePrintApiController_security_scheme" => [
+                "OAuth2SummitAttendeeBadgePrintApiControllerSecurity" => [
                     SummitScopes::ReadAllSummitData
                 ]
             ]

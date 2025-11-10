@@ -29,6 +29,31 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 
+
+#[OA\SecurityScheme(
+    type: 'oauth2',
+    securityScheme: 'OAuth2CompaniesApiControllerAuthSchema',
+    flows: [
+        new OA\Flow(
+            authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+            tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+            flow: 'authorizationCode',
+            scopes: [
+                CompanyScopes::Read => 'Read Data',
+                CompanyScopes::Write => 'Write Data',
+                SummitScopes::ReadSummitData => 'Read Summit Data',
+                SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                SummitScopes::WriteSummitData => 'Write Summit Data',
+            ],
+        ),
+    ],
+)
+]
+class OAuth2CompaniesApiControllerAuthSchema
+{
+}
+
+
 /**
  * Class OAuth2CompaniesApiController
  * @package App\Http\Controllers
@@ -36,6 +61,54 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: "/api/v1/companies/{id}",
     summary: "Get a specific company",
+    description: "Returns detailed information about a specific company",
+    security: [
+        [
+            "OAuth2CompaniesApiControllerAuthSchema" => [
+                CompanyScopes::Read,
+            ]
+        ]
+    ],
+    tags: ["Companies"],
+    parameters: [
+        new OA\Parameter(
+            name: "id",
+            in: "path",
+            required: true,
+            description: "Company ID",
+            schema: new OA\Schema(type: "integer")
+        ),
+        new OA\Parameter(
+            name: "expand",
+            in: "query",
+            required: false,
+            description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+            schema: new OA\Schema(type: "string")
+        ),
+        new OA\Parameter(
+            name: "relations",
+            in: "query",
+            required: false,
+            description: "Load relations. Available: sponsorships, project_sponsorships",
+            schema: new OA\Schema(type: "string")
+        ),
+    ],
+    responses: [
+        new OA\Response(
+            response: Response::HTTP_OK,
+            description: "Success",
+            content: new OA\JsonContent(ref: "#/components/schemas/Company")
+        ),
+        new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+    ]
+)]
+/**
+ * Class OAuth2CompaniesApiController
+ * @package App\Http\Controllers
+ */
+#[OA\Get(
+    path: "/api/public/v1/companies/{id}",
+    summary: "Get a specific company (Public)",
     description: "Returns detailed information about a specific company",
     tags: ["Companies"],
     parameters: [
@@ -74,7 +147,13 @@ use OpenApi\Attributes as OA;
     path: "/api/v1/companies",
     summary: "Create a new company",
     description: "Creates a new company",
-    security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+    security: [
+        [
+            "OAuth2CompaniesApiControllerAuthSchema" => [
+                CompanyScopes::Write,
+            ]
+        ]
+    ],
     tags: ["Companies"],
     requestBody: new OA\RequestBody(
         required: true,
@@ -96,7 +175,13 @@ use OpenApi\Attributes as OA;
     path: "/api/v1/companies/{id}",
     summary: "Update a company",
     description: "Updates an existing company",
-    security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+    security: [
+        [
+            "OAuth2CompaniesApiControllerAuthSchema" => [
+                CompanyScopes::Write,
+            ]
+        ]
+    ],
     tags: ["Companies"],
     parameters: [
         new OA\Parameter(
@@ -128,7 +213,13 @@ use OpenApi\Attributes as OA;
     path: "/api/v1/companies/{id}",
     summary: "Delete a company",
     description: "Deletes a company",
-    security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
+    security: [
+        [
+            "OAuth2CompaniesApiControllerAuthSchema" => [
+                CompanyScopes::Write,
+            ]
+        ]
+    ],
     tags: ["Companies"],
     parameters: [
         new OA\Parameter(
@@ -390,13 +481,73 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
         security: [
             [
-                "companies_oauth2" => [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
                     CompanyScopes::Read,
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData,
                 ]
             ]
         ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of pages in each page',
+            ),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter companies. Available filters: name (=@, ==, @@), member_level (=@, ==, @@), display_on_site (==)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, name, member_level",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCompaniesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+        ]
+    )]
+
+    #[OA\Get(
+        path: "/api/public/v1/companies",
+        summary: "Get all companies (Public)",
+        description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
         tags: ["Companies"],
         parameters: [
             new OA\Parameter(

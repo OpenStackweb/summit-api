@@ -17,6 +17,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRepository;
+use App\Security\SummitScopes;
 use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;

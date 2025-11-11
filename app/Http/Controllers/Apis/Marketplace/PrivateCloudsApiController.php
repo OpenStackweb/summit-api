@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +37,7 @@ final class PrivateCloudsApiController extends AbstractCompanyServiceApiControll
         description: "Get all marketplace hosted private cloud services (OpenStack implementations)",
         summary: 'Get all hosted private clouds',
         operationId: 'getAllHostedPrivateClouds',
-        tags: ['Private Clouds'],
+        tags: ['Marketplace'],
         parameters: [
             new OA\Parameter(
                 name: 'filter[]',

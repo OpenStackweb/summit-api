@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISpeakerOrganizationalRoleRepository;
+use App\Security\SummitScopes;
 use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
@@ -20,6 +21,26 @@ use Symfony\Component\HttpFoundation\Response;
 use utils\PagingResponse;
 use Illuminate\Support\Facades\Request;
 use OpenApi\Attributes as OA;
+
+
+#[OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'speaker_organizational_role_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                    SummitScopes::ReadSummitData => 'Read Summit Data',
+                ],
+            ),
+        ],
+    )
+]
+class SpeakerOrganizationalRoleAuthSchema{}
+
 /**
  * Class OAuth2SpeakerOrganizationalRoleApiController
  * @package App\Http\Controllers
@@ -47,7 +68,7 @@ final class OAuth2SpeakerOrganizationalRoleApiController extends OAuth2Protected
         summary: 'Get all default speaker organizational roles',
         description: 'Retrieves a list of default organizational roles for speakers. These are predefined role types that speakers can select to describe their position or role within an organization (e.g., "Developer", "Manager", "Architect", "Executive").',
         operationId: 'getAllSpeakerOrganizationalRoles',
-        security: [['oauth2_scopes' => [
+        security: [['speaker_organizational_role_oauth2' => [
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData
         ]]],

@@ -37,7 +37,7 @@ use OpenApi\Attributes as OA;
         ],
     )
 ]
-class RSVPAuthSchema{}
+class GroupsOAuthSchema{}
 
 /**
  * Class OAuth2GroupsApiController

@@ -15,6 +15,7 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISpeakerActiveInvolvementRepository;
+use App\Security\SummitScopes;
 use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
@@ -23,6 +24,28 @@ use Symfony\Component\HttpFoundation\Response;
 use utils\PagingResponse;
 use Illuminate\Support\Facades\Request;
 use OpenApi\Attributes as OA;
+
+
+#[
+    OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'speaker_active_involvement_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::ReadSummitData => 'Read Summit Data',
+                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                ],
+            ),
+        ],
+    )
+]
+class SpeakerActiveInvolvementAuthSchema{}
+
+
 /**
  * Class OAuth2SpeakerActiveInvolvementApiController
  * @package App\Http\Controllers
@@ -50,7 +73,7 @@ final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedC
         summary: 'Get all default speaker active involvements',
         description: 'Retrieves a list of default active involvements for speakers. These are predefined involvement types that speakers can select to describe their current activities (e.g., "Active Contributor", "User", "Evaluator"). Public endpoint accessible without authentication.',
         operationId: 'getAllSpeakerActiveInvolvements',
-        security: [['oauth2_scopes' => [
+        security: [['speaker_active_involvement_oauth2' => [
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],

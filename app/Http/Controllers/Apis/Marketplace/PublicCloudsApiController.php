@@ -39,7 +39,7 @@ final class PublicCloudsApiController extends AbstractCompanyServiceApiControlle
         description: "Get all marketplace public cloud services (OpenStack implementations)",
         summary: 'Get all public clouds',
         operationId: 'getAllPublicClouds',
-        tags: ['Public Clouds'],
+        tags: ['Marketplace'],
         parameters: [
             new OA\Parameter(
                 name: 'filter[]',

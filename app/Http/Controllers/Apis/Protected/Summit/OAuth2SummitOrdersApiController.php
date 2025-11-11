@@ -23,6 +23,7 @@ use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\ISummitOrderSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -44,6 +45,33 @@ use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
 
+#[OA\SecurityScheme(
+    type: 'oauth2',
+    securityScheme: 'OAuth2SummitOrdersApiControllerAuthSchema',
+    flows: [
+        new OA\Flow(
+            authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+            tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+            flow: 'authorizationCode',
+            scopes: [
+                SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                SummitScopes::ReadRegistrationOrders => 'Read Registration Orders',
+                SummitScopes::ReadMyRegistrationOrders => 'Read My Registration Orders',
+                SummitScopes::WriteSummitData => 'Write Summit Data',
+                SummitScopes::CreateRegistrationOrders => 'Create Registration Orders',
+                SummitScopes::CreateOfflineRegistrationOrders => 'Create Offline Registration Orders',
+                SummitScopes::DeleteRegistrationOrders => 'Delete Registration Orders',
+                SummitScopes::UpdateRegistrationOrders => 'Update Registration Orders',
+                SummitScopes::UpdateMyRegistrationOrders => 'Update My Registration Orders',
+                SummitScopes::DeleteMyRegistrationOrders => 'Delete My Registration Orders',
+            ],
+        ),
+    ],
+)
+]
+class OAuth2SummitOrdersApiControllerAuthSchema
+{
+}
 /**
  * Class OAuth2SummitOrdersApiController
  * @package App\Http\Controllers
@@ -119,11 +147,38 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Post(
-        path: '/api/public/v1/summits/{summit_id}/orders/reserve',
+        path: '/api/public/v1/summits/{id}/orders/reserve',
+        summary: 'Reserve tickets in an order (Public)',
+        description: 'Creates a reservation for tickets. Can be called anonymously or by authenticated users.',
+        tags: ['Orders'],
+        parameters: [
+            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/ReserveOrderRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Order reserved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitOrderReservation')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+        ]
+    )]
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/orders/reserve',
         summary: 'Reserve tickets in an order',
         description: 'Creates a reservation for tickets. Can be called anonymously or by authenticated users.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
         ],
@@ -211,11 +266,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/public/v1/summits/{summit_id}/orders/{hash}/checkout',
+        path: '/api/public/v1/summits/{id}/orders/{hash}/checkout',
         summary: 'Checkout a reserved order',
         description: 'Processes payment and completes an order reservation',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -273,11 +328,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: '/api/public/v1/summits/{summit_id}/orders/{hash}/tickets/mine',
+        path: '/api/public/v1/summits/{id}/orders/{hash}/tickets/mine',
         summary: 'Get my ticket by order hash',
         description: 'Returns ticket information for the current user using order hash',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -316,11 +371,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Delete(
-        path: '/api/public/v1/summits/{summit_id}/orders/{hash}',
+        path: '/api/public/v1/summits/{id}/orders/{hash}',
         summary: 'Cancel order by hash',
         description: 'Cancels an order using its hash',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -345,11 +400,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/orders',
+        path: '/api/v1/summits/{id}/orders',
         summary: 'Get all orders for a summit',
         description: 'Returns paginated list of orders for the specified summit. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -520,7 +575,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Get all my orders across all summits',
         description: 'Returns paginated list of current user orders across all summits',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
@@ -546,11 +601,11 @@ final class OAuth2SummitOrdersApiController
      * @return mixed
      */
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/orders/me',
+        path: '/api/v1/summits/{id}/orders/me',
         summary: 'Get all my orders for a summit',
         description: 'Returns paginated list of current user orders for the specified summit',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug (or "all" for all summits)', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -652,7 +707,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Get my ticket by ID',
         description: 'Returns ticket information for the current user by order and ticket ID',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -746,7 +801,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Update my order',
         description: 'Updates order information for the current user',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -806,7 +861,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Cancel refund request for a ticket',
         description: 'Cancels an existing refund request for a ticket',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -860,7 +915,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Request refund for a ticket',
         description: 'Requests a refund for a specific ticket',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -904,7 +959,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Request refund for entire order',
         description: 'Requests a refund for all tickets in an order',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -944,7 +999,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Assign attendee to a ticket',
         description: 'Assigns an attendee to a specific ticket in an order',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1000,7 +1055,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Resend order confirmation email',
         description: 'Resends the order confirmation email. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1039,7 +1094,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Re-invite attendee to ticket',
         description: 'Resends invitation email to the ticket attendee',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1096,11 +1151,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/orders/{order_id}/tickets/{ticket_id}',
+        path: '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}',
         summary: 'Update ticket details',
         description: 'Updates ticket information including type, badge, and attendee details. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
@@ -1160,11 +1215,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Post(
-        path: '/api/v1/summits/{summit_id}/orders/{order_id}/tickets',
+        path: '/api/v1/summits/{id}/orders/{order_id}/tickets',
         summary: 'Add tickets to an existing order',
         description: 'Adds new tickets to an existing order. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
@@ -1229,7 +1284,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Remove attendee from ticket',
         description: 'Revokes/removes the attendee assignment from a ticket',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1269,11 +1324,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/orders/{order_id}/tickets/{ticket_id}/pdf',
+        path: '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/pdf',
         summary: 'Get ticket PDF by summit',
         description: 'Generates and returns ticket PDF. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
@@ -1313,7 +1368,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Get ticket PDF by order ID',
         description: 'Generates and returns ticket PDF for current user',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1349,7 +1404,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Get my ticket PDF by ticket ID',
         description: 'Generates and returns PDF for current user ticket',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1385,7 +1440,7 @@ final class OAuth2SummitOrdersApiController
         path: '/api/public/v1/tickets/{hash}',
         summary: 'Get ticket by hash (public endpoint)',
         description: 'Returns ticket information using public hash. No authentication required.',
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Ticket hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1422,7 +1477,7 @@ final class OAuth2SummitOrdersApiController
         path: '/api/public/v1/tickets/{hash}',
         summary: 'Update ticket by hash (public endpoint)',
         description: 'Updates ticket information using public hash. No authentication required.',
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Ticket hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1475,7 +1530,7 @@ final class OAuth2SummitOrdersApiController
         path: '/api/public/v1/orders/{order_hash}/tickets',
         summary: 'Update tickets by order hash',
         description: 'Updates multiple tickets information using order hash. No authentication required.',
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1523,7 +1578,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Update my ticket by ticket ID',
         description: 'Updates ticket information for the current user',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1582,7 +1637,7 @@ final class OAuth2SummitOrdersApiController
         path: '/api/public/v1/tickets/{hash}/regenerate',
         summary: 'Regenerate ticket hash',
         description: 'Regenerates the public hash for a ticket. No authentication required.',
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Current ticket hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1609,7 +1664,7 @@ final class OAuth2SummitOrdersApiController
         path: '/api/public/v1/tickets/{hash}/pdf',
         summary: 'Get ticket PDF by hash',
         description: 'Generates and returns ticket PDF using public hash. No authentication required.',
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Ticket hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1683,7 +1738,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Get my order by ID',
         description: 'Returns order information for the current user',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1735,7 +1790,7 @@ final class OAuth2SummitOrdersApiController
         summary: 'Get my tickets by order ID',
         description: 'Returns paginated list of tickets for a specific order owned by current user',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -1901,11 +1956,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/orders/{order_id}/tickets/{ticket_id}/activate',
+        path: '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/activate',
         summary: 'Activate a ticket',
         description: 'Activates an inactive ticket. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
@@ -1946,11 +2001,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Delete(
-        path: '/api/v1/summits/{summit_id}/orders/{order_id}/tickets/{ticket_id}/activate',
+        path: '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/activate',
         summary: 'Deactivate a ticket',
         description: 'Deactivates an active ticket. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
@@ -1989,11 +2044,11 @@ final class OAuth2SummitOrdersApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/orders/{order_id}/tickets/all/refund-requests/approved',
+        path: '/api/v1/summits/{id}/orders/{order_id}/tickets/all/refund-requests/approved',
         summary: 'Get all approved refund requests for an order',
         description: 'Returns paginated list of approved refund requests for tickets in an order. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
@@ -2064,11 +2119,11 @@ final class OAuth2SummitOrdersApiController
      * @return mixed
      */
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/orders/{order_id}/tickets/{ticket_id}/delegate',
+        path: '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/delegate',
         summary: 'Delegate ticket to another attendee',
         description: 'Delegates/transfers ticket ownership to another attendee. Admin access required.',
         security: [['bearer' => []]],
-        tags: ['orders'],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),

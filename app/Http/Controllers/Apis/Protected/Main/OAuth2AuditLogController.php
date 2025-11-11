@@ -26,6 +26,22 @@ use models\summit\SummitAttendeeBadge;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 
+#[OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'audit_logs_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                ],
+            ),
+        ],
+    )
+]
+class AuditLogAuthSchema{}
+
 /**
  * Class OAuth2AuditLogController
  * @package App\Http\Controllers

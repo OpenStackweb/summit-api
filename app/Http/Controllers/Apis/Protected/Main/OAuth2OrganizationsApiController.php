@@ -15,6 +15,7 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 
+use App\Security\OrganizationScopes;
 use App\Security\SummitScopes;
 use App\Services\Model\IOrganizationService;
 use Illuminate\Http\Response;
@@ -23,6 +24,26 @@ use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
+
+
+#[OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'organizations_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    OrganizationScopes::WriteOrganizationData => 'Write Organization Data',
+                    OrganizationScopes::ReadOrganizationData => 'Read Organization Data',
+                ],
+            ),
+        ],
+    )
+]
+class RSVPAuthSchema{}
+
 
 /**
  * Class OAuth2OrganizationsApiController
@@ -41,7 +62,10 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
     #[OA\Post(
         path: '/api/v1/organizations',
         summary: 'Creates a new organization',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteOrganizationData]]],
+        security: [['organizations_oauth2' => [
+                OrganizationScopes::WriteOrganizationData
+            ]
+        ]],
         tags: ['organizations'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -85,8 +109,8 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
         summary: 'Get all organizations',
         operationId: 'getAllOrganizations',
         tags: ['Organizations'],
-        security: [['oauth2_security_scope' => [
-            SummitScopes::ReadOrganizationData,
+        security: [['organizations_oauth2' => [
+            OrganizationScopes::ReadOrganizationData,
         ]]],
         parameters: [
             new OA\Parameter(

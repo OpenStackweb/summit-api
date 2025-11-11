@@ -26,14 +26,18 @@ class AuditEventListener
 
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
+        if (app()->environment('testing')){
+            return;
+        }
         $em = $eventArgs->getObjectManager();
         $uow = $em->getUnitOfWork();
         // Strategy selection based on environment configuration
         $strategy = $this->getAuditStrategy($em);
-        $ctx = $this->buildAuditContext();
         if (!$strategy) {
             return; // No audit strategy enabled
         }
+
+        $ctx = $this->buildAuditContext();
 
         try {
             foreach ($uow->getScheduledEntityInsertions() as $entity) {

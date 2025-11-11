@@ -29,6 +29,7 @@ final class AppliancesApiController extends AbstractCompanyServiceApiController
     /**
      * AppliancesApiController constructor.
      * @param IApplianceRepository $repository
+     * @param IResourceServerContext $resource_server_context
      */
     public function __construct(IApplianceRepository $repository, IResourceServerContext $resource_server_context)
     {

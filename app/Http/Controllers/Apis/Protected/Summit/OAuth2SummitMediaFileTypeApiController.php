@@ -14,6 +14,7 @@ namespace App\Http\Controllers;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitMediaFileTypeRepository;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitMediaFileTypeService;
@@ -22,6 +23,27 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Response;
+
+
+#[OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'summit_media_file_type_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::ReadSummitMediaFileTypes => 'Read Summit Media File Types',
+                    SummitScopes::WriteSummitMediaFileTypes => 'Write Summit Media File Types',
+                ],
+            ),
+        ],
+    )
+]
+class SummitMediaFileTypeAuthSchema{}
+
+
 /**
  * Class OAuth2SummitMediaFileTypeApiController
  * @package App\Http\Controllers
@@ -67,8 +89,17 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         path: '/api/v1/summit-media-file-types',
         summary: 'Get all summit media file types',
         description: 'Retrieves a paginated list of summit media file types. Media file types define categories of files that can be uploaded to summits (e.g., presentations, videos, documents) along with their allowed file extensions.',
-        security: [['oauth2_security_scope' => [SummitScopes::ReadSummitMediaFileTypes]]],
-        tags: ['Summit Media File Types'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::ReadSummitMediaFileTypes
+        ]]],
+        tags: ['Files'],
         parameters: [
             new OA\Parameter(
                 name: 'page',
@@ -122,7 +153,16 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         path: '/api/v1/summit-media-file-types/{id}',
         summary: 'Get a summit media file type by ID',
         description: 'Retrieves detailed information about a specific summit media file type.',
-        security: [['oauth2_security_scope' => [SummitScopes::ReadSummitMediaFileTypes]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::ReadSummitMediaFileTypes
+        ]]],
         tags: ['Summit Media File Types'],
         parameters: [
             new OA\Parameter(
@@ -152,7 +192,16 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         path: '/api/v1/summit-media-file-types',
         summary: 'Create a new summit media file type',
         description: 'Creates a new summit media file type with specified name, description, and allowed file extensions.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitMediaFileTypes]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::WriteSummitMediaFileTypes
+        ]]],
         tags: ['Summit Media File Types'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -178,7 +227,16 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         path: '/api/v1/summit-media-file-types/{id}',
         summary: 'Update a summit media file type',
         description: 'Updates an existing summit media file type.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitMediaFileTypes]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::WriteSummitMediaFileTypes
+        ]]],
         tags: ['Summit Media File Types'],
         parameters: [
             new OA\Parameter(
@@ -212,7 +270,16 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         path: '/api/v1/summit-media-file-types/{id}',
         summary: 'Delete a summit media file type',
         description: 'Deletes an existing summit media file type. System-defined types cannot be deleted.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitMediaFileTypes]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::WriteSummitMediaFileTypes
+        ]]],
         tags: ['Summit Media File Types'],
         parameters: [
             new OA\Parameter(

@@ -15,9 +15,11 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeFeatureTypeRepository;
+use App\Models\Foundation\Main\IGroup;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitBadgeFeatureTypeService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -29,6 +31,27 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 use Exception;
+
+
+#[OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'badge_feature_types_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
+                    SummitScopes::ReadSummitData => 'Read Summit Data',
+                    SummitScopes::WriteSummitData => 'Write Summit Data',
+                ],
+            ),
+        ],
+    )
+]
+class BadgeFeatureTypesOauth2Schema{}
+
 /**
  * Class OAuth2SummitBadgeFeatureTypeApiController
  * @package App\Http\Controllers
@@ -74,7 +97,14 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         path: '/api/v1/summits/{id}/badge-feature-types',
         summary: 'Get all badge feature types for a summit',
         description: 'Retrieves a paginated list of badge feature types for a specific summit. Badge feature types define visual elements and features that can be applied to attendee badges (e.g., speaker ribbons, sponsor logos, special access indicators).',
-        security: [['oauth2_security_scope' => [
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['badge_feature_types_oauth2' => [
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],
@@ -127,12 +157,12 @@ final class OAuth2SummitBadgeFeatureTypeApiController
                 description: 'Badge feature types retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitBadgeFeatureTypesResponse')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -144,7 +174,7 @@ final class OAuth2SummitBadgeFeatureTypeApiController
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],
-        tags: ['Badge Feature Types'],
+        tags: ['Badges Feature Types'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -167,12 +197,12 @@ final class OAuth2SummitBadgeFeatureTypeApiController
                 description: 'Badge feature type retrieved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitBadgeFeatureType')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -201,13 +231,13 @@ final class OAuth2SummitBadgeFeatureTypeApiController
                 description: 'Badge feature type created successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitBadgeFeatureType')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 422, ref: '#/components/responses/422'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: "Unprocessable Entity"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -243,13 +273,13 @@ final class OAuth2SummitBadgeFeatureTypeApiController
                 description: 'Badge feature type updated successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitBadgeFeatureType')
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 422, ref: '#/components/responses/422'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: "Unprocessable Entity"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -280,12 +310,12 @@ final class OAuth2SummitBadgeFeatureTypeApiController
                 response: 204,
                 description: 'Badge feature type deleted successfully'
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -340,12 +370,12 @@ final class OAuth2SummitBadgeFeatureTypeApiController
                     ]
                 )
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 
@@ -376,12 +406,12 @@ final class OAuth2SummitBadgeFeatureTypeApiController
                 response: 204,
                 description: 'Image deleted successfully'
             ),
-            new OA\Response(response: 400, ref: '#/components/responses/400'),
-            new OA\Response(response: 401, ref: '#/components/responses/401'),
-            new OA\Response(response: 403, ref: '#/components/responses/403'),
-            new OA\Response(response: 404, ref: '#/components/responses/404'),
-            new OA\Response(response: 412, ref: '#/components/responses/412'),
-            new OA\Response(response: 500, ref: '#/components/responses/500'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
 

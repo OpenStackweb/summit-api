@@ -99,9 +99,10 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         description: 'Retrieves a paginated list of badge feature types for a specific summit. Badge feature types define visual elements and features that can be applied to attendee badges (e.g., speaker ribbons, sponsor logos, special access indicators).',
         x: [
             'required-groups' => [
-                IGroup::SummitAdministrators,
                 IGroup::SuperAdmins,
-                IGroup::Administrators
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
             ]
         ],
         security: [['badge_feature_types_oauth2' => [
@@ -170,11 +171,19 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         path: '/api/v1/summits/{id}/badge-feature-types/{feature_id}',
         summary: 'Get a badge feature type by ID',
         description: 'Retrieves detailed information about a specific badge feature type.',
-        security: [['oauth2_security_scope' => [
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['badge_feature_types_oauth2' => [
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],
-        tags: ['Badges Feature Types'],
+        tags: ['Badge Feature Types'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -210,7 +219,17 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         path: '/api/v1/summits/{id}/badge-feature-types',
         summary: 'Create a new badge feature type',
         description: 'Creates a new badge feature type for the summit.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['badge_feature_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Badge Feature Types'],
         parameters: [
             new OA\Parameter(
@@ -245,7 +264,17 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         path: '/api/v1/summits/{id}/badge-feature-types/{feature_id}',
         summary: 'Update a badge feature type',
         description: 'Updates an existing badge feature type.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['badge_feature_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Badge Feature Types'],
         parameters: [
             new OA\Parameter(
@@ -287,7 +316,17 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         path: '/api/v1/summits/{id}/badge-feature-types/{feature_id}',
         summary: 'Delete a badge feature type',
         description: 'Deletes an existing badge feature type from the summit.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['badge_feature_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Badge Feature Types'],
         parameters: [
             new OA\Parameter(
@@ -323,7 +362,17 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         path: '/api/v1/summits/{id}/badge-feature-types/{feature_id}/image',
         summary: 'Add an image to a badge feature type',
         description: 'Uploads and associates an image file with a badge feature type. This image is typically displayed on attendee badges.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['badge_feature_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Badge Feature Types'],
         parameters: [
             new OA\Parameter(
@@ -383,7 +432,17 @@ final class OAuth2SummitBadgeFeatureTypeApiController
         path: '/api/v1/summits/{id}/badge-feature-types/{feature_id}/image',
         summary: 'Delete the image from a badge feature type',
         description: 'Removes the associated image from a badge feature type.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['badge_feature_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Badge Feature Types'],
         parameters: [
             new OA\Parameter(

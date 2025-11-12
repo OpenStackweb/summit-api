@@ -16,6 +16,7 @@ use App\Services\Model\ILocationService;
 use App\Services\Model\IProcessPaymentService;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use models\oauth2\IResourceServerContext;
 use models\summit\IPaymentConstants;
@@ -25,6 +26,8 @@ use models\summit\Summit;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use Exception;
+use OpenApi\Attributes as OA;
+
 /**
  * Class PaymentGatewayWebHookController
  * @package App\Http\Controllers
@@ -97,6 +100,45 @@ final class PaymentGatewayWebHookController extends JsonController
      * @param LaravelRequest $request
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/public/v1/summits/all/payments/{application_name}/confirm",
+        summary: "Generic payment gateway webhook confirmation",
+        description: "Handles payment gateway webhook callbacks for a given application type.",
+        operationId: "genericConfirm",
+        tags: ["PaymentGatewayHook"],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: "application_name",
+                in: "path",
+                required: true,
+                description: "Application name (e.g. Show admin)",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayWebhookRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Payment processed successfully"
+            ),
+            new OA\Response(
+                response: Response::HTTP_ALREADY_REPORTED,
+                description: "Already reported"
+            ),
+            new OA\Response(
+                response: Response::HTTP_BAD_REQUEST,
+                description: "Payload error"
+            ),
+            new OA\Response(
+                response: Response::HTTP_PRECONDITION_FAILED,
+                description: "Precondition failed - missing configuration or invalid data"
+            )
+        ]
+    )]
     public function genericConfirm($application_type, LaravelRequest $request){
         try {
 
@@ -156,6 +198,52 @@ final class PaymentGatewayWebHookController extends JsonController
      * @param LaravelRequest $request
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/public/v1/summits/{summit_id}/payments/{application_name}/confirm",
+        summary: "Summit payment gateway webhook confirmation",
+        description: "Handles payment gateway webhook callbacks for a given summit and application type.",
+        operationId: "confirm",
+        tags: ["PaymentGatewayHook"],
+        security: [],
+        parameters: [
+            new OA\Parameter(
+                name: "summit_id",
+                in: "path",
+                required: true,
+                description: "Summit identifier",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "application_name",
+                in: "path",
+                required: true,
+                description: "Application Name (e.g ShowAdmin)",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/PaymentGatewayWebhookRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Payment processed successfully"
+            ),
+            new OA\Response(
+                response: Response::HTTP_ALREADY_REPORTED,
+                description: "Already reported"
+            ),
+            new OA\Response(
+                response: Response::HTTP_BAD_REQUEST,
+                description: "Payload error"
+            ),
+            new OA\Response(
+                response: Response::HTTP_PRECONDITION_FAILED,
+                description: "Precondition failed - missing configuration or invalid data"
+            )
+        ]
+    )]
     public function confirm($summit_id, $application_type, LaravelRequest $request){
 
         try {

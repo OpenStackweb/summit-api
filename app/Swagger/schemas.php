@@ -351,3 +351,22 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+#[OA\Schema(
+    schema: 'PaymentGatewayWebhookRequest',
+    type: 'object',
+    description: 'Generic payment gateway webhook payload. The structure depends on the payment provider (e.g., Stripe, etc.)',
+    example: [
+        'id' => 'evt_1234567890',
+        'cart_id' => '1234567890',
+        'type' => 'charge.succeeded',
+        'data' => [
+            'object' => [
+                'id' => 'ch_1234567890',
+                'status' => 'succeeded'
+            ]
+        ]
+    ]
+)]
+class PaymentGatewayWebhookRequestSchema {}
+

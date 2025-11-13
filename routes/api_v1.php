@@ -2352,15 +2352,15 @@ Route::group(['prefix' => 'summit-administrator-groups'], function () {
 
         Route::group(['prefix' => 'members'], function () {
             Route::group(['prefix' => '{member_id}'], function () {
-                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@addMember']);
-                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@removeMember']);
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@addMember']);
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@removeMember']);
             });
         });
 
         Route::group(['prefix' => 'summits'], function () {
             Route::group(['prefix' => '{summit_id}'], function () {
-                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@addSummit']);
-                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@removeSummit']);
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@addSummit']);
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAdministratorPermissionGroupApiController@removeSummit']);
             });
         });
     });

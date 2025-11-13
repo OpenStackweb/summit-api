@@ -1,4 +1,5 @@
 <?php namespace App\Http\Controllers;
+
 /**
  * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +18,9 @@ use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use utils\PagingResponse;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
+
 /**
  * Class TimezonesApiController
  * @package App\Http\Controllers
@@ -26,6 +30,32 @@ final class TimezonesApiController extends JsonController
     /**
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/timezones',
+        operationId: 'getTimezones',
+        description: 'Retrieve all available timezones',
+        tags: ['Timezones'],
+        parameters: [
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expansion parameters',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of all available timezones',
+                content: new OA\JsonContent(ref: '#/components/schemas/TimezonesResponse')
+            ),
+            new OA\Response(
+                response: Response::HTTP_INTERNAL_SERVER_ERROR,
+                description: 'Server Error'
+            ),
+        ]
+    )]
     public function getAll(){
         try {
             $timezones   = \DateTimeZone::listIdentifiers();

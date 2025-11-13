@@ -15,8 +15,10 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipTypeRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitSponsorshipTypeService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
@@ -77,11 +79,21 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Get(
         path: '/api/v1/summits/{id}/sponsorships-types',
         summary: 'Get all sponsorship types for a summit',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
-        tags: ['Summits', 'Sponsorship Types'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['sponsorship_types_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        tags: ['Summits Sponsorship Types'],
         parameters: [
-            new OA\Parameter(ref: '#/components/parameters/page'),
-            new OA\Parameter(ref: '#/components/parameters/per_page'),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by name, label, or size (name=@value, label==value, size=@value)', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-name, +/-order, +/-label, +/-size', schema: new OA\Schema(type: 'string')),
@@ -106,8 +118,17 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Post(
         path: '/api/v1/summits/{id}/sponsorships-types',
         summary: 'Create a new sponsorship type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
-        tags: ['Summits', 'Sponsorship Types'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['sponsorship_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -136,8 +157,18 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Get(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Get a sponsorship type by ID',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
-        tags: ['Summits', 'Sponsorship Types'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['sponsorship_types_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
@@ -162,8 +193,17 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Put(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Update a sponsorship type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
-        tags: ['Summits', 'Sponsorship Types'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['sponsorship_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
@@ -193,8 +233,17 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Delete a sponsorship type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
-        tags: ['Summits', 'Sponsorship Types'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['sponsorship_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
@@ -330,8 +379,17 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Post(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
         summary: 'Upload a badge image for a sponsorship type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
-        tags: ['Summits', 'Sponsorship Types'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['sponsorship_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
@@ -401,8 +459,17 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
         summary: 'Remove the badge image from a sponsorship type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
-        tags: ['Summits', 'Sponsorship Types'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['sponsorship_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),

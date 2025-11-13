@@ -16,7 +16,9 @@ namespace App\Http\Controllers;
  **/
 use HTTP401UnauthorizedException;
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitMediaUploadTypeRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitMediaUploadTypeService;
 use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
@@ -26,27 +28,6 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 
-
-
-#[OA\SecurityScheme(
-    type: 'oauth2',
-    securityScheme: 'OAuth2SummitMediaUploadTypeApiControllerSecurity',
-    flows: [
-        new OA\Flow(
-            authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
-            tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
-            flow: 'authorizationCode',
-            scopes: [
-                SummitScopes::ReadAllSummitData => 'Read All Summit Data',
-                SummitScopes::WriteSummitData => 'Write Summit Data',
-            ],
-        ),
-    ],
-)
-]
-class RSVPAuthSchema
-{
-}
 
 /**
  * Class OAuth2SummitMediaUploadTypeApiController
@@ -95,9 +76,16 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         description: "Returns a paginated list of media upload types configured for a specific summit. Allows ordering, filtering and pagination.",
         security: [
             [
-                "OAuth2SummitMediaUploadTypeApiControllerSecurity" => [
+                "summit_media_upload_type_oauth2" => [
                     SummitScopes::ReadAllSummitData,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         tags: ["Summit Media Upload Types"],
@@ -180,9 +168,16 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         description: "Returns detailed information about a specific media upload type",
         security: [
             [
-                "OAuth2SummitMediaUploadTypeApiControllerSecurity" => [
+                "summit_media_upload_type_oauth2" => [
                     SummitScopes::ReadAllSummitData,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         tags: ["Summit Media Upload Types"],
@@ -238,9 +233,16 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         description: "Creates a new media upload type for the specified summit",
         security: [
             [
-                "OAuth2SummitMediaUploadTypeApiControllerSecurity" => [
+                "summit_media_upload_type_oauth2" => [
                     SummitScopes::WriteSummitData,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         tags: ["Summit Media Upload Types"],
@@ -281,9 +283,16 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         description: "Updates an existing media upload type",
         security: [
             [
-                "OAuth2SummitMediaUploadTypeApiControllerSecurity" => [
+                "summit_media_upload_type_oauth2" => [
                     SummitScopes::WriteSummitData,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         tags: ["Summit Media Upload Types"],
@@ -331,9 +340,16 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         description: "Deletes a media upload type from the summit",
         security: [
             [
-                "OAuth2SummitMediaUploadTypeApiControllerSecurity" => [
+                "summit_media_upload_type_oauth2" => [
                     SummitScopes::WriteSummitData,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         tags: ["Summit Media Upload Types"],
@@ -492,9 +508,16 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         description: "Associates a media upload type with a specific presentation type",
         security: [
             [
-                "OAuth2SummitMediaUploadTypeApiControllerSecurity" => [
+                "summit_media_upload_type_oauth2" => [
                     SummitScopes::WriteSummitData,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         tags: ["Summit Media Upload Types"],
@@ -563,9 +586,16 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         description: "Removes the association between a media upload type and a presentation type",
         security: [
             [
-                "OAuth2SummitMediaUploadTypeApiControllerSecurity" => [
+                "summit_media_upload_type_oauth2" => [
                     SummitScopes::WriteSummitData,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         tags: ["Summit Media Upload Types"],
@@ -633,9 +663,16 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         description: "Clones all media upload types from one summit to another summit",
         security: [
             [
-                "OAuth2SummitMediaUploadTypeApiControllerSecurity" => [
+                "summit_media_upload_type_oauth2" => [
                     SummitScopes::WriteSummitData,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         tags: ["Summit Media Upload Types"],

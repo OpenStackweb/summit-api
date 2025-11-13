@@ -13,9 +13,11 @@
  **/
 
 use App\Http\Exceptions\HTTP403ForbiddenException;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupRepository;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\Services\Model\ISummitAdministratorPermissionGroupService;
+use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -24,6 +26,8 @@ use models\summit\IOrderConstants;
 use models\utils\IEntity;
 use Exception;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 use utils\Filter;
 use utils\FilterElement;
 
@@ -67,6 +71,50 @@ class OAuth2SummitAdministratorPermissionGroupApiController
 
     use GetEntity;
 
+    #[OA\Get(
+        path: "/api/v1/summit-administrator-groups",
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: "Get all summit administrator permission groups",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::ReadSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "page",
+                description: "Page number",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1)
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                description: "Items per page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10)
+            ),
+            new OA\Parameter(name: "filter", description: "Filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAdministratorPermissionGroupList")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     function getAll()
     {
         return $this->_getAll(
@@ -107,9 +155,32 @@ class OAuth2SummitAdministratorPermissionGroupApiController
         );
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[OA\Post(
+        path: "/api/v1/summit-administrator-groups",
+        summary: "Create a new summit administrator permission group",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::WriteSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                ref: "#/components/schemas/CreateSummitAdministratorPermissionGroup"
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAdministratorPermissionGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     function getAddValidationRules(array $payload): array
     {
         return [
@@ -127,25 +198,64 @@ class OAuth2SummitAdministratorPermissionGroupApiController
         return $this->service->create($payload);
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function deleteEntity(int $id): void
-    {
-        $this->service->delete($id);
-    }
-
-    /**
-     * @inheritDoc
-     */
+    #[OA\Get(
+        path: "/api/v1/summit-administrator-groups/{id}",
+        summary: "Get a summit administrator permission group by ID",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::ReadSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Permission Group ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAdministratorPermissionGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     protected function getEntity(int $id): IEntity
     {
         return $this->repository->getById($id);
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[OA\Put(
+        path: "/api/v1/summit-administrator-groups/{id}",
+        summary: "Update a summit administrator permission group",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::WriteSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Permission Group ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                ref: "#/components/schemas/UpdateSummitAdministratorPermissionGroup"
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAdministratorPermissionGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     function getUpdateValidationRules(array $payload): array
     {
         return [
@@ -163,6 +273,62 @@ class OAuth2SummitAdministratorPermissionGroupApiController
         return $this->service->update($id, $payload);
     }
 
+    #[OA\Delete(
+        path: "/api/v1/summit-administrator-groups/{id}",
+        summary: "Delete a summit administrator permission group",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::WriteSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Permission Group ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    protected function deleteEntity(int $id): void
+    {
+        $this->service->delete($id);
+    }
+
+    #[OA\Delete(
+        path: "/api/v1/summit-administrator-groups/{id}/members/{member_id}",
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: "Add member to permission group",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::WriteSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Permission Group ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "member_id", description: "Member ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAdministratorPermissionGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addMember($id, $member_id)
     {
         try {
@@ -189,6 +355,38 @@ class OAuth2SummitAdministratorPermissionGroupApiController
         }
     }
 
+    #[OA\Put(
+        path: "/api/v1/summit-administrator-groups/{id}/members/{member_id}",
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: "Remove member from permission group",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::WriteSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Permission Group ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "member_id", description: "Member ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAdministratorPermissionGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeMember($id, $member_id)
     {
         try {
@@ -215,6 +413,38 @@ class OAuth2SummitAdministratorPermissionGroupApiController
         }
     }
 
+    #[OA\Put(
+        path: "/api/v1/summit-administrator-groups/{id}/summits/{summit_id}",
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: "Add summit to permission group",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::WriteSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Permission Group ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "summit_id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAdministratorPermissionGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addSummit($id, $summit_id)
     {
         try {
@@ -241,6 +471,38 @@ class OAuth2SummitAdministratorPermissionGroupApiController
         }
     }
 
+    #[OA\Delete(
+        path: "/api/v1/summit-administrator-groups/{id}/summits/{summit_id}",
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: "Remove summit from permission group",
+        security: [['summit_admin_groups_oauth2' => [
+            SummitScopes::WriteSummitAdminGroups,
+        ]]],
+        tags: ["SummitAdministratorPermissionGroups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Permission Group ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "summit_id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitAdministratorPermissionGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeSummit($id, $summit_id)
     {
         try {

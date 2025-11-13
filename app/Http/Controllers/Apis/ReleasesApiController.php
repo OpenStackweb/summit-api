@@ -17,6 +17,8 @@ use App\ModelSerializers\SerializerUtils;
 use Illuminate\Support\Facades\Log;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class ReleasesApiController
@@ -42,6 +44,29 @@ final class ReleasesApiController extends OAuth2ProtectedController
     /**
      * @return \Illuminate\Http\JsonResponse|mixed|void
      */
+    #[OA\Get(
+        path: '/api/v1/releases/current',
+        operationId: 'getCurrentRelease',
+        description: 'Retrieve the current OpenStack release',
+        tags: ['Releases'],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Current OpenStack release',
+                content: new OA\JsonContent(
+                    ref: '#/components/schemas/OpenStackRelease'
+                )
+            ),
+            new OA\Response(
+                response: Response::HTTP_NOT_FOUND,
+                description: 'Current release not found'
+            ),
+            new OA\Response(
+                response: Response::HTTP_INTERNAL_SERVER_ERROR,
+                description: 'Server Error'
+            ),
+        ]
+    )]
     public function getCurrent(){
         try{
             $current = $this->repository->getCurrent();

@@ -297,7 +297,7 @@ class OAuth2SummitAdministratorPermissionGroupApiController
         $this->service->delete($id);
     }
 
-    #[OA\Delete(
+    #[OA\Put(
         path: "/api/v1/summit-administrator-groups/{id}/members/{member_id}",
         description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         summary: "Add member to permission group",
@@ -355,7 +355,7 @@ class OAuth2SummitAdministratorPermissionGroupApiController
         }
     }
 
-    #[OA\Put(
+    #[OA\Delete(
         path: "/api/v1/summit-administrator-groups/{id}/members/{member_id}",
         description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         summary: "Remove member from permission group",

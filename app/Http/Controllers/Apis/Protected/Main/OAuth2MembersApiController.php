@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,16 +48,38 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
      */
     public function __construct
     (
-        IMemberRepository      $member_repository,
-        IMemberService         $member_service,
+        IMemberRepository $member_repository,
+        IMemberService $member_service,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $member_repository;
         $this->member_service = $member_service;
     }
 
+    #[OA\Get(
+        path: '/api/public/v1/members',
+        summary: 'Get all members',
+        description: 'Returns a paginated list of members with optional filtering, sorting and search capabilities',
+        security: [['bearer' => []]],
+        tags: ['Members (Public)'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by irc, twitter, first_name, last_name, email, group_slug, group_id, email_verified, active, github_user, full_name, created, last_edited, membership_type', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by first_name, last_name, id, created, last_edited, membership_type', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedMembersResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+        ]
+    )]
     #[OA\Get(
         path: '/api/v1/members',
         summary: 'Get all members',
@@ -100,8 +123,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                     'active' => ['=='],
                     'github_user' => ['=@', '==', '@@'],
                     'full_name' => ['=@', '==', '@@'],
-                    'created' => ['>', '<', '<=', '>=', '==','[]'],
-                    'last_edited' => ['>', '<', '<=', '>=', '==','[]'],
+                    'created' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'last_edited' => ['>', '<', '<=', '>=', '==', '[]'],
                     'membership_type' => ['==', '=@', '@@'],
                 ];
             },
@@ -169,7 +192,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
         ]
     )]
-    public function getAllCompanies(){
+    public function getAllCompanies()
+    {
         return $this->_getAll(
             function () {
                 return [
@@ -179,7 +203,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'company' => 'sometimes|string',
-               ];
+                ];
             },
             function () {
                 return [
@@ -276,7 +300,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
             $member = $this->resource_server_context->getCurrentUser();
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'projects' => 'sometimes|string_array',
@@ -401,7 +426,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 $this->resource_server_context->getCurrentUser() :
                 $this->repository->getById($member_id);
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
             $affiliations = $member->getAffiliations()->toArray();
 
             $response = new PagingResponse
@@ -480,7 +506,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 $this->resource_server_context->getCurrentUser() :
                 $this->repository->getById($member_id);
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'is_current' => 'required|boolean',
@@ -564,7 +591,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 $this->resource_server_context->getCurrentUser() :
                 $this->repository->getById($member_id);
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'is_current' => 'sometimes|boolean',
@@ -630,7 +658,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 $this->resource_server_context->getCurrentUser() :
                 $this->repository->getById($member_id);
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $this->member_service->deleteAffiliation($member, $affiliation_id);
 
@@ -659,7 +688,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($member_id, $rsvp_id) {
 
             $member = $this->repository->getById(intval($member_id));
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $this->member_service->deleteRSVP($member, intval($rsvp_id));
 
@@ -689,7 +719,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
             $member = $this->resource_server_context->getCurrentUser();
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $member = $this->member_service->signFoundationMembership($member);
 
@@ -698,10 +729,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 $member,
                 SerializerRegistry::SerializerType_Private
             )->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
         });
     }
 
@@ -727,7 +758,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
             $member = $this->resource_server_context->getCurrentUser();
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $member = $this->member_service->signCommunityMembership($member);
 
@@ -736,10 +768,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 $member,
                 SerializerRegistry::SerializerType_Private
             )->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
         });
     }
 
@@ -760,7 +792,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         return $this->processRequest(function () {
             $member = $this->resource_server_context->getCurrentUser();
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $this->member_service->resignMembership($member);
 
@@ -790,7 +823,8 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
             $member = $this->resource_server_context->getCurrentUser();
 
-            if (is_null($member)) return $this->error404();
+            if (is_null($member))
+                return $this->error404();
 
             $member = $this->member_service->signIndividualMembership($member);
 
@@ -799,10 +833,10 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
                 $member,
                 SerializerRegistry::SerializerType_Private
             )->serialize(
-                SerializerUtils::getExpand(),
-                SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
-            ));
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
         });
     }
 

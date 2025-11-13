@@ -47,7 +47,7 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
                 OrganizationScopes::WriteOrganizationData
             ]
         ]],
-        tags: ['organizations'],
+        tags: ['Organizations'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/OrganizationCreateRequest')

@@ -13,6 +13,8 @@
  **/
 
 use App\ModelSerializers\IMemberSerializerTypes;
+use App\Models\Foundation\Main\IGroup;
+use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Request;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
@@ -21,6 +23,8 @@ use services\model\ISubmitterService;
 use utils\Filter;
 use utils\FilterParser;
 use utils\PagingInfo;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class OAuth2SummitSubmittersApiController
@@ -66,10 +70,72 @@ final class OAuth2SummitSubmittersApiController
         $this->service = $service;
     }
 
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/submitters",
+        summary: "Get all submitters for a summit",
+        operationId: "getSubmittersBySummit",
+        tags: ["SummitSubmitters"],
+        security: [['summit_submitters_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Summit ID or slug",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                description: "Page number",
+                schema: new OA\Schema(type: "integer", default: 1)
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                description: "Items per page",
+                schema: new OA\Schema(type: "integer", default: 10)
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                description: "Filter query (supports multiple operators)",
+                schema: new OA\Schema(type: "string", example: "first_name=@John")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field (prefix with - for descending)",
+                schema: new OA\Schema(type: "string", example: "first_name,-created")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand relations (presentations, member)",
+                schema: new OA\Schema(type: "string", example: "presentations,member")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Successful response with paginated submitters",
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSubmittersResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllBySummit($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
@@ -158,10 +224,62 @@ final class OAuth2SummitSubmittersApiController
         );
     }
 
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/submitters/csv",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: "Get all submitters for a summit in CSV format",
+        operationId: "getSubmittersCSV",
+        tags: ["SummitSubmitters"],
+        security: [['summit_submitters_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Summit ID or slug",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                description: "Filter query to select specific submitters",
+                schema: new OA\Schema(type: "string", example: "first_name=@John")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field (prefix with - for descending)",
+                schema: new OA\Schema(type: "string", example: "first_name,-created")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "CSV file with submitter data",
+                content: new OA\MediaType(
+                    mediaType: "text/csv",
+                    schema: new OA\Schema(type: "string", format: "binary")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllBySummitCSV($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
@@ -255,10 +373,57 @@ final class OAuth2SummitSubmittersApiController
         );
     }
 
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/submitters/all/send",
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
+        summary: "Send bulk emails to submitters",
+        operationId: "sendSubmittersBulkEmails",
+        tags: ["SummitSubmitters"],
+        security: [['summit_submitters_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSpeakersData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Summit ID or slug",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                description: "Filter query to select specific submitters",
+                schema: new OA\Schema(type: "string", example: "has_accepted_presentations==true")
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SendSubmittersEmailsRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Emails sent successfully"
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function send($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {

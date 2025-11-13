@@ -63,7 +63,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],
-        tags: ['Summits', 'Tax Types'],
+        tags: ['Summits Tax Types'],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/page'),
             new OA\Parameter(ref: '#/components/parameters/per_page'),
@@ -103,7 +103,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        tags: ['Summits', 'Tax Types'],
+        tags: ['Summits Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -144,7 +144,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        tags: ['Summits', 'Tax Types'],
+        tags: ['Summits Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
@@ -180,7 +180,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        tags: ['Summits', 'Tax Types'],
+        tags: ['Summits Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
@@ -221,7 +221,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        tags: ['Summits', 'Tax Types'],
+        tags: ['Summits Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
@@ -367,7 +367,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        tags: ['Summits', 'Tax Types'],
+        tags: ['Summits Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),
@@ -431,7 +431,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        tags: ['Summits', 'Tax Types'],
+        tags: ['Summits Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'tax_id', in: 'path', required: true, description: 'Tax Type ID', schema: new OA\Schema(type: 'integer')),

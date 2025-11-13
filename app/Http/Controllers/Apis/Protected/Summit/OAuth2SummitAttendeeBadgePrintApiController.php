@@ -16,8 +16,10 @@ namespace App\Http\Controllers;
  **/
 
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRepository;
 use App\Security\SummitScopes;
+use App\Swagger\Security\BadgePrintsAuthSchema;
 use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
@@ -26,29 +28,6 @@ use OpenApi\Attributes as OA;
 use services\model\ISummitAttendeeBadgePrintService;
 use utils\Filter;
 use utils\FilterElement;
-
-
-#[OA\SecurityScheme(
-    type: 'oauth2',
-    securityScheme: 'OAuth2SummitAttendeeBadgePrintApiControllerSecurity',
-    flows: [
-        new OA\Flow(
-            authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
-            tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
-            flow: 'authorizationCode',
-            scopes: [
-                SummitScopes::WriteSummitData => 'Write Summit Data',
-                SummitScopes::UpdateRegistrationOrders => 'Update Registration Orders',
-                SummitScopes::ReadAllSummitData => 'Read All Summit Data'
-            ],
-        ),
-    ],
-)
-]
-class OAuth2SummitAttendeeBadgePrintApiControllerSecurityScheme
-{
-}
-
 
 /**
  * Class OAuth2SummitAttendeeBadgePrintApiController
@@ -82,9 +61,17 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
         description: "Returns a paginated list of badge print records for a specific ticket. Allows ordering, filtering and pagination.",
         security: [
             [
-                "OAuth2SummitAttendeeBadgePrintApiControllerSecurity" => [
+                "summit_attendee_badge_print_oauth2" => [
                     SummitScopes::ReadAllSummitData
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
             ]
         ],
         tags: ["Summit Badge Prints"],
@@ -205,9 +192,17 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
         description: "Exports all badge print records for a specific ticket to CSV format. Allows ordering and filtering.",
         security: [
             [
-                "OAuth2SummitAttendeeBadgePrintApiController_security_scheme" => [
+                "summit_attendee_badge_print_oauth2" => [
                     SummitScopes::ReadAllSummitData
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
             ]
         ],
         tags: ["Summit Badge Prints"],
@@ -324,10 +319,18 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
         description: "Deletes all badge print records for a specific ticket",
         security: [
             [
-                "OAuth2SummitAttendeeBadgePrintApiController_security_scheme" => [
+                "summit_attendee_badge_print_oauth2" => [
                     SummitScopes::WriteSummitData,
                     SummitScopes::UpdateRegistrationOrders
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
             ]
         ],
         tags: ["Summit Badge Prints"],

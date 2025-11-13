@@ -14,6 +14,7 @@ namespace App\Http\Controllers;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitPresentationActionService;
 use Illuminate\Http\Response;
@@ -26,6 +27,8 @@ use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 use Exception;
+
+
 /**
  * Class OAuth2SummitPresentationActionApiController
  * @package App\Http\Controllers
@@ -68,7 +71,18 @@ final class OAuth2SummitPresentationActionApiController
         path: '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/complete',
         summary: 'Mark a presentation action as completed',
         description: 'Marks a specific action for a presentation as completed by a track chair. Track chairs use presentation actions to manage the review process (e.g., "Review Video", "Check Speakers", "Verify Content"). Only track chairs and track chair admins can perform this action.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins,
+            ]
+        ],
+        security: [['presentation_actions_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteEventData,
+        ]]],
         tags: ['Presentation Actions'],
         parameters: [
             new OA\Parameter(
@@ -162,7 +176,17 @@ final class OAuth2SummitPresentationActionApiController
         path: '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/incomplete',
         summary: 'Mark a presentation action as incomplete',
         description: 'Unmarks a completed presentation action, setting it back to incomplete status. This allows track chairs to revert an action they previously marked as done. Only track chairs and track chair admins can perform this action.',
-        security: [['oauth2_security_scope' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins,
+            ]
+        ],
+        security: [['presentation_actions_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Presentation Actions'],
         parameters: [
             new OA\Parameter(

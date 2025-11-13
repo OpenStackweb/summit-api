@@ -64,7 +64,7 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{id}/badges',
         summary: 'Get all attendee badges for a summit',
         description: 'Retrieves a paginated list of attendee badges for a specific summit. Badges are issued to attendees and contain ticket information, badge type, printing details, and feature assignments (ribbons, special access indicators, etc.).',
-        security: [['Bearer' => [SummitScopes::ReadAllSummitData]]],
+        security: [['summit_badges_api_oauth2' => [SummitScopes::ReadAllSummitData]]],
         tags: ['Summit Badges'],
         parameters: [
             new OA\Parameter(
@@ -185,7 +185,7 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{id}/badges/csv',
         summary: 'Export all attendee badges for a summit to CSV',
         description: 'Exports a CSV file containing all attendee badges for a specific summit. Supports the same filtering and ordering capabilities as the standard list endpoint.',
-        security: [['oauth2_security_scope' => [SummitScopes::ReadAllSummitData]]],
+        security: [['summit_badges_api_oauth2' => [SummitScopes::ReadAllSummitData]]],
         tags: ['Summit Badges'],
         parameters: [
             new OA\Parameter(

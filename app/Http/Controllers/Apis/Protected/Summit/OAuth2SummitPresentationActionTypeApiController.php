@@ -13,7 +13,9 @@
  **/
 
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\IPresentationActionTypeRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitPresentationActionTypeService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Input;
@@ -138,7 +140,17 @@ final class OAuth2SummitPresentationActionTypeApiController
     #[OA\Post(
         path: '/api/v1/summits/{id}/presentation-action-types',
         summary: 'Create a new presentation action type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairsAdmins,
+            ]
+        ],
+        security: [['presentation_action_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -173,7 +185,18 @@ final class OAuth2SummitPresentationActionTypeApiController
     #[OA\Get(
         path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
         summary: 'Get a presentation action type by ID',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairsAdmins,
+            ]
+        ],
+        security: [['presentation_action_types_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+        ]]],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -204,7 +227,17 @@ final class OAuth2SummitPresentationActionTypeApiController
     #[OA\Put(
         path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
         summary: 'Update a presentation action type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairsAdmins,
+            ]
+        ],
+        security: [['presentation_action_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -240,7 +273,17 @@ final class OAuth2SummitPresentationActionTypeApiController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
         summary: 'Delete a presentation action type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairsAdmins,
+            ]
+        ],
+        security: [['presentation_action_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -266,7 +309,19 @@ final class OAuth2SummitPresentationActionTypeApiController
     #[OA\Get(
         path: '/api/v1/summits/{id}/presentation-action-types',
         summary: 'Get all presentation action types for a summit',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairsAdmins,
+                IGroup::TrackChairs,
+            ]
+        ],
+        security: [['presentation_action_types_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+        ]]],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/page'),
@@ -337,7 +392,18 @@ final class OAuth2SummitPresentationActionTypeApiController
     #[OA\Get(
         path: '/api/v1/summits/{id}/presentation-action-types/csv',
         summary: 'Get all presentation action types for a summit in CSV format',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairsAdmins,
+            ]
+        ],
+        security: [['presentation_action_types_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+        ]]],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/page'),

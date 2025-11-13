@@ -14,7 +14,9 @@ namespace App\Http\Controllers;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitTaxTypeRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitTaxTypeService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -57,7 +59,10 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: '/api/v1/summits/{id}/tax-types',
         summary: 'Get all tax types for a summit',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        security: [['tax_types_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
         tags: ['Summits', 'Tax Types'],
         parameters: [
             new OA\Parameter(ref: '#/components/parameters/page'),
@@ -87,7 +92,17 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Post(
         path: '/api/v1/summits/{id}/tax-types',
         summary: 'Create a new tax type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        security: [['tax_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
         tags: ['Summits', 'Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -117,7 +132,18 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Get a tax type by ID',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        security: [['tax_types_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
         tags: ['Summits', 'Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -143,7 +169,17 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Put(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Update a tax type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        security: [['tax_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
         tags: ['Summits', 'Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -174,7 +210,17 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Delete a tax type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        security: [['tax_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
         tags: ['Summits', 'Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -310,7 +356,17 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Put(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
         summary: 'Add a tax type to a ticket type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        security: [['tax_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
         tags: ['Summits', 'Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -364,7 +420,17 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
         summary: 'Remove a tax type from a ticket type',
-        security: [['OAuth2' => ['openid', 'profile', 'email']]],
+        security: [['tax_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
         tags: ['Summits', 'Tax Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),

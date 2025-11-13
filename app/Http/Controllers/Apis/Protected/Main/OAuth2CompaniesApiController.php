@@ -15,6 +15,7 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Rules\Boolean;
 use App\Security\CompanyScopes;
 use App\Security\SummitScopes;
@@ -28,214 +29,10 @@ use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 
-
-#[OA\SecurityScheme(
-    type: 'oauth2',
-    securityScheme: 'OAuth2CompaniesApiControllerAuthSchema',
-    flows: [
-        new OA\Flow(
-            authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
-            tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
-            flow: 'authorizationCode',
-            scopes: [
-                CompanyScopes::Read => 'Read Data',
-                CompanyScopes::Write => 'Write Data',
-                SummitScopes::ReadSummitData => 'Read Summit Data',
-                SummitScopes::ReadAllSummitData => 'Read All Summit Data',
-                SummitScopes::WriteSummitData => 'Write Summit Data',
-            ],
-        ),
-    ],
-)
-]
-class OAuth2CompaniesApiControllerAuthSchema
-{
-}
-
-
 /**
  * Class OAuth2CompaniesApiController
  * @package App\Http\Controllers
  */
-#[OA\Get(
-    path: "/api/v1/companies/{id}",
-    summary: "Get a specific company",
-    description: "Returns detailed information about a specific company",
-    security: [
-        [
-            "OAuth2CompaniesApiControllerAuthSchema" => [
-                CompanyScopes::Read,
-            ]
-        ]
-    ],
-    tags: ["Companies"],
-    parameters: [
-        new OA\Parameter(
-            name: "id",
-            in: "path",
-            required: true,
-            description: "Company ID",
-            schema: new OA\Schema(type: "integer")
-        ),
-        new OA\Parameter(
-            name: "expand",
-            in: "query",
-            required: false,
-            description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
-            schema: new OA\Schema(type: "string")
-        ),
-        new OA\Parameter(
-            name: "relations",
-            in: "query",
-            required: false,
-            description: "Load relations. Available: sponsorships, project_sponsorships",
-            schema: new OA\Schema(type: "string")
-        ),
-    ],
-    responses: [
-        new OA\Response(
-            response: Response::HTTP_OK,
-            description: "Success",
-            content: new OA\JsonContent(ref: "#/components/schemas/Company")
-        ),
-        new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
-    ]
-)]
-/**
- * Class OAuth2CompaniesApiController
- * @package App\Http\Controllers
- */
-#[OA\Get(
-    path: "/api/public/v1/companies/{id}",
-    summary: "Get a specific company (Public)",
-    description: "Returns detailed information about a specific company",
-    tags: ["Companies"],
-    parameters: [
-        new OA\Parameter(
-            name: "id",
-            in: "path",
-            required: true,
-            description: "Company ID",
-            schema: new OA\Schema(type: "integer")
-        ),
-        new OA\Parameter(
-            name: "expand",
-            in: "query",
-            required: false,
-            description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
-            schema: new OA\Schema(type: "string")
-        ),
-        new OA\Parameter(
-            name: "relations",
-            in: "query",
-            required: false,
-            description: "Load relations. Available: sponsorships, project_sponsorships",
-            schema: new OA\Schema(type: "string")
-        ),
-    ],
-    responses: [
-        new OA\Response(
-            response: Response::HTTP_OK,
-            description: "Success",
-            content: new OA\JsonContent(ref: "#/components/schemas/Company")
-        ),
-        new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
-    ]
-)]
-#[OA\Post(
-    path: "/api/v1/companies",
-    summary: "Create a new company",
-    description: "Creates a new company",
-    security: [
-        [
-            "OAuth2CompaniesApiControllerAuthSchema" => [
-                CompanyScopes::Write,
-            ]
-        ]
-    ],
-    tags: ["Companies"],
-    requestBody: new OA\RequestBody(
-        required: true,
-        content: new OA\JsonContent(ref: "#/components/schemas/CompanyCreateRequest")
-    ),
-    responses: [
-        new OA\Response(
-            response: Response::HTTP_CREATED,
-            description: "Created",
-            content: new OA\JsonContent(ref: "#/components/schemas/Company")
-        ),
-        new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
-        new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-        new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-        new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
-    ]
-)]
-#[OA\Put(
-    path: "/api/v1/companies/{id}",
-    summary: "Update a company",
-    description: "Updates an existing company",
-    security: [
-        [
-            "OAuth2CompaniesApiControllerAuthSchema" => [
-                CompanyScopes::Write,
-            ]
-        ]
-    ],
-    tags: ["Companies"],
-    parameters: [
-        new OA\Parameter(
-            name: "id",
-            in: "path",
-            required: true,
-            description: "Company ID",
-            schema: new OA\Schema(type: "integer")
-        ),
-    ],
-    requestBody: new OA\RequestBody(
-        required: true,
-        content: new OA\JsonContent(ref: "#/components/schemas/CompanyUpdateRequest")
-    ),
-    responses: [
-        new OA\Response(
-            response: Response::HTTP_OK,
-            description: "Success",
-            content: new OA\JsonContent(ref: "#/components/schemas/Company")
-        ),
-        new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
-        new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-        new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-        new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
-        new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
-    ]
-)]
-#[OA\Delete(
-    path: "/api/v1/companies/{id}",
-    summary: "Delete a company",
-    description: "Deletes a company",
-    security: [
-        [
-            "OAuth2CompaniesApiControllerAuthSchema" => [
-                CompanyScopes::Write,
-            ]
-        ]
-    ],
-    tags: ["Companies"],
-    parameters: [
-        new OA\Parameter(
-            name: "id",
-            in: "path",
-            required: true,
-            description: "Company ID",
-            schema: new OA\Schema(type: "integer")
-        ),
-    ],
-    responses: [
-        new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted successfully"),
-        new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-        new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-        new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
-    ]
-)]
 final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 {
 
@@ -271,6 +68,203 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         $this->service = $service;
     }
 
+    #[OA\Get(
+        path: "/api/v1/companies/{id}",
+        summary: "Get a specific company",
+        description: "Returns detailed information about a specific company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Read,
+                ]
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Company")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+        ]
+    )]
+    /**
+     * Class OAuth2CompaniesApiController
+     * @package App\Http\Controllers
+     */
+    #[OA\Get(
+        path: "/api/public/v1/companies/{id}",
+        summary: "Get a specific company (Public)",
+        description: "Returns detailed information about a specific company",
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Company")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+        ]
+    )]
+    #[OA\Post(
+        path: "/api/v1/companies",
+        summary: "Create a new company",
+        description: "Creates a new company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/CompanyCreateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/Company")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
+    #[OA\Put(
+        path: "/api/v1/companies/{id}",
+        summary: "Update a company",
+        description: "Updates an existing company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/CompanyUpdateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Company")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
+    #[OA\Delete(
+        path: "/api/v1/companies/{id}",
+        summary: "Delete a company",
+        description: "Deletes a company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+        ]
+    )]
     #[OA\Get(
         path: "/api/v1/companies",
         summary: "Get all companies",
@@ -516,6 +510,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
                 ]
             ]
         ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
         tags: ["Companies"],
         parameters: [
             new OA\Parameter(
@@ -582,6 +582,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
                 ]
             ]
         ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
         tags: ["Companies"],
         parameters: [
             new OA\Parameter(
@@ -619,6 +625,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
                 "OAuth2CompaniesApiControllerAuthSchema" => [
                     CompanyScopes::Write,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
             ]
         ],
         tags: ["Companies"],
@@ -684,6 +696,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
                 "OAuth2CompaniesApiControllerAuthSchema" => [
                     CompanyScopes::Write,
                 ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
             ]
         ],
         tags: ["Companies"],

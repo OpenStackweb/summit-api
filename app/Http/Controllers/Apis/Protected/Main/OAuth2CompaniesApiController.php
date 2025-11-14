@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
+
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +15,19 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Rules\Boolean;
+use App\Security\CompanyScopes;
+use App\Security\SummitScopes;
 use App\Services\Model\ICompanyService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2CompaniesApiController
@@ -51,19 +59,340 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
      */
     public function __construct
     (
-        ICompanyRepository     $company_repository,
+        ICompanyRepository $company_repository,
         IResourceServerContext $resource_server_context,
-        ICompanyService        $service
-    )
-    {
+        ICompanyService $service
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $company_repository;
         $this->service = $service;
     }
 
+    #[OA\Get(
+        path: "/api/v1/companies/{id}",
+        summary: "Get a specific company",
+        description: "Returns detailed information about a specific company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Read,
+                ]
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Company")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+        ]
+    )]
     /**
-     * @return mixed
+     * Class OAuth2CompaniesApiController
+     * @package App\Http\Controllers
      */
+    #[OA\Get(
+        path: "/api/public/v1/companies/{id}",
+        summary: "Get a specific company (Public)",
+        description: "Returns detailed information about a specific company",
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Company")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+        ]
+    )]
+    #[OA\Post(
+        path: "/api/v1/companies",
+        summary: "Create a new company",
+        description: "Creates a new company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/CompanyCreateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/Company")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
+    #[OA\Put(
+        path: "/api/v1/companies/{id}",
+        summary: "Update a company",
+        description: "Updates an existing company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/CompanyUpdateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Company")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
+    #[OA\Delete(
+        path: "/api/v1/companies/{id}",
+        summary: "Delete a company",
+        description: "Deletes a company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+        ]
+    )]
+    #[OA\Get(
+        path: "/api/v1/companies",
+        summary: "Get all companies",
+        description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Read,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of pages in each page',
+            ),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter companies. Available filters: name (=@, ==, @@), member_level (=@, ==, @@), display_on_site (==)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, name, member_level",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCompaniesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+        ]
+    )]
+
+    #[OA\Get(
+        path: "/api/public/v1/companies",
+        summary: "Get all companies (Public)",
+        description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of pages in each page',
+            ),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter companies. Available filters: name (=@, ==, @@), member_level (=@, ==, @@), display_on_site (==)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, name, member_level",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCompaniesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+        ]
+    )]
     public function getAllCompanies()
     {
 
@@ -72,14 +401,14 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
                 return [
                     'name' => ['=@', '==', '@@'],
                     'member_level' => ['=@', '==', '@@'],
-                    'display_on_site' => [ '=='],
+                    'display_on_site' => ['=='],
                 ];
             },
             function () {
                 return [
                     'name' => 'sometimes|string',
                     'member_level' => 'sometimes|string',
-                    'display_on_site' =>  ['sometimes', new Boolean],
+                    'display_on_site' => ['sometimes', new Boolean],
                 ];
             },
             function () {
@@ -93,7 +422,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
                 return $filter;
             },
             function () {
-              return $this->getEntitySerializerType();
+                return $this->getEntitySerializerType();
             }
         );
     }
@@ -117,7 +446,8 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         return $this->service->addCompany($payload);
     }
 
-    protected function addEntitySerializerType(){
+    protected function addEntitySerializerType()
+    {
         return $this->getEntitySerializerType();
     }
 
@@ -145,7 +475,8 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
             SerializerRegistry::SerializerType_Public;
     }
 
-    protected function updateEntitySerializerType(){
+    protected function updateEntitySerializerType()
+    {
         return $this->getEntitySerializerType();
     }
     /**
@@ -168,11 +499,63 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 
     // Logos
 
-    /**
-     * @param LaravelRequest $request
-     * @param $speaker_id
-     * @return mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/companies/{id}/logo",
+        summary: "Add company logo",
+        description: "Uploads a logo image for the company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    required: ["file"],
+                    properties: [
+                        new OA\Property(
+                            property: "file",
+                            type: "string",
+                            format: "binary",
+                            description: "Logo image file"
+                        )
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Logo uploaded successfully",
+                content: new OA\JsonContent(type: "object")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "File parameter not set"),
+        ]
+    )]
     public function addCompanyLogo(LaravelRequest $request, $company_id)
     {
         return $this->processRequest(function () use ($request, $company_id) {
@@ -188,10 +571,40 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $company_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/companies/{id}/logo",
+        summary: "Delete company logo",
+        description: "Removes the logo image from the company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Logo deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+        ]
+    )]
     public function deleteCompanyLogo($company_id)
     {
         return $this->processRequest(function () use ($company_id) {
@@ -203,11 +616,63 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $speaker_id
-     * @return mixed
-     */
+    #[OA\Post(
+        path: "/api/v1/companies/{id}/logo/big",
+        summary: "Add company big logo",
+        description: "Uploads a big logo image for the company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    required: ["file"],
+                    properties: [
+                        new OA\Property(
+                            property: "file",
+                            type: "string",
+                            format: "binary",
+                            description: "Big logo image file"
+                        )
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Big logo uploaded successfully",
+                content: new OA\JsonContent(type: "object")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "File parameter not set"),
+        ]
+    )]
     public function addCompanyBigLogo(LaravelRequest $request, $company_id)
     {
         return $this->processRequest(function () use ($request, $company_id) {
@@ -222,10 +687,40 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $company_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/companies/{id}/logo/big",
+        summary: "Delete company big logo",
+        description: "Removes the big logo image from the company",
+        security: [
+            [
+                "OAuth2CompaniesApiControllerAuthSchema" => [
+                    CompanyScopes::Write,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Company ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Big logo deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
+        ]
+    )]
     public function deleteCompanyBigLogo($company_id)
     {
         return $this->processRequest(function () use ($company_id) {

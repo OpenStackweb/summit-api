@@ -120,7 +120,21 @@ class PaginatedCSVRSVPInvitationsResponseSchema {}
         new OA\Property(property: 'event', ref: '#/components/schemas/SummitEvent'),
     ]
 )]
-class RSVPInvitationSchema {}
+class RSVPInvitationSchema {}curl 'https://purchases-api.dev.fnopen.com/api/v1/summits/63/sponsors/359/carts/current/forms?access_token=zA4BHSUmTlR5cvK0x2w52yyO2NeSTQwS_aRm-yFTcYxQWBEHQNO5WhXH9Vmmk9uCBuqHpiOaki0K4sAoOSIAUUciHDpz0kITLXxiQcqlRZeIuA75pLMfxyzKBCGH6SxB' \
+  -H 'accept: */*' \
+  -H 'accept-language: es-AR,es;q=0.9,en-US;q=0.8,en;q=0.7' \
+  -H 'content-type: application/json' \
+  -H 'origin: https://localhost:8000' \
+  -H 'priority: u=1, i' \
+  -H 'referer: https://localhost:8000/' \
+  -H 'sec-ch-ua: "Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "Linux"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: cross-site' \
+  -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36' \
+  --data-raw '{"form_id":"19","addon_id":"none","items":[{"form_item_id":10,"meta_fields":[{"type_id":61,"class_field":"Item","current_value":""},{"type_id":62,"class_field":"Item","current_value":false},{"type_id":40,"class_field":"Form","current_value":"tst1"},{"type_id":41,"class_field":"Form","current_value":false},{"type_id":42,"class_field":"Form","current_value":[46]},{"type_id":43,"class_field":"Form","current_value":48},{"type_id":44,"class_field":"Form","current_value":1},{"type_id":45,"class_field":"Form","current_value":1},{"type_id":46,"class_field":"Form","current_value":"2025-11-14T08:00:00.000Z"}],"notes":"a note"},{"form_item_id":11,"meta_fields":[{"type_id":63,"class_field":"Item","current_value":""},{"type_id":64,"class_field":"Item","current_value":false},{"type_id":40,"class_field":"Form","current_value":"tst2"},{"type_id":41,"class_field":"Form","current_value":true},{"type_id":42,"class_field":"Form","current_value":[47]},{"type_id":43,"class_field":"Form","current_value":49},{"type_id":44,"class_field":"Form","current_value":1},{"type_id":45,"class_field":"Form","current_value":1},{"type_id":46,"class_field":"Form","current_value":"2025-11-14T20:00:00.000Z"}],"notes":"note 2"}]}'
 
 
 #[OA\Schema(
@@ -350,6 +364,20 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+// Legal Documents
+
+#[OA\Schema(
+    schema: 'LegalDocument',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'title', type: 'string', example: 'Privacy Policy'),
+        new OA\Property(property: 'slug', type: 'string', example: 'privacy-policy'),
+        new OA\Property(property: 'content', type: 'string', example: 'This privacy policy describes how we handle your data...'),
+    ]
+)]
+class LegalDocumentSchema {}
 
 #[OA\Schema(
     schema: 'ChunkedFileUploadProgressResponse',

@@ -350,3 +350,56 @@ class RSVPUpdateRequestSchema_{
     ]
 )]
 class RSVPAdminAddRequestSchema {}
+
+#[OA\Schema(
+    schema: 'ChunkedFileUploadProgressResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'done', type: 'number', format: 'float', example: 45.5, description: 'Upload progress percentage (0-100)'),
+    ]
+)]
+class ChunkedFileUploadProgressResponseSchema {}
+
+#[OA\Schema(
+    schema: 'ChunkedFileUploadCompleteResponse',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'path', type: 'string', example: 'upload/image-jpeg/2025-09-30/', description: 'Directory path where the file was saved'),
+        new OA\Property(property: 'name', type: 'string', example: 'myfile_abc123def456.jpg', description: 'Generated filename with timestamp hash'),
+        new OA\Property(property: 'mime_type', type: 'string', example: 'image-jpeg', description: 'MIME type of the uploaded file (slashes replaced with hyphens)'),
+    ]
+)]
+class ChunkedFileUploadCompleteResponseSchema {}
+
+#[OA\Schema(
+    schema: 'ChunkedFileUploadRequest',
+    type: 'object',
+    required: ['file'],
+    properties: [
+        new OA\Property(
+            property: 'file',
+            type: 'string',
+            format: 'binary',
+            description: 'File to upload (can be a chunk of a larger file)'
+        ),
+        new OA\Property(
+            property: 'resumableChunkNumber',
+            type: 'integer',
+            description: 'Current chunk number (for resumable.js library)',
+            example: 1
+        ),
+        new OA\Property(
+            property: 'resumableTotalChunks',
+            type: 'integer',
+            description: 'Total number of chunks (for resumable.js library)',
+            example: 5
+        ),
+        new OA\Property(
+            property: 'resumableIdentifier',
+            type: 'string',
+            description: 'Unique identifier for the file upload session (for resumable.js library)',
+            example: '12345-myfile-jpg'
+        ),
+    ]
+)]
+class ChunkedFileUploadRequestSchema {}

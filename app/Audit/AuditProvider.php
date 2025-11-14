@@ -1,7 +1,6 @@
 <?php namespace App\Audit;
-
 /**
- * Copyright 2022 OpenStack Foundation
+ * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +12,27 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\ServiceProvider;
 
-/**
- * Interface IAuditLogFormatter
- * @package App\Audit
- */
-interface IAuditLogFormatter
+class AuditProvider extends ServiceProvider
 {
-    /**
-     * @param $subject
-     * @param array $change_set
-     * @return string|null
-     */
-    public function format($subject, array $change_set):?string;
+    protected $defer = true;
+
+    public function boot()
+    {
+    }
+
+    public function register()
+    {
+        App::singleton(IAuditLogFormatterFactory::class, AuditLogFormatterFactory::class);
+    }
+
+    public function provides()
+    {
+        return [
+            IAuditLogFormatterFactory::class,
+        ];
+    }
+
 }

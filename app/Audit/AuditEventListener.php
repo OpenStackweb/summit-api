@@ -1,9 +1,6 @@
-<?php
-
-namespace App\Audit;
-
+<?php namespace App\Audit;
 /**
- * Copyright 2022 OpenStack Foundation
+ * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +12,7 @@ namespace App\Audit;
  * limitations under the License.
  **/
 
-use App\Audit\AuditLogOtlpStrategy;
+use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -29,30 +26,34 @@ class AuditEventListener
 
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
+        if (app()->environment('testing')){
+            return;
+        }
         $em = $eventArgs->getObjectManager();
         $uow = $em->getUnitOfWork();
         // Strategy selection based on environment configuration
         $strategy = $this->getAuditStrategy($em);
-
         if (!$strategy) {
             return; // No audit strategy enabled
         }
 
+        $ctx = $this->buildAuditContext();
+
         try {
             foreach ($uow->getScheduledEntityInsertions() as $entity) {
-                $strategy->audit($entity, [], AuditLogOtlpStrategy::EVENT_ENTITY_CREATION);
+                $strategy->audit($entity, [], IAuditStrategy::EVENT_ENTITY_CREATION, $ctx);
             }
 
             foreach ($uow->getScheduledEntityUpdates() as $entity) {
-                $strategy->audit($entity, $uow->getEntityChangeSet($entity), AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE);
+                $strategy->audit($entity, $uow->getEntityChangeSet($entity), IAuditStrategy::EVENT_ENTITY_UPDATE, $ctx);
             }
 
             foreach ($uow->getScheduledEntityDeletions() as $entity) {
-                $strategy->audit($entity, [], AuditLogOtlpStrategy::EVENT_ENTITY_DELETION);
+                $strategy->audit($entity, [], IAuditStrategy::EVENT_ENTITY_DELETION, $ctx);
             }
 
             foreach ($uow->getScheduledCollectionUpdates() as $col) {
-                $strategy->audit($col, [], AuditLogOtlpStrategy::EVENT_COLLECTION_UPDATE);
+                $strategy->audit($col, [], IAuditStrategy::EVENT_COLLECTION_UPDATE, $ctx);
             }
         } catch (\Exception $e) {
             Log::error('Audit event listener failed', [
@@ -78,9 +79,36 @@ class AuditEventListener
                 ]);
             }
         }
-        
+
         // Use database strategy (either as default or fallback)
         return new AuditLogStrategy($em);
+    }
 
+    private function buildAuditContext(): AuditContext
+    {
+        $resourceCtx = app(\models\oauth2\IResourceServerContext::class);
+        $userExternalId = $resourceCtx->getCurrentUserId();
+        $member = null;
+        if ($userExternalId) {
+            $memberRepo = app(\models\main\IMemberRepository::class);
+            $member = $memberRepo->findOneBy(["user_external_id" => $userExternalId]);
+        }
+
+        //$ui = app()->bound('ui.context') ? app('ui.context') : [];
+
+        $req = request();
+
+        return new AuditContext(
+            userId:        $member?->getId(),
+            userEmail:     $member?->getEmail(),
+            userFirstName: $member?->getFirstName(),
+            userLastName:  $member?->getLastName(),
+            uiApp:         $ui['app']  ?? null,
+            uiFlow:        $ui['flow'] ?? null,
+            route:         $req?->path(),
+            httpMethod:    $req?->method(),
+            clientIp:      $req?->ip(),
+            userAgent:     $req?->userAgent(),
+        );
     }
 }

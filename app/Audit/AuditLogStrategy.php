@@ -1,6 +1,4 @@
-<?php
-
-namespace App\Audit;
+<?php namespace App\Audit;
 
 /**
  * Copyright 2022 OpenStack Foundation
@@ -20,6 +18,7 @@ use App\Audit\ConcreteFormatters\EntityCollectionUpdateAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
+use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +31,7 @@ use models\summit\SummitEvent;
  * Class AuditLogFormatterStrategy
  * @package App\Audit
  */
-class AuditLogStrategy
+class AuditLogStrategy implements IAuditStrategy
 {
     public const EVENT_COLLECTION_UPDATE = 'event_collection_update';
     public const EVENT_ENTITY_CREATION = 'event_entity_creation';
@@ -72,7 +71,8 @@ class AuditLogStrategy
      * @param $event_type
      * @return void
      */
-    public function audit($subject, $change_set, $event_type) {
+    public function audit($subject, $change_set, $event_type, AuditContext $ctx): void
+    {
         try {
             $entity = $this->resolveAuditableEntity($subject);
 

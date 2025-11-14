@@ -1,7 +1,6 @@
 <?php namespace App\Audit;
-
 /**
- * Copyright 2022 OpenStack Foundation
+ * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,18 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
-
-/**
- * Interface IAuditLogFormatter
- * @package App\Audit
- */
-interface IAuditLogFormatter
+class AuditContext
 {
-    /**
-     * @param $subject
-     * @param array $change_set
-     * @return string|null
-     */
-    public function format($subject, array $change_set):?string;
+    public function __construct(
+        public ?int    $userId = null,
+        public ?string $userEmail = null,
+        public ?string $userFirstName = null,
+        public ?string $userLastName = null,
+        public ?string $uiApp = null,
+        public ?string $uiFlow = null,
+        public ?string $route = null,
+        public ?string $httpMethod = null,
+        public ?string $clientIp = null,
+        public ?string $userAgent = null,
+    ) {}
 }

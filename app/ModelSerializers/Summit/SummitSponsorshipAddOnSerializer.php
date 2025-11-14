@@ -1,5 +1,6 @@
 <?php namespace App\ModelSerializers\Summit;
 
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SilverStripeSerializer;
 
 /**
@@ -23,6 +24,16 @@ final class SummitSponsorshipAddOnSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'Name' => 'name:json_string',
-        'Type' => 'type:json_string'
+        'Type' => 'type:json_string',
+        'SponsorshipId' => 'sponsorship_id:json_int',
+    ];
+
+    protected static $expand_mappings = [
+        'sponsorship' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'sponsorship_id',
+            'getter' => 'getSponsorship',
+            'has' => 'hasSponsorship'
+        ],
     ];
 }

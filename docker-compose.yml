@@ -1,157 +1,189 @@
 services:
-  app:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-      args:
-        GITHUB_OAUTH_TOKEN: ${GITHUB_OAUTH_TOKEN}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    image: summit-api
-    pull_policy: never
-    container_name: summit-api
-    restart: unless-stopped
-    working_dir: /var/www/
-    volumes:
-      - ./:/var/www
-    networks:
-      - summit-api-local-net
-    depends_on:
-      redis:
-        condition: service_started
-      rabbitmq_sponsor_services:
-        condition: service_started
-      db_config:
-        condition: service_healthy
-      db_model:
-        condition: service_healthy
-  redis:
-    image: redis:latest
-    container_name: redis-summit-api
-    restart: always
-    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-    ports:
-      - ${REDIS_PORT}
-    volumes:
-      - /tmp/summit_api/redis:/root/redis
-      - ./docker-compose/redis/redis.conf:/usr/local/etc/redis/redis.conf
-    networks:
-      - summit-api-local-net
-    env_file: ./.env
-  rabbitmq_sponsor_services:
-    image: rabbitmq:3-management
-    environment:
-      RABBITMQ_DEFAULT_USER: ${DOMAIN_EVENTS_RABBITMQ_LOGIN}
-      RABBITMQ_DEFAULT_PASS: ${DOMAIN_EVENTS_RABBITMQ_PASSWORD}
-    ports:
-      - "15672:15672"  # admin
-      - "5672:5672"    # RabbitMQ
-    networks:
-      - summit-api-local-net
-    env_file: ./.env
-  db_config:
-    image: mysql:8.0
-    container_name: summit-api-config-db-local
-    command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION
-    restart: unless-stopped
-    ports:
-      - "32780:3306"
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
-    healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
-      timeout: 20s
-      retries: 10
-    volumes:
-      - ./docker-compose/mysql/config:/docker-entrypoint-initdb.d
-      - mysql_summit_api_config:/var/lib/mysql
-    networks:
-      - summit-api-local-net
-    env_file: ./.env
-  db_model:
-    image: mysql:8.0
-    container_name: summit-api-model-db-local
-    command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION
-    restart: unless-stopped
-    ports:
-      - "32781:3306"
-    environment:
-      MYSQL_DATABASE: ${SS_DATABASE}
-      MYSQL_PASSWORD: ${SS_DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${SS_DB_PASSWORD}
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
-    healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
-      timeout: 20s
-      retries: 10
-    volumes:
-      - ./docker-compose/mysql/model:/docker-entrypoint-initdb.d
-      - mysql_summit_api_model:/var/lib/mysql
-    networks:
-      - summit-api-local-net
-    env_file: ./.env
-  nginx:
-    image: nginx:alpine
-    container_name: nginx-summit-api
-    restart: unless-stopped
-    ports:
-      - "8002:80"
-    volumes:
-      - ./:/var/www
-      - ./docker-compose/nginx:/etc/nginx/conf.d/
-    networks:
-      - summit-api-local-net
-    env_file: ./.env
-    depends_on:
-      - app
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib
-    volumes:
-      - ./docker-compose/opentelemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
-      - ./docker-compose/opentelemetry/otel-traces.json:/tmp/otel-traces.json
-    ports:
-      - 1888:1888 # pprof extension
-      - 8888:8888 # Prometheus metrics exposed by the Collector
-      - 8889:8889 # Prometheus exporter metrics
-      - 13133:13133 # health_check extension
-      - 4317:4317 # OTLP gRPC receiver
-      - 4318:4318 # OTLP http receiver
-      - 55679:55679 # zpages extension
-    networks:
-      - summit-api-local-net
-    depends_on:
-      - elasticsearch
+    app:
+        build:
+            context: ./
+            dockerfile: Dockerfile
+            args:
+                GITHUB_OAUTH_TOKEN: ${GITHUB_OAUTH_TOKEN}
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        image: summit-api
+        pull_policy: never
+        container_name: summit-api
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        networks:
+            - summit-api-local-net
+        depends_on:
+            redis:
+                condition: service_started
+            rabbitmq_sponsor_services:
+                condition: service_started
+            db_config:
+                condition: service_healthy
+            db_model:
+                condition: service_healthy
+            memcached:
+                condition: service_healthy
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - cluster.name=summit-api-cluster
-      - node.name=summit-api-node
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    networks:
-      - summit-api-local-net
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    memcached:
+        image: memcached:1.6-alpine
+        container_name: memcached-summit-api
+        restart: unless-stopped
+        command:
+            - memcached
+            - -m
+            - "256"     # memory (MB)
+            - -I
+            - "5m"      # per-item limit
+            - -c
+            - "4096"    # max connections
+            - -t
+            - "2"       # threads
+        healthcheck:
+            test: ["CMD", "sh", "-lc", "printf 'version\r\n' | nc -w 1 127.0.0.1 11211 >/dev/null"]
+            interval: 10s
+            timeout: 3s
+            retries: 5
+        networks:
+            - summit-api-local-net
+
+    redis:
+        image: redis:latest
+        container_name: redis-summit-api
+        restart: always
+        command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+        ports:
+            - ${REDIS_PORT}
+        volumes:
+            - /tmp/summit_api/redis:/root/redis
+            - ./docker-compose/redis/redis.conf:/usr/local/etc/redis/redis.conf
+        networks:
+            - summit-api-local-net
+        env_file: ./.env
+
+    rabbitmq_sponsor_services:
+        image: rabbitmq:3-management
+        environment:
+            RABBITMQ_DEFAULT_USER: ${DOMAIN_EVENTS_RABBITMQ_LOGIN}
+            RABBITMQ_DEFAULT_PASS: ${DOMAIN_EVENTS_RABBITMQ_PASSWORD}
+        ports:
+            - "15672:15672"  # admin
+            - "5672:5672"    # RabbitMQ
+        networks:
+            - summit-api-local-net
+        env_file: ./.env
+
+    db_config:
+        image: mysql:8.0
+        container_name: summit-api-config-db-local
+        command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION
+        restart: unless-stopped
+        ports:
+            - "32780:3306"
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+            timeout: 20s
+            retries: 10
+        volumes:
+            - ./docker-compose/mysql/config:/docker-entrypoint-initdb.d
+            - mysql_summit_api_config:/var/lib/mysql
+        networks:
+            - summit-api-local-net
+        env_file: ./.env
+
+    db_model:
+        image: mysql:8.0
+        container_name: summit-api-model-db-local
+        command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION
+        restart: unless-stopped
+        ports:
+            - "32781:3306"
+        environment:
+            MYSQL_DATABASE: ${SS_DATABASE}
+            MYSQL_PASSWORD: ${SS_DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${SS_DB_PASSWORD}
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+            timeout: 20s
+            retries: 10
+        volumes:
+            - ./docker-compose/mysql/model:/docker-entrypoint-initdb.d
+            - mysql_summit_api_model:/var/lib/mysql
+        networks:
+            - summit-api-local-net
+        env_file: ./.env
+
+    nginx:
+        image: nginx:alpine
+        container_name: nginx-summit-api
+        restart: unless-stopped
+        ports:
+            - "8002:80"
+        volumes:
+            - ./:/var/www
+            - ./docker-compose/nginx:/etc/nginx/conf.d/
+        networks:
+            - summit-api-local-net
+        env_file: ./.env
+        depends_on:
+            - app
+
+    otel-collector:
+        image: otel/opentelemetry-collector-contrib
+        volumes:
+            - ./docker-compose/opentelemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+            - ./docker-compose/opentelemetry/otel-traces.json:/tmp/otel-traces.json
+        ports:
+            - 1888:1888
+            - 8888:8888
+            - 8889:8889
+            - 13133:13133
+            - 4317:4317
+            - 4318:4318
+            - 55679:55679
+        networks:
+            - summit-api-local-net
+        depends_on:
+            - elasticsearch
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+        container_name: elasticsearch
+        environment:
+            - discovery.type=single-node
+            - xpack.security.enabled=false
+            - ES_JAVA_OPTS=-Xms512m -Xmx512m
+            - cluster.name=summit-api-cluster
+            - node.name=summit-api-node
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        volumes:
+            - elasticsearch_data:/usr/share/elasticsearch/data
+        networks:
+            - summit-api-local-net
+        healthcheck:
+            test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+
 networks:
-  summit-api-local-net:
-    driver: bridge
+    summit-api-local-net:
+        driver: bridge
+
 volumes:
-  mysql_summit_api_model:
-  mysql_summit_api_config:
-  elasticsearch_data:
+    mysql_summit_api_model:
+    mysql_summit_api_config:
+    elasticsearch_data:

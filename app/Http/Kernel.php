@@ -39,7 +39,6 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\SecurityHTTPHeadersWriterMiddleware::class,
         \App\Http\Middleware\ParseMultipartFormDataInputForNonPostRequests::class,
         \App\Http\Middleware\DoctrineMiddleware::class,
-        \App\Http\Middleware\RequestScopedCacheMiddleware::class,
     ];
 
     /**

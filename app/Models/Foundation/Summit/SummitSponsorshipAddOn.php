@@ -15,6 +15,7 @@
 use App\Repositories\Summit\DoctrineSummitSponsorshipAddOnRepository;
 use Doctrine\ORM\Mapping as ORM;
 use models\exceptions\ValidationException;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
 /**
@@ -24,6 +25,17 @@ use models\utils\SilverstripeBaseModel;
 #[ORM\Entity(repositoryClass: DoctrineSummitSponsorshipAddOnRepository::class)]
 class SummitSponsorshipAddOn extends SilverstripeBaseModel
 {
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getSponsorshipId' => 'sponsorship',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasSponsorship' => 'sponsorship',
+    ];
+
     const Booth_Type = 'Booth';
     const MeetingRoom_Type = 'Meeting_Room';
     const ScheduleSpot_Type = 'Schedule_Spot';

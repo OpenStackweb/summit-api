@@ -1,5 +1,6 @@
 <?php namespace App\Http\Middleware;
 
+use App\Utils\Cache\MemCache;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -87,49 +88,82 @@ final class CacheMiddleware
             }
         }
         $status = 200;
+        $wasMemCacheHit = false;
         $wasHit = false;
+        $data = null;
+
         if ($regionTag) {
             Log::debug("CacheMiddleware: using region tag {$regionTag} ip {$ip} agent {$agent}");
-            $wasHit = Cache::tags($regionTag)->has($key);
-            Log::debug($wasHit ? "CacheMiddleware: cache HIT (tagged)" : "CacheMiddleware: cache MISS (tagged)", [
-                'tag' => $regionTag,
-                'ip' => $ip,
-                'agent' => $agent,
-                'key' => $key,
-            ]);
+            // try L1
+            $encoded = MemCache::get($key);
+            $wasMemCacheHit = $encoded !== null;
+            if($wasMemCacheHit){
+                Log::debug("CacheMiddleware:: MemcCache Hit");
+            }
+            if(!$wasMemCacheHit) {
+                // then L2 Redis
+                $wasHit = Cache::tags($regionTag)->has($key);
+                Log::debug($wasHit ? "CacheMiddleware: cache HIT Redis (tagged)" : "CacheMiddleware: cache MISS (tagged)", [
+                    'tag' => $regionTag,
+                    'ip' => $ip,
+                    'agent' => $agent,
+                    'key' => $key,
+                ]);
 
-            $encoded = Cache::tags($regionTag)
-                ->remember($key, $cache_lifetime, function() use ($next, $request, $regionTag, $key, $cache_lifetime, &$status,$ip, $agent) {
+                $encoded = Cache::tags($regionTag)
+                    ->remember($key, $cache_lifetime, function () use ($next, $request, $regionTag, $key, $cache_lifetime, &$status, $ip, $agent) {
+                        $resp = $next($request);
+                        if ($resp instanceof JsonResponse) {
+                            $status = $resp->getStatusCode();
+                            if ($status === 200) {
+                                return $this->encode($resp->getData(true));
+                            }
+                        }
+                        // don’t cache non-200 or non-JSON
+                        return Cache::get($key);
+                    });
+
+
+                // backfill Memcache only if we actually have a value
+                if ($encoded !== null) { // avoid null writes
+                    MemCache::put($key, $encoded, $cache_lifetime, $regionTag);
+                }
+            }
+            $data = $this->decode($encoded);
+        } else {
+            // try L1
+            $encoded = MemCache::get($key);
+            $wasMemCacheHit = !is_null($encoded);
+            if($wasMemCacheHit){
+                Log::debug("CacheMiddleware:: MemcCache Hit");
+            }
+            if(!$wasMemCacheHit) {
+                // then L2 Redis
+
+                $wasHit = Cache::has($key);
+
+                Log::debug($wasHit ? "CacheMiddleware: cache HIT" : "CacheMiddleware: cache MISS", [
+                    'ip' => $ip,
+                    'agent' => $agent,
+                    'key' => $key,
+                ]);
+
+                $encoded = Cache::remember($key, $cache_lifetime, function () use ($next, $request, $key, &$status, $ip, $agent) {
                     $resp = $next($request);
                     if ($resp instanceof JsonResponse) {
                         $status = $resp->getStatusCode();
-                        if($status === 200) {
+                        if ($status === 200)
                             return $this->encode($resp->getData(true));
-                        }
                     }
-                    // don’t cache non-200 or non-JSON
                     return Cache::get($key);
                 });
-            $data = $this->decode($encoded);
-        } else {
-            $wasHit = Cache::has($key);
-
-            Log::debug($wasHit ? "CacheMiddleware: cache HIT" : "CacheMiddleware: cache MISS", [
-                'ip' => $ip,
-                'agent' => $agent,
-                'key' => $key,
-            ]);
-
-            $encoded = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key, &$status, $ip, $agent) {
-                $resp = $next($request);
-                if ($resp instanceof JsonResponse) {
-                    $status = $resp->getStatusCode();
-                    if($status === 200)
-                        return $this->encode($resp->getData(true));
+                // store at MemCache
+                if ($encoded !== null) { // avoid null writes
+                    MemCache::put($key, $encoded, $cache_lifetime);
                 }
-                return Cache::get($key);
-            });
-            $data = $this->decode($encoded);
+
+                $data = $this->decode($encoded);
+            }
         }
         // safe guard
         if ($data === null) $data = is_array($encoded) ? $encoded : [];
@@ -143,7 +177,8 @@ final class CacheMiddleware
         $response->headers->addCacheControlDirective('must-revalidate', true);
         $response->headers->addCacheControlDirective('proxy-revalidate', true);
         $response->headers->add([
-            'X-Cache-Result' => $wasHit ? 'HIT':'MISS',
+            'X-Cache-Result' => ($wasMemCacheHit || $wasHit) ? 'HIT' : 'MISS',
+            'X-Cache-Type' =>  $wasMemCacheHit ? 'M' : ($wasHit ? 'R' : 'N'),
         ]);
         Log::debug( "CacheMiddleware: returning response", [
             'ip' => $ip,

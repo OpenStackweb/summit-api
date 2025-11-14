@@ -172,6 +172,7 @@ return [
         SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
         \App\Providers\DoctrineWorkerServiceProvider::class,
         App\libs\Utils\Doctrine\DoctrineCacheServiceProvider::class,
+        App\Audit\AuditProvider::class,
         // Only if you want to toggle via env:
     ],  env('OTEL_SERVICE_ENABLED', false) ? [\Keepsuit\LaravelOpenTelemetry\LaravelOpenTelemetryServiceProvider::class] : []),
 

@@ -85,9 +85,11 @@ final class GoogleGeoCodingAPI implements IGeoCodingAPI
             $params['postal_code'] = urlencode($zip_code);
         }
 
+        Log::warning("GoogleGeoCodingAPI::getGeoCoordinates", ['params' => $params]);
         $response = $this->doRequest($params);
 
         if($response['status'] != GoogleGeoCodingAPI::ResponseStatusOK){
+            Log::warning("GoogleGeoCodingAPI::getGeoCoordinates", ['response' => $response]);
             throw new GeoCodingApiException($response['status']);
         }
 

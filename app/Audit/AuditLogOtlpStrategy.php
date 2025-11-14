@@ -1,107 +1,77 @@
-<?php
-
-namespace App\Audit;
-
+<?php namespace App\Audit;
+/**
+ * Copyright 2025 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\PersistentCollection;
-use Illuminate\Support\Facades\App;
-use models\summit\PresentationAction;
-use models\summit\PresentationExtraQuestionAnswer;
-use models\summit\SummitAttendeeBadgePrint;
-use models\summit\SummitEvent;
-use App\Audit\ConcreteFormatters\ChildEntityFormatters\ChildEntityFormatterFactory;
-use App\Audit\ConcreteFormatters\EntityCollectionUpdateAuditLogFormatter;
-use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
-use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
-use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
-use Keepsuit\LaravelOpenTelemetry\Facades\Logger;
-
+use Illuminate\Support\Facades\Log;
+use App\Jobs\EmitAuditLogJob;
 /**
  * OpenTelemetry Logs Audit Strategy
  */
 class AuditLogOtlpStrategy implements IAuditStrategy
 {
-    public const EVENT_COLLECTION_UPDATE = 'event_collection_update';
-    public const EVENT_ENTITY_CREATION = 'event_entity_creation';
-    public const EVENT_ENTITY_DELETION = 'event_entity_deletion';
-    public const EVENT_ENTITY_UPDATE = 'event_entity_update';
-
-    public const ACTION_CREATE = 'create';
-    public const ACTION_UPDATE = 'update';
-    public const ACTION_DELETE = 'delete';
-    public const ACTION_COLLECTION_UPDATE = 'collection_update';
-    public const ACTION_UNKNOWN = 'unknown';
-
-    public const LOG_MESSAGE_CREATED = 'audit.entity.created';
-    public const LOG_MESSAGE_UPDATED = 'audit.entity.updated';
-    public const LOG_MESSAGE_DELETED = 'audit.entity.deleted';
-    public const LOG_MESSAGE_COLLECTION_UPDATED = 'audit.collection.updated';
-    public const LOG_MESSAGE_CHANGED = 'audit.entity.changed';
 
     private bool $enabled;
     private string $elasticIndex;
 
-    public function __construct()
+    private IAuditLogFormatterFactory $formatterFactory;
+    public function __construct(IAuditLogFormatterFactory $formatterFactory)
     {
+        $this->formatterFactory = $formatterFactory;
         $this->enabled = config('opentelemetry.enabled', false);
         $this->elasticIndex = config('opentelemetry.logs.elasticsearch_index', 'logs-audit');
     }
 
-    public function audit($subject, array $change_set, string $event_type): void
+    /**
+     * @param $subject
+     * @param array $change_set
+     * @param string $event_type
+     * @param AuditContext $ctx
+     * @return void
+     */
+    public function audit($subject, array $change_set, string $event_type,  AuditContext $ctx): void
     {
         if (!$this->enabled) {
             return;
         }
-
+            Log::debug("AuditLogOtlpStrategy::audit", ['subject' => $subject, 'change_set' => $change_set, 'event_type' => $event_type]);
         try {
             $entity = $this->resolveAuditableEntity($subject);
             if (is_null($entity)) {
+                Log::warning("AuditLogOtlpStrategy::audit subject not found");
                 return;
             }
-
-            $resource_server_ctx = App::make(\models\oauth2\IResourceServerContext::class);
-            $user_id = $resource_server_ctx->getCurrentUserId();
-            $user_email = $resource_server_ctx->getCurrentUserEmail();
-
-            $formatter = null;
-            switch ($event_type) {
-                case self::EVENT_COLLECTION_UPDATE:
-                    $child_entity = null;
-                    if (count($subject) > 0) {
-                        $child_entity = $subject[0];
-                    }
-                    if (is_null($child_entity) && count($subject->getSnapshot()) > 0) {
-                        $child_entity = $subject->getSnapshot()[0];
-                    }
-                    $child_entity_formatter = $child_entity != null ? ChildEntityFormatterFactory::build($child_entity) : null;
-                    $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
-                    break;
-                case self::EVENT_ENTITY_CREATION:
-                    $formatter = new EntityCreationAuditLogFormatter();
-                    break;
-                case self::EVENT_ENTITY_DELETION:
-                    $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
-                    $formatter = new EntityDeletionAuditLogFormatter($child_entity_formatter);
-                    break;
-                case self::EVENT_ENTITY_UPDATE:
-                    $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
-                    $formatter = new EntityUpdateAuditLogFormatter($child_entity_formatter);
-                    break;
+            Log::debug("AuditLogOtlpStrategy::audit current user", ["user_id" => $ctx->userId, "user_email" => $ctx->userEmail]);
+            $formatter = $this->formatterFactory->make($subject, $event_type);
+            if(is_null($formatter)) {
+                Log::warning("AuditLogOtlpStrategy::audit formatter not found");
+                return;
             }
-
-            $description = null;
-            if ($formatter) {
-                $description = $formatter->format($subject, $change_set);
+            $description = $formatter->format($subject, $change_set);
+            if(is_null($description)){
+                Log::warning("AuditLogOtlpStrategy::audit description is empty");
+                return;
             }
-
-            $auditData = $this->buildAuditLogData($entity, $subject, $change_set, $event_type, $user_id, $user_email);
+            $auditData = $this->buildAuditLogData($entity, $subject, $change_set, $event_type, $ctx);
             if (!empty($description)) {
                 $auditData['audit.description'] = $description;
             }
-            Logger::info($this->getLogMessage($event_type), $auditData);
+            Log::debug("AuditLogOtlpStrategy::audit sending entry to OTEL", ["user_id" => $ctx->userId, "user_email" => $ctx->userEmail, 'payload' => $auditData]);
+            EmitAuditLogJob::dispatch($this->getLogMessage($event_type), $auditData);
+            Log::debug("AuditLogOtlpStrategy::audit entry sent to OTEL", ["user_id" => $ctx->userId, "user_email" => $ctx->userEmail]);
 
         } catch (\Exception $ex) {
-            Logger::warning('OTEL audit logging error: ' . $ex->getMessage(), [
+            Log::error('OTEL audit logging error: ' . $ex->getMessage(), [
                 'exception' => $ex,
                 'subject_class' => get_class($subject),
                 'event_type' => $event_type,
@@ -111,69 +81,112 @@ class AuditLogOtlpStrategy implements IAuditStrategy
 
     private function resolveAuditableEntity($subject)
     {
-        if ($subject instanceof SummitEvent) return $subject;
+        // 1) special cases first
 
-        if ($subject instanceof PersistentCollection && $subject->getOwner() instanceof SummitEvent) {
+        // exactly a SummitEvent
+        if ($subject instanceof \models\summit\SummitEvent) {
+            return $subject;
+        }
+
+        // collection that belongs to a SummitEvent
+        if ($subject instanceof \Doctrine\ORM\PersistentCollection
+            && $subject->getOwner() instanceof \models\summit\SummitEvent) {
             return $subject->getOwner();
         }
 
-        if ($subject instanceof PresentationAction || $subject instanceof PresentationExtraQuestionAnswer) {
+        // presentation “child” stuff → log the presentation
+        if ($subject instanceof \models\summit\PresentationAction
+            || $subject instanceof \models\summit\PresentationExtraQuestionAnswer) {
             return $subject->getPresentation();
         }
 
-        if ($subject instanceof SummitAttendeeBadgePrint) {
+        // badge print → log the badge
+        if ($subject instanceof \models\summit\SummitAttendeeBadgePrint) {
             return $subject->getBadge();
         }
 
+        // 2) generic fallback
+
+        // any collection → log the owner
+        if ($subject instanceof \Doctrine\ORM\PersistentCollection) {
+            return $subject->getOwner();
+        }
+
+        // any object → log itself
+        if (is_object($subject)) {
+            return $subject;
+        }
+
+        // nothing we can do
         return null;
     }
 
-    private function buildAuditLogData($entity, $subject, array $change_set, string $event_type, ?string $user_id, ?string $user_email): array
+    private function buildAuditLogData($entity, $subject, array $change_set, string $event_type, AuditContext $ctx): array
     {
-        $auditData = [
+        $data = [
             'audit.action' => $this->mapEventTypeToAction($event_type),
             'audit.entity' => class_basename($entity),
             'audit.entity_id' => (string) (method_exists($entity, 'getId') ? $entity->getId() : 'unknown'),
             'audit.entity_class' => get_class($entity),
             'audit.timestamp' => now()->toISOString(),
             'audit.event_type' => $event_type,
-            'auth.user.id' => $user_id ?? 'unknown',
-            'auth.user.email' => $user_email ?? 'unknown',
             'elasticsearch.index' => $this->elasticIndex,
         ];
+        // user data
+        $data['auth.user.id']         = $ctx->userId        ?? 'unknown';
+        $data['auth.user.email']      = $ctx->userEmail     ?? 'unknown';
+        $data['auth.user.first_name'] = $ctx->userFirstName ?? 'unknown';
+        $data['auth.user.last_name']  = $ctx->userLastName  ?? 'unknown';
+
+        // UI / request
+        $data['ui.app']    = $ctx->uiApp   ?? 'unknown';
+        $data['ui.flow']   = $ctx->uiFlow  ?? 'unknown';
+        $data['http.route']= $ctx->route   ?? null;
+        $data['http.method']= $ctx->httpMethod ?? null;
+        $data['client.ip'] = $ctx->clientIp ?? null;
+        $data['user_agent']= $ctx->userAgent ?? null;
 
         if (method_exists($entity, 'getSummitId')) {
             $summitId = $entity->getSummitId();
             if ($summitId !== null) {
-                $auditData['audit.summit_id'] = (string) $summitId;
+                $data['audit.summit_id'] = (string) $summitId;
             }
         }
 
         switch ($event_type) {
-            case self::EVENT_COLLECTION_UPDATE:
+            case IAuditStrategy::EVENT_COLLECTION_UPDATE:
                 if ($subject instanceof PersistentCollection) {
-                    $auditData['audit.collection_type'] = $this->getCollectionType($subject);
-                    $auditData['audit.collection_count'] = count($subject);
-                    
+                    $data['audit.collection_type'] = $this->getCollectionType($subject);
+                    $data['audit.collection_count'] = count($subject);
+
                     $changes = $this->getCollectionChanges($subject, $change_set);
-                    $auditData['audit.collection_current_count'] = $changes['current_count'];
-                    $auditData['audit.collection_snapshot_count'] = $changes['snapshot_count'];
-                    $auditData['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
+                    $data['audit.collection_current_count'] = $changes['current_count'];
+                    $data['audit.collection_snapshot_count'] = $changes['snapshot_count'];
+                    $data['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
                 }
                 break;
         }
 
-        return $auditData;
+        return $data;
     }
 
     private function getCollectionType(PersistentCollection $collection): string
     {
-        if (empty($collection) && empty($collection->getSnapshot())) {
+        try {
+            if (!method_exists($collection, 'getMapping')) {
+                return 'unknown';
+            }
+
+            $mapping = $collection->getMapping();
+
+            if (!isset($mapping['targetEntity']) || empty($mapping['targetEntity'])) {
+                return 'unknown';
+            }
+
+            return class_basename($mapping['targetEntity']);
+        } catch (\Exception $ex) {
             return 'unknown';
         }
-        
-        $item = !empty($collection) ? $collection->first() : $collection->getSnapshot()[0];
-        return class_basename($item);
     }
 
     private function getCollectionChanges(PersistentCollection $collection, array $change_set): array
@@ -188,22 +201,22 @@ class AuditLogOtlpStrategy implements IAuditStrategy
     private function mapEventTypeToAction(string $event_type): string
     {
         return match($event_type) {
-            self::EVENT_ENTITY_CREATION => self::ACTION_CREATE,
-            self::EVENT_ENTITY_UPDATE => self::ACTION_UPDATE,
-            self::EVENT_ENTITY_DELETION => self::ACTION_DELETE,
-            self::EVENT_COLLECTION_UPDATE => self::ACTION_COLLECTION_UPDATE,
-            default => self::ACTION_UNKNOWN
+            IAuditStrategy::EVENT_ENTITY_CREATION => IAuditStrategy::ACTION_CREATE,
+            IAuditStrategy::EVENT_ENTITY_UPDATE => IAuditStrategy::ACTION_UPDATE,
+            IAuditStrategy::EVENT_ENTITY_DELETION => IAuditStrategy::ACTION_DELETE,
+            IAuditStrategy::EVENT_COLLECTION_UPDATE => IAuditStrategy::ACTION_COLLECTION_UPDATE,
+            default => IAuditStrategy::ACTION_UNKNOWN
         };
     }
 
     private function getLogMessage(string $event_type): string
     {
         return match($event_type) {
-            self::EVENT_ENTITY_CREATION => self::LOG_MESSAGE_CREATED,
-            self::EVENT_ENTITY_UPDATE => self::LOG_MESSAGE_UPDATED,
-            self::EVENT_ENTITY_DELETION => self::LOG_MESSAGE_DELETED,
-            self::EVENT_COLLECTION_UPDATE => self::LOG_MESSAGE_COLLECTION_UPDATED,
-            default => self::LOG_MESSAGE_CHANGED
+            IAuditStrategy::EVENT_ENTITY_CREATION => IAuditStrategy::LOG_MESSAGE_CREATED,
+            IAuditStrategy::EVENT_ENTITY_UPDATE => IAuditStrategy::LOG_MESSAGE_UPDATED,
+            IAuditStrategy::EVENT_ENTITY_DELETION => IAuditStrategy::LOG_MESSAGE_DELETED,
+            IAuditStrategy::EVENT_COLLECTION_UPDATE => IAuditStrategy::LOG_MESSAGE_COLLECTION_UPDATED,
+            default => IAuditStrategy::LOG_MESSAGE_CHANGED
         };
     }
 

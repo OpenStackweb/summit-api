@@ -46,7 +46,7 @@ final class SummitProposedScheduleAllowedLocationSerializer extends SilverStripe
         'track' => [
             'type' => One2ManyExpandSerializer::class,
             'original_attribute' => 'track_id',
-            'getter' => 'geTrack',
+            'getter' => 'getTrack',
             'has' => 'hasTrack'
         ],
     ];

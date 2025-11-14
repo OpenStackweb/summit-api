@@ -1049,7 +1049,7 @@ class Member extends SilverstripeBaseModel
         try {
             $sql = <<<SQL
 SELECT COUNT(MemberID)
-FROM Group_Members 
+FROM Group_Members
 INNER JOIN `Group` ON `Group`.ID = Group_Members.GroupID
 WHERE MemberID = :member_id AND `Group`.Code = :code
 SQL;
@@ -1180,8 +1180,8 @@ SQL;
     public function getFavoritesEventsIds(Summit $summit)
     {
         $sql = <<<SQL
-SELECT SummitEventID 
-FROM Member_FavoriteSummitEvents 
+SELECT SummitEventID
+FROM Member_FavoriteSummitEvents
 INNER JOIN SummitEvent ON SummitEvent.ID = Member_FavoriteSummitEvents.SummitEventID
 WHERE MemberID = :member_id AND SummitEvent.Published = 1 AND SummitEvent.SummitID = :summit_id
 SQL;
@@ -1238,7 +1238,6 @@ SQL;
                 sprintf('Event %s does not belongs to member %s schedule.', $event->getId(), $this->getId())
             );
         $this->schedule->removeElement($schedule);
-        $schedule->clearOwner();
     }
 
     public function removeFromScheduleSyncInfo(ScheduleCalendarSyncInfo $sync_info)
@@ -1280,9 +1279,9 @@ SQL;
     {
 
         try {
-            $query = $this->createQuery("SELECT s from models\main\SummitMemberSchedule s 
-        JOIN s.member a 
-        JOIN s.event e    
+            $query = $this->createQuery("SELECT s from models\main\SummitMemberSchedule s
+        JOIN s.member a
+        JOIN s.event e
         WHERE a.id = :member_id and e.id = :event_id
         ");
             return $query
@@ -1325,9 +1324,9 @@ SQL;
     public function getFavoriteByEvent(SummitEvent $event)
     {
         try {
-            $query = $this->createQuery("SELECT f from models\main\SummitMemberFavorite f 
-        JOIN f.member a 
-        JOIN f.event e    
+            $query = $this->createQuery("SELECT f from models\main\SummitMemberFavorite f
+        JOIN f.member a
+        JOIN f.event e
         WHERE a.id = :member_id and e.id = :event_id
         ");
             return $query
@@ -1349,8 +1348,8 @@ SQL;
     public function getScheduledEventsIds(Summit $summit)
     {
         $sql = <<<SQL
-SELECT SummitEventID 
-FROM Member_Schedule 
+SELECT SummitEventID
+FROM Member_Schedule
 INNER JOIN SummitEvent ON SummitEvent.ID = Member_Schedule.SummitEventID
 WHERE MemberID = :member_id AND SummitEvent.Published = 1 AND SummitEvent.SummitID = :summit_id
 SQL;
@@ -1435,7 +1434,7 @@ SQL;
 
         $query = $this->createQuery("SELECT s from models\main\SummitMemberSchedule s
         JOIN s.member m
-        JOIN s.event e 
+        JOIN s.event e
         JOIN e.summit su WHERE su.id = :summit_id and m.id = :member_id and e.published = 1 ");
 
         return $query
@@ -1452,7 +1451,7 @@ SQL;
     {
         $query = $this->createQuery("SELECT f from models\main\SummitMemberFavorite f
         JOIN f.member m
-        JOIN f.event e 
+        JOIN f.event e
         JOIN e.summit su WHERE su.id = :summit_id and m.id = :member_id and e.published = 1 ");
 
         return $query
@@ -1669,10 +1668,10 @@ SQL;
     public function getReservationsCountBySummit(Summit $summit): int
     {
         $query = $this->createQuery("SELECT count(rv.id) from models\summit\SummitRoomReservation rv
-        JOIN rv.owner o 
-        JOIN rv.room r 
-        JOIN r.venue v 
-        JOIN v.summit s 
+        JOIN rv.owner o
+        JOIN rv.room r
+        JOIN r.venue v
+        JOIN v.summit s
         WHERE s.id = :summit_id AND o.id = :owner_id and rv.status not in (:status)");
         return $query
             ->setParameter('summit_id', $summit->getId())
@@ -1694,10 +1693,10 @@ SQL;
     public function getReservationsBySummit(Summit $summit)
     {
         $query = $this->createQuery("SELECT rv from models\summit\SummitRoomReservation rv
-        JOIN rv.owner o 
-        JOIN rv.room r 
-        JOIN r.venue v 
-        JOIN v.summit s 
+        JOIN rv.owner o
+        JOIN rv.room r
+        JOIN r.venue v
+        JOIN v.summit s
         WHERE s.id = :summit_id AND o.id = :owner_id");
         return $query
             ->setParameter('summit_id', $summit->getId())
@@ -1834,10 +1833,10 @@ SQL;
     public function getActiveSummitsSponsorMemberships()
     {
         $dql = <<<DQL
-SELECT sp 
+SELECT sp
 FROM models\summit\Sponsor sp
 JOIN sp.members m
-JOIN sp.summit s 
+JOIN sp.summit s
 WHERE m.id = :member_id
 AND s.end_date >= :now
 ORDER BY s.begin_date ASC
@@ -1879,8 +1878,8 @@ SQL;
 SELECT COUNT(Sponsor_Users.SponsorID)
 FROM Sponsor_Users
 INNER JOIN Sponsor ON Sponsor.ID = Sponsor_Users.SponsorID
-WHERE 
-    MemberID = :member_id 
+WHERE
+    MemberID = :member_id
     AND Sponsor.SummitID = :summit_id
 SQL;
 
@@ -2105,12 +2104,12 @@ SQL;
         if (!SummitAdministratorPermissionGroup::isValidGroup($groupSlug)) return false;
 
         $sql = <<<SQL
-SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID) 
-FROM SummitAdministratorPermissionGroup_Members 
-INNER JOIN SummitAdministratorPermissionGroup_Summits ON 
+SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID)
+FROM SummitAdministratorPermissionGroup_Members
+INNER JOIN SummitAdministratorPermissionGroup_Summits ON
 SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID
 WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id
-AND 
+AND
 SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
 SQL;
 
@@ -2132,12 +2131,12 @@ SQL;
     public function hasPermissionFor(Summit $summit): bool
     {
         $sql = <<<SQL
-SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID) 
-FROM SummitAdministratorPermissionGroup_Members 
-INNER JOIN SummitAdministratorPermissionGroup_Summits ON 
+SELECT DISTINCT(SummitAdministratorPermissionGroup_Summits.SummitID)
+FROM SummitAdministratorPermissionGroup_Members
+INNER JOIN SummitAdministratorPermissionGroup_Summits ON
 SummitAdministratorPermissionGroup_Summits.SummitAdministratorPermissionGroupID = SummitAdministratorPermissionGroup_Members.SummitAdministratorPermissionGroupID
 WHERE SummitAdministratorPermissionGroup_Members.MemberID = :member_id
-AND 
+AND
 SummitAdministratorPermissionGroup_Summits.SummitID = :summit_id
 SQL;
 
@@ -2159,14 +2158,14 @@ SQL;
     public function getPaidSummitTicketsIds(Summit $summit)
     {
         $sql = <<<SQL
-SELECT SummitAttendeeTicket.ID 
+SELECT SummitAttendeeTicket.ID
 FROM SummitAttendeeTicket
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
-WHERE 
-SummitAttendee.Email = :member_email AND 
-SummitAttendee.SummitID = :summit_id AND 
+WHERE
+SummitAttendee.Email = :member_email AND
+SummitAttendee.SummitID = :summit_id AND
 SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND
-SummitAttendeeTicket.Status = :ticket_status AND 
+SummitAttendeeTicket.Status = :ticket_status AND
 SummitAttendeeTicket.IsActive = 1
 LIMIT 1
 SQL;
@@ -2181,14 +2180,14 @@ SQL;
         if(count($res) > 0) return $res;
 
         $sql = <<<SQL
-SELECT SummitAttendeeTicket.ID 
+SELECT SummitAttendeeTicket.ID
 FROM SummitAttendeeTicket
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
-WHERE 
-SummitAttendee.MemberID = :member_id AND 
-SummitAttendee.SummitID = :summit_id AND 
+WHERE
+SummitAttendee.MemberID = :member_id AND
+SummitAttendee.SummitID = :summit_id AND
 SummitAttendeeTicket.OwnerID = SummitAttendee.ID AND
-SummitAttendeeTicket.Status = :ticket_status AND 
+SummitAttendeeTicket.Status = :ticket_status AND
 SummitAttendeeTicket.IsActive = 1
 LIMIT 1
 SQL;
@@ -2228,17 +2227,17 @@ SQL;
     {
 
         $sql = <<<SQL
-SELECT DISTINCT T.* 
+SELECT DISTINCT T.*
 FROM SummitAttendeeTicket T
 JOIN
 (
     SELECT SA1.ID FROM SummitAttendee AS SA1
     WHERE SA1.SummitID = :SUMMIT_ID AND SA1.MemberID = :MEMBER_ID
-    UNION 
+    UNION
     SELECT SA2.ID FROM SummitAttendee AS SA2
     WHERE SA2.SummitID = :SUMMIT_ID AND SA2.Email = :MEMBER_EMAIL
 ) AS A ON A.ID = T.OwnerID
-WHERE T.Status = :TICKET_STATUS AND T.IsActive = 1 
+WHERE T.Status = :TICKET_STATUS AND T.IsActive = 1
 SQL;
 
         $bindings = [
@@ -2474,7 +2473,7 @@ SQL;
             $sql = <<<SQL
             SELECT COUNT(DISTINCT(C.ID)) AS qty
             FROM CandidateNomination AS C
-            WHERE C.ElectionID = :election_id AND 
+            WHERE C.ElectionID = :election_id AND
                   C.CandidateID = :candidate_id
 SQL;
             $stmt = $this->prepareRawSQL($sql, [
@@ -2787,7 +2786,7 @@ SQL;
             if($filter->hasFilter("has_media_upload_with_type"))
             {
                 $extraWhere .= " AND EXISTS (
-                    SELECT pmu_12.id 
+                    SELECT pmu_12.id
                     FROM models\summit\PresentationMediaUpload pmu_12
                     JOIN pmu_12.media_upload_type mut_12
                     JOIN pmu_12.presentation p__12
@@ -2797,7 +2796,7 @@ SQL;
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
                 $extraWhere .= " AND NOT EXISTS (
-                    SELECT pmu_12.id 
+                    SELECT pmu_12.id
                     FROM models\summit\PresentationMediaUpload pmu_12
                     JOIN pmu_12.media_upload_type mut_12
                     JOIN pmu_12.presentation p__12
@@ -2809,63 +2808,63 @@ SQL;
                 if($value)
                     $extraWhere .=  'AND (
                                  EXISTS (
-                                    SELECT __p61.id FROM models\summit\Presentation __p61 
-                                    JOIN __p61.created_by __c61 WITH __c61 = :member_id 
-                                    JOIN __p61.speakers __pspk61 
-                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = :member_id 
+                                    SELECT __p61.id FROM models\summit\Presentation __p61
+                                    JOIN __p61.created_by __c61 WITH __c61 = :member_id
+                                    JOIN __p61.speakers __pspk61
+                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = :member_id
                                     WHERE __p61.summit = :summit_id
-                                 ) 
-                                 OR 
+                                 )
+                                 OR
                                  EXISTS (
-                                    SELECT __p62.id FROM models\summit\Presentation __p62 
+                                    SELECT __p62.id FROM models\summit\Presentation __p62
                                     JOIN __p62.created_by __c62 WITH __c62 = :member_id
-                                    JOIN __p62.moderator __md62 WITH __md62.member = :member_id 
+                                    JOIN __p62.moderator __md62 WITH __md62.member = :member_id
                                     WHERE __p62.summit = :summit_id
                                  ))';
                 else
                     $extraWhere .= ' AND (
                                 NOT EXISTS (
-                                    SELECT __p61.id FROM models\summit\Presentation __p61 
-                                    JOIN __p61.created_by __c61 WITH __c61 = :member_id 
+                                    SELECT __p61.id FROM models\summit\Presentation __p61
+                                    JOIN __p61.created_by __c61 WITH __c61 = :member_id
                                     JOIN __p61.speakers __pspk61
-                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = :member_id 
+                                    JOIN __pspk61.speaker __spk61 WITH __spk61.member = :member_id
                                     WHERE __p61.summit = :summit_id
-                                ) 
-                                AND  
+                                )
+                                AND
                                 NOT EXISTS (
-                                    SELECT __p62.id FROM models\summit\Presentation __p62 
-                                    JOIN __p62.created_by __c62 WITH __c62 = :member_id 
-                                    JOIN __p62.moderator __md62 WITH __md62.member = :member_id 
+                                    SELECT __p62.id FROM models\summit\Presentation __p62
+                                    JOIN __p62.created_by __c62 WITH __c62 = :member_id
+                                    JOIN __p62.moderator __md62 WITH __md62.member = :member_id
                                     WHERE __p62.summit = :summit_id
                                 ))';
             }
         }
         $query = $this->createQuery(sprintf("
-            SELECT DISTINCT p from models\summit\Presentation p 
-            JOIN p.summit s 
-            LEFT JOIN p.speakers a_spk 
+            SELECT DISTINCT p from models\summit\Presentation p
+            JOIN p.summit s
+            LEFT JOIN p.speakers a_spk
             LEFT JOIN p.moderator mod
-            LEFT JOIN a_spk.speaker spk 
-            JOIN p.created_by cb 
-            LEFT JOIN p.selection_plan sel_p  
-            LEFT JOIN p.materials m 
-            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id 
+            LEFT JOIN a_spk.speaker spk
+            JOIN p.created_by cb
+            LEFT JOIN p.selection_plan sel_p
+            LEFT JOIN p.materials m
+            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
             LEFT JOIN pmu.media_upload_type mut
             JOIN p.type t
-            JOIN p.category cat 
-            LEFT JOIN p.selected_presentations ssp 
-            LEFT JOIN ssp.list sspl 
-            WHERE s.id = :summit_id 
+            JOIN p.category cat
+            LEFT JOIN p.selected_presentations ssp
+            LEFT JOIN ssp.list sspl
+            WHERE s.id = :summit_id
             AND cb = :submitter_id
-            AND 
+            AND
             (
-                ( 
+                (
                     ssp.order is not null AND
                     ssp.order <= cat.session_count AND
                     ssp.collection = '%s' AND
                     sspl.list_type = '%s' AND sspl.list_class = '%s'
                 )
-                OR p.published = 1 
+                OR p.published = 1
             )
             " . $extraWhere,
             SummitSelectedPresentation::CollectionSelected,
@@ -3022,7 +3021,7 @@ SQL;
             if($filter->hasFilter("has_media_upload_with_type"))
             {
                 $extraWhere .= " AND EXISTS (
-                    SELECT pmu_12.id 
+                    SELECT pmu_12.id
                     FROM models\summit\PresentationMediaUpload pmu_12
                     JOIN pmu_12.media_upload_type mut_12
                     JOIN pmu_12.presentation p__12
@@ -3032,7 +3031,7 @@ SQL;
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
                 $extraWhere .= " AND NOT EXISTS (
-                    SELECT pmu_12.id 
+                    SELECT pmu_12.id
                     FROM models\summit\PresentationMediaUpload pmu_12
                     JOIN pmu_12.media_upload_type mut_12
                     JOIN pmu_12.presentation p__12
@@ -3049,19 +3048,19 @@ SQL;
         }
 
         $query = $this->createQuery("
-        SELECT DISTINCT p from models\summit\Presentation p 
-        JOIN p.summit s 
+        SELECT DISTINCT p from models\summit\Presentation p
+        JOIN p.summit s
         LEFT JOIN p.moderator mod
-        LEFT JOIN p.speakers a_spk 
-        LEFT JOIN a_spk.speaker spk 
-        JOIN p.created_by cb 
-        JOIN p.selection_plan sel_p 
-        LEFT JOIN p.materials m 
-        LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id 
-        LEFT JOIN pmu.media_upload_type mut 
-        JOIN p.type t 
-        JOIN p.category cat 
-        WHERE s.id = :summit_id 
+        LEFT JOIN p.speakers a_spk
+        LEFT JOIN a_spk.speaker spk
+        JOIN p.created_by cb
+        JOIN p.selection_plan sel_p
+        LEFT JOIN p.materials m
+        LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
+        LEFT JOIN pmu.media_upload_type mut
+        JOIN p.type t
+        JOIN p.category cat
+        WHERE s.id = :summit_id
         AND cb.id = :submitter_id" . $extraWhere);
 
         $query
@@ -3191,7 +3190,7 @@ SQL;
             if($filter->hasFilter("has_media_upload_with_type"))
             {
                 $extraWhere .= " AND EXISTS (
-                    SELECT pmu_12.id 
+                    SELECT pmu_12.id
                     FROM models\summit\PresentationMediaUpload pmu_12
                     JOIN pmu_12.media_upload_type mut_12
                     JOIN pmu_12.presentation p__12
@@ -3201,7 +3200,7 @@ SQL;
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
                 $extraWhere .= " AND NOT EXISTS (
-                    SELECT pmu_12.id 
+                    SELECT pmu_12.id
                     FROM models\summit\PresentationMediaUpload pmu_12
                     JOIN pmu_12.media_upload_type mut_12
                     JOIN pmu_12.presentation p__12
@@ -3217,20 +3216,20 @@ SQL;
             }
         }
 
-        $query = $this->createQuery("SELECT DISTINCT p from models\summit\Presentation p 
+        $query = $this->createQuery("SELECT DISTINCT p from models\summit\Presentation p
             JOIN p.summit s
-            LEFT JOIN p.moderator mod 
-            LEFT JOIN p.speakers a_spk 
-            LEFT JOIN a_spk.speaker spk 
-            LEFT JOIN p.materials m 
-            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id 
-            LEFT JOIN pmu.media_upload_type mut 
-            LEFT JOIN p.selection_plan sel_p 
-            JOIN p.type t 
-            JOIN p.category cat 
-            JOIN p.created_by cb 
-            WHERE s.id = :summit_id 
-            AND p.published = 0 
+            LEFT JOIN p.moderator mod
+            LEFT JOIN p.speakers a_spk
+            LEFT JOIN a_spk.speaker spk
+            LEFT JOIN p.materials m
+            LEFT JOIN models\summit\PresentationMediaUpload pmu WITH pmu.id = m.id
+            LEFT JOIN pmu.media_upload_type mut
+            LEFT JOIN p.selection_plan sel_p
+            JOIN p.type t
+            JOIN p.category cat
+            JOIN p.created_by cb
+            WHERE s.id = :summit_id
+            AND p.published = 0
             AND cb.id = :submitter_id " . $extraWhere);
 
         $query

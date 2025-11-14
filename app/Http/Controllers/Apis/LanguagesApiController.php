@@ -12,17 +12,16 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
+use Illuminate\Http\Response;
+use OpenApi\Attributes as OA;
 use utils\PagingResponse;
-use Illuminate\Support\Facades\Request;
 /**
  * Class LanguagesApiController
  * @package App\Http\Controllers
  */
 final class LanguagesApiController extends JsonController
 {
+    use RequestProcessor;
     /**
      * @var ILanguageRepository
      */
@@ -37,13 +36,28 @@ final class LanguagesApiController extends JsonController
         $this->language_repository = $language_repository;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getAll(){
-        try {
-            $languages   = $this->language_repository->getAll();
-            $response    = new PagingResponse
+    #[OA\Get(
+        path: "/api/public/v1/languages",
+        description: "Get all available languages with ISO codes",
+        summary: 'Get all languages',
+        operationId: 'getAllLanguages',
+        tags: ['Languages'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success - Returns paginated list of languages',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedISOLanguageElementResponseSchema'),
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function getAll()
+    {
+        return $this->processRequest(function () {
+            $languages = $this->language_repository->getAll();
+            $response = new PagingResponse
             (
                 count($languages),
                 count($languages),
@@ -52,20 +66,8 @@ final class LanguagesApiController extends JsonController
                 $languages
             );
 
-            return $this->ok($response->toArray($expand = Request::input('expand','')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok($response->toArray());
+        });
     }
+
 }

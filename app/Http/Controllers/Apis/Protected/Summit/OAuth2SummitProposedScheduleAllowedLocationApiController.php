@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use Illuminate\Http\Response;
+use OpenApi\Attributes as OA;
 use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedDayRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitProposedScheduleAllowedLocationRepository;
 use App\ModelSerializers\SerializerUtils;
@@ -96,6 +98,69 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations",
+        summary: "Get all allowed locations for a track's proposed schedule",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter operators: location_id==, track_id=="
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by fields: location_id, track_id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAllAllowedLocationByTrack($summit_id, $track_id){
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -143,6 +208,48 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $track_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations",
+        summary: "Add an allowed location to a track's proposed schedule",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitProposedScheduleAllowedLocationRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitProposedScheduleAllowedLocation")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addAllowedLocationToTrack($summit_id, $track_id){
 
         return $this->processRequest(function () use ($summit_id, $track_id) {
@@ -173,6 +280,46 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}",
+        summary: "Get a specific allowed location from a track's proposed schedule",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "location_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The allowed location id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitProposedScheduleAllowedLocation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAllowedLocationFromTrack($summit_id, $track_id, $location_id){
         return $this->processRequest(function () use ($summit_id, $track_id, $location_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -198,6 +345,42 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
         });
     }
 
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}",
+        summary: "Remove an allowed location from a track's proposed schedule",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "location_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The allowed location id"
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeAllowedLocationFromTrack($summit_id, $track_id, $location_id){
         return $this->processRequest(function () use ($summit_id, $track_id, $location_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -220,6 +403,35 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $track_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/all",
+        summary: "Remove all allowed locations from a track's proposed schedule",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeAllAllowedLocationFromTrack($summit_id, $track_id){
         return $this->processRequest(function () use ($summit_id, $track_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -243,6 +455,55 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames",
+        summary: "Add a time frame to an allowed location",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "location_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The allowed location id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitProposedScheduleAllowedDayAddRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitProposedScheduleAllowedDay")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addTimeFrame2AllowedLocation($summit_id, $track_id, $location_id){
         return $this->processRequest(function () use ($summit_id, $track_id, $location_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -272,6 +533,76 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $location_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames",
+        summary: "Get all time frames for an allowed location",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "location_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The allowed location id"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter operators: allowed_location_id==, track_id==, location_id==, day</>/<=/>=/ ==, opening_hour</>/<=/>=/ ==, closing_hour</>/<=/>=/=="
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by fields: id, day, opening_hour, closing_hour, location_id, allowed_location_id, track_id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAllTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id){
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -350,6 +681,53 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $time_frame_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}",
+        summary: "Get a specific time frame from an allowed location",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "location_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The allowed location id"
+            ),
+            new OA\Parameter(
+                name: "time_frame_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The time frame id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitProposedScheduleAllowedDay")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id, $time_frame_id){
         return $this->processRequest(function() use($summit_id, $track_id, $location_id, $time_frame_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -385,6 +763,49 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $time_frame_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}",
+        summary: "Remove a time frame from an allowed location",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "location_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The allowed location id"
+            ),
+            new OA\Parameter(
+                name: "time_frame_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The time frame id"
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id, $time_frame_id){
         return $this->processRequest(function() use($summit_id, $track_id, $location_id, $time_frame_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -408,6 +829,42 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/all",
+        summary: "Remove all time frames from an allowed location",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "location_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The allowed location id"
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeAllTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id){
         return $this->processRequest(function() use($summit_id, $track_id, $location_id){
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
@@ -432,6 +889,62 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiController
      * @param $time_frame_id
      * @return mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}",
+        summary: "Update a time frame for an allowed location",
+        security: [["Bearer" => []]],
+        tags: ["Summit Proposed Schedule"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            ),
+            new OA\Parameter(
+                name: "location_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The allowed location id"
+            ),
+            new OA\Parameter(
+                name: "time_frame_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The time frame id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitProposedScheduleAllowedDayUpdateRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitProposedScheduleAllowedDay")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function updateTimeFrameFromAllowedLocation($summit_id, $track_id, $location_id, $time_frame_id){
         return $this->processRequest(function () use ($summit_id, $track_id, $location_id, $time_frame_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));

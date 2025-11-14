@@ -41,6 +41,20 @@ final class DistributionsApiController extends AbstractCompanyServiceApiControll
         tags: ['Marketplace', 'Marketplace Distributions'],
         parameters: [
             new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
+            new OA\Parameter(
                 name: 'filter[]',
                 in: 'query',
                 required: false,

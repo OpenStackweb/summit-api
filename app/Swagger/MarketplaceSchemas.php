@@ -107,7 +107,12 @@ class PaginatedPublicOrPrivateCloudsResponseSchema
         new OA\Property(property: 'company', type: 'Company', description: 'Company that provides this appliance, visible only when expanded'),
         new OA\Property(property: 'type_id', type: 'integer', example: 13, description: 'ID of the type of this appliance'),
         new OA\Property(property: 'type', type: 'MarketPlaceType', description: 'Type of this appliance, visible only when expanded'),
+        new OA\Property(property: 'types', type: 'array', items: new OA\Items(type: 'RegionalSupport'), description: 'Regional support of this appliance, visible only when requested as relation'),
         new OA\Property(property: 'reviews', type: 'array', items: new OA\Items(type: 'MarketPlaceReview', title: 'MarketPlaceReview'), description: 'Reviews of this appliance, visible only when expanded'),
+        new OA\Property(property: 'capabilities', type: 'array', items: new OA\Items(type: 'OpenStackImplementationApiCoverage'), description: 'Capabilities of this appliance, visible only when requested as relation'),
+        new OA\Property(property: 'hypervisors', type: 'array', items: new OA\Items(type: 'HyperVisorType'), description: 'Hypervisors of this appliance, visible only when requested as relation'),
+        new OA\Property(property: 'guests', type: 'array', items: new OA\Items(type: 'GuestOSType'), description: 'GuestOSType of this appliance, visible only when requested as relation'),
+        new OA\Property(property: 'supported_regions', type: 'array', items: new OA\Items(type: 'RegionalSupport'), description: 'Regional support of this appliance, visible only when requested as relation'),
     ],
 )]
 class MarketplaceAppliancesResponseSchema

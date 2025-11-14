@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +38,7 @@ final class DistributionsApiController extends AbstractCompanyServiceApiControll
         description: "Get all marketplace distributions (OpenStack implementations)",
         summary: 'Get all distributions',
         operationId: 'getAllDistributions',
-        tags: ['Marketplace Distributions'],
+        tags: ['Marketplace', 'Marketplace Distributions'],
         parameters: [
             new OA\Parameter(
                 name: 'filter[]',
@@ -55,8 +56,8 @@ final class DistributionsApiController extends AbstractCompanyServiceApiControll
                 name: 'order',
                 in: 'query',
                 required: false,
-                description: 'Order by field(s)',
-                schema: new OA\Schema(type: 'string', example: 'name,-id')
+                description: 'Order by field(s). Allowed fields: id, name, company',
+                schema: new OA\Schema(type: 'string', example: 'name,-id'),
             ),
             new OA\Parameter(
                 name: 'expand',

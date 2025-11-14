@@ -340,7 +340,6 @@ class RSVPUpdateRequestSchema_{
 
 }
 
-
 #[OA\Schema(
     schema: 'RSVPAdminAddRequest',
     type: 'object',

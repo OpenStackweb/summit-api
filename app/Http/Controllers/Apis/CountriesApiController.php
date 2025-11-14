@@ -11,32 +11,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Models\Foundation\Main\CountryCodes;
-use Illuminate\Support\Facades\Log;
-use models\exceptions\EntityNotFoundException;
-use models\exceptions\ValidationException;
+use Illuminate\Http\Response;
+use OpenApi\Attributes as OA;
 use utils\PagingResponse;
-use Illuminate\Support\Facades\Request;
+
 /**
  * Class CountriesApiController
  * @package App\Http\Controllers
  */
 final class CountriesApiController extends JsonController
 {
-    /**
-     * @return mixed
-     */
-    public function getAll(){
-        try {
+    use RequestProcessor;
+
+    #[OA\Get(
+        path: "/api/public/v1/countries",
+        description: "Get all countries with ISO codes",
+        summary: 'Get all countries',
+        operationId: 'getAllCountries',
+        tags: ['Countries'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success - Returns paginated list of countries',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedISOCountryElementResponseSchema'),
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    public function getAll()
+    {
+        return $this->processRequest(function () {
             $countries = [];
-            foreach(CountryCodes::$iso_3166_countryCodes as $iso_code => $name){
+            foreach (CountryCodes::$iso_3166_countryCodes as $iso_code => $name) {
                 $countries[] = [
                     'iso_code' => $iso_code,
                     'name' => $name,
                 ];
             }
 
-            $response    = new PagingResponse
+            $response = new PagingResponse
             (
                 count($countries),
                 count($countries),
@@ -45,20 +62,8 @@ final class CountriesApiController extends JsonController
                 $countries
             );
 
-            return $this->ok($response->toArray($expand = Request::input('expand','')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
+            return $this->ok($response->toArray());
+        });
+
     }
 }

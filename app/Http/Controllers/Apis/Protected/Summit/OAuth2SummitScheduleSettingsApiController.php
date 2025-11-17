@@ -203,7 +203,17 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Get all schedule settings",
         operationId: "getAllSummitScheduleSettings",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -279,7 +289,17 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Get schedule setting",
         operationId: "getSummitScheduleSetting",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -333,7 +353,16 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Create schedule setting",
         operationId: "createSummitScheduleSetting",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -372,7 +401,16 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Update schedule setting",
         operationId: "updateSummitScheduleSetting",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -418,7 +456,16 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Delete schedule setting",
         operationId: "deleteSummitScheduleSetting",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -454,7 +501,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Get schedule settings metadata",
         operationId: "getSummitScheduleSettingsMetadata",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => []]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -482,7 +529,16 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Add schedule setting filter",
         operationId: "addSummitScheduleSettingFilter",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -553,7 +609,16 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Update schedule setting filter",
         operationId: "updateSummitScheduleSettingFilter",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -633,7 +698,16 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         summary: "Seed default schedule settings",
         operationId: "seedDefaultSummitScheduleSettings",
         tags: ['Summit Schedule Settings'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_schedule_settings_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',

@@ -56,7 +56,7 @@ class PaginatedConsultantsResponseSchema
                 new OA\Property(
                     property: 'data',
                     type: 'array',
-                    items: new OA\Items(ref: '#/components/schemas/DistributionSchema')
+                    items: new OA\Items(ref: '#/components/schemas/Distribution')
                 )
             ]
         )

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
  * Class PaymentGatewayProfileFactory
@@ -27,6 +28,7 @@ final class PaymentGatewayProfileFactory
      */
     public static function build(string $provider, array $params): ?PaymentGatewayProfile
     {
+        Log::debug("PaymentGatewayProfileFactory::build()", ['provider' => $provider, 'params' => $params]);
         $profile = null;
         if ($provider == IPaymentConstants::ProviderStripe) {
             $profile = static::populate(new StripePaymentProfile, $params);

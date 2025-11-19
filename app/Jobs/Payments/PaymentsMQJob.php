@@ -17,7 +17,7 @@ use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Jobs\RabbitMQJob as BaseJob;
 
 class PaymentsMQJob extends BaseJob
 {
-    public int $tries = 3;
+    public int $tries = 1;
 
     /**
      * Get the decoded body of the job.
@@ -27,7 +27,7 @@ class PaymentsMQJob extends BaseJob
     public function payload(): array
     {
         $routing_key = $this->getRabbitMQMessage()->getRoutingKey();
-        Log::debug("PaymentsMQJob::payload", ['routing_key' => $routing_key]);
+        Log::debug("PaymentsMQJob::payload processing job", ['routing_key' => $routing_key]);
         switch ($routing_key) {
             case EventTypes::PAYMENT_PROFILE_CREATED:
                 $job = 'App\Jobs\Payments\CreatePaymentProfileMQJob@handle';

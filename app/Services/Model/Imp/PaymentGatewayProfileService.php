@@ -12,14 +12,15 @@
  * limitations under the License.
  **/
 
-use Illuminate\Support\Facades\Log;
-use models\summit\PaymentGatewayProfileFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IPaymentGatewayProfileService;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\PaymentGatewayProfile;
+use models\summit\PaymentGatewayProfileFactory;
 use models\summit\Summit;
+
 /**
  * Class PaymentGatewayProfileService
  * @package App\Services\Model\Imp
@@ -34,19 +35,20 @@ final class PaymentGatewayProfileService
      */
     public function addPaymentProfile(Summit $summit, array $payload): ?PaymentGatewayProfile
     {
-        return $this->tx_service->transaction(function() use($summit, $payload){
+        return $this->tx_service->transaction(function () use ($summit, $payload) {
+            Log::debug("PaymentGatewayProfileService::addPaymentProfilee", ["summit" => $summit->getId(), 'payload' => $payload]);
             $payload['summit'] = $summit;
             $profile = PaymentGatewayProfileFactory::build($payload['provider'], $payload);
             $formerProfile = $summit->getPaymentGateWayProfilePerApp($profile->getApplicationType());
-            if($profile->isActive() && !is_null($formerProfile) && $formerProfile->isActive()){
+            if ($profile->isActive() && !is_null($formerProfile) && $formerProfile->isActive()) {
                 throw new ValidationException
                 (
                     sprintf("There is already an active Payment Profile for application type %s,", $formerProfile->getApplicationType())
                 );
             }
             $summit->addPaymentProfile($profile);
-            if(isset($payload['active']) && boolval($payload['active']) == true){
-                // force activation ( rebuild web hook)
+            if (isset($payload['active']) && boolval($payload['active']) == true) {
+                // force activation ( rebuild web hook )
                 $profile->activate();
             }
             return $profile;
@@ -58,9 +60,11 @@ final class PaymentGatewayProfileService
      */
     public function deletePaymentProfile(Summit $summit, int $child_id): void
     {
-        $this->tx_service->transaction(function() use($summit, $child_id){
+        $this->tx_service->transaction(function () use ($summit, $child_id) {
+            Log::debug("PaymentGatewayProfileService::deletePaymentProfile", ["summit" => $summit->getId(), "profile_id" => $child_id]);
+
             $profile = $summit->getPaymentProfileById($child_id);
-            if(is_null($profile))
+            if (is_null($profile))
                 throw new EntityNotFoundException();
             $summit->removePaymentProfile($profile);
         });
@@ -71,28 +75,17 @@ final class PaymentGatewayProfileService
      */
     public function updatePaymentProfile(Summit $summit, int $child_id, array $payload): ?PaymentGatewayProfile
     {
-        return $this->tx_service->transaction(function() use($summit, $child_id, $payload){
-
-            Log::debug
-            (
-                sprintf
-                (
-                    "PaymentGatewayProfileService::updatePaymentProfile summit %s profile %s payload %s",
-                    $summit->getId(),
-                    $child_id,
-                    json_encode($payload)
-                )
-            );
-
+        return $this->tx_service->transaction(function () use ($summit, $child_id, $payload) {
+            Log::debug("PaymentGatewayProfileService::updatePaymentProfile", ["summit" => $summit->getId(), "profile_id" => $child_id, "payload" => $payload]);
             $profile = $summit->getPaymentProfileById($child_id);
-            if(is_null($profile))
+            if (is_null($profile))
                 throw new EntityNotFoundException();
 
             $formerProfile = $summit->getPaymentGateWayProfilePerApp($profile->getApplicationType());
             // if we are activating this profile, check if there is not already one activated
-            if(isset($payload['active']) && boolval($payload['active']) == true &&
+            if (isset($payload['active']) && boolval($payload['active']) == true &&
                 !is_null($formerProfile) && $formerProfile->getId() != $profile->getId()
-                && $formerProfile->isActive()){
+                && $formerProfile->isActive()) {
                 throw new ValidationException
                 (
                     sprintf("There is already an active Payment Profile for application type %s.", $formerProfile->getApplicationType())

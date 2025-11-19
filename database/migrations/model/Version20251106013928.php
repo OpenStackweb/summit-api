@@ -36,6 +36,7 @@ final class Version20251106013928 extends AbstractMigration
         if($schema->hasTable("PaymentGatewayProfile") && !$builder->hasColumn("PaymentGatewayProfile", "ExternalId")) {
             $builder->table("PaymentGatewayProfile", function (Table $table) {
                 $table->string("ExternalId", )->setNotnull(false)->setDefault('NULL');
+                $table->unique(["ExternalId"], "PaymentGatewayProfile_ExternalId_Unique");
              });
         }
     }

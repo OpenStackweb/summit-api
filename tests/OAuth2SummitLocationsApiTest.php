@@ -355,7 +355,8 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'location_id' => self::$mainVenue->getId(),
             'filter' => [
                 'start_date>='.(time())
-            ]
+            ],
+            'order'    => '-track_id'
         ];
 
         $response = $this->action

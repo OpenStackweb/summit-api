@@ -512,6 +512,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'end_date',
                     'id',
                     'created',
+                    'track_id'
                 ];
             },
             function ($filter) use($summit_id, $location, $published){

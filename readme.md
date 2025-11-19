@@ -70,7 +70,11 @@ php artisan queue:work
 
 - php artisan queue:work message_broker
 - php artisan queue:work sponsor_users_sync_consumer
+
+### PAYMENTS SERVICE ( PAYMENT PROFILES )
+- mq:setup_payment_service_message_broker {exchange_name} direct
 - php artisan queue:work payments_sync_consumer
+
 
 ### Set up rabbitmq exchange, queue and bindings for Domain Events
 - php artisan mq:setup_domain_events_message_broker

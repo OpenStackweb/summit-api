@@ -20,6 +20,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use models\summit\IPaymentConstants;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 
@@ -60,6 +61,11 @@ class CreatePaymentProfileMQJob implements ShouldQueue
             $data = $payload['data'];
             $id = intval($data['id']);
             $summit_id = intval($data['summit_id']);
+            $application_type = $data['application_type'];
+            if(!in_array($application_type, IPaymentConstants::ValidApplicationTypes)){
+                Log::warning("CreatePaymentProfileMQJob::handle Application Type $application_type is not valid.");
+                return;
+            }
             $response = $this->payments_api->getPaymentProfile($summit_id, $id);
             Log::debug("CreatePaymentProfileMQJob::handle", ['response' => $response]);
             $summit = $this->summit_repository->getById($summit_id);

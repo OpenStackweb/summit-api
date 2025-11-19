@@ -126,10 +126,12 @@ class RemoteCloudsResponseSchema {}
                 new OA\Property(
                     property: 'data',
                     type: 'array',
-                    items: new OA\Items(ref: '#/components/schemas/RemoteCloudsResponse')
+                    items: new OA\Items(ref: '#/components/schemas/RemoteCloudService')
                 )
             ]
         )
     ]
 )]
-class PaginatedRemoteCloudsResponseSchema {}
+class PaginatedRemoteCloudsResponseSchema
+{
+}

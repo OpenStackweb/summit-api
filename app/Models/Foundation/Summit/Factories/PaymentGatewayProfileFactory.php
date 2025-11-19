@@ -60,6 +60,10 @@ final class PaymentGatewayProfileFactory
             $profile->setSummit($params['summit']);
         }
 
+        // common properties
+        if (isset($params['application_type']))
+            $profile->setApplicationType($params['application_type']);
+
         if(isset($params['external_id'])){
             $profile->setExternalId(trim($params['external_id']));
         }
@@ -103,10 +107,6 @@ final class PaymentGatewayProfileFactory
                 ]);
             }
         }
-
-        // common properties
-        if (isset($params['application_type']))
-            $profile->setApplicationType($params['application_type']);
 
         if (isset($params['active'])) {
             if(boolval($params['active']) == true)

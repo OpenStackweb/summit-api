@@ -19,7 +19,9 @@ use OpenApi\Attributes as OA;
         'type_id' => new OA\Property(property: 'type_id', type: 'integer', example: 1)
     ]
 )]
-class ConsultantsResponseSchema {}
+class ConsultantsResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedConsultantsResponse',
@@ -37,4 +39,29 @@ class ConsultantsResponseSchema {}
         )
     ]
 )]
-class PaginatedConsultantsResponseSchema {}
+class PaginatedConsultantsResponseSchema
+{
+}
+
+
+
+
+#[OA\Schema(
+    schema: 'PaginatedMarketplaceDistributionResponseSchema',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Distribution')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedMarketplaceDistributionResponseSchema
+{
+}

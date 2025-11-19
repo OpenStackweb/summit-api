@@ -221,10 +221,12 @@ class StripePaymentProfile extends PaymentGatewayProfile
         try {
             if (!$this->existsWebHook() && $this->hasSecretKey() && $this->hasSummit()) {
                 $api = new StripeApi($this->createConfiguration());
+                $application_type =  $this->getApplicationType();
+                Log::debug("StripePaymentProfile::buildWebHook", ['id' => $this->getId(), 'application_type' => $application_type]);
                 // create it
                 $info = $api->createWebHook(action('PaymentGatewayWebHookController@confirm', [
                     'id' => $this->summit->getId(),
-                    'application_name' => $this->getApplicationType()
+                    'application_name' => $application_type
                 ]));
                 // and set web hook info
                 $this->setWebHookInfo($info);

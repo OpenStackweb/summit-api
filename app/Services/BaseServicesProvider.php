@@ -20,10 +20,11 @@ use App\Services\Apis\IGeoCodingAPI;
 use App\Services\Apis\IMailApi;
 use App\Services\Apis\IMUXApi;
 use App\Services\Apis\IPasswordlessAPI;
+use App\Services\Apis\IPaymentsApi;
 use App\Services\Apis\MailApi;
 use App\Services\Apis\MUXApi;
-use App\Services\Apis\MuxCredentials;
 use App\Services\Apis\PasswordlessAPI;
+use App\Services\Apis\PaymentsApi;
 use App\Services\Apis\Samsung\ISamsungRegistrationAPI;
 use App\Services\Apis\Samsung\SamsungRegistrationAPI;
 use App\Services\Model\FolderService;
@@ -121,6 +122,11 @@ final class BaseServicesProvider extends ServiceProvider
         App::singleton(
             IExternalUserApi::class,
             ExternalUserApi::class
+        );
+
+        App::singleton(
+            IPaymentsApi::class,
+            PaymentsApi::class
         );
 
         App::singleton

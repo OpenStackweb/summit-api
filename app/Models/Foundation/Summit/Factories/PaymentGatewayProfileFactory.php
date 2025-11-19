@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
 /**
  * Class PaymentGatewayProfileFactory
@@ -27,6 +28,7 @@ final class PaymentGatewayProfileFactory
      */
     public static function build(string $provider, array $params): ?PaymentGatewayProfile
     {
+        Log::debug("PaymentGatewayProfileFactory::build()", ['provider' => $provider, 'params' => $params]);
         $profile = null;
         if ($provider == IPaymentConstants::ProviderStripe) {
             $profile = static::populate(new StripePaymentProfile, $params);
@@ -56,6 +58,14 @@ final class PaymentGatewayProfileFactory
         if(isset($params['summit']))
         {
             $profile->setSummit($params['summit']);
+        }
+
+        // common properties
+        if (isset($params['application_type']))
+            $profile->setApplicationType($params['application_type']);
+
+        if(isset($params['external_id'])){
+            $profile->setExternalId(trim($params['external_id']));
         }
 
         $profile->setTestKeys([
@@ -97,10 +107,6 @@ final class PaymentGatewayProfileFactory
                 ]);
             }
         }
-
-        // common properties
-        if (isset($params['application_type']))
-            $profile->setApplicationType($params['application_type']);
 
         if (isset($params['active'])) {
             if(boolval($params['active']) == true)

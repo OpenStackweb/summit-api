@@ -73,6 +73,9 @@ class UpdatePaymentProfileMQJob implements ShouldQueue
             $local_payment_profile =$this->payment_gateway_profile_repository->getByExternalId($id);
             if($summit instanceof Summit && $local_payment_profile instanceof PaymentGatewayProfile) {
                 $local_payment_profile_id = $local_payment_profile->getId();
+                // mappings
+                $response['external_id'] = $id;
+                $response['active'] = $response['is_active'] ?? false;
                 Log::debug("UpdatePaymentProfileMQJob::handle updating local profile", ['local_payment_profile_id' => $local_payment_profile_id]);
                 $this->service->updatePaymentProfile($summit, $local_payment_profile_id, $response);
             }

@@ -64,7 +64,9 @@ class CreatePaymentProfileMQJob implements ShouldQueue
             Log::debug("CreatePaymentProfileMQJob::handle", ['response' => $response]);
             $summit = $this->summit_repository->getById($summit_id);
             if($summit instanceof Summit) {
+                // mappings
                 $response['external_id'] = $id;
+                $response['active'] = $response['is_active'] ?? false;
                 Log::debug("CreatePaymentProfileMQJob::handle creating payment profile", ['response' => $response ]);
                 $this->service->addPaymentProfile($summit, $response);
             }

@@ -79,7 +79,7 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         security: [['summit_media_file_type_oauth2' => [
             SummitScopes::ReadSummitMediaFileTypes
         ]]],
-        tags: ['Files'],
+        tags: ['Summit Media File Types'],
         parameters: [
             new OA\Parameter(
                 name: 'page',

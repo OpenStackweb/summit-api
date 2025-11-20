@@ -14,9 +14,11 @@
 
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitEventTypeRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitEventTypeService;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +35,8 @@ use utils\FilterParser;
 use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class OAuth2SummitsEventTypesApiController
@@ -77,6 +81,71 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/event-types",
+        operationId: "getAllBySummit",
+        description: "Get all event types for a summit with pagination and filtering",
+        tags: ["Event Types"],
+        security: [['summit_event_types_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 20),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter by: name, class_name, is_default, black_out_times, use_sponsors, are_sponsors_mandatory, allows_attachment, use_speakers, are_speakers_mandatory, use_moderator, is_moderator_mandatory, should_be_available_on_cfp"
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by: id, name"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships: summit, summit_documents, allowed_ticket_types"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Event types retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedEventTypesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllBySummit($summit_id)
     {
 
@@ -146,6 +215,64 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/event-types/csv",
+        operationId: "getAllBySummitCSV",
+        description: "Export event types for a summit as CSV",
+        tags: ["Event Types"],
+        security: [['summit_event_types_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer"),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter criteria"
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by: id, name"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "CSV file exported successfully",
+                content: new OA\MediaType(mediaType: "text/csv")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllBySummitCSV($summit_id)
     {
         $values = Request::all();
@@ -272,6 +399,44 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $event_type_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/event-types/{event_type_id}",
+        operationId: "getEventTypeBySummit",
+        description: "Get a specific event type by ID",
+        tags: ["Event Types (Public)"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+            new OA\Parameter(
+                name: "event_type_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Event type ID"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Event type retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/EventType")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Event type or summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getEventTypeBySummit($summit_id, $event_type_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_type_id) {
@@ -297,6 +462,47 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/event-types",
+        operationId: "addEventTypeBySummit",
+        description: "Create a new event type",
+        tags: ["Event Types"],
+        security: [['summit_event_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteEventTypeData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/EventTypeAddRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Event type created successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/EventType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addEventTypeBySummit($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -321,6 +527,54 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $event_type_id
      * @return mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/event-types/{event_type_id}",
+        operationId: "updateEventTypeBySummit",
+        description: "Update an existing event type",
+        tags: ["Event Types"],
+        security: [['summit_event_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteEventTypeData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+            new OA\Parameter(
+                name: "event_type_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Event type ID"
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/EventTypeUpdateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Event type updated successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/EventType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Event type or summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateEventTypeBySummit($summit_id, $event_type_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_type_id) {
@@ -345,6 +599,48 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $event_type_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/event-types/{event_type_id}",
+        operationId: "deleteEventTypeBySummit",
+        description: "Delete an event type",
+        tags: ["Event Types"],
+        security: [['summit_event_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteEventTypeData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+            new OA\Parameter(
+                name: "event_type_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Event type ID"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_NO_CONTENT,
+                description: "Event type deleted successfully"
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Event type or summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deleteEventTypeBySummit($summit_id, $event_type_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_type_id) {
@@ -362,6 +658,42 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/event-types/seed-defaults",
+        operationId: "seedDefaultEventTypesBySummit",
+        description: "Seed default event types for a summit",
+        tags: ["Event Types"],
+        security: [['summit_event_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteEventTypeData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Default event types seeded successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedEventTypesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function seedDefaultEventTypesBySummit($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -390,6 +722,55 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $document_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/event-types/{event_type_id}/summit-documents/{document_id}",
+        operationId: "addSummitDocument",
+        description: "Add a document to an event type",
+        tags: ["Event Types"],
+        security: [['summit_event_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteEventTypeData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+            new OA\Parameter(
+                name: "event_type_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Event type ID"
+            ),
+            new OA\Parameter(
+                name: "document_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Document ID"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Document added to event type successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/EventType")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Event type, summit or document not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addSummitDocument($summit_id, $event_type_id, $document_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_type_id, $document_id) {
@@ -419,6 +800,62 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      * @param $document_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/event-types/{event_type_id}/summit-documents/{document_id}",
+        operationId: "removeSummitDocument",
+        description: "Remove a document from an event type",
+        tags: ["Event Types"],
+        security: [['summit_event_types_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteEventTypeData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "access_token",
+                in: "query",
+                required: false,
+                description: "OAuth2 access token (alternative to Authorization: Bearer)",
+                schema: new OA\Schema(type: "string", example: "eyJhbGciOi..."),
+            ),
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID or slug"
+            ),
+            new OA\Parameter(
+                name: "event_type_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Event type ID"
+            ),
+            new OA\Parameter(
+                name: "document_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Document ID"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Document removed from event type successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/EventType")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Event type, summit or document not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeSummitDocument($summit_id, $event_type_id, $document_id)
     {
         return $this->processRequest(function () use ($summit_id, $event_type_id, $document_id) {

@@ -28,6 +28,7 @@ class SummitMediaFileTypeSchema {}
 
 #[OA\Schema(
     schema: 'PaginatedSummitMediaFileTypesResponse',
+    type: 'object',
     allOf: [
         new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
         new OA\Schema(

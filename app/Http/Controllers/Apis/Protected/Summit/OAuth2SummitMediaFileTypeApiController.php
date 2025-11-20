@@ -67,6 +67,7 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
 
     #[OA\Get(
         path: '/api/v1/summit-media-file-types',
+        operationId: 'getAllSummitMediaFileTypes',
         summary: 'Get all summit media file types',
         description: 'Retrieves a paginated list of summit media file types. Media file types define categories of files that can be uploaded to summits (e.g., presentations, videos, documents) along with their allowed file extensions.',
         x: [
@@ -131,6 +132,7 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
 
     #[OA\Get(
         path: '/api/v1/summit-media-file-types/{id}',
+        operationId: 'getSummitMediaFileType',
         summary: 'Get a summit media file type by ID',
         description: 'Retrieves detailed information about a specific summit media file type.',
         x: [
@@ -170,6 +172,7 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
 
     #[OA\Post(
         path: '/api/v1/summit-media-file-types',
+        operationId: 'createSummitMediaFileType',
         summary: 'Create a new summit media file type',
         description: 'Creates a new summit media file type with specified name, description, and allowed file extensions.',
         x: [
@@ -205,6 +208,7 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
 
     #[OA\Put(
         path: '/api/v1/summit-media-file-types/{id}',
+        operationId: 'updateSummitMediaFileType',
         summary: 'Update a summit media file type',
         description: 'Updates an existing summit media file type.',
         x: [
@@ -248,6 +252,7 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
 
     #[OA\Delete(
         path: '/api/v1/summit-media-file-types/{id}',
+        operationId: 'deleteSummitMediaFileType',
         summary: 'Delete a summit media file type',
         description: 'Deletes an existing summit media file type. System-defined types cannot be deleted.',
         x: [

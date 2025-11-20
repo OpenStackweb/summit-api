@@ -103,7 +103,7 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
                 name: 'expand',
                 in: 'query',
                 required: false,
-                description: 'Comma-separated list of related resources to include. Available relations: members',
+                description: 'Comma-separated list of related resources to include. Available relations: members (expands member IDs to full member objects)',
                 schema: new OA\Schema(type: 'string', example: 'members')
             ),
         ],

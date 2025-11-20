@@ -16,7 +16,6 @@ namespace App\Http\Controllers;
  **/
 
 use App\Security\OrganizationScopes;
-use App\Security\SummitScopes;
 use App\Services\Model\IOrganizationService;
 use Illuminate\Http\Response;
 use models\main\IOrganizationRepository;
@@ -43,10 +42,13 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
     #[OA\Post(
         path: '/api/v1/organizations',
         summary: 'Creates a new organization',
-        security: [['organizations_oauth2' => [
-                OrganizationScopes::WriteOrganizationData
+        security: [
+            [
+                'organizations_oauth2' => [
+                    OrganizationScopes::WriteOrganizationData
+                ]
             ]
-        ]],
+        ],
         tags: ['Organizations'],
         requestBody: new OA\RequestBody(
             required: true,
@@ -75,10 +77,9 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
     public function __construct
     (
         IOrganizationRepository $company_repository,
-        IResourceServerContext  $resource_server_context,
-        IOrganizationService    $service
-    )
-    {
+        IResourceServerContext $resource_server_context,
+        IOrganizationService $service
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $company_repository;
         $this->service = $service;
@@ -90,17 +91,14 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
         summary: 'Get all organizations',
         operationId: 'getAllOrganizations',
         tags: ['Organizations'],
-        security: [['organizations_oauth2' => [
-            OrganizationScopes::ReadOrganizationData,
-        ]]],
+        security: [
+            [
+                'organizations_oauth2' => [
+                    OrganizationScopes::ReadOrganizationData,
+                ]
+            ]
+        ],
         parameters: [
-            new OA\Parameter(
-                name: 'access_token',
-                in: 'query',
-                required: false,
-                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
-                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...')
-            ),
             new OA\Parameter(
                 name: 'page',
                 in: 'query',

@@ -15,14 +15,18 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'qr_code', type: 'string', nullable: true, example: 'QR123456789'),
         new OA\Property(property: 'is_void', type: 'boolean', example: false, description: 'Whether the badge has been voided'),
         new OA\Property(property: 'printed_times', type: 'integer', example: 2, description: 'Number of times this badge has been printed'),
-        new OA\Property(property: 'ticket_id', type: 'integer', example: 123, description: 'Ticket ID, use expand=ticket for full object details (ticket field)'),
-        new OA\Property(property: 'type_id', type: 'integer', example: 5, description: 'BadgeType ID, use expand=type for full object details (type field)'),
+        new OA\Property(property: 'ticket_id', type: 'integer', example: 123, description: 'SummitAttendeeTicket ID, use expand=ticket for full object details'),
+        new OA\Property(property: 'type_id', type: 'integer', example: 5, description: 'SummitBadgeType ID, use expand=type for full object details'),
+        new OA\Property(property: 'type', ref: '#/components/schemas/SummitBadgeType'),
         new OA\Property(property: 'print_excerpt', type: 'string', example: 'John Doe - Speaker', description: 'Short text excerpt for printing'),
         new OA\Property(
             property: 'features',
             type: 'array',
-            description: 'Array of feature IDs assigned to this badge (use expand=features for full details)',
-            items: new OA\Items(type: 'integer'),
+            description: 'Array of SummitBadgeFeatureType IDs assigned to this badge (use expand=features for full details)',
+            items: new OA\Items(oneOf: [
+                new OA\Schema(type: 'integer'),
+                new OA\Schema(ref: '#/components/schemas/SummitBadgeFeatureType'),
+            ]),
             example: [1, 2, 3]
         ),
     ],

@@ -41,8 +41,7 @@ final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedC
     (
         ISpeakerActiveInvolvementRepository $repository,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
     }
@@ -50,19 +49,23 @@ final class OAuth2SpeakerActiveInvolvementApiController extends OAuth2ProtectedC
     #[OA\Get(
         path: '/api/v1/speakers/active-involvements',
         summary: 'Get all default speaker active involvements',
-        description: 'Retrieves a list of default active involvements for speakers. These are predefined involvement types that speakers can select to describe their current activities (e.g., "Active Contributor", "User", "Evaluator"). Public endpoint accessible without authentication.',
+        description: 'Retrieves a list of default active involvements for speakers. These are predefined involvement types that speakers can select to describe their current activities (e.g., "Active Contributor", "User", "Evaluator").',
         operationId: 'getAllSpeakerActiveInvolvements',
-        security: [['speaker_active_involvement_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'speaker_active_involvement_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         tags: ['Speakers'],
         parameters: [
             new OA\Parameter(
                 name: 'expand',
                 in: 'query',
                 required: false,
-                description: 'Comma-separated list of related resources to expand',
+                description: 'No expandable relationships available for this resource',
                 schema: new OA\Schema(type: 'string', example: '')
             ),
         ],

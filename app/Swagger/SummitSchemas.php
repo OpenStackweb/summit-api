@@ -15,10 +15,8 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'qr_code', type: 'string', nullable: true, example: 'QR123456789'),
         new OA\Property(property: 'is_void', type: 'boolean', example: false, description: 'Whether the badge has been voided'),
         new OA\Property(property: 'printed_times', type: 'integer', example: 2, description: 'Number of times this badge has been printed'),
-        new OA\Property(property: 'ticket_id', type: 'integer', example: 123, description: 'Associated ticket ID'),
-        new OA\Property(property: 'ticket', type: 'Ticket'),
-        new OA\Property(property: 'type_id', type: 'integer', example: 5, description: 'Badge type ID'),
-        new OA\Property(property: 'type', type: 'BadgeType'),
+        new OA\Property(property: 'ticket_id', type: 'integer', example: 123, description: 'Ticket ID, use expand=ticket for full object details (ticket field)'),
+        new OA\Property(property: 'type_id', type: 'integer', example: 5, description: 'BadgeType ID, use expand=type for full object details (type field)'),
         new OA\Property(property: 'print_excerpt', type: 'string', example: 'John Doe - Speaker', description: 'Short text excerpt for printing'),
         new OA\Property(
             property: 'features',

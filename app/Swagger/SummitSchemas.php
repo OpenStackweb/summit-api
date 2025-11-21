@@ -15,8 +15,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'qr_code', type: 'string', nullable: true, example: 'QR123456789'),
         new OA\Property(property: 'is_void', type: 'boolean', example: false, description: 'Whether the badge has been voided'),
         new OA\Property(property: 'printed_times', type: 'integer', example: 2, description: 'Number of times this badge has been printed'),
-    ],
-    anyOf: [
         new OA\Property(property: 'ticket_id', type: 'integer', example: 123, description: 'Associated ticket ID'),
         new OA\Property(property: 'ticket', type: 'Ticket'),
         new OA\Property(property: 'type_id', type: 'integer', example: 5, description: 'Badge type ID'),
@@ -31,7 +29,9 @@ use OpenApi\Attributes as OA;
         ),
     ],
 )]
-class SummitAttendeeBadgeSchema {}
+class SummitAttendeeBadgeSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedSummitAttendeeBadgesResponse',

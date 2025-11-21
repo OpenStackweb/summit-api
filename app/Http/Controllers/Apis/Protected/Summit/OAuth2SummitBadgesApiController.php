@@ -43,8 +43,7 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
         ISummitAttendeeBadgeRepository $repository,
         ISummitRepository $summit_repository,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
@@ -62,6 +61,7 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/badges',
+        operationId: 'getAllBySummit',
         summary: 'Get all attendee badges for a summit',
         description: 'Retrieves a paginated list of attendee badges for a specific summit. Badges are issued to attendees and contain ticket information, badge type, printing details, and feature assignments (ribbons, special access indicators, etc.).',
         security: [['summit_badges_api_oauth2' => [SummitScopes::ReadAllSummitData]]],
@@ -134,34 +134,35 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function getAllBySummit($summit_id){
+    public function getAllBySummit($summit_id)
+    {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         return $this->_getAll(
-            function(){
+            function () {
                 return [
-                    'owner_first_name'           => ['=@', '=='],
-                    'owner_last_name'            => ['=@', '=='],
-                    'owner_full_name'            => ['=@', '=='],
-                    'owner_email'                => ['=@', '=='],
-                    'ticket_number'              => ['=@', '=='],
-                    'order_number'               => ['=@', '=='],
+                    'owner_first_name' => ['=@', '=='],
+                    'owner_last_name' => ['=@', '=='],
+                    'owner_full_name' => ['=@', '=='],
+                    'owner_email' => ['=@', '=='],
+                    'ticket_number' => ['=@', '=='],
+                    'order_number' => ['=@', '=='],
                 ];
             },
-            function(){
+            function () {
                 return [
-                    'owner_first_name'           => 'sometimes|string',
-                    'owner_last_name'            => 'sometimes|string',
-                    'owner_full_name'            => 'sometimes|string',
-                    'owner_email'                => 'sometimes|string',
-                    'ticket_number'               => 'sometimes|string',
-                    'order_number'                => 'sometimes|string',
+                    'owner_first_name' => 'sometimes|string',
+                    'owner_last_name' => 'sometimes|string',
+                    'owner_full_name' => 'sometimes|string',
+                    'owner_email' => 'sometimes|string',
+                    'ticket_number' => 'sometimes|string',
+                    'order_number' => 'sometimes|string',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'id',
                     'ticket_number',
@@ -169,13 +170,13 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
                     'created'
                 ];
             },
-            function($filter) use($summit){
-                if($filter instanceof Filter){
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                 }
                 return $filter;
             },
-            function(){
+            function () {
                 return SerializerRegistry::SerializerType_Private;
             }
         );
@@ -183,6 +184,7 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/badges/csv',
+        operationId: 'getAllBySummitCSV',
         summary: 'Export all attendee badges for a summit to CSV',
         description: 'Exports a CSV file containing all attendee badges for a specific summit. Supports the same filtering and ordering capabilities as the standard list endpoint.',
         security: [['summit_badges_api_oauth2' => [SummitScopes::ReadAllSummitData]]],
@@ -240,34 +242,35 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function getAllBySummitCSV($summit_id){
+    public function getAllBySummitCSV($summit_id)
+    {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         return $this->_getAllCSV(
-            function(){
+            function () {
                 return [
-                    'owner_first_name'           => ['=@', '=='],
-                    'owner_last_name'            => ['=@', '=='],
-                    'owner_full_name'            => ['=@', '=='],
-                    'owner_email'                => ['=@', '=='],
-                    'ticket_number'              => ['=@', '=='],
-                    'order_number'               => ['=@', '=='],
+                    'owner_first_name' => ['=@', '=='],
+                    'owner_last_name' => ['=@', '=='],
+                    'owner_full_name' => ['=@', '=='],
+                    'owner_email' => ['=@', '=='],
+                    'ticket_number' => ['=@', '=='],
+                    'order_number' => ['=@', '=='],
                 ];
             },
-            function(){
+            function () {
                 return [
-                    'owner_first_name'           => 'sometimes|string',
-                    'owner_last_name'            => 'sometimes|string',
-                    'owner_full_name'            => 'sometimes|string',
-                    'owner_email'                => 'sometimes|string',
-                    'ticket_number'               => 'sometimes|string',
-                    'order_number'                => 'sometimes|string',
+                    'owner_first_name' => 'sometimes|string',
+                    'owner_last_name' => 'sometimes|string',
+                    'owner_full_name' => 'sometimes|string',
+                    'owner_email' => 'sometimes|string',
+                    'ticket_number' => 'sometimes|string',
+                    'order_number' => 'sometimes|string',
                 ];
             },
-            function()
-            {
+            function () {
                 return [
                     'id',
                     'ticket_number',
@@ -275,19 +278,19 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
                     'created'
                 ];
             },
-            function($filter) use($summit){
-                if($filter instanceof Filter){
+            function ($filter) use ($summit) {
+                if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
                 }
                 return $filter;
             },
-            function(){
+            function () {
                 return SerializerRegistry::SerializerType_Private;
             },
-            function(){
+            function () {
                 return [];
             },
-            function(){
+            function () {
                 return [];
             },
             'attendees-badges-'

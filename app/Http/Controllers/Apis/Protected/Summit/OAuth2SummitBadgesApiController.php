@@ -206,7 +206,7 @@ final class OAuth2SummitBadgesApiController extends OAuth2ProtectedController
                 explode: true,
                 schema: new OA\Schema(
                     type: 'array',
-                    items: new OA\Items(type: 'string', example: 'owner_email=@example.com')
+                    items: new OA\Items(type: 'string', example: 'owner_email=@john')
                 )
             ),
             new OA\Parameter(

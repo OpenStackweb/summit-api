@@ -59,14 +59,31 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: '/api/v1/summits/{id}/tax-types',
         summary: 'Get all tax types for a summit',
-        security: [['tax_types_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'tax_types_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits Tax Types'],
         parameters: [
-            new OA\Parameter(ref: '#/components/parameters/page'),
-            new OA\Parameter(ref: '#/components/parameters/per_page'),
+
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by name (name=@value, name==value)', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-name', schema: new OA\Schema(type: 'string')),
@@ -85,16 +102,21 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function getAllBySummit($summit_id){
+    public function getAllBySummit($summit_id)
+    {
         return parent::getAllBySummit($summit_id);
     }
 
     #[OA\Post(
         path: '/api/v1/summits/{id}/tax-types',
         summary: 'Create a new tax type',
-        security: [['tax_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'tax_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -125,17 +147,22 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function add($summit_id){
+    public function add($summit_id)
+    {
         return parent::add($summit_id);
     }
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Get a tax type by ID',
-        security: [['tax_types_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'tax_types_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -162,16 +189,21 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($summit_id, $tax_id){
+    public function get($summit_id, $tax_id)
+    {
         return parent::get($summit_id, $tax_id);
     }
 
     #[OA\Put(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Update a tax type',
-        security: [['tax_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'tax_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -203,16 +235,21 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function update($summit_id, $tax_id){
+    public function update($summit_id, $tax_id)
+    {
         return parent::update($summit_id, $tax_id);
     }
 
     #[OA\Delete(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Delete a tax type',
-        security: [['tax_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'tax_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -235,14 +272,15 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function delete($summit_id, $tax_id){
+    public function delete($summit_id, $tax_id)
+    {
         return parent::delete($summit_id, $tax_id);
     }
 
     /**
      * @return array
      */
-    protected function getFilterRules():array
+    protected function getFilterRules(): array
     {
         return [
             'name' => ['=@', '=='],
@@ -252,7 +290,8 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     /**
      * @return array
      */
-    protected function getFilterValidatorRules():array{
+    protected function getFilterValidatorRules(): array
+    {
         return [
             'name' => 'sometimes|required|string',
         ];
@@ -260,7 +299,8 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     /**
      * @return array
      */
-    protected function getOrderRules():array{
+    protected function getOrderRules(): array
+    {
         return [
             'id',
             'name',
@@ -273,8 +313,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
         ISummitRepository $summit_repository,
         ISummitTaxTypeService $service,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
@@ -356,9 +395,13 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Put(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
         summary: 'Add a tax type to a ticket type',
-        security: [['tax_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'tax_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -387,25 +430,23 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function addTaxToTicketType($summit_id, $tax_id, $ticket_type_id){
+    public function addTaxToTicketType($summit_id, $tax_id, $ticket_type_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $child = $this->service->addTaxTypeToTicketType($summit, $tax_id, $ticket_type_id);
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize());
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }
@@ -420,9 +461,13 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
         summary: 'Remove a tax type from a ticket type',
-        security: [['tax_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'tax_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -451,25 +496,23 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function removeTaxFromTicketType($summit_id, $tax_id, $ticket_type_id){
+    public function removeTaxFromTicketType($summit_id, $tax_id, $ticket_type_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $child = $this->service->removeTaxTypeFromTicketType($summit, $tax_id, $ticket_type_id);
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize());
-        }
-        catch (ValidationException $ex1) {
+        } catch (ValidationException $ex1) {
             Log::warning($ex1);
             return $this->error412(array($ex1->getMessage()));
-        }
-        catch(EntityNotFoundException $ex2)
-        {
+        } catch (EntityNotFoundException $ex2) {
             Log::warning($ex2);
-            return $this->error404(array('message'=> $ex2->getMessage()));
-        }
-        catch (Exception $ex) {
+            return $this->error404(array('message' => $ex2->getMessage()));
+        } catch (Exception $ex) {
             Log::error($ex);
             return $this->error500($ex);
         }

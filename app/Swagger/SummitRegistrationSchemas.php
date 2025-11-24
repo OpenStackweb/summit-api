@@ -598,6 +598,8 @@ class SummitOrderSchema
         new OA\Property(property: 'is_active', type: 'boolean'),
         new OA\Property(property: 'qr_code', type: 'string'),
         new OA\Property(property: 'owner_email', type: 'string'),
+        new OA\Property(property: 'owner', ref: '#/components/schemas/SummitAttendee', description: 'Owner of the ticket, only available when ?expand=owner'),
+        new OA\Property(property: 'order', ref: '#/components/schemas/SummitOrder', description: 'Order associated to the ticket, only available when ?expand=order'),
     ]
 )]
 class SummitAttendeeTicketSchema
@@ -728,8 +730,8 @@ class CheckoutOrderRequestSchema
         new OA\Property(property: 'owner_id', type: 'integer'),
         new OA\Property(property: 'summit_id', type: 'integer'),
         new OA\Property(property: 'currency', type: 'string'),
-        new OA\Property(property: 'extra_questions', type: 'array', items: new OA\Items(oneOf: [ new OA\Schema(type: 'integer'), new OA\Schema(ref: '#/components/schemas/ExtraQuestions')])),
-        new OA\Property(property: 'tickets', type: 'array', items: new OA\Items(oneOf: [ new OA\Schema(type: 'integer'), new OA\Schema(ref: '#/components/schemas/SummitAttendeeTicket')])),
+        new OA\Property(property: 'extra_questions', type: 'array', items: new OA\Items(oneOf: [new OA\Schema(type: 'integer'), new OA\Schema(ref: '#/components/schemas/ExtraQuestions')])),
+        new OA\Property(property: 'tickets', type: 'array', items: new OA\Items(oneOf: [new OA\Schema(type: 'integer'), new OA\Schema(ref: '#/components/schemas/SummitAttendeeTicket')])),
         new OA\Property(property: 'owner', type: 'Member'),
     ]
 )]

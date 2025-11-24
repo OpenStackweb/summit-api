@@ -33,8 +33,7 @@ use Exception;
  * Class OAuth2SummitPresentationActionApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SummitPresentationActionApiController
-    extends OAuth2ProtectedController
+final class OAuth2SummitPresentationActionApiController extends OAuth2ProtectedController
 {
 
     /**
@@ -58,8 +57,7 @@ final class OAuth2SummitPresentationActionApiController
         ISummitRepository $summit_repository,
         ISummitPresentationActionService $service,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         $this->summit_repository = $summit_repository;
         $this->service = $service;
         parent::__construct($resource_server_context);
@@ -69,6 +67,7 @@ final class OAuth2SummitPresentationActionApiController
 
     #[OA\Put(
         path: '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/complete',
+        operationId: 'completePresentationAction',
         summary: 'Mark a presentation action as completed',
         description: 'Marks a specific action for a presentation as completed by a track chair. Track chairs use presentation actions to manage the review process (e.g., "Review Video", "Check Speakers", "Verify Content"). Only track chairs and track chair admins can perform this action.',
         x: [
@@ -79,10 +78,14 @@ final class OAuth2SummitPresentationActionApiController
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [['presentation_actions_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteEventData,
-        ]]],
+        security: [
+            [
+                'presentation_actions_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                ]
+            ]
+        ],
         tags: ['Presentation Actions'],
         parameters: [
             new OA\Parameter(
@@ -141,11 +144,13 @@ final class OAuth2SummitPresentationActionApiController
      * @param $presentation_id
      * @param $action_type_id
      */
-    public function complete($summit_id, $selection_plan_id, $presentation_id, $action_type_id){
+    public function complete($summit_id, $selection_plan_id, $presentation_id, $action_type_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $member = $this->resource_server_context->getCurrentUser();
 
@@ -157,7 +162,7 @@ final class OAuth2SummitPresentationActionApiController
             if (!$authz)
                 return $this->error403();
 
-            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_type_id), true );
+            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_type_id), true);
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Request::input('expand', '')));
 
         } catch (ValidationException $ex) {
@@ -174,6 +179,7 @@ final class OAuth2SummitPresentationActionApiController
 
     #[OA\Delete(
         path: '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/incomplete',
+        operationId: 'incompletePresentationAction',
         summary: 'Mark a presentation action as incomplete',
         description: 'Unmarks a completed presentation action, setting it back to incomplete status. This allows track chairs to revert an action they previously marked as done. Only track chairs and track chair admins can perform this action.',
         x: [
@@ -184,9 +190,13 @@ final class OAuth2SummitPresentationActionApiController
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [['presentation_actions_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'presentation_actions_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Presentation Actions'],
         parameters: [
             new OA\Parameter(
@@ -245,11 +255,13 @@ final class OAuth2SummitPresentationActionApiController
      * @param $presentation_id
      * @param $action_type_id
      */
-    public function uncomplete($summit_id, $selection_plan_id, $presentation_id, $action_type_id){
+    public function uncomplete($summit_id, $selection_plan_id, $presentation_id, $action_type_id)
+    {
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $member = $this->resource_server_context->getCurrentUser();
 
@@ -261,7 +273,7 @@ final class OAuth2SummitPresentationActionApiController
             if (!$authz)
                 return $this->error403();
 
-            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_type_id), false );
+            $action = $this->service->updateAction($summit, intval($selection_plan_id), intval($presentation_id), intval($action_type_id), false);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($action)->serialize(Request::input('expand', '')));
         } catch (ValidationException $ex) {

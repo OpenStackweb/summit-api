@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2021 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,8 +34,7 @@ use utils\FilterElement;
  * Class OAuth2SummitPresentationActionTypeApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SummitPresentationActionTypeApiController
-    extends OAuth2ProtectedController
+final class OAuth2SummitPresentationActionTypeApiController extends OAuth2ProtectedController
 {
     /**
      * @var ISummitRepository
@@ -59,8 +59,7 @@ final class OAuth2SummitPresentationActionTypeApiController
         IPresentationActionTypeRepository $repository,
         ISummitRepository $summit_repository,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
@@ -148,9 +147,13 @@ final class OAuth2SummitPresentationActionTypeApiController
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [['presentation_action_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'presentation_action_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -173,7 +176,8 @@ final class OAuth2SummitPresentationActionTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function add($summit_id){
+    public function add($summit_id)
+    {
         return parent::add($summit_id);
     }
 
@@ -193,10 +197,14 @@ final class OAuth2SummitPresentationActionTypeApiController
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [['presentation_action_types_oauth2' => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSummitData,
-        ]]],
+        security: [
+            [
+                'presentation_action_types_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -215,7 +223,8 @@ final class OAuth2SummitPresentationActionTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($summit_id, $action_id){
+    public function get($summit_id, $action_id)
+    {
         return parent::get($summit_id, $action_id);
     }
 
@@ -235,9 +244,13 @@ final class OAuth2SummitPresentationActionTypeApiController
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [['presentation_action_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'presentation_action_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -261,7 +274,8 @@ final class OAuth2SummitPresentationActionTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function update($summit_id, $action_id){
+    public function update($summit_id, $action_id)
+    {
         return parent::update($summit_id, $action_id);
     }
 
@@ -281,9 +295,13 @@ final class OAuth2SummitPresentationActionTypeApiController
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [['presentation_action_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'presentation_action_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -298,7 +316,8 @@ final class OAuth2SummitPresentationActionTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function delete($summit_id, $action_id){
+    public function delete($summit_id, $action_id)
+    {
         return parent::delete($summit_id, $action_id);
     }
 
@@ -318,14 +337,30 @@ final class OAuth2SummitPresentationActionTypeApiController
                 IGroup::TrackChairs,
             ]
         ],
-        security: [['presentation_action_types_oauth2' => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSummitData,
-        ]]],
+        security: [
+            [
+                'presentation_action_types_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
-            new OA\Parameter(ref: '#/components/parameters/page'),
-            new OA\Parameter(ref: '#/components/parameters/per_page'),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by label (label=@value, label==value)', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-label, +/-order', schema: new OA\Schema(type: 'string')),
@@ -347,7 +382,8 @@ final class OAuth2SummitPresentationActionTypeApiController
     public function getAllBySummit($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         return $this->_getAll(
             function () {
@@ -400,14 +436,30 @@ final class OAuth2SummitPresentationActionTypeApiController
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [['presentation_action_types_oauth2' => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSummitData,
-        ]]],
+        security: [
+            [
+                'presentation_action_types_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits', 'Presentation Action Types'],
         parameters: [
-            new OA\Parameter(ref: '#/components/parameters/page'),
-            new OA\Parameter(ref: '#/components/parameters/per_page'),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by label (label=@value, label==value)', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-label, +/-order', schema: new OA\Schema(type: 'string')),
@@ -434,7 +486,8 @@ final class OAuth2SummitPresentationActionTypeApiController
     public function getAllBySummitCSV($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         return $this->_getAllCSV(
             function () {

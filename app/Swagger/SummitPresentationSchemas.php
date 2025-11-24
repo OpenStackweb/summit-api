@@ -12,11 +12,13 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'created', type: 'integer', example: 1630500518),
         new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
         new OA\Property(property: 'label', type: 'string', example: 'Review'),
-        new OA\Property(property: 'summit_id', type: 'integer', example: 42),
-        new OA\Property(property: 'order', type: 'integer', example: 1, description: 'Order within a selection plan. Only present when filtering by selection_plan_id',),
+        new OA\Property(property: 'summit_id', type: 'integer', example: 42, description: 'Summit ID, add ?expand=summit to get full summit object'),
+        new OA\Property(property: 'order', type: 'integer', example: 1, description: 'Order within a selection plan. Only present when filtering by selection_plan_id', ),
     ]
 )]
-class PresentationActionTypeSchema {}
+class PresentationActionTypeSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedPresentationActionTypesResponse',
@@ -34,7 +36,9 @@ class PresentationActionTypeSchema {}
         )
     ]
 )]
-class PaginatedPresentationActionTypesResponseSchema {}
+class PaginatedPresentationActionTypesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PresentationActionTypeCreateRequest',
@@ -42,9 +46,12 @@ class PaginatedPresentationActionTypesResponseSchema {}
     required: ['label'],
     properties: [
         new OA\Property(property: 'label', type: 'string', example: 'Review', maxLength: 255),
+        new OA\Property(property: 'selection_plan_id', type: 'integer', example: 42, description: 'If provided, the order field will be set within the context of the selection plan'),
     ]
 )]
-class PresentationActionTypeCreateRequestSchema {}
+class PresentationActionTypeCreateRequestSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PresentationActionTypeUpdateRequest',
@@ -53,4 +60,6 @@ class PresentationActionTypeCreateRequestSchema {}
         new OA\Property(property: 'label', type: 'string', example: 'Review', maxLength: 255),
     ]
 )]
-class PresentationActionTypeUpdateRequestSchema {}
+class PresentationActionTypeUpdateRequestSchema
+{
+}

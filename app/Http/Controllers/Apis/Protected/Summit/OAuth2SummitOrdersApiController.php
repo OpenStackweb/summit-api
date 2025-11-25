@@ -792,7 +792,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Get(
-        path: '/api/v1/orders/{order_id}/tickets/{ticket_id}',
+        path: '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}',
         summary: 'Get my ticket by ID',
         description: 'Returns ticket information for the current user by order and ticket ID',
         operationId: 'getMyTicketById',
@@ -893,7 +893,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @param $order_id
      */
     #[OA\Put(
-        path: '/api/v1/orders/{order_id}',
+        path: '/api/v1/summits/all/orders/{order_id}',
         summary: 'Update my order',
         description: 'Updates order information for the current user',
         operationId: 'updateMyOrder',
@@ -961,7 +961,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Delete(
-        path: '/api/v1/orders/{order_id}/tickets/{ticket_id}/refund/cancel',
+        path: '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/refund/cancel',
         summary: 'Cancel refund request for a ticket',
         description: 'Cancels an existing refund request for a ticket',
         operationId: 'cancelRefundRequestTicket',
@@ -1028,7 +1028,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Delete(
-        path: '/api/v1/orders/{order_id}/tickets/{ticket_id}/refund',
+        path: '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/refund',
         summary: 'Request refund for a ticket',
         description: 'Requests a refund for a specific ticket',
         operationId: 'requestRefundMyTicket',
@@ -1079,7 +1079,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Delete(
-        path: '/api/v1/orders/{order_id}/refund',
+        path: '/api/v1/summits/all/orders/{order_id}/refund',
         summary: 'Request refund for entire order',
         description: 'Requests a refund for all tickets in an order',
         operationId: 'requestRefundMyOrder',
@@ -1126,7 +1126,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/v1/orders/{order_id}/tickets/{ticket_id}/attendee',
+        path: '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/attendee',
         summary: 'Assign attendee to a ticket',
         description: 'Assigns an attendee to a specific ticket in an order',
         operationId: 'assignAttendee',
@@ -1189,7 +1189,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/v1/orders/{order_id}/resend',
+        path: '/api/v1/summits/all/orders/{order_id}/resend',
         summary: 'Resend order confirmation email',
         description: 'Resends the order confirmation email. Admin access required.',
         operationId: 'reSendOrderEmail',
@@ -1244,7 +1244,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/v1/orders/{order_id}/tickets/{ticket_id}/attendee/reinvite',
+        path: '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/attendee/reinvite',
         summary: 'Re-invite attendee to ticket',
         description: 'Resends invitation email to the ticket attendee',
         operationId: 'reInviteAttendee',
@@ -1475,7 +1475,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Delete(
-        path: '/api/v1/orders/{order_id}/tickets/{ticket_id}/attendee',
+        path: '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/attendee',
         summary: 'Remove attendee from ticket',
         description: 'Revokes/removes the attendee assignment from a ticket',
         operationId: 'removeAttendee',
@@ -1584,7 +1584,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     #[OA\Get(
-        path: '/api/v1/orders/{order_id}/tickets/{ticket_id}/pdf',
+        path: '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/pdf',
         summary: 'Get ticket PDF by order ID',
         description: 'Generates and returns ticket PDF for current user',
         operationId: 'getTicketPDFByOrderId',
@@ -1627,7 +1627,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     #[OA\Get(
-        path: '/api/v1/orders/all/tickets/{ticket_id}/pdf',
+        path: '/api/v1/summits/all/orders/all/tickets/{ticket_id}/pdf',
         summary: 'Get my ticket PDF by ticket ID',
         description: 'Generates and returns PDF for current user ticket',
         operationId: 'getMyTicketPDFById',
@@ -1671,7 +1671,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: '/api/public/v1/orders/all/tickets/{hash}',
+        path: '/api/public/v1/summits/all/orders/all/tickets/{hash}',
         summary: 'Get ticket by hash (public endpoint)',
         description: 'Returns ticket information using public hash. No authentication required.',
         operationId: 'getTicketByHash',
@@ -1709,7 +1709,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/public/v1/orders/all/tickets/{hash}',
+        path: '/api/public/v1/summits/all/orders/all/tickets/{hash}',
         summary: 'Update ticket by hash (public endpoint)',
         description: 'Updates ticket information using public hash. No authentication required.',
         operationId: 'updateTicketByHash',
@@ -1763,7 +1763,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/public/v1/orders/{order_hash}/tickets',
+        path: '/api/public/v1/summits/all/orders/{order_hash}/tickets',
         summary: 'Update tickets by order hash',
         description: 'Updates multiple tickets information using order hash. No authentication required.',
         operationId: 'updateTicketsByOrderHash',
@@ -1811,7 +1811,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/v1/orders/all/tickets/{ticket_id}',
+        path: '/api///tickets/{ticket_id}',
         summary: 'Update my ticket by ticket ID',
         description: 'Updates ticket information for the current user',
         operationId: 'updateMyTicketById',
@@ -1878,7 +1878,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api/public/v1/orders/all/tickets/{hash}/regenerate',
+        path: '/api/public/v1/summits/all/orders/all/tickets/{hash}/regenerate',
         summary: 'Regenerate ticket hash',
         description: 'Regenerates the public hash for a ticket. No authentication required.',
         operationId: 'regenerateTicketHash',
@@ -1906,7 +1906,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     #[OA\Get(
-        path: '/api/public/v1/orders/all/tickets/{hash}/pdf',
+        path: '/api/public/v1/summits/all/orders/all/tickets/{hash}/pdf',
         summary: 'Get ticket PDF by hash',
         description: 'Generates and returns ticket PDF using public hash. No authentication required.',
         operationId: 'getTicketPDFByHash',
@@ -1980,7 +1980,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Get(
-        path: '/api/v1/orders/{order_id}',
+        path: '/api/v1/summits/all/orders/{order_id}',
         summary: 'Get my order by ID',
         description: 'Returns order information for the current user',
         operationId: 'getMyOrderById',
@@ -2039,7 +2039,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: '/api/v1/orders/{order_id}/tickets',
+        path: '/api/v1/summits/all/orders/{order_id}/tickets',
         summary: 'Get my tickets by order ID',
         description: 'Returns paginated list of tickets for a specific order owned by current user',
         operationId: 'getMyTicketsByOrderId',

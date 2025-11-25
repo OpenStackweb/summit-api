@@ -12,14 +12,20 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipAddOnRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitSponsorshipService;
+use App\Swagger\Summit\SummitSponsorshipAddOnSchema;
+use App\Swagger\Summit\SummitSponsorshipSchema;
 use Illuminate\Http\JsonResponse;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
@@ -77,6 +83,40 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $sponsor_id
      * @return JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships",
+        operationId: "getAllSponsorships",
+        description: "Get all sponsorships for a sponsor",
+        summary: "Get all sponsorships for a sponsor",
+        tags: ["Sponsorships"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", description: "Page number", in: "query", schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", description: "Items per page", in: "query", schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "expand", description: "Expand relations", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "fields", description: "Fields to return", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "filter", description: "Filter conditions", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by", in: "query", schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "List of sponsorships", content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSponsorshipsResponse")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAll($summit_id, $sponsor_id): mixed
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -132,6 +172,37 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $sponsorship_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}",
+        operationId: "getSponsorshipById",
+        description: "Get sponsorship by ID",
+        summary: "Get sponsorship by ID",
+        tags: ["Sponsorships"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsorship_id", description: "Sponsorship ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "expand", description: "Expand relations", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "fields", description: "Fields to return", in: "query", schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "Sponsorship data", content: new OA\JsonContent(ref: "#/components/schemas/SummitSponsorship")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getById($summit_id, $sponsor_id, $sponsorship_id): mixed
     {
         return $this->processRequest(function () use ($summit_id, $sponsor_id, $sponsorship_id) {
@@ -165,6 +236,38 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $sponsor_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships",
+        operationId: "addSponsorshipsFromTypes",
+        description: "Add sponsorships from types",
+        summary: "Add sponsorships from types",
+        tags: ["Sponsorships"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/AddSponsorshipRequest")
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: "Sponsorships created", content: new OA\JsonContent(type: "array", items: new OA\Items(ref: "#/components/schemas/SummitSponsorship"))),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addFromTypes($summit_id, $sponsor_id): mixed
     {
         return $this->processRequest(function () use ($summit_id, $sponsor_id) {
@@ -202,6 +305,34 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $sponsorship_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}",
+        operationId: "removeSponsorships",
+        description: "Remove a sponsorship",
+        summary: "Remove a sponsorship",
+        tags: ["Sponsorships"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsorship_id", description: "Sponsorship ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Sponsorship deleted"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function remove($summit_id, $sponsor_id, $sponsorship_id): mixed
     {
         return $this->processRequest(function () use ($summit_id, $sponsor_id, $sponsorship_id) {
@@ -227,6 +358,41 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $sponsorship_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons",
+        operationId: "getAllAddOns",
+        description: "Get all add-ons for a sponsorship",
+        summary: "Get all add-ons for a sponsorship",
+        tags: ["Sponsorships Add-Ons"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsorship_id", description: "Sponsorship ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", description: "Page number", in: "query", schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", description: "Items per page", in: "query", schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "expand", description: "Expand relations", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "fields", description: "Fields to return", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "filter", description: "Filter conditions", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by", in: "query", schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "List of add-ons", content: new OA\JsonContent(ref: "#/components/schemas/PaginatedAddOnsResponse")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAllAddOns($summit_id, $sponsor_id, $sponsorship_id): mixed
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -292,6 +458,39 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $sponsorship_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons",
+        operationId: "addNewAddOn",
+        description: "Add a new add-on to a sponsorship",
+        summary: "Add a new add-on to a sponsorship",
+        tags: ["Sponsorships Add-Ons"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsorship_id", description: "Sponsorship ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/AddAddOnRequest")
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: "Add-on created", content: new OA\JsonContent(ref: "#/components/schemas/SummitSponsorshipAddOn")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addNewAddOn($summit_id, $sponsor_id, $sponsorship_id): mixed
     {
          return $this->processRequest(function () use ($summit_id, $sponsor_id, $sponsorship_id) {
@@ -324,6 +523,38 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $add_on_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}",
+        operationId: "getAddOnById",
+        description: "Get add-on by ID",
+        summary: "Get add-on by ID",
+        tags: ["Sponsorships Add-Ons"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsorship_id", description: "Sponsorship ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "add_on_id", description: "Add-on ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "expand", description: "Expand relations", in: "query", schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "fields", description: "Fields to return", in: "query", schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "Add-on data", content: new OA\JsonContent(ref: "#/components/schemas/SummitSponsorshipAddOn")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getAddOnById($summit_id, $sponsor_id, $sponsorship_id, $add_on_id): mixed
     {
         return $this->processRequest(function () use ($summit_id, $sponsor_id, $sponsorship_id, $add_on_id) {
@@ -360,6 +591,40 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $add_on_id
      * @return mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}",
+        operationId: "updateAddOn",
+        description: "Update an add-on",
+        summary: "Update an add-on",
+        tags: ["Sponsorships Add-Ons"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsorship_id", description: "Sponsorship ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "add_on_id", description: "Add-on ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/UpdateAddOnRequest")
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "Add-on updated", content: new OA\JsonContent(ref: "#/components/schemas/SummitSponsorshipAddOn")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateAddOn($summit_id, $sponsor_id, $sponsorship_id, $add_on_id): mixed
     {
         return $this->processRequest(function () use ($summit_id, $sponsor_id, $sponsorship_id, $add_on_id) {
@@ -392,6 +657,35 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $add_on_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}",
+        operationId: "removeAddOn",
+        description: "Remove an add-on",
+        summary: "Remove an add-on",
+        tags: ["Sponsorships Add-Ons"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "sponsorship_id", description: "Sponsorship ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "add_on_id", description: "Add-on ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Add-on deleted"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function removeAddOn($summit_id, $sponsor_id, $sponsorship_id, $add_on_id): mixed
     {
         return $this->processRequest(function () use ($summit_id, $sponsor_id, $sponsorship_id, $add_on_id) {
@@ -415,6 +709,25 @@ final class OAuth2SummitSponsorshipsApiController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/add-ons/metadata",
+        operationId: "getAddOnsMetadata",
+        description: "Get add-ons metadata",
+        summary: "Get add-ons metadata",
+        tags: ["Sponsorships Add-Ons"],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "Add-ons metadata", content: new OA\JsonContent(type: "object")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getMetadata($summit_id): mixed
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);

@@ -282,7 +282,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         operationId: 'checkout',
         tags: ['Orders (Public)'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
@@ -1334,7 +1334,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         ],
         tags: ['Orders'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1415,7 +1415,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         ],
         tags: ['Orders'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -1549,7 +1549,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         ],
         tags: ['Orders'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1811,7 +1811,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: '/api///tickets/{ticket_id}',
+        path: '/api/v1/summits/all/orders/all/tickets/{ticket_id}',
         summary: 'Update my ticket by ticket ID',
         description: 'Updates ticket information for the current user',
         operationId: 'updateMyTicketById',
@@ -1964,18 +1964,96 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @param array $payload
      * @return IEntity
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/orders',
+        summary: 'Create offline order',
+        description: 'Creates a new offline order for a summit. Admin access required.',
+        operationId: 'add',
+        security: [
+            [
+                'summit_orders_auth' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::CreateOfflineRegistrationOrders,
+                ]
+            ]
+        ],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ['Orders'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/CreateOfflineOrderRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Order created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitOrder')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+        ]
+    )]
     protected function addChild(Summit $summit, array $payload): IEntity
     {
         return $this->service->createOfflineOrder($summit, $payload);
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/orders/{order_id}',
+        summary: 'Get order by ID',
+        description: 'Returns order information for the specified order. Admin access required.',
+        operationId: 'get',
+        security: [
+            [
+                'summit_orders_auth' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
+                ]
+            ]
+        ],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ['Orders'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Order information',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitOrder')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or order not found'),
+        ]
+    )]
     protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
     {
         return $summit->getOrderById($child_id);
     }
 
     /**
-     * @param $summit_id
      * @param $order_id
      * @return mixed
      */
@@ -2196,6 +2274,49 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @param array $payload
      * @return IEntity
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/orders/{order_id}',
+        summary: 'Update order',
+        description: 'Updates order information. Admin access required.',
+        operationId: 'update',
+        security: [
+            [
+                'summit_orders_auth' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
+                ]
+            ]
+        ],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ['Orders'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateOrderRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Order updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitOrder')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or order not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+        ]
+    )]
     protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
     {
         return $this->service->updateOrder($summit, $child_id, $payload);
@@ -2206,6 +2327,39 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      * @param $child_id
      * @return void
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/orders/{order_id}',
+        summary: 'Delete order',
+        description: 'Deletes an order. Admin access required.',
+        operationId: 'delete',
+        security: [
+            [
+                'summit_orders_auth' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DeleteRegistrationOrders,
+                ]
+            ]
+        ],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ['Orders'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Order deleted successfully'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or order not found'),
+        ]
+    )]
     protected function deleteChild(Summit $summit, $child_id): void
     {
         $this->service->deleteOrder($summit, intval($child_id));
@@ -2240,7 +2394,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         ],
         tags: ['Orders'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -2302,7 +2456,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         ],
         tags: ['Orders'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -2362,7 +2516,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         ],
         tags: ['Orders'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
@@ -2455,7 +2609,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         ],
         tags: ['Orders'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_id', in: 'path', required: true, description: 'Order ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],

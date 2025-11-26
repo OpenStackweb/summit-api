@@ -17,10 +17,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "score", type: "integer", example: 5),
         new OA\Property(property: "name", type: "string", example: "Excellent"),
         new OA\Property(property: "description", type: "string", example: "This presentation is excellent"),
-    ],
-    anyOf: [
-        new OA\Property(property: "type_id", type: "integer", example: 10),
-        new OA\Property(property: "type", type: "PresentationTrackChairRatingType"),
+        new OA\Property(property: "type_id", type: "integer", example: 10, description: "The PresentationTrackChairRatingType id, use ?expand=type to full object (type)"),
     ],
 )]
 class PresentationTrackChairScoreType {}

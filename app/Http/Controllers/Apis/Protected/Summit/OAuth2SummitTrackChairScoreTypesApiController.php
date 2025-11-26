@@ -19,6 +19,8 @@ use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeR
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairScoreTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Models\Foundation\Main\IGroup;
+use App\Security\SummitScopes;
 use App\Services\Model\ITrackChairRankingService;
 use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
@@ -100,7 +102,15 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         summary: "Get track chair score types",
         operationId: "getTrackChairScoreTypes",
         tags: ['Track Chair Score Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_track_chair_oauth2' => [SummitScopes::ReadSummitData]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -178,7 +188,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -231,7 +241,15 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         summary: "Get track chair score type",
         operationId: "getTrackChairScoreType",
         tags: ['Track Chair Score Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_track_chair_oauth2' => [SummitScopes::ReadSummitData]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -286,7 +304,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -321,7 +339,15 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         summary: "Create track chair score type",
         operationId: "addTrackChairScoreType",
         tags: ['Track Chair Score Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_track_chair_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -358,7 +384,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -392,7 +418,15 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         summary: "Update track chair score type",
         operationId: "updateTrackChairScoreType",
         tags: ['Track Chair Score Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_track_chair_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -436,7 +470,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -470,7 +504,15 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         summary: "Delete track chair score type",
         operationId: "deleteTrackChairScoreType",
         tags: ['Track Chair Score Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_track_chair_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -505,7 +547,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
             new OA\Response(response: 204, description: 'No Content'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]

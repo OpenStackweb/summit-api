@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
+use App\Security\SummitScopes;
 use Illuminate\Http\Response;
 use OpenApi\Attributes as OA;
 use App\Facades\ResourceServerContext;
@@ -92,9 +94,23 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/proposed-schedules/{source}/presentations",
+        operationId: 'getProposedScheduleEvents',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
         summary: "Get proposed schedule events for a specific source",
-        security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -213,9 +229,22 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/proposed-schedules/{source}/presentations/{presentation_id}/propose",
+        operationId: 'publishProposedSchedulePresentation',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
         summary: "Publish a presentation to the proposed schedule",
-        security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -289,9 +318,22 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      */
     #[OA\Delete(
         path: "/api/v1/summits/{id}/proposed-schedules/{source}/presentations/{presentation_id}/propose",
+        operationId: 'unpublishProposedSchedulePresentation',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
         summary: "Unpublish a presentation from the proposed schedule",
-        security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -346,9 +388,22 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/proposed-schedules/{source}/presentations/all/publish",
+        operationId: 'publishAllProposedSchedulePresentations',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
         summary: "Publish all presentations to the proposed schedule with optional filters",
-        security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -440,9 +495,19 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      */
     #[OA\Post(
         path: "/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/lock",
+        operationId: 'sendProposedScheduleTrackToReview',
+        description: "required-groups " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
         summary: "Send a track schedule for review (lock the track)",
-        security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -517,9 +582,20 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      */
     #[OA\Delete(
         path: "/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/lock",
+        operationId: 'removeProposedScheduleTrackReview',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
         summary: "Remove review lock from a track schedule (unlock the track)",
-        security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -582,9 +658,12 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/proposed-schedules/{source}/locks",
+        operationId: 'getProposedScheduleReviewSubmissions',
         summary: "Get all proposed schedule review submissions (locks) for a source",
-        security: [["Bearer" => []]],
-        tags: ["summit-proposed-schedule"],
+        tags: ["Summit Proposed Schedule"],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::ReadSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",

@@ -19,8 +19,10 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitRegistrationInvitationService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
@@ -85,9 +87,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Post(
         path: "/api/v1/summits/{id}/registration-invitations/csv",
+        operationId: 'ingestInvitations',
         summary: "Import registration invitations from CSV file",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -151,10 +165,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: "/api/v1/summits/registration-invitations/tokens/{token}",
+        path: "/api/v1/summits/registration-invitations/{token}",
+        operationId: 'getInvitationByToken',
         summary: "Get a registration invitation by token",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadMyRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: "token",
@@ -222,9 +247,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/registration-invitations/{invitation_id}",
+        operationId: 'getRegistrationInvitation',
         summary: "Get a registration invitation by id",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -264,9 +301,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/registration-invitations",
+        operationId: 'getAllBySummit',
         summary: "Get all registration invitations for a summit",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -383,9 +432,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/registration-invitations/csv",
+        operationId: 'getAllBySummitCSV',
         summary: "Export registration invitations to CSV",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -524,7 +585,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     $columns = $allowed_columns;
                 return $columns;
             },
-            'summit-registration-invitations-'
+            'Summit Registration Invitations-'
         );
     }
 
@@ -548,9 +609,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Delete(
         path: "/api/v1/summits/{id}/registration-invitations/{invitation_id}",
+        operationId: 'deleteRegistrationInvitation',
         summary: "Delete a registration invitation",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -606,9 +679,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Post(
         path: "/api/v1/summits/{id}/registration-invitations",
+        operationId: 'addRegistrationInvitation',
         summary: "Create a registration invitation",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -671,9 +756,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/registration-invitations/{invitation_id}",
+        operationId: 'updateRegistrationInvitation',
         summary: "Update a registration invitation",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -721,9 +818,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Delete(
         path: "/api/v1/summits/{id}/registration-invitations/all",
+        operationId: 'deleteAllRegistrationInvitations',
         summary: "Delete all registration invitations for a summit",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -759,9 +868,21 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/registration-invitations/all/send",
+        operationId: 'sendRegistrationInvitations',
         summary: "Send registration invitation emails",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -877,9 +998,12 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/registration-invitations/me",
+        operationId: 'getMyRegistrationInvitation',
         summary: "Get my registration invitation for the current user",
-        security: [["Bearer" => []]],
-        tags: ["summit-registration-invitations"],
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadMyRegistrationInvitations,
+        ]]],
+        tags: ["Summit Registration Invitations"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -933,8 +1057,9 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Get(
         path: "/api/public/v1/summits/{id}/registration-invitations/{token}",
+        operationId: 'getInvitationBySummitAndToken',
         summary: "Get a registration invitation by summit and token (public endpoint)",
-        tags: ["summit-registration-invitations"],
+        tags: ["Summit Registration Invitations (Public)"],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -985,8 +1110,9 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Delete(
         path: "/api/public/v1/summits/{id}/registration-invitations/{token}/reject",
+        operationId: 'rejectInvitationBySummitAndToken',
         summary: "Reject a registration invitation by summit and token (public endpoint)",
-        tags: ["summit-registration-invitations"],
+        tags: ["Summit Registration Invitations (Public)"],
         parameters: [
             new OA\Parameter(
                 name: 'id',

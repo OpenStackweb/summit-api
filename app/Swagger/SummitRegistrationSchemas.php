@@ -75,11 +75,11 @@ class SummitBadgeTypeUpdateRequest
         new OA\Property(property: "action_date", type: "integer", nullable: true),
         new OA\Property(property: "acceptance_criteria", type: "string", enum: ["ANY_TICKET_TYPE", "ALL_TICKET_TYPES"]),
         new OA\Property(property: "status", type: "string", enum: ["Pending", "Accepted", "Rejected"]),
-        new OA\Property(property: "allowed_ticket_types", type: "array", items: new OA\Items(type: ["integer", "SummitTicketType"]), nullable: true),
-        new OA\Property(property: "tags", type: "array", items: new OA\Items(type: ["integer", "Tag"]), nullable: true)
+        new OA\Property(property: "allowed_ticket_types", type: "array", items: new OA\Items(type: "integer"), description: "Array of SummitTicketType IDs, full object when expanded", nullable: true),
+        new OA\Property(property: "tags", type: "array", items: new OA\Items(type: ["integer", "string"]), description: "Array of Tag IDs or names when expanded", nullable: true),
     ]
 )]
-class SummitRegistrationInvitation
+class SummitRegistrationInvitationSchema
 {
 }
 
@@ -98,7 +98,7 @@ class SummitRegistrationInvitation
         )
     ]
 )]
-class PaginatedSummitRegistrationInvitationsResponse
+class PaginatedSummitRegistrationInvitationsResponseSchema
 {
 }
 
@@ -116,7 +116,7 @@ class PaginatedSummitRegistrationInvitationsResponse
         new OA\Property(property: "status", type: "string", enum: ["Pending", "Accepted", "Rejected"])
     ]
 )]
-class SummitRegistrationInvitationCreateRequest
+class SummitRegistrationInvitationCreateRequestSchema
 {
 }
 
@@ -134,7 +134,7 @@ class SummitRegistrationInvitationCreateRequest
         new OA\Property(property: "status", type: "string", enum: ["Pending", "Accepted", "Rejected"])
     ]
 )]
-class SummitRegistrationInvitationUpdateRequest
+class SummitRegistrationInvitationUpdateRequestSchema
 {
 }
 
@@ -147,7 +147,7 @@ class SummitRegistrationInvitationUpdateRequest
         new OA\Property(property: "acceptance_criteria", type: "string", enum: ["ANY_TICKET_TYPE", "ALL_TICKET_TYPES"])
     ]
 )]
-class SummitRegistrationInvitationCSVImportRequest
+class SummitRegistrationInvitationCSVImportRequestSchema
 {
 }
 
@@ -163,7 +163,7 @@ class SummitRegistrationInvitationCSVImportRequest
         new OA\Property(property: "outcome_email_recipient", type: "string", format: "email")
     ]
 )]
-class SendRegistrationInvitationsRequest
+class SendRegistrationInvitationsRequestSchema
 {
 }
 

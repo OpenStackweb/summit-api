@@ -12,8 +12,10 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitMetricService;
 use Illuminate\Http\Response;
 use models\main\IMemberRepository;
@@ -72,9 +74,10 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/metrics/enter",
+        operationId: 'enter',
         summary: "Record a metric entry (enter)",
-        security: [["Bearer" => []]],
-        tags: ["summit-metrics"],
+        security: [["summit_metrics_oauth2" => [SummitScopes::EnterEvent, SummitScopes::WriteMetrics]]],
+        tags: ["Summit Metrics"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -140,9 +143,10 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      */
     #[OA\Post(
         path: "/api/v1/summits/{id}/metrics/leave",
+        operationId: 'leave',
         summary: "Record a metric exit (leave)",
-        security: [["Bearer" => []]],
-        tags: ["summit-metrics"],
+        security: [["summit_metrics_oauth2" => [SummitScopes::LeaveEvent, SummitScopes::WriteMetrics]]],
+        tags: ["Summit Metrics"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -208,9 +212,10 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/metrics/enter",
+        operationId: 'enterToEvent',
         summary: "Record a metric entry to a specific event",
-        security: [["Bearer" => []]],
-        tags: ["summit-metrics"],
+        security: [["summit_metrics_oauth2" => [SummitScopes::EnterEvent]]],
+        tags: ["Summit Metrics"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -278,9 +283,10 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      */
     #[OA\Post(
         path: "/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/metrics/leave",
+        operationId: 'leaveFromEvent',
         summary: "Record a metric exit from a specific event",
-        security: [["Bearer" => []]],
-        tags: ["summit-metrics"],
+        security: [["summit_metrics_oauth2" => [SummitScopes::LeaveEvent]]],
+        tags: ["Summit Metrics"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -342,9 +348,13 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/metrics/onsite/enter",
+        operationId: 'onSiteEnter',
         summary: "Record an on-site metric entry (for attendees entering venue/room)",
-        security: [["Bearer" => []]],
-        tags: ["summit-metrics"],
+        security: [["summit_metrics_oauth2" => [SummitScopes::WriteMetrics]]],
+        tags: ["Summit Metrics"],
+        x: [
+            "authz_groups" => [IGroup::SummitAccessControl]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -406,9 +416,13 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/metrics/onsite/enter",
+        operationId: 'checkOnSiteEnter',
         summary: "Check if on-site entry is allowed for an attendee (validation only, does not record entry)",
-        security: [["Bearer" => []]],
-        tags: ["summit-metrics"],
+        security: [["summit_metrics_oauth2" => [SummitScopes::ReadAllSummitData, SummitScopes::ReadSummitData, SummitScopes::ReadMetrics]]],
+        tags: ["Summit Metrics"],
+        x: [
+            "authz_groups" => [IGroup::SummitAccessControl]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -481,9 +495,13 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/metrics/onsite/leave",
+        operationId: 'onSiteLeave',
         summary: "Record an on-site metric exit (for attendees leaving venue/room)",
-        security: [["Bearer" => []]],
-        tags: ["summit-metrics"],
+        security: [["summit_metrics_oauth2" => [SummitScopes::WriteMetrics]]],
+        tags: ["Summit Metrics"],
+        x: [
+            "authz_groups" => [IGroup::SummitAccessControl]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",

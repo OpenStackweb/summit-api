@@ -11,6 +11,8 @@ use OpenApi\Attributes as OA;
     type: "object",
     properties: [
         new OA\Property(property: "id", type: "integer"),
+        new OA\Property(property: "created", type: "integer"),
+        new OA\Property(property: "last_edited", type: "integer"),
         new OA\Property(property: "member_first_name", type: "string", nullable: true),
         new OA\Property(property: "member_last_name", type: "string", nullable: true),
         new OA\Property(property: "member_pic", type: "string", nullable: true),
@@ -20,8 +22,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "browser", type: "string", nullable: true),
         new OA\Property(property: "outgress_date", type: "integer", nullable: true),
         new OA\Property(property: "ingress_date", type: "integer"),
-        new OA\Property(property: "created", type: "integer"),
-        new OA\Property(property: "last_edited", type: "integer")
     ]
 )]
 class SummitMetric

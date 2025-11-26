@@ -19,7 +19,9 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\PresentationSubmissions\Invitations\InviteSubmissionEmail;
 use App\Jobs\Emails\PresentationSubmissions\Invitations\ReInviteSubmissionEmail;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitSubmissionInvitationRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitSubmissionInvitationService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
@@ -95,11 +97,22 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/submission-invitations/csv",
-        description: "Import submission invitations from CSV file",
+        description: "Import submission invitations from CSV file - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Import submission invitations from CSV",
         operationId: "ingestSummitSubmissionInvitations",
         tags: ['Summit Submission Invitations'],
-        security: [['summit_oauth2' => []]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSubmissionInvitations,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -173,11 +186,22 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/submission-invitations",
-        description: "Get all submission invitations for a summit",
+        description: "Get all submission invitations for a summit - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Get all submission invitations",
         operationId: "getAllSummitSubmissionInvitations",
         tags: ['Summit Submission Invitations'],
-        security: [['summit_oauth2' => []]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSubmissionInvitations,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -294,11 +318,22 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/submission-invitations/csv",
-        description: "Get all submission invitations for a summit in CSV format",
+        description: "Get all submission invitations for a summit in CSV format - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Get all submission invitations (CSV)",
         operationId: "getAllSummitSubmissionInvitationsCSV",
         tags: ['Summit Submission Invitations'],
-        security: [['summit_oauth2' => []]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSubmissionInvitations,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -469,11 +504,22 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/submission-invitations/{invitation_id}",
-        description: "Get a specific submission invitation by id",
+        description: "Get a specific submission invitation by id - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Get submission invitation",
         operationId: "getSummitSubmissionInvitation",
         tags: ['Summit Submission Invitations'],
-        security: [['summit_oauth2' => []]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSubmissionInvitations,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -523,11 +569,22 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/submission-invitations",
-        description: "Create a new submission invitation",
+        description: "Create a new submission invitation - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Create submission invitation",
         operationId: "createSummitSubmissionInvitation",
         tags: ['Summit Submission Invitations'],
-        security: [['summit_oauth2' => []]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSubmissionInvitations,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -562,11 +619,22 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/submission-invitations/{invitation_id}",
-        description: "Update an existing submission invitation",
+        description: "Update an existing submission invitation - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Update submission invitation",
         operationId: "updateSummitSubmissionInvitation",
         tags: ['Summit Submission Invitations'],
-        security: [['summit_oauth2' => []]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSubmissionInvitations,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -608,11 +676,22 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/submission-invitations/{invitation_id}",
-        description: "Delete a submission invitation",
+        description: "Delete a submission invitation - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Delete submission invitation",
         operationId: "deleteSummitSubmissionInvitation",
         tags: ['Summit Submission Invitations'],
-        security: [['summit_oauth2' => []]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSubmissionInvitations,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -644,11 +723,22 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/submission-invitations/all",
-        description: "Delete all submission invitations for a summit",
+        description: "Delete all submission invitations for a summit - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Delete all submission invitations",
         operationId: "deleteAllSummitSubmissionInvitations",
         tags: ['Summit Submission Invitations'],
-        security: [['summit_oauth2' => []]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSubmissionInvitations,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -681,6 +771,81 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/submission-invitations/all/send",
+        description: "Send submission invitations to selected recipients - required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
+        summary: "Send submission invitations",
+        operationId: "sendSummitSubmissionInvitations",
+        tags: ['Summit Submission Invitations'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        security: [['summit_submission_invitations_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSubmissionInvitations,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Filter expression to select invitations'
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email_flow_event'],
+                properties: [
+                    new OA\Property(
+                        property: 'email_flow_event',
+                        type: 'string',
+                        enum: ['SUMMIT_SUBMISSIONS_INVITE_SUBMISSION', 'SUMMIT_SUBMISSIONS_REINVITE_SUBMISSION'],
+                        description: 'Email flow event type'
+                    ),
+                    new OA\Property(
+                        property: 'selection_plan_id',
+                        type: 'integer',
+                        description: 'Selection plan ID'
+                    ),
+                    new OA\Property(
+                        property: 'invitations_ids',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer'),
+                        description: 'Array of invitation IDs to send'
+                    ),
+                    new OA\Property(
+                        property: 'excluded_invitations_ids',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer'),
+                        description: 'Array of invitation IDs to exclude'
+                    )
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Success'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function send($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {

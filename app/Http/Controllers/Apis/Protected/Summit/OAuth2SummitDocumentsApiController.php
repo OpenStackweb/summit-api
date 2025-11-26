@@ -16,8 +16,10 @@ namespace App\Http\Controllers;
  **/
 
 use App\Http\Utils\MultipartFormDataCleaner;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitDocumentRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitDocumentService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
@@ -91,7 +93,9 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Get summit documents",
         operationId: "getAllSummitDocuments",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -169,7 +173,9 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Get summit document",
         operationId: "getSummitDocument",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -224,7 +230,16 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Create summit document",
         operationId: "addSummitDocument",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -322,7 +337,16 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Update summit document",
         operationId: "updateSummitDocument",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -428,7 +452,16 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Delete summit document",
         operationId: "deleteSummitDocument",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -524,7 +557,16 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Add event type to document",
         operationId: "addEventTypeToDocument",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -600,7 +642,16 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Remove event type from document",
         operationId: "removeEventTypeFromDocument",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -676,7 +727,16 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Add file to document",
         operationId: "addFileToDocument",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -750,7 +810,16 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
         summary: "Remove file from document",
         operationId: "removeFileFromDocument",
         tags: ['Summit Documents'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_document_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',

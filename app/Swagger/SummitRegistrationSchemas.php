@@ -22,17 +22,20 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: "access_levels",
             type: "array",
-            items: new OA\Items(type: ["integer", "SummitAccessLevelType"]),
+            items: new OA\Items(type: "integer"),
+            description: "SummitAccessLevelType IDs, full objects when expanded"
         ),
         new OA\Property(
             property: "badge_features",
             type: "array",
-            items: new OA\Items(type: ["integer", "SummitBadgeFeatureType"]),
+            items: new OA\Items(type: "integer"),
+            description: "SummitBadgeFeatureType IDs, full objects when expanded",
         ),
         new OA\Property(
             property: "allowed_view_types",
             type: "array",
-            items: new OA\Items(type: ["integer", "SummitBadgeViewType"]),
+            items: new OA\Items(type: "integer"),
+            description: "SummitBadgeViewType IDs, full objects when expanded",
         ),
     ],
 )]

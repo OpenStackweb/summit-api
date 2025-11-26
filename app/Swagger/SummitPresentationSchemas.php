@@ -163,11 +163,8 @@ class PresentationTrackChairScoreTypeUpdateRequest {}
         new OA\Property(property: "summit_id", type: "integer"),
         new OA\Property(property: "speaker_email", type: "string"),
         new OA\Property(property: "speaker_full_name", type: "string"),
+        new OA\Property(property: "speaker_id", type: "integer", description: "PresentationSpeaker Id, full object available in 'speaker' expand (speaker field)"),
         new OA\Property(property: "confirmation_date", type: "integer", nullable: true),
-    ],
-    anyOf:[
-        new OA\Property(property: "speaker_id", type: "integer"),
-        new OA\Property(property: "speaker", type: "PresentationSpeaker"),
     ]
 )]
 class PresentationSpeakerSummitAssistanceConfirmationRequest

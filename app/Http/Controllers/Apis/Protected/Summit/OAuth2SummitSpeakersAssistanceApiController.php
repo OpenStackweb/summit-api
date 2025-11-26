@@ -16,7 +16,9 @@ namespace App\Http\Controllers;
  **/
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
+use App\Security\SummitScopes;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -83,9 +85,13 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/speakers-assistances",
+        operationId: 'getBySummit',
         summary: "Get all speaker assistances for a summit",
-        security: [["Bearer" => []]],
-        tags: ["summit-speakers-assistances"],
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -227,9 +233,13 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/speakers-assistances/csv",
+        operationId: 'getBySummitCSV',
         summary: "Export speaker assistances to CSV",
-        security: [["Bearer" => []]],
-        tags: ["summit-speakers-assistances"],
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -340,9 +350,13 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      */
     #[OA\Post(
         path: "/api/v1/summits/{id}/speakers-assistances",
+        operationId: 'addSpeakerSummitAssistance',
         summary: "Create a speaker assistance confirmation request",
-        security: [["Bearer" => []]],
-        tags: ["summit-speakers-assistances"],
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -427,9 +441,13 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/speakers-assistances/{assistance_id}",
+        operationId: 'updateSpeakerSummitAssistance',
         summary: "Update a speaker assistance confirmation request",
-        security: [["Bearer" => []]],
-        tags: ["summit-speakers-assistances"],
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -521,9 +539,13 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      */
     #[OA\Delete(
         path: "/api/v1/summits/{id}/speakers-assistances/{assistance_id}",
+        operationId: 'deleteSpeakerSummitAssistance',
         summary: "Delete a speaker assistance confirmation request",
-        security: [["Bearer" => []]],
-        tags: ["summit-speakers-assistances"],
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -579,9 +601,13 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/speakers-assistances/{assistance_id}",
+        operationId: 'getSpeakerSummitAssistanceBySummit',
         summary: "Get a speaker assistance confirmation request by id",
-        security: [["Bearer" => []]],
-        tags: ["summit-speakers-assistances"],
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",

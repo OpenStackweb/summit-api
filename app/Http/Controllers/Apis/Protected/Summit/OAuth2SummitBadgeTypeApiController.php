@@ -17,6 +17,8 @@ namespace App\Http\Controllers;
 use App\Models\Foundation\Summit\Repositories\ISummitBadgeTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Services\Model\ISummitBadgeTypeService;
+use App\Models\Foundation\Main\IGroup;
+use App\Security\SummitScopes;
 use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
@@ -121,7 +123,18 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Get badge types",
         operationId: "getAllBySummitBadgeTypes",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -199,7 +212,18 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Get badge type",
         operationId: "getSummitBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -254,7 +278,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Create badge type",
         operationId: "addSummitBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -292,7 +326,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Update badge type",
         operationId: "updateSummitBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -337,7 +381,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Delete badge type",
         operationId: "deleteSummitBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -450,7 +504,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Add access level to badge type",
         operationId: "addAccessLevelToBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -509,7 +573,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Remove access level from badge type",
         operationId: "removeAccessLevelFromBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -566,7 +640,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Add feature to badge type",
         operationId: "addFeatureToBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -624,7 +708,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Remove feature from badge type",
         operationId: "removeFeatureFromBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -681,7 +775,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Add view type to badge type",
         operationId: "addViewTypeToBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -739,7 +843,17 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         summary: "Remove view type from badge type",
         operationId: "removeViewTypeFromBadgeType",
         tags: ['Badge Types'],
-        security: [['summit_oauth2' => []]],
+        security: [['summit_badge_types_oauth2' => [
+            SummitScopes::WriteSummitData
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',

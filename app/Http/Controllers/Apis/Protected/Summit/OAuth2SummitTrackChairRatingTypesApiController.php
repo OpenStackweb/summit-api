@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ITrackChairRankingService;
 use Illuminate\Http\Response;
 use models\oauth2\IResourceServerContext;
@@ -96,7 +98,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
         summary: "Get all track chair rating types",
         operationId: "getAllTrackChairRatingTypes",
         tags: ['Track Chair Rating Types'],
-        security: [['summit_oauth2' => []]],
+        security: [["track_chair_rating_types_oauth2" => [SummitScopes::ReadSummitData]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -214,7 +216,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
         summary: "Get track chair rating type",
         operationId: "getTrackChairRatingType",
         tags: ['Track Chair Rating Types'],
-        security: [['summit_oauth2' => []]],
+        security: [["track_chair_rating_types_oauth2" => [SummitScopes::ReadSummitData]]],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -292,7 +294,10 @@ final class OAuth2SummitTrackChairRatingTypesApiController
         summary: "Create track chair rating type",
         operationId: "createTrackChairRatingType",
         tags: ['Track Chair Rating Types'],
-        security: [['summit_oauth2' => []]],
+        security: [["track_chair_rating_types_oauth2" => [SummitScopes::WriteSummitData]]],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -356,7 +361,10 @@ final class OAuth2SummitTrackChairRatingTypesApiController
         summary: "Update track chair rating type",
         operationId: "updateTrackChairRatingType",
         tags: ['Track Chair Rating Types'],
-        security: [['summit_oauth2' => []]],
+        security: [["track_chair_rating_types_oauth2" => [SummitScopes::WriteSummitData]]],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -427,7 +435,10 @@ final class OAuth2SummitTrackChairRatingTypesApiController
         summary: "Delete track chair rating type",
         operationId: "deleteTrackChairRatingType",
         tags: ['Track Chair Rating Types'],
-        security: [['summit_oauth2' => []]],
+        security: [["track_chair_rating_types_oauth2" => [SummitScopes::WriteSummitData]]],
+        x: [
+            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',

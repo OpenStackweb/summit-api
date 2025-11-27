@@ -152,7 +152,7 @@ class CompanyService extends SilverstripeBaseModel
     }
 
     /**
-     * @return Company
+     * @return MarketPlaceType
      */
     public function getType()
     {

@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Swagger\Security;
+
+use App\Security\SummitScopes;
+use OpenApi\Attributes as OA;
+
+#[
+    OA\SecurityScheme(
+        type: 'oauth2',
+        securityScheme: 'selected_presentation_list_oauth2',
+        flows: [
+            new OA\Flow(
+                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
+                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
+                flow: 'authorizationCode',
+                scopes: [
+                    SummitScopes::ReadSummitData => 'Read Summit Data',
+                    SummitScopes::WriteSummitData => 'Write Summit Data',
+                ],
+            ),
+        ],
+    )
+]
+class SelectedPresentationListAuthSchema {}

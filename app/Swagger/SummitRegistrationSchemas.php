@@ -56,7 +56,7 @@ class SummitTaxTypeCreateRequestSchema
         )
     ]
 )]
-class PaginatedSummitTicketTypesResponse
+class PaginatedSummitTicketTypesResponseSchema
 {
 }
 

@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +13,11 @@
  * limitations under the License.
  **/
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\MemberScopes;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitTicketTypeService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -61,11 +65,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
     public function __construct
     (
         ISummitTicketTypeRepository $repository,
-        ISummitRepository           $summit_repository,
-        ISummitTicketTypeService    $ticket_type_service,
-        IResourceServerContext      $resource_server_context
-    )
-    {
+        ISummitRepository $summit_repository,
+        ISummitTicketTypeService $ticket_type_service,
+        IResourceServerContext $resource_server_context
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
@@ -78,9 +81,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/ticket-types",
+        operationId: 'getAllTicketTypesBySummit',
         summary: "Get all ticket types for a summit (public audience only)",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -135,28 +139,29 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
     {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         return $this->_getAll(
             function () {
                 return [
-                    'id' => [ '=='],
+                    'id' => ['=='],
                     'badge_type_id' => ['=='],
                     'name' => ['=@', '@@', '=='],
                     'description' => ['=@', '@@', '=='],
                     'external_id' => ['=@', '@@', '=='],
                     'audience' => ['=@', '@@', '=='],
-                    'sales_start_date'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'created'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'sales_start_date' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'sales_end_date' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'created' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'last_edited' => ['>', '<', '<=', '>=', '==', '[]'],
                     'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
                 return [
-                    'id' =>'sometimes|integer',
-                    'badge_type_id' =>'sometimes|integer',
+                    'id' => 'sometimes|integer',
+                    'badge_type_id' => 'sometimes|integer',
                     'name' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
@@ -191,7 +196,8 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             function ($page, $per_page, $filter, $order, $applyExtraFilters) use ($summit) {
                 return $this->repository->getBySummit
                 (
-                    $summit, new PagingInfo($page, $per_page),
+                    $summit,
+                    new PagingInfo($page, $per_page),
                     call_user_func($applyExtraFilters, $filter),
                     $order
                 );
@@ -207,28 +213,29 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
     {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         return $this->_getAllCSV(
             function () {
                 return [
-                    'id' => [ '=='],
+                    'id' => ['=='],
                     'badge_type_id' => ['=='],
                     'name' => ['=@', '@@', '=='],
                     'description' => ['=@', '@@', '=='],
                     'external_id' => ['=@', '@@', '=='],
                     'audience' => ['=@', '@@', '=='],
-                    'sales_start_date'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'created'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'sales_start_date' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'sales_end_date' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'created' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'last_edited' => ['>', '<', '<=', '>=', '==', '[]'],
                     'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
                 return [
-                    'id' =>'sometimes|integer',
-                    'badge_type_id' =>'sometimes|integer',
+                    'id' => 'sometimes|integer',
+                    'badge_type_id' => 'sometimes|integer',
                     'name' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
@@ -284,9 +291,11 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Get(
         path: "/api/v2/summits/{id}/ticket-types",
+        operationId: 'getAllTicketTypesBySummitV2',
         summary: "Get all ticket types for a summit (all audiences)",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -340,27 +349,28 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
     public function getAllBySummitV2($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
         return $this->_getAll(
             function () {
                 return [
-                    'id' => [ '=='],
+                    'id' => ['=='],
                     'badge_type_id' => ['=='],
                     'name' => ['=@', '@@', '=='],
                     'description' => ['=@', '@@', '=='],
                     'external_id' => ['=@', '@@', '=='],
                     'audience' => ['=@', '@@', '=='],
-                    'sales_start_date'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'sales_end_date'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'created'=> ['>', '<', '<=', '>=', '==','[]'],
-                    'last_edited'=> ['>', '<', '<=', '>=', '==','[]'],
+                    'sales_start_date' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'sales_end_date' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'created' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'last_edited' => ['>', '<', '<=', '>=', '==', '[]'],
                     'allows_to_delegate' => ['=='],
                 ];
             },
             function () {
                 return [
-                    'id' =>'sometimes|integer',
-                    'badge_type_id' =>'sometimes|integer',
+                    'id' => 'sometimes|integer',
+                    'badge_type_id' => 'sometimes|integer',
                     'name' => 'sometimes|string',
                     'description' => 'sometimes|string',
                     'external_id' => 'sometimes|string',
@@ -402,9 +412,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/ticket-types/allowed",
+        operationId: 'getAllowedTicketTypesBySummitAndCurrentMember',
         summary: "Get allowed ticket types for current member",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [MemberScopes::ReadMyMemberData]]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -438,17 +449,19 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
     {
         return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $member = $this->resource_server_context->getCurrentUser();
-            if (is_null($member)) return $this->error403();
+            if (is_null($member))
+                return $this->error403();
 
-            $filter = self::getFilter(function(){
+            $filter = self::getFilter(function () {
                 return [
                     'promo_code' => ['=='],
                 ];
 
-            }, function(){
+            }, function () {
                 return [
                     'promo_code' => 'sometimes|required|string',
                 ];
@@ -484,9 +497,10 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/ticket-types/{ticket_type_id}",
+        operationId: 'getTicketTypeBySummit',
         summary: "Get a specific ticket type by id",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -518,7 +532,8 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
     {
         return $this->processRequest(function () use ($summit_id, $ticket_type_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
             $ticket_type = $summit->getTicketTypeById($ticket_type_id);
             if (is_null($ticket_type))
                 return $this->error404();
@@ -537,9 +552,11 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Post(
         path: "/api/v1/summits/{id}/ticket-types",
+        operationId: 'addTicketTypeBySummit',
         summary: "Create a new ticket type for a summit",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -553,7 +570,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             required: true,
             content: new OA\MediaType(
                 mediaType: "application/json",
-                schema: new OA\Schema(ref: "#/components/schemas/SummitTicketType")
+                schema: new OA\Schema(ref: "#/components/schemas/SummitTicketTypeAddRequest")
             )
         ),
         responses: [
@@ -575,7 +592,8 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $payload = $this->getJsonPayload(SummitTicketTypeValidationRulesFactory::buildForAdd());
 
@@ -596,9 +614,11 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/ticket-types/{ticket_type_id}",
+        operationId: 'updateTicketTypeBySummit',
         summary: "Update a ticket type",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -619,7 +639,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             required: true,
             content: new OA\MediaType(
                 mediaType: "application/json",
-                schema: new OA\Schema(ref: "#/components/schemas/SummitTicketType")
+                schema: new OA\Schema(ref: "#/components/schemas/SummitTicketTypeUpdateRequest")
             )
         ),
         responses: [
@@ -641,7 +661,8 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->processRequest(function () use ($summit_id, $ticket_type_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $payload = $this->getJsonPayload(SummitTicketTypeValidationRulesFactory::buildForUpdate());
 
@@ -662,9 +683,11 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Delete(
         path: "/api/v1/summits/{id}/ticket-types/{ticket_type_id}",
+        operationId: 'deleteTicketTypeBySummit',
         summary: "Delete a ticket type",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -694,7 +717,8 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->processRequest(function () use ($summit_id, $ticket_type_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $this->ticket_type_service->deleteTicketType($summit, $ticket_type_id);
 
@@ -708,9 +732,11 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Post(
         path: "/api/v1/summits/{id}/ticket-types/seed-defaults",
+        operationId: 'seedDefaultTicketTypesBySummit',
         summary: "Seed default ticket types from Eventbrite",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -738,7 +764,8 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $ticket_types = $this->ticket_type_service->seedSummitTicketTypesFromEventBrite($summit);
 
@@ -766,9 +793,11 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/ticket-types/all/currency/{currency_symbol}",
+        operationId: 'updateTicketTypesCurrencySymbol',
         summary: "Update currency symbol for all ticket types in a summit",
-        security: [["Bearer" => []]],
-        tags: ["summit-ticket-types"],
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -804,13 +833,14 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
                 return $this->error404();
 
             $member = $this->resource_server_context->getCurrentUser();
-            if (is_null($member)) return $this->error403();
+            if (is_null($member))
+                return $this->error403();
 
-            if(!$member->isAuthzFor($summit)){
+            if (!$member->isAuthzFor($summit)) {
                 return $this->error403();
             }
 
-            if(!in_array($currency_symbol, SummitTicketType::AllowedCurrencies)){
+            if (!in_array($currency_symbol, SummitTicketType::AllowedCurrencies)) {
                 throw new ValidationException(sprintf("Currency symbol %s is not allowed.", $currency_symbol));
             }
 

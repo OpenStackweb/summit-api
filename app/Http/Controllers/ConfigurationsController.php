@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 use Exception;
 /**
  * Class ConfigurationsController
@@ -42,6 +44,32 @@ final class ConfigurationsController extends JsonController
     /**
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: '/.well-known/endpoints',
+        operationId: 'getEndpointsDefinitions',
+        description: 'Retrieve all available API endpoints definitions including OAuth2 and public endpoints',
+        tags: ['Configurations'],
+        parameters: [
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expansion parameters',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of all available endpoints',
+                content: new OA\JsonContent(ref: '#/components/schemas/EndpointsDefinitionsResponse')
+            ),
+            new OA\Response(
+                response: Response::HTTP_INTERNAL_SERVER_ERROR,
+                description: 'Server Error'
+            ),
+        ]
+    )]
     public function getEndpointsDefinitions(){
         try {
             $items = [];

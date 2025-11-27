@@ -57,7 +57,7 @@ final class PrivateCloudsApiController extends AbstractCompanyServiceApiControll
                 name: 'filter[]',
                 in: 'query',
                 required: false,
-                description: 'Filter expressions in the format field<op>value. Available fields: name, company. Operators: =@, ==, @@.',
+                description: 'Filter expressions in the format field<op>value. Available fields: name, company. Operators: =@ (starts with), == (equals), @@ (contains).',
                 style: 'form',
                 explode: true,
                 schema: new OA\Schema(
@@ -69,7 +69,7 @@ final class PrivateCloudsApiController extends AbstractCompanyServiceApiControll
                 name: 'order',
                 in: 'query',
                 required: false,
-                description: 'Order by field(s)',
+                description: 'Order by field(s). Available fields: id, name. Use "-" prefix for descending order.',
                 schema: new OA\Schema(type: 'string', example: 'name,-id')
             ),
             new OA\Parameter(

@@ -13,7 +13,9 @@
  **/
 
 use App\Models\Exceptions\AuthzException;
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Request;
@@ -76,10 +78,12 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/team",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/team",
+        operationId: 'getTeamSelectionList',
         summary: "Get team selection list for a track",
-        security: [["Bearer" => []]],
-        tags: ["summit-selected-presentation-lists"],
+        security: [["selected_presentation_list_oauth2" => [SummitScopes::ReadSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -144,10 +148,12 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Post(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/team",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/team",
+        operationId: 'createTeamSelectionList',
         summary: "Create team selection list for a track",
-        security: [["Bearer" => []]],
-        tags: ["summit-selected-presentation-lists"],
+        security: [["selected_presentation_list_oauth2" => [SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -209,10 +215,12 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/individual/owner/{owner_id}",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/owner/{owner_id}",
+        operationId: 'getIndividualSelectionList',
         summary: "Get individual selection list for a specific owner",
-        security: [["Bearer" => []]],
-        tags: ["summit-selected-presentation-lists"],
+        security: [["selected_presentation_list_oauth2" => [SummitScopes::ReadSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -280,10 +288,12 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Post(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/individual/owner/me",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/owner/me",
+        operationId: 'createIndividualSelectionList',
         summary: "Create individual selection list for current user",
-        security: [["Bearer" => []]],
-        tags: ["summit-selected-presentation-lists"],
+        security: [["selected_presentation_list_oauth2" => [SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -344,10 +354,12 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Put(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/{list_id}/reorder",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/{list_id}/reorder",
+        operationId: 'reorderSelectionList',
         summary: "Reorder presentations in a selection list",
-        security: [["Bearer" => []]],
-        tags: ["summit-selected-presentation-lists"],
+        security: [["selected_presentation_list_oauth2" => [SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -447,10 +459,12 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Post(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}",
+        operationId: 'assignPresentationToMyIndividualList',
         summary: "Assign a presentation to current user's individual selection list",
-        security: [["Bearer" => []]],
-        tags: ["summit-selected-presentation-lists"],
+        security: [["selected_presentation_list_oauth2" => [SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -527,10 +541,12 @@ class OAuth2SummitSelectedPresentationListApiController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Delete(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chairs/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}",
+        operationId: 'removePresentationFromMyIndividualList',
         summary: "Remove a presentation from current user's individual selection list",
-        security: [["Bearer" => []]],
-        tags: ["summit-selected-presentation-lists"],
+        security: [["selected_presentation_list_oauth2" => [SummitScopes::WriteSummitData]]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
                 name: "id",

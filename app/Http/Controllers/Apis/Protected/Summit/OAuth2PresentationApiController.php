@@ -92,7 +92,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $presentation_repository
      * @param IMemberRepository $member_repository
-     * @params ISummitPresentationCommentRepository $presentation_comments_repository
+     * @param ISummitPresentationCommentRepository $presentation_comments_repository
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
@@ -1609,7 +1609,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      */
 
     #[OA\Get(
-        path: "/api/v1/summits/{id}/presentations/{presentation_id}/votes",
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes",
         summary: "Get attendee votes for a presentation",
         operationId: "getAttendeeVotes",
         tags: ['Presentations'],
@@ -1635,7 +1635,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-        path: "/api/v1/summits/{id}/presentations/{presentation_id}/vote",
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes",
         summary: "Cast an attendee vote for a presentation",
         operationId: "castAttendeeVote",
         security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
@@ -1683,7 +1683,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: "/api/v1/summits/{id}/presentations/{presentation_id}/vote",
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes",
         summary: "Remove an attendee vote for a presentation",
         operationId: "unCastAttendeeVote",
         security: [['summit_oauth2' => [SummitScopes::WritePresentationData]]],
@@ -1717,7 +1717,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/scores/{score_type_id}",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/track-chair-scores/{score_type_id}",
         summary: "Add a track chair score to a presentation",
         operationId: "addTrackChairScore",
         tags: ['Presentations'],
@@ -1768,7 +1768,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/scores/{score_type_id}",
+        path: "/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/track-chair-scores/{score_type_id}",
         summary: "Remove a track chair score from a presentation",
         operationId: "removeTrackChairScore",
         security: [['summit_oauth2' => [SummitScopes::WriteTrackChairData]]],

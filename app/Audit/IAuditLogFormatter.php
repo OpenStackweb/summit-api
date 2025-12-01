@@ -21,6 +21,12 @@
 interface IAuditLogFormatter
 {
     /**
+     * @param $ctx
+     * @return void
+     */
+    public function setContext(AuditContext $ctx): void;
+
+    /**
      * @param $subject
      * @param array $change_set
      * @return string|null

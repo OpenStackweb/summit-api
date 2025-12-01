@@ -52,7 +52,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 return;
             }
             Log::debug("AuditLogOtlpStrategy::audit current user", ["user_id" => $ctx->userId, "user_email" => $ctx->userEmail]);
-            $formatter = $this->formatterFactory->make($subject, $event_type);
+            $formatter = $this->formatterFactory->make($ctx, $subject, $event_type);
             if(is_null($formatter)) {
                 Log::warning("AuditLogOtlpStrategy::audit formatter not found");
                 return;

@@ -33,8 +33,7 @@ use OpenApi\Attributes as OA;
  * Class OAuth2SummitSponsorshipTypeApiController
  * @package App\Http\Controllers
  */
-final class OAuth2SummitSponsorshipTypeApiController
-    extends OAuth2ProtectedController
+final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedController
 {
     /**
      * @var ISummitRepository
@@ -58,8 +57,7 @@ final class OAuth2SummitSponsorshipTypeApiController
         ISummitSponsorshipTypeRepository $repository,
         ISummitSponsorshipTypeService $service,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         $this->service = $service;
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
@@ -79,6 +77,7 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Get(
         path: '/api/v1/summits/{id}/sponsorships-types',
         summary: 'Get all sponsorship types for a summit',
+        operationId: 'getAllSponsorshipTypes',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -86,10 +85,14 @@ final class OAuth2SummitSponsorshipTypeApiController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['sponsorship_types_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'sponsorship_types_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -111,13 +114,15 @@ final class OAuth2SummitSponsorshipTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function getAllBySummit($summit_id){
+    public function getAllBySummit($summit_id)
+    {
         return parent::getAllBySummit($summit_id);
     }
 
     #[OA\Post(
         path: '/api/v1/summits/{id}/sponsorships-types',
         summary: 'Create a new sponsorship type',
+        operationId: 'createSponsorshipType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -125,9 +130,13 @@ final class OAuth2SummitSponsorshipTypeApiController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['sponsorship_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'sponsorship_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -150,13 +159,15 @@ final class OAuth2SummitSponsorshipTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function add($summit_id){
+    public function add($summit_id)
+    {
         return parent::add($summit_id);
     }
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Get a sponsorship type by ID',
+        operationId: 'getSponsorshipType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -164,10 +175,14 @@ final class OAuth2SummitSponsorshipTypeApiController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['sponsorship_types_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'sponsorship_types_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -186,13 +201,15 @@ final class OAuth2SummitSponsorshipTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($summit_id, $type_id){
+    public function get($summit_id, $type_id)
+    {
         return parent::get($summit_id, $type_id);
     }
 
     #[OA\Put(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Update a sponsorship type',
+        operationId: 'updateSponsorshipType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -200,9 +217,13 @@ final class OAuth2SummitSponsorshipTypeApiController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['sponsorship_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'sponsorship_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -226,13 +247,15 @@ final class OAuth2SummitSponsorshipTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function update($summit_id, $type_id){
+    public function update($summit_id, $type_id)
+    {
         return parent::update($summit_id, $type_id);
     }
 
     #[OA\Delete(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Delete a sponsorship type',
+        operationId: 'deleteSponsorshipType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -240,9 +263,13 @@ final class OAuth2SummitSponsorshipTypeApiController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['sponsorship_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'sponsorship_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -257,7 +284,8 @@ final class OAuth2SummitSponsorshipTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function delete($summit_id, $type_id){
+    public function delete($summit_id, $type_id)
+    {
         return parent::delete($summit_id, $type_id);
     }
 
@@ -343,7 +371,7 @@ final class OAuth2SummitSponsorshipTypeApiController
      */
     protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
     {
-       return $summit->getSummitSponsorshipTypeById(intval($child_id));
+        return $summit->getSummitSponsorshipTypeById(intval($child_id));
     }
 
     /**
@@ -363,7 +391,7 @@ final class OAuth2SummitSponsorshipTypeApiController
      */
     protected function updateChild(Summit $summit, int $child_id, array $payload): IEntity
     {
-        return $this->service->update($summit,$child_id, $payload);
+        return $this->service->update($summit, $child_id, $payload);
     }
 
     use RequestProcessor;
@@ -379,6 +407,7 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Post(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
         summary: 'Upload a badge image for a sponsorship type',
+        operationId: 'addSponsorshipTypeBadgeImage',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -386,9 +415,13 @@ final class OAuth2SummitSponsorshipTypeApiController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['sponsorship_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'sponsorship_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -426,11 +459,13 @@ final class OAuth2SummitSponsorshipTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function addBadgeImage(LaravelRequest $request, $summit_id, $type_id){
+    public function addBadgeImage(LaravelRequest $request, $summit_id, $type_id)
+    {
         return $this->processRequest(function () use ($request, $summit_id, $type_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $file = $request->file('file');
             if (is_null($file)) {
@@ -459,6 +494,7 @@ final class OAuth2SummitSponsorshipTypeApiController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
         summary: 'Remove the badge image from a sponsorship type',
+        operationId: 'deleteSponsorshipTypeBadgeImage',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -466,9 +502,13 @@ final class OAuth2SummitSponsorshipTypeApiController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['sponsorship_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'sponsorship_types_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ['Summits Sponsorship Types'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
@@ -483,11 +523,13 @@ final class OAuth2SummitSponsorshipTypeApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function removeBadgeImage($summit_id, $type_id){
+    public function removeBadgeImage($summit_id, $type_id)
+    {
         return $this->processRequest(function () use ($summit_id, $type_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $this->service->deleteBadgeImage($summit, $type_id);
 

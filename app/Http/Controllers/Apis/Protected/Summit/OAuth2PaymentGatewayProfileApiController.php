@@ -79,6 +79,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
     #[OA\Get(
         path: '/api/v1/summits/{id}/payment-gateway-profiles',
         summary: 'Get all payment gateway profiles for a summit',
+        operationId: 'getAllPaymentGatewayProfiles',
         description: 'Retrieves a paginated list of payment gateway profiles configured for a specific summit. Payment profiles manage payment processing for registrations and bookable rooms.',
         x: [
             'required-groups' => [
@@ -155,6 +156,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
     #[OA\Get(
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Get a payment gateway profile by ID',
+        operationId: 'getPaymentGatewayProfile',
         description: 'Retrieves detailed information about a specific payment gateway profile.',
         x: [
             'required-groups' => [
@@ -204,6 +206,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
     #[OA\Post(
         path: '/api/v1/summits/{id}/payment-gateway-profiles',
         summary: 'Create a new payment gateway profile',
+        operationId: 'createPaymentGatewayProfile',
         description: 'Creates a new payment gateway profile for the summit. Supports Stripe and LawPay providers.',
         x: [
             'required-groups' => [
@@ -252,6 +255,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
     #[OA\Put(
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Update a payment gateway profile',
+        operationId: 'updatePaymentGatewayProfile',
         description: 'Updates an existing payment gateway profile.',
         x: [
             'required-groups' => [
@@ -307,6 +311,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
     #[OA\Delete(
         path: '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
         summary: 'Delete a payment gateway profile',
+        operationId: 'deletePaymentGatewayProfile',
         description: 'Deletes an existing payment gateway profile from the summit.',
         x: [
             'required-groups' => [

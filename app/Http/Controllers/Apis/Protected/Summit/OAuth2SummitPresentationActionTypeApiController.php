@@ -139,6 +139,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
     #[OA\Post(
         path: '/api/v1/summits/{id}/presentation-action-types',
         summary: 'Create a new presentation action type',
+        operationId: 'createPresentationActionType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -189,6 +190,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
     #[OA\Get(
         path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
         summary: 'Get a presentation action type by ID',
+        operationId: 'getPresentationActionType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -236,6 +238,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
     #[OA\Put(
         path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
         summary: 'Update a presentation action type',
+        operationId: 'updatePresentationActionType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -287,6 +290,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
     #[OA\Delete(
         path: '/api/v1/summits/{id}/presentation-action-types/{action_id}',
         summary: 'Delete a presentation action type',
+        operationId: 'deletePresentationActionType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -328,6 +332,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
     #[OA\Get(
         path: '/api/v1/summits/{id}/presentation-action-types',
         summary: 'Get all presentation action types for a summit',
+        operationId: 'getAllPresentationActionTypes',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -428,6 +433,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
     #[OA\Get(
         path: '/api/v1/summits/{id}/presentation-action-types/csv',
         summary: 'Get all presentation action types for a summit in CSV format',
+        operationId: 'getAllPresentationActionTypesCSV',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,

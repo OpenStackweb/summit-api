@@ -42,6 +42,7 @@ final class OAuth2OrganizationsApiController extends OAuth2ProtectedController
     #[OA\Post(
         path: '/api/v1/organizations',
         summary: 'Creates a new organization',
+        operationId: 'createOrganization',
         security: [
             [
                 'organizations_oauth2' => [

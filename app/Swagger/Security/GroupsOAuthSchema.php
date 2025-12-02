@@ -1,5 +1,5 @@
 <?php
-namespace App\OpenApi\schemas;
+namespace App\Swagger\schemas;
 
 use OpenApi\Attributes as OA;
 use App\Security\SummitScopes;

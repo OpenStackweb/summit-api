@@ -57,8 +57,7 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         ISummitRepository $summit_repository,
         IPaymentGatewayProfileService $service,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
@@ -89,10 +88,14 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_payment_gateway_oauth2' =>
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadPaymentProfiles
-        ]],
+        security: [
+            [
+                'summit_payment_gateway_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadPaymentProfiles
+                ]
+            ]
+        ],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -161,10 +164,13 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_payment_gateway_oauth2' =>
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadPaymentProfiles
-        ]],
+        security: [
+            [
+                'summit_payment_gateway_oauth2' =>
+                    SummitScopes::ReadAllSummitData,
+                SummitScopes::ReadPaymentProfiles
+            ]
+        ],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -207,10 +213,13 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_payment_gateway_oauth2' =>
-            SummitScopes::WriteSummitData,
-            SummitScopes::WritePaymentProfiles
-        ]],
+        security: [
+            [
+                'summit_payment_gateway_oauth2' =>
+                    SummitScopes::WriteSummitData,
+                SummitScopes::WritePaymentProfiles
+            ]
+        ],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -252,10 +261,13 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_payment_gateway_oauth2' =>
-            SummitScopes::WriteSummitData,
-            SummitScopes::WritePaymentProfiles
-        ]],
+        security: [
+            [
+                'summit_payment_gateway_oauth2' =>
+                    SummitScopes::WriteSummitData,
+                SummitScopes::WritePaymentProfiles
+            ]
+        ],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -304,10 +316,13 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_payment_gateway_oauth2' =>
-            SummitScopes::WriteSummitData,
-            SummitScopes::WritePaymentProfiles
-        ]],
+        security: [
+            [
+                'summit_payment_gateway_oauth2' =>
+                    SummitScopes::WriteSummitData,
+                SummitScopes::WritePaymentProfiles
+            ]
+        ],
         tags: ['Payment Gateway Profiles'],
         parameters: [
             new OA\Parameter(
@@ -396,46 +411,52 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
     /**
      * @return array
      */
-    protected function getFilterRules():array
+    protected function getFilterRules(): array
     {
         return [
             'application_type' => ['=@', '=='],
-            'active'           => ['=='],
+            'active' => ['=='],
         ];
     }
 
     /**
      * @return array
      */
-    protected function getFilterValidatorRules():array{
+    protected function getFilterValidatorRules(): array
+    {
         return [
             'application_type' => 'sometimes|required|string',
-            'active'           => 'sometimes|required|boolean',
+            'active' => 'sometimes|required|boolean',
         ];
     }
     /**
      * @return array
      */
-    protected function getOrderRules():array{
+    protected function getOrderRules(): array
+    {
         return [
             'id',
             'application_type',
         ];
     }
 
-    protected function serializerType():string{
+    protected function serializerType(): string
+    {
         return SerializerRegistry::SerializerType_Private;
     }
 
-    protected function addSerializerType():string{
+    protected function addSerializerType(): string
+    {
         return SerializerRegistry::SerializerType_Private;
     }
 
-    protected function updateSerializerType():string{
+    protected function updateSerializerType(): string
+    {
         return SerializerRegistry::SerializerType_Private;
     }
 
-    public function getChildSerializer(){
+    public function getChildSerializer()
+    {
         return SerializerRegistry::SerializerType_Private;
     }
 }

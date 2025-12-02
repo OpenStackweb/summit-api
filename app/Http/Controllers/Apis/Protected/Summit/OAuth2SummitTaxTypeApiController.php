@@ -59,6 +59,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: '/api/v1/summits/{id}/tax-types',
         summary: 'Get all tax types for a summit',
+        operationId: 'getAllTaxTypes',
         security: [
             [
                 'tax_types_oauth2' => [
@@ -110,6 +111,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Post(
         path: '/api/v1/summits/{id}/tax-types',
         summary: 'Create a new tax type',
+        operationId: 'createTaxType',
         security: [
             [
                 'tax_types_oauth2' => [
@@ -155,6 +157,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Get a tax type by ID',
+        operationId: 'getTaxType',
         security: [
             [
                 'tax_types_oauth2' => [
@@ -197,6 +200,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Put(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Update a tax type',
+        operationId: 'updateTaxType',
         security: [
             [
                 'tax_types_oauth2' => [
@@ -243,6 +247,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
         summary: 'Delete a tax type',
+        operationId: 'deleteTaxType',
         security: [
             [
                 'tax_types_oauth2' => [
@@ -395,6 +400,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Put(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
         summary: 'Add a tax type to a ticket type',
+        operationId: 'addTaxTypeToTicketType',
         security: [
             [
                 'tax_types_oauth2' => [
@@ -461,6 +467,7 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     #[OA\Delete(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
         summary: 'Remove a tax type from a ticket type',
+        operationId: 'removeTaxTypeFromTicketType',
         security: [
             [
                 'tax_types_oauth2' => [

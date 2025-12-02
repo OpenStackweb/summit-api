@@ -57,6 +57,7 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints",
+        operationId: "getAllBadgePrintsByTicket",
         summary: "Get all badge prints for a ticket",
         description: "Returns a paginated list of badge print records for a specific ticket. Allows ordering, filtering and pagination.",
         security: [
@@ -77,7 +78,7 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
         tags: ["Summit Badge Prints"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'integer'),
@@ -188,6 +189,7 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints/csv",
+        operationId: "getAllBadgePrintsByTicketCSV",
         summary: "Export badge prints to CSV",
         description: "Exports all badge print records for a specific ticket to CSV format. Allows ordering and filtering.",
         security: [
@@ -208,7 +210,7 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
         tags: ["Summit Badge Prints"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'integer'),
@@ -315,6 +317,7 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints",
+        operationId: "deleteBadgePrintsByTicket",
         summary: "Delete all badge prints for a ticket",
         description: "Deletes all badge print records for a specific ticket",
         security: [
@@ -336,7 +339,7 @@ final class OAuth2SummitAttendeeBadgePrintApiController extends OAuth2ProtectedC
         tags: ["Summit Badge Prints"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'integer'),

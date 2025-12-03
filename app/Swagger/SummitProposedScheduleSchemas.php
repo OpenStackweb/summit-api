@@ -10,13 +10,11 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "id", type: "integer", example: 1),
         new OA\Property(property: "created", type: "integer", description: "Unix timestamp", example: 1640995200),
         new OA\Property(property: "last_edited", type: "integer", description: "Unix timestamp", example: 1640995200),
-        new OA\Property(property: "allowed_timeframes", type: "array", items: new OA\Items(type: ["integer", "SummitProposedScheduleAllowedDay"]), description: "Array of allowed timeframe IDs or objects when expanded", nullable: true)
-    ],
-    anyOf: [
+        new OA\Property(property: "allowed_timeframes", type: "array", items: new OA\Items(type: "integer"), description: "Array SummitProposedScheduleAllowedDay IDs or full SummitProposedScheduleAllowedDay objects when expanded", nullable: true),
         new OA\Property(property: "location_id", type: "integer", example: 10, description: "only when not expanded"),
-        new OA\Property(property: "location", type: "SummitAbstractLocation", description: "only when expanded"),
+        new OA\Property(property: "location", type: "SummitAbstractLocation", description: "ID of the SummitAbstractLocation, when not expanded, when ?expand=location, you get a SummitAbstractLocation schema object in a 'location' property"),
         new OA\Property(property: "track_id", type: "integer", example: 5, description: "only when not expanded"),
-        new OA\Property(property: "track", type: "PresentationCategory", description: "only when expanded"),
+        new OA\Property(property: "track", type: "PresentationCategory", description: "ID of the PresentationCategory, when not expanded, when ?expand=track, you get a PresentationCategory schema object in a 'track' property"),
     ],
 )]
 class SummitProposedScheduleAllowedLocation {}
@@ -73,18 +71,14 @@ class SummitProposedScheduleAllowedDayUpdateRequest {}
         new OA\Property(property: "start_date", type: "integer", description: "Unix timestamp", example: 1640995200),
         new OA\Property(property: "end_date", type: "integer", description: "Unix timestamp", example: 1641081600),
         new OA\Property(property: "duration", type: "integer", description: "Duration in seconds", example: 3600),
-    ],
-    anyOf: [
-        new OA\Property(property: "schedule_id", type: "integer", example: 1),
-        new OA\Property(property: "schedule", type: "SummitProposedSchedule"),
+        new OA\Property(property: "schedule_id", type: "integer", description: "ID of the SummitProposedSchedule, when not expanded, when ?expand=schedule, you get a SummitProposedSchedule schema object in a 'schedule' property"),
         new OA\Property(property: "summit_event_id", type: "integer", example: 100),
-        new OA\Property(property: "summit_event", type: "SummitEvent"),
-        new OA\Property(property: "location_id", type: "integer", example: 10),
-        new OA\Property(property: "location", type: "SummitAbstractLocation"),
-        new OA\Property(property: "created_by_id", type: "integer", example: 5),
-        new OA\Property(property: "created_by", type: "Member"),
-        new OA\Property(property: "updated_by_id", type: "integer", example: 5, nullable: true),
-        new OA\Property(property: "updated_by", type: "Member"),
+        new OA\Property(property: "summit_event", ref: "#/components/schemas/SummitEvent", description: "only present if ?expand=summit_event"),
+        new OA\Property(property: "location_id", type: "integer", description: "ID of the SummitAbstractLocation, when not expanded, when ?expand=location, you get a SummitAbstractLocation schema object in a 'location' property"),
+        new OA\Property(property: "created_by_id", type: "integer", example: 5, description: "not present if expanded"),
+        new OA\Property(property: "created_by", ref: "#/components/schemas/Member", description: "only present if ?expand=created_by"),
+        new OA\Property(property: "updated_by_id", type: "integer", example: 5, nullable: true, description: "not present if expanded"),
+        new OA\Property(property: "updated_by", ref: "#/components/schemas/Member", description: "only present if ?expand=updated_by"),
     ]
 )]
 class SummitProposedScheduleSummitEvent {}
@@ -96,10 +90,7 @@ class SummitProposedScheduleSummitEvent {}
         new OA\Property(property: "start_date", type: "integer", description: "Unix timestamp", example: 1640995200),
         new OA\Property(property: "end_date", type: "integer", description: "Unix timestamp (must be after start_date)", example: 1641081600),
         new OA\Property(property: "duration", type: "integer", description: "Duration in seconds", example: 3600),
-    ],
-    anyOf: [
-        new OA\Property(property: "location_id", type: "integer", example: 10),
-        new OA\Property(property: "location", type: "SummitAbstractLocation"),
+        new OA\Property(property: "location_id", type: "integer", description: "ID of the SummitAbstractLocation, when not expanded, when ?expand=location, you get a SummitAbstractLocation schema object in a 'location' property"),
     ]
 )]
 class SummitProposedSchedulePublishRequest {}
@@ -119,12 +110,9 @@ class SummitProposedSchedulePublishAllRequest {}
         new OA\Property(property: "created", type: "integer", description: "Unix timestamp", example: 1640995200),
         new OA\Property(property: "last_edited", type: "integer", description: "Unix timestamp", example: 1640995200),
         new OA\Property(property: "reason", type: "string", example: "Review in progress"),
-    ],
-    anyOf: [
         new OA\Property(property: "created_by_id", type: "integer", example: 5),
-        new OA\Property(property: "created_by", type: "Member"),
-        new OA\Property(property: "track_id", type: "integer", example: 3),
-        new OA\Property(property: "track", type: "PresentationCategory")
+        new OA\Property(property: "created_by", ref: "#/components/schemas/Member", description: "only present if ?expand=created_by"),
+        new OA\Property(property: "track_id", type: "integer", example: 3, description: "ID of the PresentationCategory, when not expanded, when ?expand=track, you get a PresentationCategory schema object in a 'track' property"),
     ]
 )]
 class SummitProposedScheduleLock {}

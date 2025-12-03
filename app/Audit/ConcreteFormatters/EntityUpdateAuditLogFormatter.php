@@ -12,8 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
-use App\Audit\IAuditLogFormatter;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\BaseEntity;
 use DateTime;
@@ -30,7 +30,7 @@ use ReflectionClass;
  * Class EntityUpdateAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class EntityUpdateAuditLogFormatter implements IAuditLogFormatter
+class EntityUpdateAuditLogFormatter extends AbstractAuditLogFormatter
 {
     /**
      * @var IChildEntityAuditLogFormatter

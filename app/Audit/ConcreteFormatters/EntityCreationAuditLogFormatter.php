@@ -2,7 +2,7 @@
 
 namespace App\Audit\ConcreteFormatters;
 
-use App\Audit\IAuditLogFormatter;
+use App\Audit\AbstractAuditLogFormatter;
 use ReflectionClass;
 
 /**
@@ -23,7 +23,7 @@ use ReflectionClass;
  * Class EntityCreationAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class EntityCreationAuditLogFormatter implements IAuditLogFormatter
+class EntityCreationAuditLogFormatter extends AbstractAuditLogFormatter
 {
     protected function getCreationIgnoredEntities(): array {
         return [

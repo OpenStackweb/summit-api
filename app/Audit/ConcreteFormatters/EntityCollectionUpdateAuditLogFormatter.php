@@ -3,7 +3,7 @@
 namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
-use App\Audit\IAuditLogFormatter;
+use App\Audit\AbstractAuditLogFormatter;
 use Illuminate\Support\Facades\Log;
 use ReflectionException;
 
@@ -25,7 +25,7 @@ use ReflectionException;
  * Class EntityCollectionUpdateAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class EntityCollectionUpdateAuditLogFormatter implements IAuditLogFormatter
+class EntityCollectionUpdateAuditLogFormatter extends AbstractAuditLogFormatter
 {
     /**
      * @var IChildEntityAuditLogFormatter
@@ -67,3 +67,4 @@ class EntityCollectionUpdateAuditLogFormatter implements IAuditLogFormatter
         }
     }
 }
+

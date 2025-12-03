@@ -15,8 +15,8 @@ namespace App\Audit\ConcreteFormatters;
  * limitations under the License.
  **/
 
+use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
-use App\Audit\IAuditLogFormatter;
 use models\summit\SummitAttendeeBadgePrint;
 use ReflectionClass;
 
@@ -24,7 +24,7 @@ use ReflectionClass;
  * Class EntityDeletionAuditLogFormatter
  * @package App\Audit\ConcreteFormatters
  */
-class EntityDeletionAuditLogFormatter implements IAuditLogFormatter
+class EntityDeletionAuditLogFormatter extends AbstractAuditLogFormatter
 {
     /**
      * @var IChildEntityAuditLogFormatter

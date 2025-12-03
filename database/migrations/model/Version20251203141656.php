@@ -19,6 +19,15 @@ final class Version20251203141656 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $sql = <<<SQL
+UPDATE SummitDocument
+SET ClassName = 'SummitDocument'
+WHERE ClassName IS NULL
+   OR ClassName <> 'SummitDocument';
+SQL;
+
+        $this->addSql($sql);
+
         $sql= <<<SQL
 ALTER TABLE SummitDocument CHANGE `ClassName` `ClassName` ENUM('SummitDocument')
      CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NULL DEFAULT 'SummitDocument';

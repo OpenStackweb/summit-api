@@ -70,11 +70,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/companies/{id}",
+        operationId: "getCompany",
         summary: "Get a specific company",
         description: "Returns detailed information about a specific company",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Read,
                 ]
             ]
@@ -118,9 +119,10 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
      */
     #[OA\Get(
         path: "/api/public/v1/companies/{id}",
+        operationId: "getCompanyPublic",
         summary: "Get a specific company (Public)",
         description: "Returns detailed information about a specific company",
-        tags: ["Companies"],
+        tags: ["Companies (Public)"],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -155,11 +157,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
     )]
     #[OA\Post(
         path: "/api/v1/companies",
+        operationId: "createCompany",
         summary: "Create a new company",
         description: "Creates a new company",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Write,
                 ]
             ]
@@ -189,11 +192,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
     )]
     #[OA\Put(
         path: "/api/v1/companies/{id}",
+        operationId: "updateCompany",
         summary: "Update a company",
         description: "Updates an existing company",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Write,
                 ]
             ]
@@ -233,11 +237,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
     )]
     #[OA\Delete(
         path: "/api/v1/companies/{id}",
+        operationId: "deleteCompany",
         summary: "Delete a company",
         description: "Deletes a company",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Write,
                 ]
             ]
@@ -267,11 +272,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
     )]
     #[OA\Get(
         path: "/api/v1/companies",
+        operationId: "getAllCompanies",
         summary: "Get all companies",
         description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Read,
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData,
@@ -336,9 +342,10 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/public/v1/companies",
+        operationId: "getAllCompaniesPublic",
         summary: "Get all companies (Public)",
         description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
-        tags: ["Companies"],
+        tags: ["Companies (Public)"],
         parameters: [
             new OA\Parameter(
                 name: 'page',
@@ -501,11 +508,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 
     #[OA\Post(
         path: "/api/v1/companies/{id}/logo",
+        operationId: "addCompanyLogo",
         summary: "Add company logo",
         description: "Uploads a logo image for the company",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Write,
                 ]
             ]
@@ -573,11 +581,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: "/api/v1/companies/{id}/logo",
+        operationId: "deleteCompanyLogo",
         summary: "Delete company logo",
         description: "Removes the logo image from the company",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Write,
                 ]
             ]
@@ -618,11 +627,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 
     #[OA\Post(
         path: "/api/v1/companies/{id}/logo/big",
+        operationId: "addCompanyBigLogo",
         summary: "Add company big logo",
         description: "Uploads a big logo image for the company",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Write,
                 ]
             ]
@@ -689,11 +699,12 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: "/api/v1/companies/{id}/logo/big",
+        operationId: "deleteCompanyBigLogo",
         summary: "Delete company big logo",
         description: "Removes the big logo image from the company",
         security: [
             [
-                "OAuth2CompaniesApiControllerAuthSchema" => [
+                "companies_oauth2" => [
                     CompanyScopes::Write,
                 ]
             ]

@@ -34,8 +34,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "overview", type: "string", nullable: true, example: "Company overview"),
         new OA\Property(property: "commitment", type: "string", nullable: true, example: "Commitment to open source"),
         new OA\Property(property: "commitment_author", type: "string", nullable: true, example: "John Doe, CEO"),
-    ],
-    anyOf: [
         new OA\Property(
             property: "sponsorships",
             type: "array",
@@ -46,7 +44,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: "sponsorships",
             type: "array",
-            items: new OA\Items(type: "SummitSponsorship"),
+            items: new OA\Items(ref: "#/components/schemas/SummitSponsorship"),
             description: "Array of SummitSponsorship models (only when expand=sponsorships)",
         ),
         new OA\Property(
@@ -59,7 +57,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: "project_sponsorships",
             type: "array",
-            items: new OA\Items(type: "ProjectSponsorshipType"),
+            items: new OA\Items(ref: "#/components/schemas/ProjectSponsorshipType"),
             description: "Array of project ProjectSponsorshipType models (only when expand=project_sponsorships)",
         ),
     ],

@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
+
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +16,15 @@
  **/
 
 use App\Models\Foundation\Main\Repositories\IAuditLogRepository;
+use App\Security\SummitScopes;
+use Illuminate\Http\Response;
 use models\main\SummitAttendeeBadgeAuditLog;
 use models\main\SummitAuditLog;
 use models\main\SummitEventAuditLog;
 use models\oauth2\IResourceServerContext;
 use models\summit\SummitAttendeeBadge;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2AuditLogController
@@ -46,6 +52,77 @@ final class OAuth2AuditLogController extends OAuth2ProtectedController
     /**
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/audit-logs",
+        description: "Get all audit logs with filtering capabilities. Requires OAuth2 authentication with appropriate scope.",
+        summary: 'Get all audit logs',
+        operationId: 'getAllAuditLogs',
+        tags: ['Audit Logs'],
+        security: [['audit_logs_oauth2' => [
+            SummitScopes::ReadAuditLogs,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions. Format: field<op>value. Available fields: class_name (required, ==), user_id (==), summit_id (==), event_id (==), entity_id (==), user_email (==, =@, @@), user_full_name (==, =@, @@), action (=@, @@), metadata (==, =@, @@), created (==, >, <, >=, <=, []). class_name must be one of: SummitAuditLog, SummitEventAuditLog, SummitAttendeeBadgeAuditLog',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'class_name==SummitAuditLog')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s). Available fields: id, user_id, event_id, entity_id, created, user_email, user_full_name, metadata. Use "-" prefix for descending order.',
+                schema: new OA\Schema(type: 'string', example: '-created')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include. Available relations: user, summit',
+                schema: new OA\Schema(type: 'string', example: 'user,summit')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success - Returns paginated list of audit logs',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedAuditLogsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request - Invalid parameters"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized - Invalid or missing access token"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - Insufficient permissions"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error - Missing required filters"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAll(){
 
         return $this->_getAll(

@@ -34,6 +34,11 @@ abstract class JsonController extends Controller
         return Response::json(array('message' => 'server error'), 500);
     }
 
+    protected function error501()
+    {
+        return Response::json(array('message' => 'not implemented'), 501);
+    }
+
 
     protected function created($data = 'ok')
     {

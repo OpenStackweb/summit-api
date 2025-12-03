@@ -21,8 +21,10 @@ use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Jobs\SynchAllAttendeesStatus;
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\SummitScopes;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\ISummitOrderService;
 use Exception;
@@ -145,13 +147,17 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
      */
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/attendees/me',
+        path: '/api/v1/summits/{id}/attendees/me',
+        operationId: 'getCurrentAttendee',
         summary: 'Get current user attendee profile',
         description: 'Returns the attendee profile for the currently authenticated user in the specified summit',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (extra_questions, tickets, presentation_votes, ticket_types, allowed_access_levels, allowed_features, tags)', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
@@ -189,13 +195,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}',
+        operationId: 'getAttendee',
         summary: 'Get attendee by ID',
         description: 'Returns a specific attendee profile from the summit',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
         ],
@@ -236,13 +254,17 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/schedule',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/schedule',
+        operationId: 'getAttendeeSchedule',
         summary: 'Get attendee schedule',
         description: 'Returns the personal schedule for a specific attendee',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -285,13 +307,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/schedule/{event_id}',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}',
+        operationId: 'addEventToAttendeeSchedule',
         summary: 'Add event to attendee schedule',
         description: 'Adds an event to the attendee\'s personal schedule',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -331,13 +356,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/schedule/{event_id}',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}',
+        operationId: 'removeEventFromAttendeeSchedule',
         summary: 'Remove event from attendee schedule',
         description: 'Removes an event from the attendee\'s personal schedule',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -378,13 +406,17 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/schedule/{event_id}/rsvp',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}/rsvp',
+        operationId: 'deleteAttendeeEventRsvp',
         summary: 'Delete RSVP for event',
         description: 'Deletes the attendee\'s RSVP for a specific event',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::DeleteMyRSVP,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -430,14 +462,49 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         }
     }
 
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}/check-in',
+        operationId: 'checkInAttendeeToEvent',
+        summary: 'Check-in attendee to event',
+        description: 'Performs check-in for an attendee at a specific event on their schedule',
+        tags: ['Summit Attendees'],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID or "me"', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NOT_IMPLEMENTED, description: 'Not Implemented'),
+        ]
+    )]
+    public function checkingAttendeeOnEvent($id, $attendee_id, $event_id)
+    {
+        return $this->error501();
+    }
+
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/attendees',
+        path: '/api/v1/summits/{id}/attendees',
+        operationId: 'getAllAttendees',
         summary: 'Get all attendees for a summit',
         description: 'Returns a paginated list of attendees for the specified summit with filtering, sorting and search capabilities',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by id, first_name, last_name, full_name, company, email, member_id, ticket_type, badge_type, status, has_member, has_tickets, etc.', schema: new OA\Schema(type: 'string')),
@@ -598,10 +665,42 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         );
     }
 
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/attendees/csv',
+        operationId: 'getAllAttendeesCSV',
+        summary: 'Export attendees to CSV',
+        description: 'Returns a CSV file with all attendees for the specified summit',
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by id, first_name, last_name, full_name, company, email, member_id, ticket_type, badge_type, status, has_member, has_tickets, etc.', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by first_name, last_name, email, company, id, status, etc.', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'CSV file with attendees data',
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getAttendeesBySummitCSV($summit_id)
     {
 
@@ -720,13 +819,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-        path: '/api/v1/summits/{summit_id}/attendees',
+        path: '/api/v1/summits/{id}/attendees',
+        operationId: 'createAttendee',
         summary: 'Create a new attendee',
         description: 'Creates a new attendee for the specified summit',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteAttendeesData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -799,13 +910,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}',
+        operationId: 'deleteAttendee',
         summary: 'Delete an attendee',
         description: 'Deletes a specific attendee from the summit',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteAttendeesData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -832,13 +955,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}',
+        operationId: 'updateAttendee',
         summary: 'Update an attendee',
         description: 'Updates a specific attendee in the summit',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteAttendeesData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -915,13 +1050,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/tickets',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/tickets',
+        operationId: 'addAttendeeTicket',
         summary: 'Add ticket to attendee',
         description: 'Creates a new ticket for a specific attendee',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteAttendeesData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -992,13 +1139,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/tickets/{ticket_id}',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/tickets/{ticket_id}',
+        operationId: 'deleteAttendeeTicket',
         summary: 'Delete attendee ticket',
         description: 'Deletes a specific ticket from an attendee',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteAttendeesData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1025,13 +1184,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/tickets/{ticket_id}/reassign/member/{other_member_id}',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/tickets/{ticket_id}/reassign/{other_member_id}',
+        operationId: 'reassignAttendeeTicketByMember',
         summary: 'Reassign ticket to another member',
         description: 'Reassigns a ticket from one attendee to another member',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteAttendeesData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'other_member_id', in: 'path', required: true, description: 'Target Member ID', schema: new OA\Schema(type: 'integer')),
@@ -1072,13 +1243,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/tickets/{ticket_id}/reassign',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/tickets/{ticket_id}/reassign',
+        operationId: 'reassignAttendeeTicket',
         summary: 'Reassign ticket to another attendee',
         description: 'Reassigns a ticket to a different attendee by email',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteAttendeesData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1135,13 +1318,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-        path: '/api/v1/summits/{summit_id}/attendees/send',
+        path: '/api/v1/summits/{id}/attendees/all/send',
+        operationId: 'sendAttendeesEmail',
         summary: 'Send email to attendees',
         description: 'Sends email notifications to filtered attendees',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteAttendeesData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter attendees', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
@@ -1283,13 +1478,17 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/virtual-check-in',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/virtual-check-in',
+        operationId: 'doAttendeeVirtualCheckIn',
         summary: 'Perform virtual check-in',
         description: 'Performs virtual check-in for a specific attendee',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::DoVirtualCheckIn,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -1323,13 +1522,17 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/attendees/{attendee_id}/me',
+        path: '/api/v1/summits/{id}/attendees/{attendee_id}/me',
+        operationId: 'getMyRelatedAttendee',
         summary: 'Get related attendee for current user',
         description: 'Returns attendee information if current user owns the tickets or is the attendee',
-        security: [['bearer' => []]],
-        tags: ['attendees'],
+        tags: ['Summit Attendees'],
+        security: [['summit_attendees_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
         ],

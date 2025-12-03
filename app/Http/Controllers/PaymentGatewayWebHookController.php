@@ -16,7 +16,6 @@ use App\Services\Model\ILocationService;
 use App\Services\Model\IProcessPaymentService;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
-use Illuminate\Support\Facades\Cache;
 use models\oauth2\IResourceServerContext;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitRepository;
@@ -124,11 +123,6 @@ final class PaymentGatewayWebHookController extends JsonController
                 return $this->error412("cart id is null");
             }
 
-            $lock = Cache::lock("stripe:pi:{$cart_id}", 30); // 30s is enough
-            if (!$lock->get()) {
-                Log::warning("PaymentGatewayWebHookController::genericConfirm  Skip concurrent webhook for {$cart_id}");
-                return $this->ok(); // idempotent no-op
-            }
             Log::debug(sprintf("PaymentGatewayWebHookController::genericConfirm  cart id %s processing payment.", $cart_id));
 
             $service->processPayment($payload);
@@ -196,11 +190,6 @@ final class PaymentGatewayWebHookController extends JsonController
                 return $this->error412("cart id is null");
             }
 
-            $lock = Cache::lock("stripe:pi:{$cart_id}", 30); // 30s is enough
-            if (!$lock->get()) {
-                Log::warning("PaymentGatewayWebHookController::confirm  Skip concurrent webhook for {$cart_id}");
-                return $this->ok(); // idempotent no-op
-            }
             Log::debug(sprintf("PaymentGatewayWebHookController::confirm summit %s cart id %s processing payment.", $summit_id, $cart_id));
             $service->processPayment($payload, $summit);
             return $this->ok();

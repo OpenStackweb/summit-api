@@ -1,17 +1,49 @@
-<?php namespace App\Audit\ConcreteFormatters;
+<?php
 
-use App\Audit\IAuditLogFormatter;
+namespace App\Audit\ConcreteFormatters;
+
+/**
+ * Copyright 2025 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
+
+use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use models\summit\Presentation;
 use Illuminate\Support\Facades\Log;
 
-class PresentationSubmissionAuditLogFormatter implements IAuditLogFormatter
+class PresentationSubmissionAuditLogFormatter extends AbstractAuditLogFormatter
 {
     private string $event_type;
 
     public function __construct(string $event_type)
     {
         $this->event_type = $event_type;
+    }
+
+    private function getUserInfo(): string
+    {
+        if (!$this->ctx) {
+            return 'Unknown (unknown)';
+        }
+
+        $user_name = 'Unknown';
+        if ($this->ctx->userFirstName || $this->ctx->userLastName) {
+            $user_name = trim(sprintf("%s %s", $this->ctx->userFirstName ?? '', $this->ctx->userLastName ?? '')) ?: 'Unknown';
+        } elseif ($this->ctx->userEmail) {
+            $user_name = $this->ctx->userEmail;
+        }
+        
+        $user_id = $this->ctx->userId ?? 'unknown';
+        return sprintf("%s (%s)", $user_name, $user_id);
     }
 
     public function format($subject, array $change_set): ?string
@@ -34,12 +66,13 @@ class PresentationSubmissionAuditLogFormatter implements IAuditLogFormatter
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Presentation '%s' (%d) submitted by '%s' to track '%s' (Plan: %s)",
+                        "Presentation '%s' (%d) submitted by '%s' to track '%s' (Plan: %s) by user %s",
                         $title,
                         $id,
                         $creator_name,
                         $category_name,
-                        $plan_name
+                        $plan_name,
+                        $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
@@ -79,29 +112,32 @@ class PresentationSubmissionAuditLogFormatter implements IAuditLogFormatter
                     
                     if ($old_status && $new_status) {
                         return sprintf(
-                            "Presentation '%s' (%d) status changed: %s → %s (%s changed)",
+                            "Presentation '%s' (%d) status changed: %s → %s (%s changed) by user %s",
                             $title,
                             $id,
                             strtoupper($old_status),
                             strtoupper($new_status),
-                            $fields_str
+                            $fields_str,
+                            $this->getUserInfo()
                         );
                     }
 
                     return sprintf(
-                        "Presentation '%s' (%d) updated (%s changed)",
+                        "Presentation '%s' (%d) updated (%s changed) by user %s",
                         $title,
                         $id,
-                        $fields_str
+                        $fields_str,
+                        $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Presentation '%s' (%d) submitted by '%s' to track '%s' was deleted",
+                        "Presentation '%s' (%d) submitted by '%s' to track '%s' was deleted by user %s",
                         $title,
                         $id,
                         $creator_name,
-                        $category_name
+                        $category_name,
+                        $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {

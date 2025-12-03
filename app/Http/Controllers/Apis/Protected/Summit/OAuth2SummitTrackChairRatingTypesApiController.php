@@ -296,7 +296,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
         tags: ['Track Chair Rating Types'],
         security: [["track_chair_rating_types_oauth2" => [SummitScopes::WriteSummitData]]],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
         ],
         parameters: [
             new OA\Parameter(
@@ -363,7 +363,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
         tags: ['Track Chair Rating Types'],
         security: [["track_chair_rating_types_oauth2" => [SummitScopes::WriteSummitData]]],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
         ],
         parameters: [
             new OA\Parameter(
@@ -437,7 +437,7 @@ final class OAuth2SummitTrackChairRatingTypesApiController
         tags: ['Track Chair Rating Types'],
         security: [["track_chair_rating_types_oauth2" => [SummitScopes::WriteSummitData]]],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]
         ],
         parameters: [
             new OA\Parameter(

@@ -172,8 +172,6 @@ class PaginatedSummitProposedScheduleLocksResponse {}
         new OA\Property(property: "summit_id", type: "integer", example: 3),
         new OA\Property(property: "scheduled_summit_events", type: "array", items: new OA\Items(ref: "#/components/schemas/SummitProposedScheduleSummitEvent"), description: "Array of scheduled summit events, only available if it is added in expand."),
         new OA\Property(property: "locks", type: "array", items: new OA\Items(ref: "#/components/schemas/SummitProposedScheduleLock")),
-    ],
-    anyOf: [
         new OA\Property(property: "created_by_id", type: "integer", example: 5),
         new OA\Property(property: "created_by", type: "Member"),
     ]

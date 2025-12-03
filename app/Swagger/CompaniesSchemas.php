@@ -37,28 +37,20 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: "sponsorships",
             type: "array",
-            items: new OA\Items(type: "integer"),
+            items: new OA\Items(oneOf: [
+                new OA\Schema(type: "integer"),
+                new OA\Schema(ref: "#/components/schemas/SummitSponsorship"),
+            ]),
             description: "Array of sponsorship IDs (only when relations=sponsorships)",
-            example: [1, 2, 3]
-        ),
-        new OA\Property(
-            property: "sponsorships",
-            type: "array",
-            items: new OA\Items(ref: "#/components/schemas/SummitSponsorship"),
-            description: "Array of SummitSponsorship models (only when expand=sponsorships)",
         ),
         new OA\Property(
             property: "project_sponsorships",
             type: "array",
-            items: new OA\Items(type: "integer"),
+            items: new OA\Items(oneOf: [
+                new OA\Schema(type: "integer"),
+                new OA\Schema(ref: "#/components/schemas/ProjectSponsorshipType"),
+            ]),
             description: "Array of project sponsorship IDs (only when relations=project_sponsorships)",
-            example: [4, 5, 6]
-        ),
-        new OA\Property(
-            property: "project_sponsorships",
-            type: "array",
-            items: new OA\Items(ref: "#/components/schemas/ProjectSponsorshipType"),
-            description: "Array of project ProjectSponsorshipType models (only when expand=project_sponsorships)",
         ),
     ],
     type: "object"

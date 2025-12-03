@@ -15,7 +15,9 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use models\main\ITagRepository;
 use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Validator;
@@ -61,10 +63,15 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/tags",
+        operationId: "getAllTags",
         summary: "Get all tags",
         description: "Returns a paginated list of tags. Allows ordering, filtering and pagination.",
-        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Tags"],
+        security: [['tags_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadTagsData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'page',
@@ -141,9 +148,15 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/tags/{id}",
+        operationId: "getTag",
         summary: "Get a specific tag",
         description: "Returns detailed information about a specific tag",
         tags: ["Tags"],
+        security: [['tags_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadTagsData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -201,10 +214,21 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
 
     #[OA\Post(
         path: "/api/v1/tags",
+        operationId: "createTag",
         summary: "Create a new tag",
         description: "Creates a new tag",
-        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Tags"],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['tags_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTagsData,
+        ]]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/TagRequest")
@@ -253,10 +277,21 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: "/api/v1/tags/{id}",
+        operationId: "updateTag",
         summary: "Update a tag",
         description: "Updates an existing tag",
-        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Tags"],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['tags_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTagsData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -317,10 +352,21 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: "/api/v1/tags/{id}",
+        operationId: "deleteTag",
         summary: "Delete a tag",
         description: "Deletes a tag",
-        security: [["oauth2_security_scope" => ["openid", "profile", "email"]]],
         tags: ["Tags"],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['tags_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTagsData,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: "id",

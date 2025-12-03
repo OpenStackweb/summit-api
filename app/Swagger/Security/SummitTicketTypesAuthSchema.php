@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Swagger\Security;
+namespace App\Swagger\schemas;
 
 use App\Security\MemberScopes;
 use App\Security\SummitScopes;

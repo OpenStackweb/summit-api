@@ -294,7 +294,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         operationId: 'getAllTicketTypesBySummitV2',
         summary: "Get all ticket types for a summit (all audiences)",
         security: [["summit_ticket_types_oauth2" => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        x: ["required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
@@ -555,7 +555,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         operationId: 'addTicketTypeBySummit',
         summary: "Create a new ticket type for a summit",
         security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        x: ["required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
@@ -617,7 +617,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         operationId: 'updateTicketTypeBySummit',
         summary: "Update a ticket type",
         security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        x: ["required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
@@ -686,7 +686,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         operationId: 'deleteTicketTypeBySummit',
         summary: "Delete a ticket type",
         security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        x: ["required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
@@ -735,7 +735,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         operationId: 'seedDefaultTicketTypesBySummit',
         summary: "Seed default ticket types from Eventbrite",
         security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        x: ["required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(
@@ -796,7 +796,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         operationId: 'updateTicketTypesCurrencySymbol',
         summary: "Update currency symbol for all ticket types in a summit",
         security: [["summit_ticket_types_oauth2" => [SummitScopes::WriteTicketTypeData, SummitScopes::WriteSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        x: ["required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Summit Ticket Types"],
         parameters: [
             new OA\Parameter(

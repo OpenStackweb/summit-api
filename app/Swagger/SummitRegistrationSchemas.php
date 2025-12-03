@@ -4,8 +4,6 @@ namespace App\Swagger\schemas;
 
 use OpenApi\Attributes as OA;
 
-// Badge Types
-
 #[OA\Schema(
     schema: "PaginatedSummitBadgeTypesResponse",
     description: "Paginated list of summit badge types",

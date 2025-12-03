@@ -483,7 +483,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             )
         ],
         responses: [
-            new OA\Response(response: 204, description: 'No Content'),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'No Content'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),

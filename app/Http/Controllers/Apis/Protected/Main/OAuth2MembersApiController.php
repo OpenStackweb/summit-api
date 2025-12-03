@@ -13,7 +13,9 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\MemberScopes;
 use App\Services\Model\IMemberService;
 use Illuminate\Http\Response;
 use models\exceptions\EntityNotFoundException;
@@ -59,9 +61,9 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: '/api/public/v1/members',
+        operationId: 'getAllMembersPublic',
         summary: 'Get all members',
         description: 'Returns a paginated list of members with optional filtering, sorting and search capabilities',
-        security: [['bearer' => []]],
         tags: ['Members (Public)'],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -82,10 +84,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     )]
     #[OA\Get(
         path: '/api/v1/members',
+        operationId: 'getAllMembers',
         summary: 'Get all members',
         description: 'Returns a paginated list of members with optional filtering, sorting and search capabilities',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::ReadMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
@@ -171,11 +176,11 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/members/companies',
+        path: '/api/public/v1/members/all/companies',
+        operationId: 'getAllMemberCompanies',
         summary: 'Get all member companies',
         description: 'Returns a paginated list of companies from member profiles',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members (Public)'],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
@@ -230,10 +235,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     }
     #[OA\Get(
         path: '/api/v1/members/me',
+        operationId: 'getCurrentMember',
         summary: 'Get current authenticated member',
         description: 'Returns the profile of the currently authenticated member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::ReadMyMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (groups, affiliations, all_affiliations, ccla_teams, election_applications, candidate_profile, election_nominations)', schema: new OA\Schema(type: 'string')),
         ],
@@ -275,10 +283,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: '/api/v1/members/me',
+        operationId: 'updateCurrentMember',
         summary: 'Update current authenticated member',
         description: 'Updates the profile of the currently authenticated member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMyMemberData,
+        ]]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/MemberUpdateRequest')
@@ -326,11 +337,11 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/members/{member_id}',
+        path: '/api/public/v1/members/{member_id}',
+        operationId: 'getMemberById',
         summary: 'Get member by ID',
         description: 'Returns a member profile by ID',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members (Public)'],
         parameters: [
             new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
@@ -376,10 +387,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: '/api/v1/members/me/affiliations',
+        operationId: 'getCurrentMemberAffiliations',
         summary: 'Get current member affiliations',
         description: 'Returns all affiliations for the currently authenticated member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::ReadMyMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (organization)', schema: new OA\Schema(type: 'string')),
         ],
@@ -400,10 +414,20 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: '/api/v1/members/{member_id}/affiliations',
+        operationId: 'getMemberAffiliations',
         summary: 'Get member affiliations',
         description: 'Returns all affiliations for a specific member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['members_oauth2' => [
+            MemberScopes::ReadMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (organization)', schema: new OA\Schema(type: 'string')),
@@ -450,10 +474,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Post(
         path: '/api/v1/members/me/affiliations',
+        operationId: 'addCurrentMemberAffiliation',
         summary: 'Add affiliation to current member',
         description: 'Creates a new affiliation for the currently authenticated member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMyMemberData,
+        ]]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/AffiliationRequest')
@@ -476,10 +503,20 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Post(
         path: '/api/v1/members/{member_id}/affiliations',
+        operationId: 'addMemberAffiliation',
         summary: 'Add affiliation to member',
         description: 'Creates a new affiliation for a specific member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -531,10 +568,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: '/api/v1/members/me/affiliations/{affiliation_id}',
+        operationId: 'updateCurrentMemberAffiliation',
         summary: 'Update current member affiliation',
         description: 'Updates an affiliation for the currently authenticated member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMyMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'affiliation_id', in: 'path', required: true, description: 'Affiliation ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -560,10 +600,20 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: '/api/v1/members/{member_id}/affiliations/{affiliation_id}',
+        operationId: 'updateMemberAffiliation',
         summary: 'Update member affiliation',
         description: 'Updates an affiliation for a specific member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'affiliation_id', in: 'path', required: true, description: 'Affiliation ID', schema: new OA\Schema(type: 'integer')),
@@ -616,10 +666,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: '/api/v1/members/me/affiliations/{affiliation_id}',
+        operationId: 'deleteCurrentMemberAffiliation',
         summary: 'Delete current member affiliation',
         description: 'Deletes an affiliation for the currently authenticated member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMyMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'affiliation_id', in: 'path', required: true, description: 'Affiliation ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -636,10 +689,20 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: '/api/v1/members/{member_id}/affiliations/{affiliation_id}',
+        operationId: 'deleteMemberAffiliation',
         summary: 'Delete member affiliation',
         description: 'Deletes an affiliation for a specific member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'affiliation_id', in: 'path', required: true, description: 'Affiliation ID', schema: new OA\Schema(type: 'integer')),
@@ -669,10 +732,20 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: '/api/v1/members/{member_id}/rsvp/{rsvp_id}',
+        operationId: 'deleteMemberRsvp',
         summary: 'Delete member RSVP',
         description: 'Deletes an RSVP for a specific member',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMemberData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'rsvp_id', in: 'path', required: true, description: 'RSVP ID', schema: new OA\Schema(type: 'integer')),
@@ -699,10 +772,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: '/api/v1/members/me/membership/foundation',
+        operationId: 'signFoundationMembership',
         summary: 'Sign foundation membership',
         description: 'Signs the currently authenticated member up for foundation membership',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMyMemberData,
+        ]]],
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
@@ -738,10 +814,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: '/api/v1/members/me/membership/community',
+        operationId: 'signCommunityMembership',
         summary: 'Sign community membership',
         description: 'Signs the currently authenticated member up for community membership',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMyMemberData,
+        ]]],
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
@@ -777,10 +856,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: '/api/v1/members/me/membership/resign',
+        operationId: 'resignMembership',
         summary: 'Resign membership',
         description: 'Resigns the currently authenticated member from their membership',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMyMemberData,
+        ]]],
         responses: [
             new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Membership resigned successfully'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
@@ -803,10 +885,13 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
 
     #[OA\Put(
         path: '/api/v1/members/me/membership/individual',
+        operationId: 'signIndividualMembership',
         summary: 'Sign individual membership',
         description: 'Signs the currently authenticated member up for individual membership',
-        security: [['bearer' => []]],
-        tags: ['members'],
+        tags: ['Members'],
+        security: [['members_oauth2' => [
+            MemberScopes::WriteMyMemberData,
+        ]]],
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,

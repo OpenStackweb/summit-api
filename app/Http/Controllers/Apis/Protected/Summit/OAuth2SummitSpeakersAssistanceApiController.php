@@ -90,7 +90,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
         tags: ["Summit Speakers Assistances"],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
         ],
         parameters: [
             new OA\Parameter(
@@ -238,7 +238,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
         tags: ["Summit Speakers Assistances"],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
         ],
         parameters: [
             new OA\Parameter(
@@ -355,7 +355,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
         tags: ["Summit Speakers Assistances"],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
         ],
         parameters: [
             new OA\Parameter(
@@ -446,7 +446,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
         tags: ["Summit Speakers Assistances"],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
         ],
         parameters: [
             new OA\Parameter(
@@ -544,7 +544,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
         tags: ["Summit Speakers Assistances"],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
         ],
         parameters: [
             new OA\Parameter(
@@ -606,7 +606,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
         tags: ["Summit Speakers Assistances"],
         x: [
-            "authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
         ],
         parameters: [
             new OA\Parameter(

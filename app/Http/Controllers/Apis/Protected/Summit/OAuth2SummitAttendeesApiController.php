@@ -157,7 +157,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::ReadAllSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (extra_questions, tickets, presentation_votes, ticket_types, allowed_access_levels, allowed_features, tags)', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
@@ -213,7 +213,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::ReadAllSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
         ],
@@ -264,7 +264,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::ReadAllSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -316,7 +316,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -365,7 +365,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -416,7 +416,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::DeleteMyRSVP,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -472,7 +472,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID or "me"', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -504,7 +504,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::ReadAllSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by id, first_name, last_name, full_name, company, email, member_id, ticket_type, badge_type, status, has_member, has_tickets, etc.', schema: new OA\Schema(type: 'string')),
@@ -684,7 +684,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::ReadAllSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by id, first_name, last_name, full_name, company, email, member_id, ticket_type, badge_type, status, has_member, has_tickets, etc.', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by first_name, last_name, email, company, id, status, etc.', schema: new OA\Schema(type: 'string')),
         ],
@@ -837,7 +837,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteAttendeesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -928,7 +928,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteAttendeesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -973,7 +973,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteAttendeesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -1068,7 +1068,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteAttendeesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -1157,7 +1157,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteAttendeesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1202,7 +1202,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteAttendeesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'other_member_id', in: 'path', required: true, description: 'Target Member ID', schema: new OA\Schema(type: 'integer')),
@@ -1261,7 +1261,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteAttendeesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1336,7 +1336,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::WriteAttendeesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter attendees', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
@@ -1488,7 +1488,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::DoVirtualCheckIn,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -1532,7 +1532,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             SummitScopes::ReadAllSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
         ],

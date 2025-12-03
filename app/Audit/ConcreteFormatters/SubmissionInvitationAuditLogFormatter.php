@@ -1,17 +1,49 @@
-<?php namespace App\Audit\ConcreteFormatters;
+<?php
 
-use App\Audit\IAuditLogFormatter;
+namespace App\Audit\ConcreteFormatters;
+
+/**
+ * Copyright 2025 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
+
+use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use models\summit\SummitSubmissionInvitation;
 use Illuminate\Support\Facades\Log;
 
-class SubmissionInvitationAuditLogFormatter implements IAuditLogFormatter
+class SubmissionInvitationAuditLogFormatter extends AbstractAuditLogFormatter
 {
     private string $event_type;
 
     public function __construct(string $event_type)
     {
         $this->event_type = $event_type;
+    }
+
+    private function getUserInfo(): string
+    {
+        if (!$this->ctx) {
+            return 'Unknown (unknown)';
+        }
+
+        $user_name = 'Unknown';
+        if ($this->ctx->userFirstName || $this->ctx->userLastName) {
+            $user_name = trim(sprintf("%s %s", $this->ctx->userFirstName ?? '', $this->ctx->userLastName ?? '')) ?: 'Unknown';
+        } elseif ($this->ctx->userEmail) {
+            $user_name = $this->ctx->userEmail;
+        }
+        
+        $user_id = $this->ctx->userId ?? 'unknown';
+        return sprintf("%s (%s)", $user_name, $user_id);
     }
 
     public function format($subject, array $change_set): ?string
@@ -21,7 +53,7 @@ class SubmissionInvitationAuditLogFormatter implements IAuditLogFormatter
         }
 
         try {
-            $email = $subject->getEmail() ?? 'unknown@example.com';
+            $email = $subject->getEmail() ?? 'unknown';
             $first_name = $subject->getFirstName() ?? 'Unknown';
             $last_name = $subject->getLastName() ?? '';
             $full_name = trim(sprintf("%s %s", $first_name, $last_name)) ?: 'Unknown';
@@ -35,11 +67,12 @@ class SubmissionInvitationAuditLogFormatter implements IAuditLogFormatter
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     $sent_status = $is_sent ? 'sent' : 'not sent';
                     return sprintf(
-                        "Submission invitation created for '%s' (%s) with email '%s' [status: %s]",
+                        "Submission invitation created for '%s' (%s) with email '%s' [status: %s] by user %s",
                         $full_name,
                         $id,
                         $email,
-                        $sent_status
+                        $sent_status,
+                        $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
@@ -64,20 +97,22 @@ class SubmissionInvitationAuditLogFormatter implements IAuditLogFormatter
                     
                     $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
                     return sprintf(
-                        "Submission invitation for '%s' (%s) updated (%s changed)",
+                        "Submission invitation for '%s' (%s) updated (%s changed) by user %s",
                         $email,
                         $id,
-                        $fields_str
+                        $fields_str,
+                        $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     $sent_status = $is_sent ? 'sent' : 'pending';
                     return sprintf(
-                        "Submission invitation for '%s' (%s) with email '%s' [status: %s] was deleted",
+                        "Submission invitation for '%s' (%s) with email '%s' [status: %s] was deleted by user %s",
                         $full_name,
                         $id,
                         $email,
-                        $sent_status
+                        $sent_status,
+                        $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {

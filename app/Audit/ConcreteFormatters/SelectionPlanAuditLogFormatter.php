@@ -1,17 +1,49 @@
-<?php namespace App\Audit\ConcreteFormatters;
+<?php
 
-use App\Audit\IAuditLogFormatter;
+namespace App\Audit\ConcreteFormatters;
+
+/**
+ * Copyright 2025 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
+
+use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use App\Models\Foundation\Summit\SelectionPlan;
 use Illuminate\Support\Facades\Log;
 
-class SelectionPlanAuditLogFormatter implements IAuditLogFormatter
+class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
 {
     private string $event_type;
 
     public function __construct(string $event_type)
     {
         $this->event_type = $event_type;
+    }
+
+    private function getUserInfo(): string
+    {
+        if (!$this->ctx) {
+            return 'Unknown (unknown)';
+        }
+
+        $user_name = 'Unknown';
+        if ($this->ctx->userFirstName || $this->ctx->userLastName) {
+            $user_name = trim(sprintf("%s %s", $this->ctx->userFirstName ?? '', $this->ctx->userLastName ?? '')) ?: 'Unknown';
+        } elseif ($this->ctx->userEmail) {
+            $user_name = $this->ctx->userEmail;
+        }
+        
+        $user_id = $this->ctx->userId ?? 'unknown';
+        return sprintf("%s (%s)", $user_name, $user_id);
     }
 
     private function formatDate($date): string
@@ -45,11 +77,12 @@ class SelectionPlanAuditLogFormatter implements IAuditLogFormatter
                         : 'No dates set';
                     
                     return sprintf(
-                        "Selection Plan '%s' (%d) created for Summit '%s' with CFP period: %s",
+                        "Selection Plan '%s' (%d) created for Summit '%s' with CFP period: %s by user %s",
                         $name,
                         $id,
                         $summit_name,
-                        $submission_dates
+                        $submission_dates,
+                        $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
@@ -98,19 +131,21 @@ class SelectionPlanAuditLogFormatter implements IAuditLogFormatter
                     
                     $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
                     return sprintf(
-                        "Selection Plan '%s' (%d) for Summit '%s' updated (%s changed)",
+                        "Selection Plan '%s' (%d) for Summit '%s' updated (%s changed) by user %s",
                         $name,
                         $id,
                         $summit_name,
-                        $fields_str
+                        $fields_str,
+                        $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Selection Plan '%s' (%d) for Summit '%s' was deleted",
+                        "Selection Plan '%s' (%d) for Summit '%s' was deleted by user %s",
                         $name,
                         $id,
-                        $summit_name
+                        $summit_name,
+                        $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {

@@ -72,6 +72,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/media-upload-types",
+        operationId: "getAllMediaUploadTypes",
         summary: "Get all media upload types for a summit",
         description: "Returns a paginated list of media upload types configured for a specific summit. Allows ordering, filtering and pagination.",
         security: [
@@ -91,7 +92,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         tags: ["Summit Media Upload Types"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
@@ -164,6 +165,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}",
+        operationId: "getMediaUploadType",
         summary: "Get a specific media upload type",
         description: "Returns detailed information about a specific media upload type",
         security: [
@@ -183,7 +185,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         tags: ["Summit Media Upload Types"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
@@ -229,6 +231,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/media-upload-types",
+        operationId: "createMediaUploadType",
         summary: "Create a new media upload type",
         description: "Creates a new media upload type for the specified summit",
         security: [
@@ -248,7 +251,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         tags: ["Summit Media Upload Types"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
@@ -279,6 +282,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}",
+        operationId: "updateMediaUploadType",
         summary: "Update a media upload type",
         description: "Updates an existing media upload type",
         security: [
@@ -298,7 +302,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         tags: ["Summit Media Upload Types"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
@@ -336,6 +340,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}",
+        operationId: "deleteMediaUploadType",
         summary: "Delete a media upload type",
         description: "Deletes a media upload type from the summit",
         security: [
@@ -355,7 +360,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         tags: ["Summit Media Upload Types"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
@@ -504,6 +509,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}/presentation-types/{event_type_id}",
+        operationId: "addMediaUploadTypeToPresentationType",
         summary: "Add media upload type to presentation type",
         description: "Associates a media upload type with a specific presentation type",
         security: [
@@ -523,7 +529,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         tags: ["Summit Media Upload Types"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
@@ -582,6 +588,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}/presentation-types/{event_type_id}",
+        operationId: "removeMediaUploadTypeFromPresentationType",
         summary: "Remove media upload type from presentation type",
         description: "Removes the association between a media upload type and a presentation type",
         security: [
@@ -601,7 +608,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         tags: ["Summit Media Upload Types"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
@@ -659,6 +666,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/media-upload-types/all/clone/{to_summit_id}",
+        operationId: "cloneMediaUploadTypes",
         summary: "Clone media upload types to another summit",
         description: "Clones all media upload types from one summit to another summit",
         security: [
@@ -678,7 +686,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         tags: ["Summit Media Upload Types"],
         parameters: [
             new OA\Parameter(
-                name: 'summit_id',
+                name: 'id',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),

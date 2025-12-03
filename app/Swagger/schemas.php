@@ -391,7 +391,7 @@ class RSVPSchema
         )
     ]
 )]
-class PaginatedMembersResponse {}
+class PaginatedMembersResponseSchema {}
 
 #[OA\Schema(
     schema: 'PaginatedMemberCompaniesResponse',
@@ -414,7 +414,7 @@ class PaginatedMembersResponse {}
         )
     ]
 )]
-class PaginatedMemberCompaniesResponse {}
+class PaginatedMemberCompaniesResponseSchema {}
 
 #[OA\Schema(
     schema: 'PaginatedAffiliationsResponse',
@@ -432,7 +432,7 @@ class PaginatedMemberCompaniesResponse {}
         )
     ]
 )]
-class PaginatedAffiliationsResponse {}
+class PaginatedAffiliationsResponseSchema {}
 
 #[OA\Schema(
     schema: 'Affiliation',
@@ -450,7 +450,7 @@ class PaginatedAffiliationsResponse {}
         new OA\Property(property: 'organization_id', type: 'integer', example: 1),
     ]
 )]
-class Affiliation {}
+class AffiliationSchema {}
 
 #[OA\Schema(
     schema: 'MemberUpdateRequest',
@@ -465,7 +465,7 @@ class Affiliation {}
         new OA\Property(property: 'other_food_preference', type: 'string', maxLength: 100),
     ]
 )]
-class MemberUpdateRequest {}
+class MemberUpdateRequestSchema {}
 
 #[OA\Schema(
     schema: 'AffiliationRequest',
@@ -480,7 +480,7 @@ class MemberUpdateRequest {}
         new OA\Property(property: 'job_title', type: 'string', maxLength: 255),
     ]
 )]
-class AffiliationRequest {}
+class AffiliationRequestSchema {}
 
 #[OA\Schema(
     schema: 'PaginatedRSVPsResponse',

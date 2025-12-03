@@ -11,11 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Audit\IAuditLogFormatter;
+
+use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use models\main\SummitMemberSchedule;
 
-class SummitMemberScheduleAuditLogFormatter implements IAuditLogFormatter
+class SummitMemberScheduleAuditLogFormatter extends AbstractAuditLogFormatter
 {
 
     private string $event_type;

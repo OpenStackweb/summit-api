@@ -36,7 +36,7 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
         return !is_null($cls) ? new $cls($event_type):null;
     }
 
-    public function make($subject, $eventType): ?IAuditLogFormatter
+    public function make(AuditContext $ctx, $subject, $eventType): ?IAuditLogFormatter
     {
         $formatter = null;
         switch ($eventType) {
@@ -72,6 +72,7 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
                 }
                 break;
         }
+        $formatter->setContext($ctx);
         return $formatter;
     }
 }

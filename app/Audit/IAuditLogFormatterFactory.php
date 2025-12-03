@@ -2,5 +2,5 @@
 
 interface IAuditLogFormatterFactory
 {
-    public function make($subject, $eventType): ?IAuditLogFormatter;
+    public function make(AuditContext $ctx, $subject, $eventType): ?IAuditLogFormatter;
 }

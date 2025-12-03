@@ -11,13 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackMultiValueQuestionTemplate;
 use App\Models\Foundation\Summit\Events\Presentations\TrackQuestions\TrackQuestionTemplateConstants;
 use App\Models\Foundation\Summit\Repositories\ITrackQuestionTemplateRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\ITrackQuestionTemplateService;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use libs\utils\PaginationValidationRules;
+use OpenApi\Attributes as OA;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use Exception;
@@ -65,6 +69,40 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
     /**
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/track-question-templates',
+        operationId: 'getAllTrackQuestionTemplates',
+        summary: 'Get all track question templates',
+        description: 'Returns a paginated list of track question templates',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 5)),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by name, label or class_name', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by id, name, or label', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relations (tracks)', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedTrackQuestionTemplatesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getTrackQuestionTemplates(){
         $values = Request::all();
         $rules  = PaginationValidationRules::get();
@@ -160,6 +198,43 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
     /**
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/track-question-templates',
+        operationId: 'createTrackQuestionTemplate',
+        summary: 'Create a new track question template',
+        description: 'Creates a new track question template',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackQuestionTemplateData,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionTemplateRequest')
+        ),
+        parameters: [
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relations', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Track Question Template Created',
+                content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionTemplate')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addTrackQuestionTemplate(){
         try {
 
@@ -205,6 +280,38 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      * @param $track_question_template_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/track-question-templates/{track_question_template_id}',
+        operationId: 'getTrackQuestionTemplate',
+        summary: 'Get a track question template by id',
+        description: 'Returns a single track question template',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'track_question_template_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template id'),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relations', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionTemplate')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getTrackQuestionTemplate($track_question_template_id){
         try {
 
@@ -234,6 +341,44 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      * @param $track_question_template_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/track-question-templates/{track_question_template_id}',
+        operationId: 'updateTrackQuestionTemplate',
+        summary: 'Update a track question template',
+        description: 'Updates an existing track question template',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackQuestionTemplateData,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionTemplateRequest')
+        ),
+        parameters: [
+            new OA\Parameter(name: 'track_question_template_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template id'),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relations', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Track Question Template Updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionTemplate')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateTrackQuestionTemplate($track_question_template_id){
         try {
 
@@ -278,6 +423,34 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      * @param $track_question_template_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/track-question-templates/{track_question_template_id}',
+        operationId: 'deleteTrackQuestionTemplate',
+        summary: 'Delete a track question template',
+        description: 'Deletes a track question template',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackQuestionTemplateData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'track_question_template_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template id'),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Track Question Template Deleted'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deleteTrackQuestionTemplate($track_question_template_id){
         try {
 
@@ -302,6 +475,37 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
     /**
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/track-question-templates/metadata',
+        operationId: 'getTrackQuestionTemplateMetadata',
+        summary: 'Get track question templates metadata',
+        description: 'Returns metadata about available track question template types',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'class_names', type: 'array', items: new OA\Items(type: 'string')),
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getTrackQuestionTemplateMetadata(){
         return $this->ok
         (
@@ -318,6 +522,38 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      * @param $track_question_template_value_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/track-question-templates/{track_question_template_id}/values/{track_question_template_value_id}',
+        operationId: 'getTrackQuestionTemplateValue',
+        summary: 'Get a track question template value',
+        description: 'Returns a single track question template value',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'track_question_template_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template id'),
+            new OA\Parameter(name: 'track_question_template_value_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template value id'),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionValueTemplate')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function getTrackQuestionTemplateValue($track_question_template_id, $track_question_template_value_id){
         try {
 
@@ -350,6 +586,44 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      * @param $track_question_template_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/track-question-templates/{track_question_template_id}/values',
+        operationId: 'createTrackQuestionTemplateValue',
+        summary: 'Add a value to a track question template',
+        description: 'Adds a new value to a multi-value track question template',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackQuestionTemplateData,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionValueTemplateRequest')
+        ),
+        parameters: [
+            new OA\Parameter(name: 'track_question_template_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template id'),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relations', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Track Question Template Value Created',
+                content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionValueTemplate')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function addTrackQuestionTemplateValue($track_question_template_id){
         try {
 
@@ -399,6 +673,45 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      * @param $track_question_template_value_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/track-question-templates/{track_question_template_id}/values/{track_question_template_value_id}',
+        operationId: 'updateTrackQuestionTemplateValue',
+        summary: 'Update a track question template value',
+        description: 'Updates an existing track question template value',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackQuestionTemplateData,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionValueTemplateRequest')
+        ),
+        parameters: [
+            new OA\Parameter(name: 'track_question_template_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template id'),
+            new OA\Parameter(name: 'track_question_template_value_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template value id'),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relations', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Track Question Template Value Updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/TrackQuestionValueTemplate')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function updateTrackQuestionTemplateValue($track_question_template_id, $track_question_template_value_id){
         try {
 
@@ -449,6 +762,35 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
      * @param $track_question_template_value_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/track-question-templates/{track_question_template_id}/values/{track_question_template_value_id}',
+        operationId: 'deleteTrackQuestionTemplateValue',
+        summary: 'Delete a track question template value',
+        description: 'Deletes a track question template value',
+        tags: ['Track Question Templates'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['track_question_templates_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackQuestionTemplateData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'track_question_template_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template id'),
+            new OA\Parameter(name: 'track_question_template_value_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track question template value id'),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Track Question Template Value Deleted'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function deleteTrackQuestionTemplateValue($track_question_template_id, $track_question_template_value_id){
         try {
             $this->track_question_template_service->deleteTrackQuestionValueTemplate

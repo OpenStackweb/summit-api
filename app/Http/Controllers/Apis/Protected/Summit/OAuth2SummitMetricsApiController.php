@@ -211,7 +211,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Put(
-        path: "/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/metrics/enter",
+        path: "/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/enter",
         operationId: 'enterToEvent',
         summary: "Record a metric entry to a specific event",
         security: [["summit_metrics_oauth2" => [SummitScopes::EnterEvent]]],
@@ -282,7 +282,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Post(
-        path: "/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/metrics/leave",
+        path: "/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/leave",
         operationId: 'leaveFromEvent',
         summary: "Record a metric exit from a specific event",
         security: [["summit_metrics_oauth2" => [SummitScopes::LeaveEvent]]],
@@ -353,7 +353,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
         security: [["summit_metrics_oauth2" => [SummitScopes::WriteMetrics]]],
         tags: ["Summit Metrics"],
         x: [
-            "authz_groups" => [IGroup::SummitAccessControl]
+            "required-groups" => [IGroup::SummitAccessControl]
         ],
         parameters: [
             new OA\Parameter(
@@ -421,7 +421,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
         security: [["summit_metrics_oauth2" => [SummitScopes::ReadAllSummitData, SummitScopes::ReadSummitData, SummitScopes::ReadMetrics]]],
         tags: ["Summit Metrics"],
         x: [
-            "authz_groups" => [IGroup::SummitAccessControl]
+            "required-groups" => [IGroup::SummitAccessControl]
         ],
         parameters: [
             new OA\Parameter(
@@ -500,7 +500,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
         security: [["summit_metrics_oauth2" => [SummitScopes::WriteMetrics]]],
         tags: ["Summit Metrics"],
         x: [
-            "authz_groups" => [IGroup::SummitAccessControl]
+            "required-groups" => [IGroup::SummitAccessControl]
         ],
         parameters: [
             new OA\Parameter(

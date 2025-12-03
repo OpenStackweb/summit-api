@@ -52,6 +52,12 @@ class SummitDocument extends SilverstripeBaseModel
     /**
      * @var string
      */
+    #[ORM\Column(name: 'ClassName', type: 'string')]
+    private $class_name;
+
+    /**
+     * @var string
+     */
     #[ORM\Column(name: 'Label', type: 'string')]
     private $label;
 
@@ -96,6 +102,7 @@ class SummitDocument extends SilverstripeBaseModel
     public function __construct()
     {
         parent::__construct();
+        $this->class_name = 'SummitDocument';
         $this->event_types = new ArrayCollection();
         $this->file = null;
         $this->label = '';

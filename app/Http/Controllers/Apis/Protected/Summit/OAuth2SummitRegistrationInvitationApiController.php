@@ -94,7 +94,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::WriteRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -172,7 +172,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::ReadMyRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -254,7 +254,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::ReadRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -308,7 +308,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::ReadRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -439,7 +439,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::ReadRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -616,7 +616,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::WriteRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -686,7 +686,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::WriteRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -763,7 +763,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::WriteRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -825,7 +825,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::WriteRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -875,7 +875,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             SummitScopes::WriteRegistrationInvitations,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,

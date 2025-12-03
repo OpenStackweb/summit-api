@@ -30,6 +30,10 @@ use utils\FilterParser;
 use utils\OrderParser;
 use utils\PagingInfo;
 use Exception;
+use App\Security\SummitScopes;
+use App\Models\Foundation\Main\IGroup;
+use Illuminate\Http\Response;
+use OpenApi\Attributes as OA;
 /**
  * Class OAuth2SummitBookableRoomsAttributeTypeApiController
  * @package App\Http\Controllers
@@ -80,6 +84,86 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
         $this->summit_service             = $summit_service;
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types",
+        description: "Get all bookable room attribute types for a summit",
+        summary: 'Get all bookable room attribute types',
+        operationId: 'getAllBookableRoomAttributeTypes',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1),
+                description: 'Page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10),
+                description: 'Items per page'
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Operators: @@, ==, =@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'type@@Room')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'id,-type')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'values')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Get all paginated bookable room attribute types',
+                content:  new OA\JsonContent(ref: '#/components/schemas/PaginatedBookableRoomAttributeTypesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -170,6 +254,63 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
         }
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types",
+        description: "Create a new bookable room attribute type",
+        summary: 'Create bookable room attribute type',
+        operationId: 'addBookableRoomAttributeType',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'values')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/BookableRoomAttributeTypeCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Bookable room attribute type created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomAttributeType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -216,6 +357,60 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
         }
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}",
+        description: "Get a specific bookable room attribute type",
+        summary: 'Get bookable room attribute type',
+        operationId: 'getBookableRoomAttributeType',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute type id'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'values')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Bookable room attribute type',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomAttributeType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $type_id
@@ -246,6 +441,63 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
             return $this->error500($ex);
         }
     }
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}",
+        description: "Update a bookable room attribute type",
+        summary: 'Update bookable room attribute type',
+        operationId: 'updateBookableRoomAttributeType',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute type id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/BookableRoomAttributeTypeCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Bookable room attribute type updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomAttributeType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $type_id
@@ -293,6 +545,58 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
         }
     }
 
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}",
+        description: "Delete a bookable room attribute type",
+        summary: 'Delete bookable room attribute type',
+        operationId: 'deleteBookableRoomAttributeType',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute type id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: "Deleted"
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $type_id
@@ -324,6 +628,93 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
 
     // values
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values",
+        description: "Get all values for a bookable room attribute type",
+        summary: 'Get all bookable room attribute values',
+        operationId: 'getAllBookableRoomAttributeValues',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute type id'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1),
+                description: 'Page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10),
+                description: 'Items per page'
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value. Operators: @@, ==, =@.',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'value@@Large')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'id,-value')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'type')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Get all paginated bookable room attribute values',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedBookableRoomAttributeValuesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $type_id
@@ -421,6 +812,67 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
         }
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values/{value_id}",
+        description: "Get a specific bookable room attribute value",
+        summary: 'Get bookable room attribute value',
+        operationId: 'getBookableRoomAttributeValue',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute type id'
+            ),
+            new OA\Parameter(
+                name: 'value_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute value id'
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include',
+                schema: new OA\Schema(type: 'string', example: 'type')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Bookable room attribute value',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomAttributeValue')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $type_id
@@ -456,6 +908,63 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
         }
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values",
+        description: "Create a new bookable room attribute value",
+        summary: 'Create bookable room attribute value',
+        operationId: 'addBookableRoomAttributeValue',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute type id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/BookableRoomAttributeValueCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Bookable room attribute value created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomAttributeValue')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $type_id
@@ -503,6 +1012,70 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
         }
     }
 
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values/{value_id}",
+        description: "Update a bookable room attribute value",
+        summary: 'Update bookable room attribute value',
+        operationId: 'updateBookableRoomAttributeValue',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute type id'
+            ),
+            new OA\Parameter(
+                name: 'value_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute value id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/BookableRoomAttributeValueCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Bookable room attribute value updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomAttributeValue')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $type_id
@@ -551,6 +1124,65 @@ final class OAuth2SummitBookableRoomsAttributeTypeApiController extends OAuth2Pr
         }
     }
 
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values/{value_id}",
+        description: "Delete a bookable room attribute value",
+        summary: 'Delete bookable room attribute value',
+        operationId: 'deleteBookableRoomAttributeValue',
+        tags: ['Bookable Room Attributes'],
+        security: [['summit_bookable_rooms_attribute_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute type id'
+            ),
+            new OA\Parameter(
+                name: 'value_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The attribute value id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: "Deleted"
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $type_id

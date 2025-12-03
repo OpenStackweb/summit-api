@@ -80,10 +80,8 @@ final class OwnMemberSerializer extends AbstractMemberSerializer
     {
         $member         = $this->object;
         if(!$member instanceof Member) return [];
+
         $values           = parent::serialize($expand, $fields, $relations, $params);
-        /**
-         * @var \models\summit\Summit $summit
-         */
         $summit           = isset($params['summit'])? $params['summit'] :null;
         $speaker          = !is_null($summit)? $summit->getSpeakerByMember($member): null;
         $attendee         = !is_null($summit)? $summit->getAttendeeByMember($member): null;

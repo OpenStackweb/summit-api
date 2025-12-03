@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
+
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitMediaFileTypeRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitMediaFileTypeService;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
+
 /**
  * Class OAuth2SummitMediaFileTypeApiController
  * @package App\Http\Controllers
@@ -55,6 +63,232 @@ final class OAuth2SummitMediaFileTypeApiController extends OAuth2ProtectedContro
         $this->repository = $repository;
     }
 
+    // OpenAPI Documentation
+
+    #[OA\Get(
+        path: '/api/v1/summit-media-file-types',
+        operationId: 'getAllSummitMediaFileTypes',
+        summary: 'Get all summit media file types',
+        description: 'Retrieves a paginated list of summit media file types. Media file types define categories of files that can be uploaded to summits (e.g., presentations, videos, documents) along with their allowed file extensions.',
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::ReadSummitMediaFileTypes
+        ]]],
+        tags: ['Summit Media File Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions. Format: field<op>value. Available field: name (=@, ==). Operators: == (equals), =@ (starts with)',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'name@@presentation')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s). Available fields: name, id. Use "-" prefix for descending order.',
+                schema: new OA\Schema(type: 'string', example: 'name')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Media file types retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitMediaFileTypesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+
+    #[OA\Get(
+        path: '/api/v1/summit-media-file-types/{id}',
+        operationId: 'getSummitMediaFileType',
+        summary: 'Get a summit media file type by ID',
+        description: 'Retrieves detailed information about a specific summit media file type.',
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::ReadSummitMediaFileTypes
+        ]]],
+        tags: ['Summit Media File Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit Media File Type ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Media file type retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+
+    #[OA\Post(
+        path: '/api/v1/summit-media-file-types',
+        operationId: 'createSummitMediaFileType',
+        summary: 'Create a new summit media file type',
+        description: 'Creates a new summit media file type with specified name, description, and allowed file extensions.',
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::WriteSummitMediaFileTypes
+        ]]],
+        tags: ['Summit Media File Types'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileTypeCreateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Media file type created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+
+    #[OA\Put(
+        path: '/api/v1/summit-media-file-types/{id}',
+        operationId: 'updateSummitMediaFileType',
+        summary: 'Update a summit media file type',
+        description: 'Updates an existing summit media file type.',
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::WriteSummitMediaFileTypes
+        ]]],
+        tags: ['Summit Media File Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit Media File Type ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileTypeUpdateRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Media file type updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitMediaFileType')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+
+    #[OA\Delete(
+        path: '/api/v1/summit-media-file-types/{id}',
+        operationId: 'deleteSummitMediaFileType',
+        summary: 'Delete a summit media file type',
+        description: 'Deletes an existing summit media file type. System-defined types cannot be deleted.',
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_media_file_type_oauth2' => [
+            SummitScopes::WriteSummitMediaFileTypes
+        ]]],
+        tags: ['Summit Media File Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'Summit Media File Type ID',
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Media file type deleted successfully'
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
 
     /**
      * @inheritDoc

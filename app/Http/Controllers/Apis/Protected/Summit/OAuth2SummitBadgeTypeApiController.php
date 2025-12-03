@@ -128,7 +128,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::ReadAllSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -217,7 +217,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::ReadAllSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -282,7 +282,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -330,7 +330,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -385,7 +385,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -508,7 +508,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -577,7 +577,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -644,7 +644,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -712,7 +712,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -779,7 +779,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -847,7 +847,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,

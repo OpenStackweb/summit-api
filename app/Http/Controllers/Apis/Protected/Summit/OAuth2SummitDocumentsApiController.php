@@ -234,7 +234,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -341,7 +341,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -456,7 +456,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -561,7 +561,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -646,7 +646,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -731,7 +731,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -814,7 +814,7 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             SummitScopes::WriteSummitData,
         ]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,

@@ -12,14 +12,18 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitMetricService;
+use Illuminate\Http\Response;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitMetricType;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2SummitMetricsApiController
@@ -68,6 +72,42 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/metrics/enter",
+        operationId: 'enter',
+        summary: "Record a metric entry (enter)",
+        security: [["summit_metrics_oauth2" => [SummitScopes::EnterEvent, SummitScopes::WriteMetrics]]],
+        tags: ["Summit Metrics"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitMetricEnterRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitMetric")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function enter($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -101,6 +141,42 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/metrics/leave",
+        operationId: 'leave',
+        summary: "Record a metric exit (leave)",
+        security: [["summit_metrics_oauth2" => [SummitScopes::LeaveEvent, SummitScopes::WriteMetrics]]],
+        tags: ["Summit Metrics"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitMetricLeaveRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitMetric")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function leave($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -134,6 +210,49 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/enter",
+        operationId: 'enterToEvent',
+        summary: "Record a metric entry to a specific event",
+        security: [["summit_metrics_oauth2" => [SummitScopes::EnterEvent]]],
+        tags: ["Summit Metrics"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "member_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string", enum: ["me"]),
+                description: "The member id (must be 'me')"
+            ),
+            new OA\Parameter(
+                name: "event_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The event id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitMetric")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function enterToEvent($summit_id, $member_id, $event_id)
     {
         return $this->processRequest(function () use ($summit_id, $member_id, $event_id) {
@@ -162,6 +281,49 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
      * @param $event_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/leave",
+        operationId: 'leaveFromEvent',
+        summary: "Record a metric exit from a specific event",
+        security: [["summit_metrics_oauth2" => [SummitScopes::LeaveEvent]]],
+        tags: ["Summit Metrics"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "member_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string", enum: ["me"]),
+                description: "The member id (must be 'me')"
+            ),
+            new OA\Parameter(
+                name: "event_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The event id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitMetric")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function leaveFromEvent($summit_id, $member_id, $event_id)
     {
         return $this->processRequest(function () use ($summit_id, $member_id, $event_id) {
@@ -184,6 +346,45 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/metrics/onsite/enter",
+        operationId: 'onSiteEnter',
+        summary: "Record an on-site metric entry (for attendees entering venue/room)",
+        security: [["summit_metrics_oauth2" => [SummitScopes::WriteMetrics]]],
+        tags: ["Summit Metrics"],
+        x: [
+            "required-groups" => [IGroup::SummitAccessControl]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitMetricOnSiteEnterRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitMetric")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function onSiteEnter($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -213,7 +414,59 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
         });
     }
 
-
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/metrics/onsite/enter",
+        operationId: 'checkOnSiteEnter',
+        summary: "Check if on-site entry is allowed for an attendee (validation only, does not record entry)",
+        security: [["summit_metrics_oauth2" => [SummitScopes::ReadAllSummitData, SummitScopes::ReadSummitData, SummitScopes::ReadMetrics]]],
+        tags: ["Summit Metrics"],
+        x: [
+            "required-groups" => [IGroup::SummitAccessControl]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "attendee_id",
+                in: "query",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The attendee id"
+            ),
+            new OA\Parameter(
+                name: "room_id",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer"),
+                description: "The room id"
+            ),
+            new OA\Parameter(
+                name: "event_id",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer"),
+                description: "The event id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitMetric")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function checkOnSiteEnter($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -240,6 +493,45 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/metrics/onsite/leave",
+        operationId: 'onSiteLeave',
+        summary: "Record an on-site metric exit (for attendees leaving venue/room)",
+        security: [["summit_metrics_oauth2" => [SummitScopes::WriteMetrics]]],
+        tags: ["Summit Metrics"],
+        x: [
+            "required-groups" => [IGroup::SummitAccessControl]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitMetricOnSiteLeaveRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitMetric")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function onSiteLeave($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {

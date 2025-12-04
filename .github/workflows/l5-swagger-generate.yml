@@ -1,0 +1,114 @@
+name: OpenAPI generation
+
+on:
+    push:
+    pull_request:
+jobs:
+    unit-tests:
+        runs-on: ubuntu-latest
+        env:
+            OTEL_SERVICE_ENABLED: false
+            APP_ENV: testing
+            APP_DEBUG: true
+            APP_KEY: "base64:4vh0op/S1dAsXKQ2bbdCfWRyCI9r8NNIdPXyZWt9PX4="
+            DEV_EMAIL_TO: smarcet@gmail.com
+            APP_URL: http://localhost
+            DB_CONNECTION: model
+            DB_HOST: 127.0.0.1
+            DB_PORT: 3306
+            DB_DATABASE: api_config
+            DB_USERNAME: root
+            DB_PASSWORD: 1qaz2wsx
+            SS_DB_HOST: 127.0.0.1
+            SS_DB_PORT: 3310
+            SS_DATABASE: api_model
+            SS_DB_USERNAME: root
+            SS_DB_PASSWORD: 1qaz2wsx
+            REDIS_HOST: 127.0.0.1
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+            REDIS_PASSWORD: 1qaz2wsx
+            REDIS_DATABASES: 16
+            SSL_ENABLED: false
+            SESSION_DRIVER: redis
+            PHP_VERSION: "8.3"
+            CACHE_DRIVER: redis
+            SESSION_COOKIE_DOMAIN: localhost
+            SESSION_COOKIE_SECURE: false
+            QUEUE_DRIVER: redis
+            REGISTRATION_DEFAULT_PAYMENT_PROVIDER: Stripe
+            REGISTRATION_DEFAULT_STRIPE_TEST_MODE: true
+            REGISTRATION_DEFAULT_LIVE_STRIPE_PRIVATE_KEY:
+            REGISTRATION_DEFAULT_LIVE_STRIPE_PUBLISHABLE_KEY:
+            REGISTRATION_DEFAULT_LIVE_WEBHOOK_SECRET:
+            REGISTRATION_DEFAULT_TEST_STRIPE_PRIVATE_KEY: sk_test_12345
+            REGISTRATION_DEFAULT_TEST_STRIPE_PUBLISHABLE_KEY: pk_12345
+            REGISTRATION_DEFAULT_TEST_WEBHOOK_SECRET: whsec_12345
+            BOOKABLE_ROOMS_DEFAULT_PAYMENT_PROVIDER: Stripe
+            BOOKABLE_ROOMS_DEFAULT_STRIPE_TEST_MODE: true
+            BOOKABLE_ROOMS_DEFAULT_LIVE_STRIPE_PRIVATE_KEY:
+            BOOKABLE_ROOMS_DEFAULT_LIVE_STRIPE_PUBLISHABLE_KEY:
+            BOOKABLE_ROOMS_DEFAULT_LIVE_WEBHOOK_SECRET:
+            BOOKABLE_ROOMS_DEFAULT_TEST_STRIPE_PRIVATE_KEY: sk_test_12345
+            BOOKABLE_ROOMS_DEFAULT_TEST_STRIPE_PUBLISHABLE_KEY: pk_12345
+            BOOKABLE_ROOMS_DEFAULT_TEST_WEBHOOK_SECRET: whsec_12345
+            REGISTRATION_VALIDATE_TICKET_TYPE_REMOVAL: false
+            MEMCACHED_SERVER_HOST: 127.0.0.1
+            MEMCACHED_SERVER_PORT: 11211
+
+        services:
+            mysql_api_model:
+                image: mysql:8.0
+                env:
+                    MYSQL_ROOT_PASSWORD: ${{ env.SS_DB_PASSWORD }}
+                    MYSQL_DATABASE: ${{ env.SS_DATABASE }}
+                ports:
+                    - 3310:3306
+                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10 --name=mysql_api_model
+            mysql_api_config:
+                image: mysql:8.0
+                env:
+                    MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
+                    MYSQL_DATABASE: ${{ env.DB_DATABASE }}
+                ports:
+                    - 3306:3306
+                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+
+        steps:
+            - name: Start Memcached (with larger item size)
+              run: |
+                  docker run -d --name ci-memcached -p 11211:11211 memcached:1.6-alpine \
+                  memcached -m 256 -I 5m -c 4096 -t 2
+                  # wait until ready
+                  for i in {1..20}; do
+                      printf "version\r\nquit\r\n" | nc 127.0.0.1 11211 >/dev/null 2>&1 && break
+                      sleep 0.5
+                  done
+
+            - name: Create Redis
+              uses: supercharge/redis-github-action@1.7.0
+              with:
+                  redis-port: ${{ env.REDIS_PORT }}
+                  redis-password: ${{ env.REDIS_PASSWORD }}
+
+            - name: Check out repository code
+              uses: actions/checkout@v4
+
+            - name: Change MYSQL sql_mode
+              run: >
+                  docker exec mysql_api_model mysql -u root --password=${{ env.SS_DB_PASSWORD }} -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';"
+
+            - name: Install PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ env.PHP_VERSION }}
+                  extensions: pdo_mysql, mbstring, exif, pcntl, bcmath, sockets, gettext, apcu, redis, igbinary, memcached
+
+            - name: Install dependencies
+              uses: ramsey/composer-install@v3
+              env:
+                  COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"} }'
+
+            - name: Generate OpenAPI docs
+              run: php artisan l5-swagger:generate
+

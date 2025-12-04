@@ -109,10 +109,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -198,10 +202,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -330,10 +338,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -516,10 +528,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -581,10 +597,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -631,10 +651,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -688,10 +712,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -735,10 +763,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -785,10 +817,14 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
                 IGroup::SummitRegistrationAdmins
             ]
         ],
-        security: [['summit_submission_invitations_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteSubmissionInvitations,
-        ]]],
+        security: [
+            [
+                'summit_submission_invitations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'id',

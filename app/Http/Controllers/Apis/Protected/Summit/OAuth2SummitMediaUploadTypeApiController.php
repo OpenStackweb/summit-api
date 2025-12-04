@@ -93,7 +93,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(
                 name: 'id',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The summit ID'
@@ -186,7 +186,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(
                 name: 'id',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The summit ID'
@@ -252,7 +252,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(
                 name: 'id',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The summit ID'
@@ -303,7 +303,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(
                 name: 'id',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The summit ID'
@@ -361,7 +361,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(
                 name: 'id',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The summit ID'
@@ -530,7 +530,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(
                 name: 'id',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The summit ID'
@@ -609,7 +609,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(
                 name: 'id',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The summit ID'
@@ -687,7 +687,7 @@ final class OAuth2SummitMediaUploadTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(
                 name: 'id',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The summit ID'

@@ -67,11 +67,15 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         summary: "Get all tags",
         description: "Returns a paginated list of tags. Allows ordering, filtering and pagination.",
         tags: ["Tags"],
-        security: [['tags_oauth2' => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadTagsData,
-        ]]],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadTagsData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'page',
@@ -152,11 +156,15 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         summary: "Get a specific tag",
         description: "Returns detailed information about a specific tag",
         tags: ["Tags"],
-        security: [['tags_oauth2' => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadTagsData,
-        ]]],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadTagsData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -225,10 +233,14 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['tags_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteTagsData,
-        ]]],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTagsData,
+                ]
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/TagRequest")
@@ -288,10 +300,14 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['tags_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteTagsData,
-        ]]],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTagsData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -363,10 +379,14 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
                 IGroup::SummitAdministrators,
             ]
         ],
-        security: [['tags_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteTagsData,
-        ]]],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTagsData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",

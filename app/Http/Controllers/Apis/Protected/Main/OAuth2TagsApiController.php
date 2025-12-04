@@ -219,7 +219,7 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         description: "Creates a new tag",
         tags: ["Tags"],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -282,7 +282,7 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         description: "Updates an existing tag",
         tags: ["Tags"],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -357,7 +357,7 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         description: "Deletes a tag",
         tags: ["Tags"],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,

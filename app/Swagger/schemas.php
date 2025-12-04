@@ -470,20 +470,6 @@ class ChunkedFileUploadRequestSchema
 }
 
 #[OA\Schema(
-    schema: 'Organization',
-    type: 'object',
-    properties: [
-        new OA\Property(property: 'id', type: 'integer', example: 1),
-        new OA\Property(property: 'created', type: 'integer', format: 'int64', example: 1633024800),
-        new OA\Property(property: 'last_edited', type: 'integer', format: 'int64', example: 1633024800),
-        new OA\Property(property: 'name', type: 'string', example: 'OpenStack Foundation'),
-    ]
-)]
-class OrganizationSchema
-{
-}
-
-#[OA\Schema(
     schema: 'PaginatedOrganizationsResponse',
     allOf: [
         new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),

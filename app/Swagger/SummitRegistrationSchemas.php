@@ -32,8 +32,8 @@ class PaginatedSummitBadgeFeatureTypesResponseSchema {}
     required: ['name'],
     properties: [
         new OA\Property(property: 'name', type: 'string', example: 'Speaker Ribbon'),
-        new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Special ribbon for speakers'),
-        new OA\Property(property: 'template_content', type: 'string', nullable: true, example: '<div>{{name}}</div>'),
+        new OA\Property(property: 'description', type: 'string', example: 'Special ribbon for speakers'),
+        new OA\Property(property: 'template_content', type: 'string', example: '<div>{{name}}</div>'),
     ]
 )]
 class SummitBadgeFeatureTypeCreateRequestSchema {}
@@ -43,8 +43,8 @@ class SummitBadgeFeatureTypeCreateRequestSchema {}
     type: 'object',
     properties: [
         new OA\Property(property: 'name', type: 'string', example: 'VIP Ribbon'),
-        new OA\Property(property: 'description', type: 'string', nullable: true, example: 'VIP attendee designation'),
-        new OA\Property(property: 'template_content', type: 'string', nullable: true, example: '<div class="vip">{{name}}</div>'),
+        new OA\Property(property: 'description', type: 'string', example: 'VIP attendee designation'),
+        new OA\Property(property: 'template_content', type: 'string', example: '<div class="vip">{{name}}</div>'),
     ]
 )]
 class SummitBadgeFeatureTypeUpdateRequestSchema {}

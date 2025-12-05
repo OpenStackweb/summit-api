@@ -83,13 +83,13 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
         summary: "Get all attendee notes for a summit",
         description: "Returns all notes for all attendees in the summit. Admin access required.",
         operationId: 'getAllAttendeeNotes',
-        tags: ["AttendeeNotes"],
+        tags: ["Attendee Notes"],
         security: [['summit_attendee_notes_oauth2' => [
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadAttendeeNotesData,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
             new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
             new OA\Parameter(name: "filter", description: "Filter query", in: "query", required: false, schema: new OA\Schema(type: "string")),
@@ -174,9 +174,9 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadAttendeeNotesData,
         ]]],
-        tags: ["AttendeeNotes"],
+        tags: ["Attendee Notes"],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "filter", description: "Filter query", in: "query", required: false, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "order", description: "Order by", in: "query", required: false, schema: new OA\Schema(type: "string")),
         ],
@@ -263,9 +263,9 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadAttendeeNotesData,
         ]]],
-        tags: ["AttendeeNotes"],
+        tags: ["Attendee Notes"],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
             new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
@@ -343,9 +343,9 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadAttendeeNotesData,
         ]]],
-        tags: ["AttendeeNotes"],
+        tags: ["Attendee Notes"],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
@@ -429,9 +429,9 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadAttendeeNotesData,
         ]]],
-        tags: ["AttendeeNotes"],
+        tags: ["Attendee Notes"],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "note_id", description: "Note ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "expand", description: "Expand relations (author, owner, ticket)", in: "query", required: false, schema: new OA\Schema(type: "string")),
@@ -484,7 +484,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             SummitScopes::WriteSummitData,
             SummitScopes::WriteAttendeeNotesData,
         ]]],
-        tags: ["AttendeeNotes"],
+        tags: ["Attendee Notes"],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -494,7 +494,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         requestBody: new OA\RequestBody(
@@ -541,7 +541,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             SummitScopes::WriteSummitData,
             SummitScopes::WriteAttendeeNotesData,
         ]]],
-        tags: ["AttendeeNotes"],
+        tags: ["Attendee Notes"],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -551,7 +551,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "note_id", description: "Note ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
@@ -600,7 +600,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             SummitScopes::WriteSummitData,
             SummitScopes::WriteAttendeeNotesData,
         ]]],
-        tags: ["AttendeeNotes"],
+        tags: ["Attendee Notes"],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -610,7 +610,7 @@ final class OAuth2SummitAttendeeNotesApiController extends OAuth2ProtectedContro
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "attendee_id", description: "Attendee ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "note_id", description: "Note ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],

@@ -109,7 +109,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
 
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/tickets',
+        path: '/api/v1/summits/{id}/tickets',
         operationId: 'getAllTickets',
         summary: 'Get all tickets for a summit',
         description: 'Returns a paginated list of tickets for the specified summit with filtering and sorting capabilities',
@@ -126,7 +126,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by number, owner_name, owner_email, status, ticket_type_id, etc.', schema: new OA\Schema(type: 'string')),
@@ -297,7 +297,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/tickets/external',
+        path: '/api/v1/summits/{id}/tickets/external',
         operationId: 'getExternalTickets',
         summary: 'Get external ticket data',
         description: 'Returns ticket data from external registration feed by owner email',
@@ -310,7 +310,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: true, description: 'Filter by owner_email', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
@@ -379,7 +379,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/tickets/csv',
+        path: '/api/v1/summits/{id}/tickets/csv',
         operationId: 'getAllTicketsCSV',
         summary: 'Get all tickets for a summit',
         description: 'Returns a paginated list of tickets for the specified summit with filtering and sorting capabilities',
@@ -395,7 +395,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by number, owner_name, owner_email, status, ticket_type_id, etc.', schema: new OA\Schema(type: 'string')),
@@ -650,8 +650,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/tickets/ingest',
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/tickets/ingest',
         operationId: 'ingestExternalTicketData',
         summary: 'Ingest external ticket data',
         description: 'Triggers ingestion of ticket data from external registration feed',
@@ -667,7 +667,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
             required: false,
@@ -702,7 +702,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/tickets/import-template',
+        path: '/api/v1/summits/{id}/tickets/csv/template',
         operationId: 'getTicketImportTemplate',
         summary: 'Get ticket import template',
         description: 'Returns a CSV template for importing ticket data',
@@ -718,7 +718,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(
@@ -792,7 +792,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-        path: '/api/v1/summits/{summit_id}/tickets/import',
+        path: '/api/v1/summits/{id}/tickets/csv',
         operationId: 'importTicketData',
         summary: 'Import ticket data from CSV',
         description: 'Imports ticket data from a CSV file',
@@ -808,7 +808,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -854,7 +854,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/all/tickets/me',
+        path: '/api/v1/summits/all/orders/all/tickets/me',
         operationId: 'getAllMyTickets',
         summary: 'Get all my tickets across all summits',
         description: 'Returns all tickets owned by the current user across all summits',
@@ -884,7 +884,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/tickets/me',
+        path: '/api/v1/summits/{id}/orders/all/tickets/me',
         operationId: 'getMyTicketsBySummit',
         summary: 'Get my tickets for a summit',
         description: 'Returns all tickets owned by the current user for a specific summit',
@@ -893,7 +893,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by number, order_number, status, etc.', schema: new OA\Schema(type: 'string')),
@@ -902,7 +902,6 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'number', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_number', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order_owner_email', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'summit_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'order_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'order_owner_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'has_order_owner', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
@@ -1022,7 +1021,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/refund',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/refund',
         operationId: 'refundTicket',
         summary: 'Refund a ticket',
         description: 'Processes a refund for a specific ticket',
@@ -1038,7 +1037,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -1095,7 +1094,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge',
         operationId: 'getTicketBadge',
         summary: 'Get ticket badge',
         description: 'Returns the badge associated with a ticket',
@@ -1111,7 +1110,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
         ],
@@ -1148,7 +1147,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge',
         operationId: 'createTicketBadge',
         summary: 'Create ticket badge',
         description: 'Creates a badge for a specific ticket',
@@ -1164,7 +1163,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -1202,7 +1201,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current',
         operationId: 'deleteTicketBadge',
         summary: 'Delete ticket badge',
         description: 'Deletes the badge associated with a ticket',
@@ -1218,7 +1217,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -1238,7 +1237,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/type/{type_id}',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/type/{type_id}',
         operationId: 'updateTicketBadgeType',
         summary: 'Update badge type',
         description: 'Updates the badge type for a ticket',
@@ -1254,7 +1253,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Badge Type ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1284,7 +1283,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/features/{feature_id}',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/features/{feature_id}',
         operationId: 'addTicketBadgeFeature',
         summary: 'Add badge feature',
         description: 'Adds a feature to a ticket badge',
@@ -1300,7 +1299,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'feature_id', in: 'path', required: true, description: 'Feature ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1330,7 +1329,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/features/{feature_id}',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/features/{feature_id}',
         operationId: 'removeTicketBadgeFeature',
         summary: 'Remove badge feature',
         description: 'Removes a feature from a ticket badge',
@@ -1346,7 +1345,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'feature_id', in: 'path', required: true, description: 'Feature ID', schema: new OA\Schema(type: 'integer')),
         ],
@@ -1376,7 +1375,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/print',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
         operationId: 'printTicketBadge',
         summary: 'Print badge with default view',
         description: 'Prints a badge using the summit\'s default view type',
@@ -1393,7 +1392,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
@@ -1424,7 +1423,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/{view_type}/print',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/{view_type}/print',
         operationId: 'printTicketBadgeByViewType',
         summary: 'Print badge with specific view type',
         description: 'Prints a badge using a specific view type',
@@ -1441,7 +1440,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'view_type', in: 'path', required: true, description: 'View type name', schema: new OA\Schema(type: 'string')),
         ],
@@ -1490,7 +1489,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/can-print',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
         operationId: 'canPrintTicketBadge',
         summary: 'Check if badge can be printed (default view)',
         description: 'Checks if a badge can be printed using the default view type',
@@ -1507,7 +1506,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -1534,7 +1533,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/{view_type}/can-print',
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/{view_type}/print',
         operationId: 'canPrintTicketBadgeByViewType',
         summary: 'Check if badge can be printed (specific view)',
         description: 'Checks if a badge can be printed using a specific view type',
@@ -1551,7 +1550,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ]],
         tags: ['tickets'],
         parameters: [
-            new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'view_type', in: 'path', required: true, description: 'View type name', schema: new OA\Schema(type: 'string')),
         ],

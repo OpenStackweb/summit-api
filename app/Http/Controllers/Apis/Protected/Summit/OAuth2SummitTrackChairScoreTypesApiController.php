@@ -243,7 +243,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         tags: ['Track Chair Score Types'],
         security: [['summit_track_chair_oauth2' => [SummitScopes::ReadSummitData]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::TrackChairs,
@@ -341,7 +341,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         tags: ['Track Chair Score Types'],
         security: [['summit_track_chair_oauth2' => [SummitScopes::WriteSummitData]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::TrackChairs,
@@ -420,7 +420,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         tags: ['Track Chair Score Types'],
         security: [['summit_track_chair_oauth2' => [SummitScopes::WriteSummitData]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::TrackChairs,
@@ -506,7 +506,7 @@ final class OAuth2SummitTrackChairScoreTypesApiController
         tags: ['Track Chair Score Types'],
         security: [['summit_track_chair_oauth2' => [SummitScopes::WriteSummitData]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::TrackChairs,

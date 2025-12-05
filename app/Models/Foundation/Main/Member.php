@@ -2401,11 +2401,11 @@ SQL;
     public function nominateCandidate(Member $candidate, Election $election): Nomination
     {
 
-        if (!$this->isFoundationMember())
-            throw new ValidationException("You are not a valid Voter.");
+        if (!$this->isIndividualMember())
+            throw new ValidationException("You need to be an Individual Member.");
 
         if (!$election->isNominationsOpen())
-            throw new ValidationException("Nomination Period is closed for election.");
+            throw new ValidationException("Nomination Period is closed for current election.");
 
         if (!$candidate->isFoundationMember())
             throw new ValidationException("Candidate is not valid.");

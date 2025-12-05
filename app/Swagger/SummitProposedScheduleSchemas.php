@@ -12,9 +12,9 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "last_edited", type: "integer", description: "Unix timestamp", example: 1640995200),
         new OA\Property(property: "allowed_timeframes", type: "array", items: new OA\Items(type: "integer"), description: "Array SummitProposedScheduleAllowedDay IDs or full SummitProposedScheduleAllowedDay objects when expanded", nullable: true),
         new OA\Property(property: "location_id", type: "integer", example: 10, description: "only when not expanded"),
-        new OA\Property(property: "location", type: "SummitAbstractLocation", description: "ID of the SummitAbstractLocation, when not expanded, when ?expand=location, you get a SummitAbstractLocation schema object in a 'location' property"),
+        new OA\Property(property: "location", type: "integer", description: "ID of the SummitAbstractLocation, when not expanded, when ?expand=location, you get a SummitAbstractLocation schema object in a 'location' property"),
         new OA\Property(property: "track_id", type: "integer", example: 5, description: "only when not expanded"),
-        new OA\Property(property: "track", type: "PresentationCategory", description: "ID of the PresentationCategory, when not expanded, when ?expand=track, you get a PresentationCategory schema object in a 'track' property"),
+        new OA\Property(property: "track", type: "integer", description: "ID of the PresentationCategory, when not expanded, when ?expand=track, you get a PresentationCategory schema object in a 'track' property"),
     ],
 )]
 class SummitProposedScheduleAllowedLocation {}
@@ -173,7 +173,7 @@ class PaginatedSummitProposedScheduleLocksResponse {}
         new OA\Property(property: "scheduled_summit_events", type: "array", items: new OA\Items(ref: "#/components/schemas/SummitProposedScheduleSummitEvent"), description: "Array of scheduled summit events, only available if it is added in expand."),
         new OA\Property(property: "locks", type: "array", items: new OA\Items(ref: "#/components/schemas/SummitProposedScheduleLock")),
         new OA\Property(property: "created_by_id", type: "integer", example: 5),
-        new OA\Property(property: "created_by", type: "Member"),
+        new OA\Property(property: "created_by", ref: "#/components/schemas/Member"),
     ]
 )]
 class SummitProposedSchedulePublishAllResponse {}

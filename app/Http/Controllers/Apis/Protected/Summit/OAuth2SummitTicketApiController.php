@@ -15,10 +15,12 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\libs\Utils\Doctrine\ReplicaAwareTrait;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
@@ -110,7 +112,17 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets',
         summary: 'Get all tickets for a summit',
         description: 'Returns a paginated list of tickets for the specified summit with filtering and sorting capabilities',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -287,7 +299,13 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/external',
         summary: 'Get external ticket data',
         description: 'Returns ticket data from external registration feed by owner email',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::BadgePrinters,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -362,7 +380,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/csv',
         summary: 'Get all tickets for a summit',
         description: 'Returns a paginated list of tickets for the specified summit with filtering and sorting capabilities',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -624,7 +651,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/ingest',
         summary: 'Ingest external ticket data',
         description: 'Triggers ingestion of ticket data from external registration feed',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationData,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -665,7 +701,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/import-template',
         summary: 'Get ticket import template',
         description: 'Returns a CSV template for importing ticket data',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationData,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -745,7 +790,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/import',
         summary: 'Import ticket data from CSV',
         description: 'Imports ticket data from a CSV file',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationData,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -797,7 +851,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/all/tickets/me',
         summary: 'Get all my tickets across all summits',
         description: 'Returns all tickets owned by the current user across all summits',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadMyRegistrationOrders,
+        ]]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -824,7 +880,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/me',
         summary: 'Get my tickets for a summit',
         description: 'Returns all tickets owned by the current user for a specific summit',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadMyRegistrationOrders,
+        ]]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -959,7 +1017,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/refund',
         summary: 'Refund a ticket',
         description: 'Processes a refund for a specific ticket',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1022,7 +1089,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge',
         summary: 'Get ticket badge',
         description: 'Returns the badge associated with a ticket',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1065,7 +1141,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge',
         summary: 'Create ticket badge',
         description: 'Creates a badge for a specific ticket',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1109,7 +1194,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge',
         summary: 'Delete ticket badge',
         description: 'Deletes the badge associated with a ticket',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1135,7 +1229,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/type/{type_id}',
         summary: 'Update badge type',
         description: 'Updates the badge type for a ticket',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1171,7 +1274,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/features/{feature_id}',
         summary: 'Add badge feature',
         description: 'Adds a feature to a ticket badge',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1207,7 +1319,16 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/features/{feature_id}',
         summary: 'Remove badge feature',
         description: 'Removes a feature from a ticket badge',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1243,7 +1364,17 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/print',
         summary: 'Print badge with default view',
         description: 'Prints a badge using the summit\'s default view type',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::PrintRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1280,7 +1411,17 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/{view_type}/print',
         summary: 'Print badge with specific view type',
         description: 'Prints a badge using a specific view type',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::PrintRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1335,7 +1476,17 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/can-print',
         summary: 'Check if badge can be printed (default view)',
         description: 'Checks if a badge can be printed using the default view type',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::PrintRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1368,7 +1519,17 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{summit_id}/tickets/{ticket_id}/badge/{view_type}/can-print',
         summary: 'Check if badge can be printed (specific view)',
         description: 'Checks if a badge can be printed using a specific view type',
-        security: [['bearer' => []]],
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::PrintRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
         tags: ['tickets'],
         parameters: [
             new OA\Parameter(name: 'summit_id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),

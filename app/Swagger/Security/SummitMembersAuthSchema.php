@@ -2,6 +2,7 @@
 
 namespace App\Swagger\schemas;
 
+use App\Security\MemberScopes;
 use App\Security\SummitScopes;
 use OpenApi\Attributes as OA;
 
@@ -16,6 +17,7 @@ use OpenApi\Attributes as OA;
                 flow: 'authorizationCode',
                 scopes: [
                     SummitScopes::MeRead => 'Read My Member Data',
+                    MemberScopes::ReadMyMemberData => 'Read My Member Data',
                     SummitScopes::AddMyFavorites => 'Add Favorites to My Schedule',
                     SummitScopes::DeleteMyFavorites => 'Remove Favorites from My Schedule',
                     SummitScopes::AddMySchedule => 'Add Events to My Schedule',

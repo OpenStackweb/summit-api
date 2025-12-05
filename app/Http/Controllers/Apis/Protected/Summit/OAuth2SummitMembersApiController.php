@@ -16,10 +16,9 @@ use App\Http\Utils\CurrentAffiliationsCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
-use App\Security\RSVPInvitationsScopes;
+use App\Security\MemberScopes;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitRSVPService;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -38,7 +37,7 @@ use utils\OrderParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
 use OpenApi\Attributes as OA;
-use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class OAuth2SummitMembersApiController
@@ -93,12 +92,13 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: "/summits/{id}/members/me",
+        path: "/api/v1/summits/{id}/members/me",
         operationId: "getMyMember",
         description: "Get current user member details for a summit",
         tags: ["Summit Members"],
         security: [['summit_members_oauth2' => [
             SummitScopes::MeRead,
+            MemberScopes::ReadMyMemberData,
         ]]],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
@@ -107,10 +107,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "relations", description: "Relations to include", in: "query", schema: new OA\Schema(type: "string")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_OK, description: "Member details", content: new OA\JsonContent(ref: "#/components/schemas/Member")),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_OK, description: "Member details", content: new OA\JsonContent(ref: "#/components/schemas/Member")),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function getMyMember($summit_id, $member_id)
@@ -142,12 +142,13 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: "/summits/{id}/members/me/favorites",
+        path: "/api/v1/summits/{id}/members/me/favorites",
         operationId: "getMemberFavoritesSummitEvents",
         description: "Get current user favorite summit events",
         tags: ["Summit Members"],
         security: [['summit_members_oauth2' => [
             SummitScopes::MeRead,
+            MemberScopes::ReadMyMemberData,
         ]]],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
@@ -156,10 +157,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "relations", description: "Relations to include", in: "query", schema: new OA\Schema(type: "string")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_OK, description: "List of favorite events", content: new OA\JsonContent(ref: "#/components/schemas/MemberFavoriteEventsList")),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_OK, description: "List of favorite events", content: new OA\JsonContent(ref: "#/components/schemas/MemberFavoriteEventsList")),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function getMemberFavoritesSummitEvents($summit_id, $member_id)
@@ -206,22 +207,23 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Post(
-        path: "/summits/{id}/members/me/favorites/{event_id}",
+        path: "/api/v1/summits/{id}/members/me/favorites/{event_id}",
         operationId: "addEventToMemberFavorites",
         description: "Add an event to current user favorites",
         tags: ["Summit Members"],
         security: [['summit_members_oauth2' => [
             SummitScopes::AddMyFavorites,
+            MemberScopes::ReadMyMemberData,
         ]]],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "event_id", description: "Event ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_CREATED, description: "Event added to favorites"),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_CREATED, description: "Event added to favorites"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function addEventToMemberFavorites($summit_id, $member_id, $event_id)
@@ -246,7 +248,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Delete(
-        path: "/summits/{id}/members/me/favorites/{event_id}",
+        path: "/api/v1/summits/{id}/members/me/favorites/{event_id}",
         operationId: "removeEventFromMemberFavorites",
         description: "Remove an event from current user favorites",
         tags: ["Summit Members"],
@@ -258,10 +260,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "event_id", description: "Event ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_NO_CONTENT, description: "Event removed from favorites"),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Event removed from favorites"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function removeEventFromMemberFavorites($summit_id, $member_id, $event_id)
@@ -285,12 +287,13 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Get(
-        path: "/summits/{id}/members/me/schedule",
+        path: "/api/v1/summits/{id}/members/me/schedule",
         operationId: "getMemberScheduleSummitEvents",
         description: "Get current user schedule events",
         tags: ["Summit Members"],
         security: [['summit_members_oauth2' => [
             SummitScopes::MeRead,
+            MemberScopes::ReadMyMemberData,
         ]]],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
@@ -299,10 +302,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "relations", description: "Relations to include", in: "query", schema: new OA\Schema(type: "string")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_OK, description: "List of schedule events", content: new OA\JsonContent(ref: "#/components/schemas/MemberScheduleEventsList")),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_OK, description: "List of schedule events", content: new OA\JsonContent(ref: "#/components/schemas/MemberScheduleEventsList")),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function getMemberScheduleSummitEvents($summit_id, $member_id)
@@ -349,11 +352,12 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Post(
-        path: "/summits/{id}/members/me/schedule/{event_id}",
+        path: "/api/v1/summits/{id}/members/me/schedule/{event_id}",
         operationId: "addEventToMemberSchedule",
         description: "Add an event to current user schedule",
         tags: ["Summit Members"],
         security: [['summit_members_oauth2' => [
+            SummitScopes::WriteSummitData,
             SummitScopes::AddMySchedule,
         ]]],
         parameters: [
@@ -361,10 +365,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "event_id", description: "Event ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_CREATED, description: "Event added to schedule"),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_CREATED, description: "Event added to schedule"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function addEventToMemberSchedule($summit_id, $member_id, $event_id)
@@ -389,11 +393,12 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return mixed
      */
     #[OA\Delete(
-        path: "/summits/{id}/members/me/schedule/{event_id}",
+        path: "/api/v1/summits/{id}/members/me/schedule/{event_id}",
         operationId: "removeEventFromMemberSchedule",
         description: "Remove an event from current user schedule",
         tags: ["Summit Members"],
         security: [['summit_members_oauth2' => [
+            SummitScopes::WriteSummitData,
             SummitScopes::DeleteMySchedule,
         ]]],
         parameters: [
@@ -401,10 +406,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "event_id", description: "Event ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_NO_CONTENT, description: "Event removed from schedule"),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Event removed from schedule"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function removeEventFromMemberSchedule($summit_id, $member_id, $event_id)
@@ -429,7 +434,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: "/summits/{id}/members",
+        path: "/api/v1/summits/{id}/members",
         operationId: "getAllMembersBySummit",
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         tags: ["Summit Members"],
@@ -454,9 +459,9 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "relations", description: "Relations to include", in: "query", schema: new OA\Schema(type: "string")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_OK, description: "List of members", content: new OA\JsonContent(ref: "#/components/schemas/MembersList")),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_OK, description: "List of members", content: new OA\JsonContent(ref: "#/components/schemas/MembersList")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function getAllBySummit($summit_id)
@@ -525,7 +530,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: "/summits/{id}/members/csv",
+        path: "/api/v1/summits/{id}/members/csv",
         operationId: "getAllMembersBySummitCSV",
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         tags: ["Summit Members"],
@@ -551,10 +556,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "columns", description: "CSV columns", in: "query", schema: new OA\Schema(type: "string")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_OK, description: "CSV export", content: new OA\MediaType(mediaType: "text/csv")),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_OK, description: "CSV export", content: new OA\MediaType(mediaType: "text/csv")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function getAllBySummitCSV($summit_id)
@@ -727,21 +732,22 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Post(
-        path: "/summits/{id}/members/me/schedule/shareable-link",
+        path: "/api/v1/summits/{id}/members/me/schedule/shareable-link",
         operationId: "createScheduleShareableLink",
         description: "Create a shareable link for member schedule",
         tags: ["Summit Members"],
         security: [['summit_members_oauth2' => [
+            SummitScopes::WriteSummitData,
             SummitScopes::AddMyScheduleShareable,
         ]]],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_CREATED, description: "Shareable link created", content: new OA\JsonContent(type: "object")),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_CREATED, description: "Shareable link created", content: new OA\JsonContent(type: "object")),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function createScheduleShareableLink($summit_id, $member_id)
@@ -771,21 +777,22 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Delete(
-        path: "/summits/{id}/members/me/schedule/shareable-link",
+        path: "/api/v1/summits/{id}/members/me/schedule/shareable-link",
         operationId: "revokeScheduleShareableLink",
         description: "Revoke shareable link for member schedule",
         tags: ["Summit Members"],
         security: [['summit_members_oauth2' => [
+            SummitScopes::WriteSummitData,
             SummitScopes::DeleteMyScheduleShareable,
         ]]],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_NO_CONTENT, description: "Shareable link revoked"),
-            new OA\Response(response: HttpResponse::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Shareable link revoked"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function revokeScheduleShareableLink($summit_id, $member_id)
@@ -811,21 +818,18 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response|mixed
      */
     #[OA\Get(
-        path: "/summits/{id}/members/me/schedule/{cid}/ics",
+        path: "/api/public/v1/summits/{id}/members/all/schedule/ics/{cid}",
         operationId: "getCalendarFeedICS",
         description: "Get calendar feed in ICS format for member schedule",
-        tags: ["Summit Members"],
-        security: [['summit_members_oauth2' => [
-            SummitScopes::MeRead,
-        ]]],
+        tags: ["Summit Members (Public)"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "cid", description: "Calendar ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
         ],
         responses: [
-            new OA\Response(response: HttpResponse::HTTP_OK, description: "ICS calendar feed", content: new OA\MediaType(mediaType: "text/calendar")),
-            new OA\Response(response: HttpResponse::HTTP_NOT_FOUND, description: "Not found"),
-            new OA\Response(response: HttpResponse::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_OK, description: "ICS calendar feed", content: new OA\MediaType(mediaType: "text/calendar")),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
     public function getCalendarFeedICS($summit_id, $cid)

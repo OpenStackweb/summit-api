@@ -76,7 +76,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Returns a paginated list of track question templates',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -205,7 +205,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Creates a new track question template',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -287,7 +287,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Returns a single track question template',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -348,7 +348,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Updates an existing track question template',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -430,7 +430,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Deletes a track question template',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -482,7 +482,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Returns metadata about available track question template types',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -529,7 +529,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Returns a single track question template value',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -593,7 +593,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Adds a new value to a multi-value track question template',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -680,7 +680,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Updates an existing track question template value',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -769,7 +769,7 @@ final class OAuth2TrackQuestionsTemplateApiController extends OAuth2ProtectedCon
         description: 'Deletes a track question template value',
         tags: ['Track Question Templates'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,

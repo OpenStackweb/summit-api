@@ -21,7 +21,7 @@ use OpenApi\Attributes as OA;
             type: 'array',
             items: new OA\Items(oneOf: [
                 new OA\Schema(type: 'integer'),
-                new OA\Schema(type: 'SummitTicketType')
+                new OA\Schema(ref: '#/components/schemas/SummitTicketType')
             ]),
             example: [1, 2, 3],
             description: 'Array of ticket type IDs or its Model (only present when relations=ticket_types), expanded when expand includes ticket_types.'

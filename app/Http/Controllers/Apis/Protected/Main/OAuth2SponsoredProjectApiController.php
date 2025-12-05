@@ -12,20 +12,20 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Repositories\IProjectSponsorshipTypeRepository;
 use App\Models\Foundation\Main\Repositories\ISponsoredProjectRepository;
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
+use App\Security\SponsoredProjectScope;
 use App\Services\Model\ISponsoredProjectService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
-use models\main\SponsoredProject;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
-use Psr\Log\LogLevel;
 use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
@@ -146,6 +146,65 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->service->update(intval($id), HTMLCleaner::cleanData($payload, ['description']));
     }
 
+    #[OA\Get(
+        path: "/api/v1/sponsored-projects",
+        description: "Get all sponsored projects",
+        summary: 'Read All Sponsored Projects',
+        operationId: 'getAllSponsoredProjects',
+        tags: ['Sponsored Projects'],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Read,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'name@@project')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'name,id')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of sponsored projects',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSponsoredProjectsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @return mixed
      */
@@ -181,6 +240,203 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Post(
+        path: "/api/v1/sponsored-projects",
+        description: "Add a new sponsored project",
+        summary: 'Add Sponsored Project',
+        operationId: 'addSponsoredProject',
+        tags: ['Sponsored Projects'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', description: 'Project name'),
+                    new OA\Property(property: 'description', type: 'string', description: 'Project description'),
+                    new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the project is active'),
+                ]
+            )
+        ),
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Sponsored project created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProject')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
+    public function add()
+    {
+        return parent::add();
+    }
+
+    #[OA\Get(
+        path: "/api/v1/sponsored-projects/{id}",
+        description: "Get a specific sponsored project",
+        summary: 'Read Sponsored Project',
+        operationId: 'getSponsoredProject',
+        tags: ['Sponsored Projects'],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Read,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sponsored project details',
+                content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProject')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function get($id)
+    {
+        return parent::get($id);
+    }
+
+    #[OA\Put(
+        path: "/api/v1/sponsored-projects/{id}",
+        description: "Update a sponsored project",
+        summary: 'Update Sponsored Project',
+        operationId: 'updateSponsoredProject',
+        tags: ['Sponsored Projects'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', description: 'Project name'),
+                    new OA\Property(property: 'description', type: 'string', description: 'Project description'),
+                    new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the project is active'),
+                ]
+            )
+        ),
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sponsored project updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProject')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
+    public function update($id)
+    {
+        return parent::update($id);
+    }
+
+    #[OA\Delete(
+        path: "/api/v1/sponsored-projects/{id}",
+        description: "Delete a sponsored project",
+        summary: 'Delete Sponsored Project',
+        operationId: 'deleteSponsoredProject',
+        tags: ['Sponsored Projects'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Sponsored project deleted',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function delete($id)
+    {
+        return parent::delete($id);
+    }
+
     // sponsorship types
 
     #[OA\Get(
@@ -189,7 +445,9 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         summary: 'Read All Sponsorship Types',
         operationId: 'getAllSponsorshipTypes',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
-        security: [['oauth2' => ['read']]],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Read,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -306,7 +564,9 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         summary: 'Read Sponsorship Type',
         operationId: 'getSponsorshipType',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
-        security: [['oauth2' => ['read']]],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Read,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -352,6 +612,61 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Post(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types",
+        description: "Add a new sponsorship type to a sponsored project",
+        summary: 'Add Sponsorship Type',
+        operationId: 'addSponsorshipType',
+        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', description: 'Sponsorship type name'),
+                    new OA\Property(property: 'description', type: 'string', description: 'Sponsorship type description'),
+                    new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the sponsorship type is active'),
+                    new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+                ]
+            )
+        ),
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Sponsorship type created',
+                content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipType')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     /**
      * @param $id
      * @return mixed
@@ -370,6 +685,68 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Put(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}",
+        description: "Update a sponsorship type",
+        summary: 'Update Sponsorship Type',
+        operationId: 'updateSponsorshipType',
+        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', description: 'Sponsorship type name'),
+                    new OA\Property(property: 'description', type: 'string', description: 'Sponsorship type description'),
+                    new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the sponsorship type is active'),
+                    new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+                ]
+            )
+        ),
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsorship type id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sponsorship type updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipType')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     /**
      * @param $id
      * @param $sponsorship_type_id
@@ -389,6 +766,54 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Delete(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}",
+        description: "Delete a sponsorship type",
+        summary: 'Delete Sponsorship Type',
+        operationId: 'deleteSponsorshipType',
+        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsorship type id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Sponsorship type deleted',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $id
      * @param $sponsorship_type_id
@@ -414,7 +839,9 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         summary: 'Read All Supporting Companies',
         operationId: 'getSupportingCompanies',
         tags: ['Sponsored Projects', 'Supporting Companies'],
-        security: [['oauth2' => ['read']]],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Read,
+        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -529,6 +956,67 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
     }
 
 
+    #[OA\Post(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies",
+        description: "Add a supporting company to a sponsorship type",
+        summary: 'Add Supporting Company',
+        operationId: 'addSupportingCompany',
+        tags: ['Sponsored Projects', 'Supporting Companies'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['company_id'],
+                properties: [
+                    new OA\Property(property: 'company_id', type: 'integer', description: 'The company id'),
+                    new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+                ]
+            )
+        ),
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsorship type id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Supporting company added',
+                content: new OA\JsonContent(ref: '#/components/schemas/SupportingCompany')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     /**
      * @param $id
      * @param $sponsorship_type_id
@@ -555,6 +1043,72 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Put(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}",
+        description: "Update a supporting company",
+        summary: 'Update Supporting Company',
+        operationId: 'updateSupportingCompany',
+        tags: ['Sponsored Projects', 'Supporting Companies'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+                ]
+            )
+        ),
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsorship type id'
+            ),
+            new OA\Parameter(
+                name: 'company_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The supporting company id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Supporting company updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/SupportingCompany')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     /**
      * @param $id
      * @param $sponsorship_type_id
@@ -582,6 +1136,61 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Delete(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}",
+        description: "Delete a supporting company from a sponsorship type",
+        summary: 'Delete Supporting Company',
+        operationId: 'deleteSupportingCompany',
+        tags: ['Sponsored Projects', 'Supporting Companies'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsorship type id'
+            ),
+            new OA\Parameter(
+                name: 'company_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The supporting company id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Supporting company deleted',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $id
      * @param $sponsorship_type_id
@@ -594,6 +1203,62 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         }, $id, $sponsorship_type_id);
     }
 
+    #[OA\Get(
+        path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}",
+        description: "Get a specific supporting company",
+        summary: 'Read Supporting Company',
+        operationId: 'getSupportingCompany',
+        tags: ['Sponsored Projects', 'Supporting Companies'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Read,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsorship type id'
+            ),
+            new OA\Parameter(
+                name: 'company_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The supporting company id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Supporting company details',
+                content: new OA\JsonContent(ref: '#/components/schemas/SupportingCompany')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $id
      * @param $sponsorship_type_id
@@ -609,6 +1274,66 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         }, $company_id);
     }
 
+    #[OA\Post(
+        path: "/api/v1/sponsored-projects/{id}/logo",
+        description: "Upload a logo for a sponsored project",
+        summary: 'Add Sponsored Project Logo',
+        operationId: 'addSponsoredProjectLogo',
+        tags: ['Sponsored Projects'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    required: ['file'],
+                    properties: [
+                        new OA\Property(
+                            property: 'file',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'The logo file to upload'
+                        ),
+                    ]
+                )
+            )
+        ),
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Logo uploaded successfully',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     /**
      * @param LaravelRequest $request
      * @param $project_id
@@ -627,6 +1352,47 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Delete(
+        path: "/api/v1/sponsored-projects/{id}/logo",
+        description: "Delete the logo of a sponsored project",
+        summary: 'Delete Sponsored Project Logo',
+        operationId: 'deleteSponsoredProjectLogo',
+        tags: ['Sponsored Projects'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Write,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Logo deleted successfully',
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $project_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -640,6 +1406,79 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
 
     //  subprojects
 
+    #[OA\Get(
+        path: "/api/v1/sponsored-projects/{id}/subprojects",
+        description: "Get all subprojects of a sponsored project",
+        summary: 'Read Subprojects',
+        operationId: 'getSubprojects',
+        tags: ['Sponsored Projects'],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+            ]
+        ],
+        security: [['sponsored_projects_oauth2' => [
+            SponsoredProjectScope::Read,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsored project id'
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'name@@subproject')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'name,id')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of subprojects',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSponsoredProjectsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $id string|int
      */

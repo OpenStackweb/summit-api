@@ -31,10 +31,10 @@ final class TimezonesApiController extends JsonController
      * @return mixed
      */
     #[OA\Get(
-        path: '/api/v1/timezones',
+        path: '/api/public/v1/timezones',
         operationId: 'getTimezones',
         description: 'Retrieve all available timezones',
-        tags: ['Timezones'],
+        tags: ['Timezones (Public)'],
         parameters: [
             new OA\Parameter(
                 name: 'expand',

@@ -29,23 +29,6 @@ class SubmissionInvitationAuditLogFormatter extends AbstractAuditLogFormatter
         $this->event_type = $event_type;
     }
 
-    private function getUserInfo(): string
-    {
-        if (!$this->ctx) {
-            return 'Unknown (unknown)';
-        }
-
-        $user_name = 'Unknown';
-        if ($this->ctx->userFirstName || $this->ctx->userLastName) {
-            $user_name = trim(sprintf("%s %s", $this->ctx->userFirstName ?? '', $this->ctx->userLastName ?? '')) ?: 'Unknown';
-        } elseif ($this->ctx->userEmail) {
-            $user_name = $this->ctx->userEmail;
-        }
-        
-        $user_id = $this->ctx->userId ?? 'unknown';
-        return sprintf("%s (%s)", $user_name, $user_id);
-    }
-
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof SummitSubmissionInvitation) {

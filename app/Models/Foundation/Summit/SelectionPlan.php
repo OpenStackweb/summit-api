@@ -743,6 +743,10 @@ class SelectionPlan extends SilverstripeBaseModel
         return !is_null($this->selection_begin_date) && !is_null($this->selection_end_date);
     }
 
+    public function hasSubmissionPeriodDefined():bool{
+        return !is_null($this->submission_begin_date) && !is_null($this->submission_end_date);
+    }
+
     /**
      * @return bool
      */

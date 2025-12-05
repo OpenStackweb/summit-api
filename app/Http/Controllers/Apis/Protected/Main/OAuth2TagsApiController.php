@@ -1,4 +1,7 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
+
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +15,17 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use models\main\ITagRepository;
 use models\oauth2\IResourceServerContext;
 use Illuminate\Support\Facades\Validator;
 use ModelSerializers\SerializerRegistry;
 use Illuminate\Support\Facades\Request;
 use App\Services\Model\ITagService;
+use Illuminate\Http\Response;
+use OpenApi\Attributes as OA;
 /**
  * Class OAuth2TagsApiController
  * @package App\Http\Controllers
@@ -54,6 +61,61 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         $this->tag_service = $tag_service;
     }
 
+    #[OA\Get(
+        path: "/api/v1/tags",
+        operationId: "getAllTags",
+        summary: "Get all tags",
+        description: "Returns a paginated list of tags. Allows ordering, filtering and pagination.",
+        tags: ["Tags"],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadTagsData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of pages in each page',
+            ),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter tags. Available filters: tag (=@, ==, @@)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, tag",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedTagsResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+        ]
+    )]
     public function getAll(){
         return $this->_getAll(
             function () {
@@ -88,6 +150,60 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/tags/{id}",
+        operationId: "getTag",
+        summary: "Get a specific tag",
+        description: "Returns detailed information about a specific tag",
+        tags: ["Tags"],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadTagsData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Tag ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "fields",
+                in: "query",
+                required: false,
+                description: "Fields to include in response",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Relations to include",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Tag")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Tag not found"),
+        ]
+    )]
     public function getTag($tag_id){
         return $this->processRequest(function () use ($tag_id) {
             $tag = $this->repository->getById(intval($tag_id));
@@ -104,6 +220,43 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Post(
+        path: "/api/v1/tags",
+        operationId: "createTag",
+        summary: "Create a new tag",
+        description: "Creates a new tag",
+        tags: ["Tags"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTagsData,
+                ]
+            ]
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/TagRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/Tag")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     public function addTag(){
         return $this->processRequest(function () {
             if(!Request::isJson()) return $this->error400();
@@ -134,6 +287,53 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: "/api/v1/tags/{id}",
+        operationId: "updateTag",
+        summary: "Update a tag",
+        description: "Updates an existing tag",
+        tags: ["Tags"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTagsData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Tag ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/TagRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/Tag")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Tag not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+        ]
+    )]
     public function updateTag($tag_id){
         return $this->processRequest(function () use ($tag_id) {
             if(!Request::isJson()) return $this->error400();
@@ -166,6 +366,43 @@ final class OAuth2TagsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Delete(
+        path: "/api/v1/tags/{id}",
+        operationId: "deleteTag",
+        summary: "Delete a tag",
+        description: "Deletes a tag",
+        tags: ["Tags"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [
+            [
+                'tags_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTagsData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Tag ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted successfully"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Tag not found"),
+        ]
+    )]
     public function deleteTag($tag_id){
         return $this->processRequest(function () use ($tag_id) {
 

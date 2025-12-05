@@ -12,7 +12,20 @@ return [
         ],
         \models\summit\Presentation::class => [
             'enabled' => true,
-            'strategy' => \App\Audit\ConcreteFormatters\PresentationSubmissionAuditLogFormatter::class,
+            'strategies' => [
+                [
+                    'route' => 'api/v1/summits/{id}/events',
+                    'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationEventApiAuditLogFormatter::class,
+                ],
+                [
+                    'route' => 'api/v1/summits/{id}/presentations',
+                    'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationEventApiAuditLogFormatter::class,
+                ],
+                [
+                    'route' => 'api/v1/summits/{id}/presentations/{presentation_id}',
+                    'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationEventApiAuditLogFormatter::class,
+                ],
+            ]
         ],
         \App\Models\Foundation\Summit\SelectionPlan::class => [
             'enabled' => true,

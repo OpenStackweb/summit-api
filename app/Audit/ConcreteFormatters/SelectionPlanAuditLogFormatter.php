@@ -29,23 +29,6 @@ class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
         $this->event_type = $event_type;
     }
 
-    private function getUserInfo(): string
-    {
-        if (!$this->ctx) {
-            return 'Unknown (unknown)';
-        }
-
-        $user_name = 'Unknown';
-        if ($this->ctx->userFirstName || $this->ctx->userLastName) {
-            $user_name = trim(sprintf("%s %s", $this->ctx->userFirstName ?? '', $this->ctx->userLastName ?? '')) ?: 'Unknown';
-        } elseif ($this->ctx->userEmail) {
-            $user_name = $this->ctx->userEmail;
-        }
-        
-        $user_id = $this->ctx->userId ?? 'unknown';
-        return sprintf("%s (%s)", $user_name, $user_id);
-    }
-
     private function formatDate($date): string
     {
         if ($date instanceof \DateTime) {
@@ -68,7 +51,7 @@ class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $submission_dates = $subject->getSubmissionBeginDate() && $subject->getSubmissionEndDate()
+                    $submission_dates = $subject->hasSubmissionPeriodDefined()
                         ? sprintf(
                             "[%s - %s]",
                             $this->formatDate($subject->getSubmissionBeginDate()),
@@ -76,12 +59,21 @@ class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
                         )
                         : 'No dates set';
                     
+                    $selection_dates = $subject->hasSelectionPeriodDefined()
+                        ? sprintf(
+                            "[%s - %s]",
+                            $this->formatDate($subject->getSelectionBeginDate()),
+                            $this->formatDate($subject->getSelectionEndDate())
+                        )
+                        : 'No dates set';
+                    
                     return sprintf(
-                        "Selection Plan '%s' (%d) created for Summit '%s' with CFP period: %s by user %s",
+                        "Selection Plan '%s' (%d) created for Summit '%s' with CFP period: %s, selection period: %s by user %s",
                         $name,
                         $id,
                         $summit_name,
                         $submission_dates,
+                        $selection_dates,
                         $this->getUserInfo()
                     );
 

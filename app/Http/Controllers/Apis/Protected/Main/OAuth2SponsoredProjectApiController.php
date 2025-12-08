@@ -147,6 +147,54 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
     }
 
     #[OA\Get(
+        path: "/api/public/v1/sponsored-projects",
+        description: "Get all sponsored projects (public endpoint)",
+        summary: 'Read All Sponsored Projects (Public)',
+        operationId: 'getAllSponsoredProjectsPublic',
+        tags: ['Sponsored Projects'],
+        parameters: [
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value, operators: =@ (starts with), == (equals), @@ (contains), fields: name, slug, is_active',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'name@@project')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'name,id')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of sponsored projects',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSponsoredProjectsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    #[OA\Get(
         path: "/api/v1/sponsored-projects",
         description: "Get all sponsored projects",
         summary: 'Read All Sponsored Projects',
@@ -167,7 +215,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 name: 'filter[]',
                 in: 'query',
                 required: false,
-                description: 'Filter expressions in the format field<op>value',
+                description: 'Filter expressions in the format field<op>value, operators: =@ (starts with), == (equals), @@ (contains), fields: name, slug, is_active',
                 style: 'form',
                 explode: true,
                 schema: new OA\Schema(
@@ -291,6 +339,31 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return parent::add();
     }
 
+    #[OA\Get(
+        path: "/api/public/v1/sponsored-projects/{id}",
+        description: "Get a specific sponsored project (public endpoint)",
+        summary: 'Read Sponsored Project (Public)',
+        operationId: 'getSponsoredProjectPublic',
+        tags: ['Sponsored Projects'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsored project id or slug'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sponsored project details',
+                content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProject')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     #[OA\Get(
         path: "/api/v1/sponsored-projects/{id}",
         description: "Get a specific sponsored project",
@@ -440,6 +513,62 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
     // sponsorship types
 
     #[OA\Get(
+        path: "/api/public/v1/sponsored-projects/{id}/sponsorship-types",
+        description: "Get all sponsorship types for a sponsored project (public endpoint)",
+        summary: 'Read All Sponsorship Types (Public)',
+        operationId: 'getAllSponsorshipTypesPublic',
+        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsored project id or slug'
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value, operators: =@ (starts with), == (equals), @@ (contains), fields: name, slug, is_active',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'name@@type')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'order,name')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of sponsorship types',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedProjectSponsorshipTypesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    #[OA\Get(
         path: "/api/v1/sponsored-projects/{id}/sponsorship-types",
         description: "Get all sponsorship types for a sponsored project",
         summary: 'Read All Sponsorship Types',
@@ -467,7 +596,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 name: 'filter[]',
                 in: 'query',
                 required: false,
-                description: 'Filter expressions in the format field<op>value',
+                description: 'Filter expressions in the format field<op>value, operators: =@ (starts with), == (equals), @@ (contains), fields: name, slug, is_active',
                 style: 'form',
                 explode: true,
                 schema: new OA\Schema(
@@ -558,6 +687,38 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Get(
+        path: "/api/public/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}",
+        description: "Get a specific sponsorship type (public endpoint)",
+        summary: 'Read Sponsorship Type (Public)',
+        operationId: 'getSponsorshipTypePublic',
+        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsored project id or slug'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsorship type id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Sponsorship type details',
+                content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipType')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     #[OA\Get(
         path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}",
         description: "Get a specific sponsorship type",
@@ -834,6 +995,69 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
     //  supporting companies
 
     #[OA\Get(
+        path: "/api/public/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies",
+        description: "Get all supporting companies for a sponsorship type (public endpoint)",
+        summary: 'Read All Supporting Companies (Public)',
+        operationId: 'getSupportingCompaniesPublic',
+        tags: ['Sponsored Projects', 'Supporting Companies'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsored project id or slug'
+            ),
+            new OA\Parameter(
+                name: 'sponsorship_type_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string'),
+                description: 'The sponsorship type id or slug'
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions in the format field<op>value, operators: =@ (starts with), == (equals), @@ (contains), fields: name, slug, is_active',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string', example: 'order,name')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of supporting companies',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSupportingCompaniesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    #[OA\Get(
         path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies",
         description: "Get all supporting companies for a sponsorship type",
         summary: 'Read All Supporting Companies',
@@ -868,7 +1092,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 name: 'filter[]',
                 in: 'query',
                 required: false,
-                description: 'Filter expressions',
+                description: 'Filter expressions in the format field<op>value, operators: =@ (starts with), == (equals), @@ (contains), fields: name, slug, is_active',
                 style: 'form',
                 explode: true,
                 schema: new OA\Schema(
@@ -1440,7 +1664,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 name: 'filter[]',
                 in: 'query',
                 required: false,
-                description: 'Filter expressions in the format field<op>value',
+                description: 'Filter expressions in the format field<op>value, operators: =@ (starts with), == (equals), @@ (contains), fields: name, slug, is_active',
                 style: 'form',
                 explode: true,
                 schema: new OA\Schema(

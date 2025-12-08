@@ -18,8 +18,6 @@ use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cache;
 use models\oauth2\IResourceServerContext;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitRepository;

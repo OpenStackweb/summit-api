@@ -92,8 +92,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
             new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
-            new OA\Parameter(name: "filter", description: "Filter by fields (not_id, name, description, code, group_name, voting_visible, chair_visible, has_parent, has_subtracks, has_proposed_schedule_allowed_locations)", in: "query", required: false, schema: new OA\Schema(type: "string")),
-            new OA\Parameter(name: "order", description: "Order by fields (id, code, name, order)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "filter", description: "Filter by fields: not_id, name, description, code, group_name, voting_visible, chair_visible, has_parent, has_subtracks, has_proposed_schedule_allowed_locations.\n\nValid operands could be: == (equal), =@ (starts with), @@ (contains)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by fields: id, code, name, order", in: "query", required: false, schema: new OA\Schema(type: "string")),
         ],
         tags: ["Summit Tracks"],
         responses: [
@@ -183,8 +183,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
             new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer")),
-            new OA\Parameter(name: "filter", description: "Filter by fields", in: "query", required: false, schema: new OA\Schema(type: "string")),
-            new OA\Parameter(name: "order", description: "Order by fields", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "filter", description: "Filter by fields: not_id, name, description, code, group_name, voting_visible, chair_visible, has_proposed_schedule_allowed_locations, has_parent, has_subtracks.\n\nValid operands could be: == (equal), =@ (starts with), @@ (contains)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by fields: id, code, title, order", in: "query", required: false, schema: new OA\Schema(type: "string")),
         ],
         tags: ["Summit Tracks"],
         responses: [

@@ -30,29 +30,40 @@ class NominationRequestSchema {}
 
 
 #[OA\Schema(
-    schema: "ElectionsList",
-    type: "object",
-    properties: [
-        new OA\Property(
-            property: "data",
-            type: "array",
-            items: new OA\Items(ref: "#/components/schemas/Election")
-        ),
-        new OA\Property(
-            property: "total",
-            type: "integer",
-            example: 10
-        ),
-        new OA\Property(
-            property: "per_page",
-            type: "integer",
-            example: 20
-        ),
-        new OA\Property(
-            property: "current_page",
-            type: "integer",
-            example: 1
-        ),
-    ]
+    schema: "PaginatedElectionsResponse",
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/Election")
+                )
+            ]
+        )]
 )]
-class ElectionsListSchema {}
+class PaginatedElectionsResponseSchema
+{
+}
+
+
+#[OA\Schema(
+    schema: "PaginatedCandidatesResponse",
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/Candidate")
+                )
+            ]
+        )]
+)]
+class PaginatedCandidatesResponseSchema
+{
+}

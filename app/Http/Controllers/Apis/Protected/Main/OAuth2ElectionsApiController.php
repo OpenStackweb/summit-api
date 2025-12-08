@@ -93,14 +93,14 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
                 in: "query",
                 required: false,
                 schema: new OA\Schema(type: "string"),
-                description: "Expand relationships"
+                description: "Expand relationships: "
             ),
         ],
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Elections list retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/ElectionsList")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedElectionsResponse")
             ),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
@@ -152,7 +152,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: "/api/v1/elections/current",
+        path: "/api/public/v1/elections/current",
         operationId: "getCurrentElection",
         description: "Get the current active election",
         tags: ["Elections (Public)"],
@@ -252,7 +252,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: "/api/v1/elections/current/candidates",
+        path: "/api/public/v1/elections/current/candidates",
         operationId: "getCurrentElectionCandidates",
         description: "Get all accepted candidates for the current election. Supports expand parameter to include member and/or election objects",
         tags: ["Elections (Public)"],
@@ -297,7 +297,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Current election candidates retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/CandidatesList")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCandidatesResponse")
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "No current election found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -405,7 +405,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Election candidates retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/CandidatesList")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCandidatesResponse")
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Election not found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -460,7 +460,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: "/api/v1/elections/current/candidates/gold",
+        path: "/api/public/v1/elections/current/candidates/gold",
         operationId: "getCurrentGoldCandidates",
         description: "Get all gold (featured) candidates for the current election. Supports expand parameter to include member and/or election objects",
         tags: ["Elections (Public)"],
@@ -505,7 +505,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Gold candidates retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/CandidatesList")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCandidatesResponse")
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "No current election found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -613,7 +613,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Gold candidates retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/CandidatesList")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCandidatesResponse")
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Election not found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),

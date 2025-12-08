@@ -11,8 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPMultiValueQuestionTemplate;
 use App\Models\Foundation\Summit\Repositories\IRSVPTemplateRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\IRSVPTemplateService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -92,7 +94,20 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Read All RSVP Templates',
         operationId: 'getAllRSVPTemplatesBySummit',
         tags: ['RSVP Templates'],
-        security: [['oauth2' => ['read']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::ReadAllSummitData
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -106,7 +121,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'filter[]',
@@ -154,7 +169,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedRSVPTemplatesResponse')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -256,7 +271,20 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Read RSVP Template',
         operationId: 'getRSVPTemplate',
         tags: ['RSVP Templates'],
-        security: [['oauth2' => ['read']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::ReadAllSummitData
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -270,7 +298,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -301,7 +329,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplate')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -349,7 +377,20 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Read RSVP Template Questions Metadata',
         operationId: 'getRSVPTemplateQuestionsMetadata',
         tags: ['RSVP Templates'],
-        security: [['oauth2' => ['read']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::ReadAllSummitData
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -363,7 +404,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
         ],
         responses: [
@@ -373,7 +414,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestionMetadata')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -390,14 +431,27 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
             $this->rsvp_template_repository->getQuestionsMetadata($summit)
         );
     }
-    
+
     #[OA\Delete(
         path: "/api/v1/summits/{id}/rsvp-templates/{template_id}",
         description: "Delete an RSVP template",
         summary: 'Delete RSVP Template',
         operationId: 'deleteRSVPTemplate',
         tags: ['RSVP Templates'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::ReadAllSummitData
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -411,7 +465,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -427,7 +481,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 description: "RSVP template deleted"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -467,7 +521,21 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Create RSVP Template',
         operationId: 'addRSVPTemplate',
         tags: ['RSVP Templates'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -481,7 +549,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
         ],
         requestBody: new OA\RequestBody(
@@ -495,7 +563,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplate')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -552,7 +620,21 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Update RSVP Template',
         operationId: 'updateRSVPTemplate',
         tags: ['RSVP Templates'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -566,7 +648,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -587,7 +669,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplate')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -649,7 +731,20 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Read RSVP Template Question',
         operationId: 'getRSVPTemplateQuestion',
         tags: ['RSVP Templates', 'RSVP Template Questions'],
-        security: [['oauth2' => ['read']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -663,7 +758,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -687,7 +782,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestion')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -732,7 +827,21 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Create RSVP Template Question',
         operationId: 'addRSVPTemplateQuestion',
         tags: ['RSVP Templates', 'RSVP Template Questions'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -746,7 +855,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -767,7 +876,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestion')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -825,7 +934,21 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Update RSVP Template Question',
         operationId: 'updateRSVPTemplateQuestion',
         tags: ['RSVP Templates', 'RSVP Template Questions'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -839,7 +962,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -867,7 +990,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestion')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -926,7 +1049,21 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Delete RSVP Template Question',
         operationId: 'deleteRSVPTemplateQuestion',
         tags: ['RSVP Templates', 'RSVP Template Questions'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -940,7 +1077,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -963,7 +1100,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 description: "Question deleted"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -1008,7 +1145,20 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Read RSVP Template Question Value',
         operationId: 'getRSVPTemplateQuestionValue',
         tags: ['RSVP Templates', 'RSVP Template Question Values'],
-        security: [['oauth2' => ['read']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1022,7 +1172,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -1053,7 +1203,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestionValue')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -1105,7 +1255,21 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Create RSVP Template Question Value',
         operationId: 'addRSVPTemplateQuestionValue',
         tags: ['RSVP Templates', 'RSVP Template Question Values'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1119,7 +1283,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -1147,7 +1311,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestionValue')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -1206,7 +1370,21 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Update RSVP Template Question Value',
         operationId: 'updateRSVPTemplateQuestionValue',
         tags: ['RSVP Templates', 'RSVP Template Question Values'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1220,7 +1398,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -1255,7 +1433,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestionValue')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -1315,7 +1493,21 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         summary: 'Delete RSVP Template Question Value',
         operationId: 'deleteRSVPTemplateQuestionValue',
         tags: ['RSVP Templates', 'RSVP Template Question Values'],
-        security: [['oauth2' => ['write']]],
+        security: [
+            [
+                'summit_rsvp_templates_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1329,7 +1521,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'The summit id or slug'
+                description: 'The summit id'
             ),
             new OA\Parameter(
                 name: 'template_id',
@@ -1359,7 +1551,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
                 description: "Value deleted"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]

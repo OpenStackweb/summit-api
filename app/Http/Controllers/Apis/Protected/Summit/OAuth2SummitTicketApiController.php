@@ -124,7 +124,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitRegistrationAdmins,
             IGroup::BadgePrinters,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -308,7 +308,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         x: ['required-groups' => [
             IGroup::BadgePrinters,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: true, description: 'Filter by owner_email', schema: new OA\Schema(type: 'string')),
@@ -393,7 +393,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -665,7 +665,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
         ],
@@ -716,7 +716,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
         ],
@@ -806,7 +806,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
         ],
@@ -861,7 +861,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         security: [['summit_tickets_oauth2' => [
             SummitScopes::ReadMyRegistrationOrders,
         ]]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
@@ -891,7 +891,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         security: [['summit_tickets_oauth2' => [
             SummitScopes::ReadMyRegistrationOrders,
         ]]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -1035,7 +1035,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1108,7 +1108,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
@@ -1161,7 +1161,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1215,7 +1215,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1251,7 +1251,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1297,7 +1297,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1343,7 +1343,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitAdministrators,
             IGroup::SummitRegistrationAdmins,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1390,7 +1390,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitRegistrationAdmins,
             IGroup::BadgePrinters,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1438,7 +1438,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitRegistrationAdmins,
             IGroup::BadgePrinters,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1504,7 +1504,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitRegistrationAdmins,
             IGroup::BadgePrinters,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
@@ -1548,7 +1548,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             IGroup::SummitRegistrationAdmins,
             IGroup::BadgePrinters,
         ]],
-        tags: ['tickets'],
+        tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),

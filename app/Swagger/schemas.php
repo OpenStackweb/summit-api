@@ -501,51 +501,35 @@ class RSVPAdminAddRequestSchema
 #[OA\Schema(
     schema: "ExtraQuestionTypeValue",
     description: "Extra Question Type Value",
-    type: "object"
+    type: "object",
+    properties: [
+        new OA\Property(property: "id", type: "integer", format: "int64", example: 1),
+        new OA\Property(property: "value", type: "string", example: "Value 1"),
+        new OA\Property(property: "label", type: "string", example: "Label 1"),
+        new OA\Property(property: "order", type: "integer", format: "int32", example: 1),
+        new OA\Property(property: "question_id", type: "integer", format: "int64", example: 10),
+    ]
 )]
 class ExtraQuestionTypeValue
 {
-    #[OA\Property(property: "id", type: "integer", format: "int64")]
-    public int $id;
-
-    #[OA\Property(property: "value", type: "string")]
-    public string $value;
-
-    #[OA\Property(property: "label", type: "string")]
-    public string $label;
-
-    #[OA\Property(property: "order", type: "integer", format: "int32")]
-    public int $order;
-
-    #[OA\Property(property: "question_id", type: "integer", format: "int64")]
-    public int $question_id;
 }
 
 // SubQuestionRule Schema
 #[OA\Schema(
     schema: "SubQuestionRule",
     description: "Sub Question Rule",
-    type: "object"
+    type: "object",
+    properties: [
+        new OA\Property(property: "id", type: "integer", format: "int64"),
+        new OA\Property(property: "parent_question_id", type: "integer", format: "int64"),
+        new OA\Property(property: "parent_question_value_id", type: "integer", format: "int64"),
+        new OA\Property(property: "sub_question_id", type: "integer", format: "int64"),
+        new OA\Property(property: "visibility", type: "string", enum: ["Visible", "Hidden"]),
+        new OA\Property(property: "logic", type: "string", enum: ["And", "Or"]),
+    ]
 )]
 class SubQuestionRule
 {
-    #[OA\Property(property: "id", type: "integer", format: "int64")]
-    public int $id;
-
-    #[OA\Property(property: "parent_question_id", type: "integer", format: "int64")]
-    public int $parent_question_id;
-
-    #[OA\Property(property: "parent_question_value_id", type: "integer", format: "int64")]
-    public int $parent_question_value_id;
-
-    #[OA\Property(property: "sub_question_id", type: "integer", format: "int64")]
-    public int $sub_question_id;
-
-    #[OA\Property(property: "visibility", type: "string", enum: ["Visible", "Hidden"])]
-    public string $visibility;
-
-    #[OA\Property(property: "logic", type: "string", enum: ["And", "Or"])]
-    public string $logic;
 }
 
 // Legal Documents

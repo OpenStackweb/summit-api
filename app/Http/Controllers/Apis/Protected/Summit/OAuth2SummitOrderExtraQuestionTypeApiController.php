@@ -17,6 +17,7 @@ use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderExtraQuestionTypeRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitOrderExtraQuestionTypeService;
 use libs\utils\HTMLCleaner;
 use models\exceptions\EntityNotFoundException;
@@ -45,6 +46,13 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
 {
 
     use GetAndValidateJsonPayload;
+    use GetAllBySummit;
+    use GetSummitChildElementById;
+    use AddSummitChildElement;
+    use UpdateSummitChildElement;
+    use DeleteSummitChildElement;
+    use RequestProcessor;
+    use ParametrizedGetAll;
 
     /**
      * @var ISummitRepository
@@ -77,19 +85,164 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         $this->repository = $repository;
     }
 
-    use GetAllBySummit;
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/order-extra-questions",
+        operationId: "getAllOrderExtraQuestions",
+        description: "Get all order extra questions for a summit",
+        summary: "Get all order extra questions",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 20),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter by name, type, usage, label, class, has_ticket_types, has_badge_feature_types"
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by id, name, label, order"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Order extra questions retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
+    #[OA\Get(
+        path: "/api/public/v1/summits/{id}/order-extra-questions",
+        operationId: "getAllOrderExtraQuestionsPublic",
+        description: "Get all order extra questions for a summit (public endpoint)",
+        tags: ["Order Extra Questions (Public)"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 20),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter by name, type, usage, label, class, has_ticket_types, has_badge_feature_types"
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by id, name, label, order"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Order extra questions retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
 
-    use GetSummitChildElementById;
-
-    use AddSummitChildElement;
-
-    use UpdateSummitChildElement;
-
-    use DeleteSummitChildElement;
-
-    use RequestProcessor;
-
-    use ParametrizedGetAll;
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/order-extra-questions/{question_id}",
+        operationId: "getOrderExtraQuestion",
+        description: "Get a specific order extra question by ID",
+        summary: "Get order extra question by ID",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ["Order Extra Questions"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "question_id",
+                description: "Question ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Order extra question retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitOrderExtraQuestionType")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Question or Summit not found"),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -99,6 +252,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/metadata",
         operationId: "getOrderExtraQuestionsMetadata",
         description: "Get metadata for order extra questions",
+        summary: "Get metadata for order extra questions",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(
@@ -194,6 +350,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions",
         operationId: "addOrderExtraQuestion",
         description: "Add a new order extra question",
+        summary: "Add a new order extra question",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/SummitOrderExtraQuestionType")
@@ -244,6 +403,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}",
         operationId: "deleteOrderExtraQuestion",
         description: "Delete an order extra question",
+        summary: "Delete an order extra question",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(
@@ -299,6 +461,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}",
         operationId: "updateOrderExtraQuestion",
         description: "Update an order extra question",
+        summary: "Update an order extra question",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/SummitOrderExtraQuestionType")
@@ -351,6 +516,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/values",
         operationId: "addOrderExtraQuestionValue",
         description: "Add a value to an order extra question",
+        summary: "Add a value to an order extra question",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/ExtraQuestionTypeValue")
@@ -416,6 +584,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/values/{value_id}",
         operationId: "updateOrderExtraQuestionValue",
         description: "Update a value of an order extra question",
+        summary: "Update a value of an order extra question",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/ExtraQuestionTypeValue")
@@ -486,6 +657,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/values/{value_id}",
         operationId: "deleteOrderExtraQuestionValue",
         description: "Delete a value from an order extra question",
+        summary: "Delete a value from an order extra question",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(
@@ -537,6 +711,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/seed-defaults",
         operationId: "seedDefaultOrderExtraQuestions",
         description: "Seed default order extra questions from EventBrite",
+        summary: "Seed default order extra questions from EventBrite",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(
@@ -592,6 +769,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules",
         operationId: "getSubQuestionRules",
         description: "Get sub question rules for an order extra question",
+        summary: "Get sub question rules for an order extra question",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(
@@ -658,6 +837,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules",
         operationId: "addSubQuestionRule",
         description: "Add a sub question rule to an order extra question",
+        summary: "Add a sub question rule to an order extra question",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/SubQuestionRule")
@@ -723,6 +905,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}",
         operationId: "updateSubQuestionRule",
         description: "Update a sub question rule",
+        summary: "Update a sub question rule",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/SubQuestionRule")
@@ -797,6 +982,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}",
         operationId: "getSubQuestionRule",
         description: "Get a specific sub question rule",
+        summary: "Get a specific sub question rule",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(
@@ -866,6 +1053,9 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}",
         operationId: "deleteSubQuestionRule",
         description: "Delete a sub question rule",
+        summary: "Delete a sub question rule",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(
@@ -916,6 +1106,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/attendees/me/allowed-extra-questions",
         operationId: "getOwnAttendeeAllowedExtraQuestions",
         description: "Get allowed extra questions for the current user's attendance",
+        summary: "Get allowed extra questions for the current user's attendance",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(
@@ -958,6 +1150,8 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/v1/summits/{id}/attendees/{attendee_id}/allowed-extra-questions",
         operationId: "getAttendeeAllowedExtraQuestions",
         description: "Get allowed extra questions for a specific attendee",
+        summary: "Get allowed extra questions for a specific attendee",
+        security: [['order_extra_questions_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         tags: ["Order Extra Questions"],
         parameters: [
             new OA\Parameter(

@@ -106,7 +106,7 @@ class Candidate extends SilverstripeBaseModel
         parent::__construct();
         $this->nominations = new ArrayCollection();
         $this->member = $member;
-        if(!$member->isFoundationMember())
+        if(!$member->isIndividualMember())
             throw new ValidationException("Invalid Candidate.");
 
         $this->election = $election;

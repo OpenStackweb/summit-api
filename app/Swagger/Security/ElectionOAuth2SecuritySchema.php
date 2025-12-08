@@ -23,4 +23,4 @@ use OpenApi\Attributes as OA;
         ],
     )
 ]
-class ElectionOAuth2Security {}
+class ElectionOAuth2SecuritySchema {}

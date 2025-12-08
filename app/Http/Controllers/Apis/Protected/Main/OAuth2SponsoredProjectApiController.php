@@ -151,7 +151,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         description: "Get all sponsored projects (public endpoint)",
         summary: 'Read All Sponsored Projects (Public)',
         operationId: 'getAllSponsoredProjectsPublic',
-        tags: ['Sponsored Projects'],
+        tags: ['Sponsored Projects (Public)'],
         parameters: [
             new OA\Parameter(
                 name: 'filter[]',
@@ -344,7 +344,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         description: "Get a specific sponsored project (public endpoint)",
         summary: 'Read Sponsored Project (Public)',
         operationId: 'getSponsoredProjectPublic',
-        tags: ['Sponsored Projects'],
+        tags: ['Sponsored Projects (Public)'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -517,7 +517,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         description: "Get all sponsorship types for a sponsored project (public endpoint)",
         summary: 'Read All Sponsorship Types (Public)',
         operationId: 'getAllSponsorshipTypesPublic',
-        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        tags: ['Sponsored Projects (Public)', 'Sponsorship Types (Public)'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -692,7 +692,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         description: "Get a specific sponsorship type (public endpoint)",
         summary: 'Read Sponsorship Type (Public)',
         operationId: 'getSponsorshipTypePublic',
-        tags: ['Sponsored Projects', 'Sponsorship Types'],
+        tags: ['Sponsored Projects (Public)', 'Sponsorship Types (Public)'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -999,7 +999,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         description: "Get all supporting companies for a sponsorship type (public endpoint)",
         summary: 'Read All Supporting Companies (Public)',
         operationId: 'getSupportingCompaniesPublic',
-        tags: ['Sponsored Projects', 'Supporting Companies'],
+        tags: ['Sponsored Projects (Public)', 'Supporting Companies (Public)'],
         parameters: [
             new OA\Parameter(
                 name: 'id',

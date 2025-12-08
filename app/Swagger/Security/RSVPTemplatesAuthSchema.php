@@ -6,7 +6,7 @@ use App\Security\SummitScopes;
 use OpenApi\Attributes as OA;
 
 #[OA\SecurityScheme(
-    type: 'rsvp_templates_oauth2',
+    type: 'oauth2',
     securityScheme: 'summit_rsvp_templates_oauth2',
     flows: [
         new OA\Flow(

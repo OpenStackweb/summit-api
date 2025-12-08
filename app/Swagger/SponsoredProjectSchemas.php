@@ -64,3 +64,76 @@ class PaginatedProjectSponsorshipTypesResponseSchema {}
 )]
 class PaginatedSupportingCompaniesResponseSchema {}
 
+
+
+#[OA\Schema(
+    schema: 'SponsoredProjectRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', description: 'Project name'),
+        new OA\Property(property: 'description', type: 'string', description: 'Project description'),
+        new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the project is active'),
+    ]
+)]
+class SponsoredProjectRequestSchema {}
+
+
+#[OA\Schema(
+    schema: 'ProjectSponsorshipTypeCreateRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', description: 'Sponsorship type name'),
+        new OA\Property(property: 'description', type: 'string', description: 'Sponsorship type description'),
+        new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the sponsorship type is active'),
+        new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+    ]
+)]
+class ProjectSponsorshipTypeCreateRequestSchema {}
+
+#[OA\Schema(
+    schema: 'ProjectSponsorshipTypeUpdateRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', description: 'Sponsorship type name'),
+        new OA\Property(property: 'description', type: 'string', description: 'Sponsorship type description'),
+        new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the sponsorship type is active'),
+        new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+    ]
+)]
+class ProjectSponsorshipTypeUpdateRequestSchema {}
+
+#[OA\Schema(
+    schema: 'AddSupportingCompanyRequest',
+    type: 'object',
+    required: ['company_id'],
+    properties: [
+        new OA\Property(property: 'company_id', type: 'integer', description: 'The company id'),
+        new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+    ]
+)]
+class AddSupportingCompanyRequestSchema {}
+
+#[OA\Schema(
+    schema: 'UpdateSupportingCompanyRequest',
+    type: 'object',
+    required: ['order'],
+    properties: [
+        new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+    ]
+)]
+class UpdateSupportingCompanyRequestSchema {}
+
+#[OA\Schema(
+    schema: 'UploadSponsoredProjectLogoRequest',
+    type: 'object',
+    required: ['file'],
+    properties: [
+        new OA\Property(
+            property: 'file',
+            type: 'string',
+            format: 'binary',
+            description: 'The logo file to upload'
+        ),
+    ]
+)]
+class UploadSponsoredProjectLogoRequestSchema {}

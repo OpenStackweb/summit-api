@@ -305,14 +305,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ]]],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                type: 'object',
-                properties: [
-                    new OA\Property(property: 'name', type: 'string', description: 'Project name'),
-                    new OA\Property(property: 'description', type: 'string', description: 'Project description'),
-                    new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the project is active'),
-                ]
-            )
+            content: new OA\JsonContent(ref:'#/components/schemas/SponsoredProjectRequest')
         ),
         parameters: [
             new OA\Parameter(
@@ -422,14 +415,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ]]],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                type: 'object',
-                properties: [
-                    new OA\Property(property: 'name', type: 'string', description: 'Project name'),
-                    new OA\Property(property: 'description', type: 'string', description: 'Project description'),
-                    new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the project is active'),
-                ]
-            )
+            content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProjectRequest')
         ),
         parameters: [
             new OA\Parameter(
@@ -790,15 +776,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ]]],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                type: 'object',
-                properties: [
-                    new OA\Property(property: 'name', type: 'string', description: 'Sponsorship type name'),
-                    new OA\Property(property: 'description', type: 'string', description: 'Sponsorship type description'),
-                    new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the sponsorship type is active'),
-                    new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
-                ]
-            )
+            content: new OA\JsonContent(ref:'#/components/schemas/ProjectSponsorshipTypeCreateRequest')
         ),
         parameters: [
             new OA\Parameter(
@@ -863,15 +841,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ]]],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                type: 'object',
-                properties: [
-                    new OA\Property(property: 'name', type: 'string', description: 'Sponsorship type name'),
-                    new OA\Property(property: 'description', type: 'string', description: 'Sponsorship type description'),
-                    new OA\Property(property: 'is_active', type: 'boolean', description: 'Whether the sponsorship type is active'),
-                    new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
-                ]
-            )
+            content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipTypeUpdateRequest')
         ),
         parameters: [
             new OA\Parameter(
@@ -1197,14 +1167,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ]]],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                type: 'object',
-                required: ['company_id'],
-                properties: [
-                    new OA\Property(property: 'company_id', type: 'integer', description: 'The company id'),
-                    new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
-                ]
-            )
+            content: new OA\JsonContent(ref: '#/components/schemas/AddSupportingCompanyRequest')
         ),
         parameters: [
             new OA\Parameter(
@@ -1284,12 +1247,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ]]],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                type: 'object',
-                properties: [
-                    new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
-                ]
-            )
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateSupportingCompanyRequest')
         ),
         parameters: [
             new OA\Parameter(
@@ -1517,18 +1475,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             required: true,
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
-                schema: new OA\Schema(
-                    type: 'object',
-                    required: ['file'],
-                    properties: [
-                        new OA\Property(
-                            property: 'file',
-                            type: 'string',
-                            format: 'binary',
-                            description: 'The logo file to upload'
-                        ),
-                    ]
-                )
+                schema: new OA\Schema(ref: '#/components/schemas/UploadSponsoredProjectLogoRequest')
             )
         ),
         parameters: [

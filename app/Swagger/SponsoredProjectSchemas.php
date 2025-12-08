@@ -63,3 +63,4 @@ class PaginatedProjectSponsorshipTypesResponseSchema {}
     ]
 )]
 class PaginatedSupportingCompaniesResponseSchema {}
+

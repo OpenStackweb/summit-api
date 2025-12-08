@@ -2365,7 +2365,7 @@ SQL;
         if (!$election->isNominationsOpen())
             throw new ValidationException("Nomination Period is closed for current election.");
 
-        if (!$candidate->isFoundationMember())
+        if (!$candidate->isIndividualMember())
             throw new ValidationException("Candidate is not valid.");
 
         $criteria = Criteria::create()

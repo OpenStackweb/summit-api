@@ -1,11 +1,10 @@
-<?php 
+<?php
 namespace App\Swagger\schemas;
 
 use App\Security\SummitScopes;
 use OpenApi\Attributes as OA;
 
-#[
-    OA\SecurityScheme(
+#[OA\SecurityScheme(
         type: 'oauth2',
         securityScheme: 'summit_bookable_rooms_attribute_oauth2',
         flows: [

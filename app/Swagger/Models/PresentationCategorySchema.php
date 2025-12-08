@@ -5,7 +5,7 @@ use OpenApi\Attributes as OA;
 
 #[OA\Schema(
     schema: "PresentationCategory",
-    description: "Summit Track/Presentation Category",
+    description: "Summit Track/Presentation Category. Expandable relations: , allowed_tags, allowed_access_levels, extra_questions, proposed_schedule_allowed_locations, parent, subtracks",
     type: "object",
     properties: [
         new OA\Property(property: "id", description: "Track ID", type: "integer", format: "int64"),
@@ -29,4 +29,4 @@ use OpenApi\Attributes as OA;
         ),
     ]
 )]
-class PresentationCategorySchemas {}
+class PresentationCategorySchema {}

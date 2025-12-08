@@ -74,7 +74,7 @@ final class OAuth2SummitSubmittersApiController
         path: "/api/v1/summits/{id}/submitters",
         summary: "Get all submitters for a summit",
         operationId: "getSubmittersBySummit",
-        tags: ["SummitSubmitters"],
+        tags: ["Summit Submitters"],
         security: [['summit_submitters_oauth2' => [
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
@@ -229,7 +229,7 @@ final class OAuth2SummitSubmittersApiController
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
         summary: "Get all submitters for a summit in CSV format",
         operationId: "getSubmittersCSV",
-        tags: ["SummitSubmitters"],
+        tags: ["Summit Submitters"],
         security: [['summit_submitters_oauth2' => [
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
@@ -378,7 +378,7 @@ final class OAuth2SummitSubmittersApiController
         description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRegistrationAdmins,
         summary: "Send bulk emails to submitters",
         operationId: "sendSubmittersBulkEmails",
-        tags: ["SummitSubmitters"],
+        tags: ["Summit Submitters"],
         security: [['summit_submitters_oauth2' => [
             SummitScopes::WriteSummitData,
             SummitScopes::WriteSpeakersData,

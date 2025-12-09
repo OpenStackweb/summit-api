@@ -9,6 +9,7 @@ use App\Security\RSVPInvitationsScopes;
 use App\Security\SummitScopes;
 use models\summit\RSVP;
 use OpenApi\Attributes as OA;
+use function Laravel\Prompts\form;
 
 #[OA\Schema(
     schema: 'Owner',

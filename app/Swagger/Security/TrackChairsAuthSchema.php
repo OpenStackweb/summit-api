@@ -1,12 +1,11 @@
-<?php 
-namespace App\Swagger\schemas;
+<?php
 
+namespace App\Swagger\schemas;
 
 use App\Security\SummitScopes;
 use OpenApi\Attributes as OA;
 
-#[
-    OA\SecurityScheme(
+#[OA\SecurityScheme(
         type: 'oauth2',
         securityScheme: 'summit_track_chairs_oauth2',
         flows: [

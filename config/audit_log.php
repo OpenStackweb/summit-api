@@ -14,16 +14,20 @@ return [
             'enabled' => true,
             'strategies' => [
                 [
-                    'route' => 'api/v1/summits/{id}/events',
+                    'route' => 'POST|api/v1/summits/{id}/events',
                     'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationEventApiAuditLogFormatter::class,
                 ],
                 [
-                    'route' => 'api/v1/summits/{id}/presentations',
+                    'route' => 'PUT|api/v1/summits/{id}/events',
                     'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationEventApiAuditLogFormatter::class,
                 ],
                 [
-                    'route' => 'api/v1/summits/{id}/presentations/{presentation_id}',
-                    'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationEventApiAuditLogFormatter::class,
+                    'route' => 'POST|api/v1/summits/{id}/presentations',
+                    'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationSubmissionAuditLogFormatter::class,
+                ],
+                [
+                    'route' => 'PUT|api/v1/summits/{id}/presentations/{presentation_id}',
+                    'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationSubmissionAuditLogFormatter::class,
                 ],
             ]
         ],

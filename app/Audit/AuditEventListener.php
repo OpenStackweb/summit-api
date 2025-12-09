@@ -16,6 +16,7 @@ use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Class AuditEventListener
@@ -97,7 +98,11 @@ class AuditEventListener
         //$ui = app()->bound('ui.context') ? app('ui.context') : [];
 
         $req = request();
-
+        
+        $route = Route::getRoutes()->match(request());
+        $method = isset($route->methods[0]) ? $route->methods[0] : null;
+        $rawRoute = $method."|".$route->uri;
+        
         return new AuditContext(
             userId:        $member?->getId(),
             userEmail:     $member?->getEmail(),
@@ -109,6 +114,7 @@ class AuditEventListener
             httpMethod:    $req?->method(),
             clientIp:      $req?->ip(),
             userAgent:     $req?->userAgent(),
+            rawRoute:      $rawRoute
         );
     }
 }

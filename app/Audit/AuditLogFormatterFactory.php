@@ -115,12 +115,8 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
         return true;
     }
 
-    private function routeMatches(string $pattern, string $actual_route): bool
+    private function routeMatches(string $route, string $actual_route): bool
     {
-        $normalized_pattern = preg_replace('/\{[a-zA-Z_]+\}/', '\d+', $pattern);
-        $regex = '/^' . preg_quote($normalized_pattern, '/') . '$/';
-        $regex = str_replace('\\\d+', '\d+', $regex);
-        
-        return preg_match($regex, $actual_route) === 1;
+        return strcmp($actual_route, $route) === 0;
     }
 }

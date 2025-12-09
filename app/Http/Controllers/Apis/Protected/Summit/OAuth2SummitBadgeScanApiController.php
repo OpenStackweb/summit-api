@@ -154,12 +154,12 @@ final class OAuth2SummitBadgeScanApiController
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/user-info-grants/me",
         summary: "Add user info grant for current user",
         operationId: "addUserInfoWithSponsor",
-        tags: ["SponsorUserInfoGrants"],
+        tags: ["Badge Scans", "Sponsor User Info Grants"],
         security: [['summit_badge_scan_oauth2' => [
             SummitScopes::WriteMyBadgeScan,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "sponsor_id", description: "Sponsor ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
@@ -211,12 +211,12 @@ final class OAuth2SummitBadgeScanApiController
         path: "/api/v1/summits/{id}/badge-scans/me",
         summary: "Get all my badge scans for a summit",
         operationId: "getMyBadgeScans",
-        tags: ['BadgeScans'],
+        tags: ['Badge Scans'],
         security: [['summit_badge_scan_oauth2' => [
             SummitScopes::ReadMyBadgeScan,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
             new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
             new OA\Parameter(name: "filter", description: "Filter query", in: "query", required: false, schema: new OA\Schema(type: "string")),
@@ -290,7 +290,7 @@ final class OAuth2SummitBadgeScanApiController
         path: "/api/v1/summits/{id}/badge-scans",
         summary: "Get all badge scans for a summit",
         operationId: "getAllBadgeScans",
-        tags: ['BadgeScans'],
+        tags: ['Badge Scans'],
         x: [
             'required-groups' => [
                 IGroup::SummitAdministrators,
@@ -305,7 +305,7 @@ final class OAuth2SummitBadgeScanApiController
             SummitScopes::ReadBadgeScan,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
             new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
             new OA\Parameter(name: "filter", description: "Filter query", in: "query", required: false, schema: new OA\Schema(type: "string")),
@@ -408,7 +408,7 @@ final class OAuth2SummitBadgeScanApiController
         path: "/api/v1/summits/{id}/badge-scans/csv",
         summary: "Get all badge scans for a summit in CSV format",
         operationId: "getAllBadgeScansCSV",
-        tags: ['BadgeScans'],
+        tags: ['Badge Scans'],
         x: [
             'required-groups' => [
                 IGroup::SummitAdministrators,
@@ -423,7 +423,7 @@ final class OAuth2SummitBadgeScanApiController
             SummitScopes::ReadBadgeScan,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "filter", description: "Filter query", in: "query", required: false, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "order", description: "Order by", in: "query", required: false, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "columns", description: "Columns to export (comma separated)", in: "query", required: false, schema: new OA\Schema(type: "string")),
@@ -579,7 +579,7 @@ final class OAuth2SummitBadgeScanApiController
         path: "/api/v1/summits/{id}/badge-scans",
         summary: "Add a badge scan",
         operationId: "addBadgeScan",
-        tags: ['BadgeScans'],
+        tags: ['Badge Scans'],
         x: [
             'required-groups' => [
                 IGroup::SummitAdministrators,
@@ -593,7 +593,7 @@ final class OAuth2SummitBadgeScanApiController
             SummitScopes::WriteBadgeScan,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -625,13 +625,13 @@ final class OAuth2SummitBadgeScanApiController
         path: "/api/v1/summits/{id}/badge-scans/checkin",
         summary: "Check in an attendee using QR code",
         operationId: "checkInBadgeScan",
-        tags: ['BadgeScans'],
+        tags: ['Badge Scans'],
         security: [['summit_badge_scan_oauth2' => [
             SummitScopes::WriteBadgeScan,
             SummitScopes::WriteSummitData,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -679,7 +679,7 @@ final class OAuth2SummitBadgeScanApiController
         path: "/api/v1/summits/{id}/badge-scans/{scan_id}",
         summary: "Get a badge scan by id",
         operationId: "getBadgeScan",
-        tags: ['BadgeScans'],
+        tags: ['Badge Scans'],
         x: [
             'required-groups' => [
                 IGroup::SummitAdministrators,
@@ -695,7 +695,7 @@ final class OAuth2SummitBadgeScanApiController
             SummitScopes::ReadMyBadgeScan,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "scan_id", description: "Badge scan ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
@@ -723,7 +723,7 @@ final class OAuth2SummitBadgeScanApiController
         path: "/api/v1/summits/{id}/badge-scans/{scan_id}",
         summary: "Update a badge scan",
         operationId: "updateBadgeScan",
-        tags: ['BadgeScans'],
+        tags: ['Badge Scans'],
         x: [
             'required-groups' => [
                 IGroup::SummitAdministrators,
@@ -738,7 +738,7 @@ final class OAuth2SummitBadgeScanApiController
             SummitScopes::WriteBadgeScan,
         ]]],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "scan_id", description: "Badge scan ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         requestBody: new OA\RequestBody(

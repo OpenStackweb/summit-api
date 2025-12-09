@@ -519,4 +519,3 @@ class OrganizationCreateRequestSchema
     ]
 )]
 class PaginatedUserStoriesResponseSchema {}
-

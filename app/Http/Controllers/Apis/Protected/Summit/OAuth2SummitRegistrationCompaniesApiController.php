@@ -72,7 +72,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadSummitData,
         ]]],
-        tags: ["RegistrationCompanies"],
+        tags: ["Registration Companies"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
@@ -150,7 +150,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         security: [["registration_companies_oauth2" => [
             SummitScopes::WriteSummitData,
         ]]],
-        tags: ["RegistrationCompanies"],
+        tags: ["Registration Companies"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "company_id", description: "Company ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
@@ -187,7 +187,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         security: [["registration_companies_oauth2" => [
             SummitScopes::WriteSummitData,
         ]]],
-        tags: ["RegistrationCompanies"],
+        tags: ["Registration Companies"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "company_id", description: "Company ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
@@ -224,7 +224,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         security: [["registration_companies_oauth2" => [
             SummitScopes::WriteSummitData,
         ]]],
-        tags: ["RegistrationCompanies"],
+        tags: ["Registration Companies"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
         ],

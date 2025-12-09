@@ -56,13 +56,13 @@ final class ElectionService
     {
         return $this->tx_service->transaction(function() use($candidate, $election, $payload){
 
-            if(!$candidate->isFoundationMember())
+            if(!$candidate->isIndividualMember())
                 throw new ValidationException("Candidate is not valid.");
 
             $candidateProfile = $election->getCandidancyFor($candidate);
 
             if(!$election->isNominationsOpen() && !is_null($candidateProfile) && !$candidateProfile->isGoldMember()){
-                throw new ValidationException("Eleciton Nominations are closed.");
+                throw new ValidationException("Election Nominations are closed.");
             }
 
             if(!$election->isOpen()){

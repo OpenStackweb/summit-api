@@ -109,7 +109,7 @@ class Candidate extends SilverstripeBaseModel
         $this->nominations = new ArrayCollection();
         $this->member = $member;
         if(!$member->isIndividualMember())
-            throw new ValidationException("Invalid Candidate.");
+            throw new ValidationException("Candidate is not valid.");
 
         $this->election = $election;
         $this->relationship_to_openstack = null;

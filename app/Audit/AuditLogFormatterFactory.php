@@ -108,7 +108,7 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
 
     private function matchesStrategy(array $strategy, AuditContext $ctx): bool
     {
-        if (isset($strategy['route']) && !$this->routeMatches($strategy['route'], $ctx->route)) {
+        if (isset($strategy['route']) && !$this->routeMatches($strategy['route'], $ctx->rawRoute)) {
             return false;
         }
 

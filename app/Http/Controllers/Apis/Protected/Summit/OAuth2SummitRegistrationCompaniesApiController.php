@@ -68,10 +68,14 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         path: "/api/v1/summits/{id}/registration-companies",
         summary: "Get all registration companies for a summit",
         description: "Returns list of companies that have registered attendees for this summit",
-        security: [["registration_companies_oauth2" => [
-            SummitScopes::ReadAllSummitData,
-            SummitScopes::ReadSummitData,
-        ]]],
+        security: [
+            [
+                "registration_companies_oauth2" => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
         tags: ["Registration Companies"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
@@ -89,7 +93,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -147,9 +151,13 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [["registration_companies_oauth2" => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                "registration_companies_oauth2" => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ["Registration Companies"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
@@ -160,7 +168,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -184,9 +192,13 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [["registration_companies_oauth2" => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                "registration_companies_oauth2" => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ["Registration Companies"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
@@ -197,7 +209,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -221,9 +233,13 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        security: [["registration_companies_oauth2" => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                "registration_companies_oauth2" => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         tags: ["Registration Companies"],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
@@ -240,7 +256,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]

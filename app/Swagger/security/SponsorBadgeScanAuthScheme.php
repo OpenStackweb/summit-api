@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Swagger\security;
+namespace App\Swagger\schemas;
 
 use App\Security\SummitScopes;
 use OpenApi\Attributes as OA;
@@ -18,10 +18,11 @@ use OpenApi\Attributes as OA;
                 scopes: [
                     SummitScopes::ReadBadgeScan => 'Read Badge Scan Data',
                     SummitScopes::ReadMyBadgeScan => 'Read My Badge Scan Data',
-                    SummitScopes::WriteBadgeScan => 'Write Badge Scan Data',
                     SummitScopes::ReadBadgeScanValidate => 'Validate Badge Scan',
                     SummitScopes::ReadAllSummitData => 'Read All Summit Data',
                     SummitScopes::WriteSummitData => 'Write Summit Data',
+                    SummitScopes::WriteBadgeScan => 'Write Badge Scan Data',
+                    SummitScopes::WriteMyBadgeScan => 'Write My Badge Scan Data',
                 ],
             ),
         ],

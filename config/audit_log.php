@@ -18,7 +18,7 @@ return [
                     'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationEventApiAuditLogFormatter::class,
                 ],
                 [
-                    'route' => 'PUT|api/v1/summits/{id}/events',
+                    'route' => 'PUT|api/v1/summits/{id}/events/{event_id}',
                     'formatter' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationEventApiAuditLogFormatter::class,
                 ],
                 [

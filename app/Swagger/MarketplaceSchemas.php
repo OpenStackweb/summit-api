@@ -43,6 +43,9 @@ class PaginatedConsultantsResponseSchema
 {
 }
 
+
+
+
 #[OA\Schema(
     schema: 'PaginatedMarketplaceDistributionResponseSchema',
     allOf: [

@@ -75,13 +75,18 @@ final class OAuth2SummitTrackChairsApiController
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/track-chairs",
+        operationId: "getAllTrackChairs",
         summary: "Get all track chairs for a summit",
         description: "Returns different data based on user role: Public view for regular users, Admin view for admins/track chairs",
-        security: [['summit_track_chairs_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
-        tags: ["TrackChairs"],
+        tags: ["Track Chairs"],
+        security: [
+            [
+                'summit_track_chairs_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -92,7 +97,7 @@ final class OAuth2SummitTrackChairsApiController
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
             new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
             new OA\Parameter(name: "filter", description: "Filter query (member_first_name=@value, member_last_name=@value, member_email=@value, member_id==value, track_id==value)", in: "query", required: false, schema: new OA\Schema(type: "string")),
@@ -109,7 +114,7 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -175,12 +180,17 @@ final class OAuth2SummitTrackChairsApiController
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/track-chairs/csv",
+        operationId: "getAllTrackChairsCSV",
         summary: "Get all track chairs for a summit in CSV format",
-        security: [['summit_track_chairs_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
-        tags: ["TrackChairs"],
+        tags: ["Track Chairs"],
+        security: [
+            [
+                'summit_track_chairs_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -190,7 +200,7 @@ final class OAuth2SummitTrackChairsApiController
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "filter", description: "Filter query", in: "query", required: false, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "order", description: "Order by", in: "query", required: false, schema: new OA\Schema(type: "string")),
             new OA\Parameter(
@@ -214,7 +224,7 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -377,11 +387,16 @@ final class OAuth2SummitTrackChairsApiController
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/track-chairs",
+        operationId: "addTrackChair",
         summary: "Add a track chair to a summit",
-        security: [['summit_track_chairs_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        tags: ["TrackChairs"],
+        tags: ["Track Chairs"],
+        security: [
+            [
+                'summit_track_chairs_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -391,7 +406,7 @@ final class OAuth2SummitTrackChairsApiController
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
         ],
         requestBody: new OA\RequestBody(
             required: true,
@@ -406,7 +421,7 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -421,22 +436,28 @@ final class OAuth2SummitTrackChairsApiController
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}",
+        operationId: "getTrackChair",
         summary: "Get a track chair by id",
-        security: [['summit_track_chairs_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
-        tags: ["TrackChairs"],
+        tags: ["Track Chairs"],
+        security: [
+            [
+                'summit_track_chairs_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
-                IGroup::TrackChairsAdmins
+                IGroup::TrackChairsAdmins,
+                IGroup::TrackChairs
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "track_chair_id", description: "Track chair ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "expand", description: "Expand relations (categories, member, summit)", in: "query", required: false, schema: new OA\Schema(type: "string")),
         ],
@@ -454,7 +475,7 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -468,11 +489,16 @@ final class OAuth2SummitTrackChairsApiController
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}",
+        operationId: "updateTrackChair",
         summary: "Update a track chair's categories",
-        security: [['summit_track_chairs_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        tags: ["TrackChairs"],
+        tags: ["Track Chairs"],
+        security: [
+            [
+                'summit_track_chairs_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -482,7 +508,7 @@ final class OAuth2SummitTrackChairsApiController
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "track_chair_id", description: "Track chair ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         requestBody: new OA\RequestBody(
@@ -498,7 +524,7 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -513,11 +539,16 @@ final class OAuth2SummitTrackChairsApiController
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}",
+        operationId: "deleteTrackChair",
         summary: "Delete a track chair",
-        security: [['summit_track_chairs_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        tags: ["TrackChairs"],
+        tags: ["Track Chairs"],
+        security: [
+            [
+                'summit_track_chairs_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -527,7 +558,7 @@ final class OAuth2SummitTrackChairsApiController
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "track_chair_id", description: "Track chair ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
@@ -535,7 +566,7 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -549,11 +580,16 @@ final class OAuth2SummitTrackChairsApiController
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}/categories/{track_id}",
+        operationId: "addCategoryToTrackChair",
         summary: "Add a track/category to a track chair",
-        security: [['summit_track_chairs_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        tags: ["TrackChairs"],
+        tags: ["Track Chairs"],
+        security: [
+            [
+                'summit_track_chairs_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -563,7 +599,7 @@ final class OAuth2SummitTrackChairsApiController
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "track_chair_id", description: "Track chair ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "track_id", description: "Track/Category ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
@@ -576,7 +612,7 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -612,11 +648,16 @@ final class OAuth2SummitTrackChairsApiController
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}/categories/{track_id}",
+        operationId: "removeCategoryFromTrackChair",
         summary: "Remove a track/category from a track chair",
-        security: [['summit_track_chairs_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
-        tags: ["TrackChairs"],
+        tags: ["Track Chairs"],
+        security: [
+            [
+                'summit_track_chairs_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -626,7 +667,7 @@ final class OAuth2SummitTrackChairsApiController
             ]
         ],
         parameters: [
-            new OA\Parameter(name: "id", description: "Summit ID or slug", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "track_chair_id", description: "Track chair ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "track_id", description: "Track/Category ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
@@ -639,7 +680,7 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]

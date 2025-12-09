@@ -14,17 +14,15 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'created', type: 'integer', description: 'Unix timestamp'),
         new OA\Property(property: 'last_edited', type: 'integer', description: 'Unix timestamp'),
         new OA\Property(
-            property: 'categories', 
-            type: 'array', 
-            items: new OA\Items(type: ['integer', 'PresentationCategory']), 
-            description: 'Array of category IDs by default. Use expand=categories to get full objects. Use relations=categories to include'
+            property: 'categories',
+            type: 'array',
+            items: new OA\Items(type: 'integer'),
+            description: "Array of PresentationCategory ID, Use expand=categories to get full objects"
         ),
-    ],
-    anyOf: [
         new OA\Property(property: 'summit_id', type: 'integer', example: 10, description: 'Summit ID when not expanded'),
-        new OA\Property(property: 'summit', type: 'Summit', description: 'Full Summit object when expanded (expand=summit)'),
+        new OA\Property(property: 'summit', ref: '#/components/schemas/Summit', description: 'Full Summit object when expanded (expand=summit)'),
         new OA\Property(property: 'member_id', type: 'integer', example: 123, description: 'Member ID when not expanded'),
-        new OA\Property(property: 'member', type: 'Member', description: 'Full Member object (without email) when expanded (expand=member)'),
+        new OA\Property(property: 'member', ref: '#/components/schemas/Member', description: 'Full Member object (without email) when expanded (expand=member)'),
     ]
 )]
 class SummitTrackChairSchema {}
@@ -39,17 +37,15 @@ class SummitTrackChairSchema {}
         new OA\Property(property: 'created', type: 'integer', description: 'Unix timestamp'),
         new OA\Property(property: 'last_edited', type: 'integer', description: 'Unix timestamp'),
         new OA\Property(
-            property: 'categories', 
-            type: 'array', 
-            items: new OA\Items(type: ['integer', 'PresentationCategory']), 
-            description: 'Array of category IDs by default. Use expand=categories to get full objects. Use relations=categories to include'
+            property: 'categories',
+            type: 'array',
+            items: new OA\Items(type: 'integer'),
+            description: "Array of PresentationCategory ID, Use expand=categories to get full objects"
         ),
-    ],
-    anyOf: [
         new OA\Property(property: 'summit_id', type: 'integer', example: 10, description: 'Summit ID when not expanded'),
-        new OA\Property(property: 'summit', type: 'Summit', description: 'Full Summit object when expanded (expand=summit)'),
+        new OA\Property(property: 'summit', ref: '#/components/schemas/Summit', description: 'Full Summit object when expanded (expand=summit)'),
         new OA\Property(property: 'member_id', type: 'integer', example: 123, description: 'Member ID when not expanded'),
-        new OA\Property(property: 'member', type: 'AdminMember', description: 'Full Member object (WITH email) when expanded (expand=member)'),
+        new OA\Property(property: 'member', ref: '#/components/schemas/AdminMember', description: 'Full Member object (WITH email) when expanded (expand=member)'),
     ]
 )]
 class AdminSummitTrackChairSchema {}

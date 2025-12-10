@@ -31,56 +31,22 @@ use OpenApi\Attributes as OA;
     ]
 )]
 class PaginatedTrackTagGroupAllowedTagsResponseSchema {}
+
 #[OA\Schema(
     schema: "TrackTagGroup",
     type: "object",
     required: ["id", "name", "label", "is_mandatory", "summit_id"],
     properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', example: 1),
+        new OA\Property(property: 'last_edited', type: 'integer', example: 1),
+        new OA\Property(property: "name", type: "string", maxLength: 50, description: "Track tag group name", example: "Difficulty Level"),
+        new OA\Property(property: "label", type: "string", maxLength: 50, description: "Display label for the tag group", example: "Difficulty"),
+        new OA\Property(property: "is_mandatory", type: "boolean", description: "Whether this tag group is mandatory", example: false),
+        new OA\Property(property: "order", type: "integer", description: "Display order of the tag group", example: 1),
+        new OA\Property(property: "summit_id", type: "integer", format: "int64", description: "Summit ID this tag group belongs to", example: 1),
         new OA\Property(
-            property: "id",
-            type: "integer",
-            format: "int64",
-            description: "Track tag group ID",
-            example: 1
-        ),
-        new OA\Property(
-            property: "name",
-            type: "string",
-            maxLength: 50,
-            description: "Track tag group name",
-            example: "Difficulty Level"
-        ),
-        new OA\Property(
-            property: "label",
-            type: "string",
-            maxLength: 50,
-            description: "Display label for the tag group",
-            example: "Difficulty"
-        ),
-        new OA\Property(
-            property: "is_mandatory",
-            type: "boolean",
-            description: "Whether this tag group is mandatory",
-            example: false
-        ),
-        new OA\Property(
-            property: "order",
-            type: "integer",
-            description: "Display order of the tag group",
-            example: 1
-        ),
-        new OA\Property(
-            property: "summit_id",
-            type: "integer",
-            format: "int64",
-            description: "Summit ID this tag group belongs to",
-            example: 1
-        ),
-        new OA\Property(
-            property: "allowed_tags",
-            type: "array",
-            description: "Array of allowed tag IDs. Use expand=allowed_tags to get full TrackTagGroupAllowedTag objects",
-            items: new OA\Items(
+            property: "allowed_tags", type: "array", description: "Array of allowed tag IDs. Use expand=allowed_tags to get full TrackTagGroupAllowedTag objects", items: new OA\Items(
                 oneOf: [
                     new OA\Schema(type: "integer", format: "int64", example: 1),
                     new OA\Schema(ref: "#/components/schemas/TrackTagGroupAllowedTag")
@@ -150,28 +116,17 @@ class TrackTagGroupAllowedTagSchema {}
 // TrackTagGroupsList schema
 #[OA\Schema(
     schema: "TrackTagGroupsList",
-    type: "object",
-    properties: [
-        new OA\Property(
-            property: "data",
-            type: "array",
-            items: new OA\Items(ref: "#/components/schemas/TrackTagGroup")
-        ),
-        new OA\Property(
-            property: "total",
-            type: "integer",
-            example: 5
-        ),
-        new OA\Property(
-            property: "per_page",
-            type: "integer",
-            example: 5
-        ),
-        new OA\Property(
-            property: "current_page",
-            type: "integer",
-            example: 1
-        ),
+    allOf: [
+        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+        new OA\Schema(
+            type: "object",
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/TrackTagGroup")
+                ),
+            ]),
     ]
 )]
 class TrackTagGroupsListSchema {}

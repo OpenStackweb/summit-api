@@ -85,7 +85,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "expand",
@@ -168,7 +168,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "page",
@@ -189,7 +189,8 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "query",
                 required: false,
                 schema: new OA\Schema(type: "string"),
-                description: "Filter by tag name"
+                description: "Filters, allowed operands: == (equals), =@ (contains), @@ (full text search), allowed fields: tag",
+                example: "tag==AI",
             ),
             new OA\Parameter(
                 name: "order",
@@ -342,7 +343,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
         ],
         requestBody: new OA\RequestBody(
@@ -432,7 +433,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "track_tag_group_id",
@@ -512,7 +513,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "track_tag_group_id",
@@ -617,7 +618,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "track_tag_group_id",
@@ -689,7 +690,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
         ],
         responses: [
@@ -761,7 +762,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "tag_id",
@@ -830,7 +831,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "track_tag_group_id",

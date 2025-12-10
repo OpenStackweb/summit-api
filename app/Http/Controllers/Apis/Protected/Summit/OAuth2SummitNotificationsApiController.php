@@ -13,6 +13,8 @@
  **/
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitPushNotificationService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -28,6 +30,9 @@ use utils\PagingInfo;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Request;
 use Exception;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
+
 /**
  * Class OAuth2SummitNotificationsApiController
  * @package App\Http\Controllers
@@ -81,6 +86,88 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/notifications',
+        operationId: 'getNotifications',
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Get all push notifications for a summit',
+        tags: ['Summit Notifications'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_notifications_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadNotifications,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand relations (event,group,recipients)',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of notifications',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedNotificationsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getAll($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -142,8 +229,145 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
 
     /**
      * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
+     * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/notifications/sent',
+        operationId: 'getApprovedNotifications',
+        summary: 'Get all approved push notifications sent to current user',
+        tags: ['Summit Notifications'],
+        security: [['summit_notifications_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadNotifications,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand relations (event,group,recipients)',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of approved notifications',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedNotificationsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/public/v1/summits/{id}/notifications/sent',
+        operationId: 'getApprovedNotificationsPublic',
+        summary: 'Get all approved push notifications sent to current user',
+        tags: ['Summit Notifications (Public)'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand relations (event,group,recipients)',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of approved notifications',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedNotificationsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getAllApprovedByUser($summit_id){
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -204,6 +428,69 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/notifications/csv',
+        operationId: 'getNotificationsCSV',
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Export all push notifications as CSV',
+        tags: ['Summit Notifications'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_notifications_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadNotifications,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'CSV file with notifications'
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getAllCSV($summit_id)
     {
 
@@ -279,6 +566,64 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @param $notification_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/notifications/{notification_id}',
+        operationId: 'getNotificationById',
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        summary: 'Get specific push notification',
+        tags: ['Summit Notifications'],
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_notifications_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadNotifications,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...'),
+            ),
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'notification_id',
+                description: 'Notification ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand relations',
+                in: 'query',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Notification details',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitPushNotificationResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or notification not found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getById($summit_id, $notification_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -305,6 +650,47 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @param $notification_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/notifications/{notification_id}',
+        operationId: 'deleteNotification',
+        description: 'Delete a notification from a summit. required-groups: SuperAdmins, Administrators, SummitAdministrators',
+        tags: ['Summit Notifications'],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        security: [['summit_notifications_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteNotifications,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'notification_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Notification deleted successfully'),
+            new OA\Response(response: 400, description: 'Invalid input'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Summit or notification not found'),
+            new OA\Response(response: 412, description: 'Validation failed'),
+            new OA\Response(response: 500, description: 'Server error'),
+        ],
+    )]
     public function deleteNotification($summit_id, $notification_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -328,6 +714,47 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @param $notification_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/notifications/{notification_id}/approve',
+        operationId: 'approveNotification',
+        description: 'Approve a notification for sending. required-groups: SuperAdmins, Administrators, SummitAdministrators',
+        tags: ['Summit Notifications'],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        security: [['summit_notifications_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteNotifications,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'notification_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Notification approved successfully'),
+            new OA\Response(response: 400, description: 'Invalid input'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Summit or notification not found'),
+            new OA\Response(response: 412, description: 'Validation failed'),
+            new OA\Response(response: 500, description: 'Server error'),
+        ],
+    )]
     public function approveNotification($summit_id, $notification_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -352,6 +779,47 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @param $notification_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/notifications/{notification_id}/approve',
+        operationId: 'unApproveNotification',
+        description: 'Revoke approval for a notification. required-groups: SuperAdmins, Administrators, SummitAdministrators',
+        tags: ['Summit Notifications'],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        security: [['summit_notifications_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteNotifications,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'notification_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Notification approval revoked successfully'),
+            new OA\Response(response: 400, description: 'Invalid input'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Summit or notification not found'),
+            new OA\Response(response: 412, description: 'Validation failed'),
+            new OA\Response(response: 500, description: 'Server error'),
+        ],
+    )]
     public function unApproveNotification($summit_id, $notification_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -375,6 +843,50 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/notifications',
+        operationId: 'addNotification',
+        description: 'Create a new push notification for a summit. required-groups: SuperAdmins, Administrators, SummitAdministrators',
+        tags: ['Summit Notifications'],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        security: [['summit_notifications_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteNotifications,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token',
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'Notification data',
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitPushNotificationRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Notification created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitPushNotificationResponse')
+            ),
+            new OA\Response(response: 400, description: 'Invalid input'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+            new OA\Response(response: 404, description: 'Not Found'),
+            new OA\Response(response: 412, description: 'Validation failed'),
+            new OA\Response(response: 500, description: 'Server error'),
+        ],
+    )]
     public function addPushNotification($summit_id){
         try {
 

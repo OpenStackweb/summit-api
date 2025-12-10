@@ -123,7 +123,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],
-        tags: ["SponsorshipTypes"],
+        tags: ["Sponsorship Types"],
         parameters: [
             new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
             new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
@@ -191,7 +191,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
         security: [['summit_sponsorship_oauth2' => [
             SummitScopes::WriteSummitData,
         ]]],
-        tags: ["SponsorshipTypes"],
+        tags: ["Sponsorship Types"],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: "#/components/schemas/SponsorshipTypeAddRequest")
@@ -237,7 +237,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],
-        tags: ["SponsorshipTypes"],
+        tags: ["Sponsorship Types"],
         parameters: [
             new OA\Parameter(name: "id", description: "Sponsorship Type ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
@@ -284,7 +284,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
         security: [['summit_sponsorship_oauth2' => [
             SummitScopes::WriteSummitData,
         ]]],
-        tags: ["SponsorshipTypes"],
+        tags: ["Sponsorship Types"],
         parameters: [
             new OA\Parameter(name: "id", description: "Sponsorship Type ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
@@ -340,7 +340,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
         security: [['summit_sponsorship_oauth2' => [
             SummitScopes::WriteSummitData,
         ]]],
-        tags: ["SponsorshipTypes"],
+        tags: ["Sponsorship Types"],
         parameters: [
             new OA\Parameter(name: "id", description: "Sponsorship Type ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],

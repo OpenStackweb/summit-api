@@ -3,6 +3,36 @@
 namespace App\Swagger\schemas;
 
 use OpenApi\Attributes as OA;
+#[OA\Schema(
+    schema: 'SummitScheduleConfigContent',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', description: 'Unix timestamp', example: 1640995200),
+        new OA\Property(property: 'last_edited', type: 'integer', description: 'Unix timestamp', example: 1640995200),
+        new OA\Property(property: 'key', type: 'string', example: 'schedule-main'),
+        new OA\Property(property: 'summit_id', type: 'integer', example: 1),
+        new OA\Property(property: 'is_my_schedule', type: 'boolean', example: false),
+        new OA\Property(property: 'only_events_with_attendee_access', type: 'boolean', example: false),
+        new OA\Property(property: 'color_source', type: 'string', enum: ['EVENT_TYPES', 'TRACK', 'TRACK_GROUP'], example: 'EVENT_TYPES'),
+        new OA\Property(property: 'is_enabled', type: 'boolean', example: true),
+        new OA\Property(property: 'is_default', type: 'boolean', example: true),
+        new OA\Property(property: 'hide_past_events_with_show_always_on_schedule', type: 'boolean', example: false),
+        new OA\Property(property: 'time_format', type: 'string', enum: ['12h', '24h'], example: '12h'),
+        new OA\Property(
+            property: 'filters',
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/SummitScheduleFilterElementConfig')
+        ),
+        new OA\Property(
+            property: 'pre_filters',
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/SummitSchedulePreFilterElementConfig')
+        )
+    ]
+)]
+class SummitScheduleConfigContentSchema {}
+
 
 #[OA\Schema(
     schema: 'SummitScheduleConfig',
@@ -12,33 +42,9 @@ use OpenApi\Attributes as OA;
             property: '<type>',
             description: 'Dynamic property name with SummitScheduleFilterElementConfig->type as key',
             type: 'object',
-            schema: new OA\Schema(
-                type: 'object',
-                properties: [
-                    new OA\Property(property: 'id', type: 'integer', example: 1),
-                    new OA\Property(property: 'created', type: 'integer', description: 'Unix timestamp', example: 1640995200),
-                    new OA\Property(property: 'last_edited', type: 'integer', description: 'Unix timestamp', example: 1640995200),
-                    new OA\Property(property: 'key', type: 'string', example: 'schedule-main'),
-                    new OA\Property(property: 'summit_id', type: 'integer', example: 1),
-                    new OA\Property(property: 'is_my_schedule', type: 'boolean', example: false),
-                    new OA\Property(property: 'only_events_with_attendee_access', type: 'boolean', example: false),
-                    new OA\Property(property: 'color_source', type: 'string', enum: ['EVENT_TYPES', 'TRACK', 'TRACK_GROUP'], example: 'EVENT_TYPES'),
-                    new OA\Property(property: 'is_enabled', type: 'boolean', example: true),
-                    new OA\Property(property: 'is_default', type: 'boolean', example: true),
-                    new OA\Property(property: 'hide_past_events_with_show_always_on_schedule', type: 'boolean', example: false),
-                    new OA\Property(property: 'time_format', type: 'string', enum: ['12h', '24h'], example: '12h'),
-                    new OA\Property(
-                        property: 'filters',
-                        type: 'array',
-                        items: new OA\Items(ref: '#/components/schemas/SummitScheduleFilterElementConfig')
-                    ),
-                    new OA\Property(
-                        property: 'pre_filters',
-                        type: 'array',
-                        items: new OA\Items(ref: '#/components/schemas/SummitSchedulePreFilterElementConfig')
-                    )
-                ]
-            )
+            allOf: [
+                new OA\Schema(ref: '#/components/schemas/SummitScheduleConfigContent')
+            ]
         )
     ]
 )]

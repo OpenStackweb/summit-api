@@ -96,7 +96,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "page",
@@ -230,7 +230,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "page",
@@ -403,6 +403,44 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         path: "/api/v1/summits/{id}/event-types/{event_type_id}",
         operationId: "getEventTypeBySummit",
         description: "Get a specific event type by ID",
+        tags: ["Event Types"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+            new OA\Parameter(
+                name: "event_type_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Event type ID"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Event type retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/EventType")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Event type or summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    #[OA\Get(
+        path: "/api/public/v1/summits/{id}/event-types/{event_type_id}",
+        operationId: "getEventTypeBySummitPublic",
+        description: "Get a specific event type by ID",
         tags: ["Event Types (Public)"],
         parameters: [
             new OA\Parameter(
@@ -410,7 +448,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "event_type_id",
@@ -484,7 +522,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
         ],
         requestBody: new OA\RequestBody(
@@ -549,7 +587,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "event_type_id",
@@ -621,7 +659,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "event_type_id",
@@ -680,7 +718,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
         ],
         responses: [
@@ -744,7 +782,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "event_type_id",
@@ -829,7 +867,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "string"),
-                description: "Summit ID or slug"
+                description: "Summit ID"
             ),
             new OA\Parameter(
                 name: "event_type_id",

@@ -13,11 +13,17 @@
  **/
 use App\Models\Foundation\Summit\Repositories\ISponsorshipTypeRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ISponsorshipTypeService;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use App\Models\Foundation\Main\IGroup;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
+
 /**
  * Class OAuth2SponsorshipTypeApiController
  * @package App\Http\Controllers
@@ -101,9 +107,108 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
     }
 
     use GetAndValidateJsonPayload;
-    /**
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+
+    #[OA\Get(
+        path: "/api/v1/sponsorship-types",
+        summary: "Get all sponsorship types",
+        operationId: 'getSponsorshipTypes',
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        tags: ["Sponsorship Types"],
+        parameters: [
+            new OA\Parameter(name: "page", description: "Page number", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", description: "Items per page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "filter", description: "Filter query (name==value, label=@value, size==value)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", description: "Order by (+id, -name, +order, +label, +size)", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedDataSponsorshipType'),
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function getAll()
+    {
+        return $this->_getAll(
+            function(){
+                return [
+                    'name' => ['==', '=@'],
+                    'label' => ['==', '=@'],
+                    'size' => ['==', '=@'],
+                ];
+            },
+            function(){
+                return [
+                    'name' => 'sometimes|required|string',
+                    'label' => 'sometimes|required|string',
+                    'size' => 'sometimes|required|string',
+                ];
+            },
+            function(){
+                return [
+                    'id',
+                    'name',
+                    'order',
+                    'label',
+                    'size',
+                ];
+            },
+            function($filter){
+                return $filter;
+            },
+            function(){
+                return SerializerRegistry::SerializerType_Public;
+            }
+        );
+    }
+
+    #[OA\Post(
+        path: "/api/v1/sponsorship-types",
+        summary: "Add a new sponsorship type",
+        operationId: 'addSponsorshipType',
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        tags: ["Sponsorship Types"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SponsorshipTypeAddRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SponsorshipType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function add()
     {
         return $this->processRequest(function(){
@@ -124,10 +229,31 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: "/api/v1/sponsorship-types/{id}",
+        summary: "Get a sponsorship type by id",
+        operationId: 'getSponsorshipType',
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        tags: ["Sponsorship Types"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Sponsorship Type ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SponsorshipType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function get($id)
     {
         return $this->processRequest(function() use($id){
@@ -144,10 +270,42 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: "/api/v1/sponsorship-types/{id}",
+        summary: "Update a sponsorship type",
+        operationId: 'updateSponsorshipType',
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        tags: ["Sponsorship Types"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Sponsorship Type ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SponsorshipTypeUpdateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SponsorshipType")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function update($id)
     {
         return $this->processRequest(function() use($id){
@@ -168,10 +326,33 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: "/api/v1/sponsorship-types/{id}",
+        summary: "Delete a sponsorship type",
+        operationId: 'deleteSponsorshipType',
+        x: [
+            'required-groups' => [
+                IGroup::SummitAdministrators,
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        security: [['summit_sponsorship_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        tags: ["Sponsorship Types"],
+        parameters: [
+            new OA\Parameter(name: "id", description: "Sponsorship Type ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     public function delete($id)
     {
         return $this->processRequest(function() use($id){

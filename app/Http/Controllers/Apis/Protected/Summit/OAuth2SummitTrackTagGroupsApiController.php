@@ -204,7 +204,7 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
                 in: "query",
                 required: false,
                 schema: new OA\Schema(type: "string"),
-                description: "Expand relationships"
+                description: "Expand relationships allowed values: track_tag_group, tag"
             ),
             new OA\Parameter(
                 name: "fields",

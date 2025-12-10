@@ -17,12 +17,15 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\Filters\FiltersParams;
 use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use App\Models\Foundation\Summit\Repositories\ISpeakersRegistrationDiscountCodeRepository;
 use App\Models\Foundation\Summit\Repositories\ISpeakersSummitRegistrationPromoCodeRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\SummitScopes;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Request;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
@@ -35,6 +38,7 @@ use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use services\model\ISummitPromoCodeService;
 use utils\Filter;
 use utils\FilterElement;
@@ -111,6 +115,28 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         $this->speakers_discount_code_repository = $speakers_discount_code_repository;
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/promo-codes",
+        summary: "Get all promo codes for a summit",
+        description: "Get all promo codes for a summit with filtering and pagination",
+        operationId: "getAllPromoCodesBySummit",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "expand", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -205,6 +231,29 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/sponsor-promo-codes",
+        summary: "Get all sponsor promo codes for a summit",
+        description: "Get all sponsor promo codes for a summit with filtering and pagination",
+        operationId: "getAllSponsorPromoCodesBySummit",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "expand", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -292,6 +341,25 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/promo-codes/csv",
+        summary: "Export promo codes to CSV",
+        description: "Export all promo codes for a summit to CSV format",
+        operationId: "getAllPromoCodesBySummitCSV",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "CSV file"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return \Illuminate\Http\Response|mixed
@@ -408,6 +476,26 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/sponsor-promo-codes/csv",
+        summary: "Export sponsor promo codes to CSV",
+        description: "Export all sponsor promo codes for a summit to CSV format",
+        operationId: "getSponsorPromoCodesAllBySummitCSV",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "CSV file"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
     public function getSponsorPromoCodesAllBySummitCSV($summit_id)
     {
 
@@ -511,6 +599,23 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/promo-codes/metadata",
+        summary: "Get promo codes metadata",
+        description: "Get metadata about promo codes for a summit",
+        operationId: "getPromoCodesMetadata",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -526,6 +631,25 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/promo-codes",
+        summary: "Create a promo code",
+        description: "Create a new promo code for a summit",
+        operationId: "addPromoCodeBySummit",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/PromoCodeAddRequest')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: "Created"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -549,6 +673,26 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_id}",
+        summary: "Update a promo code",
+        description: "Update an existing promo code",
+        operationId: "updatePromoCodeBySummit",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/PromoCodeUpdateRequest')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -574,6 +718,24 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_id}",
+        summary: "Delete a promo code",
+        description: "Delete a promo code from a summit",
+        operationId: "deletePromoCodeBySummit",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -592,6 +754,24 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_id}/mail",
+        summary: "Send promo code email",
+        description: "Send an email with the promo code",
+        operationId: "sendPromoCodeMail",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -607,6 +787,25 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_id}",
+        summary: "Get a promo code",
+        description: "Get a specific promo code by ID",
+        operationId: "getPromoCodeBySummit",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "expand", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -628,6 +827,25 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_id}/badge-features/{badge_feature_id}",
+        summary: "Add badge feature to promo code",
+        description: "Add a badge feature to a promo code",
+        operationId: "addBadgeFeatureToPromoCode",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "badge_feature_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -650,6 +868,25 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     }
 
 
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_id}/badge-features/{badge_feature_id}",
+        summary: "Remove badge feature from promo code",
+        description: "Remove a badge feature from a promo code",
+        operationId: "removeBadgeFeatureFromPromoCode",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "badge_feature_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -671,6 +908,26 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_id}/ticket-types/{ticket_type_id}",
+        summary: "Add ticket type to promo code",
+        description: "Add a ticket type rule to a promo code",
+        operationId: "addTicketTypeToPromoCode",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "ticket_type_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(required: false, content: new OA\JsonContent(ref: '#/components/schemas/PromoCodeTicketTypeRuleRequest')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -702,6 +959,25 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
     }
 
 
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_id}/ticket-types/{ticket_type_id}",
+        summary: "Remove ticket type from promo code",
+        description: "Remove a ticket type rule from a promo code",
+        operationId: "removeTicketTypeFromPromoCode",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "ticket_type_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -722,6 +998,32 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/promo-codes/csv",
+        summary: "Import promo codes from CSV",
+        description: "Import promo codes from a CSV file",
+        operationId: "ingestPromoCodes",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(properties: [new OA\Property(property: "file", type: "string", format: "binary")])
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation error"),
+        ]
+    )]
     /**
      * @param LaravelRequest $request
      * @param $summit_id
@@ -748,6 +1050,32 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/sponsor-promo-codes/csv",
+        summary: "Import sponsor promo codes from CSV",
+        description: "Import sponsor promo codes from a CSV file",
+        operationId: "ingestSponsorPromoCodes",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(properties: [new OA\Property(property: "file", type: "string", format: "binary")])
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation error"),
+        ]
+    )]
     /**
      * @param LaravelRequest $request
      * @param $summit_id
@@ -774,6 +1102,28 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers",
+        summary: "Get speakers for a promo code",
+        description: "Get all speakers associated with a promo code",
+        operationId: "getPromoCodeSpeakers",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -840,6 +1190,28 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers",
+        summary: "Get speakers for a discount code",
+        description: "Get all speakers associated with a discount code",
+        operationId: "getDiscountCodeSpeakers",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "discount_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "per_page", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "order", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $discount_code_id
@@ -906,6 +1278,46 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         );
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers/{speaker_id}",
+        summary: "Add speaker to promo code",
+        description: "Associate a speaker with a promo code",
+        operationId: "addPromoCodeSpeaker",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "speaker_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: "Created"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers/{speaker_id}",
+        summary: "Add speaker to promo code",
+        description: "Associate a speaker with a promo code",
+        operationId: "addDiscountCodeSpeaker",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "discount_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "speaker_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: "Created"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -929,6 +1341,46 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers/{speaker_id}",
+        summary: "Remove speaker from promo code",
+        description: "Remove a speaker from a promo code",
+        operationId: "removePromoCodeSpeaker",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "speaker_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers/{speaker_id}",
+        summary: "Remove speaker from promo code",
+        description: "Remove a speaker from a promo code",
+        operationId: "removeDiscountCodeSpeaker",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "discount_code_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "speaker_id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Deleted"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_id
@@ -952,6 +1404,25 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/promo-codes/{promo_code_val}/apply",
+        summary: "Pre-validate promo code",
+        description: "Pre-validate a promo code before applying it",
+        operationId: "preValidatePromoCode",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "promo_code_val", in: "path", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $promo_code_val
@@ -998,6 +1469,30 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         });
     }
 
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/sponsors/all/promo-codes/all/send",
+        summary: "Send sponsor promo codes emails",
+        description: "Trigger sending sponsor promo codes via email",
+        operationId: "sendSponsorPromoCodesMail",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::WritePromoCodeData, SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SendSponsorPromoCodesRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed

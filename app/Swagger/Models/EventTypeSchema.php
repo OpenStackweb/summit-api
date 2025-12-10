@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace App\Swagger\schemas;
 
 use OpenApi\Attributes as OA;
@@ -29,7 +29,6 @@ use OpenApi\Attributes as OA;
         new OA\Property(
             property: "color",
             type: "string",
-            nullable: true,
             description: "Display color (hex)",
             example: "#FF5733"
         ),
@@ -37,7 +36,6 @@ use OpenApi\Attributes as OA;
             property: "black_out_times",
             type: "string",
             enum: ["UNLIMITED", "ONLY_MAIN_EVENTS", "BLACKOUT_TIMES"],
-            nullable: true,
             description: "Blackout times setting",
             example: "UNLIMITED"
         ),
@@ -107,33 +105,27 @@ use OpenApi\Attributes as OA;
             type: "array",
             description: "Summit document IDs (use expand=summit_documents to get full objects)",
             items: new OA\Items(
-                anyOf: [
+                oneOf: [
                     new OA\Schema(type: "integer"),
                     new OA\Schema(ref: "#/components/schemas/SummitDocument")
                 ]
-            ),
-            nullable: true
+            )
         ),
         new OA\Property(
             property: "allowed_ticket_types",
             type: "array",
             description: "Allowed ticket type IDs (use expand=allowed_ticket_types to get full objects)",
             items: new OA\Items(
-                anyOf: [
+                oneOf: [
                     new OA\Schema(type: "integer"),
                     new OA\Schema(ref: "#/components/schemas/SummitTicketType")
                 ]
-            ),
-            nullable: true
+            )
         ),
         new OA\Property(
             property: "summit",
             description: "Summit ID or expanded object (use expand=summit to get full object)",
-            anyOf: [
-                new OA\Schema(type: "integer"),
-                new OA\Schema(ref: "#/components/schemas/Summit")
-            ],
-            nullable: true
+            schema: "#/components/schemas/Summit",
         ),
         new OA\Property(
             property: "created",

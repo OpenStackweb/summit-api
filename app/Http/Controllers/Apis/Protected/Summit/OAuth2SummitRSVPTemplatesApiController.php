@@ -372,7 +372,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
     }
 
     #[OA\Get(
-        path: "/api/v1/summits/{id}/rsvp-templates/metadata",
+        path: "/api/v1/summits/{id}/rsvp-templates/questions/metadata",
         description: "Get metadata about RSVP template questions (available question types, validators, etc)",
         summary: 'Read RSVP Template Questions Metadata',
         operationId: 'getRSVPTemplateQuestionsMetadata',
@@ -441,7 +441,8 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         security: [
             [
                 'summit_rsvp_templates_oauth2' => [
-                    SummitScopes::ReadAllSummitData
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData,
                 ]
             ]
         ],

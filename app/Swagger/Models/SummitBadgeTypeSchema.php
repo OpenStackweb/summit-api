@@ -10,12 +10,12 @@ use OpenApi\Attributes as OA;
     type: 'object',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
-        new OA\Property(property: 'created', type: 'integer', example: 1),
-        new OA\Property(property: 'last_edited', type: 'integer', example: 1),
-        new OA\Property(property: 'name', type: 'string'),
-        new OA\Property(property: 'description', type: 'string'),
-        new OA\Property(property: 'template_content', type: 'string'),
-        new OA\Property(property: 'is_default', type: 'boolean'),
+        new OA\Property(property: "created", type: "integer", description: "Unix timestamp", example: 1640995200),
+        new OA\Property(property: "last_edited", type: "integer", description: "Unix timestamp", example: 1640995200),
+        new OA\Property(property: "name", type: "string", example: "Attendee"),
+        new OA\Property(property: "description", type: "string", example: "Standard attendee badge"),
+        new OA\Property(property: "template_content", type: "string", nullable: true, example: "Badge template content"),
+        new OA\Property(property: "is_default", type: "boolean", example: false),
         new OA\Property(property: 'summit_id', type: 'integer', description: 'Summit ID, use expand=summit for full object details'),
         new OA\Property(
             property: 'access_levels',

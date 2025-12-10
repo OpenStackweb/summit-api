@@ -83,7 +83,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/event-types",
-        operationId: "getAllBySummit",
+        operationId: "getAllSummitEventTypesBySummit",
         description: "Get all event types for a summit with pagination and filtering",
         tags: ["Event Types"],
         security: [['summit_event_types_oauth2' => [
@@ -217,7 +217,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/event-types/csv",
-        operationId: "getAllBySummitCSV",
+        operationId: "getAllSummitEventTypesBySummitCSV",
         description: "Export event types for a summit as CSV",
         tags: ["Event Types"],
         security: [['summit_event_types_oauth2' => [

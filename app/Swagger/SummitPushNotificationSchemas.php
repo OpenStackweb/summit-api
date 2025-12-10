@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Swagger\Summit;
+namespace App\Swagger\schemas;
 
 use OpenApi\Attributes as OA;
 

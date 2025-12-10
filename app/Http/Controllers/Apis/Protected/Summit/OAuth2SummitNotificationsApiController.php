@@ -164,7 +164,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
         ]
     )]
@@ -301,7 +301,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
         ]
     )]
@@ -364,7 +364,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
         ]
     )]
@@ -487,7 +487,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
         ]
     )]
@@ -882,7 +882,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
             new OA\Response(response: 400, description: 'Invalid input'),
             new OA\Response(response: 401, description: 'Unauthorized'),
             new OA\Response(response: 403, description: 'Forbidden'),
-            new OA\Response(response: 404, description: 'Summit not found'),
+            new OA\Response(response: 404, description: 'Not Found'),
             new OA\Response(response: 412, description: 'Validation failed'),
             new OA\Response(response: 500, description: 'Server error'),
         ],

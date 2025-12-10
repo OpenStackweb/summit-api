@@ -587,7 +587,7 @@ class OAuth2SummitSelectedPresentationListApiController
         responses: [
             new OA\Response(
                 response: 201,
-                description: "Created",
+                description: "Removed from List",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitSelectedPresentationList")
             ),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),

@@ -96,7 +96,7 @@ final class PrivateCloudsApiController extends AbstractCompanyServiceApiControll
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Success - Returns paginated list of hosted private clouds',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPublicOrPrivateCloudsResponse')
             ),

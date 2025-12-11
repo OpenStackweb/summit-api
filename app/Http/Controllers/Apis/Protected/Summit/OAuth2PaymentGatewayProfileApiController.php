@@ -168,9 +168,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         ],
         security: [
             [
-                'summit_payment_gateway_oauth2' =>
+                'summit_payment_gateway_oauth2' => [
                     SummitScopes::ReadAllSummitData,
-                SummitScopes::ReadPaymentProfiles
+                    SummitScopes::ReadPaymentProfiles
+                ]
             ]
         ],
         tags: ['Payment Gateway Profiles'],
@@ -218,9 +219,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         ],
         security: [
             [
-                'summit_payment_gateway_oauth2' =>
+                'summit_payment_gateway_oauth2' => [
                     SummitScopes::WriteSummitData,
-                SummitScopes::WritePaymentProfiles
+                    SummitScopes::WritePaymentProfiles
+                ]
             ]
         ],
         tags: ['Payment Gateway Profiles'],
@@ -267,9 +269,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         ],
         security: [
             [
-                'summit_payment_gateway_oauth2' =>
+                'summit_payment_gateway_oauth2' => [
                     SummitScopes::WriteSummitData,
-                SummitScopes::WritePaymentProfiles
+                    SummitScopes::WritePaymentProfiles
+                ]
             ]
         ],
         tags: ['Payment Gateway Profiles'],
@@ -323,9 +326,10 @@ final class OAuth2PaymentGatewayProfileApiController extends OAuth2ProtectedCont
         ],
         security: [
             [
-                'summit_payment_gateway_oauth2' =>
+                'summit_payment_gateway_oauth2' => [
                     SummitScopes::WriteSummitData,
-                SummitScopes::WritePaymentProfiles
+                    SummitScopes::WritePaymentProfiles
+                ]
             ]
         ],
         tags: ['Payment Gateway Profiles'],

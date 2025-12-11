@@ -98,7 +98,7 @@ final class RemoteCloudsApiController extends AbstractCompanyServiceApiControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Success - Returns paginated list of remotely managed private clouds',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedRemoteCloudsResponse')
             ),

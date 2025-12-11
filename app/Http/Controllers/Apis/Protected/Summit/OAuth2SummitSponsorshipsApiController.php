@@ -364,7 +364,6 @@ final class OAuth2SummitSponsorshipsApiController
         tags: ["Sponsorships Add-Ons"],
         security: [['summit_sponsorship_oauth2' => [
             SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
         ]]],
         x: [
             'required-groups' => [
@@ -529,7 +528,6 @@ final class OAuth2SummitSponsorshipsApiController
         tags: ["Sponsorships Add-Ons"],
         security: [['summit_sponsorship_oauth2' => [
             SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
         ]]],
         x: [
             'required-groups' => [
@@ -715,8 +713,14 @@ final class OAuth2SummitSponsorshipsApiController
         tags: ["Sponsorships Add-Ons"],
         security: [['summit_sponsorship_oauth2' => [
             SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
         ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],

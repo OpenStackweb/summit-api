@@ -4,19 +4,6 @@ namespace App\Swagger\schemas;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
-    schema: 'SummitSponsorship',
-    title: "Summit Sponsorship",
-    description: "Summit Sponsorship Schema",
-    type: "object",
-    properties: [
-        new OA\Property(property: "id", type: "integer", format: "int64"),
-        new OA\Property(property: "type_id", type: "integer", format: "int64"),
-        new OA\Property(property: "add_ons", type: "array", items: new OA\Items(type: "integer", format: "int64")),
-    ]
-)]
-class SummitSponsorshipSchema {}
-
-#[OA\Schema(
     schema: 'PaginatedSponsorshipsResponse',
     allOf: [
         new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
@@ -92,21 +79,6 @@ class AddAddOnRequestSchema {}
     ]
 )]
 class UpdateAddOnRequestSchema {}
-
-#[OA\Schema(
-    schema: 'SummitSponsorshipAddOn',
-    title: "Summit Sponsorship Add On",
-    description: "Summit Sponsorship Add On Schema",
-    type: "object",
-    properties: [
-        new OA\Property(property: "id", type: "integer", format: "int64"),
-        new OA\Property(property: "name", type: "string"),
-        new OA\Property(property: "label", type: "string"),
-        new OA\Property(property: "type", type: "string"),
-        new OA\Property(property: "size", type: "string"),
-    ]
-)]
-class SummitSponsorshipAddOnSchemas {}
 
 #[OA\Schema(
     title: "Summit Sponsorship Type",

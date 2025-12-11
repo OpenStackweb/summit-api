@@ -119,7 +119,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: "OK"),
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
@@ -190,7 +190,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
             ),
@@ -279,7 +279,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
             ),
@@ -353,7 +353,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitRegistrationInvitationsResponse")
             ),
@@ -476,7 +476,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\MediaType(mediaType: "text/csv", schema: new OA\Schema(type: "string"))
             ),
@@ -795,7 +795,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
             ),
@@ -906,7 +906,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: "OK"),
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
@@ -1015,7 +1015,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
             ),
@@ -1077,7 +1077,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
             ),

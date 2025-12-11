@@ -499,9 +499,6 @@ class PaginatedOrganizationsResponseSchema
 class OrganizationCreateRequestSchema
 {
 }
-class ChunkedFileUploadRequestSchema
-{
-}
 
 #[OA\Schema(
     schema: 'PaymentGatewayProfile',

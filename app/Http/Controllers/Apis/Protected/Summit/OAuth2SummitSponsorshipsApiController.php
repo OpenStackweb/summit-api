@@ -18,8 +18,6 @@ use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\ModelSerializers\SerializerUtils;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitSponsorshipService;
-use App\Swagger\Summit\SummitSponsorshipAddOnSchema;
-use App\Swagger\Summit\SummitSponsorshipSchema;
 use Illuminate\Http\JsonResponse;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;

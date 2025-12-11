@@ -640,7 +640,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             )
         ],
         responses: [
-            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
@@ -712,7 +712,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: "Created",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
             ),
@@ -843,7 +843,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             ),
         ],
         responses: [
-            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
@@ -1129,7 +1129,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             )
         ],
         responses: [
-            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]

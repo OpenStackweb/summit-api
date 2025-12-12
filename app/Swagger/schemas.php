@@ -11,28 +11,6 @@ use models\summit\RSVP;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
-    schema: "Summit",
-    title: "Summit",
-    type: "object",
-    properties: [
-        new OA\Property(property: "id", type: "integer", format: "int64"),
-        new OA\Property(property: "name", type: "string"),
-        new OA\Property(property: "start_date", type: "integer", format: "int64", description: "Unix timestamp"),
-        new OA\Property(property: "end_date", type: "integer", format: "int64", description: "Unix timestamp"),
-        new OA\Property(property: "registration_begin_date", type: "integer", format: "int64"),
-        new OA\Property(property: "registration_end_date", type: "integer", format: "int64"),
-        new OA\Property(property: "active", type: "boolean"),
-        new OA\Property(property: "slug", type: "string"),
-        new OA\Property(property: "logo", type: "string", format: "url"),
-        new OA\Property(property: "secondary_logo", type: "string", format: "url"),
-        new OA\Property(property: "registration_link", type: "string", format: "url"),
-        new OA\Property(property: "time_zone_id", type: "string"),
-        new OA\Property(property: "modality", type: "string"),
-    ]
-)]
-class Summit {}
-
-#[OA\Schema(
     schema: "SummitCollection",
     title: "Summit Collection",
     allOf: [

@@ -164,7 +164,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'List of RSVP templates',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedRSVPTemplatesResponse')
             ),
@@ -324,7 +324,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'RSVP template details',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplate')
             ),
@@ -409,7 +409,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Metadata about RSVP template questions',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestionMetadata')
             ),
@@ -478,7 +478,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: "RSVP template deleted"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
@@ -559,7 +559,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'RSVP template created',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplate')
             ),
@@ -665,7 +665,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'RSVP template updated',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplate')
             ),
@@ -778,7 +778,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Question details',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestion')
             ),
@@ -872,7 +872,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Question created',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestion')
             ),
@@ -986,7 +986,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Question updated',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestion')
             ),
@@ -1097,7 +1097,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: "Question deleted"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
@@ -1199,7 +1199,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Value details',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestionValue')
             ),
@@ -1307,7 +1307,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Value created',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestionValue')
             ),
@@ -1429,7 +1429,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Value updated',
                 content: new OA\JsonContent(ref: '#/components/schemas/RSVPTemplateQuestionValue')
             ),
@@ -1548,7 +1548,7 @@ final class OAuth2SummitRSVPTemplatesApiController extends OAuth2ProtectedContro
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: "Value deleted"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),

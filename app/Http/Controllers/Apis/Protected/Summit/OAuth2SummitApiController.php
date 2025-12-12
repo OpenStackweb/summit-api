@@ -43,27 +43,6 @@ use utils\OrderElement;
 use utils\PagingInfo;
 use OpenApi\Attributes as OA;
 
-#[
-    OA\Info(version: "1.0.0", description: "Summit API", title: "Summit API Documentation"),
-    OA\Server(url: L5_SWAGGER_CONST_HOST, description: "server"),
-    OA\SecurityScheme(
-        type: 'oauth2',
-        securityScheme: 'summit_badges_oauth2',
-        flows: [
-            new OA\Flow(
-                authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
-                tokenUrl: L5_SWAGGER_CONST_TOKEN_URL,
-                flow: 'authorizationCode',
-                scopes: [
-                    SummitScopes::ReadSummitData => 'Read Summit Data',
-                    SummitScopes::ReadAllSummitData => 'Read All Summit Data',
-                    SummitScopes::WriteSummitData => 'Write Summit Data',
-                    SummitScopes::ReadBadgeScanValidate => 'Validate Badge Scan',
-                ],
-            ),
-        ],
-    )
-]
 final class OAuth2SummitApiController extends OAuth2ProtectedController
 {
 
@@ -174,7 +153,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadSummitData,
                 SummitScopes::ReadAllSummitData
             ]]]
@@ -346,7 +325,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadAllSummitData
             ]]]
         ),
@@ -533,7 +512,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadSummitData,
                 SummitScopes::ReadAllSummitData
             ]]]
@@ -663,7 +642,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadSummitData,
                 SummitScopes::ReadAllSummitData
             ]]]
@@ -759,7 +738,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadAllSummitData
             ]]]
         )
@@ -866,7 +845,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadAllSummitData
             ]]]
         )
@@ -967,7 +946,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadAllSummitData
             ]]]
         )
@@ -1039,7 +1018,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::Administrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1101,7 +1080,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1158,7 +1137,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::Administrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1203,7 +1182,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Order not found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             ],
-            security: [["summit_badges_oauth2" => []]]
+            security: [["summit_oauth2" => []]]
         )
     ]
     public function getExternalOrder($summit_id, $external_order_id)
@@ -1254,7 +1233,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             ],
-            security: [["summit_badges_oauth2" => []]]
+            security: [["summit_oauth2" => []]]
         )
     ]
     public function confirmExternalOrderAttendee($summit_id, $external_order_id, $external_attendee_id)
@@ -1341,7 +1320,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1406,7 +1385,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1472,7 +1451,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1532,7 +1511,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1588,7 +1567,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1652,7 +1631,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1710,7 +1689,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1789,7 +1768,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadAllSummitData,
                 SummitScopes::ReadSummitData
             ]]]
@@ -1892,7 +1871,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::Administrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -1947,7 +1926,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SponsorExternalUsers,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadSummitData,
                 SummitScopes::ReadAllSummitData
             ]]]
@@ -1998,7 +1977,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SponsorExternalUsers,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::ReadSummitData,
                 SummitScopes::ReadAllSummitData
             ]]]
@@ -2058,7 +2037,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -2124,7 +2103,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_badges_oauth2" => [
+            security: [["summit_oauth2" => [
                 SummitScopes::WriteSummitData
             ]]]
         )
@@ -2167,7 +2146,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 IGroup::Administrators,
             ]
         ],
-        security: [['summit_badges_oauth2' => [
+        security: [['summit_oauth2' => [
             SummitScopes::ReadBadgeScanValidate
         ]]],
         parameters: [

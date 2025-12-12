@@ -301,7 +301,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/registration-invitations",
-        operationId: 'getAllBySummit',
+        operationId: 'getAllRegistrationInvitationsBySummit',
         summary: "Get all registration invitations for a summit",
         security: [['summit_registration_invitation_oauth2' => [
             SummitScopes::ReadAllSummitData,
@@ -432,7 +432,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/registration-invitations/csv",
-        operationId: 'getAllBySummitCSV',
+        operationId: 'getAllRegistrationInvitationsBySummitCSV',
         summary: "Export registration invitations to CSV",
         security: [['summit_registration_invitation_oauth2' => [
             SummitScopes::ReadAllSummitData,

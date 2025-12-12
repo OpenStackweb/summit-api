@@ -24,6 +24,7 @@ use OpenApi\Attributes as OA;
     ],
 )
 ]
+
 class SummitAuthSchema
 {
 }

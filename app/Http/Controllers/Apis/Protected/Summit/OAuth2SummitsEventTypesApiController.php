@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -86,10 +87,14 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "getAllSummitEventTypesBySummit",
         description: "Get all event types for a summit with pagination and filtering",
         tags: ["Event Types"],
-        security: [['summit_event_types_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -150,7 +155,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
     {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         return $this->_getAll(
             function () {
@@ -220,10 +226,14 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "getAllSummitEventTypesBySummitCSV",
         description: "Export event types for a summit as CSV",
         tags: ["Event Types"],
-        security: [['summit_event_types_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -282,7 +292,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $validation = Validator::make($values, $rules);
 
@@ -319,7 +330,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 ]);
             }
 
-            if (is_null($filter)) $filter = new Filter();
+            if (is_null($filter))
+                $filter = new Filter();
 
             $filter->validate([
                 'class_name' => 'sometimes|string|in:'.join(",", SummitEventTypeConstants::$valid_class_names),
@@ -404,6 +416,14 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "getEventTypeBySummit",
         description: "Get a specific event type by ID",
         tags: ["Event Types"],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -505,15 +525,19 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "addEventTypeBySummit",
         description: "Create a new event type",
         tags: ["Event Types"],
-        security: [['summit_event_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteEventTypeData,
-        ]]],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
-                IGroup::SummitAdministrators,
                 IGroup::SuperAdmins,
-                IGroup::Administrators
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         parameters: [
@@ -546,7 +570,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $payload = $this->getJsonPayload(EventTypeValidationRulesFactory::build(Request::all()));
 
@@ -570,15 +595,19 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "updateEventTypeBySummit",
         description: "Update an existing event type",
         tags: ["Event Types"],
-        security: [['summit_event_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteEventTypeData,
-        ]]],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
-                IGroup::SummitAdministrators,
                 IGroup::SuperAdmins,
-                IGroup::Administrators
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         parameters: [
@@ -603,7 +632,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: "Event type updated successfully",
                 content: new OA\JsonContent(ref: "#/components/schemas/EventType")
             ),
@@ -618,7 +647,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id, $event_type_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $payload = $this->getJsonPayload(EventTypeValidationRulesFactory::build(Request::all(), true));
 
@@ -642,15 +672,19 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "deleteEventTypeBySummit",
         description: "Delete an event type",
         tags: ["Event Types"],
-        security: [['summit_event_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteEventTypeData,
-        ]]],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
-                IGroup::SummitAdministrators,
                 IGroup::SuperAdmins,
-                IGroup::Administrators
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         parameters: [
@@ -684,7 +718,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id, $event_type_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $this->event_type_service->deleteEventType($summit, intval($event_type_id));
 
@@ -701,15 +736,19 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "seedDefaultEventTypesBySummit",
         description: "Seed default event types for a summit",
         tags: ["Event Types"],
-        security: [['summit_event_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteEventTypeData,
-        ]]],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
-                IGroup::SummitAdministrators,
                 IGroup::SuperAdmins,
-                IGroup::Administrators
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         parameters: [
@@ -737,7 +776,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $event_types = $this->event_type_service->seedDefaultEventTypes($summit);
 
@@ -765,15 +805,19 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "addSummitDocument",
         description: "Add a document to an event type",
         tags: ["Event Types"],
-        security: [['summit_event_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteEventTypeData,
-        ]]],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
-                IGroup::SummitAdministrators,
                 IGroup::SuperAdmins,
-                IGroup::Administrators
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         parameters: [
@@ -801,7 +845,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: "Document added to event type successfully",
                 content: new OA\JsonContent(ref: "#/components/schemas/EventType")
             ),
@@ -814,7 +858,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id, $event_type_id, $document_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
 
             $document = $this->event_type_service->addSummitDocumentToEventType
@@ -843,15 +888,19 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         operationId: "removeSummitDocument",
         description: "Remove a document from an event type",
         tags: ["Event Types"],
-        security: [['summit_event_types_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteEventTypeData,
-        ]]],
+        security: [
+            [
+                'summit_event_types_oauth2' => [
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
-                IGroup::SummitAdministrators,
                 IGroup::SuperAdmins,
-                IGroup::Administrators
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ]
         ],
         parameters: [
@@ -886,7 +935,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: "Document removed from event type successfully",
                 content: new OA\JsonContent(ref: "#/components/schemas/EventType")
             ),
@@ -899,7 +948,8 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id, $event_type_id, $document_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $document = $this->event_type_service->removeSummitDocumentFromEventType
             (

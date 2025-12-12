@@ -11,6 +11,24 @@ use models\summit\RSVP;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
+    schema: "SummitCollection",
+    title: "Summit Collection",
+    allOf: [
+        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+        new OA\Schema(
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/Summit")
+                )
+            ]
+        )
+    ]
+)]
+class SummitCollection {}
+
+#[OA\Schema(
     schema: 'Owner',
     type: 'object',
     properties: [

@@ -160,7 +160,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 SummitScopes::ReadAllSummitData
             ]]]
         ),
-        OA\Get(
+    ]
+    #[OA\Get(
             path: "/api/public/v1/summits",
             operationId: "getSummitsPublic",
             summary: "Get summits list (public)",
@@ -331,7 +332,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 SummitScopes::ReadAllSummitData
             ]]]
         ),
-        OA\Get(
+    ]
+    #[OA\Get(
             path: "/api/public/v1/summits/all",
             operationId: "getAllSummitsPublic",
             summary: "Get all summits (public)",
@@ -519,7 +521,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 SummitScopes::ReadAllSummitData
             ]]]
         ),
-        OA\Get(
+    ]
+    #[OA\Get(
             path: "/api/public/v1/summits/{id}",
             operationId: "getSummitPublic",
             summary: "Get summit by ID or slug (public)",
@@ -549,7 +552,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
             ]
         ),
-        OA\Get(
+    ]
+    #[OA\Get(
             path: "/api/v2/summits/{id}",
             operationId: "getSummitV2",
             summary: "Get summit by ID or slug (v2)",
@@ -649,7 +653,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 SummitScopes::ReadAllSummitData
             ]]]
         ),
-        OA\Get(
+    ]
+    #[OA\Get(
             path: "/api/public/v1/summits/all/current",
             operationId: "getAllCurrentSummitPublic",
             summary: "Get current summit (public)",

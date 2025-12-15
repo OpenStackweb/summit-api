@@ -119,84 +119,130 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     use ParseAndGetPaginationParams;
 
     #[OA\Get(
-            path: "/api/v1/summits",
-            operationId: "getSummits",
-            summary: "Get summits list",
-            tags: ["Summits"],
-            parameters: [
-                new OA\Parameter(
-                    name: "page",
-                    description: "Page number",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "integer", default: 1)
-                ),
-                new OA\Parameter(
-                    name: "per_page",
-                    description: "Items per page",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "integer", default: 10)
-                ),
-                new OA\Parameter(
-                    name: "filter",
-                    description: "Filter criteria",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "string")
-                ),
-            ],
-            responses: [
-                new OA\Response(
-                    response: Response::HTTP_OK,
-                    description: "Success",
-                    content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
-                ),
-                new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-                new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::ReadSummitData,
-                SummitScopes::ReadAllSummitData
-            ]]]
-        ),
+        path: "/api/v1/summits",
+        operationId: "getSummits",
+        summary: "Get summits list",
+        tags: ["Summits"],
+        parameters: [
+            new OA\Parameter(
+                name: "page",
+                description: "Page number",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1)
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                description: "Items per page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10)
+            ),
+            new OA\Parameter(
+                name: "filter",
+                description: "Filter criteria. Allowed fields: name, start_date, end_date, registration_begin_date, registration_end_date, ticket_types_count. Operands: == (equal), < (less than), > (greater than), <= (less than or equal), >= (greater than or equal), [] (especially for date ranges), =@ (starts with), @@ (contains)",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by: id, name, start_date, registration_begin_date"
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships (ids): locations, wifi_connections, selection_plans, meeting_booking_room_allowed_attributes, summit_sponsors, order_extra_questions, tax_types, payment_profiles, email_flows_events, summit_documents, featured_speakers, dates_with_events, presentation_action_types, schedule_settings, badge_view_types, lead_report_settings, badge_types, badge_features_types, badge_access_level_types, dates_with_events, supported_currencies"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships: locations, wifi_connections, selection_plans, meeting_booking_room_allowed_attributes, summit_sponsors, order_extra_questions, tax_types, payment_profiles, email_flows_events, summit_documents, featured_speakers, dates_with_events, presentation_action_types, schedule_settings, badge_view_types, lead_report_settings, badge_types, badge_features_types, badge_access_level_types, dates_with_events, supported_currencies"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+        ],
+        security: [
+            [
+                "summit_oauth2" => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ]
+        ]
+    ),
     ]
     #[OA\Get(
-            path: "/api/public/v1/summits",
-            operationId: "getSummitsPublic",
-            summary: "Get summits list (public)",
-            tags: ["Summits (Public)"],
-            parameters: [
-                new OA\Parameter(
-                    name: "page",
-                    description: "Page number",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "integer", default: 1)
-                ),
-                new OA\Parameter(
-                    name: "per_page",
-                    description: "Items per page",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "integer", default: 10)
-                ),
-                new OA\Parameter(
-                    name: "filter",
-                    description: "Filter criteria",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "string")
-                ),
-            ],
-            responses: [
-                new OA\Response(
-                    response: Response::HTTP_OK,
-                    description: "Success",
-                    content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
-                ),
-            ]
-        )
+        path: "/api/public/v1/summits",
+        operationId: "getSummitsPublic",
+        summary: "Get summits list (public)",
+        tags: ["Summits (Public)"],
+        parameters: [
+            new OA\Parameter(
+                name: "page",
+                description: "Page number",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1)
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                description: "Items per page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10)
+            ),
+            new OA\Parameter(
+                name: "filter",
+                description: "Filter criteria. Allowed fields: name, start_date, end_date, registration_begin_date, registration_end_date, ticket_types_count. Operands: == (equal), < (less than), > (greater than), <= (less than or equal), >= (greater than or equal), [] (especially for date ranges), =@ (starts with), @@ (contains)",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by: id, name, start_date, registration_begin_date"
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships (ids): locations, wifi_connections, selection_plans, meeting_booking_room_allowed_attributes, summit_sponsors, order_extra_questions, tax_types, payment_profiles, email_flows_events, summit_documents, featured_speakers, dates_with_events, presentation_action_types, schedule_settings, badge_view_types, lead_report_settings, badge_types, badge_features_types, badge_access_level_types, dates_with_events, supported_currencies"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships: featured_speakers, schedule, type, locations"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
+            ),
+        ]
+    )
     ]
     public function getSummits()
     {

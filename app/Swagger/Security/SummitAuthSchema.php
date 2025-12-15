@@ -6,6 +6,8 @@ use App\Security\SummitScopes;
 use OpenApi\Attributes as OA;
 
 #[
+    OA\Info(version: "1.0.0", description: "Summit API", title: "Summit API Documentation"),
+    OA\Server(url: L5_SWAGGER_CONST_HOST, description: "server"),
     OA\SecurityScheme(
     type: 'oauth2',
     securityScheme: 'summit_oauth2',

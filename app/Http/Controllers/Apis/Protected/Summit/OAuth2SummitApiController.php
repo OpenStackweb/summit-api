@@ -123,6 +123,14 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         operationId: "getSummits",
         summary: "Get summits list",
         tags: ["Summits"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: "page",
@@ -176,14 +184,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
         ],
-        security: [
-            [
-                "summit_oauth2" => [
-                    SummitScopes::ReadSummitData,
-                    SummitScopes::ReadAllSummitData
-                ]
-            ]
-        ]
     ),
     ]
     #[OA\Get(
@@ -324,111 +324,115 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-            path: "/api/v1/summits/all",
-            operationId: "getAllSummits",
-            summary: "Get all summits",
-            tags: ["Summits"],
-            parameters: [
-                new OA\Parameter(
-                    name: "page",
-                    description: "Page number",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "integer", default: 1)
-                ),
-                new OA\Parameter(
-                    name: "per_page",
-                    description: "Items per page",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "integer", default: 10)
-                ),
-                new OA\Parameter(
-                    name: "filter",
-                    description: "Filter criteria: name, start_date, end_date, registration_begin_date, registration_end_date, ticket_types_count, submission_begin_date, submission_end_date, voting_begin_date, voting_end_date, selection_begin_date, selection_end_date, selection_plan_enabled, begin_allow_booking_date, end_allow_booking_date",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "string")
-                ),
-                new OA\Parameter(
-                    name: "expand",
-                    description: "Relations to expand: featured_speakers, schedule, type, locations",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "string")
-                ),
-                new OA\Parameter(
-                    name: "relations",
-                    description: "Relations to add: ticket_types, locations, wifi_connections, selection_plans, meeting_booking_room_allowed_attributes, summit_sponsors, order_extra_questions, tax_types, payment_profiles, email_flows_events, summit_documents, featured_speakers, dates_with_events, presentation_action_types, schedule_settings, badge_view_types, lead_report_settings, badge_types, badge_features_types, badge_access_level_types, dates_with_events, supported_currencies",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "string")
-                ),
-            ],
-            responses: [
-                new OA\Response(
-                    response: Response::HTTP_OK,
-                    description: "Success",
-                    content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
-                ),
-                new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-                new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::ReadAllSummitData
-            ]]]
-        ),
+        path: "/api/v1/summits/all",
+        operationId: "getAllSummits",
+        summary: "Get all summits",
+        tags: ["Summits"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::ReadAllSummitData
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "page",
+                description: "Page number",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1)
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                description: "Items per page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10)
+            ),
+            new OA\Parameter(
+                name: "filter",
+                description: "Filter criteria: name, start_date, end_date, registration_begin_date, registration_end_date, ticket_types_count, submission_begin_date, submission_end_date, voting_begin_date, voting_end_date, selection_begin_date, selection_end_date, selection_plan_enabled, begin_allow_booking_date, end_allow_booking_date",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                description: "Relations to expand: featured_speakers, schedule, type, locations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                description: "Relations to add: ticket_types, locations, wifi_connections, selection_plans, meeting_booking_room_allowed_attributes, summit_sponsors, order_extra_questions, tax_types, payment_profiles, email_flows_events, summit_documents, featured_speakers, dates_with_events, presentation_action_types, schedule_settings, badge_view_types, lead_report_settings, badge_types, badge_features_types, badge_access_level_types, dates_with_events, supported_currencies",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+        ]
+    ),
     ]
     #[OA\Get(
-            path: "/api/public/v1/summits/all",
-            operationId: "getAllSummitsPublic",
-            summary: "Get all summits (public)",
-            tags: ["Summits (Public)"],
-            parameters: [
-                new OA\Parameter(
-                    name: "page",
-                    description: "Page number",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "integer", default: 1)
-                ),
-                new OA\Parameter(
-                    name: "per_page",
-                    description: "Items per page",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "integer", default: 10)
-                ),
-                new OA\Parameter(
-                    name: "filter",
-                    description: "Filter criteria",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "string")
-                ),
-                new OA\Parameter(
-                    name: "relations",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "string"),
-                    description: "Expand relationships (ids): locations, wifi_connections, selection_plans, meeting_booking_room_allowed_attributes, summit_sponsors, order_extra_questions, tax_types, payment_profiles, email_flows_events, summit_documents, featured_speakers, dates_with_events, presentation_action_types, schedule_settings, badge_view_types, lead_report_settings, badge_types, badge_features_types, badge_access_level_types, dates_with_events, supported_currencies"
-                ),
-                new OA\Parameter(
-                    name: "expand",
-                    in: "query",
-                    required: false,
-                    schema: new OA\Schema(type: "string"),
-                    description: "Expand relationships: featured_speakers, schedule, type, locations"
-                ),
-            ],
-            responses: [
-                new OA\Response(
-                    response: Response::HTTP_OK,
-                    description: "Success",
-                    content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
-                ),
-            ]
-        )
+        path: "/api/public/v1/summits/all",
+        operationId: "getAllSummitsPublic",
+        summary: "Get all summits (public)",
+        tags: ["Summits (Public)"],
+        parameters: [
+            new OA\Parameter(
+                name: "page",
+                description: "Page number",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1)
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                description: "Items per page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10)
+            ),
+            new OA\Parameter(
+                name: "filter",
+                description: "Filter criteria",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships (ids): locations, wifi_connections, selection_plans, meeting_booking_room_allowed_attributes, summit_sponsors, order_extra_questions, tax_types, payment_profiles, email_flows_events, summit_documents, featured_speakers, dates_with_events, presentation_action_types, schedule_settings, badge_view_types, lead_report_settings, badge_types, badge_features_types, badge_access_level_types, dates_with_events, supported_currencies"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships: featured_speakers, schedule, type, locations"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
+            ),
+        ]
+    )
     ]
     public function getAllSummits()
     {
@@ -538,7 +542,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         tags: ["Summits"],
         security: [
             [
-                "summit_oauth2" => [
+                'summit_oauth2' => [
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData
                 ]
@@ -624,7 +628,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         tags: ["Summits"],
         security: [
             [
-                "summit_oauth2" => [
+                'summit_oauth2' => [
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData
                 ]
@@ -828,7 +832,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         tags: ["Summits"],
         security: [
             [
-                "summit_oauth2" => [
+                'summit_oauth2' => [
                     SummitScopes::ReadAllSummitData
                 ]
             ]
@@ -911,6 +915,13 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "getAllSummitByIdOrSlugRegistrationStats",
             summary: "Get summit registration statistics",
             tags: ["Summits", "Statistics"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::ReadAllSummitData
+                    ]
+                ]
+            ],
             x: [
                 'required-groups' => [
                     IGroup::SuperAdmins,
@@ -919,9 +930,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
-            security: [["summit_oauth2" => [
-                SummitScopes::ReadAllSummitData
-            ]]],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1018,19 +1026,19 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         operationId: "getAttendeesCheckinsOverTimeStats",
         summary: "Get attendees check-ins statistics",
         tags: ["Summits", "Statistics"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::ReadAllSummitData
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
                 IGroup::SummitRegistrationAdmins,
-            ]
-        ],
-        security: [
-            [
-                "summit_oauth2" => [
-                    SummitScopes::ReadAllSummitData
-                ]
             ]
         ],
         parameters: [
@@ -1130,6 +1138,13 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "getPurchasedTicketsOverTimeStats",
             summary: "Get purchased tickets statistics",
             tags: ["Summits", "Statistics"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::ReadAllSummitData
+                    ]
+                ]
+            ],
             x: [
                 'required-groups' => [
                     IGroup::SuperAdmins,
@@ -1138,9 +1153,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
-            security: [["summit_oauth2" => [
-                SummitScopes::ReadAllSummitData
-            ]]],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1231,15 +1243,19 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "addSummit",
             summary: "Create a new summit",
             tags: ["Summits"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
             x: [
                 'required-groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                 ]
             ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]],
             requestBody: new OA\RequestBody(
                 required: true,
                 content: new OA\JsonContent(ref: "#/components/schemas/Summit")
@@ -1281,6 +1297,13 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "updateSummit",
             summary: "Update summit",
             tags: ["Summits"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
             x: [
                 'required-groups' => [
                     IGroup::SuperAdmins,
@@ -1288,9 +1311,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     IGroup::SummitAdministrators,
                 ]
             ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1349,15 +1369,19 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "deleteSummit",
             summary: "Delete summit",
             tags: ["Summits"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
             x: [
                 'required-groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                 ]
             ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1390,6 +1414,13 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "getExternalOrder",
             summary: "Get external order",
             tags: ["Summits", "External Orders"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::ReadSummitsConfirmExternalOrders
+                    ]
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1412,10 +1443,9 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                     description: "Success",
                     content: new OA\JsonContent(type: "object")
                 ),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Order not found"),
+                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            ],
-            security: [["summit_oauth2" => []]]
+            ]
         )
     ]
     public function getExternalOrder($summit_id, $external_order_id)
@@ -1433,6 +1463,13 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "confirmExternalOrderAttendee",
             summary: "Confirm external order attendee",
             tags: ["Summits", "External Orders"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitsConfirmExternalOrders
+                    ]
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1460,13 +1497,12 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(
                     response: Response::HTTP_OK,
                     description: "Success",
-                    content: new OA\JsonContent(type: "object")
+                    content: new OA\JsonContent(ref: "#/components/schemas/SummitAttendee")
                 ),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            ],
-            security: [["summit_oauth2" => []]]
+            ]
         )
     ]
     public function confirmExternalOrderAttendee($summit_id, $external_order_id, $external_attendee_id)
@@ -1513,6 +1549,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "addSummitLogo",
             summary: "Add summit logo",
             tags: ["Summits", "Media"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1538,7 +1588,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(
                     response: Response::HTTP_CREATED,
                     description: "Logo created",
-                    content: new OA\JsonContent(type: "object")
+                    content: new OA\JsonContent(ref: "#/components/schemas/File")
                 ),
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
@@ -1546,16 +1596,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
                 new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     /**
@@ -1592,35 +1632,39 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-            path: "/api/v1/summits/{id}/logo",
-            operationId: "deleteSummitLogo",
-            summary: "Delete summit logo",
-            tags: ["Summits", "Media"],
-            parameters: [
-                new OA\Parameter(
-                    name: "id",
-                    description: "Summit ID",
-                    in: "path",
-                    required: true,
-                    schema: new OA\Schema(type: "integer")
-                ),
-            ],
-            responses: [
-                new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Logo deleted"),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-                new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-                new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
+        path: "/api/v1/summits/{id}/logo",
+        operationId: "deleteSummitLogo",
+        summary: "Delete summit logo",
+        tags: ["Summits", "Media"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::WriteSummitData
                 ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Logo deleted"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+        ],
         )
     ]
     public function deleteSummitLogo($summit_id)
@@ -1646,6 +1690,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "addSummitSecondaryLogo",
             summary: "Add summit secondary logo",
             tags: ["Summits", "Media"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1677,16 +1735,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     public function addSummitSecondaryLogo(LaravelRequest $request, $summit_id)
@@ -1722,6 +1770,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "deleteSummitSecondaryLogo",
             summary: "Delete summit secondary logo",
             tags: ["Summits", "Media"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1737,16 +1799,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     public function deleteSummitSecondaryLogo($summit_id)
@@ -1772,6 +1824,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "addFeatureSpeaker",
             summary: "Add featured speaker to summit",
             tags: ["Summits", "Featured Speakers"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1790,19 +1856,9 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ],
             responses: [
                 new OA\Response(response: Response::HTTP_OK, description: "Speaker added as featured"),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or speaker not found"),
+                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     /**
@@ -1826,6 +1882,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "updateFeatureSpeaker",
             summary: "Update featured speaker order",
             tags: ["Summits", "Featured Speakers"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1853,20 +1923,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ),
             responses: [
                 new OA\Response(response: Response::HTTP_OK, description: "Featured speaker updated"),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or speaker not found"),
+                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     /**
@@ -1894,6 +1954,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "removeFeatureSpeaker",
             summary: "Remove featured speaker from summit",
             tags: ["Summits", "Featured Speakers"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1912,19 +1986,9 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ],
             responses: [
                 new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Featured speaker removed"),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or speaker not found"),
+                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     /**
@@ -1948,6 +2012,21 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "getAllFeatureSpeaker",
             summary: "Get all featured speakers for summit",
             tags: ["Summits", "Featured Speakers"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -1994,17 +2073,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::ReadAllSummitData,
-                SummitScopes::ReadSummitData
-            ]]]
         )
     ]
     /**
@@ -2079,6 +2147,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "generateQREncKey",
             summary: "Generate QR encryption key",
             tags: ["Summits", "QR Code"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::SummitAdministrators,
+                    IGroup::Administrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -2097,16 +2179,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::SummitAdministrators,
-                    IGroup::Administrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     /**
@@ -2132,6 +2204,23 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "getLeadReportSettingsMetadata",
             summary: "Get lead report settings metadata",
             tags: ["Summits", "Lead Reports"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::ReadSummitData,
+                        SummitScopes::ReadAllSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -2150,19 +2239,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
-                    IGroup::SponsorExternalUsers,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::ReadSummitData,
-                SummitScopes::ReadAllSummitData
-            ]]]
         )
     ]
     /**
@@ -2183,6 +2259,23 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "getLeadReportSettings",
             summary: "Get lead report settings",
             tags: ["Summits", "Lead Reports"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::ReadSummitData,
+                        SummitScopes::ReadAllSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -2201,19 +2294,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
-                    IGroup::SponsorExternalUsers,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::ReadSummitData,
-                SummitScopes::ReadAllSummitData
-            ]]]
         )
     ]
     /**
@@ -2239,6 +2319,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "addLeadReportSettings",
             summary: "Add lead report settings",
             tags: ["Summits", "Lead Reports"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -2263,16 +2357,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     /**
@@ -2305,6 +2389,20 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             operationId: "updateLeadReportSettings",
             summary: "Update lead report settings",
             tags: ["Summits", "Lead Reports"],
+            security: [
+                [
+                    'summit_oauth2' => [
+                        SummitScopes::WriteSummitData
+                    ]
+                ]
+            ],
+            x: [
+                'required-groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             parameters: [
                 new OA\Parameter(
                     name: "id",
@@ -2329,16 +2427,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            security: [["summit_oauth2" => [
-                SummitScopes::WriteSummitData
-            ]]]
         )
     ]
     /**
@@ -2372,6 +2460,13 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         summary: 'Validate Scanned Badges',
         operationId: 'validateBadge',
         tags: ['Badges'],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::ReadBadgeScanValidate
+                ]
+            ]
+        ],
         x: [
             'required-groups' => [
                 IGroup::SponsorExternalUsers,
@@ -2379,9 +2474,6 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 IGroup::Administrators,
             ]
         ],
-        security: [['summit_oauth2' => [
-            SummitScopes::ReadBadgeScanValidate
-        ]]],
         parameters: [
             new OA\Parameter(
                 name: 'summit_id',
@@ -2405,7 +2497,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 content: new OA\JsonContent(ref: '#/components/schemas/ValidateBadgeResponse')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]

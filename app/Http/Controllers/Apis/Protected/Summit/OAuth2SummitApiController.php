@@ -12,12 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\IStatsConstants;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\ModelSerializers\SerializerUtils;
 use App\Security\SummitScopes;
 use App\Utils\FilterUtils;
+use Doctrine\ORM\EntityNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
@@ -384,6 +386,35 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         });
     }
 
+    private function getSummitOr404($id):Summit{
+        $summit = $this->repository->getById(intval($id));
+        if (is_null($summit))
+            $summit = $this->repository->getBySlug(trim($id));
+
+        if (!$summit instanceof Summit || $summit->isDeleting())
+            throw new EntityNotFoundException("Summit not Found.");
+        return $summit;
+    }
+
+    public function getAllSummitByIdOrSlugPublic($id){
+        return $this->processRequest(function () use ($id) {
+            $summit = $this->getSummitOr404($id);
+            return $this->ok
+            (
+                SerializerRegistry::getInstance()
+                    ->getSerializer($summit)
+                    ->serialize
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        [
+                            'build_default_payment_gateway_profile_strategy' => $this->build_default_payment_gateway_profile_strategy
+                        ])
+            );
+        });
+    }
+
     /**
      * @param $id
      * @return JsonResponse|mixed
@@ -391,15 +422,18 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     public function getAllSummitByIdOrSlug($id)
     {
         return $this->processRequest(function () use ($id) {
-            $summit = $this->repository->getById(intval($id));
-            if (is_null($summit))
-                $summit = $this->repository->getBySlug(trim($id));
-
-            if (!$summit instanceof Summit || $summit->isDeleting()) return $this->error404();
+            $summit = $this->getSummitOr404($id);
 
             $current_member = $this->resource_server_context->getCurrentUser();
+
             if (!is_null($current_member) && !$current_member->isAdmin() && !$current_member->hasPermissionFor($summit))
-                return $this->error403(['message' => sprintf("Member %s has not permission for this Summit", $current_member->getId())]);
+                throw new HTTP403ForbiddenException
+                (
+                    sprintf
+                    (
+                        "Member %s has not permission for this Summit", $current_member->getId()
+                    )
+                );
 
             $serializer_type = $this->serializer_type_selector->getSerializerType();
 

@@ -59,12 +59,14 @@ class Kernel extends HttpKernel
         'api' => [
             'ssl',
             'oauth2.protected',
-            'etags'
+            'etags',
+            'memory.footprint',
         ],
         'public_api' => [
             'ssl',
             'rate.limit:10000,1', // 10000 request per minute
-            'etags'
+            'etags',
+            'memory.footprint',
         ],
         'well_known' => [
             'ssl',
@@ -91,6 +93,8 @@ class Kernel extends HttpKernel
         'ssl'              => \App\Http\Middleware\SSLMiddleware::class,
         'auth.user'        => \App\Http\Middleware\UserAuthEndpoint::class,
         'server.timing.doctrine' => \App\Http\Middleware\ServerTimingDoctrine::class,
+        'memory.footprint' => \App\Http\Middleware\MemoryFootprintMiddleware::class,
+
     ];
 
 }

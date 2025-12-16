@@ -29,6 +29,13 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
         $this->config = config('audit_log', []);
     }
 
+    public function getStrategyClass(object $subject, string $event_type): ?IAuditLogFormatter
+    {
+        $class = get_class($subject);
+        $cls = $this->config['entities'][$class]['strategy'] ?? null;
+        return !is_null($cls) ? new $cls($event_type):null;
+    }
+
     public function make(AuditContext $ctx, $subject, $eventType): ?IAuditLogFormatter
     {
         $formatter = null;
@@ -46,12 +53,18 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
                 break;
             case IAuditStrategy::EVENT_ENTITY_CREATION:
                 $formatter = $this->getFormatterByContext($subject, $eventType, $ctx);
+                if (is_null($formatter)) {
+                    $formatter = $this->getStrategyClass($subject, $eventType);
+                }
                 if(is_null($formatter)) {
                     $formatter = new EntityCreationAuditLogFormatter();
                 }
                 break;
             case IAuditStrategy::EVENT_ENTITY_DELETION:
                 $formatter = $this->getFormatterByContext($subject, $eventType, $ctx);
+                if (is_null($formatter)) {
+                    $formatter = $this->getStrategyClass($subject, $eventType);
+                }
                 if(is_null($formatter)) {
                     $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
                     $formatter = new EntityDeletionAuditLogFormatter($child_entity_formatter);
@@ -59,6 +72,9 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
                 break;
             case IAuditStrategy::EVENT_ENTITY_UPDATE:
                 $formatter = $this->getFormatterByContext($subject, $eventType, $ctx);
+                if (is_null($formatter)) {
+                    $formatter = $this->getStrategyClass($subject, $eventType);
+                }
                 if(is_null($formatter)) {
                     $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
                     $formatter = new EntityUpdateAuditLogFormatter($child_entity_formatter);
@@ -74,24 +90,17 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
         $class = get_class($subject);
         $entity_config = $this->config['entities'][$class] ?? null;
         
-        if (!$entity_config) {
+        if (!$entity_config || !isset($entity_config['strategies'])) {
             return null;
         }
 
-        if (isset($entity_config['strategies'])) {
-            foreach ($entity_config['strategies'] as $strategy) {
-                if (!$this->matchesStrategy($strategy, $ctx)) {
-                    continue;
-                }
-
-                $formatter_class = $strategy['formatter'] ?? null;
-                return $formatter_class ? new $formatter_class($event_type) : null;
+        foreach ($entity_config['strategies'] as $strategy) {
+            if (!$this->matchesStrategy($strategy, $ctx)) {
+                continue;
             }
-        }
 
-        if (isset($entity_config['strategy'])) {
-            $strategy_class = $entity_config['strategy'];
-            return new $strategy_class($event_type);
+            $formatter_class = $strategy['formatter'] ?? null;
+            return $formatter_class ? new $formatter_class($event_type) : null;
         }
 
         return null;

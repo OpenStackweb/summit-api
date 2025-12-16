@@ -17,7 +17,7 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
+
 /**
  * Class AuditEventListener
  * @package App\Audit
@@ -99,16 +99,15 @@ class AuditEventListener
         //$ui = app()->bound('ui.context') ? app('ui.context') : [];
 
         $req = request();
-        $rawRoute = null;
-        // does not resolve the route when app is running in console mode
-        if ($req instanceof Request && !app()->runningInConsole()) {
-            try {
-                $route = Route::getRoutes()->match($req);
-                $method = $route->methods[0] ?? 'UNKNOWN';
-                $rawRoute = $method . self::ROUTE_METHOD_SEPARATOR . $route->uri;
-            } catch (\Exception $e) {
-                Log::warning($e);
-            }
+
+        try {
+            $route = Route::getRoutes()->match($req);
+            $method = $route->methods[0] ?? 'UNKNOWN';
+            $rawRoute = $method . self::ROUTE_METHOD_SEPARATOR . $route->uri;
+        }
+        catch (\Exception $e) {
+            Log::warning($e);
+            $rawRoute = null;
         }
 
         return new AuditContext(

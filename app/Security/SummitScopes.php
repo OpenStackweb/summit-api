@@ -119,4 +119,7 @@ final class SummitScopes
 
     const WriteAttendeeNotesData = '%s/attendee/notes/write';
     const ReadAttendeeNotesData = '%s/attendee/notes/read';
+
+    const WriteSummitsConfirmExternalOrders = '%s/summits/confirm-external-orders';
+    const ReadSummitsConfirmExternalOrders = '%s/summits/read-external-orders';
 }

@@ -99,17 +99,11 @@ class AuditEventListener
         //$ui = app()->bound('ui.context') ? app('ui.context') : [];
 
         $req = request();
-
-        try {
-            $route = Route::getRoutes()->match($req);
-            $method = $route->methods[0] ?? 'UNKNOWN';
-            $rawRoute = $method . self::ROUTE_METHOD_SEPARATOR . $route->uri;
-        }
-        catch (\Exception $e) {
-            Log::warning($e);
-            $rawRoute = null;
-        }
-
+        
+        $route = Route::getRoutes()->match($req);
+        $method = $route->methods[0] ?? 'UNKNOWN';
+        $rawRoute = $method . self::ROUTE_METHOD_SEPARATOR . $route->uri;
+        
         return new AuditContext(
             userId:        $member?->getId(),
             userEmail:     $member?->getEmail(),

@@ -24,22 +24,5 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         $this->ctx = $ctx;
     }
 
-    protected function getUserInfo(): string
-    {
-        if (!$this->ctx) {
-            return 'Unknown (unknown)';
-        }
-
-        $user_name = 'Unknown';
-        if ($this->ctx->userFirstName || $this->ctx->userLastName) {
-            $user_name = trim(sprintf("%s %s", $this->ctx->userFirstName ?? '', $this->ctx->userLastName ?? '')) ?: 'Unknown';
-        } elseif ($this->ctx->userEmail) {
-            $user_name = $this->ctx->userEmail;
-        }
-        
-        $user_id = $this->ctx->userId ?? 'unknown';
-        return sprintf("%s (%s)", $user_name, $user_id);
-    }
-
     abstract public function format($subject, array $change_set): ?string;
 }

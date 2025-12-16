@@ -16,7 +16,6 @@ use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
 
 /**
  * Class AuditEventListener
@@ -24,11 +23,10 @@ use Illuminate\Support\Facades\Route;
  */
 class AuditEventListener
 {
-    private const ROUTE_METHOD_SEPARATOR = '|';
 
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
-        if (app()->environment('testing')) {
+        if (app()->environment('testing')){
             return;
         }
         $em = $eventArgs->getObjectManager();
@@ -69,7 +67,7 @@ class AuditEventListener
     /**
      * Get the appropriate audit strategy based on environment configuration
      */
-    private function getAuditStrategy($em): ?IAuditStrategy
+    private function getAuditStrategy($em)
     {
         // Check if OTLP audit is enabled
         if (config('opentelemetry.enabled', false)) {
@@ -99,11 +97,7 @@ class AuditEventListener
         //$ui = app()->bound('ui.context') ? app('ui.context') : [];
 
         $req = request();
-        
-        $route = Route::getRoutes()->match($req);
-        $method = $route->methods[0] ?? 'UNKNOWN';
-        $rawRoute = $method . self::ROUTE_METHOD_SEPARATOR . $route->uri;
-        
+
         return new AuditContext(
             userId:        $member?->getId(),
             userEmail:     $member?->getEmail(),
@@ -115,7 +109,6 @@ class AuditEventListener
             httpMethod:    $req?->method(),
             clientIp:      $req?->ip(),
             userAgent:     $req?->userAgent(),
-            rawRoute:      $rawRoute
         );
     }
 }

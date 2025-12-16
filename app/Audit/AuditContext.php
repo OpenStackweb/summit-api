@@ -21,7 +21,6 @@ class AuditContext
         public ?string $uiApp = null,
         public ?string $uiFlow = null,
         public ?string $route = null,
-        public ?string $rawRoute = null,
         public ?string $httpMethod = null,
         public ?string $clientIp = null,
         public ?string $userAgent = null,

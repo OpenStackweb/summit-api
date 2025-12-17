@@ -30,6 +30,10 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         $this->formatterFactory = $formatterFactory;
         $this->enabled = config('opentelemetry.enabled', false);
         $this->elasticIndex = config('opentelemetry.logs.elasticsearch_index', 'logs-audit');
+        Log::debug("AuditLogOtlpStrategy::__construct", [
+            'enabled' => $this->enabled,
+            'elasticIndex' => $this->elasticIndex,
+        ]);
     }
 
     /**

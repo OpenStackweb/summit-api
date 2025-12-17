@@ -4,7 +4,7 @@ use Keepsuit\LaravelOpenTelemetry\Instrumentation;
 use OpenTelemetry\SDK\Common\Configuration\Variables;
 
 return [
-    'enabled' => env('OTEL_SERVICE_ENABLED', false),
+    'enabled' => filter_var(env('OTEL_SERVICE_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
     /**
      * Service name
      */

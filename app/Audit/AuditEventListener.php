@@ -74,6 +74,7 @@ class AuditEventListener
         // Check if OTLP audit is enabled
         if (config('opentelemetry.enabled', false)) {
             try {
+                Log::debug("AuditEventListener::getAuditStrategy strategy AuditLogOtlpStrategy");
                 return App::make(AuditLogOtlpStrategy::class);
             } catch (\Exception $e) {
                 Log::warning('Failed to create OTLP audit strategy, falling back to database', [
@@ -83,6 +84,7 @@ class AuditEventListener
         }
 
         // Use database strategy (either as default or fallback)
+        Log::debug("AuditEventListener::getAuditStrategy strategy AuditLogStrategy");
         return new AuditLogStrategy($em);
     }
 

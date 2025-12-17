@@ -238,11 +238,44 @@ class SummitSpeakerCreateRequest {}
 class SummitSpeakerUpdateRequest {}
 
 #[OA\Schema(
-    schema: "SummitPaginatedSpeakersResponse",
+    schema: "PaginatedPresentationSpeakersResponse",
     type: "object",
-    properties: [
-        new OA\Property(property: "data", type: "array", items: new OA\Items(ref: "#/components/schemas/SummitSpeakerPublic")),
-        new OA\Property(property: "meta", ref: "#/components/schemas/PaginateDataSchemaResponse"),
+    allOf: [
+        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+        new OA\Schema(
+            type: "object",
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(
+                        oneOf: [
+                            new OA\Schema(ref: "#/components/schemas/SummitPresentationSpeaker"),
+                            new OA\Schema(ref: "#/components/schemas/AdminPresentationSpeaker"),
+                        ]
+                    )
+                )
+            ]
+        )
     ]
 )]
-class SummitPaginatedSpeakersResponse {}
+class PaginatedPresentationSpeakersResponseSchema {}
+
+#[OA\Schema(
+    schema: "PaginatedSummitPresentationSpeakersResponsePublic",
+    type: "object",
+    allOf: [
+        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+        new OA\Schema(
+            type: "object",
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/SummitPresentationSpeaker"),
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedSummitPresentationSpeakersResponsePublicSchema {}

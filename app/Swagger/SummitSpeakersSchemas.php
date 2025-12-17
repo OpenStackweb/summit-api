@@ -177,3 +177,70 @@ class SpeakerOrganizationalRoleSchema
 class SpeakerOrganizationalRolesResponseSchema
 {
 }
+
+#[OA\Schema(
+    schema: 'SummitPresentationSpeakerRequestBody',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'title', type: 'string', maxLength: 100),
+        new OA\Property(property: 'first_name', type: 'string', maxLength: 100),
+        new OA\Property(property: 'last_name', type: 'string', maxLength: 100),
+        new OA\Property(property: 'bio', type: 'string'),
+        new OA\Property(property: 'twitter', type: 'string', maxLength: 50),
+        new OA\Property(property: 'irc', type: 'string', maxLength: 50),
+        new OA\Property(property: 'member_id', type: 'integer'),
+        new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 50),
+        new OA\Property(property: 'on_site_phone', type: 'string', maxLength: 50),
+        new OA\Property(property: 'registered', type: 'boolean'),
+        new OA\Property(property: 'is_confirmed', type: 'boolean'),
+        new OA\Property(property: 'checked_in', type: 'boolean'),
+        new OA\Property(property: 'registration_code', type: 'string'),
+        new OA\Property(property: 'available_for_bureau', type: 'boolean'),
+        new OA\Property(property: 'funded_travel', type: 'boolean'),
+        new OA\Property(property: 'willing_to_travel', type: 'boolean'),
+        new OA\Property(property: 'willing_to_present_video', type: 'boolean'),
+        new OA\Property(property: 'org_has_cloud', type: 'boolean'),
+        new OA\Property(property: 'country', type: 'string'),
+        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'areas_of_expertise', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'travel_preferences', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'organizational_roles', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'active_involvements', type: 'array', items: new OA\Items(type: 'integer')),
+    ],
+)]
+
+class SummitPresentationSpeakerRequestBodySchema
+{
+}
+
+#[OA\Schema(
+    schema: 'SummitPresentationSpeakerUpdateCreateRequestBody',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'title', type: 'string', maxLength: 100),
+        new OA\Property(property: 'first_name', type: 'string', maxLength: 100),
+        new OA\Property(property: 'last_name', type: 'string', maxLength: 100),
+        new OA\Property(property: 'bio', type: 'string'),
+        new OA\Property(property: 'notes', type: 'string'),
+        new OA\Property(property: 'twitter', type: 'string', maxLength: 50),
+        new OA\Property(property: 'irc', type: 'string', maxLength: 50),
+        new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 50),
+        new OA\Property(property: 'available_for_bureau', type: 'boolean'),
+        new OA\Property(property: 'funded_travel', type: 'boolean'),
+        new OA\Property(property: 'willing_to_travel', type: 'boolean'),
+        new OA\Property(property: 'willing_to_present_video', type: 'boolean'),
+        new OA\Property(property: 'org_has_cloud', type: 'boolean'),
+        new OA\Property(property: 'country', type: 'string'),
+        new OA\Property(property: 'languages', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'areas_of_expertise', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'travel_preferences', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'organizational_roles', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'active_involvements', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'company', type: 'string', maxLength: 255),
+        new OA\Property(property: 'phone_number', type: 'string', maxLength: 255),
+    ],
+)]
+
+class SummitPresentationSpeakerUpdateCreateRequestBodySchema
+{
+}

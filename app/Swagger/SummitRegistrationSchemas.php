@@ -54,6 +54,129 @@ class SummitTaxTypeUpdateRequestSchema
 // Badge Types
 
 #[OA\Schema(
+    schema: 'PaginatedSummitAttendeesResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/SummitAttendee')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedSummitAttendeesResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'AttendeeRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'shared_contact_info', type: 'boolean'),
+        new OA\Property(property: 'summit_hall_checked_in', type: 'boolean'),
+        new OA\Property(property: 'disclaimer_accepted', type: 'boolean'),
+        new OA\Property(property: 'first_name', type: 'string', maxLength: 255),
+        new OA\Property(property: 'surname', type: 'string', maxLength: 255),
+        new OA\Property(property: 'company', type: 'string', maxLength: 255),
+        new OA\Property(property: 'email', type: 'string', maxLength: 255),
+        new OA\Property(property: 'member_id', type: 'integer'),
+        new OA\Property(property: 'admin_notes', type: 'string', maxLength: 1024),
+        new OA\Property(property: 'tags', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'manager_id', type: 'integer'),
+        new OA\Property(
+            property: 'extra_questions',
+            type: 'array',
+            items: new OA\Items(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'question_id', type: 'integer'),
+                    new OA\Property(property: 'answer', type: 'string')
+                ]
+            )
+        ),
+    ]
+)]
+class AttendeeRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'AddAttendeeTicketRequest',
+    type: 'object',
+    required: ['ticket_type_id'],
+    properties: [
+        new OA\Property(property: 'ticket_type_id', type: 'integer'),
+        new OA\Property(property: 'promo_code', type: 'string'),
+        new OA\Property(property: 'external_order_id', type: 'string'),
+        new OA\Property(property: 'external_attendee_id', type: 'string'),
+    ]
+)]
+class AddAttendeeTicketRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'ReassignAttendeeTicketRequest',
+    type: 'object',
+    required: ['attendee_email'],
+    properties: [
+        new OA\Property(property: 'attendee_first_name', type: 'string', maxLength: 255),
+        new OA\Property(property: 'attendee_last_name', type: 'string', maxLength: 255),
+        new OA\Property(property: 'attendee_email', type: 'string', maxLength: 255),
+        new OA\Property(property: 'attendee_company', type: 'string', maxLength: 255),
+        new OA\Property(
+            property: 'extra_questions',
+            type: 'array',
+            items: new OA\Items(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'question_id', type: 'integer'),
+                    new OA\Property(property: 'answer', type: 'string')
+                ]
+            )
+        ),
+    ]
+)]
+class ReassignAttendeeTicketRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'SendAttendeesEmailRequest',
+    type: 'object',
+    required: ['email_flow_event'],
+    properties: [
+        new OA\Property(
+            property: 'email_flow_event',
+            type: 'string',
+            enum: ['SUMMIT_ATTENDEE_TICKET_REGENERATE_HASH', 'SUMMIT_ATTENDEE_INVITE_TICKET_EDITION', 'SUMMIT_ATTENDEE_ALL_TICKETS_EDITION', 'SUMMIT_ATTENDEE_REGISTRATION_INCOMPLETE_REMINDER', 'SUMMIT_ATTENDEE_GENERIC']
+        ),
+        new OA\Property(
+            property: 'attendees_ids',
+            type: 'array',
+            items: new OA\Items(type: 'integer')
+        ),
+        new OA\Property(
+            property: 'excluded_attendees_ids',
+            type: 'array',
+            items: new OA\Items(type: 'integer')
+        ),
+        new OA\Property(property: 'test_email_recipient', type: 'string', format: 'email'),
+        new OA\Property(property: 'outcome_email_recipient', type: 'string', format: 'email'),
+    ]
+)]
+class SendAttendeesEmailRequestSchema
+{
+}
+
+// Summit Badge Types
+
+#[OA\Schema(
     schema: "PaginatedSummitBadgeTypesResponse",
     description: "Paginated list of summit badge types",
     allOf: [
@@ -105,22 +228,6 @@ class SummitBadgeTypeUpdateRequestSchema
 }
 
 // Summit Badge Feature Types
-
-#[OA\Schema(
-    schema: 'SummitBadgeFeatureType',
-    type: 'object',
-    properties: [
-        new OA\Property(property: 'id', type: 'integer', example: 1),
-        new OA\Property(property: 'name', type: 'string', example: 'Speaker Ribbon'),
-        new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Special ribbon indicating speaker status'),
-        new OA\Property(property: 'template_content', type: 'string', nullable: true, example: '<div class="speaker-badge">{{name}}</div>'),
-        new OA\Property(property: 'summit_id', type: 'integer', example: 42),
-        new OA\Property(property: 'image', type: 'string', nullable: true, example: 'https://example.com/images/speaker-ribbon.png'),
-    ]
-)]
-class SummitBadgeFeatureTypeSchema
-{
-}
 
 #[OA\Schema(
     schema: 'PaginatedSummitBadgeFeatureTypesResponse',

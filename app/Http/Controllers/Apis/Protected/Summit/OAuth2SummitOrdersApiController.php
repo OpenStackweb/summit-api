@@ -17,6 +17,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Renderers\IRenderersFormats;
 use App\libs\Utils\Doctrine\ReplicaAwareTrait;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundRequestRepository;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
@@ -28,7 +29,6 @@ use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
-use models\main\IGroup;
 use models\oauth2\IResourceServerContext;
 use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeTicketRepository;
@@ -417,7 +417,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{id}/orders',
         summary: 'Get all orders for a summit',
         description: 'Returns paginated list of orders for the specified summit. Admin access required.',
-        operationId: 'getAllBySummit',
+        operationId: 'getAllOrdersBySummit',
         security: [
             [
                 'summit_orders_auth' => [
@@ -528,7 +528,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{id}/orders/csv',
         summary: 'Export orders to CSV',
         description: 'Exports all orders for a summit to CSV format. Admin access required.',
-        operationId: 'getAllBySummitCSV',
+        operationId: 'getAllOrdersBySummitCSV',
         security: [
             [
                 'summit_orders_auth' => [

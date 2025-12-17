@@ -12,8 +12,10 @@
  * limitations under the License.
  **/
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Events\Presentations\PresentationCategoryGroupConstants;
 use App\Models\Foundation\Summit\Repositories\IPresentationCategoryGroupRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\IPresentationCategoryGroupService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Request;
@@ -77,13 +79,16 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups',
         summary: 'Get all track groups by summit',
         description: 'Returns a paginated list of track groups (presentation category groups) for a summit',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 5)),
-            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by name, description, slug, track_title, track_code, group_title, group_code, voting_visible, chair_visible, or class_name', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by name, description, slug, track_title, track_code, group_title, group_code, voting_visible, chair_visible, or class_name. Operands: =@, ==, @@', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by id, name, or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relations (tracks)', schema: new OA\Schema(type: 'string')),
         ],
@@ -94,7 +99,7 @@ final class OAuth2PresentationCategoryGroupController
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPresentationCategoryGroupsResponse')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -212,6 +217,35 @@ final class OAuth2PresentationCategoryGroupController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/track-groups/csv',
+        summary: 'Export track groups to CSV',
+        description: 'Exports all track groups for a summit in CSV format',
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by name, description, slug, track_title, track_code, group_title, group_code, voting_visible, chair_visible, or class_name', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by id, name, or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'CSV file download',
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getAllBySummitCSV($summit_id){
         try {
 
@@ -322,8 +356,11 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups/{track_group_id}',
         summary: 'Get a track group by id',
         description: 'Returns a single track group by id',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
             new OA\Parameter(name: 'track_group_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track group id'),
@@ -336,7 +373,7 @@ final class OAuth2PresentationCategoryGroupController
                 content: new OA\JsonContent(ref: '#/components/schemas/PresentationCategoryGroup')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -373,8 +410,18 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups/{track_group_id}',
         summary: 'Update a track group',
         description: 'Updates an existing track group',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::WriteTrackGroupsData,
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/PresentationCategoryGroupRequest')
@@ -391,7 +438,7 @@ final class OAuth2PresentationCategoryGroupController
             ),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -446,8 +493,18 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups/{track_group_id}',
         summary: 'Delete a track group',
         description: 'Deletes a track group',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::WriteTrackGroupsData,
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
             new OA\Parameter(name: 'track_group_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track group id'),
@@ -455,7 +512,7 @@ final class OAuth2PresentationCategoryGroupController
         responses: [
             new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Track Group Deleted'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -493,8 +550,18 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups',
         summary: 'Create a new track group',
         description: 'Creates a new track group for a summit',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::WriteTrackGroupsData,
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/PresentationCategoryGroupRequest')
@@ -510,7 +577,7 @@ final class OAuth2PresentationCategoryGroupController
             ),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -566,8 +633,18 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups/{track_group_id}/tracks/{track_id}',
         summary: 'Associate a track to a track group',
         description: 'Associates a presentation category (track) to a track group',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::WriteTrackGroupsData,
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
             new OA\Parameter(name: 'track_group_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track group id'),
@@ -576,7 +653,7 @@ final class OAuth2PresentationCategoryGroupController
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: 'Track Associated'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -616,8 +693,18 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups/{track_group_id}/tracks/{track_id}',
         summary: 'Disassociate a track from a track group',
         description: 'Removes the association between a presentation category (track) and a track group',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::WriteTrackGroupsData,
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
             new OA\Parameter(name: 'track_group_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track group id'),
@@ -626,7 +713,7 @@ final class OAuth2PresentationCategoryGroupController
         responses: [
             new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Track Disassociated'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -666,8 +753,18 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups/{track_group_id}/allowed-groups/{group_id}',
         summary: 'Associate an allowed group to a track group',
         description: 'Associates a group to the list of allowed groups for a private track group',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::WriteTrackGroupsData,
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
             new OA\Parameter(name: 'track_group_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track group id'),
@@ -676,7 +773,7 @@ final class OAuth2PresentationCategoryGroupController
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: 'Group Associated'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -716,8 +813,18 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups/{track_group_id}/allowed-groups/{group_id}',
         summary: 'Disassociate an allowed group from a track group',
         description: 'Removes a group from the list of allowed groups for a private track group',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::WriteTrackGroupsData,
+            SummitScopes::WriteSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
             new OA\Parameter(name: 'track_group_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The track group id'),
@@ -726,7 +833,7 @@ final class OAuth2PresentationCategoryGroupController
         responses: [
             new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Group Disassociated'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -764,8 +871,18 @@ final class OAuth2PresentationCategoryGroupController
         path: '/api/v1/summits/{id}/track-groups/metadata',
         summary: 'Get track groups metadata',
         description: 'Returns metadata about available track group types',
-        tags: ['track-groups'],
-        security: [['Bearer' => []]],
+        tags: ['Track Groups'],
+        security: [['track_groups_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        x: [
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
         ],
@@ -781,7 +898,7 @@ final class OAuth2PresentationCategoryGroupController
                 )
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]

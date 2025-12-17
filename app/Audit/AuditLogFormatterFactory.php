@@ -17,7 +17,9 @@ use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-
+use Doctrine\ORM\PersistentCollection;
+use Illuminate\Support\Facades\Log;
+use Doctrine\ORM\Mapping\ClassMetadata;
 class AuditLogFormatterFactory implements IAuditLogFormatterFactory
 {
 
@@ -34,14 +36,68 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
         $formatter = null;
         switch ($eventType) {
             case IAuditStrategy::EVENT_COLLECTION_UPDATE:
-                $child_entity = null;
-                if (count($subject) > 0) {
-                    $child_entity = $subject[0];
+                $child_entity_formatter = null;
+
+                if ($subject instanceof PersistentCollection) {
+                    $targetEntity = null;
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "AuditLogFormatterFactory::make subject is a PersistentCollection isInitialized %b ?",
+                            $subject->isInitialized()
+                        )
+                    );
+                    if (method_exists($subject, 'getTypeClass')) {
+                        $type = $subject->getTypeClass();
+                        // Your log shows this is ClassMetadata
+                        if ($type instanceof ClassMetadata) {
+                            // Doctrine supports either getName() or public $name
+                            $targetEntity = method_exists($type, 'getName') ? $type->getName() : ($type->name ?? null);
+                        } elseif (is_string($type)) {
+                            $targetEntity = $type;
+                        }
+                        Log::debug("AuditLogFormatterFactory::make getTypeClass targetEntity {$targetEntity}");
+                    }
+                    elseif (method_exists($subject, 'getMapping')) {
+                        $mapping = $subject->getMapping();
+                        $targetEntity = $mapping['targetEntity'] ?? null;
+                        Log::debug("AuditLogFormatterFactory::make getMapping targetEntity {$targetEntity}");
+                    } else {
+                        // last-resort: read private association metadata (still no hydration)
+                        $ref = new \ReflectionObject($subject);
+                        foreach (['association', 'mapping', 'associationMapping'] as $propName) {
+                            if ($ref->hasProperty($propName)) {
+                                $prop = $ref->getProperty($propName);
+                                $prop->setAccessible(true);
+                                $mapping = $prop->getValue($subject);
+                                $targetEntity = $mapping['targetEntity'] ?? null;
+                                if ($targetEntity) break;
+                            }
+                        }
+                    }
+
+                    if ($targetEntity) {
+                        // IMPORTANT: build formatter WITHOUT touching collection items
+                        $child_entity_formatter = ChildEntityFormatterFactory::build($targetEntity);
+                    }
+                    Log::debug
+                    (
+                        sprintf
+                        (
+                            "AuditLogFormatterFactory::make subject is a PersistentCollection isInitialized %b ? ( final )",
+                            $subject->isInitialized()
+                        )
+                    );
+                } elseif (is_array($subject)) {
+                    $child_entity = $subject[0] ?? null;
+                    $child_entity_formatter = $child_entity ? ChildEntityFormatterFactory::build($child_entity) : null;
+                } elseif (is_object($subject) && method_exists($subject, 'getSnapshot')) {
+                    $snap = $subject->getSnapshot(); // only once
+                    $child_entity = $snap[0] ?? null;
+                    $child_entity_formatter = $child_entity ? ChildEntityFormatterFactory::build($child_entity) : null;
                 }
-                if (is_null($child_entity) && isset($subject->getSnapshot()[0]) && count($subject->getSnapshot()) > 0) {
-                    $child_entity = $subject->getSnapshot()[0];
-                }
-                $child_entity_formatter = $child_entity != null ? ChildEntityFormatterFactory::build($child_entity) : null;
+
                 $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
                 break;
             case IAuditStrategy::EVENT_ENTITY_CREATION:
@@ -65,6 +121,7 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
                 }
                 break;
         }
+        if ($formatter === null) return null;
         $formatter->setContext($ctx);
         return $formatter;
     }
@@ -73,7 +130,7 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
     {
         $class = get_class($subject);
         $entity_config = $this->config['entities'][$class] ?? null;
-        
+
         if (!$entity_config) {
             return null;
         }

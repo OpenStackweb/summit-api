@@ -42,7 +42,7 @@ class EntityUpdateAuditLogFormatter extends AbstractAuditLogFormatter
         $this->child_entity_formatter = $child_entity_formatter;
     }
 
-    protected function getIgnoredFields()
+    protected function getIgnoredFields(): array
     {
         return [
             'last_created',

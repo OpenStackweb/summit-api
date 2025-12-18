@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters;
+namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;

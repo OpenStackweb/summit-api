@@ -56,29 +56,13 @@ class SummitTrackChairAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    if (isset($change_set['categories'])) {
-                        $old_cats = $change_set['categories'][0] ?? [];
-                        $new_cats = $change_set['categories'][1] ?? [];
-                        
-                        $old_names = is_array($old_cats) 
-                            ? array_map(fn($c) => $c->getTitle() ?? 'Unknown', $old_cats)
-                            : [];
-                        $new_names = is_array($new_cats)
-                            ? array_map(fn($c) => $c->getTitle() ?? 'Unknown', $new_cats)
-                            : [];
-                        
-                        $old_str = !empty($old_names) ? implode(', ', $old_names) : 'None';
-                        $new_str = !empty($new_names) ? implode(', ', $new_names) : 'None';
-                        
-                        return sprintf(
-                            "Track Chair '%s' tracks changed: [%s] → [%s] by user %s",
-                            $member_name,
-                            $old_str,
-                            $new_str,
-                            $this->getUserInfo()
-                        );
-                    }
-                    return sprintf("Track Chair '%s' updated by user %s", $member_name, $this->getUserInfo());
+                    $change_details = $this->buildChangeDetails($change_set);
+                    return sprintf(
+                        "Track Chair '%s' updated: %s by user %s",
+                        $member_name,
+                        $change_details,
+                        $this->getUserInfo()
+                    );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

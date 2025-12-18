@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters;
+namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -50,16 +50,11 @@ class PresentationTrackChairRatingTypeAuditLogFormatter extends AbstractAuditLog
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $changed_fields = [];
-                    if (isset($change_set['name'])) {
-                        $changed_fields[] = "name";
-                    }
-                    
-                    $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
+                    $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Track Chair Rating Type '%s' updated (%s changed) by user %s",
+                        "Track Chair Rating Type '%s' updated: %s by user %s",
                         $name,
-                        $fields_str,
+                        $change_details,
                         $this->getUserInfo()
                     );
 

@@ -58,11 +58,11 @@ return [
         ],
         \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType::class => [
             'enabled' => true,
-            'strategy' => \App\Audit\ConcreteFormatters\PresentationTrackChairRatingTypeAuditLogFormatter::class,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationTrackChairRatingTypeAuditLogFormatter::class,
         ],
         \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType::class => [
             'enabled' => true,
-            'strategy' => \App\Audit\ConcreteFormatters\PresentationTrackChairScoreTypeAuditLogFormatter::class,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationTrackChairScoreTypeAuditLogFormatter::class,
         ],
         \models\summit\Summit::class => [
             'enabled' => true,

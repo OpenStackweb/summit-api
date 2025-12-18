@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters;
+namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -52,19 +52,11 @@ class PresentationTrackChairScoreTypeAuditLogFormatter extends AbstractAuditLogF
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $changed_fields = [];
-                    if (isset($change_set['label'])) {
-                        $changed_fields[] = "label";
-                    }
-                    if (isset($change_set['score'])) {
-                        $changed_fields[] = "score";
-                    }
-                    
-                    $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
+                    $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Score Type '%s' updated (%s changed) by user %s",
+                        "Score Type '%s' updated: %s by user %s",
                         $label,
-                        $fields_str,
+                        $change_details,
                         $this->getUserInfo()
                     );
 

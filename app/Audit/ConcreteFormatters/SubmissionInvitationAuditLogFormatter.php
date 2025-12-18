@@ -59,31 +59,12 @@ class SubmissionInvitationAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $changed_fields = [];
-                    
-                    if (isset($change_set['FirstName']) || isset($change_set['LastName'])) {
-                        $changed_fields[] = "name";
-                    }
-                    if (isset($change_set['Email'])) {
-                        $old_email = $change_set['Email'][0] ?? 'N/A';
-                        $new_email = $change_set['Email'][1] ?? 'N/A';
-                        $changed_fields[] = sprintf("email %s to %s", $old_email, $new_email);
-                    }
-                    if (isset($change_set['SentDate'])) {
-                        $old_status = isset($change_set['SentDate'][0]) && $change_set['SentDate'][0] ? 'sent' : 'not sent';
-                        $new_status = isset($change_set['SentDate'][1]) && $change_set['SentDate'][1] ? 'sent' : 'not sent';
-                        $changed_fields[] = sprintf("status %s to %s", $old_status, $new_status);
-                    }
-                    if (isset($change_set['SpeakerID'])) {
-                        $changed_fields[] = "speaker";
-                    }
-                    
-                    $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
+                    $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Submission invitation for '%s' (%s) updated (%s changed) by user %s",
+                        "Submission invitation for '%s' (%s) updated: %s by user %s",
                         $email,
                         $id,
-                        $fields_str,
+                        $change_details,
                         $this->getUserInfo()
                     );
 

@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2016 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -128,8 +129,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         IAttendeeService $attendee_service,
         ISummitOrderService $summit_order_service,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->summit_repository = $summit_repository;
         $this->repository = $attendee_repository;
@@ -152,10 +152,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         summary: 'Get current user attendee profile',
         description: 'Returns the attendee profile for the currently authenticated user in the specified summit',
         tags: ['Summit Attendees'],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships (extra_questions, tickets, presentation_votes, ticket_types, allowed_access_levels, allowed_features, tags)', schema: new OA\Schema(type: 'string')),
@@ -175,11 +179,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $type = CheckAttendeeStrategyFactory::Me;
             $attendee = CheckAttendeeStrategyFactory::build($type, $this->resource_server_context)->check('me', $summit);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
@@ -208,10 +214,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -229,12 +239,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function getAttendee($summit_id, $attendee_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id){
+        return $this->processRequest(function () use ($summit_id, $attendee_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
 
             return $this->ok
             (
@@ -243,12 +255,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     $attendee,
                     SerializerRegistry::SerializerType_Private
                 )->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    ['serializer_type' => SerializerRegistry::SerializerType_Private]
-                )
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        ['serializer_type' => SerializerRegistry::SerializerType_Private]
+                    )
             );
         });
     }
@@ -259,10 +271,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         summary: 'Get attendee schedule',
         description: 'Returns the personal schedule for a specific attendee',
         tags: ['Summit Attendees'],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -285,14 +301,17 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = CheckAttendeeStrategyFactory::build(CheckAttendeeStrategyFactory::Own, $this->resource_server_context)->check($attendee_id, $summit);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
 
             $schedule = [];
             foreach ($attendee->getSchedule() as $attendee_schedule) {
-                if (!$summit->isEventOnSchedule($attendee_schedule->getEvent()->getId())) continue;
+                if (!$summit->isEventOnSchedule($attendee_schedule->getEvent()->getId()))
+                    continue;
                 $schedule[] = SerializerRegistry::getInstance()->getSerializer($attendee_schedule)->serialize();
             }
 
@@ -312,9 +331,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         summary: 'Add event to attendee schedule',
         description: 'Adds an event to the attendee\'s personal schedule',
         tags: ['Summit Attendees'],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -332,10 +355,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = CheckAttendeeStrategyFactory::build(CheckAttendeeStrategyFactory::Own, $this->resource_server_context)->check($attendee_id, $summit);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
 
             $this->summit_service->addEventToMemberSchedule($summit, $attendee->getMember(), intval($event_id));
 
@@ -361,9 +386,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         summary: 'Remove event from attendee schedule',
         description: 'Removes an event from the attendee\'s personal schedule',
         tags: ['Summit Attendees'],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -381,10 +410,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = CheckAttendeeStrategyFactory::build(CheckAttendeeStrategyFactory::Own, $this->resource_server_context)->check($attendee_id, $summit);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
 
             $this->summit_service->removeEventFromMemberSchedule($summit, $attendee->getMember(), intval($event_id));
 
@@ -411,10 +442,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         summary: 'Delete RSVP for event',
         description: 'Deletes the attendee\'s RSVP for a specific event',
         tags: ['Summit Attendees'],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::DeleteMyRSVP,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DeleteMyRSVP,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -432,7 +467,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $event = $summit->getScheduleEvent(intval($event_id));
 
@@ -441,7 +477,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             }
 
             $attendee = CheckAttendeeStrategyFactory::build(CheckAttendeeStrategyFactory::Own, $this->resource_server_context)->check($attendee_id, $summit);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
 
             $this->summit_service->unRSVPEvent($summit, $attendee->getMember(), $event_id);
 
@@ -468,9 +505,13 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         summary: 'Check-in attendee to event',
         description: 'Performs check-in for an attendee at a specific event on their schedule',
         tags: ['Summit Attendees'],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID or "me"', schema: new OA\Schema(type: 'string')),
@@ -499,10 +540,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -526,11 +571,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         $filter = null;
 
-        $filterRules =  [
+        $filterRules = [
             'id' => ['=='],
             'not_id' => ['=='],
             'first_name' => ['=@', '=='],
@@ -559,7 +605,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
             'presentation_votes_track_group_id' => ['=='],
-            'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
+            'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<', '[]'],
             'tags' => ['=@', '==', '@@'],
             'tags_id' => ['=='],
             'notes' => ['=@', '@@'],
@@ -571,11 +617,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $filter = FilterParser::parse(Request::get('filter'), $filterRules);
         }
 
-        if (is_null($filter)) $filter = new Filter();
+        if (is_null($filter))
+            $filter = new Filter();
 
-        $params  = [];
+        $params = [];
 
-        if(!is_null($filter)) {
+        if (!is_null($filter)) {
             $votingDateFilter = $filter->getFilter('presentation_votes_date');
             if ($votingDateFilter != null) {
                 $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
@@ -590,7 +637,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         }
 
         return $this->_getAll(
-            function () use($filterRules){
+            function () use ($filterRules) {
                 return $filterRules;
             },
             function () {
@@ -612,16 +659,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'access_levels' => 'sometimes|string',
                     'status' => 'sometimes|string',
                     'has_member' => 'sometimes|required|string|in:true,false',
-                    'has_tickets'=> 'sometimes|required|string|in:true,false',
-                    'has_virtual_checkin'=> 'sometimes|required|string|in:true,false',
-                    'has_checkin'=> 'sometimes|required|string|in:true,false',
+                    'has_tickets' => 'sometimes|required|string|in:true,false',
+                    'has_virtual_checkin' => 'sometimes|required|string|in:true,false',
+                    'has_checkin' => 'sometimes|required|string|in:true,false',
                     'tickets_count' => 'sometimes|integer',
                     'presentation_votes_date' => 'sometimes|date_format:U|epoch_seconds',
                     'presentation_votes_count' => 'sometimes|integer',
                     'presentation_votes_track_group_id' => 'sometimes|integer',
                     'ticket_type_id' => 'sometimes|integer',
                     'badge_type_id' => 'sometimes|integer',
-                    'features_id'=> 'sometimes|integer',
+                    'features_id' => 'sometimes|integer',
                     'access_levels_id' => 'sometimes|integer',
                     'summit_hall_checked_in_date' => 'sometimes|date_format:U|epoch_seconds',
                     'tags' => 'sometimes|string',
@@ -679,10 +726,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by id, first_name, last_name, full_name, company, email, member_id, ticket_type, badge_type, status, has_member, has_tickets, etc.', schema: new OA\Schema(type: 'string')),
@@ -705,7 +756,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit)) return $this->error404();
+        if (is_null($summit))
+            return $this->error404();
 
         return $this->_getAllCSV(
             function () {
@@ -735,7 +787,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'features_id' => ['=='],
                     'access_levels' => ['=@', '==', '@@'],
                     'access_levels_id' => ['=='],
-                    'summit_hall_checked_in_date' =>  ['==', '>=', '<=', '>', '<', '[]'],
+                    'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<', '[]'],
                     'tags' => ['=@', '==', '@@'],
                     'tags_id' => ['=='],
                     'notes' => ['=@', '@@'],
@@ -768,7 +820,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'access_levels' => 'sometimes|string',
                     'ticket_type_id' => 'sometimes|integer',
                     'badge_type_id' => 'sometimes|integer',
-                    'features_id'=> 'sometimes|integer',
+                    'features_id' => 'sometimes|integer',
                     'access_levels_id' => 'sometimes|integer',
                     'summit_hall_checked_in_date' => 'sometimes|date_format:U|epoch_seconds',
                     'tags' => 'sometimes|string',
@@ -832,10 +884,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteAttendeesData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
         ],
@@ -857,12 +913,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function addAttendee($summit_id)
     {
-        return $this->processRequest(function() use($summit_id){
-            if (!Request::isJson()) return $this->error400();
+        return $this->processRequest(function () use ($summit_id) {
+            if (!Request::isJson())
+                return $this->error400();
             $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $rules = [
                 'shared_contact_info' => 'sometimes|boolean',
@@ -899,12 +957,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     $attendee,
                     SerializerRegistry::SerializerType_Private
                 )->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    ['serializer_type' => SerializerRegistry::SerializerType_Private]
-                )
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        ['serializer_type' => SerializerRegistry::SerializerType_Private]
+                    )
             );
         });
     }
@@ -923,10 +981,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteAttendeesData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -939,13 +1001,15 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function deleteAttendee($summit_id, $attendee_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id){
+        return $this->processRequest(function () use ($summit_id, $attendee_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
 
             $this->attendee_service->deleteAttendee($summit, $attendee->getIdentifier());
 
@@ -968,10 +1032,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteAttendeesData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -994,15 +1062,18 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function updateAttendee($summit_id, $attendee_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id){
-            if (!Request::isJson()) return $this->error400();
+        return $this->processRequest(function () use ($summit_id, $attendee_id) {
+            if (!Request::isJson())
+                return $this->error400();
             $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
 
             $rules = [
                 'shared_contact_info' => 'sometimes|boolean',
@@ -1039,12 +1110,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     $attendee,
                     SerializerRegistry::SerializerType_Private
                 )->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    ['serializer_type' => SerializerRegistry::SerializerType_Private]
-                )
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        ['serializer_type' => SerializerRegistry::SerializerType_Private]
+                    )
             );
         });
     }
@@ -1063,10 +1134,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteAttendeesData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -1089,15 +1164,18 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function addAttendeeTicket($summit_id, $attendee_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id){
-            if (!Request::isJson()) return $this->error400();
+        return $this->processRequest(function () use ($summit_id, $attendee_id) {
+            if (!Request::isJson())
+                return $this->error400();
             $data = Request::json();
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if (is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
+            if (is_null($attendee) || !$attendee instanceof SummitAttendee)
+                return $this->error404();
 
             $rules = [
                 'ticket_type_id' => 'required|integer',
@@ -1152,10 +1230,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteAttendeesData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -1169,13 +1251,15 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function deleteAttendeeTicket($summit_id, $attendee_id, $ticket_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id, $ticket_id){
+        return $this->processRequest(function () use ($summit_id, $attendee_id, $ticket_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
 
             $this->attendee_service->deleteAttendeeTicket($attendee, $ticket_id);
 
@@ -1197,10 +1281,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteAttendeesData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -1219,17 +1307,20 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function reassignAttendeeTicketByMember($summit_id, $attendee_id, $ticket_id, $other_member_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id, $ticket_id, $other_member_id){
+        return $this->processRequest(function () use ($summit_id, $attendee_id, $ticket_id, $other_member_id) {
 
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if (is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
+            if (is_null($attendee) || !$attendee instanceof SummitAttendee)
+                return $this->error404();
 
             $other_member = $this->member_repository->getById($other_member_id);
-            if (is_null($other_member) || !$other_member instanceof Member) return $this->error404();
+            if (is_null($other_member) || !$other_member instanceof Member)
+                return $this->error404();
 
             $ticket = $this->attendee_service->reassignAttendeeTicketByMember($summit, $attendee, $other_member, intval($ticket_id));
 
@@ -1256,10 +1347,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteAttendeesData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -1282,13 +1377,15 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function reassignAttendeeTicket($summit_id, $attendee_id, $ticket_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id, $ticket_id){
+        return $this->processRequest(function () use ($summit_id, $attendee_id, $ticket_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if (is_null($attendee) || !$attendee instanceof SummitAttendee) return $this->error404();
+            if (is_null($attendee) || !$attendee instanceof SummitAttendee)
+                return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'attendee_first_name' => 'nullable|string|max:255',
@@ -1317,7 +1414,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         return $this->summit_repository;
     }
 
-    #[OA\Post(
+    #[OA\Put(
         path: '/api/v1/summits/{id}/attendees/all/send',
         operationId: 'sendAttendeesEmail',
         summary: 'Send email to attendees',
@@ -1331,10 +1428,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 IGroup::SummitRegistrationAdmins,
             ]
         ],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteAttendeesData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter attendees', schema: new OA\Schema(type: 'string')),
@@ -1353,7 +1454,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function send($summit_id)
     {
-        return $this->processRequest(function() use($summit_id){
+        return $this->processRequest(function () use ($summit_id) {
 
             if (!Request::isJson())
                 return $this->error400();
@@ -1368,15 +1469,15 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             // Creates a Validator instance and validates the data.
             $validation = Validator::make($payload, [
                 'email_flow_event' => 'required|string|in:' . join(',', [
-                        SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG,
-                        InviteAttendeeTicketEditionMail::EVENT_SLUG,
-                        SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG,
-                        SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG,
-                        GenericSummitAttendeeEmail::EVENT_SLUG,
-                    ]),
+                    SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG,
+                    InviteAttendeeTicketEditionMail::EVENT_SLUG,
+                    SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG,
+                    SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG,
+                    GenericSummitAttendeeEmail::EVENT_SLUG,
+                ]),
                 'attendees_ids' => 'sometimes|int_array',
-                'excluded_attendees_ids'  => 'sometimes|int_array',
-                'test_email_recipient'    => 'sometimes|email',
+                'excluded_attendees_ids' => 'sometimes|int_array',
+                'test_email_recipient' => 'sometimes|email',
                 'outcome_email_recipient' => 'sometimes|email',
             ]);
 
@@ -1421,7 +1522,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
                     'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
                     'presentation_votes_track_group_id' => ['=='],
-                    'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
+                    'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<', '[]'],
                     'tags' => ['=@', '==', '@@'],
                     'tags_id' => ['=='],
                     'notes' => ['=@', '@@'],
@@ -1451,16 +1552,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'access_levels' => 'sometimes|string',
                 'status' => 'sometimes|string',
                 'has_member' => 'sometimes|required|string|in:true,false',
-                'has_tickets'=> 'sometimes|required|string|in:true,false',
-                'has_virtual_checkin'=> 'sometimes|required|string|in:true,false',
-                'has_checkin'=> 'sometimes|required|string|in:true,false',
+                'has_tickets' => 'sometimes|required|string|in:true,false',
+                'has_virtual_checkin' => 'sometimes|required|string|in:true,false',
+                'has_checkin' => 'sometimes|required|string|in:true,false',
                 'tickets_count' => 'sometimes|integer',
                 'presentation_votes_date' => 'sometimes|date_format:U|epoch_seconds',
                 'presentation_votes_count' => 'sometimes|integer',
                 'presentation_votes_track_group_id' => 'sometimes|integer',
                 'ticket_type_id' => 'sometimes|integer',
                 'badge_type_id' => 'sometimes|integer',
-                'features_id'=> 'sometimes|integer',
+                'features_id' => 'sometimes|integer',
                 'access_levels_id' => 'sometimes|integer',
                 'summit_hall_checked_in_date' => 'sometimes|date_format:U|epoch_seconds',
                 'tags' => 'sometimes|string',
@@ -1483,10 +1584,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         summary: 'Perform virtual check-in',
         description: 'Performs virtual check-in for a specific attendee',
         tags: ['Summit Attendees'],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::DoVirtualCheckIn,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DoVirtualCheckIn,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -1503,13 +1608,15 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function doVirtualCheckin($summit_id, $attendee_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id){
+        return $this->processRequest(function () use ($summit_id, $attendee_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $attendee = $this->repository->getById($attendee_id);
-            if (is_null($attendee)) return $this->error404();
+            if (is_null($attendee))
+                return $this->error404();
             $attendee = $this->attendee_service->doVirtualCheckin($summit, $attendee_id);
 
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize(
@@ -1527,10 +1634,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         summary: 'Get related attendee for current user',
         description: 'Returns attendee information if current user owns the tickets or is the attendee',
         tags: ['Summit Attendees'],
-        security: [['summit_attendees_oauth2' => [
-            SummitScopes::ReadSummitData,
-            SummitScopes::ReadAllSummitData,
-        ]]],
+        security: [
+            [
+                'summit_attendees_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
@@ -1549,7 +1660,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     )]
     public function getMyRelatedAttendee($summit_id, $attendee_id)
     {
-        return $this->processRequest(function() use($summit_id, $attendee_id){
+        return $this->processRequest(function () use ($summit_id, $attendee_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit))
@@ -1568,18 +1679,19 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             // check ownership
             $isOrderOwner = false;
-            foreach($attendee->getTickets() as $ticket) {
-                if(!$ticket->isPaid() || !$ticket->isActive()) continue;
+            foreach ($attendee->getTickets() as $ticket) {
+                if (!$ticket->isPaid() || !$ticket->isActive())
+                    continue;
                 $order = $ticket->getOrder();
                 if ($order->getOwnerEmail() === $current_user->getEmail())
                     $isOrderOwner = true;
             }
 
             $isAttendeeOwner = true;
-            if($attendee->getEmail() != $current_user->getEmail())
+            if ($attendee->getEmail() != $current_user->getEmail())
                 $isAttendeeOwner = false;
 
-            if(!$isOrderOwner && !$isAttendeeOwner)
+            if (!$isOrderOwner && !$isAttendeeOwner)
                 throw new EntityNotFoundException("Attendee not found.");
 
             return $this->ok
@@ -1589,12 +1701,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                     $attendee,
                     SerializerRegistry::SerializerType_Private
                 )->serialize
-                (
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations(),
-                    ['serializer_type' => SerializerRegistry::SerializerType_Private]
-                )
+                    (
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations(),
+                        ['serializer_type' => SerializerRegistry::SerializerType_Private]
+                    )
             );
         });
     }

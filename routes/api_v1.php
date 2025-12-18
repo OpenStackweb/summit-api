@@ -1228,7 +1228,7 @@ Route::group(array('prefix' => 'summits'), function () {
 
                 // side image
                 Route::group(['prefix' => 'side-image'], function () {
-                    Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addSponsorSideImage']);
+                    Route::post('', ['middleware' => 'auth.user', 'uses' => '@addSponsorSideImage']);
                     Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@deleteSponsorSideImage']);
                 });
 

@@ -249,6 +249,16 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     /**
      * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllBySummitPublic($summit_id)
+    {
+        $this->serializer_version = 2;
+        return $this->getAllBySummit($summit_id);
+    }
+
+    /**
+     * @param $summit_id
      * @param $child_id
      * @return mixed
      */

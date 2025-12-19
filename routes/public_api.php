@@ -100,7 +100,14 @@ Route::group(['prefix' => 'summits'], function () {
 
         Route::get('', 'OAuth2SummitApiController@getAllSummits');
         Route::get('current', 'OAuth2SummitApiController@getAllCurrentSummit');
-        Route::get('{id}', 'OAuth2SummitApiController@getAllSummitByIdOrSlugPublic');
+
+        Route::group(['prefix'=> '{id}'],function ()
+        {
+            Route::get('', 'OAuth2SummitApiController@getAllSummitByIdOrSlugPublic');
+            Route::group(['prefix'=> 'sponsors',],function () {
+                Route::get('', 'OAuth2SummitSponsorApiController@getAllBySummitPublic');
+            });
+        });
 
         Route::group(['prefix' => 'payments'], function () {
             Route::group(['prefix' => '{application_name}'], function () {

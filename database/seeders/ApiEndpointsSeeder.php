@@ -13,6 +13,7 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Security\GroupsScopes;
 use App\Security\RSVPInvitationsScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
@@ -9922,7 +9923,7 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [
                         sprintf(SummitScopes::ReadAllSummitData, $current_realm),
                         sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf('%s/groups/read', $current_realm)
+                        sprintf(GroupsScopes::ReadData, $current_realm)
                     ],
                 ]
             ]

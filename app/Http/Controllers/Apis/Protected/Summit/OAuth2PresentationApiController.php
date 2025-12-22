@@ -175,7 +175,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         operationId: "getPresentationVideo",
         security: [['summit_presentations_auth' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
@@ -226,7 +226,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Add a video to a presentation",
         operationId: "addPresentationVideo",
         security: [['summit_presentations_auth' => [SummitScopes::WriteVideoData, SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationVideosData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -277,7 +277,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Update a video from a presentation",
         operationId: "updatePresentationVideo",
         security: [['summit_presentations_auth' => [SummitScopes::WriteVideoData, SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationVideosData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -329,7 +329,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Delete a video from a presentation",
         operationId: "deletePresentationVideo",
         security: [['summit_presentations_auth' => [SummitScopes::WriteVideoData, SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationVideosData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -715,7 +715,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Add a slide to a presentation",
         operationId: "addPresentationSlide",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationSlidesData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -802,7 +802,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Update a slide from a presentation",
         operationId: "updatePresentationSlide",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationSlidesData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -890,7 +890,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Delete a slide from a presentation",
         operationId: "deletePresentationSlide",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationSlidesData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1037,7 +1037,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Add a link to a presentation",
         operationId: "addPresentationLink",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationLinksData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1116,7 +1116,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Update a link from a presentation",
         operationId: "updatePresentationLink",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationLinksData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1197,7 +1197,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Delete a link from a presentation",
         operationId: "deletePresentationLink",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationMaterialsData, SummitScopes::WritePresentationLinksData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1592,7 +1592,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Import assets from MUX",
         operationId: "importAssetsFromMUX",
         security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData, SummitScopes::WritePresentationData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1769,7 +1769,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Add a track chair score to a presentation",
         operationId: "addTrackChairScore",
         security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1822,7 +1822,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Remove a track chair score from a presentation",
         operationId: "removeTrackChairScore",
         security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1862,7 +1862,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Add a speaker to a presentation",
         operationId: "addSpeaker2Presentation",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationData, SummitScopes::WriteSpeakersData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1916,7 +1916,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Update a speaker in a presentation",
         operationId: "updateSpeakerInPresentation",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationData, SummitScopes::WriteSpeakersData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -1973,7 +1973,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Remove a speaker from a presentation",
         operationId: "removeSpeakerFromPresentation",
         security: [['summit_presentations_auth' => [SummitScopes::WritePresentationData, SummitScopes::WriteSpeakersData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -2014,7 +2014,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Get all comments from a presentation",
         operationId: "getPresentationComments",
         security: [['summit_presentations_auth' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -2090,7 +2090,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Get a comment from a presentation",
         operationId: "getPresentationComment",
         security: [['summit_presentations_auth' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -2134,7 +2134,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Delete a comment from a presentation",
         operationId: "deletePresentationComment",
         security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData, SummitScopes::WritePresentationData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -2167,7 +2167,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Add a comment to a presentation",
         operationId: "addPresentationComment",
         security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData, SummitScopes::WritePresentationData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -2215,7 +2215,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Update a comment from a presentation",
         operationId: "updatePresentationComment",
         security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData, SummitScopes::WritePresentationData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins, IGroup::TrackChairs]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
@@ -2264,7 +2264,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         summary: "Get extra question answers from a presentation",
         operationId: "getPresentationsExtraQuestions",
         security: [['summit_presentations_auth' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
-        x: ['authz_groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
         tags: ['Presentations'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),

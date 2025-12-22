@@ -77,7 +77,9 @@ class SummitBadgeTypeUpdateRequest
         )
     ]
 )]
-class PaginatedSummitBadgeFeatureTypesResponseSchema {}
+class PaginatedSummitBadgeFeatureTypesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitBadgeFeatureTypeCreateRequest',
@@ -89,7 +91,9 @@ class PaginatedSummitBadgeFeatureTypesResponseSchema {}
         new OA\Property(property: 'template_content', type: 'string', example: '<div>{{name}}</div>'),
     ]
 )]
-class SummitBadgeFeatureTypeCreateRequestSchema {}
+class SummitBadgeFeatureTypeCreateRequestSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitBadgeFeatureTypeUpdateRequest',
@@ -100,4 +104,6 @@ class SummitBadgeFeatureTypeCreateRequestSchema {}
         new OA\Property(property: 'template_content', type: 'string', example: '<div class="vip">{{name}}</div>'),
     ]
 )]
-class SummitBadgeFeatureTypeUpdateRequestSchema {}
+class SummitBadgeFeatureTypeUpdateRequestSchema
+{
+}

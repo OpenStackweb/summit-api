@@ -119,7 +119,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_sponsorship_oauth2' => [
+        security: [['summit_sponsorship_type_oauth2' => [
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],
@@ -188,7 +188,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_sponsorship_oauth2' => [
+        security: [['summit_sponsorship_type_oauth2' => [
             SummitScopes::WriteSummitData,
         ]]],
         tags: ["Sponsorship Types"],
@@ -233,7 +233,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
         path: "/api/v1/sponsorship-types/{id}",
         summary: "Get a sponsorship type by id",
         operationId: 'getSponsorshipType',
-        security: [['summit_sponsorship_oauth2' => [
+        security: [['summit_sponsorship_type_oauth2' => [
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData,
         ]]],
@@ -281,7 +281,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_sponsorship_oauth2' => [
+        security: [['summit_sponsorship_type_oauth2' => [
             SummitScopes::WriteSummitData,
         ]]],
         tags: ["Sponsorship Types"],
@@ -337,7 +337,7 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
                 IGroup::Administrators
             ]
         ],
-        security: [['summit_sponsorship_oauth2' => [
+        security: [['summit_sponsorship_type_oauth2' => [
             SummitScopes::WriteSummitData,
         ]]],
         tags: ["Sponsorship Types"],

@@ -12,6 +12,10 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
+use App\Security\SummitScopes;
+use Illuminate\Http\Response;
+use OpenApi\Attributes as OA;
 use App\Facades\ResourceServerContext;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
@@ -88,6 +92,83 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/proposed-schedules/{source}/presentations",
+        operationId: 'getProposedScheduleEvents',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
+        summary: "Get proposed schedule events for a specific source",
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "source",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "The source identifier"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter operators: start_date==/</>/<=/>=/ [], end_date==/</>/<=/>=/ [], duration==/</>/<=/>=, presentation_title@@/=@, presentation_id==, location_id==, track_id==, type_show_always_on_schedule=="
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by fields: start_date, end_date, presentation_id, presentation_title, track_id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitProposedScheduleSummitEventsResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getProposedScheduleEvents($summit_id, $source)
     {
 
@@ -146,6 +227,68 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/proposed-schedules/{source}/presentations/{presentation_id}/propose",
+        operationId: 'publishProposedSchedulePresentation',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
+        summary: "Publish a presentation to the proposed schedule",
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "source",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "The source identifier"
+            ),
+            new OA\Parameter(
+                name: "presentation_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The presentation id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitProposedSchedulePublishRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitProposedScheduleSummitEvent")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function publish($summit_id, $source, $presentation_id)
     {
 
@@ -173,6 +316,55 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $presentation_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/proposed-schedules/{source}/presentations/{presentation_id}/propose",
+        operationId: 'unpublishProposedSchedulePresentation',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
+        summary: "Unpublish a presentation from the proposed schedule",
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "source",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "The source identifier"
+            ),
+            new OA\Parameter(
+                name: "presentation_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The presentation id"
+            )
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function unpublish($summit_id, $source, $presentation_id)
     {
 
@@ -194,6 +386,69 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/proposed-schedules/{source}/presentations/all/publish",
+        operationId: 'publishAllProposedSchedulePresentations',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
+        summary: "Publish all presentations to the proposed schedule with optional filters",
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "source",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "The source identifier"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter operators: start_date==/</>/<=/>=/ [], end_date==/</>/<=/>=/ [], location_id==, track_id=="
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitProposedSchedulePublishAllRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitProposedSchedulePublishAllResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function publishAll($summit_id, $source)
     {
 
@@ -238,6 +493,65 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/lock",
+        operationId: 'sendProposedScheduleTrackToReview',
+        description: "required-groups " . IGroup::TrackChairs . ", " . IGroup::TrackChairsAdmins,
+        summary: "Send a track schedule for review (lock the track)",
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "source",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "The source identifier"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitProposedScheduleLockRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitProposedScheduleLock")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function send2Review($summit_id, $source, $track_id)
     {
         return $this->processRequest(function () use ($summit_id, $source, $track_id) {
@@ -266,6 +580,62 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $track_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/lock",
+        operationId: 'removeProposedScheduleTrackReview',
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        summary: "Remove review lock from a track schedule (unlock the track)",
+        tags: ["Summit Proposed Schedule"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators
+            ]
+        ],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "source",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "The source identifier"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The track id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitProposedScheduleLockRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function removeReview($summit_id, $source, $track_id)
     {
         return $this->processRequest(function () use ($summit_id, $source, $track_id) {
@@ -286,6 +656,72 @@ final class OAuth2SummitProposedScheduleApiController extends OAuth2ProtectedCon
      * @param $source
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/proposed-schedules/{source}/locks",
+        operationId: 'getProposedScheduleReviewSubmissions',
+        summary: "Get all proposed schedule review submissions (locks) for a source",
+        tags: ["Summit Proposed Schedule"],
+        security: [['summit_proposed_schedule_oauth2' => [
+            SummitScopes::ReadSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "source",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "The source identifier"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter operators: track_id=="
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by fields: track_id"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitProposedScheduleLocksResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getProposedScheduleReviewSubmissions($summit_id, $source)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));

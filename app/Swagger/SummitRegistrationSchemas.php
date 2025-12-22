@@ -4,6 +4,53 @@ namespace App\Swagger\schemas;
 
 use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: 'PaginatedSummitTaxTypesResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/SummitTaxType')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedSummitTaxTypesResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'SummitTaxTypeCreateRequest',
+    type: 'object',
+    required: ['name', 'rate'],
+    properties: [
+        new OA\Property(property: 'name', type: 'string', example: 'VAT'),
+        new OA\Property(property: 'tax_id', type: 'string', example: 'VAT-001'),
+        new OA\Property(property: 'rate', type: 'number', format: 'float', example: 21.0, description: 'Rate must be greater than 0'),
+    ]
+)]
+class SummitTaxTypeCreateRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'SummitTaxTypeUpdateRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', example: 'VAT'),
+        new OA\Property(property: 'tax_id', type: 'string', example: 'VAT-001'),
+        new OA\Property(property: 'rate', type: 'number', format: 'float', example: 21.0, description: 'Rate must be greater than 0'),
+    ]
+)]
+class SummitTaxTypeUpdateRequestSchema
+{
+}
+
 // Badge Types
 
 #[OA\Schema(
@@ -22,7 +69,7 @@ use OpenApi\Attributes as OA;
         )
     ]
 )]
-class PaginatedSummitBadgeTypesResponse
+class PaginatedSummitBadgeTypesResponseSchema
 {
 }
 
@@ -38,7 +85,7 @@ class PaginatedSummitBadgeTypesResponse
         new OA\Property(property: "is_default", type: "boolean", example: false),
     ]
 )]
-class SummitBadgeTypeCreateRequest
+class SummitBadgeTypeCreateRequestSchema
 {
 }
 
@@ -53,11 +100,9 @@ class SummitBadgeTypeCreateRequest
         new OA\Property(property: "is_default", type: "boolean", nullable: true, example: false),
     ]
 )]
-class SummitBadgeTypeUpdateRequest
+class SummitBadgeTypeUpdateRequestSchema
 {
 }
-
-//
 
 // Summit Badge Feature Types
 
@@ -77,7 +122,9 @@ class SummitBadgeTypeUpdateRequest
         )
     ]
 )]
-class PaginatedSummitBadgeFeatureTypesResponseSchema {}
+class PaginatedSummitBadgeFeatureTypesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitBadgeFeatureTypeCreateRequest',
@@ -89,7 +136,9 @@ class PaginatedSummitBadgeFeatureTypesResponseSchema {}
         new OA\Property(property: 'template_content', type: 'string', example: '<div>{{name}}</div>'),
     ]
 )]
-class SummitBadgeFeatureTypeCreateRequestSchema {}
+class SummitBadgeFeatureTypeCreateRequestSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SummitBadgeFeatureTypeUpdateRequest',
@@ -100,4 +149,6 @@ class SummitBadgeFeatureTypeCreateRequestSchema {}
         new OA\Property(property: 'template_content', type: 'string', example: '<div class="vip">{{name}}</div>'),
     ]
 )]
-class SummitBadgeFeatureTypeUpdateRequestSchema {}
+class SummitBadgeFeatureTypeUpdateRequestSchema
+{
+}

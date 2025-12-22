@@ -11,7 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ITrackTagGroupAllowedTagsRepository;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitTrackTagGroupService;
 use libs\utils\PaginationValidationRules;
 use models\oauth2\IResourceServerContext;
@@ -28,6 +30,8 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\summit\ISummitRepository;
 use utils\PagingResponse;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class OAuth2SummitTrackTagGroupsApiController
@@ -67,6 +71,40 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
         $this->repository = $repository;
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/track-tag-groups",
+        operationId: "getTrackTagGroupsBySummit",
+        description: "Get all track tag groups for a summit",
+        tags: ["Track Tag Groups"],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships: allowed_tags"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Track tag groups retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/TrackTagGroupsList")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -109,6 +147,92 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
         }
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/track-tag-groups/all/allowed-tags",
+        operationId: "getAllowedTags",
+        description: "Get all allowed tags for track tag groups in a summit. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        tags: ["Track Tag Groups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::WriteSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 5),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filters, allowed operands: == (equals), =@ (contains), @@ (full text search), allowed fields: tag",
+                example: "tag==AI",
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by: tag, id"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships allowed values: track_tag_group, tag"
+            ),
+            new OA\Parameter(
+                name: "fields",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Specific fields to return"
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relations to include"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Allowed tags retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedTrackTagGroupAllowedTagsResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -197,6 +321,47 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
         }
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/track-tag-groups",
+        operationId: "addTrackTagGroup",
+        description: "Create a new track tag group. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        tags: ["Track Tag Groups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackTagGroupsData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/CreateTrackTagGroupRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Track tag group created successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/TrackTagGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -247,6 +412,133 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
         }
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/track-tag-groups/{track_tag_group_id}",
+        operationId: "getTrackTagGroup",
+        description: "Get a specific track tag group. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        tags: ["Track Tag Groups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+            new OA\Parameter(
+                name: "track_tag_group_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Track tag group ID"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships: allowed_tags"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Track tag group retrieved successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/TrackTagGroup")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track tag group or summit not found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    /**
+     * @param $summit_id
+     * @param $track_tag_group_id
+     * @return mixed
+     */
+    public function getTrackTagGroup($summit_id, $track_tag_group_id){
+        try{
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+            $track_tag_group = $summit->getTrackTagGroup(intval($track_tag_group_id));
+            if(is_null($track_tag_group))
+                return $this->error404();
+
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track_tag_group)->serialize(Request::input('expand', '')));
+        }
+        catch (ValidationException $ex1) {
+            Log::warning($ex1);
+            return $this->error412([$ex1->getMessage()]);
+        }
+        catch(EntityNotFoundException $ex2)
+        {
+            Log::warning($ex2);
+            return $this->error404(['message'=> $ex2->getMessage()]);
+        }
+        catch (\Exception $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
+    }
+
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/track-tag-groups/{track_tag_group_id}",
+        operationId: "updateTrackTagGroup",
+        description: "Update an existing track tag group. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        tags: ["Track Tag Groups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackTagGroupsData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+            new OA\Parameter(
+                name: "track_tag_group_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Track tag group ID"
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/UpdateTrackTagGroupRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Track tag group updated successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/TrackTagGroup")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track tag group or summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $track_tag_group_id
@@ -304,36 +596,48 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
         }
     }
 
-    /**
-     * @param $summit_id
-     * @param $track_tag_group_id
-     * @return mixed
-     */
-    public function getTrackTagGroup($summit_id, $track_tag_group_id){
-        try{
-            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            $track_tag_group = $summit->getTrackTagGroup(intval($track_tag_group_id));
-            if(is_null($track_tag_group))
-                return $this->error404();
-
-            return $this->ok(SerializerRegistry::getInstance()->getSerializer($track_tag_group)->serialize(Request::input('expand', '')));
-        }
-        catch (ValidationException $ex1) {
-            Log::warning($ex1);
-            return $this->error412([$ex1->getMessage()]);
-        }
-        catch(EntityNotFoundException $ex2)
-        {
-            Log::warning($ex2);
-            return $this->error404(['message'=> $ex2->getMessage()]);
-        }
-        catch (\Exception $ex) {
-            Log::error($ex);
-            return $this->error500($ex);
-        }
-    }
-
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/track-tag-groups/{track_tag_group_id}",
+        operationId: "deleteTrackTagGroup",
+        description: "Delete a track tag group. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        tags: ["Track Tag Groups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackTagGroupsData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+            new OA\Parameter(
+                name: "track_tag_group_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Track tag group ID"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_NO_CONTENT,
+                description: "Track tag group deleted successfully"
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Track tag group or summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $track_tag_group_id
@@ -364,6 +668,42 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
         }
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/track-tag-groups/seed-defaults",
+        operationId: "seedDefaultTrackTagGroups",
+        description: "Seed default track tag groups for a summit. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        tags: ["Track Tag Groups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTrackTagGroupsData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Default track tag groups seeded successfully",
+                content: new OA\JsonContent(ref: "#/components/schemas/TrackTagGroupsList")
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -400,6 +740,48 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
         }
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/track-tag-groups/all/allowed-tags/{tag_id}/seed-on-tracks",
+        operationId: "seedTagOnAllTracks",
+        description: "Seed a tag on all tracks in a summit. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        tags: ["Track Tag Groups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTracksData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+            new OA\Parameter(
+                name: "tag_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Tag ID"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Tag seeded successfully on all tracks"
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or tag not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $tag_id
@@ -427,6 +809,55 @@ final class OAuth2SummitTrackTagGroupsApiController extends OAuth2ProtectedContr
         }
     }
 
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/track-tag-groups/{track_tag_group_id}/allowed-tags/all/copy/tracks/{track_id}",
+        operationId: "seedTagTrackGroupOnTrack",
+        description: "Seed a track tag group on a specific track. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        tags: ["Track Tag Groups"],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['summit_track_tag_groups_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteTracksData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string"),
+                description: "Summit ID"
+            ),
+            new OA\Parameter(
+                name: "track_tag_group_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Track tag group ID"
+            ),
+            new OA\Parameter(
+                name: "track_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer", format: "int64"),
+                description: "Track ID"
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Track tag group seeded successfully on track"
+            ),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit, track or track tag group not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
     /**
      * @param $summit_id
      * @param $track_tag_group_id

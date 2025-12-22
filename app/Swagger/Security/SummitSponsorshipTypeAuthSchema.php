@@ -7,7 +7,7 @@ use OpenApi\Attributes as OA;
 
 #[OA\SecurityScheme(
         type: 'oauth2',
-        securityScheme: 'summit_sponsorship_oauth2',
+        securityScheme: 'summit_sponsorship_type_oauth2',
         flows: [
             new OA\Flow(
                 authorizationUrl: L5_SWAGGER_CONST_AUTH_URL,
@@ -22,4 +22,4 @@ use OpenApi\Attributes as OA;
         ],
     )
 ]
-class SponsorshipTypeAuthSchema {}
+class SummitSponsorshipTypeAuthSchema {}

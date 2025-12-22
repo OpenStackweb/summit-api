@@ -23,5 +23,5 @@ use App\Security\SummitScopes;
         ],
     )
 ]
-class SummitSponsorshipSecurityScheme {}
+class SummitSponsorshipAuthSchema {}
 

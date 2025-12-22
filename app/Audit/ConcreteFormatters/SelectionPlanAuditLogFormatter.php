@@ -22,13 +22,6 @@ use Illuminate\Support\Facades\Log;
 
 class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
 {
-    private string $event_type;
-
-    public function __construct(string $event_type)
-    {
-        $this->event_type = $event_type;
-    }
-
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof SelectionPlan) {
@@ -46,16 +39,16 @@ class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
                     $submission_dates = $subject->hasSubmissionPeriodDefined()
                         ? sprintf(
                             "[%s - %s]",
-                            $subject->getSubmissionBeginDate()?->format('Y-m-d H:i:s') ?? 'N/A',
-                            $subject->getSubmissionEndDate()?->format('Y-m-d H:i:s') ?? 'N/A'
+                            $this->formatAuditDate($subject->getSubmissionBeginDate()),
+                            $this->formatAuditDate($subject->getSubmissionEndDate())
                         )
                         : 'No dates set';
                     
                     $selection_dates = $subject->hasSelectionPeriodDefined()
                         ? sprintf(
                             "[%s - %s]",
-                            $subject->getSelectionBeginDate()?->format('Y-m-d H:i:s') ?? 'N/A',
-                            $subject->getSelectionEndDate()?->format('Y-m-d H:i:s') ?? 'N/A'
+                            $this->formatAuditDate($subject->getSelectionBeginDate()),
+                            $this->formatAuditDate($subject->getSelectionEndDate())
                         )
                         : 'No dates set';
                     

@@ -22,13 +22,6 @@ use Illuminate\Support\Facades\Log;
 
 class SummitGeoLocatedLocationAuditLogFormatter extends AbstractAuditLogFormatter
 {
-    private string $event_type;
-
-    public function __construct(string $event_type)
-    {
-        $this->event_type = $event_type;
-    }
-
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof SummitGeoLocatedLocation) {

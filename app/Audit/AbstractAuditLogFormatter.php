@@ -2,6 +2,8 @@
 
 namespace App\Audit;
 
+use App\Audit\Utils\DateFormatter;
+
 /**
  * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +20,12 @@ namespace App\Audit;
 abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
 {
     protected AuditContext $ctx;
+    protected string $event_type;
+
+    public function __construct(string $event_type)
+    {
+        $this->event_type = $event_type;
+    }
 
     final public function setContext(AuditContext $ctx): void
     {
@@ -41,6 +49,10 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         return sprintf("%s (%s)", $user_name, $user_id);
     }
 
+    protected function formatAuditDate($date, string $format = 'Y-m-d H:i:s'): string
+    {
+        return DateFormatter::format($date, $format);
+    }
 
     protected function getIgnoredFields(): array
     {

@@ -69,6 +69,135 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
+        path: "/api/v1/companies",
+        operationId: "getAllCompanies",
+        summary: "Get all companies",
+        description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
+        security: [
+            [
+                "companies_oauth2" => [
+                    CompanyScopes::Read,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        tags: ["Companies"],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of items per page',
+            ),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter companies. Available filters: name (=@, ==, @@), member_level (=@, ==, @@), display_on_site (==)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, name, member_level",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCompaniesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+        ]
+    )]
+    #[OA\Get(
+        path: "/api/public/v1/companies",
+        operationId: "getAllCompaniesPublic",
+        summary: "Get all companies (Public)",
+        description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
+        tags: ["Companies (Public)"],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The number of items per page',
+            ),
+            new OA\Parameter(
+                name: "filter[]",
+                in: "query",
+                required: false,
+                description: "Filter companies. Available filters: name (=@, ==, @@), member_level (=@, ==, @@), display_on_site (==)",
+                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
+                explode: true
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                description: "Order by field. Valid fields: id, name, member_level",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                description: "Load relations. Available: sponsorships, project_sponsorships",
+                schema: new OA\Schema(type: "string")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCompaniesResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+        ]
+    )]
+    #[OA\Get(
         path: "/api/v1/companies/{id}",
         operationId: "getCompany",
         summary: "Get a specific company",
@@ -113,10 +242,6 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
         ]
     )]
-    /**
-     * Class OAuth2CompaniesApiController
-     * @package App\Http\Controllers
-     */
     #[OA\Get(
         path: "/api/public/v1/companies/{id}",
         operationId: "getCompanyPublic",
@@ -268,136 +393,6 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
-        ]
-    )]
-    #[OA\Get(
-        path: "/api/v1/companies",
-        operationId: "getAllCompanies",
-        summary: "Get all companies",
-        description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
-        security: [
-            [
-                "companies_oauth2" => [
-                    CompanyScopes::Read,
-                    SummitScopes::ReadSummitData,
-                    SummitScopes::ReadAllSummitData,
-                ]
-            ]
-        ],
-        tags: ["Companies"],
-        parameters: [
-            new OA\Parameter(
-                name: 'page',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The page number'
-            ),
-            new OA\Parameter(
-                name: 'per_page',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The number of pages in each page',
-            ),
-            new OA\Parameter(
-                name: "filter[]",
-                in: "query",
-                required: false,
-                description: "Filter companies. Available filters: name (=@, ==, @@), member_level (=@, ==, @@), display_on_site (==)",
-                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
-                explode: true
-            ),
-            new OA\Parameter(
-                name: "order",
-                in: "query",
-                required: false,
-                description: "Order by field. Valid fields: id, name, member_level",
-                schema: new OA\Schema(type: "string")
-            ),
-            new OA\Parameter(
-                name: "expand",
-                in: "query",
-                required: false,
-                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
-                schema: new OA\Schema(type: "string")
-            ),
-            new OA\Parameter(
-                name: "relations",
-                in: "query",
-                required: false,
-                description: "Load relations. Available: sponsorships, project_sponsorships",
-                schema: new OA\Schema(type: "string")
-            ),
-        ],
-        responses: [
-            new OA\Response(
-                response: Response::HTTP_OK,
-                description: "Success",
-                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCompaniesResponse")
-            ),
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
-        ]
-    )]
-
-    #[OA\Get(
-        path: "/api/public/v1/companies",
-        operationId: "getAllCompaniesPublic",
-        summary: "Get all companies (Public)",
-        description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
-        tags: ["Companies (Public)"],
-        parameters: [
-            new OA\Parameter(
-                name: 'page',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The page number'
-            ),
-            new OA\Parameter(
-                name: 'per_page',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The number of pages in each page',
-            ),
-            new OA\Parameter(
-                name: "filter[]",
-                in: "query",
-                required: false,
-                description: "Filter companies. Available filters: name (=@, ==, @@), member_level (=@, ==, @@), display_on_site (==)",
-                schema: new OA\Schema(type: "array", items: new OA\Items(type: "string")),
-                explode: true
-            ),
-            new OA\Parameter(
-                name: "order",
-                in: "query",
-                required: false,
-                description: "Order by field. Valid fields: id, name, member_level",
-                schema: new OA\Schema(type: "string")
-            ),
-            new OA\Parameter(
-                name: "expand",
-                in: "query",
-                required: false,
-                description: "Expand related entities. Available expansions: sponsorships, project_sponsorships",
-                schema: new OA\Schema(type: "string")
-            ),
-            new OA\Parameter(
-                name: "relations",
-                in: "query",
-                required: false,
-                description: "Load relations. Available: sponsorships, project_sponsorships",
-                schema: new OA\Schema(type: "string")
-            ),
-        ],
-        responses: [
-            new OA\Response(
-                response: Response::HTTP_OK,
-                description: "Success",
-                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedCompaniesResponse")
-            ),
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
         ]
     )]
     public function getAllCompanies()

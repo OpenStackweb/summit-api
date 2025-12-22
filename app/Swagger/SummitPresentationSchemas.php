@@ -23,9 +23,7 @@ use OpenApi\Attributes as OA;
         )
     ]
 )]
-class PresentationTrackChairRatingTypeSchema
-{
-}
+class PresentationTrackChairRatingTypeSchema {}
 
 #[OA\Schema(
     schema: 'PaginatedPresentationTrackChairRatingTypesResponse',
@@ -43,9 +41,7 @@ class PresentationTrackChairRatingTypeSchema
         )
     ]
 )]
-class PaginatedPresentationTrackChairRatingTypesResponseSchema
-{
-}
+class PaginatedPresentationTrackChairRatingTypesResponseSchema {}
 
 #[OA\Schema(
     schema: 'PresentationTrackChairRatingTypeCreateRequest',
@@ -64,9 +60,7 @@ class PaginatedPresentationTrackChairRatingTypesResponseSchema
         )
     ]
 )]
-class PresentationTrackChairRatingTypeCreateRequestSchema
-{
-}
+class PresentationTrackChairRatingTypeCreateRequestSchema {}
 
 #[OA\Schema(
     schema: 'PresentationTrackChairRatingTypeUpdateRequest',
@@ -84,9 +78,7 @@ class PresentationTrackChairRatingTypeCreateRequestSchema
         )
     ]
 )]
-class PresentationTrackChairRatingTypeUpdateRequestSchema
-{
-}
+class PresentationTrackChairRatingTypeUpdateRequestSchema {}
 
 //
 
@@ -108,9 +100,7 @@ class PresentationTrackChairRatingTypeUpdateRequestSchema
         new OA\Property(property: "type", type: "PresentationTrackChairRatingType"),
     ],
 )]
-class PresentationTrackChairScoreType
-{
-}
+class PresentationTrackChairScoreType {}
 
 #[OA\Schema(
     schema: "PaginatedPresentationTrackChairScoreTypesResponse",
@@ -128,9 +118,7 @@ class PresentationTrackChairScoreType
         )
     ]
 )]
-class PaginatedPresentationTrackChairScoreTypesResponse
-{
-}
+class PaginatedPresentationTrackChairScoreTypesResponse {}
 
 #[OA\Schema(
     schema: "PresentationTrackChairScoreTypeCreateRequest",
@@ -142,9 +130,7 @@ class PaginatedPresentationTrackChairScoreTypesResponse
         new OA\Property(property: "description", type: "string", example: "This presentation is excellent"),
     ]
 )]
-class PresentationTrackChairScoreTypeCreateRequest
-{
-}
+class PresentationTrackChairScoreTypeCreateRequest {}
 
 #[OA\Schema(
     schema: "PresentationTrackChairScoreTypeUpdateRequest",
@@ -156,8 +142,6 @@ class PresentationTrackChairScoreTypeCreateRequest
         new OA\Property(property: "description", type: "string", nullable: true, example: "This presentation is excellent"),
     ]
 )]
-class PresentationTrackChairScoreTypeUpdateRequest
-{
-}
+class PresentationTrackChairScoreTypeUpdateRequest {}
 
 // End Track Chair Score Types

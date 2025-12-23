@@ -31,10 +31,10 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
         $this->config = config('audit_log', []);
     }
 
-    public function make(AuditContext $ctx, $subject, $eventType): ?IAuditLogFormatter
+    public function make(AuditContext $ctx, $subject, string $event_type): ?IAuditLogFormatter
     {
         $formatter = null;
-        switch ($eventType) {
+        switch ($event_type) {
             case IAuditStrategy::EVENT_COLLECTION_UPDATE:
                 $child_entity_formatter = null;
 
@@ -101,20 +101,20 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
                 $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
                 break;
             case IAuditStrategy::EVENT_ENTITY_CREATION:
-                $formatter = $this->getFormatterByContext($subject, $eventType, $ctx);
+                $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
                 if(is_null($formatter)) {
-                    $formatter = new EntityCreationAuditLogFormatter();
+                    $formatter = new EntityCreationAuditLogFormatter($event_type);
                 }
                 break;
             case IAuditStrategy::EVENT_ENTITY_DELETION:
-                $formatter = $this->getFormatterByContext($subject, $eventType, $ctx);
+                $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
                 if(is_null($formatter)) {
                     $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
                     $formatter = new EntityDeletionAuditLogFormatter($child_entity_formatter);
                 }
                 break;
             case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                $formatter = $this->getFormatterByContext($subject, $eventType, $ctx);
+                $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
                 if(is_null($formatter)) {
                     $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
                     $formatter = new EntityUpdateAuditLogFormatter($child_entity_formatter);

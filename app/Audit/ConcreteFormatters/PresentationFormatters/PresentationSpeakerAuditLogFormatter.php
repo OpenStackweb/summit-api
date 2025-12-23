@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters;
+namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -22,13 +22,6 @@ use Illuminate\Support\Facades\Log;
 
 class PresentationSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
 {
-    private string $event_type;
-
-    public function __construct(string $event_type)
-    {
-        $this->event_type = $event_type;
-    }
-
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof PresentationSpeaker) {

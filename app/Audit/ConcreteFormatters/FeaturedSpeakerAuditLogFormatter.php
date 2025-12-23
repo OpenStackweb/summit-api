@@ -22,13 +22,6 @@ use Illuminate\Support\Facades\Log;
 
 class FeaturedSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
 {
-    private string $event_type;
-
-    public function __construct(string $event_type)
-    {
-        $this->event_type = $event_type;
-    }
-
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof FeaturedSpeaker) {
@@ -59,23 +52,12 @@ class FeaturedSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $changed_fields = [];
-                    
-                    if (isset($change_set['Order'])) {
-                        $old_order = $change_set['Order'][0] ?? 'unknown';
-                        $new_order = $change_set['Order'][1] ?? 'unknown';
-                        $changed_fields[] = sprintf("display_order %s → %s", $old_order, $new_order);
-                    }
-                    if (isset($change_set['PresentationSpeakerID'])) {
-                        $changed_fields[] = "speaker";
-                    }
-                    
-                    $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
+                    $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Featured speaker '%s' (%s) updated (%s changed) by user %s",
+                        "Featured speaker '%s' (%s) updated: %s by user %s",
                         $speaker_name,
                         $speaker_id,
-                        $fields_str,
+                        $change_details,
                         $this->getUserInfo()
                     );
 

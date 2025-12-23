@@ -8,10 +8,11 @@ return [
         ],
         \models\summit\PresentationSpeaker::class => [
             'enabled' => true,
-            'strategy' => \App\Audit\ConcreteFormatters\PresentationSpeakerAuditLogFormatter::class,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationSpeakerAuditLogFormatter::class,
         ],
         \models\summit\Presentation::class => [
             'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationUserSubmissionAuditLogFormatter::class,
             'strategies' => [
                 [
                     'route' => 'POST|api/v1/summits/{id}/events',
@@ -49,7 +50,7 @@ return [
         ],
         \models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest::class => [
             'enabled' => true,
-            'strategy' => \App\Audit\ConcreteFormatters\SpeakerAssistanceAuditLogFormatter::class,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationSpeakerSummitAssistanceConfirmationAuditLogFormatter::class,
         ],
         \models\summit\SummitTrackChair::class => [
             'enabled' => true,
@@ -57,11 +58,71 @@ return [
         ],
         \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType::class => [
             'enabled' => true,
-            'strategy' => \App\Audit\ConcreteFormatters\PresentationTrackChairRatingTypeAuditLogFormatter::class,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationTrackChairRatingTypeAuditLogFormatter::class,
         ],
         \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType::class => [
             'enabled' => true,
-            'strategy' => \App\Audit\ConcreteFormatters\PresentationTrackChairScoreTypeAuditLogFormatter::class,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationTrackChairScoreTypeAuditLogFormatter::class,
+        ],
+        \models\summit\Summit::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitAuditLogFormatter::class,
+        ],
+        \models\summit\SummitEvent::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitEventAuditLogFormatter::class,
+        ],
+        \models\summit\SummitGeoLocatedLocation::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitGeoLocatedLocationAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationVideo::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationVideoAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationSlide::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationSlideAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationLink::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationLinkAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationMediaUpload::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationMediaUploadAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationActionType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationActionTypeAuditLogFormatter::class,
+        ],
+        \models\summit\SummitEventAttendanceMetric::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitEventAttendanceMetricAuditLogFormatter::class,
+        ],
+        \models\summit\SummitMediaUploadType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitMediaUploadTypeAuditLogFormatter::class,
+        ],
+        \models\summit\SummitVenue::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitVenueAuditLogFormatter::class,
+        ],
+        \models\summit\SummitExternalLocation::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitExternalLocationAuditLogFormatter::class,
+        ],
+        \models\summit\SummitHotel::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitHotelAuditLogFormatter::class,
+        ],
+        \models\summit\SummitAirport::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitAirportAuditLogFormatter::class,
+        ],
+        \models\summit\SummitVenueRoom::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitVenueRoomAuditLogFormatter::class,
         ],
     ]
 ];

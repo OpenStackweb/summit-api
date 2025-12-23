@@ -18,13 +18,6 @@ use models\main\SummitMemberSchedule;
 
 class SummitMemberScheduleAuditLogFormatter extends AbstractAuditLogFormatter
 {
-
-    private string $event_type;
-    public function __construct(string $event_type)
-    {
-        $this->event_type = $event_type;
-    }
-
     /**
      * @param $subject
      * @param array $change_set

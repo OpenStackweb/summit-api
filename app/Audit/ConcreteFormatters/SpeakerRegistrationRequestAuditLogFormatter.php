@@ -22,13 +22,6 @@ use Illuminate\Support\Facades\Log;
 
 class SpeakerRegistrationRequestAuditLogFormatter extends AbstractAuditLogFormatter
 {
-    private string $event_type;
-
-    public function __construct(string $event_type)
-    {
-        $this->event_type = $event_type;
-    }
-
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof SpeakerRegistrationRequest) {
@@ -51,33 +44,11 @@ class SpeakerRegistrationRequestAuditLogFormatter extends AbstractAuditLogFormat
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $changed_fields = [];
-                    
-                    if (isset($change_set['Email'])) {
-                        $old_email = $change_set['Email'][0] ?? 'N/A';
-                        $new_email = $change_set['Email'][1] ?? 'N/A';
-                        $changed_fields[] = sprintf("email %s → %s", $old_email, $new_email);
-                    }
-                    if (isset($change_set['IsConfirmed'])) {
-                        $old_status = $change_set['IsConfirmed'][0] ? 'confirmed' : 'pending';
-                        $new_status = $change_set['IsConfirmed'][1] ? 'confirmed' : 'pending';
-                        $changed_fields[] = sprintf("status %s → %s", $old_status, $new_status);
-                    }
-                    if (isset($change_set['ConfirmationDate'])) {
-                        $changed_fields[] = "confirmation_date";
-                    }
-                    if (isset($change_set['ProposerID'])) {
-                        $changed_fields[] = "proposer";
-                    }
-                    if (isset($change_set['SpeakerID'])) {
-                        $changed_fields[] = "speaker";
-                    }
-                    
-                    $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
+                    $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Speaker registration request for '%s' (%s changed) by user %s",
+                        "Speaker registration request for '%s' updated: %s by user %s",
                         $email,
-                        $fields_str,
+                        $change_details,
                         $this->getUserInfo()
                     );
 

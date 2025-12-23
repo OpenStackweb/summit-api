@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters;
+namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -17,57 +17,44 @@ namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use App\Models\Foundation\Summit\SelectionPlan;
+use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
 use Illuminate\Support\Facades\Log;
 
-class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
+class PresentationSpeakerSummitAssistanceConfirmationAuditLogFormatter extends AbstractAuditLogFormatter
 {
     public function format($subject, array $change_set): ?string
     {
-        if (!$subject instanceof SelectionPlan) {
+        if (!$subject instanceof PresentationSpeakerSummitAssistanceConfirmationRequest) {
             return null;
         }
 
         try {
-            $name = $subject->getName() ?? 'Unknown Plan';
             $id = $subject->getId() ?? 'unknown';
+            
+            $speaker = $subject->getSpeaker();
+            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName() ?? '', $speaker->getLastName() ?? '') : 'Unknown Speaker';
+            $speaker_email = $speaker ? ($speaker->getEmail() ?? 'unknown') : 'unknown';
+            $speaker_name = trim($speaker_name) ?: $speaker_email;
+            
             $summit = $subject->getSummit();
-            $summit_name = $summit ? $summit->getName() : 'Unknown Summit';
-
+            $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
+            
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $submission_dates = $subject->hasSubmissionPeriodDefined()
-                        ? sprintf(
-                            "[%s - %s]",
-                            $this->formatAuditDate($subject->getSubmissionBeginDate()),
-                            $this->formatAuditDate($subject->getSubmissionEndDate())
-                        )
-                        : 'No dates set';
-                    
-                    $selection_dates = $subject->hasSelectionPeriodDefined()
-                        ? sprintf(
-                            "[%s - %s]",
-                            $this->formatAuditDate($subject->getSelectionBeginDate()),
-                            $this->formatAuditDate($subject->getSelectionEndDate())
-                        )
-                        : 'No dates set';
-                    
                     return sprintf(
-                        "Selection Plan '%s' (%d) created for Summit '%s' with CFP period: %s, selection period: %s by user %s",
-                        $name,
+                        "Speaker Assistance Confirmation (%d) for '%s' on Summit '%s' created by user %s",
                         $id,
+                        $speaker_name,
                         $summit_name,
-                        $submission_dates,
-                        $selection_dates,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Selection Plan '%s' (%d) for Summit '%s' updated: %s by user %s",
-                        $name,
+                        "Speaker Assistance Confirmation (%d) for '%s' on Summit '%s' updated: %s by user %s",
                         $id,
+                        $speaker_name,
                         $summit_name,
                         $change_details,
                         $this->getUserInfo()
@@ -75,15 +62,15 @@ class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Selection Plan '%s' (%d) for Summit '%s' was deleted by user %s",
-                        $name,
+                        "Speaker Assistance Confirmation (%d) for '%s' on Summit '%s' was deleted by user %s",
                         $id,
+                        $speaker_name,
                         $summit_name,
                         $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {
-            Log::warning("SelectionPlanAuditLogFormatter error: " . $ex->getMessage());
+            Log::warning("PresentationSpeakerSummitAssistanceConfirmationAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;

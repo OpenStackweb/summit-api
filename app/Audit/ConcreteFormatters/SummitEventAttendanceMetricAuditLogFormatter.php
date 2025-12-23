@@ -17,56 +17,58 @@ namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use models\summit\SummitTrackChair;
+use models\summit\SummitEventAttendanceMetric;
 use Illuminate\Support\Facades\Log;
 
-class SummitTrackChairAuditLogFormatter extends AbstractAuditLogFormatter
+class SummitEventAttendanceMetricAuditLogFormatter extends AbstractAuditLogFormatter
 {
     public function format($subject, array $change_set): ?string
     {
-        if (!$subject instanceof SummitTrackChair) {
+        if (!$subject instanceof SummitEventAttendanceMetric) {
             return null;
         }
 
         try {
+            $id = $subject->getId() ?? 'unknown';
+            
+            $event = $subject->getEvent();
+            $event_title = $event ? ($event->getTitle() ?? 'Unknown Event') : 'Unknown Event';
+            
             $member = $subject->getMember();
-            $member_name = $member ? sprintf("%s %s", $member->getFirstName(), $member->getLastName()) : 'Unknown';
-            $member_id = $member ? $member->getId() : 'unknown';
+            $member_name = $member ? sprintf("%s %s", $member->getFirstName(), $member->getLastName()) : 'Unknown Member';
+            
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $categories = [];
-                    foreach ($subject->getCategories() as $category) {
-                        $categories[] = $category->getTitle();
-                    }
-                    $tracks_list = !empty($categories) ? implode(', ', $categories) : 'No tracks assigned';
                     return sprintf(
-                        "Track Chair '%s' (%d) assigned with tracks: %s by user %s",
+                        "Attendance Metric (%d) for member '%s' at event '%s' created by user %s",
+                        $id,
                         $member_name,
-                        $member_id,
-                        $tracks_list,
+                        $event_title,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Track Chair '%s' updated: %s by user %s",
-                        $member_name,
+                        "Attendance Metric (%d) for event '%s' updated: %s by user %s",
+                        $id,
+                        $event_title,
                         $change_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Track Chair '%s' (%d) removed from summit by user %s",
+                        "Attendance Metric (%d) for member '%s' at event '%s' was deleted by user %s",
+                        $id,
                         $member_name,
-                        $member_id,
+                        $event_title,
                         $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {
-            Log::warning("SummitTrackChairAuditLogFormatter error: " . $ex->getMessage());
+            Log::warning("SummitEventAttendanceMetricAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;

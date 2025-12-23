@@ -3,6 +3,7 @@
 namespace App\Audit\ConcreteFormatters\ChildEntityFormatters;
 
 use models\summit\SummitAttendeeBadgePrint;
+use App\Audit\Utils\DateFormatter;
 
 /**
  * Copyright 2023 OpenStack Foundation
@@ -29,7 +30,7 @@ class SummitAttendeeBadgePrintAuditLogFormatter implements IChildEntityAuditLogF
     public function format($subject, string $child_entity_action_type, ?string $additional_info = ""): ?string {
         if ($child_entity_action_type == IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION &&
             $subject instanceof SummitAttendeeBadgePrint) {
-            $print_date = $subject->getPrintDate()->format('Y-m-d H:i:s');
+            $print_date = DateFormatter::format($subject->getPrintDate());
             $view_type_name = 'N/A';
             $view_type = $subject->getViewType();
             if (!is_null($view_type)) {

@@ -17,62 +17,62 @@ namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairRatingType;
+use models\summit\SummitVenueRoom;
 use Illuminate\Support\Facades\Log;
 
-class PresentationTrackChairRatingTypeAuditLogFormatter extends AbstractAuditLogFormatter
+class SummitVenueRoomAuditLogFormatter extends AbstractAuditLogFormatter
 {
-    private string $event_type;
-
-    public function __construct(string $event_type)
-    {
-        $this->event_type = $event_type;
-    }
-
     public function format($subject, array $change_set): ?string
     {
-        if (!$subject instanceof PresentationTrackChairRatingType) {
+        if (!$subject instanceof SummitVenueRoom) {
             return null;
         }
 
         try {
-            $name = $subject->getName() ?? 'Unknown';
-            $selection_plan = $subject->getSelectionPlan();
-            $plan_name = $selection_plan ? $selection_plan->getName() : 'Unknown';
-
+            $name = $subject->getName() ?? 'Unknown Room';
+            $id = $subject->getId() ?? 'unknown';
+            
+            $venue = $subject->getVenue();
+            $venue_name = $venue ? ($venue->getName() ?? 'Unknown Venue') : 'Unknown Venue';
+            
+            $summit = $subject->getSummit();
+            $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
+            
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Track Chair Rating Type '%s' created for Selection Plan '%s' by user %s",
+                        "Venue Room '%s' (%d) created in Venue '%s' for Summit '%s' by user %s",
                         $name,
-                        $plan_name,
+                        $id,
+                        $venue_name,
+                        $summit_name,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $changed_fields = [];
-                    if (isset($change_set['name'])) {
-                        $changed_fields[] = "name";
-                    }
-                    
-                    $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
+                    $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Track Chair Rating Type '%s' updated (%s changed) by user %s",
+                        "Venue Room '%s' (%d) in Venue '%s' for Summit '%s' updated: %s by user %s",
                         $name,
-                        $fields_str,
+                        $id,
+                        $venue_name,
+                        $summit_name,
+                        $change_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Track Chair Rating Type '%s' deleted from Selection Plan '%s' by user %s",
+                        "Venue Room '%s' (%d) in Venue '%s' for Summit '%s' was deleted by user %s",
                         $name,
-                        $plan_name,
+                        $id,
+                        $venue_name,
+                        $summit_name,
                         $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {
-            Log::warning("PresentationTrackChairRatingTypeAuditLogFormatter error: " . $ex->getMessage());
+            Log::warning("SummitVenueRoomAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;

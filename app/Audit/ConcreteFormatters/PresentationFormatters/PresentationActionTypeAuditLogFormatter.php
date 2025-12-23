@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters;
+namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -17,56 +17,56 @@ namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use models\summit\SummitTrackChair;
+use models\summit\PresentationActionType;
 use Illuminate\Support\Facades\Log;
 
-class SummitTrackChairAuditLogFormatter extends AbstractAuditLogFormatter
+class PresentationActionTypeAuditLogFormatter extends AbstractAuditLogFormatter
 {
     public function format($subject, array $change_set): ?string
     {
-        if (!$subject instanceof SummitTrackChair) {
+        if (!$subject instanceof PresentationActionType) {
             return null;
         }
 
         try {
-            $member = $subject->getMember();
-            $member_name = $member ? sprintf("%s %s", $member->getFirstName(), $member->getLastName()) : 'Unknown';
-            $member_id = $member ? $member->getId() : 'unknown';
+            $label = $subject->getLabel() ?? 'Unknown Action Type';
+            $id = $subject->getId() ?? 'unknown';
+            
+            $summit = $subject->getSummit();
+            $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $categories = [];
-                    foreach ($subject->getCategories() as $category) {
-                        $categories[] = $category->getTitle();
-                    }
-                    $tracks_list = !empty($categories) ? implode(', ', $categories) : 'No tracks assigned';
                     return sprintf(
-                        "Track Chair '%s' (%d) assigned with tracks: %s by user %s",
-                        $member_name,
-                        $member_id,
-                        $tracks_list,
+                        "Presentation Action Type '%s' (%d) created for Summit '%s' by user %s",
+                        $label,
+                        $id,
+                        $summit_name,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Track Chair '%s' updated: %s by user %s",
-                        $member_name,
+                        "Presentation Action Type '%s' (%d) for Summit '%s' updated: %s by user %s",
+                        $label,
+                        $id,
+                        $summit_name,
                         $change_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Track Chair '%s' (%d) removed from summit by user %s",
-                        $member_name,
-                        $member_id,
+                        "Presentation Action Type '%s' (%d) for Summit '%s' was deleted by user %s",
+                        $label,
+                        $id,
+                        $summit_name,
                         $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {
-            Log::warning("SummitTrackChairAuditLogFormatter error: " . $ex->getMessage());
+            Log::warning("PresentationActionTypeAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;

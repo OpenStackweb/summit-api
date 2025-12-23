@@ -17,18 +17,11 @@ namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use models\summit\PresentationSpeakerSummitAssistanceConfirmationRequest;
+use models\summit\SpeakerAssistanceRequest;
 use Illuminate\Support\Facades\Log;
 
 class SpeakerAssistanceAuditLogFormatter extends AbstractAuditLogFormatter
 {
-    private string $event_type;
-
-    public function __construct(string $event_type)
-    {
-        $this->event_type = $event_type;
-    }
-
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof PresentationSpeakerSummitAssistanceConfirmationRequest) {

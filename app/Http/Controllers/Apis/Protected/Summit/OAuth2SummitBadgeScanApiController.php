@@ -617,7 +617,7 @@ final class OAuth2SummitBadgeScanApiController
         return $this->processRequest(function() use($summit_id){
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit)) return $this->error404();
-            return $this->_add($summit, $this->getJsonPayload($this->getAddValidationRules()));
+            return $this->_add($summit, $this->getJsonPayload($this->getAddValidationRules([])));
         });
     }
 

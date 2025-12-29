@@ -77,7 +77,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
     #[OA\Get(
         path: '/api/v1/summits/{id}/sponsorships-types',
         summary: 'Get all sponsorship types for a summit',
-        operationId: 'getAllSponsorshipTypes',
+        operationId: 'getSummitAllSponsorshipTypes',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -122,7 +122,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
     #[OA\Post(
         path: '/api/v1/summits/{id}/sponsorships-types',
         summary: 'Create a new sponsorship type',
-        operationId: 'createSponsorshipType',
+        operationId: 'createSummitSponsorshipType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -167,7 +167,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
     #[OA\Get(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Get a sponsorship type by ID',
-        operationId: 'getSponsorshipType',
+        operationId: 'getSummitSponsorshipType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -209,7 +209,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
     #[OA\Put(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Update a sponsorship type',
-        operationId: 'updateSponsorshipType',
+        operationId: 'updateSummitSponsorshipType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -255,7 +255,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
     #[OA\Delete(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
         summary: 'Delete a sponsorship type',
-        operationId: 'deleteSponsorshipType',
+        operationId: 'deleteSummitSponsorshipType',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -407,7 +407,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
     #[OA\Post(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
         summary: 'Upload a badge image for a sponsorship type',
-        operationId: 'addSponsorshipTypeBadgeImage',
+        operationId: 'addSummitSponsorshipTypeBadgeImage',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -494,7 +494,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
     #[OA\Delete(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
         summary: 'Remove the badge image from a sponsorship type',
-        operationId: 'deleteSponsorshipTypeBadgeImage',
+        operationId: 'deleteSummitSponsorshipTypeBadgeImage',
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,

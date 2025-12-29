@@ -37,8 +37,9 @@ class EntityUpdateAuditLogFormatter extends AbstractAuditLogFormatter
      */
     private $child_entity_formatter;
 
-    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter)
+    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter = null)
     {
+        parent::__construct('entity_update');
         $this->child_entity_formatter = $child_entity_formatter;
     }
 
@@ -157,6 +158,10 @@ class EntityUpdateAuditLogFormatter extends AbstractAuditLogFormatter
 
         if (count($res) == 0) return null;
 
-        return join("|", $res);
+        $entity_id = method_exists($subject, 'getId') ? $subject->getId() : 'N/A';
+        $user_info = $this->getUserInfo();
+        $message = join("|", $res);
+        
+        return "{$class_name} (ID: {$entity_id}) updated by {$user_info}: {$message}";
     }
 }

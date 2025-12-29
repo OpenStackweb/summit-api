@@ -25,6 +25,11 @@ use ReflectionClass;
  */
 class EntityCreationAuditLogFormatter extends AbstractAuditLogFormatter
 {
+    public function __construct()
+    {
+        parent::__construct('entity_creation');
+    }
+
     protected function getCreationIgnoredEntities(): array {
         return [
             'PresentationAction',
@@ -39,6 +44,10 @@ class EntityCreationAuditLogFormatter extends AbstractAuditLogFormatter
         $class_name = (new ReflectionClass($subject))->getShortName();
         $ignored_entities = $this->getCreationIgnoredEntities();
         if (in_array($class_name, $ignored_entities)) return null;
-        return "{$class_name} created";
+
+        $entity_id = method_exists($subject, 'getId') ? $subject->getId() : 'N/A';
+        $user_info = $this->getUserInfo();
+        
+        return "{$class_name} (ID: {$entity_id}) created by {$user_info}";
     }
 }

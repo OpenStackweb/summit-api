@@ -46,39 +46,12 @@ class PresentationSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $changed_fields = [];
-                    if (isset($change_set['FirstName']) || isset($change_set['LastName'])) {
-                        $changed_fields[] = "name";
-                    }
-                    if (isset($change_set['Email'])) {
-                        $changed_fields[] = "email";
-                    }
-                    if (isset($change_set['Title'])) {
-                        $changed_fields[] = "title";
-                    }
-                   
-                    if (isset($change_set['Country'])) {
-                        $changed_fields[] = "country";
-                    }
-                    if (isset($change_set['AvailableForBureau'])) {
-                        $changed_fields[] = "available_for_bureau";
-                    }
-                    if (isset($change_set['FundedTravel'])) {
-                        $changed_fields[] = "funded_travel";
-                    }
-                    if (isset($change_set['WillingToTravel'])) {
-                        $changed_fields[] = "willing_to_travel";
-                    }
-                    if (isset($change_set['WillingToPresentVideo'])) {
-                        $changed_fields[] = "willing_to_present_video";
-                    }
-                    
-                    $fields_str = !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties';
+                    $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Speaker '%s' (%s) updated (%s changed) by user %s",
+                        "Speaker '%s' (%s) updated: %s by user %s",
                         $full_name,
                         $speaker_id,
-                        $fields_str,
+                        $change_details,
                         $this->getUserInfo()
                     );
 

@@ -87,7 +87,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/tracks",
-        operationId: "getAllBySummit",
+        operationId: "getAllSummitTracks",
         description: "Get all tracks for a specific summit",
         tags: ["Summit Tracks"],
         security: [
@@ -186,7 +186,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
      */
     #[OA\Get(
         path: "/api/v1/summits/{id}/tracks/csv",
-        operationId: "getAllBySummitCSV",
+        operationId: "getAllSummitTracksCSV",
         description: "Export all tracks for a specific summit as CSV",
         security: [
             [

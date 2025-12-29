@@ -9,19 +9,10 @@ use OpenApi\Attributes as OA;
     type: "object",
     required: ["id", "tag"],
     properties: [
-        new OA\Property(
-            property: "id",
-            type: "integer",
-            format: "int64",
-            description: "Tag ID",
-            example: 1
-        ),
-        new OA\Property(
-            property: "tag",
-            type: "string",
-            description: "Tag name/value",
-            example: "Beginner"
-        ),
+        new OA\Property(property: "id", type: "integer", example: 1),
+        new OA\Property(property: "created", type: "integer", format: "int64", description: "Creation timestamp (epoch)", example: 1234567890),
+        new OA\Property(property: "last_edited", type: "integer", format: "int64", description: "Last edit timestamp (epoch)", example: 1234567890),
+        new OA\Property(property: "tag", type: "string", maxLength: 100, example: "Cloud Computing"),
     ]
 )]
 class TagSchema {}

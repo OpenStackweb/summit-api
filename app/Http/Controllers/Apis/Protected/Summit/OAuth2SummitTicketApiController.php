@@ -1122,7 +1122,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: 'Successful operation',
-                content: new OA\JsonContent(schema: 'SummitAttendeeBadge')
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or badge not found'),

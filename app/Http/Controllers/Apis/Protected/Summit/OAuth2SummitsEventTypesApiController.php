@@ -802,7 +802,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
      */
     #[OA\Put(
         path: "/api/v1/summits/{id}/event-types/{event_type_id}/summit-documents/{document_id}",
-        operationId: "addSummitDocument",
+        operationId: "addSummitDocumentToEventType",
         description: "Add a document to an event type",
         tags: ["Event Types"],
         security: [

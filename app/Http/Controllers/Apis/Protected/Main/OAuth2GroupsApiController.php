@@ -13,6 +13,7 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 
+use App\Security\GroupsScopes;
 use App\Security\SummitScopes;
 use Illuminate\Http\Response;
 use models\main\IGroupRepository;
@@ -54,7 +55,7 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
                 'groups_oauth2' => [
                     SummitScopes::ReadAllSummitData,
                     SummitScopes::ReadSummitData,
-                    SummitScopes::ReadGroupsData,
+                    GroupsScopes::ReadData,
                 ]
             ]
         ],

@@ -1046,7 +1046,7 @@ class SummitBadgeTypeUpdateRequestSchema
                 new OA\Property(
                     property: 'data',
                     type: 'array',
-                    items: new OA\Items(type: 'SummitAttendeeTicket')
+                    items: new OA\Items(ref: '#/components/schemas/SummitAttendeeTicket')
                 )
             ]
         )

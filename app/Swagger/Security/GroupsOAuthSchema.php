@@ -2,6 +2,7 @@
 namespace App\Swagger\schemas;
 
 use OpenApi\Attributes as OA;
+use App\Security\GroupsScopes;
 use App\Security\SummitScopes;
 
 #[OA\SecurityScheme(
@@ -15,7 +16,7 @@ use App\Security\SummitScopes;
             scopes: [
                 SummitScopes::ReadAllSummitData => 'Read All Summit Data',
                 SummitScopes::ReadSummitData => 'Read Summit Data',
-                SummitScopes::ReadGroupsData => 'Read Groups Data',
+                GroupsScopes::ReadData => 'Read Groups Data',
             ],
         ),
     ],

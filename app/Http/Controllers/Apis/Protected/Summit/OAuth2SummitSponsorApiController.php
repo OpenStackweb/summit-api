@@ -262,64 +262,23 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             ]
         ],
         parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit id'
-            ),
-            new OA\Parameter(
-                name: 'page',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'integer', default: 1),
-                description: 'Page number'
-            ),
-            new OA\Parameter(
-                name: 'per_page',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'integer', default: 10),
-                description: 'Items per page'
-            ),
-            new OA\Parameter(
-                name: 'order',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'string'),
-                description: 'Order by field (e.g., +id, -company_name)'
-            ),
-            new OA\Parameter(
-                name: 'expand',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'string'),
-                description: 'Expand relationships (company)'
-            ),
-            new OA\Parameter(
-                name: 'fields',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'string'),
-                description: 'Fields to include (id,company_name)'
-            ),
-            new OA\Parameter(
-                name: 'filter',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'string'),
-                description: 'Filter expression (e.g., is_published==true)'
-            ),
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1), description: 'Page number'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10), description: 'Items per page'),
+            new OA\Parameter(name: 'order', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Order by field (e.g., +id, -company_name)'),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Expand relationships (company)'),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Fields to include (id,company_name)'),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filter expression (e.g., is_published==true)'),
         ],
         responses: [
             new OA\Response(
-                response: 200,
-                description: 'Success'
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Sponsor')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -369,13 +328,39 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Success',
                 content: new OA\JsonContent(ref: '#/components/schemas/Sponsor')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+
+    #[OA\Get(
+        path: "/api/public/v1/summits/all/{id}/sponsors",
+        description: "Get all sponsors for a summit (Public API)",
+        summary: 'Read Sponsors by Summit (Public)',
+        operationId: 'getSponsorsBySummitPublic',
+        tags: ['Sponsors'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Sponsor'))
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -448,14 +433,14 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/Sponsor')
             ),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -573,14 +558,14 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Success',
                 content: new OA\JsonContent(ref: '#/components/schemas/Sponsor')
             ),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -637,13 +622,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Success',
                 content: new OA\JsonContent(ref: '#/components/schemas/Sponsor')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -717,13 +702,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Success',
                 content: new OA\JsonContent(ref: '#/components/schemas/Sponsor')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -811,13 +796,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/File')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -880,12 +865,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'No Content'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -966,13 +951,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/File')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -1035,12 +1020,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'No Content'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -1115,13 +1100,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/File')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -1190,12 +1175,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'No Content'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -1270,13 +1255,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/File')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -1345,12 +1330,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'No Content'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -1444,12 +1429,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Success'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -1544,13 +1529,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/SponsorAd')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -1640,13 +1625,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/File')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -1723,12 +1708,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'No Content'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -1797,11 +1782,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Ad updated successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -1874,11 +1859,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Ad deleted successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -1946,11 +1931,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Ad retrieved successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -2049,11 +2034,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Sponsor materials retrieved successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -2151,12 +2136,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Material created successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SponsorMaterial')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -2232,11 +2217,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Material updated successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -2309,11 +2294,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Material deleted successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -2381,11 +2366,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Material retrieved successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -2484,11 +2469,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Social networks retrieved successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -2582,12 +2567,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Social network created successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SponsorSocialNetwork')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -2662,11 +2647,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Social network retrieved successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -2745,11 +2730,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Social network updated successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -2822,11 +2807,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Social network deleted successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -2913,11 +2898,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Extra questions retrieved successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -2986,7 +2971,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: "/api/v1/summits/{id}/sponsor-extra-questions-metadata",
+        path: "/api/v1/summits/{id}/sponsors/all/extra-questions/metadata",
         description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
         summary: 'Read Sponsor Extra Questions Metadata',
         operationId: 'getSponsorExtraQuestionsMetadata',
@@ -3013,11 +2998,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Extra questions metadata retrieved successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -3074,12 +3059,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Extra question created successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorExtraQuestionType')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -3160,11 +3145,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Extra question retrieved successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -3248,11 +3233,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Extra question updated successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -3333,11 +3318,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Extra question deleted successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
@@ -3416,12 +3401,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Question value created successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/ExtraQuestionTypeValue')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -3516,11 +3501,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Question value updated successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -3614,11 +3599,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Question value deleted successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -3689,11 +3674,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Lead report settings metadata retrieved'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -3753,12 +3738,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Lead report settings created successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitLeadReportSetting')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]
@@ -3830,11 +3815,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_CREATED,
                 description: 'Lead report settings updated successfully'
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
         ]

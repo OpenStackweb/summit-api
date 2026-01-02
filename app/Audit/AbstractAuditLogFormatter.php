@@ -19,7 +19,7 @@ use App\Audit\Utils\DateFormatter;
 
 abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
 {
-    protected AuditContext $ctx;
+    protected ?AuditContext $ctx = null;
     protected string $event_type;
 
     public function __construct(string $event_type)
@@ -34,6 +34,9 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
 
     protected function getUserInfo(): string
     {
+        if (app()->runningInConsole()) {
+            return 'Worker Job';
+        }
         if (!$this->ctx) {
             return 'Unknown (unknown)';
         }
@@ -126,5 +129,5 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         return sprintf("Property \"%s\" has changed from \"%s\" to \"%s\"", $prop_name, $old_display, $new_display);
     }
 
-    abstract public function format($subject, array $change_set): ?string;
+    abstract public function format(mixed $subject, array $change_set): ?string;
 }

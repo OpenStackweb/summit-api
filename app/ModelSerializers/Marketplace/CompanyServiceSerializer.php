@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\CompanyService;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
 /**
@@ -50,38 +52,35 @@ class CompanyServiceSerializer extends SilverStripeSerializer
     {
         $company_service  = $this->object;
         if(!$company_service instanceof CompanyService) return [];
-        $values           = parent::serialize($expand, $fields, $relations, $params);
+        $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                $relation = trim($relation);
-                if (!in_array($relation, $relations)) continue;
-                switch ($relation) {
-                    case 'company':
-                        {
-                            unset($values['company_id']);
-                            $values['company'] = SerializerRegistry::getInstance()->getSerializer($company_service->getCompany())->serialize(null, [], ['none']);
-                        }
-                        break;
-                    case 'type':
-                        {
-                            unset($values['type_id']);
-                            $values['type'] = SerializerRegistry::getInstance()->getSerializer($company_service->getType())->serialize(null, [], ['none']);
-                        }
-                        break;
-                    case 'reviews':
-                        {
-                            $reviews = [];
-                            foreach ($company_service->getApprovedReviews() as $r) {
-                                $reviews[] = SerializerRegistry::getInstance()->getSerializer($r)->serialize();
-                            }
-                            $values['reviews'] = $reviews;
-                        }
-                        break;
-                }
+        if(in_array('reviews', $relations) && !isset($values['reviews'])) {
+            $reviews = [];
+            foreach ($company_service->getApprovedReviews() as $r) {
+                $reviews[] = $r->getId();
             }
+            $values['reviews'] = $reviews;
         }
+
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'reviews' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getApprovedReviews',
+        ],
+        'company' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'company_id',
+            'getter' => 'getCompany',
+            'has' => 'hasCompany'
+        ],
+        'type' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'type_id',
+            'getter' => 'getType',
+            'has' => 'hasType'
+        ],
+    ];
 }

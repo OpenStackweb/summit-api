@@ -1,8 +1,4 @@
-<?php
-namespace App\ModelSerializers\Marketplace;
-use App\Models\Foundation\Marketplace\CloudService;
-use ModelSerializers\SerializerRegistry;
-
+<?php namespace App\ModelSerializers\Marketplace;
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +11,10 @@ use ModelSerializers\SerializerRegistry;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Models\Foundation\Marketplace\CloudService;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+
 class CloudServiceSerializer extends OpenStackImplementationSerializer
 {
     protected static $allowed_relations = [
@@ -36,34 +36,33 @@ class CloudServiceSerializer extends OpenStackImplementationSerializer
         if(!$cloud_service instanceof CloudService) return [];
         $values           = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('data_centers', $relations)){
-            $res = [];
-            foreach ($cloud_service->getDataCenters() as $dataCenter){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($dataCenter)
-                    ->serialize($expand);
+        if(in_array('data_center_regions', $relations) && !isset($values['data_center_regions'])) {
+            $data_center_regions = [];
+            foreach ($cloud_service->getDataCenterRegions() as $dcr) {
+                $data_center_regions[] = $dcr->getId();
             }
-            $values['data_centers'] = $res;
+            $values['data_center_regions'] = $data_center_regions;
         }
 
-        if(in_array('data_center_regions', $relations)){
-            $res = [];
-            foreach ($cloud_service->getDataCenterRegions() as $region){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($region)
-                    ->serialize($expand);
+        if(in_array('data_centers', $relations) && !isset($values['data_centers'])) {
+            $data_centers = [];
+            foreach ($cloud_service->getDataCenters() as $dc) {
+                $data_centers[] = $dc->getId();
             }
-            $values['data_center_regions'] = $res;
+            $values['data_centers'] = $data_centers;
         }
 
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
-        }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'data_center_regions' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getDataCenterRegions',
+        ],
+        'data_centers' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getDataCenters',
+        ],
+    ];
 }

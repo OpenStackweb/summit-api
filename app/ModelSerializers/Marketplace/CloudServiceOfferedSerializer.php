@@ -12,15 +12,18 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\CloudServiceOffered;
-use ModelSerializers\SerializerRegistry;
-use ModelSerializers\SilverStripeSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 
 /**
  * Class CloudServiceOfferedSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class CloudServiceOfferedSerializer extends SilverStripeSerializer
+final class CloudServiceOfferedSerializer extends OpenStackImplementationApiCoverageSerializer
 {
+
+    protected static $array_mappings = [
+        'Type' => 'type:json_string',
+    ];
 
     protected static $allowed_relations = [
         'pricing_schemas',
@@ -39,25 +42,20 @@ final class CloudServiceOfferedSerializer extends SilverStripeSerializer
         $service  = $this->object;
         if(!$service instanceof CloudServiceOffered) return [];
         $values           = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('pricing_schemas', $relations)){
-            $res = [];
-            foreach ($service->getPricingSchemas() as $schema){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($schema)
-                    ->serialize($expand);
+        if(in_array('pricing_schemas', $relations) && !isset($values['pricing_schemas'])) {
+            $pricing_schemas = [];
+            foreach ($service->getPricingSchemas() as $ps) {
+                $pricing_schemas[] = $ps->getId();
             }
-            $values['pricing_schemas'] = $res;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
+            $values['pricing_schemas'] = $pricing_schemas;
         }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'pricing_schemas' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getPricingSchemas',
+        ],
+    ];
 }

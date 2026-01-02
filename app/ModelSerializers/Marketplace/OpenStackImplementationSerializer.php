@@ -14,6 +14,7 @@ namespace App\ModelSerializers\Marketplace;
  **/
 
 use App\Models\Foundation\Marketplace\OpenStackImplementation;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 use ModelSerializers\SerializerRegistry;
 
 /**
@@ -55,44 +56,42 @@ class OpenStackImplementationSerializer extends RegionalSupportedCompanyServiceS
         if(!$implementation instanceof OpenStackImplementation) return [];
         $values           = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('capabilities', $relations)){
-            $res = [];
-            foreach ($implementation->getCapabilities() as $capability){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($capability)
-                    ->serialize($expand);
+        if(in_array('capabilities', $relations) && !isset($values['capabilities'])) {
+            $capabilities = [];
+            foreach ($implementation->getCapabilities() as $c) {
+                $capabilities[] = $c->getId();
             }
-            $values['capabilities'] = $res;
+            $values['capabilities'] = $capabilities;
         }
-
-        if(in_array('hypervisors', $relations)){
-            $res = [];
-            foreach ($implementation->getHypervisors() as $hypervisor){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($hypervisor)
-                    ->serialize($expand);
+        if(in_array('hypervisors', $relations) && !isset($values['hypervisors'])) {
+            $hypervisors = [];
+            foreach ($implementation->getHypervisors() as $h) {
+                $hypervisors[] = $h->getId();
             }
-            $values['hypervisors'] = $res;
+            $values['hypervisors'] = $hypervisors;
         }
-
-        if(in_array('guests', $relations)){
-            $res = [];
-            foreach ($implementation->getGuests() as $guest){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($guest)
-                    ->serialize($expand);
+        if(in_array('guests', $relations) && !isset($values['guests'])) {
+            $guests = [];
+            foreach ($implementation->getGuests() as $g) {
+                $guests[] = $g->getId();
             }
-            $values['guests'] = $res;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
+            $values['guests'] = $guests;
         }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'capabilities' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getCapabilities',
+        ],
+        'hypervisors' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getHypervisors',
+        ],
+        'guests' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getGuests',
+        ],
+    ];
 }

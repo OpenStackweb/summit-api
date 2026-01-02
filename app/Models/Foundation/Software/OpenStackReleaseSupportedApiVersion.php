@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
  * @package App\Models\Foundation\Software
@@ -31,6 +32,20 @@ class OpenStackReleaseSupportedApiVersion extends SilverstripeBaseModel
      */
     #[ORM\Column(name: 'Status', type: 'string')]
     private $status;
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getComponentId' => 'component',
+        'getApiVersionId' => 'api_version',
+        'getReleaseId' => 'release',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasComponent' => 'component',
+        'hasApiVersion' => 'api_version',
+        'hasRelease' => 'release',
+    ];
 
     /**
      * @var OpenStackComponent

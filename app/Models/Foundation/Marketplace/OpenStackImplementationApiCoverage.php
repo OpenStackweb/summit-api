@@ -13,6 +13,7 @@
  **/
 use App\Models\Foundation\Software\OpenStackReleaseSupportedApiVersion;
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
  * @package App\Models\Foundation\Marketplace
@@ -25,6 +26,19 @@ use models\utils\SilverstripeBaseModel;
 class OpenStackImplementationApiCoverage
     extends SilverstripeBaseModel
 {
+
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getReleaseSupportedApiVersionId' => 'release_supported_api_version',
+        'getImplementationId' => 'implementation',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasReleaseSupportedApiVersion' => 'release_supported_api_version',
+        'hasImplementation' => 'implementation',
+    ];
     /**
      * @var int
      */
@@ -80,5 +94,9 @@ class OpenStackImplementationApiCoverage
         catch (\Exception $ex){
             return false;
         }
+    }
+
+    public function getClassName(){
+        return 'OpenStackImplementationApiCoverage';
     }
 }

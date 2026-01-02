@@ -15,6 +15,7 @@
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 use models\main\Company;
 /**
@@ -105,6 +106,19 @@ class CompanyService extends SilverstripeBaseModel
      */
     protected $resources;
 
+
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getTypeId' => 'type',
+        'getCompanyId' => 'company',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasType' => 'type',
+        'hasCompany' => 'company',
+    ];
     /**
      * CompanyService constructor.
      */
@@ -170,32 +184,6 @@ class CompanyService extends SilverstripeBaseModel
     public function getType()
     {
         return $this->type;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCompanyId()
-    {
-        try {
-            return !is_null($this->company)? $this->company->getId():0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
-    }
-
-    /**
-     * @return int
-     */
-    public function getTypeId()
-    {
-        try {
-            return !is_null($this->type)? $this->type->getId():0;
-        }
-        catch(\Exception $ex){
-            return 0;
-        }
     }
 
     /**

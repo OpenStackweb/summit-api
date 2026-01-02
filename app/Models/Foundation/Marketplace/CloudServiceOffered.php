@@ -58,4 +58,8 @@ class CloudServiceOffered extends OpenStackImplementationApiCoverage
     {
         return $this->pricing_schemas->toArray();
     }
+
+    public function getClassName(){
+        return 'CloudServiceOffered';
+    }
 }

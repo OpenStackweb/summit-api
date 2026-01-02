@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\RegionalSupportedCompanyService;
-use ModelSerializers\SerializerRegistry;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 /**
  * Class RegionalSupportedCompanyServiceSerializer
  * @package App\ModelSerializers\Marketplace
@@ -38,24 +38,20 @@ class RegionalSupportedCompanyServiceSerializer extends CompanyServiceSerializer
         if(!$regional_service instanceof RegionalSupportedCompanyService) return [];
         $values           = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('supported_regions', $relations)){
-            $res = [];
-            foreach ($regional_service->getRegionalSupports() as $region){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($region)
-                    ->serialize($expand = 'region');
+        if(in_array('supported_regions', $relations) && !isset($values['supported_regions'])) {
+            $supported_regions = [];
+            foreach ($regional_service->getRegionalSupports() as $rs) {
+                $supported_regions[] = $rs->getId();
             }
-            $values['supported_regions'] = $res;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
+            $values['supported_regions'] = $supported_regions;
         }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'supported_regions' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getRegionalSupports',
+        ],
+    ];
 }

@@ -12,19 +12,22 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\OpenStackImplementationApiCoverage;
-use ModelSerializers\SerializerRegistry;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SilverStripeSerializer;
 /**
  * Class OpenStackImplementationApiCoverageSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class OpenStackImplementationApiCoverageSerializer extends SilverStripeSerializer
+class OpenStackImplementationApiCoverageSerializer extends SilverStripeSerializer
 {
     /**
      * @var array
      */
     protected static $array_mappings = [
+        'ClassName' => 'class_name:json_string',
         'Percent' => 'api_coverage:json_int',
+        'ReleaseSupportedApiVersionId' => 'release_supported_api_version_id:json_int',
+        'ImplementationId' => 'implementation_id:json_int',
     ];
 
     /**
@@ -38,35 +41,22 @@ final class OpenStackImplementationApiCoverageSerializer extends SilverStripeSer
     {
         $api_coverage  = $this->object;
         if(!$api_coverage instanceof OpenStackImplementationApiCoverage) return [];
-        $values           = parent::serialize($expand, $fields, $relations, $params);
-        if(!$api_coverage->hasReleaseSupportedApiVersion()) return $values;
-
-        $release_api_version = $api_coverage->getReleaseSupportedApiVersion();
-        if($release_api_version->hasApiVersion() && $release_api_version->getApiVersion()->hasComponent()){
-            $values["component"] =  SerializerRegistry::getInstance()
-                ->getSerializer($release_api_version->getApiVersion()->getComponent())
-                ->serialize();
-        }
-        else if($release_api_version->hasComponent()){
-            $values["component"] =  SerializerRegistry::getInstance()
-                ->getSerializer($release_api_version->getComponent())
-                ->serialize();
-        }
-
-        if($release_api_version->hasRelease()){
-            $values["release"] =  SerializerRegistry::getInstance()
-                ->getSerializer($release_api_version->getRelease())
-                ->serialize();
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
-        }
+        $values = parent::serialize($expand, $fields, $relations, $params);
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'release_supported_api_version' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'release_supported_api_version_id',
+            'getter' => 'getReleaseSupportedApiVersion',
+            'has' => 'hasReleaseSupportedApiVersion'
+        ],
+        'implementation' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'implementation_id',
+            'getter' => 'getImplementation',
+            'has' => 'hasImplementation'
+        ]
+    ];
 }

@@ -1,6 +1,4 @@
-<?php
-
-namespace App\Http\Controllers;
+<?php namespace App\Http\Controllers;
 
 /**
  * Copyright 2019 OpenStack Foundation
@@ -23,7 +21,6 @@ use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
-use models\utils\IBaseRepository;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
 use Illuminate\Http\Response;
@@ -36,15 +33,6 @@ use Exception;
  */
 final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
 {
-    /**
-     * @var ISummitRepository
-     */
-    private $summit_repository;
-
-    /**
-     * @var ISummitTaxTypeService
-     */
-    private $service;
 
     use GetAllBySummit;
 
@@ -55,6 +43,15 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
     use UpdateSummitChildElement;
 
     use DeleteSummitChildElement;
+    /**
+     * @var ISummitRepository
+     */
+    private $summit_repository;
+
+    /**
+     * @var ISummitTaxTypeService
+     */
+    private $service;
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/tax-types',
@@ -103,10 +100,6 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function getAllBySummit($summit_id)
-    {
-        return parent::getAllBySummit($summit_id);
-    }
 
     #[OA\Post(
         path: '/api/v1/summits/{id}/tax-types',
@@ -149,10 +142,6 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function add($summit_id)
-    {
-        return parent::add($summit_id);
-    }
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
@@ -192,10 +181,6 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($summit_id, $tax_id)
-    {
-        return parent::get($summit_id, $tax_id);
-    }
 
     #[OA\Put(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
@@ -239,10 +224,6 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function update($summit_id, $tax_id)
-    {
-        return parent::update($summit_id, $tax_id);
-    }
 
     #[OA\Delete(
         path: '/api/v1/summits/{id}/tax-types/{tax_id}',
@@ -277,10 +258,6 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function delete($summit_id, $tax_id)
-    {
-        return parent::delete($summit_id, $tax_id);
-    }
 
     /**
      * @return array
@@ -510,7 +487,6 @@ final class OAuth2SummitTaxTypeApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
             if (is_null($summit))
                 return $this->error404();
-
             $child = $this->service->removeTaxTypeFromTicketType($summit, $tax_id, $ticket_type_id);
             return $this->updated(SerializerRegistry::getInstance()->getSerializer($child)->serialize());
         } catch (ValidationException $ex1) {

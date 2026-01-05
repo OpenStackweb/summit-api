@@ -138,3 +138,43 @@ class MarketplaceAppliancesResponseSchema
 class PaginatedAppliancesResponseSchema
 {
 }
+
+#[OA\Schema(
+    schema: 'RemoteCloudsResponse',
+    type: 'object',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/OpenStackImplementation'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                'hardware_spec' => new OA\Property(property: 'hardware_spec', type: 'string', example: 'High-performance servers with SSD storage'),
+                'pricing_models' => new OA\Property(property: 'pricing_models', type: 'string', example: 'Monthly subscription, Pay-as-you-use'),
+                'published_sla' => new OA\Property(property: 'published_sla', type: 'string', example: '99.9% uptime guarantee'),
+                'is_vendor_managed_upgrades' => new OA\Property(property: 'is_vendor_managed_upgrades', type: 'boolean', example: true),
+            ]
+        )
+    ]
+)]
+class RemoteCloudsResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'PaginatedRemoteCloudsResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/RemoteCloudService')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedRemoteCloudsResponseSchema
+{
+}

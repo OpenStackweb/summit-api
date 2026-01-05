@@ -297,7 +297,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         operationId: 'getScheduledEvents',
         summary: 'Get all published/scheduled events for a summit',
         description: 'Retrieves a paginated list of all published events for a specific summit.',
-        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         tags: ['Summit Events (Public)'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -356,9 +355,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: '/api/public/v1/summits/{id}/events/all/published/tags',
         operationId: 'getScheduledEventsTags',
-        summary: 'Get all tags from published events for a summit (Public)',
+        summary: 'Get all tags from published events for a summit',
         description: 'Retrieves a paginated list of tags used in published events for a specific summit. This is a public endpoint.',
-        tags: ['Summit Events'],
+        tags: ['Summit Events (Public)'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -370,7 +369,6 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: 'Tags retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedTagsResponse')),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
-            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
         ]
@@ -883,11 +881,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     )]
 
     #[OA\Get(
-        path: '/api/v1/public/summits/{id}/events/{event_id}/published',
+        path: '/api/public/v1/summits/{id}/events/{event_id}/published',
         operationId: 'getScheduledEvent',
         summary: 'Get a specific published/scheduled event by ID',
         description: 'Retrieves a single published event by its ID for a specific summit.',
-        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         tags: ['Summit Events (Public)'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),

@@ -1,4 +1,5 @@
-<?php namespace App\Security;
+<?php
+namespace App\Security;
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,4 +120,5 @@ final class SummitScopes
 
     const WriteAttendeeNotesData = '%s/attendee/notes/write';
     const ReadAttendeeNotesData = '%s/attendee/notes/read';
+
 }

@@ -2,7 +2,9 @@
 
 namespace App\Swagger\schemas;
 
+use models\summit\ISponsorshipTypeConstants;
 use OpenApi\Attributes as OA;
+
 #[OA\Schema(
     schema: 'SummitScheduleConfigContent',
     type: 'object',
@@ -340,6 +342,49 @@ class SummitAttendeeBadgeSchema
     ]
 )]
 class PaginatedSummitAttendeeBadgesResponseSchema {}
+
+
+#[OA\Schema(
+    schema: 'PaginatedSummitSponsorshipTypesResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/SummitSponsorshipType')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedSummitSponsorshipTypesResponseSchema {}
+
+#[OA\Schema(
+    schema: 'SummitSponsorshipTypeCreateRequest',
+    type: 'object',
+    required: ['name', 'label', 'size'],
+    properties: [
+        new OA\Property(property: 'name', type: 'string', example: 'platinum'),
+        new OA\Property(property: 'label', type: 'string', example: 'Platinum'),
+        new OA\Property(property: 'size', type: 'string', example: ISponsorshipTypeConstants::BigSize, enum: ISponsorshipTypeConstants::AllowedSizes),
+    ]
+)]
+class SummitSponsorshipTypeCreateRequestSchema {}
+
+#[OA\Schema(
+    schema: 'SummitSponsorshipTypeUpdateRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', example: 'platinum'),
+        new OA\Property(property: 'label', type: 'string', example: 'Platinum'),
+        new OA\Property(property: 'size', type: 'string', example: ISponsorshipTypeConstants::BigSize, enum: ISponsorshipTypeConstants::AllowedSizes),
+        new OA\Property(property: 'order', type: 'integer', example: 1, minimum: 1),
+    ]
+)]
+class SummitSponsorshipTypeUpdateRequestSchema {}
 
 #[OA\Schema(
     schema: 'SummitMediaFileType',

@@ -1169,7 +1169,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             content: new OA\JsonContent(ref: '#/components/schemas/PublishSummitEventRequest')
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Event published successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Event published successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
@@ -1672,7 +1672,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             content: new OA\JsonContent(ref: '#/components/schemas/AddEventFeedbackRequest')
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Feedback updated successfully', content: new OA\JsonContent(type: 'integer', description: 'Feedback ID')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Feedback updated successfully', content: new OA\JsonContent(type: 'integer', description: 'Feedback ID')),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
@@ -1709,7 +1709,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             content: new OA\JsonContent(ref: '#/components/schemas/AddEventFeedbackRequest')
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Feedback updated successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventFeedback')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Feedback updated successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventFeedback')),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
@@ -2133,7 +2133,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             content: new OA\JsonContent(ref: '#/components/schemas/UpdateAndPublishEventsRequest')
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Events updated and published successfully'),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Events updated and published successfully'),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
@@ -2195,7 +2195,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             content: new OA\JsonContent(ref: '#/components/schemas/UpdateEventsRequest')
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Events updated successfully'),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Events updated successfully'),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
@@ -2835,14 +2835,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Streaming info retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventStreamingInfoResponse')),
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
-            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
-            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
         ]
     )]
 

@@ -883,7 +883,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     )]
 
     #[OA\Get(
-        path: '/api/v1/summits/{id}/events/{event_id}/published',
+        path: '/api/v1/public/summits/{id}/events/{event_id}/published',
         operationId: 'getScheduledEvent',
         summary: 'Get a specific published/scheduled event by ID',
         description: 'Retrieves a single published event by its ID for a specific summit.',
@@ -2642,7 +2642,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         operationId: 'getOverflowStreamingInfo',
         summary: 'Get overflow streaming information (Public)',
         description: 'Retrieves overflow streaming information for published events. This is a public endpoint.',
-        tags: ['Summit Events'],
+        tags: ['Summit Events (Public)'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'k', in: 'query', required: true, description: 'Overflow stream key', schema: new OA\Schema(type: 'string')),

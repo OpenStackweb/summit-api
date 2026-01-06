@@ -294,7 +294,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: '/api/public/v1/summits/{id}/events/published',
-        operationId: 'getScheduledEvents',
+        operationId: 'getScheduledEventsPublic',
         summary: 'Get all published/scheduled events for a summit',
         description: 'Retrieves a paginated list of all published events for a specific summit.',
         tags: ['Summit Events (Public)'],

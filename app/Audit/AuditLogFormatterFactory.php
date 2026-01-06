@@ -1,4 +1,7 @@
-<?php namespace App\Audit;
+<?php
+
+namespace App\Audit;
+
 /**
  * Copyright 2025 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,15 +23,19 @@ use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
 use Doctrine\ORM\Mapping\ClassMetadata;
+
 class AuditLogFormatterFactory implements IAuditLogFormatterFactory
 {
-
     private array $config;
 
     public function __construct()
     {
         // cache the config so we don't hit config() repeatedly
-        $this->config = config('audit_log', []);
+        try {
+            $this->config = config('audit_log', []);
+        } catch (\Exception $e) {
+            $this->config = [];
+        }
     }
 
     public function make(AuditContext $ctx, $subject, string $event_type): ?IAuditLogFormatter

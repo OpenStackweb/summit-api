@@ -24,7 +24,9 @@ use OpenApi\Attributes as OA;
         )
     ]
 )]
-class PaginatedSummitEventsResponseSchema {}
+class PaginatedSummitEventsResponseSchema
+{
+}
 
 /**
  * Paginated Summit Event Feedback Response Schema
@@ -46,29 +48,9 @@ class PaginatedSummitEventsResponseSchema {}
         )
     ]
 )]
-class PaginatedSummitEventFeedbackResponseSchema {}
-
-/**
- * Paginated Tags Response Schema
- */
-#[OA\Schema(
-    schema: 'PaginatedTagsResponse',
-    type: 'object',
-    allOf: [
-        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
-        new OA\Schema(
-            type: 'object',
-            properties: [
-                new OA\Property(
-                    property: 'data',
-                    type: 'array',
-                    items: new OA\Items(ref: "#/components/schemas/Tag")
-                )
-            ]
-        )
-    ]
-)]
-class PaginatedTagsResponseSchema {}
+class PaginatedSummitEventFeedbackResponseSchema
+{
+}
 
 /**
  * Add Event Request Schema
@@ -117,7 +99,9 @@ class PaginatedTagsResponseSchema {}
         ),
     ]
 )]
-class AddSummitEventRequestSchema {}
+class AddSummitEventRequestSchema
+{
+}
 
 /**
  * Update Event Request Schema
@@ -166,7 +150,9 @@ class AddSummitEventRequestSchema {}
         ),
     ]
 )]
-class UpdateSummitEventRequestSchema {}
+class UpdateSummitEventRequestSchema
+{
+}
 
 /**
  * Publish Event Request Schema
@@ -181,7 +167,9 @@ class UpdateSummitEventRequestSchema {}
         new OA\Property(property: 'duration', type: 'integer', minimum: 0, description: 'Duration in seconds'),
     ]
 )]
-class PublishSummitEventRequestSchema {}
+class PublishSummitEventRequestSchema
+{
+}
 
 /**
  * Unpublish Events Request Schema
@@ -199,7 +187,9 @@ class PublishSummitEventRequestSchema {}
         ),
     ]
 )]
-class UnpublishEventsRequestSchema {}
+class UnpublishEventsRequestSchema
+{
+}
 
 /**
  * Update and Publish Events Request Schema
@@ -226,7 +216,9 @@ class UnpublishEventsRequestSchema {}
         ),
     ]
 )]
-class UpdateAndPublishEventsRequestSchema {}
+class UpdateAndPublishEventsRequestSchema
+{
+}
 
 /**
  * Update Events Request Schema
@@ -255,7 +247,9 @@ class UpdateAndPublishEventsRequestSchema {}
         ),
     ]
 )]
-class UpdateEventsRequestSchema {}
+class UpdateEventsRequestSchema
+{
+}
 
 /**
  * Add Event Feedback Request Schema
@@ -269,7 +263,9 @@ class UpdateEventsRequestSchema {}
         new OA\Property(property: 'note', type: 'string', maxLength: 500, description: 'Optional feedback note'),
     ]
 )]
-class AddEventFeedbackRequestSchema {}
+class AddEventFeedbackRequestSchema
+{
+}
 
 /**
  * Share Event By Email Request Schema
@@ -284,7 +280,9 @@ class AddEventFeedbackRequestSchema {}
         new OA\Property(property: 'event_uri', type: 'string', format: 'uri', description: 'Event URI'),
     ]
 )]
-class ShareEventByEmailRequestSchema {}
+class ShareEventByEmailRequestSchema
+{
+}
 
 /**
  * Update Event Live Info Request Schema
@@ -298,7 +296,9 @@ class ShareEventByEmailRequestSchema {}
         new OA\Property(property: 'streaming_type', type: 'string', enum: ['VOD', 'LIVE'], description: 'Streaming type'),
     ]
 )]
-class UpdateEventLiveInfoRequestSchema {}
+class UpdateEventLiveInfoRequestSchema
+{
+}
 
 /**
  * Set Overflow Request Schema
@@ -310,7 +310,9 @@ class UpdateEventLiveInfoRequestSchema {}
         new OA\Property(property: 'overflow_streaming_url', type: 'string', format: 'uri', description: 'Overflow streaming URL'),
     ]
 )]
-class SetOverflowRequestSchema {}
+class SetOverflowRequestSchema
+{
+}
 
 /**
  * Clear Overflow Request Schema
@@ -320,7 +322,9 @@ class SetOverflowRequestSchema {}
     type: 'object',
     properties: []
 )]
-class ClearOverflowRequestSchema {}
+class ClearOverflowRequestSchema
+{
+}
 
 /**
  * Import Events CSV Request Schema
@@ -334,7 +338,9 @@ class ClearOverflowRequestSchema {}
         new OA\Property(property: 'send_speaker_email', type: 'boolean', description: 'Send email notifications to speakers'),
     ]
 )]
-class ImportEventDataRequestSchema {}
+class ImportEventDataRequestSchema
+{
+}
 
 /**
  * Paginated Summit Schedule Empty Spots Response Schema
@@ -356,7 +362,9 @@ class ImportEventDataRequestSchema {}
         )
     ]
 )]
-class PaginatedSummitScheduleEmptySpotsResponseSchema {}
+class PaginatedSummitScheduleEmptySpotsResponseSchema
+{
+}
 
 /**
  * Summit Event Secure Stream Response Schema
@@ -371,7 +379,9 @@ class PaginatedSummitScheduleEmptySpotsResponseSchema {}
         new OA\Property(property: 'streaming_url', type: 'string', description: 'Streaming URL'),
     ]
 )]
-class SummitEventSecureStreamResponseSchema {}
+class SummitEventSecureStreamResponseSchema
+{
+}
 
 /**
  * Summit Event Overflow Stream Response Schema
@@ -385,7 +395,9 @@ class SummitEventSecureStreamResponseSchema {}
         new OA\Property(property: 'overflow_streaming_url', type: 'string', description: 'Overflow streaming URL'),
     ]
 )]
-class SummitEventOverflowStreamResponseSchema {}
+class SummitEventOverflowStreamResponseSchema
+{
+}
 
 /**
  * Summit Event Streaming Info Response Schema
@@ -400,4 +412,6 @@ class SummitEventOverflowStreamResponseSchema {}
         new OA\Property(property: 'streaming_type', type: 'string', enum: ['VOD', 'LIVE'], description: 'Streaming type'),
     ]
 )]
-class SummitEventStreamingInfoResponseSchema {}
+class SummitEventStreamingInfoResponseSchema
+{
+}

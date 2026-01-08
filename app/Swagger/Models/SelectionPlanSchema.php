@@ -35,14 +35,20 @@ use OpenApi\Attributes as OA;
             property: 'track_groups',
             type: 'array',
             description: 'Array of PresentationCategoryGroup IDs, use expand=track_groups for full details',
-            items: new OA\Items(type: 'integer'),
+            items: new OA\Items(oneOf: [
+                new OA\Schema(type: 'integer'),
+                new OA\Schema(ref: '#/components/schemas/PresentationCategoryGroup'),
+            ]),
             example: [1, 2, 3]
         ),
         new OA\Property(
             property: 'extra_questions',
             type: 'array',
             description: 'Array of SummitSelectionPlanExtraQuestionType IDs, use expand=extra_questions for full details',
-            items: new OA\Items(type: 'integer'),
+            items: new OA\Items(oneOf: [
+                new OA\Schema(type: 'integer'),
+                new OA\Schema(ref: '#/components/schemas/SummitSelectionPlanExtraQuestionType'),
+            ]),
             example: [1, 2, 3]
         ),
         new OA\Property(
@@ -63,7 +69,10 @@ use OpenApi\Attributes as OA;
             property: 'allowed_presentation_action_types',
             type: 'array',
             description: 'Array of PresentationActionType IDs, use expand=allowed_presentation_action_types for full details',
-            items: new OA\Items(type: 'integer'),
+            items: new OA\Items(oneOf: [
+                new OA\Schema(type: 'integer'),
+                new OA\Schema(ref: '#/components/schemas/PresentationActionType'),
+            ]),
             example: [1, 2, 3]
         ),
         new OA\Property(

@@ -3,6 +3,7 @@
 namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
+use App\Audit\Interfaces\IAuditStrategy;
 use ReflectionClass;
 
 /**
@@ -27,7 +28,7 @@ class EntityCreationAuditLogFormatter extends AbstractAuditLogFormatter
 {
     public function __construct()
     {
-        parent::__construct('entity_creation');
+        parent::__construct(IAuditStrategy::EVENT_ENTITY_CREATION);
     }
 
     protected function getCreationIgnoredEntities(): array {

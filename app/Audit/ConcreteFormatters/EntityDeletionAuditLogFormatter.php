@@ -2,6 +2,8 @@
 
 namespace App\Audit\ConcreteFormatters;
 
+use App\Audit\Interfaces\IAuditStrategy;
+
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +35,7 @@ class EntityDeletionAuditLogFormatter extends AbstractAuditLogFormatter
 
     public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter = null)
     {
-        parent::__construct('entity_deletion');
+        parent::__construct(IAuditStrategy::EVENT_ENTITY_DELETION);
         $this->child_entity_formatter = $child_entity_formatter;
     }
 

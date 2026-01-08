@@ -131,13 +131,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getSelectionPlan',
         summary: 'Get a selection plan by ID',
         description: 'Retrieves a specific selection plan for a summit by its ID.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -216,6 +216,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'updateSelectionPlan',
         summary: 'Update a selection plan',
         description: 'Updates an existing selection plan for a summit.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -228,7 +229,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -297,6 +297,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addSelectionPlan',
         summary: 'Create a new selection plan',
         description: 'Creates a new selection plan for a summit.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -309,7 +310,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -373,6 +373,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'deleteSelectionPlan',
         summary: 'Delete a selection plan',
         description: 'Deletes an existing selection plan from a summit.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -385,7 +386,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -434,6 +434,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addTrackGroupToSelectionPlan',
         summary: 'Add a track group to a selection plan',
         description: 'Associates a track group with a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -446,7 +447,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -502,6 +502,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'deleteTrackGroupToSelectionPlan',
         summary: 'Remove a track group from a selection plan',
         description: 'Removes the association between a track group and a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -514,7 +515,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -635,13 +635,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getAllSelectionPlans',
         summary: 'Get all selection plans for a summit',
         description: 'Retrieves a paginated list of selection plans for a specific summit.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -751,6 +751,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getSelectionPlanPresentations',
         summary: 'Get presentations for a selection plan',
         description: 'Retrieves a paginated list of presentations for a specific selection plan. Only available to track chairs.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadSummitData,
@@ -764,7 +765,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -947,6 +947,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getSelectionPlanPresentationsCSV',
         summary: 'Export presentations for a selection plan to CSV',
         description: 'Exports presentations for a specific selection plan as a CSV file. Only available to track chairs.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadSummitData,
@@ -960,7 +961,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -1138,6 +1138,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getSelectionPlanPresentation',
         summary: 'Get a specific presentation from a selection plan',
         description: 'Retrieves a specific presentation by ID from a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadSummitData,
@@ -1151,7 +1152,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -1233,6 +1233,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'markPresentationAsViewed',
         summary: 'Mark a presentation as viewed',
         description: 'Marks a presentation as viewed by the current track chair.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -1246,7 +1247,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -1316,6 +1316,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addCommentToPresentation',
         summary: 'Add a comment to a presentation',
         description: 'Adds a new comment to a presentation within a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -1329,7 +1330,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         requestBody: new OA\RequestBody(
             description: 'Comment data',
             required: true,
@@ -1412,6 +1412,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getAllPresentationCategoryChangeRequest',
         summary: 'Get all category change requests for a selection plan',
         description: 'Retrieves a paginated list of category change requests for presentations in a selection plan. Only available to track chairs.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
@@ -1426,7 +1427,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -1579,6 +1579,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'createPresentationCategoryChangeRequest',
         summary: 'Create a category change request for a presentation',
         description: 'Creates a new request to change the category/track of a presentation.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -1592,7 +1593,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         requestBody: new OA\RequestBody(
             description: 'Category change request data',
             required: true,
@@ -1675,6 +1675,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'resolvePresentationCategoryChangeRequest',
         summary: 'Resolve a category change request',
         description: 'Approves or rejects a category change request for a presentation.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -1688,7 +1689,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         requestBody: new OA\RequestBody(
             description: 'Resolution data',
             required: true,
@@ -1784,6 +1784,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getExtraQuestions',
         summary: 'Get all extra questions for a summit',
         description: 'Retrieves a paginated list of extra questions available for selection plans in a summit.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
@@ -1797,7 +1798,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -1913,6 +1913,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getExtraQuestion',
         summary: 'Get a specific extra question',
         description: 'Retrieves a specific extra question by ID.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
@@ -1926,7 +1927,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -1987,13 +1987,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getExtraQuestionsBySelectionPlan',
         summary: 'Get extra questions for a selection plan',
         description: 'Retrieves a paginated list of extra questions assigned to a specific selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2117,6 +2117,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getExtraQuestionsMetadata',
         summary: 'Get extra questions metadata',
         description: 'Retrieves metadata about available extra question types.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
@@ -2130,7 +2131,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2174,13 +2174,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getExtraQuestionsMetadataBySelectionPlan',
         summary: 'Get extra questions metadata for a selection plan',
         description: 'Retrieves metadata about available extra question types for a specific selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2231,6 +2231,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addExtraQuestion',
         summary: 'Create a new extra question',
         description: 'Creates a new extra question for selection plans in a summit.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2243,7 +2244,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2296,6 +2296,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'updateExtraQuestion',
         summary: 'Update an extra question',
         description: 'Updates an existing extra question.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2308,7 +2309,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2369,6 +2369,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addExtraQuestionAndAssign',
         summary: 'Create and assign an extra question to a selection plan',
         description: 'Creates a new extra question and assigns it to a specific selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2381,7 +2382,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2443,12 +2443,12 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'assignExtraQuestion',
         summary: 'Assign an existing extra question to a selection plan',
         description: 'Assigns an existing extra question to a specific selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2517,13 +2517,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getExtraQuestionBySelectionPlan',
         summary: 'Get an extra question by selection plan',
         description: 'Retrieves a specific extra question assigned to a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2587,6 +2587,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'updateExtraQuestionBySelectionPlan',
         summary: 'Update an extra question by selection plan',
         description: 'Updates a specific extra question assigned to a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2599,7 +2600,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2672,6 +2672,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'deleteExtraQuestion',
         summary: 'Delete an extra question',
         description: 'Deletes a specific extra question from a summit.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2684,7 +2685,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2732,6 +2732,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'removeExtraQuestion',
         summary: 'Remove an extra question from a selection plan',
         description: 'Removes an extra question assignment from a specific selection plan (does not delete the question).',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2744,7 +2745,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2803,6 +2803,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addExtraQuestionValue',
         summary: 'Add a value to an extra question',
         description: 'Adds a new value option to an extra question.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2815,7 +2816,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2877,6 +2877,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addExtraQuestionValueBySelectionPlan',
         summary: 'Add a value to an extra question by selection plan',
         description: 'Adds a new value option to an extra question via selection plan context.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2889,7 +2890,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2961,6 +2961,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'updateExtraQuestionValue',
         summary: 'Update an extra question value',
         description: 'Updates a value option for an extra question.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -2973,7 +2974,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3044,6 +3044,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'updateExtraQuestionValueBySelectionPlan',
         summary: 'Update an extra question value by selection plan',
         description: 'Updates a value option for an extra question via selection plan context.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -3056,7 +3057,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3136,6 +3136,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'deleteExtraQuestionValue',
         summary: 'Delete an extra question value',
         description: 'Deletes a value option from an extra question.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -3148,7 +3149,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3205,6 +3205,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'deleteExtraQuestionValueBySelectionPlan',
         summary: 'Delete an extra question value by selection plan',
         description: 'Deletes a value option from an extra question via selection plan context.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -3217,7 +3218,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3283,6 +3283,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'attachEventType',
         summary: 'Attach an event type to a selection plan',
         description: 'Attaches an event type to a specific selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -3295,7 +3296,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3349,6 +3349,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'detachEventType',
         summary: 'Detach an event type from a selection plan',
         description: 'Detaches an event type from a specific selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -3361,7 +3362,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3416,6 +3416,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getAllowedPresentationActionTypes',
         summary: 'Get allowed presentation action types',
         description: 'Retrieves all allowed presentation action types for a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
@@ -3431,7 +3432,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3549,6 +3549,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getAllowedPresentationActionType',
         summary: 'Get a specific allowed presentation action type',
         description: 'Retrieves a specific allowed presentation action type for a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadSummitData,
@@ -3563,7 +3564,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3635,6 +3635,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addAllowedPresentationActionType',
         summary: 'Add an allowed presentation action type',
         description: 'Adds an allowed presentation action type to a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -3649,7 +3650,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3720,6 +3720,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'updateAllowedPresentationActionType',
         summary: 'Update an allowed presentation action type',
         description: 'Updates an allowed presentation action type for a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -3734,7 +3735,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3805,6 +3805,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'removeAllowedPresentationActionType',
         summary: 'Remove an allowed presentation action type',
         description: 'Removes an allowed presentation action type from a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -3819,7 +3820,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3876,6 +3876,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getAllowedMembers',
         summary: 'Get allowed members for a selection plan',
         description: 'Retrieves all members allowed for a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
@@ -3889,7 +3890,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -4002,6 +4002,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'addAllowedMember',
         summary: 'Add an allowed member to a selection plan',
         description: 'Adds a member to the allowed members list of a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -4014,7 +4015,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         requestBody: new OA\RequestBody(
             description: 'Allowed member data',
             required: true,
@@ -4080,6 +4080,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'removeAllowedMember',
         summary: 'Remove an allowed member from a selection plan',
         description: 'Removes a member from the allowed members list of a selection plan.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -4092,7 +4093,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -4145,6 +4145,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'importAllowedMembers',
         summary: 'Import allowed members from CSV',
         description: 'Imports allowed members from a CSV file.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::WriteSummitData,
@@ -4157,7 +4158,6 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -4216,13 +4216,13 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getMySelectionPlans',
         summary: 'Get my selection plans',
         description: 'Retrieves selection plans for the current authenticated user.',
+        tags: ['Selection Plans'],
         security: [
             ['selection_plans_oauth2' => [
                 SummitScopes::ReadAllSummitData,
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',

@@ -1790,7 +1790,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -1919,7 +1919,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -1993,7 +1993,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2123,7 +2123,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2180,7 +2180,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2236,7 +2236,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2301,7 +2301,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2374,7 +2374,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2448,7 +2448,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2523,7 +2523,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2592,7 +2592,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2677,7 +2677,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2737,7 +2737,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2808,7 +2808,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2882,7 +2882,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -2966,7 +2966,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3049,7 +3049,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3141,7 +3141,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3210,7 +3210,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Extra Questions'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3422,7 +3422,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Action Types'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3554,7 +3554,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Action Types'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3640,7 +3640,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Action Types'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3725,7 +3725,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Action Types'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3810,7 +3810,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Action Types'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -3882,7 +3882,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::ReadSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Allowed Members'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -4007,7 +4007,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Allowed Members'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -4085,7 +4085,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Allowed Members'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -4150,7 +4150,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 SummitScopes::WriteSummitData,
             ]]
         ],
-        tags: ['Selection Plans - Allowed Members'],
+        tags: ['Selection Plans'],
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,

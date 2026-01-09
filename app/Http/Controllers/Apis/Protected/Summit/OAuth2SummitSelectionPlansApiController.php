@@ -157,7 +157,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 name: 'expand',
                 in: 'query',
                 required: false,
-                description: 'Expand relationships: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, summit',
+                description: 'Expand relationships to include as full objects: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions, summit',
                 schema: new OA\Schema(type: 'string')
             ),
             new OA\Parameter(
@@ -171,7 +171,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 name: 'relations',
                 in: 'query',
                 required: false,
-                description: 'Relations to include',
+                description: 'Relations to include: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -248,7 +248,21 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 name: 'expand',
                 in: 'query',
                 required: false,
-                description: 'Expand relationships',
+                description: 'Expand relationships to include as full objects: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions, summit',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to include: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -322,7 +336,21 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 name: 'expand',
                 in: 'query',
                 required: false,
-                description: 'Expand relationships',
+                description: 'Expand relationships to include as full objects: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions, summit',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to include: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -589,7 +617,21 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 name: 'expand',
                 in: 'query',
                 required: false,
-                description: 'Expand relationships',
+                description: 'Expand relationships to include as full objects: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions, summit',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to include: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -687,7 +729,21 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 name: 'expand',
                 in: 'query',
                 required: false,
-                description: 'Expand relationships',
+                description: 'Expand relationships to include as full objects: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions, summit',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Relations to include: track_groups, extra_questions, event_types, track_chair_rating_types, allowed_presentation_action_types, allowed_presentation_action_types, allowed_presentation_questions, allowed_presentation_editable_questions',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -1185,7 +1241,8 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
-                description: 'Presentation retrieved successfully'
+                description: 'Presentation retrieved successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/TrackChairPresentation')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
@@ -1271,7 +1328,11 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             ),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Presentation marked as viewed successfully'),
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Presentation marked as viewed successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/TrackChairPresentation')
+            ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, Selection Plan, or Presentation not found'),
@@ -3983,6 +4044,9 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             null,
             null,
             function ($page, $per_page, $filter, $order, $applyExtraFilters) {
+                /**
+                 * @var ISelectionPlanRepository $this->repository
+                 */
                 return $this->repository->getAllAllowedMembersByPage
                 (
                     new PagingInfo($page, $per_page),

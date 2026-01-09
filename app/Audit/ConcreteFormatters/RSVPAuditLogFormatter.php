@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters\PresentationFormatters;
+namespace App\Audit\ConcreteFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -17,55 +17,67 @@ namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use models\summit\PresentationSpeaker;
 use Illuminate\Support\Facades\Log;
+use models\summit\RSVP;
 
-class PresentationSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
+
+class RSVPAuditLogFormatter extends AbstractAuditLogFormatter
 {
+    /**
+     * {@inheritDoc}
+     */
     public function format($subject, array $change_set): ?string
     {
-        if (!$subject instanceof PresentationSpeaker) {
+        // Validar que es una entidad RSVP
+        if (!$subject instanceof RSVP) {
             return null;
         }
 
         try {
-            $full_name = sprintf("%s %s", $subject->getFirstName() ?? 'Unknown', $subject->getLastName() ?? 'Unknown');
-            $email = $subject->getEmail() ?? 'unknown';
-            $speaker_id = $subject->getId() ?? 'unknown';
+            $eventTitle = $subject->getEvent()?->getTitle() ?? 'Unknown Event';
+            $ownerEmail = $subject->getOwner()?->getEmail() ?? 'Unknown Member';
+            $ownerId = $subject->getOwner()?->getId() ?? 'unknown';
+            $id = $subject->getId() ?? 'unknown';
+            $status = $subject->getStatus() ?? 'Unknown';
+            $seatType = $subject->getSeatType() ?? 'Unknown';
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $bio = $subject->getBio() ? sprintf(" - Bio: %s", mb_substr($subject->getBio(), 0, 50)) : '';
                     return sprintf(
-                        "Speaker '%s' (%s) created with email '%s'%s by user %s",
-                        $full_name,
-                        $speaker_id,
-                        $email,
-                        $bio,
+                        "RSVP created for event '%s' (ID: %s) by member %s (ID: %s) - Status: %s, Seat Type: %s, by user %s",
+                        $eventTitle,
+                        $subject->getEvent()?->getId() ?? 'unknown',
+                        $ownerEmail,
+                        $ownerId,
+                        $status,
+                        $seatType,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Speaker '%s' (%s) updated: %s by user %s",
-                        $full_name,
-                        $speaker_id,
+                        "RSVP (ID: %s) for event '%s' updated: %s by user %s",
+                        $id,
+                        $eventTitle,
                         $change_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Speaker '%s' (%s) with email '%s' was deleted by user %s",
-                        $full_name,
-                        $speaker_id,
-                        $email,
+                        "RSVP (ID: %s) deleted for event '%s' by member %s (ID: %s) - Final Status: %s, Seat Type: %s by user %s",
+                        $id,
+                        $eventTitle,
+                        $ownerEmail,
+                        $ownerId,
+                        $status,
+                        $seatType,
                         $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {
-            Log::warning("PresentationSpeakerAuditLogFormatter error: " . $ex->getMessage());
+            Log::warning("RSVPAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;

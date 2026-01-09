@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters\PresentationFormatters;
+namespace App\Audit\ConcreteFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -17,55 +17,53 @@ namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use models\summit\PresentationSpeaker;
+use models\summit\SummitBookableVenueRoomAttributeValue;
 use Illuminate\Support\Facades\Log;
 
-class PresentationSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
+class SummitBookableVenueRoomAttributeValueAuditLogFormatter extends AbstractAuditLogFormatter
 {
     public function format($subject, array $change_set): ?string
     {
-        if (!$subject instanceof PresentationSpeaker) {
+        if (!$subject instanceof SummitBookableVenueRoomAttributeValue) {
             return null;
         }
 
         try {
-            $full_name = sprintf("%s %s", $subject->getFirstName() ?? 'Unknown', $subject->getLastName() ?? 'Unknown');
-            $email = $subject->getEmail() ?? 'unknown';
-            $speaker_id = $subject->getId() ?? 'unknown';
-
+            $value = $subject->getValue() ?? 'Unknown Value';
+            $type = $subject->getType();
+            $type_name = $type ? ($type->getType() ?? 'Unknown Type') : 'Unknown Type';
+            $id = $subject->getId() ?? 'unknown';
+            
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $bio = $subject->getBio() ? sprintf(" - Bio: %s", mb_substr($subject->getBio(), 0, 50)) : '';
                     return sprintf(
-                        "Speaker '%s' (%s) created with email '%s'%s by user %s",
-                        $full_name,
-                        $speaker_id,
-                        $email,
-                        $bio,
+                        "Summit Bookable Venue Room Attribute Value (%d) '%s' Type '%s' created by user %s",
+                        $id,
+                        $value,
+                        $type_name,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Speaker '%s' (%s) updated: %s by user %s",
-                        $full_name,
-                        $speaker_id,
+                        "Summit Bookable Venue Room Attribute Value (%d) '%s' updated: %s by user %s",
+                        $id,
+                        $value,
                         $change_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Speaker '%s' (%s) with email '%s' was deleted by user %s",
-                        $full_name,
-                        $speaker_id,
-                        $email,
+                        "Summit Bookable Venue Room Attribute Value (%d) '%s' was deleted by user %s",
+                        $id,
+                        $value,
                         $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {
-            Log::warning("PresentationSpeakerAuditLogFormatter error: " . $ex->getMessage());
+            Log::warning("SummitBookableVenueRoomAttributeValueAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;

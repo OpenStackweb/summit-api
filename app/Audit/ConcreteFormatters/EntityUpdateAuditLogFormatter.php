@@ -1,4 +1,6 @@
 <?php namespace App\Audit\ConcreteFormatters;
+
+use App\Audit\Interfaces\IAuditStrategy;
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,8 +39,9 @@ class EntityUpdateAuditLogFormatter extends AbstractAuditLogFormatter
      */
     private $child_entity_formatter;
 
-    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter)
+    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter = null)
     {
+        parent::__construct(IAuditStrategy::EVENT_ENTITY_UPDATE);
         $this->child_entity_formatter = $child_entity_formatter;
     }
 
@@ -157,6 +160,10 @@ class EntityUpdateAuditLogFormatter extends AbstractAuditLogFormatter
 
         if (count($res) == 0) return null;
 
-        return join("|", $res);
+        $entity_id = method_exists($subject, 'getId') ? $subject->getId() : 'N/A';
+        $user_info = $this->getUserInfo();
+        $message = join("|", $res);
+        
+        return "{$class_name} (ID: {$entity_id}) updated by {$user_info}: {$message}";
     }
 }

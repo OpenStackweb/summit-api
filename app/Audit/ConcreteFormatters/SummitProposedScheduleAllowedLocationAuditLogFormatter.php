@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters\PresentationFormatters;
+namespace App\Audit\ConcreteFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -17,55 +17,56 @@ namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use models\summit\PresentationSpeaker;
+use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
 use Illuminate\Support\Facades\Log;
 
-class PresentationSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
+class SummitProposedScheduleAllowedLocationAuditLogFormatter extends AbstractAuditLogFormatter
 {
     public function format($subject, array $change_set): ?string
     {
-        if (!$subject instanceof PresentationSpeaker) {
+        if (!$subject instanceof SummitProposedScheduleAllowedLocation) {
             return null;
         }
 
         try {
-            $full_name = sprintf("%s %s", $subject->getFirstName() ?? 'Unknown', $subject->getLastName() ?? 'Unknown');
-            $email = $subject->getEmail() ?? 'unknown';
-            $speaker_id = $subject->getId() ?? 'unknown';
-
+            $track = $subject->getTrack();
+            $track_name = $track ? ($track->getTitle() ?? 'Unknown Track') : 'Unknown Track';
+            $location = $subject->getLocation();
+            $location_name = $location ? ($location->getName() ?? 'Unknown Location') : 'Unknown Location';
+            $id = $subject->getId() ?? 'unknown';
+            
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $bio = $subject->getBio() ? sprintf(" - Bio: %s", mb_substr($subject->getBio(), 0, 50)) : '';
                     return sprintf(
-                        "Speaker '%s' (%s) created with email '%s'%s by user %s",
-                        $full_name,
-                        $speaker_id,
-                        $email,
-                        $bio,
+                        "Proposed Schedule Allowed Location (%d) Track '%s' Location '%s' created by user %s",
+                        $id,
+                        $track_name,
+                        $location_name,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Speaker '%s' (%s) updated: %s by user %s",
-                        $full_name,
-                        $speaker_id,
+                        "Proposed Schedule Allowed Location (%d) Track '%s' Location '%s' updated: %s by user %s",
+                        $id,
+                        $track_name,
+                        $location_name,
                         $change_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Speaker '%s' (%s) with email '%s' was deleted by user %s",
-                        $full_name,
-                        $speaker_id,
-                        $email,
+                        "Proposed Schedule Allowed Location (%d) Track '%s' Location '%s' was deleted by user %s",
+                        $id,
+                        $track_name,
+                        $location_name,
                         $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {
-            Log::warning("PresentationSpeakerAuditLogFormatter error: " . $ex->getMessage());
+            Log::warning("SummitProposedScheduleAllowedLocationAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;

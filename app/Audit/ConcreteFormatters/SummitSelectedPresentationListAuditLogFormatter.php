@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Audit\ConcreteFormatters\PresentationFormatters;
+namespace App\Audit\ConcreteFormatters;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -17,55 +17,58 @@ namespace App\Audit\ConcreteFormatters\PresentationFormatters;
 
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use models\summit\PresentationSpeaker;
+use models\summit\SummitSelectedPresentationList;
 use Illuminate\Support\Facades\Log;
 
-class PresentationSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
+class SummitSelectedPresentationListAuditLogFormatter extends AbstractAuditLogFormatter
 {
     public function format($subject, array $change_set): ?string
     {
-        if (!$subject instanceof PresentationSpeaker) {
+        if (!$subject instanceof SummitSelectedPresentationList) {
             return null;
         }
 
         try {
-            $full_name = sprintf("%s %s", $subject->getFirstName() ?? 'Unknown', $subject->getLastName() ?? 'Unknown');
-            $email = $subject->getEmail() ?? 'unknown';
-            $speaker_id = $subject->getId() ?? 'unknown';
-
+            $name = $subject->getName() ?? 'Unknown List';
+            $list_type = $subject->getListType() ?? 'Unknown Type';
+            $category = $subject->getCategory();
+            $category_name = $category ? ($category->getTitle() ?? 'Unknown Category') : 'Unknown Category';
+            $owner = $subject->getOwner();
+            $owner_name = $owner ? ($owner->getFullName() ?? 'Unknown Owner') : 'Unknown Owner';
+            $id = $subject->getId() ?? 'unknown';
+            
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $bio = $subject->getBio() ? sprintf(" - Bio: %s", mb_substr($subject->getBio(), 0, 50)) : '';
                     return sprintf(
-                        "Speaker '%s' (%s) created with email '%s'%s by user %s",
-                        $full_name,
-                        $speaker_id,
-                        $email,
-                        $bio,
+                        "Selected Presentation List (%d) '%s' Type '%s' Category '%s' Owner '%s' created by user %s",
+                        $id,
+                        $name,
+                        $list_type,
+                        $category_name,
+                        $owner_name,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Speaker '%s' (%s) updated: %s by user %s",
-                        $full_name,
-                        $speaker_id,
+                        "Selected Presentation List (%d) '%s' updated: %s by user %s",
+                        $id,
+                        $name,
                         $change_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Speaker '%s' (%s) with email '%s' was deleted by user %s",
-                        $full_name,
-                        $speaker_id,
-                        $email,
+                        "Selected Presentation List (%d) '%s' was deleted by user %s",
+                        $id,
+                        $name,
                         $this->getUserInfo()
                     );
             }
         } catch (\Exception $ex) {
-            Log::warning("PresentationSpeakerAuditLogFormatter error: " . $ex->getMessage());
+            Log::warning("SummitSelectedPresentationListAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;

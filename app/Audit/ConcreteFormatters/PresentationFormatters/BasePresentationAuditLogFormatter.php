@@ -106,6 +106,7 @@ abstract class BasePresentationAuditLogFormatter extends AbstractAuditLogFormatt
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $extracted = $this->extractChangedFields($change_set);
+                    $extracted['change_set'] = $change_set;
                     return $this->formatUpdate($data, $extracted);
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:

@@ -2,6 +2,8 @@
 
 namespace App\Audit\ConcreteFormatters;
 
+use App\Audit\Interfaces\IAuditStrategy;
+
 /**
  * Copyright 2022 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,8 +33,9 @@ class EntityDeletionAuditLogFormatter extends AbstractAuditLogFormatter
      */
     private $child_entity_formatter;
 
-    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter)
+    public function __construct(?IChildEntityAuditLogFormatter $child_entity_formatter = null)
     {
+        parent::__construct(IAuditStrategy::EVENT_ENTITY_DELETION);
         $this->child_entity_formatter = $child_entity_formatter;
     }
 
@@ -56,6 +59,8 @@ class EntityDeletionAuditLogFormatter extends AbstractAuditLogFormatter
                 ->format($subject, IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION);
         }
 
-        return "{$class_name} deleted";
+        $entity_id = method_exists($subject, 'getId') ? $subject->getId() : 'unknown';
+        $user_info = $this->getUserInfo();
+        return "{$class_name} (ID: {$entity_id}) deleted by {$user_info}";
     }
 }

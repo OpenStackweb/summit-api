@@ -32,23 +32,12 @@ class PresentationSubmissionAuditLogFormatter extends BasePresentationAuditLogFo
 
     protected function formatUpdate(array $data, array $extracted): string
     {
-        if ($extracted['old_status'] && $extracted['new_status']) {
-            return sprintf(
-                "Presentation '%s' (%s) status changed: %s → %s (%s changed) by user %s",
-                $data['title'],
-                $data['id'],
-                strtoupper($extracted['old_status']),
-                strtoupper($extracted['new_status']),
-                $extracted['fields'],
-                $this->getUserInfo()
-            );
-        }
-
+        $change_details = $this->buildChangeDetails($extracted['change_set']);
         return sprintf(
-            "Presentation '%s' (%s) updated (%s changed) by user %s",
+            "Presentation '%s' (%s) updated: %s by user %s",
             $data['title'],
             $data['id'],
-            $extracted['fields'],
+            $change_details,
             $this->getUserInfo()
         );
     }

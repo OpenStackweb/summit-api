@@ -18,6 +18,11 @@ use models\main\SummitMemberSchedule;
 
 class SummitMemberScheduleAuditLogFormatter extends AbstractAuditLogFormatter
 {
+    public function __construct()
+    {
+        parent::__construct('summit_member_schedule');
+    }
+
     /**
      * @param $subject
      * @param array $change_set
@@ -27,13 +32,35 @@ class SummitMemberScheduleAuditLogFormatter extends AbstractAuditLogFormatter
     {
        if(!$subject instanceof SummitMemberSchedule) return null;
        $summit_event = $subject->getEvent();
+       $event_title = $summit_event ? ($summit_event->getTitle() ?? 'Unknown Event') : 'Unknown Event';
+       $event_id = $summit_event ? ($summit_event->getId() ?? 'unknown') : 'unknown';
+       
        switch($this->event_type) {
-           case IAuditStrategy::EVENT_ENTITY_DELETION:{
-               return sprintf("Activity %s (%s) was removed from user custom schedule.", $summit_event->getTitle(), $summit_event->getId());
-           }
-           case IAuditStrategy::EVENT_ENTITY_CREATION:{
-               return sprintf("Activity %s (%s) was inserted onto user custom schedule.", $summit_event->getTitle(), $summit_event->getId());
-           }
+           case IAuditStrategy::EVENT_ENTITY_CREATION:
+               return sprintf(
+                   "Activity '%s' (%s) was inserted onto user custom schedule by user %s",
+                   $event_title,
+                   $event_id,
+                   $this->getUserInfo()
+               );
+
+           case IAuditStrategy::EVENT_ENTITY_UPDATE:
+               $change_details = $this->buildChangeDetails($change_set);
+               return sprintf(
+                   "Activity '%s' (%s) in user custom schedule updated: %s by user %s",
+                   $event_title,
+                   $event_id,
+                   $change_details,
+                   $this->getUserInfo()
+               );
+
+           case IAuditStrategy::EVENT_ENTITY_DELETION:
+               return sprintf(
+                   "Activity '%s' (%s) was removed from user custom schedule by user %s",
+                   $event_title,
+                   $event_id,
+                   $this->getUserInfo()
+               );
        }
        return null;
     }

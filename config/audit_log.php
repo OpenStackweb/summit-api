@@ -124,5 +124,33 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SummitVenueRoomAuditLogFormatter::class,
         ],
+        \models\summit\SummitMetric::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitMetricAuditLogFormatter::class,
+        ],
+        \models\summit\SummitSponsorship::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitSponsorshipAuditLogFormatter::class,
+        ],
+        \models\summit\SummitPresentationComment::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitPresentationCommentAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitProposedScheduleAllowedLocationAuditLogFormatter::class,
+        ],
+        \models\summit\SummitSelectedPresentation::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitSelectedPresentationAuditLogFormatter::class,
+        ],
+        \models\summit\SummitBookableVenueRoomAttributeValue::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitBookableVenueRoomAttributeValueAuditLogFormatter::class,
+        ],
+        \models\summit\SummitSelectedPresentationList::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitSelectedPresentationListAuditLogFormatter::class,
+        ],
     ]
 ];

@@ -10,14 +10,16 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: "id", type: "integer", example: 1),
         new OA\Property(property: "created", type: "integer", description: "Unix timestamp", example: 1640995200),
         new OA\Property(property: "last_edited", type: "integer", description: "Unix timestamp", example: 1640995200),
-        new OA\Property(property: "allowed_timeframes", type: "array", items: new OA\Items(type: "integer"), description: "Array SummitProposedScheduleAllowedDay IDs or full SummitProposedScheduleAllowedDay objects when expanded", nullable: true),
+        new OA\Property(property: "allowed_timeframes", type: "array", items: new OA\Items(oneOf: [
+            new OA\Schema(type: 'integer'),
+            new OA\Schema(ref: '#/components/schemas/SummitProposedScheduleAllowedDay')
+        ]), description: "Array of allowed timeframe IDs or objects when expand=allowed_timeframes",),
         new OA\Property(property: "location_id", type: "integer", example: 10, description: "only when not expanded"),
-        new OA\Property(property: "location", type: "integer", description: "ID of the SummitAbstractLocation, when not expanded, when ?expand=location, you get a SummitAbstractLocation schema object in a 'location' property"),
-        new OA\Property(property: "track_id", type: "integer", example: 5, description: "only when not expanded"),
-        new OA\Property(property: "track", type: "integer", description: "ID of the PresentationCategory, when not expanded, when ?expand=track, you get a PresentationCategory schema object in a 'track' property"),
+        new OA\Property(property: "location", ref: '#/components/schemas/SummitAbstractLocation', description: "only when expand=location"),
+        new OA\Property(property: "track_id", type: "integer", example: 5, description: "PresentationCategory ID, use expand=track for full object details"),
     ],
 )]
-class SummitProposedScheduleAllowedLocation {}
+class SummitProposedScheduleAllowedLocationSchema {}
 
 #[OA\Schema(
     schema: "SummitProposedScheduleAllowedLocationRequest",
@@ -26,7 +28,7 @@ class SummitProposedScheduleAllowedLocation {}
         new OA\Property(property: "location_id", type: "integer", example: 10)
     ]
 )]
-class SummitProposedScheduleAllowedLocationRequest {}
+class SummitProposedScheduleAllowedLocationRequestSchema {}
 
 #[OA\Schema(
     schema: "SummitProposedScheduleAllowedDay",
@@ -40,7 +42,7 @@ class SummitProposedScheduleAllowedLocationRequest {}
         new OA\Property(property: "closing_hour", type: "integer", description: "Closing hour in HHMM format (0-2359)", example: 1700)
     ]
 )]
-class SummitProposedScheduleAllowedDay {}
+class SummitProposedScheduleAllowedDaySchema {}
 
 #[OA\Schema(
     schema: "SummitProposedScheduleAllowedDayAddRequest",
@@ -51,7 +53,7 @@ class SummitProposedScheduleAllowedDay {}
         new OA\Property(property: "closing_hour", type: "integer", description: "Closing hour in HHMM format (0-2359)", example: 1700)
     ]
 )]
-class SummitProposedScheduleAllowedDayAddRequest {}
+class SummitProposedScheduleAllowedDayAddRequestSchema {}
 
 #[OA\Schema(
     schema: "SummitProposedScheduleAllowedDayUpdateRequest",
@@ -61,7 +63,7 @@ class SummitProposedScheduleAllowedDayAddRequest {}
         new OA\Property(property: "closing_hour", type: "integer", description: "Closing hour in HHMM format (0-2359)", example: 1700)
     ]
 )]
-class SummitProposedScheduleAllowedDayUpdateRequest {}
+class SummitProposedScheduleAllowedDayUpdateRequestSchema {}
 #[OA\Schema(
     schema: "SummitProposedScheduleSummitEvent",
     properties: [

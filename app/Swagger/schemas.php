@@ -9,6 +9,7 @@ use App\Security\RSVPInvitationsScopes;
 use App\Security\SummitScopes;
 use models\summit\RSVP;
 use OpenApi\Attributes as OA;
+use function Laravel\Prompts\form;
 
 #[OA\Schema(
     schema: 'Owner',
@@ -308,6 +309,20 @@ class RSVPInvitationsAuthSchema
         new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
         new OA\Property(property: 'first_name', type: 'string', example: 'John'),
         new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
+        new OA\Property(property: 'bio', type: 'string'),
+        new OA\Property(property: 'gender', type: 'string'),
+        new OA\Property(property: 'github_user', type: 'string'),
+        new OA\Property(property: 'linked_in', type: 'string'),
+        new OA\Property(property: 'irc', type: 'string'),
+        new OA\Property(property: 'twitter', type: 'string'),
+        new OA\Property(property: 'state', type: 'string'),
+        new OA\Property(property: 'country', type: 'string'),
+        new OA\Property(property: 'active', type: 'boolean'),
+        new OA\Property(property: 'email_verified', type: 'boolean'),
+        new OA\Property(property: 'pic', type:  'string', format: 'url'),
+        new OA\Property(property: 'membership_type', type: 'string'),
+        new OA\Property(property: 'candidate_profile_id', type: 'integer'),
+        new OA\Property(property: 'company', type: 'string'),
     ]
 )]
 class MemberSchema

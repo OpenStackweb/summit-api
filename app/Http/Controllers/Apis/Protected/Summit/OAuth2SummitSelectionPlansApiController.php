@@ -229,6 +229,11 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Selection plan data',
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateSelectionPlanPayload')
+        ),
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -324,6 +329,11 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::SummitAdministrators,
             ]
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Selection plan data',
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddSelectionPlanPayload')
+        ),
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -876,6 +886,20 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 description: 'Expand relationships',
                 schema: new OA\Schema(type: 'string')
             ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
         ],
         responses: [
             new OA\Response(
@@ -1049,6 +1073,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 in: 'query',
                 required: false,
                 description: 'Order by field(s)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -1235,6 +1280,20 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 in: 'query',
                 required: false,
                 description: 'Expand relationships',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -1534,6 +1593,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 in: 'query',
                 required: false,
                 description: 'Order by field(s). Available: id, approval_date, status, presentation_title, new_category_name, old_category_name, requester_fullname',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -1897,6 +1977,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 description: 'Order by field(s). Available: id, name, label, order',
                 schema: new OA\Schema(type: 'string')
             ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships: values, sub_question_rules, parent_rules',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
         ],
         responses: [
             new OA\Response(
@@ -2010,6 +2111,20 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 description: 'Expand relationships: values, sub_question_rules, parent_rules',
                 schema: new OA\Schema(type: 'string')
             ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
         ],
         responses: [
             new OA\Response(
@@ -2098,6 +2213,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 in: 'query',
                 required: false,
                 description: 'Order by field(s). Available: id, name, label, order',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships: values, sub_question_rules, parent_rules',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
                 schema: new OA\Schema(type: 'string')
             ),
         ],
@@ -2606,6 +2742,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 required: true,
                 description: 'Question ID',
                 schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships: values, sub_question_rules, parent_rules',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
+                schema: new OA\Schema(type: 'string')
             ),
         ],
         responses: [
@@ -3536,6 +3693,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 description: 'Items per page',
                 schema: new OA\Schema(type: 'integer', default: 10)
             ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
         ],
         responses: [
             new OA\Response(
@@ -3647,6 +3825,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 description: 'Presentation Action Type ID',
                 schema: new OA\Schema(type: 'integer')
             ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
         ],
         responses: [
             new OA\Response(
@@ -3711,6 +3910,11 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Allowed presentation action type data',
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddAllowedPresentationActionTypePayload')
+        ),
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3796,6 +4000,11 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 IGroup::TrackChairsAdmins,
             ]
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Allowed presentation action type data',
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateAllowedPresentationActionTypePayload')
+        ),
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -3993,6 +4202,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 required: false,
                 description: 'Items per page',
                 schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
+                schema: new OA\Schema(type: 'string')
             ),
         ],
         responses: [
@@ -4294,6 +4524,27 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
                 required: true,
                 description: 'Summit ID or slug',
                 schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Expand relationships: track_groups, extra_questions, event_types',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                in: 'query',
+                required: false,
+                description: 'Fields to return (comma-separated)',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                in: 'query',
+                required: false,
+                description: 'Related entities to include (comma-separated)',
+                schema: new OA\Schema(type: 'string')
             ),
         ],
         responses: [

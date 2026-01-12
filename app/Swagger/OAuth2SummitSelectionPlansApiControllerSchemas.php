@@ -204,3 +204,83 @@ class ResolveCategoryChangeRequestPayloadSchema {}
     ]
 )]
 class AllowedMemberPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'AddSelectionPlanPayload',
+    type: 'object',
+    description: 'Payload for creating a new selection plan',
+    required: ['name', 'is_enabled', 'is_hidden', 'allow_new_presentations'],
+    properties: [
+        new OA\Property(property: 'name', type: 'string', maxLength: 255, description: 'Name of the selection plan'),
+        new OA\Property(property: 'is_enabled', type: 'boolean', description: 'Whether the selection plan is enabled'),
+        new OA\Property(property: 'is_hidden', type: 'boolean', description: 'Whether the selection plan is hidden'),
+        new OA\Property(property: 'allow_new_presentations', type: 'boolean', description: 'Whether new presentations are allowed'),
+        new OA\Property(property: 'max_submission_allowed_per_user', type: 'integer', minimum: 1, description: 'Maximum submissions allowed per user'),
+        new OA\Property(property: 'submission_begin_date', type: 'integer', description: 'Unix timestamp for submission begin date', nullable: true),
+        new OA\Property(property: 'submission_end_date', type: 'integer', description: 'Unix timestamp for submission end date', nullable: true),
+        new OA\Property(property: 'submission_lock_down_presentation_status_date', type: 'integer', description: 'Unix timestamp for submission lockdown date', nullable: true),
+        new OA\Property(property: 'voting_begin_date', type: 'integer', description: 'Unix timestamp for voting begin date', nullable: true),
+        new OA\Property(property: 'voting_end_date', type: 'integer', description: 'Unix timestamp for voting end date', nullable: true),
+        new OA\Property(property: 'selection_begin_date', type: 'integer', description: 'Unix timestamp for selection begin date', nullable: true),
+        new OA\Property(property: 'selection_end_date', type: 'integer', description: 'Unix timestamp for selection end date', nullable: true),
+        new OA\Property(property: 'submission_period_disclaimer', type: 'string', description: 'Disclaimer text for the submission period'),
+        new OA\Property(property: 'presentation_creator_notification_email_template', type: 'string', maxLength: 255, description: 'Email template for presentation creator notifications'),
+        new OA\Property(property: 'presentation_moderator_notification_email_template', type: 'string', maxLength: 255, description: 'Email template for presentation moderator notifications'),
+        new OA\Property(property: 'presentation_speaker_notification_email_template', type: 'string', maxLength: 255, description: 'Email template for presentation speaker notifications'),
+        new OA\Property(property: 'allowed_presentation_questions', type: 'array', items: new OA\Items(type: 'string'), description: 'List of allowed presentation questions'),
+        new OA\Property(property: 'allow_proposed_schedules', type: 'boolean', description: 'Whether proposed schedules are allowed'),
+        new OA\Property(property: 'allowed_presentation_editable_questions', type: 'array', items: new OA\Items(type: 'string'), description: 'List of allowed editable presentation questions'),
+        new OA\Property(property: 'allow_track_change_requests', type: 'boolean', description: 'Whether track change requests are allowed'),
+    ]
+)]
+class AddSelectionPlanPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'UpdateSelectionPlanPayload',
+    type: 'object',
+    description: 'Payload for updating an existing selection plan',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', maxLength: 255, description: 'Name of the selection plan'),
+        new OA\Property(property: 'is_enabled', type: 'boolean', description: 'Whether the selection plan is enabled'),
+        new OA\Property(property: 'is_hidden', type: 'boolean', description: 'Whether the selection plan is hidden'),
+        new OA\Property(property: 'allow_new_presentations', type: 'boolean', description: 'Whether new presentations are allowed'),
+        new OA\Property(property: 'max_submission_allowed_per_user', type: 'integer', minimum: 1, description: 'Maximum submissions allowed per user'),
+        new OA\Property(property: 'submission_begin_date', type: 'integer', description: 'Unix timestamp for submission begin date', nullable: true),
+        new OA\Property(property: 'submission_end_date', type: 'integer', description: 'Unix timestamp for submission end date', nullable: true),
+        new OA\Property(property: 'submission_lock_down_presentation_status_date', type: 'integer', description: 'Unix timestamp for submission lockdown date', nullable: true),
+        new OA\Property(property: 'voting_begin_date', type: 'integer', description: 'Unix timestamp for voting begin date', nullable: true),
+        new OA\Property(property: 'voting_end_date', type: 'integer', description: 'Unix timestamp for voting end date', nullable: true),
+        new OA\Property(property: 'selection_begin_date', type: 'integer', description: 'Unix timestamp for selection begin date', nullable: true),
+        new OA\Property(property: 'selection_end_date', type: 'integer', description: 'Unix timestamp for selection end date', nullable: true),
+        new OA\Property(property: 'submission_period_disclaimer', type: 'string', description: 'Disclaimer text for the submission period'),
+        new OA\Property(property: 'presentation_creator_notification_email_template', type: 'string', maxLength: 255, description: 'Email template for presentation creator notifications'),
+        new OA\Property(property: 'presentation_moderator_notification_email_template', type: 'string', maxLength: 255, description: 'Email template for presentation moderator notifications'),
+        new OA\Property(property: 'presentation_speaker_notification_email_template', type: 'string', maxLength: 255, description: 'Email template for presentation speaker notifications'),
+        new OA\Property(property: 'allowed_presentation_questions', type: 'array', items: new OA\Items(type: 'string'), description: 'List of allowed presentation questions'),
+        new OA\Property(property: 'allow_proposed_schedules', type: 'boolean', description: 'Whether proposed schedules are allowed'),
+        new OA\Property(property: 'allowed_presentation_editable_questions', type: 'array', items: new OA\Items(type: 'string'), description: 'List of allowed editable presentation questions'),
+        new OA\Property(property: 'allow_track_change_requests', type: 'boolean', description: 'Whether track change requests are allowed'),
+    ]
+)]
+class UpdateSelectionPlanPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'AddAllowedPresentationActionTypePayload',
+    type: 'object',
+    description: 'Payload for adding an allowed presentation action type to a selection plan',
+    properties: [
+        new OA\Property(property: 'order', type: 'integer', minimum: 1, description: 'Order of the action type'),
+    ]
+)]
+class AddAllowedPresentationActionTypePayloadSchema {}
+
+#[OA\Schema(
+    schema: 'UpdateAllowedPresentationActionTypePayload',
+    type: 'object',
+    description: 'Payload for updating an allowed presentation action type in a selection plan',
+    required: ['order'],
+    properties: [
+        new OA\Property(property: 'order', type: 'integer', minimum: 1, description: 'Order of the action type'),
+    ]
+)]
+class UpdateAllowedPresentationActionTypePayloadSchema {}

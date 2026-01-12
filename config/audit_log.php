@@ -152,5 +152,25 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SummitSelectedPresentationListAuditLogFormatter::class,
         ],
+        App\Models\Foundation\Summit\ExtraQuestions\AssignedSelectionPlanExtraQuestionType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\AssignedSelectionPlanExtraQuestionTypeAuditLogFormatter::class,
+        ],
+        App\Models\Foundation\Summit\SelectionPlanAllowedEditablePresentationQuestion::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SelectionPlanAllowedEditablePresentationQuestionAuditLogFormatter::class,
+        ],
+        App\Models\Foundation\Summit\SelectionPlanAllowedPresentationQuestion::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SelectionPlanAllowedPresentationQuestionAuditLogFormatter::class,
+        ],
+        \models\summit\SummitBookableVenueRoomAttributeType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitBookableVenueRoomAttributeTypeAuditLogFormatter::class,
+        ],
+        App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitRegistrationFeedMetadataAuditLogFormatter::class,
+        ],
     ]
 ];

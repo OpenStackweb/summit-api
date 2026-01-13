@@ -300,21 +300,6 @@ class RSVPInvitationsAuthSchema
 }
 
 #[OA\Schema(
-    schema: 'Member',
-    type: 'object',
-    properties: [
-        new OA\Property(property: 'id', type: 'integer'),
-        new OA\Property(property: 'created', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'first_name', type: 'string', example: 'John'),
-        new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
-    ]
-)]
-class MemberSchema
-{
-}
-
-#[OA\Schema(
     schema: 'RSVP',
     type: 'object',
     properties: [
@@ -329,6 +314,125 @@ class MemberSchema
     ]
 )]
 class RSVPSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'PaginatedMembersResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Member')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedMembersResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'PaginatedMemberCompaniesResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'company', type: 'string', example: 'Acme Corp')
+                        ]
+                    )
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedMemberCompaniesResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'PaginatedAffiliationsResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Affiliation')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedAffiliationsResponseSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'Affiliation',
+    type: 'object',
+    required: ['id', 'created', 'last_edited', 'is_current', 'owner_id'],
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'last_edited', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'start_date', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'end_date', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'job_title', type: 'string', example: 'Software Engineer'),
+        new OA\Property(property: 'is_current', type: 'boolean', example: true),
+        new OA\Property(property: 'owner_id', type: 'integer', example: 1),
+        new OA\Property(property: 'organization_id', type: 'integer', example: 1),
+    ]
+)]
+class AffiliationSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'MemberUpdateRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'projects', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'other_project', type: 'string', maxLength: 100),
+        new OA\Property(property: 'display_on_site', type: 'boolean'),
+        new OA\Property(property: 'subscribed_to_newsletter', type: 'boolean'),
+        new OA\Property(property: 'shirt_size', type: 'string', enum: ['Small', 'Medium', 'Large', 'XL', 'XXL']),
+        new OA\Property(property: 'food_preference', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'other_food_preference', type: 'string', maxLength: 100),
+    ]
+)]
+class MemberUpdateRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'AffiliationRequest',
+    type: 'object',
+    required: ['is_current', 'start_date'],
+    properties: [
+        new OA\Property(property: 'is_current', type: 'boolean', example: true),
+        new OA\Property(property: 'start_date', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'end_date', type: 'integer', example: 1634567890),
+        new OA\Property(property: 'organization_id', type: 'integer', example: 1),
+        new OA\Property(property: 'organization_name', type: 'string', maxLength: 255),
+        new OA\Property(property: 'job_title', type: 'string', maxLength: 255),
+    ]
+)]
+class AffiliationRequestSchema
 {
 }
 

@@ -7,26 +7,6 @@ use OpenApi\Attributes as OA;
 // Companies Schemas
 
 #[OA\Schema(
-    schema: "PaginatedCompaniesResponse",
-    description: "Paginated response for Companies",
-    properties: [
-        new OA\Property(property: "total", type: "integer", example: 100),
-        new OA\Property(property: "per_page", type: "integer", example: 15),
-        new OA\Property(property: "current_page", type: "integer", example: 1),
-        new OA\Property(property: "last_page", type: "integer", example: 7),
-        new OA\Property(
-            property: "data",
-            type: "array",
-            items: new OA\Items(ref: "#/components/schemas/Company")
-        ),
-    ],
-    type: "object"
-)]
-class PaginatedCompaniesResponseSchema
-{
-}
-
-#[OA\Schema(
     schema: "CompanyCreateRequest",
     description: "Request to create a Company",
     required: ["name"],

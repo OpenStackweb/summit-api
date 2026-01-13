@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,11 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBannerConstants;
+use App\Security\SummitScopes;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 use App\Models\Foundation\Summit\Locations\SummitLocationConstants;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationBannerRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitLocationRepository;
@@ -144,6 +149,28 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations',
+        summary: 'Get all locations for a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: class_name, name, description, address_1, address_2, zip_code, city, state, country, sold_out, is_main', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, name, order', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitAbstractLocationPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getLocations($summit_id)
     {
 
@@ -212,6 +239,28 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues',
+        summary: 'Get all venues for a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: name, rooms_name, rooms_floor_name, floors_name, description, address_1, address_2, zip_code, city, state, country, sold_out, is_main', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, name, order', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenuePaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getVenues($summit_id)
     {
 
@@ -281,6 +330,28 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         );
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/rooms/all',
+        summary: 'Get all venue rooms for a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: name, floor_name, venue_name, description', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, name, order, venue_name, floor_name', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoomPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getAllVenuesRooms($summit_id){
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -335,6 +406,24 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/external-locations',
+        summary: 'Get all external locations for a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitExternalLocationPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getExternalLocations($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -370,6 +459,24 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/hotels',
+        summary: 'Get all hotels for a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitHotelPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getHotels($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -404,6 +511,24 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/airports',
+        summary: 'Get all airports for a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitAirportPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getAirports($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -440,9 +565,28 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/{location_id}',
+        summary: 'Get a specific location by ID',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitAbstractLocation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+        ]
+    )]
     public function getLocation($summit_id, $location_id)
     {
-        return $this->processRequest(function () use ($summit_id, $location_id) {
+        return $this->processRequest(function() use($summit_id, $location_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -558,6 +702,29 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/{location_id}/events',
+        summary: 'Get events for a location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID or "tbd"', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: title, start_date, end_date, speaker, tags, event_type_id, track_id, type_show_always_on_schedule', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: title, start_date, end_date, id, created, track_id', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+        ]
+    )]
     public function getLocationEvents($summit_id, $location_id)
     {
         return $this->_getLocationEvents($summit_id, $location_id, false);
@@ -568,6 +735,29 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/{location_id}/events/published',
+        summary: 'Get published events for a location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID or "tbd"', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: title, start_date, end_date, speaker, tags, event_type_id, track_id, type_show_always_on_schedule', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: title, start_date, end_date, id, created, track_id', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+        ]
+    )]
     public function getLocationPublishedEvents($summit_id, $location_id)
     {
         return $this->_getLocationEvents($summit_id, $location_id, true);
@@ -577,6 +767,28 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/metadata',
+        summary: 'Get location metadata for a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getMetadata($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -594,6 +806,26 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $floor_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}',
+        summary: 'Get a venue floor by ID',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueFloor')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor not found'),
+        ]
+    )]
     public function getVenueFloor($summit_id, $venue_id, $floor_id)
     {
        return $this->processRequest(function() use($summit_id, $venue_id, $floor_id){
@@ -632,6 +864,26 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $room_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}',
+        summary: 'Get a venue room by ID',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room not found'),
+        ]
+    )]
     public function getVenueRoom($summit_id, $venue_id, $room_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $room_id){
@@ -670,6 +922,27 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $room_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/rooms/{room_id}',
+        summary: 'Get a room on a specific floor',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, floor, or room not found'),
+        ]
+    )]
     public function getVenueFloorRoom($summit_id, $venue_id, $floor_id, $room_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $floor_id , $room_id){
@@ -717,6 +990,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations',
+        summary: 'Add a new location to a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Location payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddLocationPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Location created', content: new OA\JsonContent(ref: '#/components/schemas/SummitAbstractLocation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addLocation($summit_id)
     {
         return $this->processRequest(function() use($summit_id){
@@ -741,6 +1041,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues',
+        summary: 'Add a new venue to a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Venue payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddVenuePayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Venue created', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenue')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addVenue($summit_id)
     {
         return $this->processRequest(function() use($summit_id){
@@ -766,6 +1093,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/external-locations',
+        summary: 'Add a new external location to a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'External location payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddExternalLocationPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'External location created', content: new OA\JsonContent(ref: '#/components/schemas/SummitExternalLocation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addExternalLocation($summit_id)
     {
         return $this->processRequest(function() use($summit_id){
@@ -792,6 +1146,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/hotels',
+        summary: 'Add a new hotel to a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Hotel payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddHotelPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Hotel created', content: new OA\JsonContent(ref: '#/components/schemas/SummitHotel')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addHotel($summit_id)
     {
         return $this->processRequest(function() use($summit_id){
@@ -817,6 +1198,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/airports',
+        summary: 'Add a new airport to a summit',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Airport payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddAirportPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Airport created', content: new OA\JsonContent(ref: '#/components/schemas/SummitAirport')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addAirport($summit_id)
     {
         return $this->processRequest(function() use($summit_id){
@@ -844,6 +1252,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $venue_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors',
+        summary: 'Add a new floor to a venue',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Floor payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddVenueFloorPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Floor created', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueFloor')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or venue not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addVenueFloor($summit_id, $venue_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id){
@@ -871,6 +1307,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $venue_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms',
+        summary: 'Add a new room to a venue',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Room payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddVenueRoomPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room created', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or venue not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addVenueRoom($summit_id, $venue_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id){
@@ -896,6 +1360,35 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $venue_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/rooms',
+        summary: 'Add a new room to a venue floor',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Room payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddVenueFloorRoomPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room created', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addVenueFloorRoom($summit_id, $venue_id, $floor_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $floor_id){
@@ -928,6 +1421,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/{location_id}',
+        summary: 'Update a location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Location payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateLocationPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Location updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitAbstractLocation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateLocation($summit_id, $location_id)
     {
         return $this->processRequest(function() use($summit_id, $location_id){
@@ -954,6 +1475,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $venue_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}',
+        summary: 'Update a venue',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Venue payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenuePayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Venue updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenue')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or venue not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateVenue($summit_id, $venue_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id){
@@ -982,6 +1531,35 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $floor_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}',
+        summary: 'Update a venue floor',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Floor payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueFloorPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Floor updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueFloor')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateVenueFloor($summit_id, $venue_id, $floor_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $floor_id){
@@ -1012,6 +1590,35 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $room_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}',
+        summary: 'Update a venue room',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Room payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueRoomPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateVenueRoom($summit_id, $venue_id, $room_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $room_id){
@@ -1040,6 +1647,36 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $room_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/rooms/{room_id}',
+        summary: 'Update a room on a specific floor',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Room payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueFloorRoomPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, floor, or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateVenueFloorRoom($summit_id, $venue_id, $floor_id, $room_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $floor_id, $room_id){
@@ -1069,6 +1706,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $hotel_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/hotels/{hotel_id}',
+        summary: 'Update a hotel',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'hotel_id', in: 'path', required: true, description: 'Hotel ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Hotel payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateHotelPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Hotel updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitHotel')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or hotel not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateHotel($summit_id, $hotel_id)
     {
         return $this->processRequest(function() use($summit_id, $hotel_id){
@@ -1095,6 +1760,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $airport_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/airports/{airport_id}',
+        summary: 'Update an airport',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'airport_id', in: 'path', required: true, description: 'Airport ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Airport payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateAirportPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Airport updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitAirport')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or airport not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateAirport($summit_id, $airport_id)
     {
         return $this->processRequest(function() use($summit_id, $airport_id){
@@ -1121,6 +1814,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $external_location_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/external-locations/{external_location_id}',
+        summary: 'Update an external location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'external_location_id', in: 'path', required: true, description: 'External location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'External location payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateExternalLocationPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'External location updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitExternalLocation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or external location not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateExternalLocation($summit_id, $external_location_id)
     {
         return $this->processRequest(function() use($summit_id, $external_location_id){
@@ -1151,6 +1872,29 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/{location_id}',
+        summary: 'Delete a location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Location deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+        ]
+    )]
     public function deleteLocation($summit_id, $location_id)
     {
         return $this->processRequest(function() use($summit_id, $location_id){
@@ -1171,6 +1915,30 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $floor_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}',
+        summary: 'Delete a venue floor',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Floor deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor not found'),
+        ]
+    )]
     public function deleteVenueFloor($summit_id, $venue_id, $floor_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $floor_id){
@@ -1191,6 +1959,30 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $room_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}',
+        summary: 'Delete a venue room',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Room deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room not found'),
+        ]
+    )]
     public function deleteVenueRoom($summit_id, $venue_id, $room_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $room_id){
@@ -1214,6 +2006,29 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/{location_id}/banners',
+        summary: 'Get all banners for a location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: class_name, title, content, type, enabled, start_date, end_date', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, title, start_date, end_date', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationBannerPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+        ]
+    )]
     public function getLocationBanners($summit_id, $location_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
@@ -1272,6 +2087,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/{location_id}/banners',
+        summary: 'Add a banner to a location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData, SummitScopes::WriteLocationBannersData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Banner payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/AddLocationBannerPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Banner created', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationBanner')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addLocationBanner($summit_id, $location_id)
     {
         return $this->processRequest(function() use($summit_id, $location_id){
@@ -1306,6 +2149,30 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $banner_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/{location_id}/banners/{banner_id}',
+        summary: 'Delete a location banner',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData, SummitScopes::WriteLocationBannersData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'banner_id', in: 'path', required: true, description: 'Banner ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Banner deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or banner not found'),
+        ]
+    )]
     public function deleteLocationBanner($summit_id, $location_id, $banner_id)
     {
 
@@ -1327,6 +2194,35 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $banner_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/{location_id}/banners/{banner_id}',
+        summary: 'Update a location banner',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData, SummitScopes::WriteLocationBannersData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'banner_id', in: 'path', required: true, description: 'Banner ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Banner payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateLocationBannerPayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Banner updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationBanner')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or banner not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateLocationBanner($summit_id, $location_id, $banner_id)
     {
         return $this->processRequest(function() use($summit_id, $location_id, $banner_id){
@@ -1368,6 +2264,26 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $map_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/{location_id}/maps/{map_id}',
+        summary: 'Get a location map',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'map_id', in: 'path', required: true, description: 'Map ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationMap')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or map not found'),
+        ]
+    )]
     public function getLocationMap($summit_id, $location_id, $map_id)
     {
         return $this->processRequest(function() use($summit_id, $location_id, $map_id){
@@ -1404,6 +2320,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/{location_id}/maps',
+        summary: 'Add a map to a location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Map created', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationMap')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addLocationMap(LaravelRequest $request, $summit_id, $location_id)
     {
 
@@ -1457,6 +2400,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $map_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/{location_id}/maps/{map_id}',
+        summary: 'Update a location map',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'map_id', in: 'path', required: true, description: 'Map ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Map updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationMap')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or map not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateLocationMap(LaravelRequest $request, $summit_id, $location_id, $map_id)
     {
         return $this->processRequest(function() use($request, $summit_id, $location_id, $map_id){
@@ -1504,6 +2475,30 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $map_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/{location_id}/maps/{map_id}',
+        summary: 'Delete a location map',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'map_id', in: 'path', required: true, description: 'Map ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Map deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or map not found'),
+        ]
+    )]
     public function deleteLocationMap($summit_id, $location_id, $map_id)
     {
         return $this->processRequest(function() use($summit_id, $location_id, $map_id){
@@ -1524,6 +2519,26 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $image_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/{location_id}/images/{image_id}',
+        summary: 'Get a location image',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'image_id', in: 'path', required: true, description: 'Image ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationImage')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or image not found'),
+        ]
+    )]
     public function getLocationImage($summit_id, $location_id, $image_id)
     {
         return $this->processRequest(function() use($summit_id, $location_id, $image_id){
@@ -1560,6 +2575,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $location_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/{location_id}/images',
+        summary: 'Add an image to a location',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Image created', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationImage')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or location not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addLocationImage(LaravelRequest $request, $summit_id, $location_id)
     {
         return $this->processRequest(function() use($request, $summit_id, $location_id){
@@ -1612,6 +2654,35 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $image_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/{location_id}/images/{image_id}',
+        summary: 'Update a location image',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'image_id', in: 'path', required: true, description: 'Image ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(description: 'Image payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateLocationImagePayload')),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Image updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationImage')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or image not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateLocationImage(LaravelRequest $request, $summit_id, $location_id, $image_id)
     {
         return $this->processRequest(function() use($request, $summit_id, $location_id, $image_id){
@@ -1647,6 +2718,30 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $image_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/{location_id}/images/{image_id}',
+        summary: 'Delete a location image',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'image_id', in: 'path', required: true, description: 'Image ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Image deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or image not found'),
+        ]
+    )]
     public function deleteLocationImage($summit_id, $location_id, $image_id)
     {
         return $this->processRequest(function() use($summit_id, $location_id, $image_id){
@@ -1664,6 +2759,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $room_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}/image',
+        summary: 'Add an image to a venue room',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room image added', content: new OA\JsonContent(ref: '#/components/schemas/SummitImage')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addVenueRoomImage(LaravelRequest $request, $summit_id, $venue_id, $room_id)
     {
         return $this->processRequest(function() use($request, $summit_id, $venue_id, $room_id){
@@ -1711,6 +2834,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $room_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}/image',
+        summary: 'Remove image from a venue room',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Room image removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room not found'),
+        ]
+    )]
     public function removeVenueRoomImage($summit_id, $venue_id, $room_id)
     {
         return $this->processRequest(function() use($summit_id, $venue_id, $room_id){
@@ -1754,6 +2904,34 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $floor_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/image',
+        summary: 'Add an image to a venue floor',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Floor image added', content: new OA\JsonContent(ref: '#/components/schemas/SummitImage')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addVenueFloorImage(LaravelRequest $request, $summit_id, $venue_id, $floor_id)
     {
         return $this->processRequest(function() use($request, $summit_id, $venue_id, $floor_id) {
@@ -1802,6 +2980,33 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $floor_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/image',
+        summary: 'Remove image from a venue floor',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Floor image removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueFloor')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor not found'),
+        ]
+    )]
     public function removeVenueFloorImage($summit_id, $venue_id, $floor_id)
     {
         return $this->processRequest(function () use($summit_id, $venue_id, $floor_id) {
@@ -1848,6 +3053,29 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
      * @param $target_summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/copy/{target_summit_id}',
+        summary: 'Copy locations from one summit to another',
+        tags: ['Summit Locations'],
+        security: [
+            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData, SummitScopes::WriteLocationBannersData]],
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Source summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'target_summit_id', in: 'path', required: true, description: 'Target summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Locations copied successfully'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Source or target summit not found'),
+        ]
+    )]
     public function copy(LaravelRequest $request, $source_summit_id, $target_summit_id)
     {
         return $this->processRequest(function() use($request, $source_summit_id, $target_summit_id) {

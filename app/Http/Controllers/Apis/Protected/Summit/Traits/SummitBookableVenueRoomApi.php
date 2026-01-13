@@ -25,6 +25,8 @@ use models\summit\SummitBookableVenueRoomAvailableSlot;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitVenue;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 use utils\Filter;
 use utils\FilterParser;
 use utils\PagingInfo;
@@ -47,6 +49,22 @@ trait SummitBookableVenueRoomApi
      * @param $id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/bookable-rooms/all/reservations/{reservation_id}',
+        summary: 'Get a reservation by ID',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Reservation not found'),
+        ]
+    )]
     public function getReservationById($id)
     {
         return $this->processRequest(function () use ($id) {
@@ -69,6 +87,25 @@ trait SummitBookableVenueRoomApi
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms',
+        summary: 'Get all bookable venue rooms for a summit',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: name, description, capacity, availability_day, attribute', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, name, capacity', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getBookableVenueRooms($summit_id)
     {
 
@@ -130,6 +167,25 @@ trait SummitBookableVenueRoomApi
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations',
+        summary: 'Get all reservations for a summit',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: summit_id, room_name, room_id, owner_id, owner_name, owner_email, not_owner_email, status, start_datetime, end_datetime', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, start_datetime, end_datetime, room_name, room_id, status, created, owner_name, owner_email', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservationPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getAllReservationsBySummit($summit_id)
     {
 
@@ -202,6 +258,20 @@ trait SummitBookableVenueRoomApi
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/csv',
+        summary: 'Export reservations for a summit as CSV',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: summit_id, room_name, room_id, owner_id, owner_name, owner_email, not_owner_email, status, start_datetime, end_datetime', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, start_datetime, end_datetime, room_name, room_id, status, created, owner_name, owner_email', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'CSV file', content: new OA\MediaType(mediaType: 'text/csv')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getAllReservationsBySummitCSV($summit_id)
     {
 
@@ -288,6 +358,23 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        summary: 'Get a bookable venue room by venue and room ID',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room not found'),
+        ]
+    )]
     public function getBookableVenueRoomByVenue($summit_id, $venue_id, $room_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id, $room_id) {
@@ -321,6 +408,22 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}',
+        summary: 'Get a bookable venue room by ID',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
+        ]
+    )]
     public function getBookableVenueRoom($summit_id, $room_id)
     {
         return $this->processRequest(function () use ($summit_id, $room_id) {
@@ -348,6 +451,23 @@ trait SummitBookableVenueRoomApi
      * @param $day
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/availability/{day}',
+        summary: 'Get availability slots for a bookable room on a specific day',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'day', in: 'path', required: true, description: 'Day (epoch timestamp or Y-m-d format)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
+        ]
+    )]
     public function getBookableVenueRoomAvailability($summit_id, $room_id, $day)
     {
         return $this->processRequest(function () use ($summit_id, $room_id, $day) {
@@ -424,6 +544,23 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations',
+        summary: 'Create a reservation for a bookable room',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Reservation created', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function createBookableVenueRoomReservation($summit_id, $room_id)
     {
         return $this->processRequest(function () use ($summit_id, $room_id) {
@@ -458,6 +595,23 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/offline',
+        summary: 'Create an offline reservation for a bookable room',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Offline reservation created', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function createOfflineBookableVenueRoomReservation($summit_id, $room_id)
     {
         return $this->processRequest(function () use ($summit_id, $room_id) {
@@ -489,6 +643,24 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
+        summary: 'Update a bookable room reservation',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Reservation updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateBookableVenueRoomReservation($summit_id, $room_id, $reservation_id)
     {
         return $this->processRequest(function () use ($summit_id, $room_id, $reservation_id) {
@@ -519,6 +691,22 @@ trait SummitBookableVenueRoomApi
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/me',
+        summary: 'Get my bookable room reservations for a summit',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservationPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Not authenticated'),
+        ]
+    )]
     public function getMyBookableVenueRoomReservations($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -557,6 +745,20 @@ trait SummitBookableVenueRoomApi
      * @param $reservation_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/me/{reservation_id}',
+        summary: 'Cancel my bookable room reservation',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Reservation cancelled', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or reservation not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Not authenticated'),
+        ]
+    )]
     public function cancelMyBookableVenueRoomReservation($summit_id, $reservation_id)
     {
         return $this->processRequest(function () use ($summit_id, $reservation_id) {
@@ -582,6 +784,24 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        summary: 'Update a bookable venue room',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateVenueBookableRoom($summit_id, $venue_id, $room_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id, $room_id) {
@@ -617,6 +837,24 @@ trait SummitBookableVenueRoomApi
         });
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
+        summary: 'Get a bookable venue room by floor',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, floor or room not found'),
+        ]
+    )]
     public function getVenueFloorBookableRoom($summit_id, $venue_id, $floor_id, $room_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id, $floor_id, $room_id) {
@@ -661,6 +899,25 @@ trait SummitBookableVenueRoomApi
      * @param $room_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
+        summary: 'Update a bookable venue room by floor',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, floor or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function updateVenueFloorBookableRoom($summit_id, $venue_id, $floor_id, $room_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id, $floor_id, $room_id) {
@@ -698,6 +955,20 @@ trait SummitBookableVenueRoomApi
         });
     }
 
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        summary: 'Delete a bookable venue room',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Room deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or room not found'),
+        ]
+    )]
     public function deleteVenueBookableRoom($summit_id, $venue_id, $room_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id, $room_id) {
@@ -716,6 +987,23 @@ trait SummitBookableVenueRoomApi
      * @param $venue_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms',
+        summary: 'Add a bookable room to a venue',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room created', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or venue not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addVenueBookableRoom($summit_id, $venue_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id) {
@@ -754,6 +1042,24 @@ trait SummitBookableVenueRoomApi
      * @param $venue_id
      * @return mixed
      */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms',
+        summary: 'Add a bookable room to a venue floor',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room created', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or floor not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function addVenueFloorBookableRoom($summit_id, $venue_id, $floor_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id, $floor_id) {
@@ -796,6 +1102,24 @@ trait SummitBookableVenueRoomApi
      * @param $attribute_id
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
+        summary: 'Add an attribute to a bookable venue room',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'attribute_id', in: 'path', required: true, description: 'Attribute ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Attribute added', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, room or attribute not found'),
+        ]
+    )]
     public function addVenueBookableRoomAttribute($summit_id, $venue_id, $room_id, $attribute_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id, $room_id, $attribute_id) {
@@ -826,6 +1150,21 @@ trait SummitBookableVenueRoomApi
      * @param $attribute_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
+        summary: 'Remove an attribute from a bookable venue room',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'attribute_id', in: 'path', required: true, description: 'Attribute ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Attribute removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, room or attribute not found'),
+        ]
+    )]
     public function deleteVenueBookableRoomAttribute($summit_id, $venue_id, $room_id, $attribute_id)
     {
         return $this->processRequest(function () use ($summit_id, $venue_id, $room_id, $attribute_id) {
@@ -846,6 +1185,21 @@ trait SummitBookableVenueRoomApi
         });
     }
 
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/refund',
+        summary: 'Refund a bookable room reservation',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Reservation refunded', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
     public function refundBookableVenueRoomReservation($summit_id, $room_id, $reservation_id)
     {
         return $this->processRequest(function () use ($summit_id, $room_id, $reservation_id) {
@@ -873,6 +1227,20 @@ trait SummitBookableVenueRoomApi
         });
     }
 
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
+        summary: 'Cancel a bookable room reservation',
+        tags: ['Summit Locations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Reservation cancelled'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
+        ]
+    )]
     public function cancelBookableVenueRoomReservation($summit_id, $room_id, $reservation_id)
     {
         return $this->processRequest(function () use ($summit_id, $room_id, $reservation_id) {

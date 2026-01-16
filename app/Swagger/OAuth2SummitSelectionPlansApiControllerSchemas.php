@@ -103,25 +103,6 @@ class PaginatedSelectionPlanAllowedMembersResponseSchema {}
 )]
 class PaginatedSummitCategoryChangesResponseSchema {}
 
-#[OA\Schema(
-    schema: 'PaginatedPresentationActionTypesResponse',
-    type: 'object',
-    allOf: [
-        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
-        new OA\Schema(
-            type: 'object',
-            properties: [
-                new OA\Property(
-                    property: 'data',
-                    type: 'array',
-                    items: new OA\Items(ref: '#/components/schemas/PresentationActionType')
-                )
-            ]
-        )
-    ]
-)]
-class PaginatedPresentationActionTypesResponseSchema {}
-
 /**
  * Metadata Response Schemas
  */

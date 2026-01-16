@@ -13,6 +13,7 @@
  **/
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -22,6 +23,16 @@ use models\utils\SilverstripeBaseModel;
  */
 class RegionalSupport extends SilverstripeBaseModel
 {
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getRegionId' => 'region',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasRegion' => 'region',
+    ];
+
     /**
      * @ORM\Column(name="Order", type="integer")
      * @var int

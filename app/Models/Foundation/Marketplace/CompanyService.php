@@ -101,12 +101,17 @@ class CompanyService extends SilverstripeBaseModel
 
     /**
      * @ORM\OneToMany(targetEntity="CompanyServiceResource", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
-     * @ORM\OrderBy({"name" = "order"})
+     * @ORM\OrderBy({"order" = "ASC"})
      * @var CompanyServiceResource[]
      */
     protected $resources;
 
-
+    /**
+     * @ORM\OneToMany(targetEntity="CustomerCaseStudy", mappedBy="company_service", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OrderBy({"order" = "ASC"})
+     * @var CustomerCaseStudy[]
+     */
+    protected $case_studies;
 
     use One2ManyPropertyTrait;
 
@@ -128,6 +133,7 @@ class CompanyService extends SilverstripeBaseModel
         $this->reviews   = new ArrayCollection();
         $this->videos    = new ArrayCollection();
         $this->resources = new ArrayCollection();
+        $this->case_studies = new ArrayCollection();
     }
 
     /**
@@ -225,5 +231,13 @@ class CompanyService extends SilverstripeBaseModel
     public function getResources()
     {
         return $this->resources->toArray();
+    }
+
+    /**
+     * @return CustomerCaseStudy[]
+     */
+    public function getCaseStudies()
+    {
+        return $this->case_studies->toArray();
     }
 }

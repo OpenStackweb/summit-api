@@ -37,8 +37,11 @@ class CompanyServiceSerializer extends SilverStripeSerializer
 
     protected static $allowed_relations = [
         'company',
-        'reviews',
         'type',
+        'case_studies',
+        'videos',
+        'reviews',
+        'resources',
     ];
 
     /**
@@ -54,6 +57,22 @@ class CompanyServiceSerializer extends SilverStripeSerializer
         if(!$company_service instanceof CompanyService) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
+        if(in_array('case_studies', $relations) && !isset($values['case_studies'])) {
+            $case_studies = [];
+            foreach ($company_service->getCaseStudies() as $c) {
+                $case_studies[] = $c->getId();
+            }
+            $values['case_studies'] = $case_studies;
+        }
+
+        if(in_array('videos', $relations) && !isset($values['videos'])) {
+            $videos = [];
+            foreach ($company_service->getVideos() as $v) {
+                $videos[] = $v->getId();
+            }
+            $values['videos'] = $videos;
+        }
+
         if(in_array('reviews', $relations) && !isset($values['reviews'])) {
             $reviews = [];
             foreach ($company_service->getApprovedReviews() as $r) {
@@ -62,13 +81,33 @@ class CompanyServiceSerializer extends SilverStripeSerializer
             $values['reviews'] = $reviews;
         }
 
+        if(in_array('resources', $relations) && !isset($values['resources'])) {
+            $resources = [];
+            foreach ($company_service->getResources() as $r) {
+                $resources[] = $r->getId();
+            }
+            $values['resources'] = $resources;
+        }
+
         return $values;
     }
 
     protected static $expand_mappings = [
+        'case_studies' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getCaseStudies',
+        ],
         'reviews' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getApprovedReviews',
+        ],
+        'resources' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getResources',
+        ],
+        'videos' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getVideos',
         ],
         'company' => [
             'type' => One2ManyExpandSerializer::class,

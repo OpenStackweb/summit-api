@@ -14,6 +14,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\RegionalSupport;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SilverStripeSerializer;
 
@@ -23,8 +25,12 @@ use ModelSerializers\SilverStripeSerializer;
  */
 class RegionalSupportSerializer extends SilverStripeSerializer
 {
+     protected static $array_mappings = [
+        'RegionId'       => 'region_id:json_int',
+    ];
 
     protected static $allowed_relations = [
+        'region',
         'supported_channel_types',
     ];
 
@@ -37,34 +43,31 @@ class RegionalSupportSerializer extends SilverStripeSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-
         $regional_support  = $this->object;
         if(!$regional_support instanceof RegionalSupport) return [];
         $values           = parent::serialize($expand, $fields, $relations, $params);
 
-        if(in_array('supported_channel_types', $relations)){
-            $res = [];
-            foreach ($regional_support->getSupportedChannelTypes() as $channel_type){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($channel_type)
-                    ->serialize();
+        if(in_array('supported_channel_types', $relations) && !isset($values['supported_channel_types'])) {
+            $supported_channel_types = [];
+            foreach ($regional_support->getSupportedChannelTypes() as $c) {
+                $supported_channel_types[] = $c->getId();
             }
-            $values['supported_channel_types'] = $res;
+            $values['supported_channel_types'] = $supported_channel_types;
         }
 
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-                    case 'region':
-                        unset($values['region_id']);
-                        $values['region'] = SerializerRegistry::getInstance()
-                        ->getSerializer($regional_support->getRegion())
-                        ->serialize();
-                        break;
-                }
-            }
-        }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'supported_channel_types' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSupportedChannelTypes',
+        ],
+        'region' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'region_id',
+            'getter' => 'getRegion',
+            'has' => 'hasRegion'
+        ],
+    ];
 }

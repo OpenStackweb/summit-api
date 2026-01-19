@@ -1,9 +1,5 @@
 <?php namespace App\Http\Controllers;
 
-use App\ModelSerializers\SerializerUtils;
-use Illuminate\Support\Facades\Request;
-use ModelSerializers\SerializerRegistry;
-
 /**
  * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,13 +13,42 @@ use ModelSerializers\SerializerRegistry;
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Marketplace\IReviewRepository;
+use App\ModelSerializers\SerializerUtils;
+use App\Services\Model\Marketplace\IReviewService;
+use Illuminate\Support\Facades\Request;
+use models\oauth2\IResourceServerContext;
+use ModelSerializers\SerializerRegistry;
 
 /**
- * Class ReviewsApiController
+ * Class OAuth2ReviewsApiController
  * @package App\Http\Controllers
  */
-final class ReviewsApiController extends AbstractCompanyServiceApiController
+final class OAuth2ReviewsApiController extends AbstractCompanyServiceApiController
 {
+    /**
+     * @var IReviewService
+     */
+    private $service;
+
+    /**
+     * ReviewsApiController constructor.
+     * @param IReviewRepository $repository
+     * @param IReviewService $review_service
+     * @param IResourceServerContext $resource_server_context
+     */
+    public function __construct
+    (
+        IReviewRepository      $repository,
+        IReviewService         $review_service,
+        IResourceServerContext $resource_server_context
+    )
+    {
+        parent::__construct($repository, $resource_server_context);
+
+        $this->service = $review_service;
+    }
+
     use RequestProcessor;
 
     use GetAndValidateJsonPayload;
@@ -35,10 +60,9 @@ final class ReviewsApiController extends AbstractCompanyServiceApiController
     public function addReview($company_service_id)
     {
         return $this->processRequest(function () use ($company_service_id) {
+            $payload = $this->getJsonPayload(ReviewValidationRulesFactory::buildForAdd(Request::all()));
 
-            $payload = $this->getJsonPayload(EventTypeValidationRulesFactory::build(Request::all()));
-
-            $review = $this->event_type_service->addEventType($company_service_id, $payload);
+            $review = $this->service->addReview(intval($company_service_id), $payload);
 
             return $this->created(SerializerRegistry::getInstance()->getSerializer($review)->serialize(
                 SerializerUtils::getExpand(),

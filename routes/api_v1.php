@@ -2314,7 +2314,7 @@ Route::group(array('prefix' => 'marketplace'), function () {
     Route::group(array('prefix' => 'services'), function () {
         Route::group(['prefix' => '{company_service_id}'], function () {
             Route::group(['prefix' => 'reviews'], function () {
-                Route::post('', ['uses' => 'ReviewsApiController@addReview']);
+                Route::post('', ['uses' => 'OAuth2ReviewsApiController@addReview']);
             });
         });
     });

@@ -14,7 +14,7 @@
 use Doctrine\ORM\Mapping AS ORM;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineReviewRepository")
  * @ORM\Table(name="MarketPlaceReview")
  * Class MarketPlaceReview
  * @package App\Models\Foundation\Marketplace
@@ -54,11 +54,29 @@ class MarketPlaceReview extends SilverstripeBaseModel
     protected $company_service;
 
     /**
+     * MarketPlaceReview constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->is_approved = false;
+    }
+
+    /**
      * @return string
      */
     public function getTitle()
     {
         return $this->title;
+    }
+
+    /**
+     * @param string $title
+     * @return void
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
     }
 
     /**
@@ -70,11 +88,29 @@ class MarketPlaceReview extends SilverstripeBaseModel
     }
 
     /**
+     * @param string $comment
+     * @return void
+     */
+    public function setComment($comment)
+    {
+        $this->comment = $comment;
+    }
+
+    /**
      * @return string
      */
     public function getRating()
     {
         return $this->rating;
+    }
+
+    /**
+     * @param float $rating
+     * @return void
+     */
+    public function setRating($rating)
+    {
+        $this->rating = $rating;
     }
 
     /**
@@ -86,6 +122,15 @@ class MarketPlaceReview extends SilverstripeBaseModel
     }
 
     /**
+     * @param bool $is_approved
+     * @return void
+     */
+    public function setIsApproved(bool $is_approved)
+    {
+        $this->is_approved = $is_approved;
+    }
+
+    /**
      * @return CompanyService
      */
     public function getCompanyService()
@@ -93,4 +138,12 @@ class MarketPlaceReview extends SilverstripeBaseModel
         return $this->company_service;
     }
 
+    /**
+     * @param CompanyService $company_service
+     * @return void
+     */
+    public function setCompanyService($company_service)
+    {
+        $this->company_service = $company_service;
+    }
 }

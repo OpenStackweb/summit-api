@@ -172,5 +172,16 @@ final class ApiSeeder extends Seeder
         EntityManager::persist($api);
 
         EntityManager::flush();
+
+        // marketplace
+
+        $api = new Api();
+        $api->setName('marketplace');
+        $api->setActive(true);
+        $api->setDescription('Marketplace API');
+
+        EntityManager::persist($api);
+
+        EntityManager::flush();
     }
 }

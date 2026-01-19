@@ -13,6 +13,7 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Security\MarketplaceScopes;
 use App\Services\Apis\AddressInfo;
 use App\Services\Apis\GeoCoordinatesInfo;
 use App\Services\Apis\IGeoCodingAPI;
@@ -124,6 +125,7 @@ class AccessTokenServiceStub implements IAccessTokenService
             ElectionScopes::NominatesCandidates,
             ElectionScopes::WriteMyCandidateProfile,
             sprintf(SummitScopes::ReadAuditLogs, $url),
+            sprintf(MarketplaceScopes::WriteReview, $url),
         );
 
         return AccessToken::createFromParams(
@@ -226,6 +228,7 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             ElectionScopes::NominatesCandidates,
             ElectionScopes::WriteMyCandidateProfile,
             sprintf(SummitScopes::Allow2PresentationAttendeeVote, $url),
+            sprintf(MarketplaceScopes::WriteReview, $url),
         );
 
         return AccessToken::createFromParams(

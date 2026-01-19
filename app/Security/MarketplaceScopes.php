@@ -1,6 +1,6 @@
-<?php namespace App\ModelSerializers\Marketplace;
+<?php namespace App\Security;
 /**
- * Copyright 2017 OpenStack Foundation
+ * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,19 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use ModelSerializers\SilverStripeSerializer;
+
 /**
- * Class MarketPlaceReviewSerializer
- * @package App\ModelSerializers\Marketplace
+ * Class MarketplaceScopes
+ * @package App\Security
  */
-final class MarketPlaceReviewSerializer extends SilverStripeSerializer
+final class MarketplaceScopes
 {
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-        'Title'     => 'title:json_string',
-        'Comment'   => 'comment:json_string',
-        'Rating'    => 'rating:json_float',
-    ];
+    const WriteReview = '%s/marketplace/services/reviews/write';
 }

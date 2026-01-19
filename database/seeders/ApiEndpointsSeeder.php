@@ -13,6 +13,7 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Security\MarketplaceScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
 use App\Models\ResourceServer\ApiEndpoint;
@@ -52,6 +53,7 @@ class ApiEndpointsSeeder extends Seeder
         $this->seedSummitAdministratorGroupsEndpoints();
         $this->seedSummitMediaFileTypeEndpoints();
         $this->seedElectionsEndpoints();
+        $this->seedMarketplaceEndpoints();
     }
 
     private function seedAttendeeBadgesEndpoints()
@@ -10379,6 +10381,23 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'POST',
                     'scopes' => [
                         ElectionScopes::NominatesCandidates
+                    ],
+                ],
+            ]
+        );
+    }
+
+    public function seedMarketplaceEndpoints()
+    {
+        $current_realm = Config::get('app.scope_base_realm');
+
+        $this->seedApiEndpoints('marketplace', [
+                [
+                    'name' => 'add-review',
+                    'route' => '/api/v1/marketplace/services/{company_service_id}/reviews',
+                    'http_method' => 'POST',
+                    'scopes' => [
+                        sprintf(MarketplaceScopes::WriteReview, $current_realm)
                     ],
                 ],
             ]

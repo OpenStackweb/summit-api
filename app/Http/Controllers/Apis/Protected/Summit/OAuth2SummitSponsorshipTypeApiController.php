@@ -100,6 +100,9 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'filter', in: 'query', description: 'Filter by name, label, or size (name=@value, label==value, size=@value)', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order', in: 'query', description: 'Order by: +/-id, +/-name, +/-order, +/-label, +/-size', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return (comma-separated)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Related entities to include (comma-separated)', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(
@@ -110,14 +113,10 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function getAllBySummit($summit_id)
-    {
-        return parent::getAllBySummit($summit_id);
-    }
 
     #[OA\Post(
         path: '/api/v1/summits/{id}/sponsorships-types',
@@ -154,15 +153,11 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function add($summit_id)
-    {
-        return parent::add($summit_id);
-    }
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
@@ -187,6 +182,9 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Sponsorship Type ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return (comma-separated)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Related entities to include (comma-separated)', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(
@@ -197,14 +195,10 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($summit_id, $type_id)
-    {
-        return parent::get($summit_id, $type_id);
-    }
 
     #[OA\Put(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
@@ -242,15 +236,11 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function update($summit_id, $type_id)
-    {
-        return parent::update($summit_id, $type_id);
-    }
 
     #[OA\Delete(
         path: '/api/v1/summits/{id}/sponsorships-types/{type_id}',
@@ -280,14 +270,10 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function delete($summit_id, $type_id)
-    {
-        return parent::delete($summit_id, $type_id);
-    }
 
     /**
      * @return array
@@ -454,7 +440,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -519,7 +505,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]

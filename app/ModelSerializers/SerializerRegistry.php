@@ -47,6 +47,8 @@ use App\ModelSerializers\Marketplace\DistributionSerializer;
 use App\ModelSerializers\Marketplace\GuestOSTypeSerializer;
 use App\ModelSerializers\Marketplace\HyperVisorTypeSerializer;
 use App\ModelSerializers\Marketplace\MarketPlaceReviewSerializer;
+use App\ModelSerializers\Marketplace\MarketPlaceVideoSerializer;
+use App\ModelSerializers\Marketplace\MarketPlaceVideoTypeSerializer;
 use App\ModelSerializers\Marketplace\OfficeSerializer;
 use App\ModelSerializers\Marketplace\OpenStackImplementationApiCoverageSerializer;
 use App\ModelSerializers\Marketplace\PricingSchemaTypeSerializer;
@@ -629,6 +631,8 @@ final class SerializerRegistry
 
         // marketplace
 
+        $this->registry['MarketPlaceVideo'] = MarketPlaceVideoSerializer::class;
+        $this->registry['MarketPlaceVideoType'] = MarketPlaceVideoTypeSerializer::class;
         $this->registry['Appliance'] = ApplianceSerializer::class;
         $this->registry["Distribution"] = DistributionSerializer::class;
         $this->registry['MarketPlaceReview'] = MarketPlaceReviewSerializer::class;

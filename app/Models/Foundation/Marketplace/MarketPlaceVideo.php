@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -21,6 +22,16 @@ use models\utils\SilverstripeBaseModel;
  */
 class MarketPlaceVideo extends SilverstripeBaseModel
 {
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getTypeId' => 'type',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasType' => 'type',
+    ];
     /**
      * @ORM\Column(name="Name", type="string")
      * @var string

@@ -34,6 +34,7 @@ class OpenStackImplementationSerializer extends RegionalSupportedCompanyServiceS
         'OpenStackPowered'                => 'is_openstack_powered:json_boolean',
         'OpenStackTested'                 => 'is_openstack_tested:json_boolean',
         'OpenStackTestedLabel'            => 'openstack_tested_info:json_string',
+        "UsesIronic"                      => 'uses_ironic:json_boolean',
     ];
 
     protected static $allowed_relations = [

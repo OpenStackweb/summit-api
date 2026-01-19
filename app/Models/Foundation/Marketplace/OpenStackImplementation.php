@@ -44,6 +44,14 @@ class OpenStackImplementation extends RegionalSupportedCompanyService
      */
     protected $is_compatible_with_federated_identity;
 
+
+    /**
+     * @ORM\Column(name="UsesIronic", type="boolean")
+     * @var bool
+     */
+    protected $uses_ironic;
+
+
     /**
      * @ORM\Column(name="ExpiryDate", type="datetime")
      * @var \DateTime
@@ -138,6 +146,9 @@ class OpenStackImplementation extends RegionalSupportedCompanyService
         return $this->is_compatible_with_compute;
     }
 
+    public function isUsesIronic():bool{
+        return $this->uses_ironic;
+    }
     /**
      * @return bool
      */

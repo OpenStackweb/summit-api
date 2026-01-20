@@ -34,16 +34,21 @@ use App\ModelSerializers\Locations\SummitRoomReservationCSVSerializer;
 use App\ModelSerializers\Locations\SummitRoomReservationSerializer;
 use App\ModelSerializers\Marketplace\ApplianceSerializer;
 use App\ModelSerializers\Marketplace\CloudServiceOfferedSerializer;
+use App\ModelSerializers\Marketplace\CompanyServiceResourceSerializer;
+use App\ModelSerializers\Marketplace\CompanyServiceSerializer;
 use App\ModelSerializers\Marketplace\ConfigurationManagementTypeSerializer;
 use App\ModelSerializers\Marketplace\ConsultantClientSerializer;
 use App\ModelSerializers\Marketplace\ConsultantSerializer;
 use App\ModelSerializers\Marketplace\ConsultantServiceOfferedTypeSerializer;
+use App\ModelSerializers\Marketplace\CustomerCaseStudySerializer;
 use App\ModelSerializers\Marketplace\DataCenterLocationSerializer;
 use App\ModelSerializers\Marketplace\DataCenterRegionSerializer;
 use App\ModelSerializers\Marketplace\DistributionSerializer;
 use App\ModelSerializers\Marketplace\GuestOSTypeSerializer;
 use App\ModelSerializers\Marketplace\HyperVisorTypeSerializer;
 use App\ModelSerializers\Marketplace\MarketPlaceReviewSerializer;
+use App\ModelSerializers\Marketplace\MarketPlaceVideoSerializer;
+use App\ModelSerializers\Marketplace\MarketPlaceVideoTypeSerializer;
 use App\ModelSerializers\Marketplace\OfficeSerializer;
 use App\ModelSerializers\Marketplace\OpenStackImplementationApiCoverageSerializer;
 use App\ModelSerializers\Marketplace\PricingSchemaTypeSerializer;
@@ -626,6 +631,8 @@ final class SerializerRegistry
 
         // marketplace
 
+        $this->registry['MarketPlaceVideo'] = MarketPlaceVideoSerializer::class;
+        $this->registry['MarketPlaceVideoType'] = MarketPlaceVideoTypeSerializer::class;
         $this->registry['Appliance'] = ApplianceSerializer::class;
         $this->registry["Distribution"] = DistributionSerializer::class;
         $this->registry['MarketPlaceReview'] = MarketPlaceReviewSerializer::class;
@@ -636,8 +643,11 @@ final class SerializerRegistry
         $this->registry['RegionalSupport'] = RegionalSupportSerializer::class;
         $this->registry['SupportChannelType'] = SupportChannelTypeSerializer::class;
         $this->registry['Office'] = OfficeSerializer::class;
+        $this->registry['CompanyService'] = CompanyServiceSerializer::class;
+        $this->registry['CompanyServiceResource'] = CompanyServiceResourceSerializer::class;
         $this->registry['Consultant'] = ConsultantSerializer::class;
         $this->registry['ConsultantClient'] = ConsultantClientSerializer::class;
+        $this->registry['CustomerCaseStudy'] = CustomerCaseStudySerializer::class;
         $this->registry['SpokenLanguage'] = SpokenLanguageSerializer::class;
         $this->registry['ConfigurationManagementType'] = ConfigurationManagementTypeSerializer::class;
         $this->registry['ServiceOfferedType'] = ServiceOfferedTypeSerializer::class;

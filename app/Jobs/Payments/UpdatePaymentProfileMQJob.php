@@ -78,14 +78,27 @@ class UpdatePaymentProfileMQJob implements ShouldQueue
             Log::debug("UpdatePaymentProfileMQJob::handle", ['response' => $response]);
             $summit = $this->summit_repository->getById($summit_id);
             $local_payment_profile =$this->payment_gateway_profile_repository->getByExternalId($id);
-            if($summit instanceof Summit && $local_payment_profile instanceof PaymentGatewayProfile) {
-                $local_payment_profile_id = $local_payment_profile->getId();
-                // mappings
-                $response['external_id'] = $id;
-                $response['active'] = $response['is_active'] ?? false;
-                Log::debug("UpdatePaymentProfileMQJob::handle updating local profile", ['local_payment_profile_id' => $local_payment_profile_id]);
-                $this->service->updatePaymentProfile($summit, $local_payment_profile_id, $response);
+            if($summit instanceof Summit) {
+                if($local_payment_profile instanceof PaymentGatewayProfile) {
+                    $local_payment_profile_id = $local_payment_profile->getId();
+                    // mappings
+                    $response['external_id'] = $id;
+                    $response['active'] = $response['is_active'] ?? false;
+                    Log::debug("UpdatePaymentProfileMQJob::handle updating local profile", ['local_payment_profile_id' => $local_payment_profile_id]);
+                    $this->service->updatePaymentProfile($summit, $local_payment_profile_id, $response);
+                }
+                else{
+                    Log::warning("UpdatePaymentProfileMQJob::handle local profile does not exists ...");
+                    $response = $this->payments_api->getPaymentProfile($summit_id, $id);
+                    Log::debug("UpdatePaymentProfileMQJob::handle get from payment api", ['response' => $response]);
+                    // mappings
+                    $response['external_id'] = $id;
+                    $response['active'] = $response['is_active'] ?? false;
+                    Log::debug("UpdatePaymentProfileMQJob::handle creating payment profile", ['response' => $response ]);
+                    $this->service->addPaymentProfile($summit, $response);
+                }
             }
+
             $job->delete();
         } catch (\Exception $ex) {
             Log::error($ex);

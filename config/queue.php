@@ -123,6 +123,7 @@ return [
                     'passphrase' => env('RABBITMQ_SSL_PASSPHRASE', null),
                 ],
                 'queue' => [
+                    'exchange' =>  env('SPONSOR_USERS_EXCHANGE','sponsor-users-api-message-broker'),
                     'passive' => env('RABBITMQ_QUEUE_PASSIVE', false),
                     'durable' => env('RABBITMQ_QUEUE_DURABLE', true),
                     'exclusive' => env('RABBITMQ_QUEUE_EXCLUSIVE', false),
@@ -159,6 +160,7 @@ return [
                     'passphrase' => env('RABBITMQ_SSL_PASSPHRASE', null),
                 ],
                 'queue' => [
+                    'exchange' =>  env('PAYMENTS_EXCHANGE','purchases-api-payments-message-broker'),
                     'passive' => env('RABBITMQ_QUEUE_PASSIVE', false),
                     'durable' => env('RABBITMQ_QUEUE_DURABLE', true),
                     'exclusive' => env('RABBITMQ_QUEUE_EXCLUSIVE', false),

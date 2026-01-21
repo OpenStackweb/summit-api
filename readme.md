@@ -70,9 +70,10 @@ php artisan queue:work
 
 - php artisan queue:work message_broker
 - php artisan queue:work sponsor_users_sync_consumer
+- php artisan queue:work payments_sync_consumer
 
 ### PAYMENTS SERVICE ( PAYMENT PROFILES )
-- php artisan mq:setup_payment_service_message_broker payments-service-message-broker direct
+- php artisan mq:setup_payment_service_message_broker purchases-api-payments-message-broker direct
 - php artisan queue:work payments_sync_consumer
 
 

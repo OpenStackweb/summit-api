@@ -153,11 +153,29 @@ class CompanyService extends SilverstripeBaseModel
     }
 
     /**
+     * @param string $name
+     * @return void
+     */
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+    /**
      * @return string
      */
     public function getSlug()
     {
         return $this->slug;
+    }
+
+    /**
+     * @param string $slug
+     * @return void
+     */
+    public function setSlug(string $slug): void
+    {
+        $this->slug = $slug;
     }
 
     /**
@@ -174,6 +192,15 @@ class CompanyService extends SilverstripeBaseModel
     public function isActive()
     {
         return $this->is_active;
+    }
+
+    /**
+     * @param bool $is_active
+     * @return void
+     */
+    public function setIsActive(bool $is_active): void
+    {
+        $this->is_active = $is_active;
     }
 
     /**
@@ -215,6 +242,15 @@ class CompanyService extends SilverstripeBaseModel
     public function getReviews()
     {
         return $this->reviews->toArray();
+    }
+
+    /**
+     * @param MarketPlaceReview $review
+     * @return void
+     */
+    public function addReview(MarketPlaceReview $review)
+    {
+        $this->reviews->add($review);
     }
 
     /**

@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 use Doctrine\ORM\Mapping AS ORM;
+use models\main\Member;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repositories\Marketplace\DoctrineReviewRepository")
  * @ORM\Table(name="MarketPlaceReview")
  * Class MarketPlaceReview
  * @package App\Models\Foundation\Marketplace
@@ -36,7 +38,7 @@ class MarketPlaceReview extends SilverstripeBaseModel
 
     /**
      * @ORM\Column(name="Rating", type="float")
-     * @var string
+     * @var float
      */
     protected $rating;
 
@@ -54,43 +56,121 @@ class MarketPlaceReview extends SilverstripeBaseModel
     protected $company_service;
 
     /**
+     * MarketPlaceReview constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->is_approved = false;
+    }
+
+    /**
+     * @ORM\ManyToOne(targetEntity="models\main\Member", fetch="LAZY")
+     * @ORM\JoinColumn(name="MemberID", referencedColumnName="ID")
+     * @var Member
+     */
+    protected $author;
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getAuthorId' => 'author',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasAuthor' => 'author',
+    ];
+
+    /**
      * @return string
      */
-    public function getTitle()
+    public function getTitle():?string
     {
         return $this->title;
     }
 
     /**
+     * @param string $title
+     * @return void
+     */
+    public function setTitle(string $title)
+    {
+        $this->title = $title;
+    }
+
+    /**
      * @return string
      */
-    public function getComment()
+    public function getComment():?string
     {
         return $this->comment;
     }
 
     /**
-     * @return string
+     * @param string $comment
+     * @return void
      */
-    public function getRating()
+    public function setComment(string $comment)
+    {
+        $this->comment = $comment;
+    }
+
+    /**
+     * @return float
+     */
+    public function getRating():float
     {
         return $this->rating;
     }
 
     /**
+     * @param float $rating
+     * @return void
+     */
+    public function setRating(float $rating):void
+    {
+        $this->rating = $rating;
+    }
+
+    /**
      * @return bool
      */
-    public function isApproved()
+    public function isApproved(): bool
     {
         return $this->is_approved;
     }
 
     /**
+     * @param bool $is_approved
+     * @return void
+     */
+    public function setIsApproved(bool $is_approved):void
+    {
+        $this->is_approved = $is_approved;
+    }
+
+    /**
      * @return CompanyService
      */
-    public function getCompanyService()
+    public function getCompanyService():?CompanyService
     {
         return $this->company_service;
     }
 
+    /**
+     * @param CompanyService $company_service
+     * @return void
+     */
+    public function setCompanyService(CompanyService $company_service):void
+    {
+        $this->company_service = $company_service;
+    }
+
+    public function setAuthor(Member $author):void{
+        $this->author = $author;
+    }
+
+    public function getAuthor():?Member{
+        return $this->author;
+    }
 }

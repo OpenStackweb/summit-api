@@ -32,6 +32,7 @@ use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\BadgeViewTypeService;
 use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\ElectionService;
+use App\Services\Model\Imp\Marketplace\ReviewService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
 use App\Services\Model\Imp\ProcessScheduleEntityLifeCycleEventService;
@@ -101,6 +102,7 @@ use App\Services\Model\ITagService;
 use App\Services\Model\ITrackChairRankingService;
 use App\Services\Model\ITrackChairService;
 use App\Services\Model\ITrackQuestionTemplateService;
+use App\Services\Model\Marketplace\IReviewService;
 use App\Services\Model\MemberService;
 use App\Services\Model\OrganizationService;
 use App\Services\Model\PresentationCategoryGroupService;
@@ -492,6 +494,11 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitAttendeeBadgePrintService::class,
             SummitAttendeeBadgePrintService::class
         );
+
+        App::singleton(
+            IReviewService::class,
+            ReviewService::class
+        );
     }
 
     /**
@@ -562,6 +569,7 @@ final class ModelServicesProvider extends ServiceProvider
             ITicketFinderStrategyFactory::class,
             IPromoCodeStrategyFactory::class,
             ISummitAttendeeBadgePrintService::class,
+            IReviewService::class,
         ];
     }
 }

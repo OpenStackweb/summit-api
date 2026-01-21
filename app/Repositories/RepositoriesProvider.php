@@ -23,6 +23,8 @@ use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupR
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
 use App\Models\Foundation\Main\Repositories\IUserStoryRepository;
 use App\Models\Foundation\Marketplace\ICompanyServiceRepository;
+use App\Models\Foundation\Marketplace\IReviewRepository;
+use App\Models\Foundation\Marketplace\MarketPlaceReview;
 use App\Models\Foundation\Software\OpenStackRelease;
 use App\Models\Foundation\Software\Repositories\IOpenStackReleaseRepository;
 use App\Models\Foundation\Summit\Defaults\DefaultSummitEventType;
@@ -946,6 +948,13 @@ final class RepositoriesProvider extends ServiceProvider
             IUserStoryRepository::class,
             function (){
                 return EntityManager::getRepository(UserStory::class);
+            }
+        );
+
+        App::singleton(
+            IReviewRepository::class,
+            function (){
+                return EntityManager::getRepository(MarketPlaceReview::class);
             }
         );
     }

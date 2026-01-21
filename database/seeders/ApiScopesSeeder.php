@@ -13,6 +13,7 @@
  **/
 
 use App\Security\ElectionScopes;
+use App\Security\MarketplaceScopes;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;;
 use App\Models\ResourceServer\ApiScope;
@@ -46,6 +47,7 @@ final class ApiScopesSeeder extends Seeder
         $this->seedSummitAdminGroupScopes();
         $this->seedSummitMediaFileTypes();
         $this->seedElectionsScopes();
+        $this->seedMarketplaceScopes();
     }
 
     private function seedSummitScopes()
@@ -757,4 +759,29 @@ final class ApiScopesSeeder extends Seeder
         EntityManager::flush();
     }
 
+     private function seedMarketplaceScopes(){
+        $current_realm = Config::get('app.scope_base_realm');
+        $api = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'marketplace']);
+
+        $scopes = [
+            [
+                'name' =>  sprintf(MarketplaceScopes::WriteReview, $current_realm),
+                'short_description' => 'Write a Company Service Review',
+                'description' => 'Write a Company Service Review',
+            ],
+        ];
+
+        foreach ($scopes as $scope_info) {
+            $scope = new ApiScope();
+            $scope->setName($scope_info['name']);
+            $scope->setShortDescription($scope_info['short_description']);
+            $scope->setDescription($scope_info['description']);
+            $scope->setActive(true);
+            $scope->setDefault(false);
+            $scope->setApi($api);
+            EntityManager::persist($scope);
+        }
+
+        EntityManager::flush();
+    }
 }

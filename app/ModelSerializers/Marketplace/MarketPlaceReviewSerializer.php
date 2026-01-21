@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use ModelSerializers\SilverStripeSerializer;
 /**
  * Class MarketPlaceReviewSerializer
@@ -24,6 +25,20 @@ final class MarketPlaceReviewSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Title'     => 'title:json_string',
         'Comment'   => 'comment:json_string',
-        'Rating'    => 'rating:json_int',
+        'Rating'    => 'rating:json_float',
+        'AuthorId'  => 'author_id:json_int',
+    ];
+
+    protected static $allowed_relations = [
+        'author',
+    ];
+
+    protected static $expand_mappings = [
+        'author' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'author_id',
+            'getter' => 'getAuthor',
+            'has' => 'hasAuthor'
+        ],
     ];
 }

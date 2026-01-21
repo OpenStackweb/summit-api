@@ -155,7 +155,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get all locations for a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -246,7 +251,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get all venues for a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -338,7 +348,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get all venue rooms for a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -415,7 +430,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get all external locations for a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -469,7 +489,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get all hotels for a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -522,7 +547,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get all airports for a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -595,7 +625,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get a specific location by ID',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -733,7 +768,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get events for a location',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -788,7 +828,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get published events for a location',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -821,7 +866,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get location metadata for a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -861,7 +911,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get a venue floor by ID',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -920,7 +975,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get a venue room by ID',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -979,7 +1039,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get a room on a specific floor',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1048,7 +1113,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a new location to a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1100,7 +1170,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a new venue to a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1153,7 +1228,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a new external location to a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1207,7 +1287,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a new hotel to a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1260,7 +1345,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a new airport to a summit',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1315,7 +1405,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a new floor to a venue',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1371,7 +1466,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a new room to a venue',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1425,7 +1525,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a new room to a venue floor',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1487,7 +1592,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update a location',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1542,7 +1652,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update a venue',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1599,7 +1714,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update a venue floor',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1659,7 +1779,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update a venue room',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1717,7 +1842,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update a room on a specific floor',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1777,7 +1907,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update a hotel',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1832,7 +1967,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update an airport',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1887,7 +2027,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update an external location',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1946,7 +2091,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Delete a location',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -1990,7 +2140,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Delete a venue floor',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2035,7 +2190,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Delete a venue room',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2104,7 +2264,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get all banners for a location',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -2366,7 +2531,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get a location map',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -2423,7 +2593,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add a map to a location',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2504,7 +2679,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update a location map',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2580,7 +2760,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Delete a location map',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2625,7 +2810,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Get a location image',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
         ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -2682,7 +2872,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add an image to a location',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2762,7 +2957,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Update a location image',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2827,7 +3027,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Delete a location image',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2869,7 +3074,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add an image to a venue room',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -2945,7 +3155,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Remove image from a venue room',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -3016,7 +3231,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Add an image to a venue floor',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [
@@ -3093,7 +3313,12 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         summary: 'Remove image from a venue floor',
         tags: ['Summit Locations'],
         security: [
-            ['locations_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteLocationsData]],
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
+                ]
+            ],
         ],
         x: [
             'required-groups' => [

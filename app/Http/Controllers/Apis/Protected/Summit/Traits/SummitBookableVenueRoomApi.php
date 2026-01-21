@@ -88,6 +88,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms',
+        operationId: 'getBookableVenueRooms',
         summary: 'Get all bookable venue rooms for a summit',
         tags: ['Summit Locations'],
         parameters: [
@@ -107,6 +108,7 @@ trait SummitBookableVenueRoomApi
     )]
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/venues/all/bookable-rooms',
+        operationId: 'getBookableVenueAllRooms',
         summary: 'Get all bookable venue rooms for a summit',
         tags: ['Summit Locations'],
         parameters: [

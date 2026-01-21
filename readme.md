@@ -72,12 +72,19 @@ php artisan queue:work
 - php artisan queue:work sponsor_users_sync_consumer
 - php artisan queue:work payments_sync_consumer
 
+### SPONSOR USERS SERVICE ( SPONSOR USERS DOMAIN EVENTS )
+
+- php artisan mq:setup_sponsor_users_service_message_broker sponsor-users-api-message-broker direct
+- php artisan queue:work sponsor_users_sync_consumer
+
 ### PAYMENTS SERVICE ( PAYMENT PROFILES )
+
 - php artisan mq:setup_payment_service_message_broker purchases-api-payments-message-broker direct
 - php artisan queue:work payments_sync_consumer
 
 
-### Set up rabbitmq exchange, queue and bindings for Domain Events
+### Set up rabbitmq exchange, queue and bindings for Domain Events ( EMIT )
+
 - php artisan mq:setup_domain_events_message_broker
 
 # Audit Log Management

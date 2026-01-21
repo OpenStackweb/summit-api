@@ -54,6 +54,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\IngestSummitOrderPaymentInfoCommand::class,
         \App\Console\Commands\SetupSponsorServiceMessageBrokerCommand::class,
         \App\Console\Commands\SetupPaymentServiceMessageBrokerCommand::class,
+        \App\Console\Commands\SetupSponsorUsersServiceMessageBrokerCommand::class,
     ];
 
     /**

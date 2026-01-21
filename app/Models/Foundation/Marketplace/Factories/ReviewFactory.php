@@ -45,9 +45,6 @@ final class ReviewFactory
         if(isset($data['rating']))
             $review->setRating(floatval($data['rating']));
 
-        if(isset($data['is_approved']))
-            $review->setIsApproved(boolval($data['is_approved']));
-
         return $review;
     }
 }

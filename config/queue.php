@@ -54,7 +54,12 @@ return [
             'block_for' => null,
             'after_commit' => false,
         ],
-
+        /* SOURCE API IDP
+         * DOMAIN EVENTS:
+         *  - PublishUserCreated ( app/Jobs/PublishUserCreated.php )
+         *  - PublishUserDeleted ( app/Jobs/PublishUserDeleted.php )
+         *  - PublishUserUpdated ( app/Jobs/PublishUserUpdated.php )
+        */
         'message_broker' => [
             'driver' => 'rabbitmq',
             'queue' => env('RABBITMQ_QUEUE', ''),
@@ -87,10 +92,17 @@ return [
                 ],
             ],
         ],
-
+        /* SOURCE API sponsor users api
+         * DOMAIN EVENTS:
+         *  - auth_user_added_to_group
+         *  - auth_user_removed_from_group
+         *  - auth_user_added_to_sponsor_and_summit
+         *  - auth_user_removed_from_sponsor_and_summit
+         *  - auth_user_removed_from_summit
+        */
         'sponsor_users_sync_consumer' => [
             'driver' => 'rabbitmq',
-            'queue' => env('SPONSOR_USERS_QUEUE', 'sponsor-users'),
+            'queue' => env('SPONSOR_USERS_QUEUE', 'sponsor-users-api-summit-api-badge-scans-queue'),
             'connection' => $rabbit_connection,
             'hosts' => [
                 [
@@ -118,9 +130,15 @@ return [
                 ],
             ],
         ],
+        /* SOURCE API purchases api
+         * DOMAIN EVENTS:
+         *  - payment_profile_created
+         *  - payment_profile_updated
+         *  - payment_profile_deleted
+        */
         'payments_sync_consumer' => [
             'driver' => 'rabbitmq',
-            'queue' => env('PAYMENTS_QUEUE', 'payments'),
+            'queue' => env('PAYMENTS_QUEUE', 'purchases-api-summit-api-payment-profiles-queue'),
             'connection' => $rabbit_connection,
             'hosts' => [
                 [
@@ -148,7 +166,23 @@ return [
                 ],
             ],
         ],
-
+        /*
+         * SOURCE API Summit API
+         * Summit Entities Domain Events
+         * DOMAIN EVENTS:
+         *  - sponsor_created ( see app/Events/SponsorServices/SponsorDomainEvents.php )
+         *  - sponsor_updated
+         *  - sponsor_deleted
+         *  - sponsorship_created
+         *  - sponsorship_updated
+         *  - sponsorship_removed
+         *  - sponsorship_addon_created
+         *  - sponsorship_addon_updated
+         *  - sponsorship_addon_removed
+         *  - summit_created ( see app/Events/SponsorServices/SummitDomainEvents.php )
+         *  - summit_updated
+         *  - summit_deleted
+         */
         'domain_events_message_broker' => [
             'driver' => 'rabbitmq',
             'hosts' => [
@@ -162,7 +196,7 @@ return [
             ],
             'options' => [
                 'exchange' => [
-                    'name' => env('DOMAIN_EVENTS_EXCHANGE_NAME', 'domain_events_message_broker'),
+                    'name' => env('DOMAIN_EVENTS_EXCHANGE_NAME', 'summit-api-message-broker'),
                     'type' => env('DOMAIN_EVENTS_EXCHANGE_TYPE', 'direct'), // direct, fanout, topic, headers
                     'passive' => false,
                     'durable' => true,

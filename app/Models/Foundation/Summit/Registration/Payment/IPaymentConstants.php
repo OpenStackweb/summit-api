@@ -23,10 +23,15 @@ interface IPaymentConstants
 
     const ApplicationTypeSponsorServices = 'SponsorServices';
 
-    const ValidApplicationTypes       = [
+    const ValidApplicationTypes = [
         self::ApplicationTypeRegistration,
         self::ApplicationTypeBookableRooms,
         self::ApplicationTypeSponsorServices
+    ];
+
+    const AllowedWebHookCreationApps = [
+        self::ApplicationTypeRegistration,
+        self::ApplicationTypeBookableRooms,
     ];
 
     const ProviderStripe = 'Stripe';

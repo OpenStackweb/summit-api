@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Services\Apis\IPaymentGatewayAPI;
+use App\Services\Apis\IPaymentsApi;
 use App\Services\Apis\PaymentGateways\StripeApi;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\ValidationException;
@@ -218,6 +219,10 @@ class StripePaymentProfile extends PaymentGatewayProfile
 
     public function buildWebHook(): void
     {
+        if(!in_array($this->application_type, IPaymentConstants::AllowedWebHookCreationApps)){
+            Log::warning(sprintf("StripePaymentProfile::buildWebHook app type %s is not allowed to create webhooks", $this->application_type));
+            return;
+        }
         try {
             if (!$this->existsWebHook() && $this->hasSecretKey() && $this->hasSummit()) {
                 $api = new StripeApi($this->createConfiguration());

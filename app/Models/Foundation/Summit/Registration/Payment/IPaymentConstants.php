@@ -21,9 +21,12 @@ interface IPaymentConstants
     const ApplicationTypeRegistration  = 'Registration';
     const ApplicationTypeBookableRooms = 'BookableRooms';
 
+    const ApplicationTypeSponsorServices = 'SponsorServices';
+
     const ValidApplicationTypes       = [
         self::ApplicationTypeRegistration,
-        self::ApplicationTypeBookableRooms
+        self::ApplicationTypeBookableRooms,
+        self::ApplicationTypeSponsorServices
     ];
 
     const ProviderStripe = 'Stripe';

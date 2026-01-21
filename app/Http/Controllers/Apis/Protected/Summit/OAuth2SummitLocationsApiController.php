@@ -333,7 +333,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-        path: '/api/v1/summits/{id}/locations/venues/rooms/all',
+        path: '/api/v1/summits/{id}/locations/venues/all/rooms',
         operationId: 'getAllSummitVenueRooms',
         summary: 'Get all venue rooms for a summit',
         tags: ['Summit Locations'],

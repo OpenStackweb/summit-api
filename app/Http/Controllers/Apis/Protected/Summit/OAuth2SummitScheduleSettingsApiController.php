@@ -1,6 +1,4 @@
-<?php
-
-namespace App\Http\Controllers;
+<?php namespace App\Http\Controllers;
 
 /*
  * Copyright 2022 OpenStack Foundation
@@ -278,10 +276,6 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function getAllBySummit($summit_id)
-    {
-        return $this->traitGetAllBySummit($summit_id);
-    }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
@@ -342,10 +336,6 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function get($summit_id, $config_id)
-    {
-        return $this->traitGet($summit_id, $config_id);
-    }
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/schedule-settings",
@@ -390,10 +380,6 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function add($summit_id)
-    {
-        return $this->traitAdd($summit_id);
-    }
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
@@ -445,10 +431,6 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function update($summit_id, $config_id)
-    {
-        return $this->traitUpdate($summit_id, $config_id);
-    }
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/schedule-settings/{config_id}",
@@ -490,10 +472,6 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function delete($summit_id, $config_id)
-    {
-        return $this->traitDelete($summit_id, $config_id);
-    }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/schedule-settings/metadata",

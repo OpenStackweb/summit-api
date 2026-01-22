@@ -53,6 +53,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/all/locations/bookable-rooms/all/reservations/{id}',
+        operationId: 'getReservationById',
         summary: 'Get a reservation by ID',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -223,6 +224,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations',
+        operationId: 'getAllReservationsBySummit',
         summary: 'Get all reservations for a summit',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -329,6 +331,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/csv',
+        operationId: 'getAllReservationsBySummitCSV',
         summary: 'Export reservations for a summit as CSV',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -444,6 +447,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        operationId: 'getBookableVenueRoomByVenue',
         summary: 'Get a bookable venue room by venue and room ID',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -502,6 +506,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}',
+        operationId: 'getBookableVenueRoom',
         summary: 'Get a bookable venue room by ID',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -554,6 +559,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/availability/{day}',
+        operationId: 'getBookableVenueRoomAvailability',
         summary: 'Get availability slots for a bookable room on a specific day',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -655,6 +661,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Post(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations',
+        operationId: 'createBookableVenueRoomReservation',
         summary: 'Create a reservation for a bookable room',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -713,6 +720,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Post(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/offline',
+        operationId: 'createOfflineBookableVenueRoomReservation',
         summary: 'Create an offline reservation for a bookable room',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -776,6 +784,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Put(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
+        operationId: 'updateBookableVenueRoomReservation',
         summary: 'Update a bookable room reservation',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -841,6 +850,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
+        operationId: 'getBookableVenueRoomReservation',
         summary: 'Get a bookable room reservation by ID',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -901,6 +911,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/me',
+        operationId: 'getMyBookableVenueRoomReservations',
         summary: 'Get my bookable room reservations for a summit',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -962,6 +973,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/{reservation_id}',
+        operationId: 'cancelMyBookableVenueRoomReservation',
         summary: 'Cancel my bookable room reservation',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1008,6 +1020,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Put(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        operationId: 'updateVenueBookableRoom',
         summary: 'Update a bookable venue room',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1076,6 +1089,7 @@ trait SummitBookableVenueRoomApi
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
+        operationId: 'getVenueFloorBookableRoom',
         summary: 'Get a bookable venue room by floor',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1146,6 +1160,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Put(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
+        operationId: 'updateVenueFloorBookableRoom',
         summary: 'Update a bookable venue room by floor',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1217,6 +1232,7 @@ trait SummitBookableVenueRoomApi
 
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        operationId: 'deleteVenueBookableRoom',
         summary: 'Delete a bookable venue room',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1264,6 +1280,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Post(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms',
+        operationId: 'addVenueBookableRoom',
         summary: 'Add a bookable room to a venue',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1334,6 +1351,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Post(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms',
+        operationId: 'addVenueFloorBookableRoom',
         summary: 'Add a bookable room to a venue floor',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1409,6 +1427,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Put(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
+        operationId: 'addVenueBookableRoomAttribute',
         summary: 'Add an attribute to a bookable venue room',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1472,6 +1491,7 @@ trait SummitBookableVenueRoomApi
      */
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
+        operationId: 'deleteVenueBookableRoomAttribute',
         summary: 'Remove an attribute from a bookable venue room',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1522,6 +1542,7 @@ trait SummitBookableVenueRoomApi
 
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/refund',
+        operationId: 'refundBookableVenueRoomReservation',
         summary: 'Refund a bookable room reservation',
         tags: ['Summit Bookable Rooms'],
         security: [
@@ -1579,6 +1600,7 @@ trait SummitBookableVenueRoomApi
 
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/cancel',
+        operationId: 'cancelBookableVenueRoomReservation',
         summary: 'Cancel a bookable room reservation',
         tags: ['Summit Bookable Rooms'],
         security: [

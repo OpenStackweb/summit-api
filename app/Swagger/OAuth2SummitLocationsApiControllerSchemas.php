@@ -612,6 +612,53 @@ class AddLocationImagePayloadSchema {}
 class UpdateLocationImagePayloadSchema {}
 
 #[OA\Schema(
+    schema: 'AddLocationMapPayload',
+    type: 'object',
+    description: 'Payload for uploading a location map (multipart form data)',
+    required: ['file'],
+    properties: [
+        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'Map image file'),
+        new OA\Property(property: 'name', type: 'string', description: 'Map name'),
+        new OA\Property(property: 'description', type: 'string', description: 'Map description'),
+    ]
+)]
+class AddLocationMapPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'UpdateLocationMapPayload',
+    type: 'object',
+    description: 'Payload for updating a location map (multipart form data)',
+    properties: [
+        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'Map image file (optional)'),
+        new OA\Property(property: 'name', type: 'string', description: 'Map name'),
+        new OA\Property(property: 'description', type: 'string', description: 'Map description'),
+    ]
+)]
+class UpdateLocationMapPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'AddVenueRoomImagePayload',
+    type: 'object',
+    description: 'Payload for uploading a venue room image (multipart form data)',
+    required: ['file'],
+    properties: [
+        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'Image file'),
+    ]
+)]
+class AddVenueRoomImagePayloadSchema {}
+
+#[OA\Schema(
+    schema: 'AddVenueFloorImagePayload',
+    type: 'object',
+    description: 'Payload for uploading a venue floor image (multipart form data)',
+    required: ['file'],
+    properties: [
+        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'Image file'),
+    ]
+)]
+class AddVenueFloorImagePayloadSchema {}
+
+#[OA\Schema(
     schema: 'AddVenueFloorRoomPayload',
     type: 'object',
     description: 'Payload for creating a new room on a venue floor',

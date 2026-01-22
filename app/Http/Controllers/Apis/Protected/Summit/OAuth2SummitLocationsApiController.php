@@ -2614,6 +2614,14 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Map file upload payload',
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: '#/components/schemas/AddLocationMapPayload')
+            )
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_CREATED, description: 'Map created', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationMap')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or Location Not Found'),
@@ -2701,6 +2709,14 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Map file update payload',
+            required: false,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: '#/components/schemas/UpdateLocationMapPayload')
+            )
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: 'Map updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationMap')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or map Not Found'),
@@ -2893,6 +2909,14 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Image file upload payload',
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: '#/components/schemas/AddLocationImagePayload')
+            )
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_CREATED, description: 'Image created', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationImage')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or Location Not Found'),
@@ -3096,6 +3120,14 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Room image file upload payload',
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: '#/components/schemas/AddVenueRoomImagePayload')
+            )
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_CREATED, description: 'Room image added', content: new OA\JsonContent(ref: '#/components/schemas/SummitImage')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room Not Found'),
@@ -3253,6 +3285,14 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            description: 'Floor image file upload payload',
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: '#/components/schemas/AddVenueFloorImagePayload')
+            )
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_CREATED, description: 'Floor image added', content: new OA\JsonContent(ref: '#/components/schemas/SummitImage')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor Not Found'),

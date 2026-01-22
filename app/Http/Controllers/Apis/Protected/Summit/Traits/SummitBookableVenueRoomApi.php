@@ -13,7 +13,9 @@
  **/
 
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -52,7 +54,23 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/all/locations/bookable-rooms/all/reservations/{id}',
         summary: 'Get a reservation by ID',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRoomAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
@@ -90,7 +108,15 @@ trait SummitBookableVenueRoomApi
         path: '/api/v1/summits/{id}/locations/bookable-rooms',
         operationId: 'getBookableVenueRooms',
         summary: 'Get all bookable venue rooms for a summit',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: name, description, capacity, availability_day, attribute', schema: new OA\Schema(type: 'string')),
@@ -110,7 +136,15 @@ trait SummitBookableVenueRoomApi
         path: '/api/v1/summits/{id}/locations/venues/all/bookable-rooms',
         operationId: 'getBookableVenueAllRooms',
         summary: 'Get all bookable venue rooms for a summit',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: name, description, capacity, availability_day, attribute', schema: new OA\Schema(type: 'string')),
@@ -190,7 +224,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations',
         summary: 'Get all reservations for a summit',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: summit_id, room_name, room_id, owner_id, owner_name, owner_email, not_owner_email, status, start_datetime, end_datetime', schema: new OA\Schema(type: 'string')),
@@ -281,7 +330,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/csv',
         summary: 'Export reservations for a summit as CSV',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: summit_id, room_name, room_id, owner_id, owner_name, owner_email, not_owner_email, status, start_datetime, end_datetime', schema: new OA\Schema(type: 'string')),
@@ -381,7 +445,15 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
         summary: 'Get a bookable venue room by venue and room ID',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -431,7 +503,15 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}',
         summary: 'Get a bookable venue room by ID',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
@@ -449,7 +529,8 @@ trait SummitBookableVenueRoomApi
         return $this->processRequest(function () use ($summit_id, $room_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit)) return $this->error404();
+            if (is_null($summit))
+                return $this->error404();
 
             $room = $summit->getLocation(intval($room_id));
 
@@ -474,7 +555,15 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/availability/{day}',
         summary: 'Get availability slots for a bookable room on a specific day',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
@@ -567,7 +656,14 @@ trait SummitBookableVenueRoomApi
     #[OA\Post(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations',
         summary: 'Create a reservation for a bookable room',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteMyBookableRoomsReservationData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
@@ -618,7 +714,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Post(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/offline',
         summary: 'Create an offline reservation for a bookable room',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
@@ -666,7 +777,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Put(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
         summary: 'Update a bookable room reservation',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
@@ -716,7 +842,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
         summary: 'Get a bookable room reservation by ID',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
@@ -761,7 +902,14 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/me',
         summary: 'Get my bookable room reservations for a summit',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadMyBookableRoomsReservationData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
@@ -815,7 +963,14 @@ trait SummitBookableVenueRoomApi
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/{reservation_id}',
         summary: 'Cancel my bookable room reservation',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteMyBookableRoomsReservationData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
@@ -854,7 +1009,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Put(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
         summary: 'Update a bookable venue room',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -907,7 +1077,15 @@ trait SummitBookableVenueRoomApi
     #[OA\Get(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
         summary: 'Get a bookable venue room by floor',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -969,7 +1147,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Put(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
         summary: 'Update a bookable venue room by floor',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -1025,7 +1218,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
         summary: 'Delete a bookable venue room',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -1057,7 +1265,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Post(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms',
         summary: 'Add a bookable room to a venue',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -1112,7 +1335,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Post(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms',
         summary: 'Add a bookable room to a venue floor',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -1172,7 +1410,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Put(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
         summary: 'Add an attribute to a bookable venue room',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -1220,7 +1473,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
         summary: 'Remove an attribute from a bookable venue room',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
@@ -1255,7 +1523,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/refund',
         summary: 'Refund a bookable room reservation',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
@@ -1297,7 +1580,22 @@ trait SummitBookableVenueRoomApi
     #[OA\Delete(
         path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/cancel',
         summary: 'Cancel a bookable room reservation',
-        tags: ['Summit Locations'],
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),

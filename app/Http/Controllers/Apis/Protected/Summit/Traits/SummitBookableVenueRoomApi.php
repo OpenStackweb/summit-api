@@ -678,6 +678,10 @@ trait SummitBookableVenueRoomApi
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/CreateBookableVenueRoomReservationPayload')
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_CREATED, description: 'Reservation created', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
@@ -745,6 +749,10 @@ trait SummitBookableVenueRoomApi
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/CreateOfflineBookableVenueRoomReservationPayload')
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_CREATED, description: 'Offline reservation created', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
@@ -810,6 +818,10 @@ trait SummitBookableVenueRoomApi
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateBookableVenueRoomReservationPayload')
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: 'Reservation updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
@@ -1046,6 +1058,10 @@ trait SummitBookableVenueRoomApi
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueBookableRoomPayload')
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or room not found'),
@@ -1187,6 +1203,10 @@ trait SummitBookableVenueRoomApi
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueFloorBookableRoomPayload')
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, floor or room not found'),
@@ -1305,6 +1325,10 @@ trait SummitBookableVenueRoomApi
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddVenueBookableRoomPayload')
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_CREATED, description: 'Room created', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or venue not found'),
@@ -1377,6 +1401,10 @@ trait SummitBookableVenueRoomApi
             new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddVenueBookableRoomPayload')
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_CREATED, description: 'Room created', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or floor not found'),
@@ -1565,6 +1593,10 @@ trait SummitBookableVenueRoomApi
             new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
         ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/RefundBookableVenueRoomReservationPayload')
+        ),
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: 'Reservation refunded', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),

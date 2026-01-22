@@ -637,3 +637,105 @@ class AddVenueFloorRoomPayloadSchema {}
     ]
 )]
 class UpdateVenueFloorRoomPayloadSchema {}
+
+// ============================================================================
+// Bookable Room Request Body Payloads
+// ============================================================================
+
+#[OA\Schema(
+    schema: 'CreateBookableVenueRoomReservationPayload',
+    type: 'object',
+    description: 'Payload for creating a new bookable room reservation',
+    required: ['start_datetime', 'end_datetime'],
+    properties: [
+        new OA\Property(property: 'start_datetime', type: 'integer', description: 'Start date/time as Unix timestamp'),
+        new OA\Property(property: 'end_datetime', type: 'integer', description: 'End date/time as Unix timestamp'),
+    ]
+)]
+class CreateBookableVenueRoomReservationPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'CreateOfflineBookableVenueRoomReservationPayload',
+    type: 'object',
+    description: 'Payload for creating an offline bookable room reservation',
+    required: ['start_datetime', 'end_datetime', 'owner_email', 'owner_first_name', 'owner_last_name'],
+    properties: [
+        new OA\Property(property: 'start_datetime', type: 'integer', description: 'Start date/time as Unix timestamp'),
+        new OA\Property(property: 'end_datetime', type: 'integer', description: 'End date/time as Unix timestamp'),
+        new OA\Property(property: 'owner_email', type: 'string', format: 'email', description: 'Owner email address'),
+        new OA\Property(property: 'owner_first_name', type: 'string', maxLength: 255, description: 'Owner first name'),
+        new OA\Property(property: 'owner_last_name', type: 'string', maxLength: 255, description: 'Owner last name'),
+    ]
+)]
+class CreateOfflineBookableVenueRoomReservationPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'UpdateBookableVenueRoomReservationPayload',
+    type: 'object',
+    description: 'Payload for updating a bookable room reservation',
+    properties: [
+        new OA\Property(property: 'start_datetime', type: 'integer', description: 'Start date/time as Unix timestamp'),
+        new OA\Property(property: 'end_datetime', type: 'integer', description: 'End date/time as Unix timestamp'),
+        new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Confirmed', 'Cancelled'], description: 'Reservation status'),
+    ]
+)]
+class UpdateBookableVenueRoomReservationPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'AddVenueBookableRoomPayload',
+    type: 'object',
+    description: 'Payload for adding a bookable room to a venue',
+    required: ['name', 'capacity'],
+    properties: [
+        new OA\Property(property: 'name', type: 'string', maxLength: 255, description: 'Room name'),
+        new OA\Property(property: 'capacity', type: 'integer', minimum: 1, description: 'Room capacity'),
+        new OA\Property(property: 'description', type: 'string', description: 'Room description'),
+        new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+    ]
+)]
+class AddVenueBookableRoomPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'UpdateVenueBookableRoomPayload',
+    type: 'object',
+    description: 'Payload for updating a bookable venue room',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', maxLength: 255, description: 'Room name'),
+        new OA\Property(property: 'capacity', type: 'integer', minimum: 1, description: 'Room capacity'),
+        new OA\Property(property: 'description', type: 'string', description: 'Room description'),
+        new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+    ]
+)]
+class UpdateVenueBookableRoomPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'UpdateVenueFloorBookableRoomPayload',
+    type: 'object',
+    description: 'Payload for updating a bookable room on a venue floor',
+    properties: [
+        new OA\Property(property: 'name', type: 'string', maxLength: 255, description: 'Room name'),
+        new OA\Property(property: 'capacity', type: 'integer', minimum: 1, description: 'Room capacity'),
+        new OA\Property(property: 'description', type: 'string', description: 'Room description'),
+        new OA\Property(property: 'order', type: 'integer', description: 'Display order'),
+    ]
+)]
+class UpdateVenueFloorBookableRoomPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'RefundBookableVenueRoomReservationPayload',
+    type: 'object',
+    description: 'Payload for refunding a bookable room reservation',
+    required: ['amount'],
+    properties: [
+        new OA\Property(property: 'amount', type: 'integer', minimum: 1, description: 'Refund amount in cents'),
+    ]
+)]
+class RefundBookableVenueRoomReservationPayloadSchema {}
+
+#[OA\Schema(
+    schema: 'CopySummitLocationsPayload',
+    type: 'object',
+    description: 'Payload for copying locations between summits',
+    properties: []
+)]
+class CopySummitLocationsPayloadSchema {}

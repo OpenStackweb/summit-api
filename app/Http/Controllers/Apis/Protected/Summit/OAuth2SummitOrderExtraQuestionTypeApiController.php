@@ -128,11 +128,18 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 description: "Order by id, name, label, order"
             ),
             new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
                 name: "expand",
                 in: "query",
                 required: false,
                 schema: new OA\Schema(type: "string"),
-                description: "Expand relationships"
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
             ),
         ],
         responses: [
@@ -186,11 +193,18 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 description: "Order by id, name, label, order"
             ),
             new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
                 name: "expand",
                 in: "query",
                 required: false,
                 schema: new OA\Schema(type: "string"),
-                description: "Expand relationships"
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
             ),
         ],
         responses: [
@@ -226,11 +240,18 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 schema: new OA\Schema(type: "integer", format: "int64")
             ),
             new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
                 name: "expand",
                 in: "query",
                 required: false,
                 schema: new OA\Schema(type: "string"),
-                description: "Expand relationships"
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
             ),
         ],
         responses: [
@@ -364,6 +385,20 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
             ),
         ],
         responses: [
@@ -538,6 +573,20 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
             ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
         ],
         responses: [
             new OA\Response(
@@ -612,6 +661,20 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
             ),
         ],
         responses: [
@@ -722,6 +785,20 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
             ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
         ],
         responses: [
             new OA\Response(
@@ -785,6 +862,13 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: sub_question, parent_question"
             ),
         ],
         responses: [
@@ -858,6 +942,13 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: sub_question, parent_question"
             ),
         ],
         responses: [
@@ -934,6 +1025,13 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
             ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: sub_question, parent_question"
+            ),
         ],
         responses: [
             new OA\Response(
@@ -1005,6 +1103,13 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: sub_question, parent_question"
             ),
         ],
         responses: [
@@ -1116,6 +1221,20 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
             ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
         ],
         responses: [
             new OA\Response(
@@ -1166,6 +1285,20 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
                 in: "path",
                 required: true,
                 schema: new OA\Schema(type: "integer", format: "int64")
+            ),
+            new OA\Parameter(
+                name: "relations",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Expand relationships, possible values: allowed_ticket_types, allowed_badge_features_types, sub_question_rules, parent_rules"
             ),
         ],
         responses: [

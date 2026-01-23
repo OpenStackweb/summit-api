@@ -135,7 +135,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/PaginatedPresentationSpeakerSummitAssistanceConfirmationRequestsResponse")
             ),
@@ -263,7 +263,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\MediaType(mediaType: "text/csv", schema: new OA\Schema(type: "string"))
             ),
@@ -375,7 +375,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: "Created",
                 content: new OA\JsonContent(ref: "#/components/schemas/PresentationSpeakerSummitAssistanceConfirmationRequest")
             ),
@@ -473,7 +473,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/PresentationSpeakerSummitAssistanceConfirmationRequest")
             ),
@@ -563,7 +563,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
             )
         ],
         responses: [
-            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
@@ -632,7 +632,7 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/PresentationSpeakerSummitAssistanceConfirmationRequest")
             ),

@@ -187,7 +187,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'List of sponsored projects',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSponsoredProjectsResponse')
             ),
@@ -245,7 +245,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'List of sponsored projects',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSponsoredProjectsResponse')
             ),
@@ -295,7 +295,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'addSponsoredProject',
         tags: ['Sponsored Projects'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -318,7 +318,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Sponsored project created',
                 content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProject')
             ),
@@ -349,7 +349,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Sponsored project details',
                 content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProject')
             ),
@@ -384,7 +384,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Sponsored project details',
                 content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProject')
             ),
@@ -405,7 +405,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'updateSponsoredProject',
         tags: ['Sponsored Projects'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -435,7 +435,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Sponsored project updated',
                 content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProject')
             ),
@@ -457,7 +457,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'deleteSponsoredProject',
         tags: ['Sponsored Projects'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -483,7 +483,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Sponsored project deleted',
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
@@ -546,7 +546,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'List of sponsorship types',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedProjectSponsorshipTypesResponse')
             ),
@@ -612,7 +612,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'List of sponsorship types',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedProjectSponsorshipTypesResponse')
             ),
@@ -697,7 +697,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Sponsorship type details',
                 content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipType')
             ),
@@ -739,7 +739,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Sponsorship type details',
                 content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipType')
             ),
@@ -766,7 +766,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'addSponsorshipType',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -796,7 +796,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Sponsorship type created',
                 content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipType')
             ),
@@ -831,7 +831,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'updateSponsorshipType',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -868,7 +868,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Sponsorship type updated',
                 content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipType')
             ),
@@ -904,7 +904,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'deleteSponsorshipType',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -937,7 +937,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Sponsorship type deleted',
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
@@ -1019,7 +1019,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'List of supporting companies',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSupportingCompaniesResponse')
             ),
@@ -1092,7 +1092,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'List of supporting companies',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSupportingCompaniesResponse')
             ),
@@ -1157,7 +1157,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'addSupportingCompany',
         tags: ['Sponsored Projects', 'Supporting Companies'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -1194,7 +1194,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Supporting company added',
                 content: new OA\JsonContent(ref: '#/components/schemas/SupportingCompany')
             ),
@@ -1237,7 +1237,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'updateSupportingCompany',
         tags: ['Sponsored Projects', 'Supporting Companies'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -1281,7 +1281,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Supporting company updated',
                 content: new OA\JsonContent(ref: '#/components/schemas/SupportingCompany')
             ),
@@ -1325,7 +1325,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'deleteSupportingCompany',
         tags: ['Sponsored Projects', 'Supporting Companies'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -1365,7 +1365,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Supporting company deleted',
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
@@ -1392,7 +1392,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'getSupportingCompany',
         tags: ['Sponsored Projects', 'Supporting Companies'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -1432,7 +1432,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Supporting company details',
                 content: new OA\JsonContent(ref: '#/components/schemas/SupportingCompany')
             ),
@@ -1463,7 +1463,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'addSponsoredProjectLogo',
         tags: ['Sponsored Projects'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -1496,7 +1496,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: 'Logo uploaded successfully',
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
@@ -1530,7 +1530,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'deleteSponsoredProjectLogo',
         tags: ['Sponsored Projects'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -1556,7 +1556,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 204,
+                response: Response::HTTP_NO_CONTENT,
                 description: 'Logo deleted successfully',
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
@@ -1584,7 +1584,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         operationId: 'getSubprojects',
         tags: ['Sponsored Projects'],
         x: [
-            'authz_groups' => [
+            'required-groups' => [
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
             ]
@@ -1641,7 +1641,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'List of subprojects',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSponsoredProjectsResponse')
             ),

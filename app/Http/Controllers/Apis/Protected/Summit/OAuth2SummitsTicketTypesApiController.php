@@ -126,7 +126,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitTicketTypesResponse")
             ),
@@ -205,6 +205,65 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         );
     }
 
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/ticket-types/csv",
+        operationId: 'getAllTicketTypesBySummit',
+        summary: "Get all ticket types for a summit (public audience only)",
+        security: [["summit_ticket_types_oauth2" => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Ticket Types"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Filter operators: id==, badge_type_id==, name=@/@@/==, description=@/@@/==, external_id=@/@@/==, audience=@/@@/==, sales_start_date>/</<=/>=/ ==/[], sales_end_date>/</<=/>=/ ==/[], created>/</<=/>=/ ==/[], last_edited>/</<=/>=/ ==/[], allows_to_delegate=="
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                required: false,
+                explode: false,
+                schema: new OA\Schema(type: "string"),
+                description: "Order by fields: id, created, name, external_id, audience"
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "CSV file",
+                content: new OA\MediaType(
+                    mediaType: "text/csv",
+                    schema: new OA\Schema(type: "string", format: "binary")
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -337,7 +396,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitTicketTypesResponse")
             ),
@@ -435,7 +494,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitTicketTypesResponse")
             ),
@@ -519,7 +578,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitTicketType")
             ),
@@ -575,7 +634,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         ),
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: "Created",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitTicketType")
             ),
@@ -644,7 +703,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         ),
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: "OK",
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitTicketType")
             ),
@@ -705,7 +764,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             )
         ],
         responses: [
-            new OA\Response(response: 204, description: "No Content"),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
@@ -748,7 +807,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
         ],
         responses: [
             new OA\Response(
-                response: 201,
+                response: Response::HTTP_CREATED,
                 description: "Created",
                 content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitTicketTypesResponse")
             ),
@@ -815,7 +874,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
             )
         ],
         responses: [
-            new OA\Response(response: 200, description: "OK"),
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
             new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),

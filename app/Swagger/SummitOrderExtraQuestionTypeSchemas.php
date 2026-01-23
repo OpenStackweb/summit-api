@@ -45,3 +45,39 @@ use OpenApi\Attributes as OA;
 class SummitOrderExtraQuestionTypeSchemas
 {
 }
+
+#[OA\Schema(
+    schema: "PaginatedSummitOrderExtraQuestionTypesResponse",
+    description: "Paginated list of summit order extra question types",
+    allOf: [
+        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+        new OA\Schema(
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/SummitOrderExtraQuestionType")
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedSummitOrderExtraQuestionTypesResponseSchema {}
+
+#[OA\Schema(
+    schema: "PaginatedSubQuestionRulesResponse",
+    description: "Paginated list of sub question rules",
+    allOf: [
+        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+        new OA\Schema(
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/SubQuestionRule")
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedSubQuestionRulesResponseSchema {}

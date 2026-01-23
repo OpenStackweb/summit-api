@@ -40,7 +40,6 @@ use utils\PagingResponse;
  * Class OAuth2SummitOrderExtraQuestionTypeApiController
  * @package App\Http\Controllers
  */
-#[OA\Tag(name: "Order Extra Questions", description: "Summit Order Extra Questions Management")]
 final class OAuth2SummitOrderExtraQuestionTypeApiController
     extends OAuth2ProtectedController
 {
@@ -140,7 +139,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Order extra questions retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitOrderExtraQuestionTypesResponse")
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
         ]
@@ -198,7 +197,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Order extra questions retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitOrderExtraQuestionTypesResponse")
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
         ]
@@ -728,7 +727,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             new OA\Response(
                 response: Response::HTTP_CREATED,
                 description: "Default questions seeded successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitOrderExtraQuestionTypesResponse")
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
@@ -792,7 +791,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Sub question rules retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSubQuestionRulesResponse")
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Question or Summit not found"),
         ]
@@ -1122,7 +1121,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Allowed questions retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitOrderExtraQuestionTypesResponse")
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit or attendee not found"),
         ]
@@ -1173,7 +1172,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: "Allowed questions retrieved successfully",
-                content: new OA\JsonContent(ref: "#/components/schemas/PaginateDataSchemaResponse")
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitOrderExtraQuestionTypesResponse")
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "You are not Authorized"),

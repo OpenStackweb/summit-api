@@ -163,7 +163,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @return \Illuminate\Http\JsonResponse|mixed
      */
     #[OA\Get(
-        path: "/api/v1/summits/registration-invitations/{token}",
+        path: "/api/v1/summits/all/registration-invitations/{token}",
         operationId: 'getInvitationByToken',
         summary: "Get a registration invitation by token",
         security: [['summit_registration_invitation_oauth2' => [

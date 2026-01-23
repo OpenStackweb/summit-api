@@ -56,6 +56,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/v1/elections",
         operationId: "getAllElections",
+        summary: "Get all elections",
         description: "Get all elections with pagination and filtering",
         tags: ["Elections"],
         security: [['election_oauth2' => [ElectionScopes::ReadAllElections]]],
@@ -154,6 +155,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/public/v1/elections/current",
         operationId: "getCurrentElection",
+        summary: "Get current election",
         description: "Get the current active election",
         tags: ["Elections (Public)"],
         parameters: [
@@ -200,6 +202,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/v1/elections/{election_id}",
         operationId: "getElectionById",
+        summary: "Get election by ID",
         description: "Get election by ID",
         tags: ["Elections"],
         security: [['election_oauth2' => [ElectionScopes::ReadAllElections]]],
@@ -254,6 +257,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/public/v1/elections/current/candidates",
         operationId: "getCurrentElectionCandidates",
+        summary: "Get current election candidates",
         description: "Get all accepted candidates for the current election. Supports expand parameter to include member and/or election objects",
         tags: ["Elections (Public)"],
         parameters: [
@@ -354,6 +358,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/v1/elections/{election_id}/candidates",
         operationId: "getElectionCandidates",
+        summary: "Get election candidates",
         description: "Get all accepted candidates for a specific election. Supports expand parameter to include member and/or election objects",
         tags: ["Elections"],
         security: [['election_oauth2' => [ElectionScopes::ReadAllElections]]],
@@ -462,6 +467,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/public/v1/elections/current/candidates/gold",
         operationId: "getCurrentGoldCandidates",
+        summary: "Get current election gold candidates",
         description: "Get all gold (featured) candidates for the current election. Supports expand parameter to include member and/or election objects",
         tags: ["Elections (Public)"],
         parameters: [
@@ -562,6 +568,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/v1/elections/{election_id}/candidates/gold",
         operationId: "getElectionGoldCandidates",
+        summary: "Get election gold candidates",
         description: "Get all gold (featured) candidates for a specific election. Supports expand parameter to include member and/or election objects",
         tags: ["Elections"],
         security: [['election_oauth2' => [ElectionScopes::ReadAllElections]]],
@@ -670,6 +677,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Put(
         path: "/api/v1/elections/current/candidates/me",
         operationId: "updateMyCandidateProfile",
+        summary: "Update my candidate profile",
         description: "Update current user's candidate profile for the current election",
         tags: ["Elections"],
         security: [['election_oauth2' => [ElectionScopes::WriteMyCandidateProfile]]],
@@ -732,6 +740,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
     #[OA\Post(
         path: "/api/v1/elections/current/candidates/{candidate_id}",
         operationId: "nominateCandidate",
+        summary: "Nominate a candidate",
         description: "Nominate a candidate for the current election. Supports expand parameter to include related objects (election, candidate, nominator)",
         tags: ["Elections"],
         security: [['election_oauth2' => [ElectionScopes::NominatesCandidates]]],

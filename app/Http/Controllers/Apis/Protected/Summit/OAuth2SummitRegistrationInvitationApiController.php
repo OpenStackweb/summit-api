@@ -1,6 +1,4 @@
-<?php
-
-namespace App\Http\Controllers;
+<?php namespace App\Http\Controllers;
 
 /**
  * Copyright 2020 OpenStack Foundation
@@ -220,9 +218,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
     // traits
     use ParametrizedGetAll;
 
-    use GetSummitChildElementById {
-        get as protected traitGet;
-    }
+    use GetSummitChildElementById;
 
     /**
      * @return ISummitRepository
@@ -290,10 +286,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function get($summit_id, $invitation_id)
-    {
-        return $this->traitGet($summit_id, $invitation_id);
-    }
+    // public function get($summit_id, $invitation_id)
 
     /**
      * @param $summit_id
@@ -585,14 +578,12 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
                     $columns = $allowed_columns;
                 return $columns;
             },
-            'Summit Registration Invitations-'
+            'summit-registration-invitations-'
         );
     }
 
 
-    use DeleteSummitChildElement {
-        delete as protected traitDelete;
-    }
+    use DeleteSummitChildElement;
 
     /**
      * @inheritDoc
@@ -602,60 +593,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         $this->service->delete($summit, $child_id);
     }
 
-    /**
-     * @param $summit_id
-     * @param $invitation_id
-     * @return mixed
-     */
-    #[OA\Delete(
-        path: "/api/v1/summits/{id}/registration-invitations/{invitation_id}",
-        operationId: 'deleteRegistrationInvitation',
-        summary: "Delete a registration invitation",
-        security: [['summit_registration_invitation_oauth2' => [
-            SummitScopes::WriteSummitData,
-            SummitScopes::WriteRegistrationInvitations,
-        ]]],
-        x: [
-            'required-groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-                IGroup::SummitRegistrationAdmins,
-            ]
-        ],
-        tags: ["Summit Registration Invitations"],
-        parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit id'
-            ),
-            new OA\Parameter(
-                name: "invitation_id",
-                in: "path",
-                required: true,
-                schema: new OA\Schema(type: "integer")
-            )
-        ],
-        responses: [
-            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
-            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
-        ]
-    )]
-    public function delete($summit_id, $invitation_id)
-    {
-        return $this->traitDelete($summit_id, $invitation_id);
-    }
-
-    use AddSummitChildElement {
-        add as protected traitAdd;
-    }
+    use AddSummitChildElement;
 
     /**
      * @inheritDoc
@@ -663,14 +601,6 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
     protected function addChild(Summit $summit, array $payload): IEntity
     {
         return $this->service->add($summit, $payload);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    function getAddValidationRules(array $payload): array
-    {
-        return SummitRegistrationInvitationValidationRulesFactory::buildForAdd($payload);
     }
 
     /**
@@ -724,14 +654,60 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function add($summit_id)
+    // public function add($summit_id)
+
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/registration-invitations/{invitation_id}",
+        operationId: 'deleteRegistrationInvitation',
+        summary: "Delete a registration invitation",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: "invitation_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // public function delete($summit_id, $invitation_id)
+
+    /**
+     * @inheritDoc
+     */
+    function getAddValidationRules(array $payload): array
     {
-        return $this->traitAdd($summit_id);
+        return SummitRegistrationInvitationValidationRulesFactory::buildForAdd($payload);
     }
 
-    use UpdateSummitChildElement {
-        update as protected traitUpdate;
-    }
+    use UpdateSummitChildElement;
 
     /**
      * @inheritDoc
@@ -807,10 +783,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function update($summit_id, $invitation_id)
-    {
-        return $this->traitUpdate($summit_id, $invitation_id);
-    }
+    // public function update($summit_id, $invitation_id)
 
     /**
      * @param $summit_id

@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,8 +90,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         ISupportingCompanyRepository $supporting_company_repository,
         IResourceServerContext $resource_server_context,
         ISponsoredProjectService $service
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $company_repository;
         $this->project_sponsorship_type_repository = $project_sponsorship_type_repository;
@@ -200,9 +200,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         summary: 'Read All Sponsored Projects',
         operationId: 'getAllSponsoredProjects',
         tags: ['Sponsored Projects'],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Read,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Read,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -261,8 +265,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '==','@@'],
-                    'slug' => ['=@', '==','@@'],
+                    'name' => ['=@', '==', '@@'],
+                    'slug' => ['=@', '==', '@@'],
                     'is_active' => ['==']
                 ];
             },
@@ -300,12 +304,16 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(ref:'#/components/schemas/SponsoredProjectRequest')
+            content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProjectRequest')
         ),
         parameters: [
             new OA\Parameter(
@@ -363,9 +371,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         summary: 'Read Sponsored Project',
         operationId: 'getSponsoredProject',
         tags: ['Sponsored Projects'],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Read,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Read,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -410,9 +422,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/SponsoredProjectRequest')
@@ -462,9 +478,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -560,9 +580,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         summary: 'Read All Sponsorship Types',
         operationId: 'getAllSponsorshipTypes',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Read,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Read,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -629,8 +653,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '==','@@'],
-                    'slug' => ['=@', '==','@@'],
+                    'name' => ['=@', '==', '@@'],
+                    'slug' => ['=@', '==', '@@'],
                     'is_active' => ['==']
                 ];
             },
@@ -648,9 +672,9 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                     'order'
                 ];
             },
-            function ($filter) use($id) {
-                if($filter instanceof Filter){
-                    if(is_numeric($id))
+            function ($filter) use ($id) {
+                if ($filter instanceof Filter) {
+                    if (is_numeric($id))
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsored_project_id', intval($id)));
                     else
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsored_project_slug', $id));
@@ -709,11 +733,15 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}",
         description: "Get a specific sponsorship type",
         summary: 'Read Sponsorship Type',
-        operationId: 'getSponsorshipType',
+        operationId: 'getSponsorshipTypeForSponsoredProject',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Read,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Read,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -752,9 +780,10 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $id
      * @param $sponsorship_type_id
      */
-    public function getSponsorshipType($id, $sponsorship_type_id){
+    public function getSponsorshipType($id, $sponsorship_type_id)
+    {
         Log::debug(sprintf("OAuth2SponsoredProjectApiController::getSponsorshipType id %s sponsorship_type_id %s", $id, $sponsorship_type_id));
-        return $this->_get($sponsorship_type_id, function($id){
+        return $this->_get($sponsorship_type_id, function ($id) {
             return $this->project_sponsorship_type_repository->getById(intval($id));
         });
     }
@@ -763,7 +792,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         path: "/api/v1/sponsored-projects/{id}/sponsorship-types",
         description: "Add a new sponsorship type to a sponsored project",
         summary: 'Add Sponsorship Type',
-        operationId: 'addSponsorshipType',
+        operationId: 'addSponsorshipTypeForSponsoredProject',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
         x: [
             'required-groups' => [
@@ -771,12 +800,16 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(ref:'#/components/schemas/ProjectSponsorshipTypeCreateRequest')
+            content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipTypeCreateRequest')
         ),
         parameters: [
             new OA\Parameter(
@@ -817,7 +850,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             function ($payload) {
                 return ProjectSponsorshipTypeValidationRulesFactory::build($payload);
             },
-            function ($payload, $id){
+            function ($payload, $id) {
                 return $this->service->addProjectSponsorshipType($id, HTMLCleaner::cleanData($payload, ['description']));
             },
             ...$args
@@ -828,7 +861,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}",
         description: "Update a sponsorship type",
         summary: 'Update Sponsorship Type',
-        operationId: 'updateSponsorshipType',
+        operationId: 'updateSponsorshipTypeForSponsoredProject',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
         x: [
             'required-groups' => [
@@ -836,9 +869,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/ProjectSponsorshipTypeUpdateRequest')
@@ -883,14 +920,15 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $sponsorship_type_id
      * @return mixed
      */
-    public function updateSponsorshipType($id, $sponsorship_type_id){
-        $args = [ intval($id) ];
+    public function updateSponsorshipType($id, $sponsorship_type_id)
+    {
+        $args = [intval($id)];
         return $this->_update(
             $sponsorship_type_id,
-            function($payload){
+            function ($payload) {
                 return ProjectSponsorshipTypeValidationRulesFactory::build($payload, true);
             },
-            function($sponsorship_type_id, $payload, $project_id){
+            function ($sponsorship_type_id, $payload, $project_id) {
                 return $this->service->updateProjectSponsorshipType($project_id, $sponsorship_type_id, HTMLCleaner::cleanData($payload, ['description']));
             },
             ...$args
@@ -901,7 +939,7 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         path: "/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}",
         description: "Delete a sponsorship type",
         summary: 'Delete Sponsorship Type',
-        operationId: 'deleteSponsorshipType',
+        operationId: 'deleteSponsorshipTypeForSponsoredProject',
         tags: ['Sponsored Projects', 'Sponsorship Types'],
         x: [
             'required-groups' => [
@@ -909,9 +947,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -950,12 +992,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $sponsorship_type_id
      * @return mixed
      */
-    public function deleteSponsorshipType($id, $sponsorship_type_id){
-        $args = [ intval($id) ];
+    public function deleteSponsorshipType($id, $sponsorship_type_id)
+    {
+        $args = [intval($id)];
 
         return $this->_delete(
             $sponsorship_type_id,
-            function ($sponsorship_type_id, $project_id){
+            function ($sponsorship_type_id, $project_id) {
                 $this->service->deleteProjectSponsorshipType($project_id, $sponsorship_type_id);
             },
             ...$args
@@ -1033,9 +1076,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         summary: 'Read All Supporting Companies',
         operationId: 'getSupportingCompanies',
         tags: ['Sponsored Projects', 'Supporting Companies'],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Read,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Read,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1101,11 +1148,12 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function getSupportingCompanies($id, $sponsorship_type_id){
+    public function getSupportingCompanies($id, $sponsorship_type_id)
+    {
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '==','@@'],
+                    'name' => ['=@', '==', '@@'],
                 ];
             },
             function () {
@@ -1119,14 +1167,14 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                     'order',
                 ];
             },
-            function ($filter) use($id, $sponsorship_type_id) {
-                if($filter instanceof Filter){
-                    if(is_numeric($id))
+            function ($filter) use ($id, $sponsorship_type_id) {
+                if ($filter instanceof Filter) {
+                    if (is_numeric($id))
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsored_project_id', intval($id)));
                     else
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsored_project_slug', $id));
 
-                    if(is_numeric($sponsorship_type_id))
+                    if (is_numeric($sponsorship_type_id))
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsorship_type_id', intval($sponsorship_type_id)));
                     else
                         $filter->addFilterCondition(FilterElement::makeEqual('sponsorship_type_slug', $sponsorship_type_id));
@@ -1162,9 +1210,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/AddSupportingCompanyRequest')
@@ -1209,15 +1261,16 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $sponsorship_type_id
      * @return mixed
      */
-    public function addSupportingCompanies($id, $sponsorship_type_id){
+    public function addSupportingCompanies($id, $sponsorship_type_id)
+    {
         return $this->_add(
-            function($payload){
+            function ($payload) {
                 return [
                     'company_id' => 'required|integer',
                     'order' => 'sometimes|integer|min:1',
                 ];
             },
-            function($payload, $project_id, $sponsorship_type_id){
+            function ($payload, $project_id, $sponsorship_type_id) {
                 return $this->service->addCompanyToProjectSponsorshipType
                 (
                     $project_id,
@@ -1242,9 +1295,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(ref: '#/components/schemas/UpdateSupportingCompanyRequest')
@@ -1297,14 +1354,16 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $company_id
      * @return mixed
      */
-    public function updateSupportingCompanies($id, $sponsorship_type_id, $company_id){
-        return $this->_update($company_id,
-            function($payload){
+    public function updateSupportingCompanies($id, $sponsorship_type_id, $company_id)
+    {
+        return $this->_update(
+            $company_id,
+            function ($payload) {
                 return [
                     'order' => 'sometimes|integer|min:1',
                 ];
             },
-            function($id, $payload, $project_id, $sponsorship_type_id){
+            function ($id, $payload, $project_id, $sponsorship_type_id) {
                 return $this->service->updateCompanyToProjectSponsorshipType
                 (
                     $project_id,
@@ -1330,9 +1389,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1379,8 +1442,9 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $company_id
      * @return mixed
      */
-    public function deleteSupportingCompanies($id, $sponsorship_type_id, $company_id){
-        return $this->_delete($company_id, function($id, $project_id, $sponsorship_type_id){
+    public function deleteSupportingCompanies($id, $sponsorship_type_id, $company_id)
+    {
+        return $this->_delete($company_id, function ($id, $project_id, $sponsorship_type_id) {
             $this->service->removeCompanyToProjectSponsorshipType($project_id, $sponsorship_type_id, $id);
         }, $id, $sponsorship_type_id);
     }
@@ -1397,9 +1461,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Read,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Read,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1447,10 +1515,11 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $company_id
      * @return mixed
      */
-    public function getSupportingCompany($id, $sponsorship_type_id, $company_id){
-        return $this->_get($sponsorship_type_id, function($id, $company_id){
+    public function getSupportingCompany($id, $sponsorship_type_id, $company_id)
+    {
+        return $this->_get($sponsorship_type_id, function ($id, $company_id) {
             $sponsorship_type = $this->project_sponsorship_type_repository->getById(intval($id));
-            if(is_null($sponsorship_type))
+            if (is_null($sponsorship_type))
                 throw new EntityNotFoundException();
             return $sponsorship_type->getSupportingCompanyById(intval($company_id));
         }, $company_id);
@@ -1468,9 +1537,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
@@ -1535,9 +1608,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Write,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Write,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1568,7 +1645,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $project_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
-    public function deleteSponsoredProjectLogo($project_id){
+    public function deleteSponsoredProjectLogo($project_id)
+    {
         return $this->processRequest(function () use ($project_id) {
             $this->service->deleteLogo(intval($project_id));
             return $this->deleted();
@@ -1589,9 +1667,13 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                 IGroup::Administrators,
             ]
         ],
-        security: [['sponsored_projects_oauth2' => [
-            SponsoredProjectScope::Read,
-        ]]],
+        security: [
+            [
+                'sponsored_projects_oauth2' => [
+                    SponsoredProjectScope::Read,
+                ]
+            ]
+        ],
         parameters: [
             new OA\Parameter(
                 name: 'access_token',
@@ -1658,8 +1740,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
         return $this->_getAll(
             function () {
                 return [
-                    'name' => ['=@', '==','@@'],
-                    'slug' => ['=@', '==','@@'],
+                    'name' => ['=@', '==', '@@'],
+                    'slug' => ['=@', '==', '@@'],
                     'is_active' => ['==']
                 ];
             },
@@ -1676,8 +1758,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
                     'id'
                 ];
             },
-            function ($filter) use($id) {
-                if($filter instanceof Filter){
+            function ($filter) use ($id) {
+                if ($filter instanceof Filter) {
                     $filter->addFilterCondition(FilterElement::makeEqual('parent_project_id', intval($id)));
                 }
                 return $filter;

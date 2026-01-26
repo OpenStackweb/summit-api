@@ -1131,6 +1131,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins,
             ]
         ],
         parameters: [
@@ -1202,6 +1204,8 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
+                IGroup::TrackChairs,
+                IGroup::TrackChairsAdmins,
             ]
         ],
         parameters: [

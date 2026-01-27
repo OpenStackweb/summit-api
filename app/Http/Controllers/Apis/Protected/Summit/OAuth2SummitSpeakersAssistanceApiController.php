@@ -1,4 +1,6 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers;
 
 /**
  * Copyright 2018 OpenStack Foundation
@@ -14,7 +16,10 @@
  **/
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
+use App\Security\SummitScopes;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -25,6 +30,7 @@ use models\oauth2\IResourceServerContext;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use services\model\ISpeakerService;
 use utils\FilterParser;
 use utils\OrderParser;
@@ -77,6 +83,69 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/speakers-assistances",
+        operationId: 'getBySummit',
+        summary: "Get all speaker assistances for a summit",
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 1),
+                description: "Page number"
+            ),
+            new OA\Parameter(
+                name: "per_page",
+                in: "query",
+                required: false,
+                schema: new OA\Schema(type: "integer", default: 10),
+                description: "Items per page"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                description: "Filter query. Available operators: id==, on_site_phone==/=@, speaker_email==/=@, speaker==/=@, is_confirmed==, registered==, confirmation_date>/</>=/<= (epoch)",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                description: "Order by field. Available fields: id, is_confirmed, confirmation_date, created, registered",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                description: "Comma-separated list of relations to expand. Available: speaker",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedPresentationSpeakerSummitAssistanceConfirmationRequestsResponse")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getBySummit($summit_id)
     {
         try {
@@ -162,6 +231,49 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/speakers-assistances/csv",
+        operationId: 'getBySummitCSV',
+        summary: "Export speaker assistances to CSV",
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                description: "Filter query. Available operators: id==, on_site_phone==/=@, speaker_email==/=@, speaker==/=@, is_confirmed==, registered==, confirmation_date>/</>=/<= (epoch)",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                description: "Order by field. Available fields: id, is_confirmed, confirmation_date, created, registered",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\MediaType(mediaType: "text/csv", schema: new OA\Schema(type: "string"))
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getBySummitCSV($summit_id){
         try {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
@@ -236,6 +348,45 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/speakers-assistances",
+        operationId: 'addSpeakerSummitAssistance',
+        summary: "Create a speaker assistance confirmation request",
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/PresentationSpeakerSummitAssistanceConfirmationRequestCreateRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationSpeakerSummitAssistanceConfirmationRequest")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function addSpeakerSummitAssistance($summit_id)
     {
         try {
@@ -288,6 +439,52 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      * @param $assistance_id
      * @return mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/speakers-assistances/{assistance_id}",
+        operationId: 'updateSpeakerSummitAssistance',
+        summary: "Update a speaker assistance confirmation request",
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "assistance_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The assistance id"
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/PresentationSpeakerSummitAssistanceConfirmationRequestUpdateRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationSpeakerSummitAssistanceConfirmationRequest")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function updateSpeakerSummitAssistance($summit_id, $assistance_id)
     {
         try {
@@ -340,6 +537,40 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      * @param $assistance_id
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/speakers-assistances/{assistance_id}",
+        operationId: 'deleteSpeakerSummitAssistance',
+        summary: "Delete a speaker assistance confirmation request",
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::WriteSummitSpeakerAssistanceData, SummitScopes::WriteSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "assistance_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The assistance id"
+            )
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function deleteSpeakerSummitAssistance($summit_id, $assistance_id)
     {
         try {
@@ -368,6 +599,50 @@ final class OAuth2SummitSpeakersAssistanceApiController extends OAuth2ProtectedC
      * @param $assistance_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/speakers-assistances/{assistance_id}",
+        operationId: 'getSpeakerSummitAssistanceBySummit',
+        summary: "Get a speaker assistance confirmation request by id",
+        security: [["summit_speaker_assistances_oauth2" => [SummitScopes::ReadAllSummitData]]],
+        tags: ["Summit Speakers Assistances"],
+        x: [
+            "required-groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The summit id"
+            ),
+            new OA\Parameter(
+                name: "assistance_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer"),
+                description: "The assistance id"
+            ),
+            new OA\Parameter(
+                name: "expand",
+                in: "query",
+                description: "Comma-separated list of relations to expand. Available: speaker",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PresentationSpeakerSummitAssistanceConfirmationRequest")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getSpeakerSummitAssistanceBySummit($summit_id, $assistance_id)
     {
         try {

@@ -267,7 +267,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: 200,
                 description: 'Success',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitScheduleConfigsResponse')
             ),
@@ -332,7 +332,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: 200,
                 description: 'Success',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleConfig')
             ),
@@ -378,7 +378,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_CREATED,
+                response: 201,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleConfig')
             ),
@@ -433,7 +433,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: 200,
                 description: 'Success',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleConfig')
             ),
@@ -522,7 +522,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
             )
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Success with an empty response body'),
+            new OA\Response(response: 200, description: 'Success with an empty response body'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
         ]
@@ -581,7 +581,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_CREATED,
+                response: 201,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleFilterElementConfig')
             ),
@@ -668,7 +668,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: 200,
                 description: 'Success',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitScheduleFilterElementConfig')
             ),
@@ -727,7 +727,7 @@ final class OAuth2SummitScheduleSettingsApiController extends OAuth2ProtectedCon
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_CREATED,
+                response: 201,
                 description: 'Created',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitScheduleConfigsResponse')
             ),

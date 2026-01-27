@@ -518,12 +518,10 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                         'access_level_type_name' => 'sometimes|string',
                         'access_level_type_id' => 'sometimes|integer',
                         'ticket_type_id' => 'sometimes|integer',
-                        'view_type_id' => 'sometimes|integer',
                         'has_owner' => 'sometimes|boolean',
                         'owner_status' => 'sometimes|string|in:' . implode(',', SummitAttendee::AllowedStatus),
                         'has_badge' => 'sometimes|boolean',
                         'promo_code_id' => 'sometimes|integer',
-                        'promo_code' => 'sometimes|string',
                         'promo_code_description' => 'sometimes|string',
                         'promo_code_tag_id' => 'sometimes|integer',
                         'promo_code_tag' => 'sometimes|string',
@@ -1050,9 +1048,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Ticket refunded successfully',
-                content: new OA\JsonContent(type: 'object')
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeTicket')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
@@ -1176,9 +1174,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Badge created successfully',
-                content: new OA\JsonContent(type: 'object')
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or ticket not found'),
@@ -1263,9 +1261,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Badge type updated successfully',
-                content: new OA\JsonContent(type: 'object')
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or badge type not found'),
@@ -1309,9 +1307,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Feature added successfully',
-                content: new OA\JsonContent(type: 'object')
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or feature not found'),
@@ -1355,9 +1353,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Feature removed successfully',
-                content: new OA\JsonContent(type: 'object')
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or feature not found'),
@@ -1405,9 +1403,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Badge printed successfully',
-                content: new OA\JsonContent(type: 'object')
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
@@ -1454,9 +1452,9 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         ),
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Badge printed successfully',
-                content: new OA\JsonContent(type: 'object')
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),

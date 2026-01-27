@@ -663,18 +663,6 @@ final class OAuth2SummitBadgeScanApiController
 
     use GetSummitChildElementById;
 
-    /**
-     * @inheritDoc
-     */
-    protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
-    {
-        $current_member = $this->resource_server_context->getCurrentUser();
-        if (is_null($current_member))
-            throw new HTTP403ForbiddenException();
-
-        return $this->service->getBadgeScan($summit, $current_member, $child_id);
-    }
-
     #[OA\Get(
         path: "/api/v1/summits/{id}/badge-scans/{scan_id}",
         summary: "Get a badge scan by id",
@@ -711,13 +699,6 @@ final class OAuth2SummitBadgeScanApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($summit_id, $scan_id){
-        return $this->processRequest(function() use($summit_id, $scan_id){
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            return $this->_get($summit, $scan_id);
-        });
-    }
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/badge-scans/{scan_id}",
@@ -759,11 +740,16 @@ final class OAuth2SummitBadgeScanApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function update($summit_id, $scan_id){
-        return $this->processRequest(function() use($summit_id, $scan_id){
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            return $this->_update($summit, $scan_id, $this->getJsonPayload($this->getUpdateValidationRules()));
-        });
+    /**
+     * @inheritDoc
+     */
+    protected function getChildFromSummit(Summit $summit, $child_id): ?IEntity
+    {
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member))
+            throw new HTTP403ForbiddenException();
+
+        return $this->service->getBadgeScan($summit, $current_member, $child_id);
     }
+
 }

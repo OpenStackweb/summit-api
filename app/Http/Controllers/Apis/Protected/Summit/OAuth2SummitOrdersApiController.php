@@ -246,10 +246,42 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      */
     #[OA\Put(
         path: '/api/public/v1/summits/{id}/orders/{hash}/checkout',
+        summary: 'Checkout a reserved order (Public)',
+        description: 'Processes payment and completes an order reservation',
+        operationId: 'checkoutPublic',
+        tags: ['Orders (Public)'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/CheckoutOrderRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Order checked out successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitOrderCheckout')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or order not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+        ]
+    )]
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/orders/{hash}/checkout',
         summary: 'Checkout a reserved order',
         description: 'Processes payment and completes an order reservation',
         operationId: 'checkout',
-        tags: ['Orders (Public)'],
+        security: [
+            [
+                'summit_orders_auth' => [
+                    SummitScopes::UpdateMyRegistrationOrders,
+                ]
+            ]
+        ],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -308,10 +340,36 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      */
     #[OA\Get(
         path: '/api/public/v1/summits/{id}/orders/{hash}/tickets/mine',
+        summary: 'Get my ticket by order hash (Public)',
+        description: 'Returns ticket information for the current user using order hash',
+        operationId: 'getMyTicketByOrderHashPublic',
+        tags: ['Orders (Public)'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Ticket information',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeTicketGuest')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or order not found'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/orders/{hash}/tickets/mine',
         summary: 'Get my ticket by order hash',
         description: 'Returns ticket information for the current user using order hash',
         operationId: 'getMyTicketByOrderHash',
-        tags: ['Orders (Public)'],
+        security: [
+            [
+                'summit_orders_auth' => [
+                    SummitScopes::ReadMyRegistrationOrders,
+                ]
+            ]
+        ],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -351,10 +409,32 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      */
     #[OA\Delete(
         path: '/api/public/v1/summits/{id}/orders/{hash}',
+        summary: 'Cancel order by hash (Public)',
+        description: 'Cancels an order using its hash',
+        operationId: 'cancelPublic',
+        tags: ['Orders (Public)'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Order cancelled successfully'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or order not found'),
+        ]
+    )]
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/orders/{hash}',
         summary: 'Cancel order by hash',
         description: 'Cancels an order using its hash',
         operationId: 'cancel',
-        tags: ['Orders (Public)'],
+        security: [
+            [
+                'summit_orders_auth' => [
+                    SummitScopes::DeleteMyRegistrationOrders,
+                ]
+            ]
+        ],
+        tags: ['Orders'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -609,7 +689,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      */
 
     #[OA\Get(
-        path: '/api/v1/orders/me',
+        path: '/api/v1/summits/all/orders/me',
         summary: 'Get all my orders across all summits',
         description: 'Returns paginated list of current user orders across all summits',
         operationId: 'getAllMyOrders',
@@ -2093,9 +2173,6 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter criteria', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Sort order', schema: new OA\Schema(type: 'string')),
         ],
-        requestBody: new OA\RequestBody(
-            content: new OA\JsonContent(ref: '#/components/schemas/GetMyTicketsByOrderIdRequest')
-        ),
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
@@ -2169,9 +2246,9 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
                     $filter->addFilterCondition(FilterElement::makeEqual('order_id', intval($order_id)));
                     $filter->addFilterCondition(FilterElement::makeEqual('order_owner_id', $owner->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('status', IOrderConstants::PaidStatus));
-                    if($filter->hasFilter("assigned_to")){
+                    if($filter->hasFilter("assigned_to")) {
                         $assigned_to = $filter->getValue("assigned_to")[0];
-                        if(in_array($assigned_to, ['Me','SomeoneElse'])){
+                        if(in_array($assigned_to, ['Me','SomeoneElse'])) {
                             $filter->addFilterCondition(FilterElement::makeEqual('owner_member_id', $owner->getId()));
                             $filter->addFilterCondition(FilterElement::makeEqual('owner_member_email', $owner->getEmail()));
                         }
@@ -2182,7 +2259,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
             function () {
                 return ISummitOrderSerializerTypes::AdminType;
             }
-            , null, null,
+             , null, null,
             function ($page, $per_page, $filter, $order, $applyExtraFilters) {
                 return $this->ticket_repository->getAllByPage(
                     new PagingInfo($page, $per_page),
@@ -2541,22 +2618,13 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     #[OA\Put(
         path: '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/delegate',
         summary: 'Delegate ticket to another attendee',
-        description: 'Delegates/transfers ticket ownership to another attendee. Admin access required.',
+        description: 'Delegates/transfers ticket ownership to another attendee.',
         operationId: 'delegateTicket',
         security: [
             [
                 'summit_orders_auth' => [
-                    SummitScopes::WriteSummitData,
-                    SummitScopes::UpdateRegistrationOrders,
+                    SummitScopes::UpdateMyRegistrationOrders,
                 ]
-            ]
-        ],
-        x: [
-            'authz_groups' => [
-                IGroup::SuperAdmins,
-                IGroup::Administrators,
-                IGroup::SummitAdministrators,
-                IGroup::SummitRegistrationAdmins,
             ]
         ],
         tags: ['Orders'],

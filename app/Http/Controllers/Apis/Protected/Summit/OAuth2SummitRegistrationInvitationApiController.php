@@ -1,4 +1,5 @@
 <?php namespace App\Http\Controllers;
+
 /**
  * Copyright 2020 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +17,13 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Jobs\Emails\Registration\Invitations\InviteSummitRegistrationEmail;
 use App\Jobs\Emails\Registration\Invitations\ReInviteSummitRegistrationEmail;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitRegistrationInvitationRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitRegistrationInvitationService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
 use models\exceptions\EntityNotFoundException;
@@ -30,6 +34,7 @@ use models\summit\Summit;
 use models\summit\SummitRegistrationInvitation;
 use models\utils\IEntity;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
@@ -78,6 +83,49 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/registration-invitations/csv",
+        operationId: 'ingestInvitations',
+        summary: "Import registration invitations from CSV file",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitRegistrationInvitationCSVImportRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function ingestInvitations(LaravelRequest $request, $summit_id)
     {
         return $this->processRequest(function () use ($request, $summit_id) {
@@ -114,6 +162,42 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @param $token
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/all/registration-invitations/{token}",
+        operationId: 'getInvitationByToken',
+        summary: "Get a registration invitation by token",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadMyRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: "token",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getInvitationByToken($token)
     {
         return $this->processRequest(function () use ($token) {
@@ -154,8 +238,126 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
 
     /**
      * @param $summit_id
+     * @param $invitation_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/registration-invitations/{invitation_id}",
+        operationId: 'getRegistrationInvitation',
+        summary: "Get a registration invitation by id",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: "invitation_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // public function get($summit_id, $invitation_id)
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/registration-invitations",
+        operationId: 'getAllRegistrationInvitationsBySummit',
+        summary: "Get all registration invitations for a summit",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1),
+                description: 'Page number'
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10),
+                description: 'Items per page'
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                description: "Filter query. Available operators: id==, not_id==, email@@/=@/==, first_name@@/=@/==, last_name@@/=@/==, full_name@@/=@/==, is_accepted==, is_sent==, ticket_types_id==, tags@@/=@/==, tags_id==, status==",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                description: "Order by field. Available fields: id, email, first_name, last_name, full_name, status",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/PaginatedSummitRegistrationInvitationsResponse")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAllBySummit($summit_id)
     {
 
@@ -221,6 +423,64 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/registration-invitations/csv",
+        operationId: 'getAllRegistrationInvitationsBySummitCSV',
+        summary: "Export registration invitations to CSV",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                description: "Filter query. Available operators: id==, not_id==, email@@/=@/==, first_name@@/=@/==, last_name@@/=@/==, full_name@@/=@/==, is_accepted==, is_sent==, ticket_types_id==, tags@@/=@/==, tags_id==, status==",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "order",
+                in: "query",
+                description: "Order by field. Available fields: id, email, first_name, last_name, full_name, status",
+                schema: new OA\Schema(type: "string")
+            ),
+            new OA\Parameter(
+                name: "columns",
+                in: "query",
+                description: "Comma-separated list of columns to include. Available columns: id, email, first_name, last_name, member_id, order_id, summit_id, accepted_date, is_accepted, is_sent, allowed_ticket_types, tags, status",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\MediaType(mediaType: "text/csv", schema: new OA\Schema(type: "string"))
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAllBySummitCSV($summit_id)
     {
 
@@ -344,6 +604,102 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
     }
 
     /**
+     * @param $summit_id
+     * @return mixed
+     */
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/registration-invitations",
+        operationId: 'addRegistrationInvitation',
+        summary: "Create a registration invitation",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitRegistrationInvitationCreateRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // public function add($summit_id)
+
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/registration-invitations/{invitation_id}",
+        operationId: 'deleteRegistrationInvitation',
+        summary: "Delete a registration invitation",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: "invitation_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // public function delete($summit_id, $invitation_id)
+
+    /**
      * @inheritDoc
      */
     function getAddValidationRules(array $payload): array
@@ -371,8 +727,103 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
 
     /**
      * @param $summit_id
+     * @param $invitation_id
+     * @return mixed
+     */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/registration-invitations/{invitation_id}",
+        operationId: 'updateRegistrationInvitation',
+        summary: "Update a registration invitation",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: "invitation_id",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SummitRegistrationInvitationUpdateRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // public function update($summit_id, $invitation_id)
+
+    /**
+     * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/registration-invitations/all",
+        operationId: 'deleteAllRegistrationInvitations',
+        summary: "Delete all registration invitations for a summit",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function deleteAll($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -388,6 +839,55 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/registration-invitations/all/send",
+        operationId: 'sendRegistrationInvitations',
+        summary: "Send registration invitation emails",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationInvitations,
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins,
+            ]
+        ],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                description: "Filter query. Available operators: id==, not_id==, email@@/=@/==, first_name@@/=@/==, last_name@@/=@/==, full_name@@/=@/==, is_accepted==, is_sent==, ticket_types_id==, tags@@/=@/==, tags_id==, status==",
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "application/json",
+                schema: new OA\Schema(ref: "#/components/schemas/SendRegistrationInvitationsRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function send($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -469,6 +969,35 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @param $summit_id
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/registration-invitations/me",
+        operationId: 'getMyRegistrationInvitation',
+        summary: "Get my registration invitation for the current user",
+        security: [['summit_registration_invitation_oauth2' => [
+            SummitScopes::ReadMyRegistrationInvitations,
+        ]]],
+        tags: ["Summit Registration Invitations"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     function getMyInvitation($summit_id)
     {
 
@@ -499,6 +1028,36 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @param $token
      * @return mixed
      */
+    #[OA\Get(
+        path: "/api/public/v1/summits/{id}/registration-invitations/{token}",
+        operationId: 'getInvitationBySummitAndToken',
+        summary: "Get a registration invitation by summit and token (public endpoint)",
+        tags: ["Summit Registration Invitations (Public)"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: "token",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: "#/components/schemas/SummitRegistrationInvitation")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     function getInvitationBySummitAndToken($summit_id, $token)
     {
         return $this->processRequest(function () use ($summit_id, $token) {
@@ -522,6 +1081,32 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
      * @param $token
      * @return mixed
      */
+    #[OA\Delete(
+        path: "/api/public/v1/summits/{id}/registration-invitations/{token}/reject",
+        operationId: 'rejectInvitationBySummitAndToken',
+        summary: "Reject a registration invitation by summit and token (public endpoint)",
+        tags: ["Summit Registration Invitations (Public)"],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: "token",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "string")
+            )
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     function rejectInvitationBySummitAndToken($summit_id, $token)
     {
         return $this->processRequest(function () use ($summit_id, $token) {

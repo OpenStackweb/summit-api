@@ -896,13 +896,6 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         ],
         parameters: [
             new OA\Parameter(
-                name: "access_token",
-                in: "query",
-                required: false,
-                description: "OAuth2 access token (alternative to Authorization: Bearer)",
-                schema: new OA\Schema(type: "string", example: "eyJhbGciOi..."),
-            ),
-            new OA\Parameter(
                 name: "id",
                 in: "path",
                 required: true,

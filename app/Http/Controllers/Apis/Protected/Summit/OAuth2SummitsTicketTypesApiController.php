@@ -207,7 +207,7 @@ final class OAuth2SummitsTicketTypesApiController extends OAuth2ProtectedControl
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/ticket-types/csv",
-        operationId: 'getAllTicketTypesBySummit',
+        operationId: 'getAllTicketTypesBySummitCSV',
         summary: "Get all ticket types for a summit (public audience only)",
         security: [["summit_ticket_types_oauth2" => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         tags: ["Summit Ticket Types"],

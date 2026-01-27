@@ -107,10 +107,46 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         $this->service = $service;
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}',
+        operationId: 'getSummitAttendeeTicketById',
+        summary: 'Get a specific ticket for a summit by ticket ID',
+        description: '',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+            IGroup::SummitAccessControl
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relationships, allowed values: applied_taxes, refund_requests', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships, allowed values: owner, order, ticket_type, badge, promo_code, refund_requests, applied_taxes', schema: new OA\Schema(type: 'string')),
+
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeTicket')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/tickets',
-        operationId: 'getAllTickets',
+        operationId: 'getAllSummitAttendeeTickets',
         summary: 'Get all tickets for a summit',
         description: 'Returns a paginated list of tickets for the specified summit with filtering and sorting capabilities',
         security: [['summit_tickets_oauth2' => [

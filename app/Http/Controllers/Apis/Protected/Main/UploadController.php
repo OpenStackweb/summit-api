@@ -30,45 +30,6 @@ use Pion\Laravel\ChunkUpload\Receiver\FileReceiver;
  */
 class UploadController extends BaseController
 {
-    #[OA\Post(
-        path: '/api/v1/files/upload',
-        summary: 'Upload file with chunked support',
-        description: 'Handles file uploads with support for chunked uploads. Returns file metadata on completion or upload progress for chunks.',
-        security: [['bearer' => []]],
-        tags: ['files'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\MediaType(
-                mediaType: 'multipart/form-data',
-                schema: new OA\Schema(
-                    required: ['file'],
-                    properties: [
-                        new OA\Property(
-                            property: 'file',
-                            type: 'string',
-                            format: 'binary',
-                            description: 'File to upload'
-                        ),
-                    ]
-                )
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: Response::HTTP_OK,
-                description: 'File uploaded successfully or chunk progress',
-                content: new OA\JsonContent(
-                    oneOf: [
-                        new OA\Schema(ref: '#/components/schemas/FileUploadCompleteResponse'),
-                        new OA\Schema(ref: '#/components/schemas/FileUploadProgressResponse'),
-                    ]
-                )
-            ),
-            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
-            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
-            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
-        ]
-    )]
     public function upload(Request $request) {
         // create the file receiver
         $receiver = new FileReceiver("file", $request, HandlerFactory::classFromRequest($request));

@@ -1,6 +1,4 @@
-<?php
-
-namespace App\Http\Controllers;
+<?php namespace App\Http\Controllers;
 
 /**
  * Copyright 2019 OpenStack Foundation
@@ -46,9 +44,6 @@ use utils\Filter;
 use utils\FilterElement;
 use utils\PagingInfo;
 
-class OAuth2SummitOrdersApiControllerAuthSchema
-{
-}
 /**
  * Class OAuth2SummitOrdersApiController
  * @package App\Http\Controllers
@@ -102,13 +97,14 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
      */
     public function __construct
     (
-        ISummitOrderRepository $repository,
-        ISummitRepository $summit_repository,
+        ISummitOrderRepository          $repository,
+        ISummitRepository               $summit_repository,
         ISummitAttendeeTicketRepository $ticket_repository,
-        ISummitRefundRequestRepository $refund_request_repository,
-        ISummitOrderService $service,
-        IResourceServerContext $resource_server_context
-    ) {
+        ISummitRefundRequestRepository  $refund_request_repository,
+        ISummitOrderService             $service,
+        IResourceServerContext          $resource_server_context
+    )
+    {
         parent::__construct($resource_server_context);
         $this->repository = $repository;
         $this->summit_repository = $summit_repository;
@@ -184,8 +180,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $owner = $this->getResourceServerContext()->getCurrentUser();
 
@@ -234,15 +229,13 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
             (
                 SerializerRegistry::getInstance()->getSerializer
                 (
-                    $order,
-                    ISummitOrderSerializerTypes::ReservationType
+                    $order, ISummitOrderSerializerTypes::ReservationType
                 )->serialize
-                    (
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    )
-            );
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                ));
         });
     }
 
@@ -282,8 +275,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id, $hash) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'billing_address_1' => 'nullable|sometimes|string|max:255',
@@ -302,10 +294,10 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
                 $order,
                 ISummitOrderSerializerTypes::CheckOutType
             )->serialize(
-                    SerializerUtils::getExpand(),
-                    SerializerUtils::getFields(),
-                    SerializerUtils::getRelations()
-                ));
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         });
     }
 
@@ -337,19 +329,17 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $hash) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $ticket = $this->service->getMyTicketByOrderHash($summit, $hash);
 
-            return $this->created(
-                SerializerRegistry::getInstance()
-                    ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::GuestEdition)
-                    ->serialize(
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    )
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::GuestEdition)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
             );
         });
     }
@@ -378,8 +368,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $hash) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
             $this->service->cancel($summit, $hash);
             return $this->deleted();
         });
@@ -432,23 +421,22 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     public function getAllBySummit($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit))
-            return $this->error404();
+        if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(
             function () {
                 return [
-                    'number' => ['=@', '==', '@@'],
-                    'owner_name' => ['=@', '==', '@@'],
-                    'owner_email' => ['=@', '==', '@@'],
-                    'owner_company' => ['=@', '==', '@@'],
-                    'ticket_owner_name' => ['=@', '==', '@@'],
-                    'ticket_owner_email' => ['=@', '==', '@@'],
-                    'ticket_number' => ['=@', '==', '@@'],
+                    'number' => ['=@', '==','@@'],
+                    'owner_name' => ['=@', '==','@@'],
+                    'owner_email' => ['=@', '==','@@'],
+                    'owner_company' => ['=@', '==','@@'],
+                    'ticket_owner_name' => ['=@', '==','@@'],
+                    'ticket_owner_email' => ['=@', '==','@@'],
+                    'ticket_number' => ['=@', '==','@@'],
                     'summit_id' => ['=='],
                     'owner_id' => ['=='],
                     'status' => ['==', '<>'],
-                    'created' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'created' => ['>', '<', '<=', '>=', '==','[]'],
                     'amount' => ['==', '<>', '>=', '>'],
                     'payment_method' => ['==']
                 ];
@@ -546,23 +534,22 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     public function getAllBySummitCSV($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit))
-            return $this->error404();
+        if (is_null($summit)) return $this->error404();
 
         return $this->_getAllCSV(
             function () {
                 return [
-                    'number' => ['=@', '==', '@@'],
-                    'owner_name' => ['=@', '==', '@@'],
-                    'owner_email' => ['=@', '==', '@@'],
-                    'owner_company' => ['=@', '==', '@@'],
-                    'ticket_owner_name' => ['=@', '==', '@@'],
-                    'ticket_owner_email' => ['=@', '==', '@@'],
-                    'ticket_number' => ['=@', '==', '@@'],
+                    'number' => ['=@', '==','@@'],
+                    'owner_name' => ['=@', '==','@@'],
+                    'owner_email' => ['=@', '==','@@'],
+                    'owner_company' => ['=@', '==','@@'],
+                    'ticket_owner_name' => ['=@', '==','@@'],
+                    'ticket_owner_email' => ['=@', '==','@@'],
+                    'ticket_number' => ['=@', '==','@@'],
                     'summit_id' => ['=='],
                     'owner_id' => ['=='],
                     'status' => ['==', '<>'],
-                    'created' => ['>', '<', '<=', '>=', '==', '[]'],
+                    'created' => ['>', '<', '<=', '>=', '==','[]'],
                     'amount' => ['==', '<>', '>=', '>'],
                     'payment_method' => ['==']
                 ];
@@ -691,21 +678,21 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         $owner = $this->getResourceServerContext()->getCurrentUser();
 
-        return $this->withReplica(function () use ($owner, $summit_id) {
+        return $this->withReplica(function() use ($owner, $summit_id) {
             return $this->_getAll(
                 function () {
                     return [
-                        'number' => ['=@', '==', '@@'],
+                        'number' => ['=@', '==','@@'],
                         'summit_id' => ['=='],
                         'status' => ['==', '<>'],
                         'owner_id' => ['=='],
-                        'created' => ['>', '<', '<=', '>=', '==', '[]'],
-                        'tickets_number' => ['=@', '==', '@@'],
-                        'tickets_assigned_to' => ['=='],
-                        'tickets_owner_status' => ['=='],
-                        'tickets_owner_email' => ['=@', '==', '@@'],
-                        'tickets_badge_features_id' => ['=='],
-                        'tickets_type_id' => ['=='],
+                        'created' => ['>', '<', '<=', '>=', '==','[]'],
+                        'tickets_number' => ['=@', '==','@@'],
+                        'tickets_assigned_to' =>  ['=='],
+                        'tickets_owner_status' =>  ['=='],
+                        'tickets_owner_email' =>  ['=@', '==','@@'],
+                        'tickets_badge_features_id' =>  ['=='],
+                        'tickets_type_id' =>  ['=='],
                         'amount' => ['==', '<>', '>=', '>'],
                         'tickets_promo_code' => ['=@', '=='],
                     ];
@@ -745,9 +732,9 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
                             $filter->addFilterCondition(FilterElement::makeEqual('summit_id', intval($summit_id)));
                         }
                         $filter->addFilterCondition(FilterElement::makeEqual('owner_id', $owner->getId()));
-                        if ($filter->hasFilter("tickets_assigned_to")) {
+                        if($filter->hasFilter("tickets_assigned_to")){
                             $assigned_to = $filter->getValue("tickets_assigned_to")[0];
-                            if (in_array($assigned_to, ['Me', 'SomeoneElse'])) {
+                            if(in_array($assigned_to, ['Me', 'SomeoneElse'])){
                                 $filter->addFilterCondition(FilterElement::makeEqual('tickets_owner_member_id', $owner->getId()));
                                 $filter->addFilterCondition(FilterElement::makeEqual('tickets_owner_member_email', $owner->getEmail()));
                             }
@@ -813,12 +800,12 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
             if ($order->getOwnerEmail() != $current_user->getEmail())
                 $isOrderOwner = false;
 
-            return $this->withReplica(function () use ($order, $ticket_id, $isOrderOwner, $current_user) {
+            return $this->withReplica(function() use ($order, $ticket_id, $isOrderOwner, $current_user) {
                 $ticket = $order->getTicketById(intval($ticket_id));
                 if (!$ticket instanceof SummitAttendeeTicket)
                     throw new EntityNotFoundException("Ticket not found.");
 
-                if (!$ticket->hasOwner() && !$isOrderOwner)
+                if(!$ticket->hasOwner() && !$isOrderOwner)
                     throw new EntityNotFoundException("Order not found.");
 
                 $isTicketOwner = true;
@@ -833,16 +820,16 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
                     )
                 );
 
-                if (!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail())
+                if(!empty($ticketOwnerEmail) && $ticketOwnerEmail != $current_user->getEmail())
                     $isTicketOwner = false;
 
-                if (!$isTicketOwner) {
+                if(!$isTicketOwner){
                     // check if we are the manager
                     $isTicketOwner = $ticket->hasOwner() && $ticket->getOwner()->isManagedBy($current_user);
-                    Log::debug(sprintf("OAuth2SummitOrdersApiController::getMyTicketById isTicketOwner %b (manager)", $isTicketOwner));
+                    Log::debug(sprintf("OAuth2SummitOrdersApiController::getMyTicketById isTicketOwner %b (manager)" , $isTicketOwner));
                 }
 
-                if (!$isOrderOwner && !$isTicketOwner)
+                if(!$isOrderOwner && !$isTicketOwner)
                     throw new EntityNotFoundException("Ticket not found.");
 
                 return $this->ok(SerializerRegistry::getInstance()
@@ -918,14 +905,13 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
 
             $order = $this->service->updateMyOrder($current_user, intval($order_id), $payload);
 
-            return $this->created(
-                SerializerRegistry::getInstance()
-                    ->getSerializer($order, ISummitOrderSerializerTypes::CheckOutType)
-                    ->serialize(
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    )
+            return $this->created(SerializerRegistry::getInstance()
+                ->getSerializer($order, ISummitOrderSerializerTypes::CheckOutType)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
             );
         });
     }
@@ -986,14 +972,13 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
 
             $ticket = $this->service->cancelRequestRefundTicket(intval($order_id), intval($ticket_id), $current_user, trim($payload['notes'] ?? ''));
 
-            return $this->updated(
-                SerializerRegistry::getInstance()->getSerializer($ticket)
-                    ->serialize
-                    (
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    )
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)
+                ->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
             );
         });
     }
@@ -1335,8 +1320,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'ticket_type_id' => 'nullable|integer',
@@ -1416,8 +1400,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($summit_id, $order_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $payload = $this->getJsonPayload([
                 'ticket_type_id' => 'required|integer',
@@ -1484,13 +1467,12 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
 
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             $ticket = $this->service->revokeTicket($current_user, intval($order_id), intval($ticket_id));
-            return $this->updated(
-                SerializerRegistry::getInstance()->getSerializer($ticket)
-                    ->serialize(
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations()
-                    )
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer($ticket)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
             );
 
         });
@@ -1547,8 +1529,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
             $content = $this->service->renderTicketByFormat(intval($ticket_id), IRenderersFormats::PDFFormat, null, intval($order_id), $summit);
             return $this->pdf('ticket_' . $ticket_id . '.pdf', $content);
         });
@@ -2145,15 +2126,15 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
             function () {
                 return [
                     'number' => ['=@', '==', '@@'],
-                    'owner_email' => ['=@', '==', '@@'],
+                    'owner_email' =>  ['=@', '==', '@@'],
                     'order_id' => ['=='],
                     'order_owner_id' => ['=='],
                     'is_active' => ['=='],
-                    'assigned_to' => ['=='],
-                    'owner_status' => ['=='],
-                    'badge_features_id' => ['=='],
+                    'assigned_to' =>  ['=='],
+                    'owner_status' =>  ['=='],
+                    'badge_features_id' =>  ['=='],
                     'final_amount' => ['==', '<>', '>=', '>'],
-                    'ticket_type_id' => ['=='],
+                    'ticket_type_id' =>  ['=='],
                     'promo_code' => ['=@', '=='],
                 ];
             },
@@ -2188,9 +2169,9 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
                     $filter->addFilterCondition(FilterElement::makeEqual('order_id', intval($order_id)));
                     $filter->addFilterCondition(FilterElement::makeEqual('order_owner_id', $owner->getId()));
                     $filter->addFilterCondition(FilterElement::makeEqual('status', IOrderConstants::PaidStatus));
-                    if ($filter->hasFilter("assigned_to")) {
+                    if($filter->hasFilter("assigned_to")){
                         $assigned_to = $filter->getValue("assigned_to")[0];
-                        if (in_array($assigned_to, ['Me', 'SomeoneElse'])) {
+                        if(in_array($assigned_to, ['Me','SomeoneElse'])){
                             $filter->addFilterCondition(FilterElement::makeEqual('owner_member_id', $owner->getId()));
                             $filter->addFilterCondition(FilterElement::makeEqual('owner_member_email', $owner->getEmail()));
                         }
@@ -2201,9 +2182,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
             function () {
                 return ISummitOrderSerializerTypes::AdminType;
             }
-            ,
-            null,
-            null,
+            , null, null,
             function ($page, $per_page, $filter, $order, $applyExtraFilters) {
                 return $this->ticket_repository->getAllByPage(
                     new PagingInfo($page, $per_page),
@@ -2389,8 +2368,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $ticket = $this->service->activateTicket($summit, intval($order_id), intval($ticket_id));
             return $this->updated(SerializerRegistry::getInstance()
@@ -2451,8 +2429,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
             $ticket = $this->service->deActivateTicket($summit, intval($order_id), intval($ticket_id));
             return $this->updated(SerializerRegistry::getInstance()
                 ->getSerializer($ticket, ISummitAttendeeTicketSerializerTypes::AdminType)
@@ -2511,8 +2488,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     public function getAllRefundApprovedRequests($summit_id, $order_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-        if (is_null($summit))
-            return $this->error404();
+        if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(
             function () {
@@ -2610,8 +2586,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id, $order_id, $ticket_id) {
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $current_user = $this->getResourceServerContext()->getCurrentUser();
             if (is_null($current_user))

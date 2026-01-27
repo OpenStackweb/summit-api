@@ -613,13 +613,6 @@ final class OAuth2SummitBadgeScanApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function add($summit_id){
-        return $this->processRequest(function() use($summit_id){
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            return $this->_add($summit, $this->getJsonPayload($this->getAddValidationRules([])));
-        });
-    }
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/badge-scans/checkin",

@@ -335,10 +335,6 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
         ]
     )]
-    public function add()
-    {
-        return parent::add();
-    }
 
     #[OA\Get(
         path: "/api/public/v1/sponsored-projects/{id}",
@@ -405,10 +401,6 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($id)
-    {
-        return parent::get($id);
-    }
 
     #[OA\Put(
         path: "/api/v1/sponsored-projects/{id}",
@@ -461,10 +453,6 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
         ]
     )]
-    public function update($id)
-    {
-        return parent::update($id);
-    }
 
     #[OA\Delete(
         path: "/api/v1/sponsored-projects/{id}",
@@ -511,10 +499,6 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function delete($id)
-    {
-        return parent::delete($id);
-    }
 
     // sponsorship types
 
@@ -1354,16 +1338,14 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $company_id
      * @return mixed
      */
-    public function updateSupportingCompanies($id, $sponsorship_type_id, $company_id)
-    {
-        return $this->_update(
-            $company_id,
-            function ($payload) {
+     public function updateSupportingCompanies($id, $sponsorship_type_id, $company_id){
+        return $this->_update($company_id,
+            function($payload){
                 return [
                     'order' => 'sometimes|integer|min:1',
                 ];
             },
-            function ($id, $payload, $project_id, $sponsorship_type_id) {
+            function($id, $payload, $project_id, $sponsorship_type_id){
                 return $this->service->updateCompanyToProjectSponsorshipType
                 (
                     $project_id,
@@ -1442,9 +1424,8 @@ final class OAuth2SponsoredProjectApiController extends OAuth2ProtectedControlle
      * @param $company_id
      * @return mixed
      */
-    public function deleteSupportingCompanies($id, $sponsorship_type_id, $company_id)
-    {
-        return $this->_delete($company_id, function ($id, $project_id, $sponsorship_type_id) {
+    public function deleteSupportingCompanies($id, $sponsorship_type_id, $company_id){
+        return $this->_delete($company_id, function($id, $project_id, $sponsorship_type_id){
             $this->service->removeCompanyToProjectSponsorshipType($project_id, $sponsorship_type_id, $id);
         }, $id, $sponsorship_type_id);
     }

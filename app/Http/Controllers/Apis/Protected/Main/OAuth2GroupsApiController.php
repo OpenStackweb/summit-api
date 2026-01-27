@@ -110,7 +110,7 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Success - Returns paginated list of groups',
                 content: new OA\JsonContent(ref: '#/components/schemas/PaginatedGroupsResponse')
             ),

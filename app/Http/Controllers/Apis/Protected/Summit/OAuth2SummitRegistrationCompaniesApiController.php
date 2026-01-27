@@ -68,6 +68,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         path: "/api/v1/summits/{id}/registration-companies",
         summary: "Get all registration companies for a summit",
         description: "Returns list of companies that have registered attendees for this summit",
+        operationId: "getAllRegistrationCompaniesBySummit",
         security: [
             [
                 "registration_companies_oauth2" => [
@@ -143,6 +144,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         path: "/api/v1/summits/{id}/registration-companies/{company_id}",
         summary: "Add a company to summit registration companies",
         description: "Associates a company with the summit for registration purposes (requires admin privileges)",
+        operationId: "addRegistrationCompany",
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -184,6 +186,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         path: "/api/v1/summits/{id}/registration-companies/{company_id}",
         summary: "Remove a company from summit registration companies",
         description: "Disassociates a company from the summit registration (requires admin privileges)",
+        operationId: "deleteRegistrationCompany",
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,
@@ -225,6 +228,7 @@ final class OAuth2SummitRegistrationCompaniesApiController extends OAuth2Protect
         path: "/api/v1/summits/{id}/registration-companies/csv",
         summary: "Import registration companies from CSV file",
         description: "Bulk import companies for summit registration from a CSV file (requires admin privileges)",
+        operationId: "importRegistrationCompanies",
         x: [
             'required-groups' => [
                 IGroup::SuperAdmins,

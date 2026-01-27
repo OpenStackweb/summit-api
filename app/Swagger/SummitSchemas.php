@@ -4,6 +4,7 @@ namespace App\Swagger\schemas;
 
 use models\summit\ISponsorshipTypeConstants;
 use OpenApi\Attributes as OA;
+
 #[OA\Schema(
     schema: 'SummitScheduleConfigContent',
     type: 'object',

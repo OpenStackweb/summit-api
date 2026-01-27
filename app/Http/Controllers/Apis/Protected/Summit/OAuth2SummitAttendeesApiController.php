@@ -508,10 +508,6 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_NOT_IMPLEMENTED, description: 'Not Implemented'),
         ]
     )]
-    public function checkingAttendeeOnEvent($id, $attendee_id, $event_id)
-    {
-        return $this->error501();
-    }
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/attendees',

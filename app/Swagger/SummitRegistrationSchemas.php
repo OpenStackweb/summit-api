@@ -1052,7 +1052,7 @@ class SummitBadgeTypeUpdateRequestSchema
         )
     ]
 )]
-class PaginatedSummitAttendeeTicketsResponse
+class PaginatedSummitAttendeeTicketsResponseSchema
 {
 }
 
@@ -1065,7 +1065,7 @@ class PaginatedSummitAttendeeTicketsResponse
         new OA\Property(property: 'notes', type: 'string', maxLength: 255, description: 'Refund notes'),
     ]
 )]
-class RefundTicketRequest
+class RefundTicketRequestSchema
 {
 }
 
@@ -1081,7 +1081,7 @@ class RefundTicketRequest
         ),
     ]
 )]
-class CreateBadgeRequest
+class CreateBadgeRequestSchema
 {
 }
 
@@ -1092,7 +1092,7 @@ class CreateBadgeRequest
         new OA\Property(property: 'check_in', type: 'boolean'),
     ]
 )]
-class PrintBadgeRequest
+class PrintBadgeRequestSchema
 {
 }
 
@@ -1103,7 +1103,7 @@ class PrintBadgeRequest
         new OA\Property(property: 'email_to', type: 'string', format: 'email'),
     ]
 )]
-class IngestExternalTicketDataRequest
+class IngestExternalTicketDataRequestSchema
 {
 }
 

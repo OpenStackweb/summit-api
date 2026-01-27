@@ -1,5 +1,4 @@
-<?php
-namespace App\Http\Controllers;
+<?php namespace App\Http\Controllers;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -155,8 +154,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
     {
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-        if (is_null($summit))
-            return $this->error404();
+        if (is_null($summit)) return $this->error404();
 
         return $this->_getAll(
             function () {
@@ -292,8 +290,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         try {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $validation = Validator::make($values, $rules);
 
@@ -330,8 +327,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
                 ]);
             }
 
-            if (is_null($filter))
-                $filter = new Filter();
+            if (is_null($filter)) $filter = new Filter();
 
             $filter->validate([
                 'class_name' => 'sometimes|string|in:'.join(",", SummitEventTypeConstants::$valid_class_names),
@@ -570,8 +566,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $payload = $this->getJsonPayload(EventTypeValidationRulesFactory::build(Request::all()));
 
@@ -647,8 +642,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id, $event_type_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $payload = $this->getJsonPayload(EventTypeValidationRulesFactory::build(Request::all(), true));
 
@@ -718,8 +712,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id, $event_type_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $this->event_type_service->deleteEventType($summit, intval($event_type_id));
 
@@ -776,8 +769,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $event_types = $this->event_type_service->seedDefaultEventTypes($summit);
 
@@ -858,8 +850,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id, $event_type_id, $document_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
 
             $document = $this->event_type_service->addSummitDocumentToEventType
@@ -948,8 +939,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         return $this->processRequest(function () use ($summit_id, $event_type_id, $document_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $document = $this->event_type_service->removeSummitDocumentFromEventType
             (

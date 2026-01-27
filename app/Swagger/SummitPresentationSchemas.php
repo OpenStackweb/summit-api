@@ -147,7 +147,6 @@ class PresentationTrackChairScoreTypeUpdateRequest {}
 // End Track Chair Score Types
 
 
-
 #[OA\Schema(
     schema: 'PaginatedPresentationCategoriesResponse',
     type: 'object',

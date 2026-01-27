@@ -426,13 +426,6 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function add($summit_id){
-        return $this->processRequest(function() use($summit_id){
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            return $this->_add($summit, $this->getJsonPayload($this->getAddValidationRules()));
-        });
-    }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}",
@@ -478,13 +471,6 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($summit_id, $track_chair_id){
-        return $this->processRequest(function() use($summit_id, $track_chair_id){
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            return $this->_get($summit, $track_chair_id);
-        });
-    }
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}",
@@ -528,13 +514,6 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function update($summit_id, $track_chair_id){
-        return $this->processRequest(function() use($summit_id, $track_chair_id){
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            return $this->_update($summit, $track_chair_id, $this->getJsonPayload($this->getUpdateValidationRules()));
-        });
-    }
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}",
@@ -569,13 +548,6 @@ final class OAuth2SummitTrackChairsApiController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function delete($summit_id, $track_chair_id){
-        return $this->processRequest(function() use($summit_id, $track_chair_id){
-            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->getResourceServerContext())->find($summit_id);
-            if (is_null($summit)) return $this->error404();
-            return $this->_delete($summit, $track_chair_id);
-        });
-    }
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/track-chairs/{track_chair_id}/categories/{track_id}",

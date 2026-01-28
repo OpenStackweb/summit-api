@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISelectionPlanRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\SummitScopes;
 use Exception;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
@@ -37,6 +39,8 @@ use utils\Filter;
 use utils\FilterParser;
 use utils\PagingInfo;
 use utils\PagingResponse;
+use Symfony\Component\HttpFoundation\Response;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2SummitSpeakersApiController
@@ -141,6 +145,156 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+     #[OA\Get(
+        path: '/api/v1/summits/{id}/speakers',
+        operationId: 'getSpeakers',
+        description: 'Get all speakers for a summit with filtering and pagination',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                description: 'Filter by id, first_name, last_name, email, full_name, member_id, has_accepted_presentations, etc.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'order',
+                description: 'Order by field (e.g., +id, -first_name)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of speakers',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPresentationSpeakersResponse')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/public/v1/summits/{id}/speakers',
+        operationId: 'getSpeakersPublic',
+        description: 'Get all speakers for a summit with filtering and pagination (public)',
+        tags: ['Summit Speakers (Public)'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                description: 'Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'order',
+                description: 'Order by full_name, first_name, last_name, id, email.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to retrieve: id, first_name, last_name, email, accepted_presentations, accepted_presentations_count, alternate_presentations, alternate_presentations_count, rejected_presentations, rejected_presentations_count.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of speakers',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPresentationSpeakersResponse')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getSpeakers($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
@@ -242,6 +396,79 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+     #[OA\Get(
+        path: '/api/v1/summits/{id}/speakers/csv',
+        operationId: 'getSpeakersCSV',
+        description: 'Export speakers for a summit as CSV file',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                description: 'Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'order',
+                description: 'Order by full_name, first_name, last_name, id, email.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to retrieve: id, first_name, last_name, email, accepted_presentations, accepted_presentations_count, alternate_presentations, alternate_presentations_count, rejected_presentations, rejected_presentations_count.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'CSV file download',
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getSpeakersCSV($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
@@ -352,6 +579,83 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+     #[OA\Get(
+        path: '/api/v1/summits/{id}/speakers/on-schedule',
+        operationId: 'getSpeakersOnSchedule',
+        description: 'Get speakers with presentations on schedule for a summit',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                description: 'Filter by id, first_name, last_name, email, full_name, event_start_date, event_end_date, featured',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'order',
+                description: 'Order by first_name, last_name, id, email.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of Speakers that belongs to Summit Schedule',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPresentationSpeakersResponse')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getSpeakersOnSchedule($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
@@ -427,6 +731,75 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * get all speakers without summit
      * @return mixed
      */
+     #[OA\Get(
+        path: '/api/v1/speakers',
+        operationId: 'getAllSpeakers',
+        description: 'Get All Global Speakers',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                description: 'Filter by id, first_name, last_name, email, full_name, member_id',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'order',
+                description: 'Order by field',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of all speakers',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedPresentationSpeakersResponse')
+            ),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getAll()
     {
         return $this->_getAll(
@@ -493,6 +866,120 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+      #[OA\Get(
+        path: '/api/v1/summits/{id}/speakers/{speaker_id}',
+        operationId: 'getSummitSpeaker',
+        description: 'Get a specific speaker by ID for a summit',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadSpeakersData,
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID or "me"',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Speaker details',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SummitPresentationSpeaker'),
+                        new OA\Schema(ref: '#/components/schemas/AdminPresentationSpeaker'),
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/public/v1/summits/{id}/speakers/{speaker_id}',
+        operationId: 'getSummitSpeakerPublic',
+        description: 'Get a specific speaker by ID for a summit (public)',
+        tags: ['Summit Speakers (Public)'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Speaker details',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getSummitSpeaker($summit_id, $speaker_id)
     {
         return $this->processRequest(function () use ($summit_id, $speaker_id) {
@@ -533,6 +1020,56 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+     #[OA\Get(
+        path: '/api/v1/summits/{id}/speakers/me',
+        operationId: 'getMySummitSpeaker',
+        description: 'Get current user speaker profile for a summit',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadMySpeakersData,
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Current user speaker profile',
+                content: new OA\JsonContent(ref: '#/components/schemas/AdminPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getMySummitSpeaker($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -564,6 +1101,50 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     /**
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/speakers/me',
+        operationId: 'getMySpeaker',
+        description: 'Get current user speaker profile',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadMySpeakersData,
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Current user speaker profile',
+                content: new OA\JsonContent(ref: '#/components/schemas/AdminPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Speaker profile not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getMySpeaker()
     {
         return $this->processRequest(function () {
@@ -593,6 +1174,30 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     /**
      * @return mixed
      */
+     #[OA\Post(
+        path: '/api/v1/speakers/me',
+        operationId: 'createMySpeaker',
+        description: 'Create speaker profile for current user',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitPresentationSpeakerUpdateCreateRequestBody')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Speaker profile created',
+                content: new OA\JsonContent(ref: '#/components/schemas/AdminPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function createMySpeaker()
     {
         return $this->processRequest(function () {
@@ -673,6 +1278,31 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     /**
      * @return mixed
      */
+    #[OA\Put(
+        path: '/api/v1/speakers/me',
+        operationId: 'updateMySpeaker',
+        description: 'Update current user speaker profile',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitPresentationSpeakerUpdateCreateRequestBody')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Speaker profile updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/AdminPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function updateMySpeaker()
     {
         return $this->processRequest(function () {
@@ -692,6 +1322,60 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+    #[OA\Get(
+        path: '/api/v1/speakers/{speaker_id}',
+        operationId: 'getSpeaker',
+        description: 'Get speaker by ID',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities (e.g., member, presentations)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Speaker details',
+                content: new OA\JsonContent(
+                    oneOf: [
+                        new OA\Schema(ref: '#/components/schemas/SummitPresentationSpeaker'),
+                        new OA\Schema(ref: '#/components/schemas/AdminPresentationSpeaker'),
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getSpeaker($speaker_id)
     {
         return $this->processRequest(function () use ($speaker_id) {
@@ -727,6 +1411,47 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+     #[OA\Post(
+        path: '/api/v1/summits/{id}/speakers',
+        operationId: 'addSpeakerBySummit',
+        description: 'Add new speaker to a summit',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitPresentationSpeakerRequestBody')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Speaker created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function addSpeakerBySummit($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -791,6 +1516,54 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+     #[OA\Put(
+        path: '/api/v1/summits/{id}/speakers/{speaker_id}',
+        operationId: 'updateSpeakerBySummit',
+        description: 'Update speaker for a summit',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SummitPresentationSpeakerUpdateCreateRequestBody')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Speaker updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function updateSpeakerBySummit($summit_id, $speaker_id)
     {
         return $this->processRequest(function () use ($summit_id, $speaker_id) {
@@ -852,6 +1625,44 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param LaravelRequest $request
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+     #[OA\Post(
+        path: '/api/v1/speakers/me/photo',
+        operationId: 'addMySpeakerPhoto',
+        description: 'Upload photo for current user speaker profile',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(
+                            property: 'file',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Photo file'
+                        ),
+                    ],
+                    required: ['file']
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Photo uploaded',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'File param not set'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function addMySpeakerPhoto(LaravelRequest $request)
     {
         $current_member = $this->resource_server_context->getCurrentUser();
@@ -866,6 +1677,21 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     /**
      * @return mixed
      */
+     #[OA\Delete(
+        path: '/api/v1/speakers/me',
+        operationId: 'deleteMySpeaker',
+        description: 'Delete current user speaker profile and photo',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Speaker deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function deleteMySpeaker()
     {
         $current_member = $this->resource_server_context->getCurrentUser();
@@ -880,6 +1706,44 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param LaravelRequest $request
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+      #[OA\Post(
+        path: '/api/v1/speakers/me/big-photo',
+        operationId: 'addMySpeakerBigPhoto',
+        description: 'Upload big photo for current user speaker profile',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(
+                            property: 'file',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Big photo file'
+                        ),
+                    ],
+                    required: ['file']
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Big photo uploaded',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'File param not set'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function addMySpeakerBigPhoto(LaravelRequest $request)
     {
         $current_member = $this->resource_server_context->getCurrentUser();
@@ -894,6 +1758,21 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     /**
      * @return \Illuminate\Http\JsonResponse
      */
+    #[OA\Delete(
+        path: '/api/v1/speakers/me/big-photo',
+        operationId: 'deleteMySpeakerBigPhoto',
+        description: 'Delete big photo from current user speaker profile',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Big photo deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function deleteMySpeakerBigPhoto()
     {
         $current_member = $this->resource_server_context->getCurrentUser();
@@ -910,6 +1789,43 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_to_id
      * @return mixed
      */
+     #[OA\Put(
+        path: '/api/v1/speakers/merge/{speaker_from_id}/{speaker_to_id}',
+        operationId: 'mergeSpeakers',
+        description: 'Merge two speakers into one',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_from_id',
+                description: 'Speaker ID to merge from',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'speaker_to_id',
+                description: 'Speaker ID to merge to',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Speakers merged successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'One or both speakers not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function merge($speaker_from_id, $speaker_to_id)
     {
         return $this->processRequest(function() use($speaker_from_id, $speaker_to_id) {
@@ -931,6 +1847,63 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     /**
      * @return mixed
      */
+      #[OA\Post(
+        path: '/api/v1/speakers',
+        operationId: 'addSpeaker',
+        description: 'Add new speaker',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators
+            ]
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'title', type: 'string', maxLength: 100),
+                    new OA\Property(property: 'first_name', type: 'string', maxLength: 100),
+                    new OA\Property(property: 'last_name', type: 'string', maxLength: 100),
+                    new OA\Property(property: 'bio', type: 'string'),
+                    new OA\Property(property: 'notes', type: 'string'),
+                    new OA\Property(property: 'twitter', type: 'string', maxLength: 50),
+                    new OA\Property(property: 'irc', type: 'string', maxLength: 50),
+                    new OA\Property(property: 'member_id', type: 'integer'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 50),
+                    new OA\Property(property: 'funded_travel', type: 'boolean'),
+                    new OA\Property(property: 'willing_to_travel', type: 'boolean'),
+                    new OA\Property(property: 'willing_to_present_video', type: 'boolean'),
+                    new OA\Property(property: 'org_has_cloud', type: 'boolean'),
+                    new OA\Property(property: 'available_for_bureau', type: 'boolean'),
+                    new OA\Property(property: 'country', type: 'string'),
+                    new OA\Property(property: 'languages', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'areas_of_expertise', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'travel_preferences', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'organizational_roles', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'active_involvements', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'company', type: 'string', maxLength: 255),
+                    new OA\Property(property: 'phone_number', type: 'string', maxLength: 255),
+                ],
+                required: ['title', 'first_name', 'last_name']
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Speaker created',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAdminPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function addSpeaker()
     {
        return $this->processRequest(function(){
@@ -989,6 +1962,73 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+     #[OA\Put(
+        path: '/api/v1/speakers/{speaker_id}',
+        operationId: 'updateSpeaker',
+        description: 'Update speaker details',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'title', type: 'string', maxLength: 100),
+                    new OA\Property(property: 'first_name', type: 'string', maxLength: 100),
+                    new OA\Property(property: 'last_name', type: 'string', maxLength: 100),
+                    new OA\Property(property: 'bio', type: 'string'),
+                    new OA\Property(property: 'notes', type: 'string'),
+                    new OA\Property(property: 'twitter', type: 'string', maxLength: 50),
+                    new OA\Property(property: 'irc', type: 'string', maxLength: 50),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', maxLength: 50),
+                    new OA\Property(property: 'member_id', type: 'integer'),
+                    new OA\Property(property: 'available_for_bureau', type: 'boolean'),
+                    new OA\Property(property: 'funded_travel', type: 'boolean'),
+                    new OA\Property(property: 'willing_to_travel', type: 'boolean'),
+                    new OA\Property(property: 'willing_to_present_video', type: 'boolean'),
+                    new OA\Property(property: 'org_has_cloud', type: 'boolean'),
+                    new OA\Property(property: 'country', type: 'string'),
+                    new OA\Property(property: 'languages', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'areas_of_expertise', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'travel_preferences', type: 'array', items: new OA\Items(type: 'string')),
+                    new OA\Property(property: 'organizational_roles', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'active_involvements', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'company', type: 'string', maxLength: 255),
+                    new OA\Property(property: 'phone_number', type: 'string', maxLength: 255),
+                ],
+                required: ['title', 'first_name', 'last_name']
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Speaker updated',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAdminPresentationSpeaker')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function updateSpeaker($speaker_id)
     {
         return $this->processRequest(function() use($speaker_id){
@@ -1052,6 +2092,35 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+     #[OA\Delete(
+        path: '/api/v1/speakers/{speaker_id}',
+        operationId: 'deleteSpeaker',
+        description: 'Delete a speaker',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Speaker deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function deleteSpeaker($speaker_id)
     {
         return $this->processRequest(function() use($speaker_id){
@@ -1069,6 +2138,63 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $selection_plan_id
      * @return mixed
      */
+        #[OA\Get(
+        path: '/api/v1/speakers/me/presentations/{role}/selection-plans/{selection_plan_id}',
+        operationId: 'getMySpeakerPresentationsByRoleAndBySelectionPlan',
+        description: 'Get current user presentations by role and selection plan',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'role',
+                description: 'Role (creator, speaker, moderator)',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', enum: ['creator', 'speaker', 'moderator'])
+            ),
+            new OA\Parameter(
+                name: 'selection_plan_id',
+                description: 'Selection Plan ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of presentations',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Selection plan not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getMySpeakerPresentationsByRoleAndBySelectionPlan($role, $selection_plan_id)
     {
         return $this->processRequest(function () use($role, $selection_plan_id){
@@ -1119,6 +2245,63 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
+        #[OA\Get(
+        path: '/api/v1/speakers/me/presentations/{role}/summits/{summit_id}',
+        operationId: 'getMySpeakerPresentationsByRoleAndBySummit',
+        description: 'Get current user presentations by role and summit',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'role',
+                description: 'Role (creator, speaker, moderator)',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', enum: ['creator', 'speaker', 'moderator'])
+            ),
+            new OA\Parameter(
+                name: 'summit_id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'List of presentations',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getMySpeakerPresentationsByRoleAndBySummit($role, $summit_id)
     {
         return $this->processRequest(function() use($role, $summit_id){
@@ -1169,6 +2352,39 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+      #[OA\Put(
+        path: '/api/v1/speakers/me/presentations/{presentation_id}/speakers/{speaker_id}',
+        operationId: 'addSpeakerToMyPresentation',
+        description: 'Add a speaker to current user presentation',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSpeakersData,
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'presentation_id',
+                description: 'Presentation ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Speaker added to presentation'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Presentation or Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function addSpeakerToMyPresentation($presentation_id, $speaker_id)
     {
         return $this->processRequest(function () use ($presentation_id, $speaker_id) {
@@ -1188,6 +2404,39 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+      #[OA\Put(
+        path: '/api/v1/speakers/me/presentations/{presentation_id}/moderators/{speaker_id}',
+        operationId: 'addModeratorToMyPresentation',
+        description: 'Add a moderator to current user presentation',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSpeakersData,
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'presentation_id',
+                description: 'Presentation ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Moderator ID (speaker)',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Moderator added to presentation'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Presentation or moderator not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function addModeratorToMyPresentation($presentation_id, $speaker_id)
     {
         return $this->processRequest(function () use ($presentation_id, $speaker_id) {
@@ -1207,6 +2456,39 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+      #[OA\Delete(
+        path: '/api/v1/speakers/me/presentations/{presentation_id}/speakers/{speaker_id}',
+        operationId: 'removeSpeakerFromMyPresentation',
+        description: 'Remove a speaker from current user presentation',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSpeakersData,
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'presentation_id',
+                description: 'Presentation ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Speaker removed from presentation'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Presentation or Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function removeSpeakerFromMyPresentation($presentation_id, $speaker_id)
     {
         return $this->processRequest(function () use ($presentation_id, $speaker_id) {
@@ -1230,6 +2512,39 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+        #[OA\Delete(
+        path: '/api/v1/speakers/me/presentations/{presentation_id}/moderators/{speaker_id}',
+        operationId: 'removeModeratorFromMyPresentation',
+        description: 'Remove a moderator from current user presentation',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSpeakersData,
+            SummitScopes::WriteMySpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'presentation_id',
+                description: 'Presentation ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Moderator ID (speaker)',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Moderator removed from presentation'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Presentation or moderator not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function removeModeratorFromMyPresentation($presentation_id, $speaker_id)
     {
         return $this->processRequest(function () use ($presentation_id, $speaker_id) {
@@ -1251,6 +2566,35 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+      #[OA\Put(
+        path: '/api/v1/speakers/{speaker_id}/edit-permission',
+        operationId: 'requestSpeakerEditPermission',
+        description: 'Request edit permission for a speaker profile',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData,
+            SummitScopes::WriteSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Permission request created',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function requestSpeakerEditPermission($speaker_id)
     {
         return $this->processRequest(function () use ($speaker_id) {
@@ -1274,6 +2618,56 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: '/api/v1/speakers/{speaker_id}/edit-permission',
+        operationId: 'getSpeakerEditPermission',
+        description: 'Get edit permission request for a speaker profile',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData,
+            SummitScopes::WriteSummitData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Edit permission request details',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Speaker or permission request not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getSpeakerEditPermission($speaker_id)
     {
 
@@ -1300,6 +2694,34 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $hash
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: '/api/public/v1/speakers/{speaker_id}/edit-permission/{token}/approve',
+        operationId: 'approveSpeakerEditPermission',
+        description: 'Approve edit permission request for a speaker profile (public endpoint)',
+        tags: ['Summit Speakers (Public)'],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'token',
+                description: 'Permission request token/hash',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Permission approved - returns HTML view'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Speaker or permission request not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function approveSpeakerEditPermission($speaker_id, $hash)
     {
         try {
@@ -1322,6 +2744,34 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $hash
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Get(
+        path: '/api/public/v1/speakers/{speaker_id}/edit-permission/{token}/decline',
+        operationId: 'declineSpeakerEditPermission',
+        description: 'Decline edit permission request for a speaker profile (public endpoint)',
+        tags: ['Summit Speakers (Public)'],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'token',
+                description: 'Permission request token/hash',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Permission declined - returns HTML view'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Speaker or permission request not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function declineSpeakerEditPermission($speaker_id, $hash)
     {
         try {
@@ -1344,6 +2794,53 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+        #[OA\Post(
+        path: '/api/v1/speakers/{speaker_id}/photo',
+        operationId: 'addSpeakerPhoto',
+        description: 'Upload photo for a speaker',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(
+                            property: 'file',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Photo file'
+                        ),
+                    ],
+                    required: ['file']
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Photo uploaded',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'File param not set'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function addSpeakerPhoto(LaravelRequest $request, $speaker_id)
     {
         return $this->processRequest(function () use ($request, $speaker_id) {
@@ -1378,6 +2875,30 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+     #[OA\Delete(
+        path: '/api/v1/speakers/{speaker_id}/photo',
+        operationId: 'deleteSpeakerPhoto',
+        description: 'Delete photo from a speaker',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Photo deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function deleteSpeakerPhoto($speaker_id)
     {
         return $this->processRequest(function () use ($speaker_id) {
@@ -1404,6 +2925,53 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return mixed
      */
+      #[OA\Post(
+        path: '/api/v1/speakers/{speaker_id}/big-photo',
+        operationId: 'addSpeakerBigPhoto',
+        description: 'Upload big photo for a speaker',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(
+                            property: 'file',
+                            type: 'string',
+                            format: 'binary',
+                            description: 'Big photo file'
+                        ),
+                    ],
+                    required: ['file']
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Big photo uploaded',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'File param not set'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function addSpeakerBigPhoto(LaravelRequest $request, $speaker_id)
     {
         return $this->processRequest(function () use ($request, $speaker_id) {
@@ -1438,6 +3006,30 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $speaker_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+     #[OA\Delete(
+        path: '/api/v1/speakers/{speaker_id}/big-photo',
+        operationId: 'deleteSpeakerBigPhoto',
+        description: 'Delete big photo from a speaker',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSpeakersData
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: 'speaker_id',
+                description: 'Speaker ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Big photo deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function deleteSpeakerBigPhoto($speaker_id)
     {
         return $this->processRequest(function () use ($speaker_id) {
@@ -1463,6 +3055,75 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
      */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/speakers/all/send',
+        operationId: 'sendSpeakerEmails',
+        description: 'Send emails to speakers for a summit with optional filtering',
+        tags: ['Summit Speakers'],
+        security: [['summit_speakers_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteSpeakersData
+        ]]],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRegistrationAdmins
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Summit ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                description: 'Filter speakers by id, first_name, last_name, email, full_name, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            description: 'Email configuration',
+            content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(
+                        property: 'subject',
+                        type: 'string',
+                        description: 'Email subject'
+                    ),
+                    new OA\Property(
+                        property: 'body',
+                        type: 'string',
+                        description: 'Email body content'
+                    ),
+                    new OA\Property(
+                        property: 'from',
+                        type: 'string',
+                        format: 'email',
+                        description: 'Sender email address'
+                    ),
+                ],
+                required: ['subject', 'body', 'from']
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Emails sent successfully'
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function send($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -1531,6 +3192,71 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Get(
+        path: '/api/public/v1/speakers/all/companies',
+        operationId: 'getAllSpeakerCompanies',
+        description: 'Get all companies associated with speakers (public endpoint)',
+        tags: ['Summit Speakers (Public)'],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                description: 'Page number',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                description: 'Items per page',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+            new OA\Parameter(
+                name: 'filter',
+                description: 'Filter by: company, operands: =@ (starts with), @@ (contains)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'order',
+                description: 'Order by: company',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                description: 'Expand related entities',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'fields',
+                description: 'Fields to return (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Parameter(
+                name: 'relations',
+                description: 'Related entities to include (comma-separated)',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Paginated list of speaker companies',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedBaseCompaniesResponse')
+            ),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     public function getAllCompanies(){
         return $this->_getAll(
             function () {

@@ -736,6 +736,28 @@ class PaymentGatewayProfileCreateRequestSchema
 class PaymentGatewayProfileUpdateRequestSchema
 {
 }
+
+
+#[OA\Schema(
+    schema: 'PaginatedGroupsResponse',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            type: 'object',
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Group')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedGroupsResponseSchema
+{
+}
+
 // User Stories
 
 

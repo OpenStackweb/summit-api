@@ -1,4 +1,5 @@
-<?php namespace App\Http\Controllers;
+<?php
+namespace App\Http\Controllers;
 /**
  * Copyright 2017 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +13,13 @@
  * limitations under the License.
  **/
 
+use App\Security\GroupsScopes;
+use App\Security\SummitScopes;
+use Illuminate\Http\Response;
 use models\main\IGroupRepository;
 use models\oauth2\IResourceServerContext;
 use ModelSerializers\SerializerRegistry;
+use OpenApi\Attributes as OA;
 
 /**
  * Class OAuth2GroupsApiController
@@ -26,20 +31,96 @@ final class OAuth2GroupsApiController extends OAuth2ProtectedController
     use ParametrizedGetAll;
 
     /**
-     * OAuth2MembersApiController constructor.
+     * OAuth2GroupsApiController constructor.
      * @param IGroupRepository $group_repository
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
     (
-        IGroupRepository       $group_repository,
+        IGroupRepository $group_repository,
         IResourceServerContext $resource_server_context
-    )
-    {
+    ) {
         parent::__construct($resource_server_context);
         $this->repository = $group_repository;
     }
 
+    #[OA\Get(
+        path: "/api/v1/groups",
+        description: "Get all groups with filtering and pagination. Groups are used for access control and organization of members. Requires OAuth2 authentication with appropriate scope.",
+        summary: 'Get all groups',
+        operationId: 'getAllGroups',
+        tags: ['Groups'],
+        security: [
+            [
+                'groups_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                    GroupsScopes::ReadData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'access_token',
+                in: 'query',
+                required: false,
+                description: 'OAuth2 access token (alternative to Authorization: Bearer)',
+                schema: new OA\Schema(type: 'string', example: 'eyJhbGciOi...')
+            ),
+            new OA\Parameter(
+                name: 'page',
+                in: 'query',
+                required: false,
+                description: 'Page number for pagination',
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+            new OA\Parameter(
+                name: 'per_page',
+                in: 'query',
+                required: false,
+                description: 'Items per page',
+                schema: new OA\Schema(type: 'integer', example: 10, maximum: 100)
+            ),
+            new OA\Parameter(
+                name: 'filter[]',
+                in: 'query',
+                required: false,
+                description: 'Filter expressions. Format: field<op>value. Available fields: code (=@, ==, @@), title (=@, ==, @@). Operators: == (equals), =@ (starts with), @@ (contains)',
+                style: 'form',
+                explode: true,
+                schema: new OA\Schema(
+                    type: 'array',
+                    items: new OA\Items(type: 'string', example: 'code==administrators')
+                )
+            ),
+            new OA\Parameter(
+                name: 'order',
+                in: 'query',
+                required: false,
+                description: 'Order by field(s). Available fields: code, title, id. Use "-" prefix for descending order.',
+                schema: new OA\Schema(type: 'string', example: 'title')
+            ),
+            new OA\Parameter(
+                name: 'expand',
+                in: 'query',
+                required: false,
+                description: 'Comma-separated list of related resources to include. Available relations: members (expands member IDs to full member objects)',
+                schema: new OA\Schema(type: 'string', example: 'members')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success - Returns paginated list of groups',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedGroupsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request - Invalid parameters"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized - Invalid or missing access token"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - Insufficient permissions"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
     public function getAll()
     {
         return $this->_getAll(

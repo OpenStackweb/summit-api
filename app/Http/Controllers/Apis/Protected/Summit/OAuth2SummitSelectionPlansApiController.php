@@ -273,7 +273,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Selection plan updated successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SelectionPlan')
             ),
@@ -509,7 +509,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             ),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Track group added successfully'),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Track group added successfully'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, Selection Plan, or Track Group not found'),
@@ -905,7 +905,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: 'Presentations retrieved successfully',
-                content: new OA\JsonContent(ref: '#/components/schemas/PaginateDataSchemaResponse')
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedTrackChairPresentationsResponse')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden - Not a track chair'),
@@ -1388,7 +1388,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Presentation marked as viewed successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/TrackChairPresentation')
             ),
@@ -1867,7 +1867,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Category change request resolved successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/SummitCategoryChange')
             ),
@@ -3538,7 +3538,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
             ),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Event type attached successfully'),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Event type attached successfully'),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, Selection Plan, or Event Type not found'),
@@ -4030,7 +4030,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_OK,
+                response: Response::HTTP_CREATED,
                 description: 'Presentation action type updated successfully',
                 content: new OA\JsonContent(ref: '#/components/schemas/PresentationActionType')
             ),

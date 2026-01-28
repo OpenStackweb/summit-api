@@ -145,6 +145,764 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
 
     use ParametrizedGetAll;
 
+    #[OA\Get(
+        path: '/api/v1/summits/all/locations/bookable-rooms/all/reservations/{id}',
+        operationId: 'getReservationById',
+        summary: 'Get a reservation by ID',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::SummitRoomAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Reservation not found'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms',
+        operationId: 'getBookableVenueRooms',
+        summary: 'Get all bookable venue rooms for a summit',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: name, description, capacity, availability_day, attribute', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, name, capacity', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/all/bookable-rooms',
+        operationId: 'getBookableVenueAllRooms',
+        summary: 'Get all bookable venue rooms for a summit',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: name, description, capacity, availability_day, attribute', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, name, capacity', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoomPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations',
+        operationId: 'getAllReservationsBySummit',
+        summary: 'Get all reservations for a summit',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: summit_id, room_name, room_id, owner_id, owner_name, owner_email, not_owner_email, status, start_datetime, end_datetime', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, start_datetime, end_datetime, room_name, room_id, status, created, owner_name, owner_email', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservationPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/csv',
+        operationId: 'getAllReservationsBySummitCSV',
+        summary: 'Export reservations for a summit as CSV',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: summit_id, room_name, room_id, owner_id, owner_name, owner_email, not_owner_email, status, start_datetime, end_datetime', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: id, start_datetime, end_datetime, room_name, room_id, status, created, owner_name, owner_email', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'CSV file', content: new OA\MediaType(mediaType: 'text/csv')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        operationId: 'getBookableVenueRoomByVenue',
+        summary: 'Get a bookable venue room by venue and room ID',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room not found'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}',
+        operationId: 'getBookableVenueRoom',
+        summary: 'Get a bookable venue room by ID',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/availability/{day}',
+        operationId: 'getBookableVenueRoomAvailability',
+        summary: 'Get availability slots for a bookable room on a specific day',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'day', in: 'path', required: true, description: 'Day (epoch timestamp or Y-m-d format)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(type: 'object')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
+        ]
+    )]
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations',
+        operationId: 'createBookableVenueRoomReservation',
+        summary: 'Create a reservation for a bookable room',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteMyBookableRoomsReservationData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/CreateBookableVenueRoomReservationPayload')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Reservation created', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/offline',
+        operationId: 'createOfflineBookableVenueRoomReservation',
+        summary: 'Create an offline reservation for a bookable room',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/CreateOfflineBookableVenueRoomReservationPayload')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Offline reservation created', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
+        operationId: 'updateBookableVenueRoomReservation',
+        summary: 'Update a bookable room reservation',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateBookableVenueRoomReservationPayload')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Reservation updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
+        operationId: 'getBookableVenueRoomReservation',
+        summary: 'Get a bookable room reservation by ID',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
+        ]
+    )]
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/me',
+        operationId: 'getMyBookableVenueRoomReservations',
+        summary: 'Get my bookable room reservations for a summit',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadMyBookableRoomsReservationData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservationPaginatedResponse')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Not authenticated'),
+        ]
+    )]
+
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/{reservation_id}',
+        operationId: 'cancelMyBookableVenueRoomReservation',
+        summary: 'Cancel my bookable room reservation',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteMyBookableRoomsReservationData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Reservation cancelled', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or reservation not found'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Not authenticated'),
+        ]
+    )]
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        operationId: 'updateVenueBookableRoom',
+        summary: 'Update a bookable venue room',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueBookableRoomPayload')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
+        operationId: 'getVenueFloorBookableRoom',
+        summary: 'Get a bookable venue room by floor',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'OK', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, floor or room not found'),
+        ]
+    )]
+
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
+        operationId: 'updateVenueFloorBookableRoom',
+        summary: 'Update a bookable venue room by floor',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueFloorBookableRoomPayload')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, floor or room not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
+        operationId: 'deleteVenueBookableRoom',
+        summary: 'Delete a bookable venue room',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Room deleted'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or room not found'),
+        ]
+    )]
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms',
+        operationId: 'addVenueBookableRoom',
+        summary: 'Add a bookable room to a venue',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddVenueBookableRoomPayload')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room created', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or venue not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
+
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms',
+        operationId: 'addVenueFloorBookableRoom',
+        summary: 'Add a bookable room to a venue floor',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'floor_id', in: 'path', required: true, description: 'Floor ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddVenueBookableRoomPayload')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room created', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or floor not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
+        operationId: 'addVenueBookableRoomAttribute',
+        summary: 'Add an attribute to a bookable venue room',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'attribute_id', in: 'path', required: true, description: 'Attribute ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, description: 'Fields to return', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Attribute added', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, room or attribute not found'),
+        ]
+    )]
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
+        operationId: 'deleteVenueBookableRoomAttribute',
+        summary: 'Remove an attribute from a bookable venue room',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'venue_id', in: 'path', required: true, description: 'Venue ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'attribute_id', in: 'path', required: true, description: 'Attribute ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Attribute removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, room or attribute not found'),
+        ]
+    )]
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/refund',
+        operationId: 'refundBookableVenueRoomReservation',
+        summary: 'Refund a bookable room reservation',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/RefundBookableVenueRoomReservationPayload')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Reservation refunded', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
+            new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
+        ]
+    )]
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/cancel',
+        operationId: 'cancelBookableVenueRoomReservation',
+        summary: 'Cancel a bookable room reservation',
+        tags: ['Summit Bookable Rooms'],
+        security: [
+            [
+                'locations_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'room_id', in: 'path', required: true, description: 'Room ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Reservation cancelled'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @return mixed

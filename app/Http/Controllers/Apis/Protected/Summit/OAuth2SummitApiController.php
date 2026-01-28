@@ -1238,6 +1238,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         });
     }
 
+    use GetAndValidateJsonPayload;
+
     #[OA\Post(
             path: "/api/v1/summits",
             operationId: "addSummit",

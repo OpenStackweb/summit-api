@@ -1326,8 +1326,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ),
             responses: [
                 new OA\Response(
-                    response: Response::HTTP_OK,
-                    description: "Success",
+                    response: Response::HTTP_CREATED,
+                    description: "Summit updated",
                     content: new OA\JsonContent(ref: "#/components/schemas/Summit")
                 ),
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
@@ -1855,7 +1855,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 ),
             ],
             responses: [
-                new OA\Response(response: Response::HTTP_OK, description: "Speaker added as featured"),
+                new OA\Response(response: Response::HTTP_CREATED, description: "Speaker added as featured"),
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             ],
@@ -1922,7 +1922,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 )
             ),
             responses: [
-                new OA\Response(response: Response::HTTP_OK, description: "Featured speaker updated"),
+                new OA\Response(response: Response::HTTP_CREATED, description: "Featured speaker updated"),
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
                 new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
                 new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
@@ -2418,8 +2418,8 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ),
             responses: [
                 new OA\Response(
-                    response: Response::HTTP_OK,
-                    description: "Success",
+                    response: Response::HTTP_CREATED,
+                    description: "Lead report settings updated",
                     content: new OA\JsonContent(type: "object")
                 ),
                 new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
@@ -2492,7 +2492,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Badge validation success',
                 content: new OA\JsonContent(ref: '#/components/schemas/ValidateBadgeResponse')
             ),

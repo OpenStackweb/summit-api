@@ -16,7 +16,11 @@ use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\Http\Utils\MultipartFormDataCleaner;
 use App\libs\Utils\Doctrine\ReplicaAwareTrait;
+use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
+use App\Security\MemberScopes;
+use App\Security\SummitScopes;
+use OpenApi\Attributes as OA;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
@@ -36,6 +40,7 @@ use models\summit\SummitEvent;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
+use Symfony\Component\HttpFoundation\Response;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
@@ -131,6 +136,34 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
      *  Events endpoints
      */
 
+    // OpenAPI Documentation
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events',
+        operationId: 'getEvents',
+        summary: 'Get all events for a summit',
+        description: 'Retrieves a paginated list of all events (published and unpublished) for a specific summit. Requires admin privileges.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Events retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @return mixed
@@ -159,6 +192,29 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
         });
     }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/csv',
+        operationId: 'getEventsCSV',
+        summary: 'Export all summit events to CSV',
+        description: 'Exports a CSV file containing all events for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'CSV file generated', content: new OA\MediaType(mediaType: 'text/csv', schema: new OA\Schema(type: 'string', format: 'binary'))),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -212,6 +268,51 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/published',
+        operationId: 'getScheduledEvents',
+        summary: 'Get all published/scheduled events for a summit',
+        description: 'Retrieves a paginated list of all published events for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Published events retrieved', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
+    #[OA\Get(
+        path: '/api/public/v1/summits/{id}/events/published',
+        operationId: 'getScheduledEventsPublic',
+        summary: 'Get all published/scheduled events for a summit',
+        description: 'Retrieves a paginated list of all published events for a specific summit.',
+        tags: ['Summit Events (Public)'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Published events retrieved', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
     /**
      * @param $summit_id
      * @return mixed
@@ -250,6 +351,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     }
 
     use ParametrizedGetAll;
+
+    #[OA\Get(
+        path: '/api/public/v1/summits/{id}/events/all/published/tags',
+        operationId: 'getScheduledEventsTags',
+        summary: 'Get all tags from published events for a summit',
+        description: 'Retrieves a paginated list of tags used in published events for a specific summit. This is a public endpoint.',
+        tags: ['Summit Events (Public)'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter by tag (=@, ==)', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by tag', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Tags retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedTagsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -326,6 +449,30 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/presentations',
+        operationId: 'getAllPresentations',
+        summary: 'Get all presentations for a summit',
+        description: 'Retrieves a paginated list of all presentations for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Presentations retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @return \Illuminate\Http\JsonResponse|mixed
      */
@@ -355,6 +502,30 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
         });
     }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/presentations/voteable',
+        operationId: 'getAllVoteablePresentations',
+        summary: 'Get all voteable presentations for a summit',
+        description: 'Retrieves a paginated list of all presentations that allow attendee voting for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Voteable presentations retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -392,6 +563,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    #[OA\Get(
+        path: '/api/v2/summits/{id}/presentations/voteable',
+        operationId: 'getAllVoteablePresentationsV2',
+        summary: 'Get all voteable presentations for a summit (V2)',
+        description: 'Retrieves a paginated list of all presentations that allow attendee voting for a specific summit with admin-level details.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Voteable presentations retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -440,6 +637,29 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    #[OA\Get(
+        path: '/api/v2/summits/{id}/presentations/voteable/csv',
+        operationId: 'getAllVoteablePresentationsV2CSV',
+        summary: 'Export voteable presentations to CSV (V2)',
+        description: 'Exports a CSV file containing all voteable presentations for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'CSV file generated', content: new OA\MediaType(mediaType: 'text/csv', schema: new OA\Schema(type: 'string', format: 'binary'))),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     public function getAllVoteablePresentationsV2CSV($summit_id)
     {
@@ -496,6 +716,27 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/presentations/voteable/{presentation_id}',
+        operationId: 'getVoteablePresentation',
+        summary: 'Get a specific voteable presentation',
+        description: 'Retrieves a single voteable presentation by ID.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, description: 'Presentation ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Presentation retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -564,6 +805,27 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     }
 
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/{event_id}',
+        operationId: 'getEvent',
+        summary: 'Get a specific event by ID',
+        description: 'Retrieves a single event by its ID for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Event retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -597,6 +859,46 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/{event_id}/published',
+        operationId: 'getScheduledEvent',
+        summary: 'Get a specific published/scheduled event by ID',
+        description: 'Retrieves a single published event by its ID for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Published event retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
+    #[OA\Get(
+        path: '/api/public/v1/summits/{id}/events/{event_id}/published',
+        operationId: 'getScheduledEventPublic',
+        summary: 'Get a specific published/scheduled event by ID',
+        description: 'Retrieves a single published event by its ID for a specific summit.',
+        tags: ['Summit Events (Public)'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Published event retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -624,6 +926,31 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/events/{event_id}/published/mail',
+        operationId: 'shareScheduledEventByEmail',
+        summary: 'Share a scheduled event by email',
+        description: 'Sends an email sharing a specific published event. Rate limited to 5 requests per day.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::SendMyScheduleMail]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/ShareEventByEmailRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Email sent successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -646,6 +973,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->ok();
         });
     }
+
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/events',
+        operationId: 'addEvent',
+        summary: 'Create a new event for a summit',
+        description: 'Creates a new event for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddSummitEventRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Event created successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -697,6 +1050,33 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/events/{event_id}',
+        operationId: 'updateEvent',
+        summary: 'Update an existing event',
+        description: 'Updates an existing event for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateSummitEventRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Event updated successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -767,6 +1147,33 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/events/{event_id}/publish',
+        operationId: 'publishEvent',
+        summary: 'Publish an event to the schedule',
+        description: 'Publishes an event to the summit schedule with optional location, start date, and duration.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::PublishEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/PublishSummitEventRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Event published successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -815,6 +1222,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/events/{event_id}/publish',
+        operationId: 'unPublishEvent',
+        summary: 'Unpublish an event from the schedule',
+        description: 'Removes an event from the published summit schedule.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::PublishEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Event unpublished successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -833,6 +1262,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->deleted();
         });
     }
+
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/events/{event_id}',
+        operationId: 'deleteEvent',
+        summary: 'Delete an event',
+        description: 'Permanently deletes an event from a summit.',
+        security: [['summit_events_api_oauth2' => []]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Event deleted successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -854,6 +1305,31 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     }
 
     /** Feedback endpoints  */
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/{event_id}/feedback',
+        operationId: 'getEventFeedback',
+        summary: 'Get feedback for an event',
+        description: 'Retrieves a paginated list of feedback for a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadAllSummitData, SummitScopes::ReadSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter by owner_full_name, note, owner_id', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by created, owner_id, owner_full_name, rate, id', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Feedback retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventFeedbackResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -919,6 +1395,30 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/{event_id}/feedback/csv',
+        operationId: 'getEventFeedbackCSV',
+        summary: 'Export event feedback to CSV',
+        description: 'Exports a CSV file containing all feedback for a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadAllSummitData, SummitScopes::ReadSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter by owner_full_name, note, owner_id', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by created, owner_id, owner_full_name, rate, id', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'CSV file generated', content: new OA\MediaType(mediaType: 'text/csv', schema: new OA\Schema(type: 'string', format: 'binary'))),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -991,6 +1491,29 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
     }
 
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/events/{event_id}/feedback/{feedback_id}',
+        operationId: 'deleteEventFeedback',
+        summary: 'Delete event feedback',
+        description: 'Deletes a specific feedback entry for an event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'feedback_id', in: 'path', required: true, description: 'Feedback ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Feedback deleted successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -1013,6 +1536,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->deleted();
         });
     }
+    #[OA\Post(
+        path: '/api/v2/summits/{id}/events/{event_id}/feedback',
+        operationId: 'addMyEventFeedbackReturnId',
+        summary: 'Add feedback for an event (V2)',
+        description: 'Adds feedback for a specific event and returns the feedback ID.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::AddMyEventFeedback]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddEventFeedbackRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Feedback added successfully', content: new OA\JsonContent(type: 'integer', description: 'Feedback ID')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -1022,6 +1571,33 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         return $this->_addMyEventFeedback($summit_id, $event_id, true);
     }
+
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
+        operationId: 'addMyEventFeedback',
+        summary: 'Add feedback for an event (V1)',
+        description: 'Adds feedback for a specific event on behalf of a member.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::AddMyEventFeedback]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID (use "me" for current user)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddEventFeedbackRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Feedback added successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventFeedback')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -1075,6 +1651,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: '/api/v2/summits/{id}/events/{event_id}/feedback',
+        operationId: 'updateMyEventFeedbackReturnId',
+        summary: 'Update feedback for an event (V2)',
+        description: 'Updates feedback for a specific event and returns the feedback ID.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::AddMyEventFeedback]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddEventFeedbackRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Feedback updated successfully', content: new OA\JsonContent(type: 'integer', description: 'Feedback ID')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -1084,6 +1686,33 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     {
         return $this->_updateMyEventFeedback($summit_id, $event_id, true);
     }
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
+        operationId: 'updateMyEventFeedback',
+        summary: 'Update feedback for an event (V1)',
+        description: 'Updates feedback for a specific event on behalf of a member.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::AddMyEventFeedback]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID (use "me" for current user)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/AddEventFeedbackRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Feedback updated successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventFeedback')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -1137,6 +1766,29 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
+        operationId: 'getMyEventFeedback',
+        summary: 'Get my feedback for an event',
+        description: 'Retrieves the current user\'s feedback for a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::MeRead, MemberScopes::ReadMyMemberData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID (use "me" for current user)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Feedback retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventFeedback')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $member_id
@@ -1171,6 +1823,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
+        operationId: 'deleteMyEventFeedback',
+        summary: 'Delete my feedback for an event',
+        description: 'Deletes the current user\'s feedback for a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::DeleteMyEventFeedback]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID (use "me" for current user)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Feedback deleted successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $member_id
@@ -1197,6 +1871,41 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/events/{event_id}/attachment',
+        operationId: 'addEventAttachment',
+        summary: 'Add an attachment to an event',
+        description: 'Uploads a file attachment to a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file'],
+                    properties: [
+                        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'File to upload')
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Attachment added successfully', content: new OA\JsonContent(type: 'integer', description: 'Attachment ID')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'File not provided'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param LaravelRequest $request
      * @param $summit_id
@@ -1220,6 +1929,30 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return !is_null($res) ? $this->created($res->getId()) : $this->error400();
         });
     }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/unpublished',
+        operationId: 'getUnpublishedEvents',
+        summary: 'Get all unpublished events for a summit',
+        description: 'Retrieves a paginated list of all unpublished events for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Unpublished events retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -1253,6 +1986,27 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
         });
     }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/published/empty-spots',
+        operationId: 'getScheduleEmptySpots',
+        summary: 'Get empty spots in the schedule',
+        description: 'Retrieves available empty time slots in the published summit schedule.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: true, description: 'Filter by location_id, start_date, end_date, gap', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Empty spots retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitScheduleEmptySpotsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Filter param is mandatory'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -1296,6 +2050,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/events/publish',
+        operationId: 'unPublishEvents',
+        summary: 'Unpublish multiple events',
+        description: 'Unpublishes multiple events from the summit schedule at once.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::PublishEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UnpublishEventsRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Events unpublished successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -1331,6 +2111,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->deleted();
         });
     }
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/events/publish',
+        operationId: 'updateAndPublishEvents',
+        summary: 'Update and publish multiple events',
+        description: 'Updates and publishes multiple events to the summit schedule at once.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::PublishEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateAndPublishEventsRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Events updated and published successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -1368,6 +2174,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/events',
+        operationId: 'updateEvents',
+        summary: 'Update multiple events',
+        description: 'Updates multiple events at once without publishing them.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateEventsRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Events updated successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -1404,6 +2236,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/events/{event_id}/clone',
+        operationId: 'cloneEvent',
+        summary: 'Clone an event',
+        description: 'Creates a copy of an existing event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID to clone', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Event cloned successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -1421,6 +2275,41 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
         });
     }
+
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/events/{event_id}/image',
+        operationId: 'addEventImage',
+        summary: 'Add an image to an event',
+        description: 'Uploads an image for a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file'],
+                    properties: [
+                        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'Image file to upload')
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Image added successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'File not provided'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     public function addEventImage(LaravelRequest $request, $summit_id, $event_id)
     {
@@ -1440,6 +2329,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/events/{event_id}/image',
+        operationId: 'deleteEventImage',
+        summary: 'Delete an event image',
+        description: 'Removes the image from a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Image deleted successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     public function deleteEventImage($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
@@ -1449,6 +2360,41 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->deleted();
         });
     }
+
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/events/csv',
+        operationId: 'importEventData',
+        summary: 'Import events from CSV',
+        description: 'Imports event data from a CSV file.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file', 'send_speaker_email'],
+                    properties: [
+                        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'CSV file to import'),
+                        new OA\Property(property: 'send_speaker_email', type: 'boolean', description: 'Whether to send email notifications to speakers')
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Events imported successfully'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param LaravelRequest $request
@@ -1490,6 +2436,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
         });
     }
+
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/events/{event_id}/live-info',
+        operationId: 'updateEventLiveInfo',
+        summary: 'Update event live streaming info',
+        description: 'Updates the live streaming URL and type for an event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateEventLiveInfoRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Live info updated successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
 
     /**
      * @param $summit_id
@@ -1543,6 +2515,28 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/{event_id}/published/tokens',
+        operationId: 'getScheduledEventJWT',
+        summary: 'Get JWT tokens for secure streaming',
+        description: 'Retrieves JWT tokens for accessing secure streaming content for a published event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'JWT tokens retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventSecureStreamResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Event not configured for secure streaming'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -1584,6 +2578,29 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/events/{event_id}/type/{type_id}/upgrade',
+        operationId: 'upgradeEvent',
+        summary: 'Upgrade an event to a different type',
+        description: 'Changes the type of an existing event (e.g., from SummitEvent to Presentation).',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'New Event Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Event upgraded successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -1617,6 +2634,25 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Get(
+        path: '/api/public/v1/summits/{id}/events/all/published/overflow',
+        operationId: 'getOverflowStreamingInfo',
+        summary: 'Get overflow streaming information (Public)',
+        description: 'Retrieves overflow streaming information for published events. This is a public endpoint.',
+        tags: ['Summit Events (Public)'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'k', in: 'query', required: true, description: 'Overflow stream key', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Overflow info retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEventOverflowStreamResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Missing overflow query string key'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Event has no overflow set'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @return \Illuminate\Http\JsonResponse|mixed
@@ -1631,7 +2667,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             return $this->withReplica(function() use ($summit_id, $query_string_key) {
                 $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
                 if (is_null($summit))
-                    return $this->error404("Summit not found.");
+                    return $this->error404("Not Found.");
 
                 $overflow_stream_key = Request::get($query_string_key);
 
@@ -1669,6 +2705,33 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         });
     }
 
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/events/{event_id}/overflow',
+        operationId: 'setOverflow',
+        summary: 'Set overflow streaming for an event',
+        description: 'Configures overflow streaming settings for a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/SetOverflowRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Overflow set successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     /**
      * @param $summit_id
      * @param $event_id
@@ -1704,6 +2767,32 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             );
         });
     }
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/events/{event_id}/overflow',
+        operationId: 'clearOverflow',
+        summary: 'Clear overflow streaming for an event',
+        description: 'Removes overflow streaming settings from a specific event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/ClearOverflowRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Overflow cleared successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
     public function clearOverflow($summit_id, $event_id)
     {
         return $this->processRequest(function() use($summit_id, $event_id){
@@ -1730,6 +2819,22 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/{event_id}/published/streaming-info',
+        operationId: 'getScheduledEventStreamingInfo',
+        summary: 'Get streaming information for a published event',
+        description: 'Retrieves streaming information for a specific published event.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+        ]
+    )]
 
     /**
      * @param $summit_id

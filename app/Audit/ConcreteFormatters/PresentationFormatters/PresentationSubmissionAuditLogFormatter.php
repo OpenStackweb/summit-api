@@ -30,14 +30,13 @@ class PresentationSubmissionAuditLogFormatter extends BasePresentationAuditLogFo
         );
     }
 
-    protected function formatUpdate(array $data, array $extracted): string
+    protected function formatUpdate(array $data, array $change_set): string
     {
-        $change_details = $this->buildChangeDetails($extracted['change_set']);
         return sprintf(
             "Presentation '%s' (%s) updated: %s by user %s",
             $data['title'],
             $data['id'],
-            $change_details,
+            $this->buildChangeDetails($change_set),
             $this->getUserInfo()
         );
     }
@@ -45,11 +44,12 @@ class PresentationSubmissionAuditLogFormatter extends BasePresentationAuditLogFo
     protected function formatDeletion(array $data): string
     {
         return sprintf(
-            "Presentation '%s' (%s) submitted by '%s' to track '%s' was deleted by user %s",
+            "Presentation '%s' (%s) submitted by '%s' to track '%s' (Plan: %s) was deleted by user %s",
             $data['title'],
             $data['id'],
             $data['creator_name'],
             $data['category_name'],
+            $data['plan_name'],
             $this->getUserInfo()
         );
     }

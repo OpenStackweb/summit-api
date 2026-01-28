@@ -22,52 +22,9 @@ use Illuminate\Support\Facades\Log;
 
 abstract class BasePresentationAuditLogFormatter extends AbstractAuditLogFormatter
 {
-    protected string $event_type;
-
     public function __construct(string $event_type)
     {
-        $this->event_type = $event_type;
-    }
-
-    protected function extractChangedFields(array $change_set): array
-    {
-        $changed_fields = [];
-        $old_status = null;
-        $new_status = null;
-
-        if (isset($change_set['Title'])) {
-            $changed_fields[] = "title";
-        }
-        if (isset($change_set['Abstract'])) {
-            $changed_fields[] = "abstract";
-        }
-        if (isset($change_set['ProblemAddressed'])) {
-            $changed_fields[] = "problem_addressed";
-        }
-        if (isset($change_set['AttendeesExpectedLearnt'])) {
-            $changed_fields[] = "attendees_expected_learnt";
-        }
-        
-        if (isset($change_set['Status'])) {
-            $changed_fields[] = "status";
-            $old_status = $change_set['Status'][0] ?? null;
-            $new_status = $change_set['Status'][1] ?? null;
-        }
-        if (isset($change_set['CategoryID']) || isset($change_set['category'])) {
-            $changed_fields[] = "track";
-        }
-        if (isset($change_set['Published'])) {
-            $changed_fields[] = "published";
-        }
-        if (isset($change_set['SelectionPlanID'])) {
-            $changed_fields[] = "selection_plan";
-        }
-
-        return [
-            'fields' => !empty($changed_fields) ? implode(', ', $changed_fields) : 'properties',
-            'old_status' => $old_status,
-            'new_status' => $new_status,
-        ];
+        parent::__construct($event_type);
     }
 
     protected function getPresentationData(Presentation $subject): array
@@ -91,7 +48,7 @@ abstract class BasePresentationAuditLogFormatter extends AbstractAuditLogFormatt
         ];
     }
 
-    public function format($subject, array $change_set): ?string
+    public function format(mixed $subject, array $change_set): ?string
     {
         if (!$subject instanceof Presentation) {
             return null;
@@ -105,9 +62,7 @@ abstract class BasePresentationAuditLogFormatter extends AbstractAuditLogFormatt
                     return $this->formatCreation($data);
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $extracted = $this->extractChangedFields($change_set);
-                    $extracted['change_set'] = $change_set;
-                    return $this->formatUpdate($data, $extracted);
+                    return $this->formatUpdate($data, $change_set);
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return $this->formatDeletion($data);
@@ -121,7 +76,7 @@ abstract class BasePresentationAuditLogFormatter extends AbstractAuditLogFormatt
 
     abstract protected function formatCreation(array $data): string;
 
-    abstract protected function formatUpdate(array $data, array $extracted): string;
+    abstract protected function formatUpdate(array $data, array $change_set): string;
 
     abstract protected function formatDeletion(array $data): string;
 }

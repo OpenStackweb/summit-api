@@ -13,9 +13,7 @@
  **/
 
 use App\Http\Utils\EpochCellFormatter;
-use App\Models\Foundation\Main\IGroup;
 use App\ModelSerializers\SerializerUtils;
-use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Validator;
@@ -27,8 +25,6 @@ use models\summit\SummitBookableVenueRoomAvailableSlot;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitVenue;
 use ModelSerializers\SerializerRegistry;
-use OpenApi\Attributes as OA;
-use Symfony\Component\HttpFoundation\Response;
 use utils\Filter;
 use utils\FilterParser;
 use utils\PagingInfo;
@@ -330,8 +326,7 @@ trait SummitBookableVenueRoomApi
         return $this->processRequest(function () use ($summit_id, $room_id) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
-            if (is_null($summit))
-                return $this->error404();
+            if (is_null($summit)) return $this->error404();
 
             $room = $summit->getLocation(intval($room_id));
 
@@ -519,13 +514,6 @@ trait SummitBookableVenueRoomApi
             ));
         });
     }
-
-    /**
-     * @param $summit_id
-     * @param $room_id
-     * @param $reservation_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
 
     /**
      * @param $summit_id

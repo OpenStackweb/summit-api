@@ -474,7 +474,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             content: new OA\JsonContent(ref: '#/components/schemas/UpdateBookableVenueRoomReservationPayload')
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Reservation updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Reservation updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, room or reservation not found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -555,7 +555,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'reservation_id', in: 'path', required: true, description: 'Reservation ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Reservation cancelled', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Reservation cancelled', content: new OA\JsonContent(ref: '#/components/schemas/SummitRoomReservation')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or reservation not found'),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Not authenticated'),
         ]
@@ -593,7 +593,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueBookableRoomPayload')
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue or room not found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -661,7 +661,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueFloorBookableRoomPayload')
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, floor or room not found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -833,7 +833,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'attribute_id', in: 'path', required: true, description: 'Attribute ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Attribute removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitBookableVenueRoom')),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Attribute removed'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, room or attribute not found'),
         ]
     )]
@@ -2373,7 +2373,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(description: 'Location payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateLocationPayload')),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Location updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitAbstractLocation')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Location updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitAbstractLocation')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or Location Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -2433,7 +2433,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(description: 'Venue payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenuePayload')),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Venue updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenue')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Venue updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenue')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or venue Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -2496,7 +2496,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(description: 'Floor payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateVenueFloorPayload')),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Floor updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueFloor')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Floor updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueFloor')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -2688,7 +2688,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(description: 'Hotel payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateHotelPayload')),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Hotel updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitHotel')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Hotel updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitHotel')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or hotel Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -2748,7 +2748,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(description: 'Airport payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateAirportPayload')),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Airport updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitAirport')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Airport updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitAirport')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or airport Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -2808,7 +2808,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(description: 'External location payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateExternalLocationPayload')),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'External location updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitExternalLocation')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'External location updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitExternalLocation')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or external location Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -3237,7 +3237,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(description: 'Banner payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateLocationBannerPayload')),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Banner updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationBanner')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Banner updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationBanner')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or banner Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -3476,7 +3476,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             )
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Map updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationMap')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Map updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationMap')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or map Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -3763,7 +3763,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(description: 'Image payload', required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateLocationImagePayload')),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Image updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationImage')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Image updated', content: new OA\JsonContent(ref: '#/components/schemas/SummitLocationImage')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, location, or image Not Found'),
             new OA\Response(response: Response::HTTP_UNPROCESSABLE_ENTITY, description: 'Validation error'),
         ]
@@ -3968,7 +3968,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Room image removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Room image removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueRoom')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or room Not Found'),
         ]
     )]
@@ -4134,7 +4134,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relations to include', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: 'Floor image removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueFloor')),
+            new OA\Response(response: Response::HTTP_CREATED, description: 'Floor image removed', content: new OA\JsonContent(ref: '#/components/schemas/SummitVenueFloor')),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, venue, or floor Not Found'),
         ]
     )]

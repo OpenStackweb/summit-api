@@ -1,32 +1,84 @@
 <?php
+
 namespace App\Swagger\schemas;
 
 use OpenApi\Attributes as OA;
 
+
 #[OA\Schema(
-    schema: "PresentationCategory",
-    description: "Summit Track/Presentation Category. Expandable relations: , allowed_tags, allowed_access_levels, extra_questions, proposed_schedule_allowed_locations, parent, subtracks",
-    type: "object",
+    schema: 'PresentationCategory',
+    type: 'object',
     properties: [
-        new OA\Property(property: "id", description: "Track ID", type: "integer", format: "int64"),
-        new OA\Property(property: "name", description: "Track Name", type: "string"),
-        new OA\Property(property: "description", description: "Track Description", type: "string"),
-        new OA\Property(property: "code", description: "Track Code", type: "string"),
-        new OA\Property(property: "group_name", description: "Track Group Name", type: "string"),
-        new OA\Property(property: "color", description: "Track Color", type: "string"),
-        new OA\Property(property: "session_count", description: "Number of Sessions", type: "integer"),
-        new OA\Property(property: "voting_visible", description: "Is Voting Visible", type: "boolean"),
-        new OA\Property(property: "chair_visible", description: "Is Chair Visible", type: "boolean"),
-        new OA\Property(property: "has_parent", description: "Has Parent Track", type: "boolean"),
-        new OA\Property(property: "has_subtracks", description: "Has Sub-Tracks", type: "boolean"),
-        new OA\Property(property: "has_proposed_schedule_allowed_locations", description: "Has Proposed Schedule Allowed Locations", type: "boolean"),
-        new OA\Property(property: "created", description: "Creation Timestamp", type: "integer", format: "int64"),
-        new OA\Property(property: "last_edited", description: "Last Edit Timestamp", type: "integer", format: "int64"),
-        new OA\Property(
-            property: "icon",
-            type: "object",
-            description: "Track icon (see File schema)"
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'created', type: 'integer', example: 1, format: "time_epoch"),
+        new OA\Property(property: 'last_edited', type: 'integer', example: 1, format: "time_epoch"),
+        new OA\Property(property: 'name', type: 'string'),
+        new OA\Property(property: 'description', type: 'string'),
+        new OA\Property(property: 'code', type: 'string'),
+        new OA\Property(property: 'slug', type: 'string'),
+        new OA\Property(property: 'session_count', type: 'integer'),
+        new OA\Property(property: 'alternate_count', type: 'integer'),
+        new OA\Property(property: 'lightning_count', type: 'integer'),
+        new OA\Property(property: 'lightning_alternate_count', type: 'integer'),
+        new OA\Property(property: 'voting_visible', type: 'boolean'),
+        new OA\Property(property: 'chair_visible', type: 'boolean'),
+        new OA\Property(property: 'summit_id', type: 'integer'),
+        new OA\Property(property: 'color', type: 'string'),
+        new OA\Property(property: 'text_color', type: 'string'),
+        new OA\Property(property: 'icon_url', type: 'string'),
+        new OA\Property(property: 'order', type: 'integer'),
+        new OA\Property(property: 'proposed_schedule_transition_time', type: 'integer'),
+        new OA\Property(property: 'parent_id', type: 'integer'),
+        new OA\Property(property: 'track_groups', type: 'array',
+            items: new OA\Items(
+                anyOf: [
+                    new OA\Schema(type: 'integer'),
+                    new OA\Schema(ref: '#/components/schemas/PresentationCategoryGroup')
+                ]
+            ),
+            description: 'PresentationCategoryGroup full objects if expanded'
         ),
-    ]
-)]
-class PresentationCategorySchema {}
+        new OA\Property(property: 'allowed_tags', type: 'array',
+            items: new OA\Items(
+                anyOf: [
+                    new OA\Schema(type: 'integer'),
+                    // new OA\Schema(ref: '#/components/schemas/Tag')
+                ]
+            ),
+            description: 'Tag full objects if expanded'
+        ),
+        new OA\Property(property: 'extra_questions', type: 'array',
+            items: new OA\Items(
+                anyOf: [
+                    new OA\Schema(type: 'integer'),
+                    // new OA\Schema(ref: '#/components/schemas/TrackQuestionTemplate')
+                ]
+            ),
+            description: 'TrackQuestionTemplate full objects if expanded'
+        ),
+        new OA\Property(property: 'selection_lists', type: 'array', items: new OA\Items(type: 'integer'),),
+        new OA\Property(property: 'allowed_access_levels', type: 'array', items: new OA\Items(type: 'integer'), description: 'SummitAccessLevelType IDs, or full objects if expanded'),
+        new OA\Property(property: 'proposed_schedule_allowed_locations', type: 'array',
+            items: new OA\Items(
+                anyOf: [
+                    new OA\Schema(type: 'integer'),
+                    // new OA\Schema(ref: '#/components/schemas/SummitProposedScheduleAllowedLocation')
+                ]
+            ),
+            description: 'SummitProposedScheduleAllowedLocation full objects if expanded'
+        ),
+        new OA\Property(property: 'parent', ref: '#/components/schemas/PresentationCategory', description: 'PresentationCategory full object if expanded'),
+        new OA\Property(property: 'subtracks', type: 'array',
+            items: new OA\Items(
+                anyOf: [
+                    new OA\Schema(type: 'integer'),
+                    new OA\Schema(ref: '#/components/schemas/PresentationCategory')
+                ]
+            ),
+            description: 'PresentationCategory full object if expanded'
+        ),
+    ])
+]
+class PresentationCategorySchema
+{
+}

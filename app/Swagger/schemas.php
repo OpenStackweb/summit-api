@@ -27,7 +27,9 @@ use function Laravel\Prompts\form;
         )
     ]
 )]
-class SummitCollection {}
+class SummitCollection
+{
+}
 
 #[OA\Schema(
     schema: 'Owner',
@@ -171,7 +173,9 @@ class RSVPInvitationSchema
         new OA\Property(property: 'event_id', type: 'integer', example: 123),
     ]
 )]
-class RSVPInvitationCSVSchema {}
+class RSVPInvitationCSVSchema
+{
+}
 
 #[OA\Schema(
     schema: 'SendRSVPInvitationsRequest',
@@ -481,24 +485,6 @@ class RSVPUpdateRequestSchema_
     ]
 )]
 class RSVPAdminAddRequestSchema
-{
-}
-
-// SubQuestionRule Schema
-#[OA\Schema(
-    schema: "SubQuestionRule",
-    description: "Sub Question Rule",
-    type: "object",
-    properties: [
-        new OA\Property(property: "id", type: "integer", format: "int64"),
-        new OA\Property(property: "parent_question_id", type: "integer", format: "int64"),
-        new OA\Property(property: "parent_question_value_id", type: "integer", format: "int64"),
-        new OA\Property(property: "sub_question_id", type: "integer", format: "int64"),
-        new OA\Property(property: "visibility", type: "string", enum: ["Visible", "Hidden"]),
-        new OA\Property(property: "logic", type: "string", enum: ["And", "Or"]),
-    ]
-)]
-class SubQuestionRule
 {
 }
 

@@ -33,9 +33,7 @@ use OpenApi\Attributes as OA;
         )
     ]
 )]
-class SummitScheduleConfigContentSchema
-{
-}
+class SummitScheduleConfigContentSchema {}
 
 
 #[OA\Schema(
@@ -52,9 +50,7 @@ class SummitScheduleConfigContentSchema
         )
     ]
 )]
-class SummitScheduleConfigSchema
-{
-}
+class SummitScheduleConfigSchema {}
 
 #[OA\Schema(
     schema: 'PaginatedSummitScheduleConfigsResponse',
@@ -72,9 +68,7 @@ class SummitScheduleConfigSchema
         )
     ]
 )]
-class PaginatedSummitScheduleConfigsResponseSchema
-{
-}
+class PaginatedSummitScheduleConfigsResponseSchema {}
 
 #[OA\Schema(
     schema: 'SummitScheduleFilterElementConfig',
@@ -94,9 +88,7 @@ class PaginatedSummitScheduleConfigsResponseSchema
         ),
     ]
 )]
-class SummitScheduleFilterElementConfigSchema
-{
-}
+class SummitScheduleFilterElementConfigSchema {}
 
 #[OA\Schema(
     schema: 'SummitSchedulePreFilterElementConfig',
@@ -119,9 +111,7 @@ class SummitScheduleFilterElementConfigSchema
         )
     ]
 )]
-class SummitSchedulePreFilterElementConfigSchema
-{
-}
+class SummitSchedulePreFilterElementConfigSchema {}
 
 #[OA\Schema(
     schema: 'SummitScheduleConfigCreateRequest',
@@ -163,9 +153,7 @@ class SummitSchedulePreFilterElementConfigSchema
         )
     ]
 )]
-class SummitScheduleConfigCreateRequestSchema
-{
-}
+class SummitScheduleConfigCreateRequestSchema {}
 
 #[OA\Schema(
     schema: 'SummitScheduleConfigUpdateRequest',
@@ -206,9 +194,7 @@ class SummitScheduleConfigCreateRequestSchema
         )
     ]
 )]
-class SummitScheduleConfigUpdateRequestSchema
-{
-}
+class SummitScheduleConfigUpdateRequestSchema {}
 
 // Summit Documents
 
@@ -471,9 +457,7 @@ class SummitSponsorshipTypeUpdateRequestSchema {}
         )
     ]
 )]
-class PaginatedSummitMediaFileTypesResponseSchema
-{
-}
+class PaginatedSummitMediaFileTypesResponseSchema {}
 
 #[OA\Schema(
     schema: 'SummitMediaFileTypeCreateRequest',
@@ -491,9 +475,7 @@ class PaginatedSummitMediaFileTypesResponseSchema
         ),
     ]
 )]
-class SummitMediaFileTypeCreateRequestSchema
-{
-}
+class SummitMediaFileTypeCreateRequestSchema {}
 
 #[OA\Schema(
     schema: 'SummitMediaFileTypeUpdateRequest',
@@ -511,9 +493,7 @@ class SummitMediaFileTypeCreateRequestSchema
         ),
     ]
 )]
-class SummitMediaFileTypeUpdateRequestSchema
-{
-}
+class SummitMediaFileTypeUpdateRequestSchema {}
 
 #[OA\Schema(
     schema: 'RegistrationStat',

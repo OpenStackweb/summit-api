@@ -171,9 +171,7 @@ class RSVPInvitationSchema
         new OA\Property(property: 'event_id', type: 'integer', example: 123),
     ]
 )]
-class RSVPInvitationCSVSchema
-{
-}
+class RSVPInvitationCSVSchema {}
 
 #[OA\Schema(
     schema: 'SendRSVPInvitationsRequest',

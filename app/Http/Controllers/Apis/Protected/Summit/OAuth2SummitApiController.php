@@ -184,8 +184,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
         ],
-    ),
-    ]
+    )]
     #[OA\Get(
         path: "/api/public/v1/summits",
         operationId: "getSummitsPublic",
@@ -242,8 +241,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
             ),
         ]
-    )
-    ]
+    )]
+    /**
+     * @return mixed
+     */
     public function getSummits()
     {
         $current_member = $this->resource_server_context->getCurrentUser();
@@ -432,8 +433,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 content: new OA\JsonContent(ref: "#/components/schemas/SummitCollection")
             ),
         ]
-    )
-    ]
+    )]
+    /**
+     * @return mixed
+     */
     public function getAllSummits()
     {
 
@@ -665,8 +668,11 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
         ]
-    )
-    ]
+    )]
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
     public function getSummit($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -764,7 +770,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             $summit = $this->repository->getBySlug(trim($id));
 
         if (!$summit instanceof Summit || $summit->isDeleting())
-            throw new EntityNotFoundException("Not Found.");
+            throw new EntityNotFoundException("Summit not Found.");
         return $summit;
     }
 
@@ -1089,8 +1095,11 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
         ],
-    )
-    ]
+    )]
+    /**
+     * @param $id
+     * @return mixed
+     */
     public function getAttendeesCheckinsOverTimeStats($id)
     {
         return $this->processRequest(function () use ($id) {
@@ -1196,6 +1205,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ],
         )
     ]
+    /**
+     * @param $id
+     * @return mixed
+     */
     public function getPurchasedTicketsOverTimeStats($id)
     {
         return $this->processRequest(function () use ($id) {
@@ -1274,6 +1287,9 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ],
         )
     ]
+    /**
+     * @return mixed
+     */
     public function addSummit()
     {
         return $this->processRequest(function () {
@@ -1340,6 +1356,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ],
         )
     ]
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
     public function updateSummit($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -1401,6 +1421,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ],
         )
     ]
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
     public function deleteSummit($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -1450,6 +1474,11 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             ]
         )
     ]
+    /**
+     * @param $summit_id
+     * @param $external_order_id
+     * @return mixed
+     */
     public function getExternalOrder($summit_id, $external_order_id)
     {
         return $this->processRequest(function () use ($summit_id, $external_order_id) {
@@ -1460,6 +1489,12 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         });
     }
 
+    /**
+     * @param $summit_id
+     * @param $external_order_id
+     * @param $external_attendee_id
+     * @return mixed
+     */
     #[OA\Post(
             path: "/api/v1/summits/{id}/external-orders/{external_order_id}/external-attendees/{external_attendee_id}/confirm",
             operationId: "confirmExternalOrderAttendee",
@@ -1669,6 +1704,10 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         ],
         )
     ]
+    /**
+     * @param $summit_id
+     * @return JsonResponse|mixed
+     */
     public function deleteSummitLogo($summit_id)
     {
        return $this->processRequest(function() use($summit_id){
@@ -1688,57 +1727,61 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     }
 
     #[OA\Post(
-            path: "/api/v1/summits/{id}/logo/secondary",
-            operationId: "addSummitSecondaryLogo",
-            summary: "Add summit secondary logo",
-            tags: ["Summits", "Media"],
-            security: [
-                [
-                    'summit_oauth2' => [
-                        SummitScopes::WriteSummitData
-                    ]
+        path: "/api/v1/summits/{id}/logo/secondary",
+        operationId: "addSummitSecondaryLogo",
+        summary: "Add summit secondary logo",
+        tags: ["Summits", "Media"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::WriteSummitData
                 ]
-            ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            parameters: [
-                new OA\Parameter(
-                    name: "id",
-                    description: "Summit ID",
-                    in: "path",
-                    required: true,
-                    schema: new OA\Schema(type: "integer")
-                ),
-            ],
-            requestBody: new OA\RequestBody(
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
                 required: true,
-                content: new OA\MediaType(
-                    mediaType: "multipart/form-data",
-                    schema: new OA\Schema(
-                        properties: [
-                            new OA\Property(property: "file", type: "string", format: "binary")
-                        ]
-                    )
-                )
+                schema: new OA\Schema(type: "integer")
             ),
-            responses: [
-                new OA\Response(
-                    response: Response::HTTP_CREATED,
-                    description: "Secondary logo created",
-                    content: new OA\JsonContent(type: "object")
-                ),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-                new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
-                new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-                new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            ],
-        )
-    ]
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: "multipart/form-data",
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(property: "file", type: "string", format: "binary")
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Secondary logo created",
+                content: new OA\JsonContent(type: "object")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+        ],
+    )]
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @return JsonResponse|mixed
+     */
     public function addSummitSecondaryLogo(LaravelRequest $request, $summit_id)
     {
         return $this->processRequest(function () use ($request, $summit_id) {
@@ -1768,41 +1811,45 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     }
 
     #[OA\Delete(
-            path: "/api/v1/summits/{id}/logo/secondary",
-            operationId: "deleteSummitSecondaryLogo",
-            summary: "Delete summit secondary logo",
-            tags: ["Summits", "Media"],
-            security: [
-                [
-                    'summit_oauth2' => [
-                        SummitScopes::WriteSummitData
-                    ]
+        path: "/api/v1/summits/{id}/logo/secondary",
+        operationId: "deleteSummitSecondaryLogo",
+        summary: "Delete summit secondary logo",
+        tags: ["Summits", "Media"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::WriteSummitData
                 ]
-            ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                ]
-            ],
-            parameters: [
-                new OA\Parameter(
-                    name: "id",
-                    description: "Summit ID",
-                    in: "path",
-                    required: true,
-                    schema: new OA\Schema(type: "integer")
-                ),
-            ],
-            responses: [
-                new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Secondary logo deleted"),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-                new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-                new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            ],
-        )
-    ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Secondary logo deleted"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+        ],
+    )]
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @return JsonResponse|mixed
+     */
     public function deleteSummitSecondaryLogo($summit_id)
     {
         return $this->processRequest(function() use($summit_id){
@@ -2145,44 +2192,43 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
-            path: "/api/v1/summits/{id}/qr-codes/all/enc-key",
-            operationId: "generateQREncKey",
-            summary: "Generate QR encryption key",
-            tags: ["Summits", "QR Code"],
-            security: [
-                [
-                    'summit_oauth2' => [
-                        SummitScopes::WriteSummitData
-                    ]
+        path: "/api/v1/summits/{id}/qr-codes/all/enc-key",
+        operationId: "generateQREncKey",
+        summary: "Generate QR encryption key",
+        tags: ["Summits", "QR Code"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::WriteSummitData
                 ]
-            ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::SummitAdministrators,
-                    IGroup::Administrators,
-                ]
-            ],
-            parameters: [
-                new OA\Parameter(
-                    name: "id",
-                    description: "Summit ID",
-                    in: "path",
-                    required: true,
-                    schema: new OA\Schema(type: "integer")
-                ),
-            ],
-            responses: [
-                new OA\Response(
-                    response: Response::HTTP_CREATED,
-                    description: "QR encryption key generated",
-                    content: new OA\JsonContent(type: "object")
-                ),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-                new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            ],
-        )
-    ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::SummitAdministrators,
+                IGroup::Administrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "QR encryption key generated",
+                content: new OA\JsonContent(type: "object")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+        ],
+    )]
     /**
      * @param $summit_id
      * @return JsonResponse|mixed
@@ -2202,53 +2248,51 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-            path: "/api/v1/summits/{id}/lead-report-settings/metadata",
-            operationId: "getLeadReportSettingsMetadata",
-            summary: "Get lead report settings metadata",
-            tags: ["Summits", "Lead Reports"],
-            security: [
-                [
-                    'summit_oauth2' => [
-                        SummitScopes::ReadSummitData,
-                        SummitScopes::ReadAllSummitData
-                    ]
+        path: "/api/v1/summits/{id}/lead-report-settings/metadata",
+        operationId: "getLeadReportSettingsMetadata",
+        summary: "Get lead report settings metadata",
+        tags: ["Summits", "Lead Reports"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
-            ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
-                    IGroup::SponsorExternalUsers,
-                ]
-            ],
-            parameters: [
-                new OA\Parameter(
-                    name: "id",
-                    description: "Summit ID",
-                    in: "path",
-                    required: true,
-                    schema: new OA\Schema(type: "integer")
-                ),
-            ],
-            responses: [
-                new OA\Response(
-                    response: Response::HTTP_OK,
-                    description: "Success",
-                    content: new OA\JsonContent(type: "object")
-                ),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-                new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            ],
-        )
-    ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::Sponsors,
+                IGroup::SponsorExternalUsers,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(type: "object")
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+        ],
+    )]
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function getLeadReportSettingsMetadata($summit_id)
-    {
+    public function getLeadReportSettingsMetadata($summit_id) {
         return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -2257,53 +2301,51 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
-            path: "/api/v1/summits/{id}/lead-report-settings",
-            operationId: "getLeadReportSettings",
-            summary: "Get lead report settings",
-            tags: ["Summits", "Lead Reports"],
-            security: [
-                [
-                    'summit_oauth2' => [
-                        SummitScopes::ReadSummitData,
-                        SummitScopes::ReadAllSummitData
-                    ]
+        path: "/api/v1/summits/{id}/lead-report-settings",
+        operationId: "getLeadReportSettings",
+        summary: "Get lead report settings",
+        tags: ["Summits", "Lead Reports"],
+        security: [
+            [
+                'summit_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
-            ],
-            x: [
-                'required-groups' => [
-                    IGroup::SuperAdmins,
-                    IGroup::Administrators,
-                    IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
-                    IGroup::SponsorExternalUsers,
-                ]
-            ],
-            parameters: [
-                new OA\Parameter(
-                    name: "id",
-                    description: "Summit ID",
-                    in: "path",
-                    required: true,
-                    schema: new OA\Schema(type: "integer")
-                ),
-            ],
-            responses: [
-                new OA\Response(
-                    response: Response::HTTP_OK,
-                    description: "Success",
-                    content: new OA\JsonContent(type: "array", items: new OA\Items(type: "object"))
-                ),
-                new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-                new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            ],
-        )
-    ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::Sponsors,
+                IGroup::SponsorExternalUsers,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "Summit ID",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Success",
+                content: new OA\JsonContent(type: "array", items: new OA\Items(type: "object"))
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+        ],
+    )]
     /**
      * @param $summit_id
      * @return mixed
      */
-    public function getLeadReportSettings($summit_id)
-    {
+    public function getLeadReportSettings($summit_id){
         return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -2365,8 +2407,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function addLeadReportSettings($summit_id)
-    {
+    public function addLeadReportSettings($summit_id) {
         return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
@@ -2435,8 +2476,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function updateLeadReportSettings($summit_id)
-    {
+    public function updateLeadReportSettings($summit_id) {
         return $this->processRequest(function () use ($summit_id) {
             $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();

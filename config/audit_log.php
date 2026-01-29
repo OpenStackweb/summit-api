@@ -108,6 +108,30 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SummitVenueAuditLogFormatter::class,
         ],
+        \models\summit\SummitVenueFloor::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitVenueFloorAuditLogFormatter::class,
+        ],
+        \models\main\File::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\FileAuditLogFormatter::class,
+        ],
+        \models\summit\SummitBookableVenueRoom::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitBookableVenueRoomAuditLogFormatter::class,
+        ],
+        \models\summit\SummitLocationImage::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitLocationImageAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitLocationBannerAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Locations\Banners\ScheduledSummitLocationBanner::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\ScheduledSummitLocationBannerAuditLogFormatter::class,
+        ],
         \models\summit\SummitExternalLocation::class => [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SummitExternalLocationAuditLogFormatter::class,

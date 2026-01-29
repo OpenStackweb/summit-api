@@ -172,5 +172,37 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SummitRegistrationFeedMetadataAuditLogFormatter::class,
         ],
+        \models\main\Affiliation::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\AffiliationAuditLogFormatter::class,
+        ],
+        \models\summit\SummitSponsorshipAddOn::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitSponsorshipAddOnAuditLogFormatter::class,
+        ],
+        \models\summit\SummitAttendeeTicket::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitAttendeeTicketAuditLogFormatter::class,
+        ],
+        \models\summit\SummitAttendeeTicketTax::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitAttendeeTicketTaxAuditLogFormatter::class,
+        ],
+        \models\summit\SummitAttendeeNote::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitAttendeeNoteAuditLogFormatter::class,
+        ],
+        \models\summit\SummitAttendeeBadge::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitAttendeeBadgeAuditLogFormatter::class,
+        ],
+        \models\summit\SummitAttendee::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitAttendeeAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationAttendeeVote::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationAttendeeVoteAuditLogFormatter::class,
+        ],
     ]
 ];

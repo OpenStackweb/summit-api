@@ -419,8 +419,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: '/api/v1/summits/{id}/tickets/csv',
         operationId: 'getAllTicketsCSV',
-        summary: 'Get all tickets for a summit',
-        description: 'Returns a paginated list of tickets for the specified summit with filtering and sorting capabilities',
+        summary: 'Export all tickets for a summit as CSV',
+        description: 'Exports all tickets for the specified summit as a CSV file with filtering and sorting capabilities',
         security: [['summit_tickets_oauth2' => [
             SummitScopes::ReadAllSummitData,
             SummitScopes::ReadRegistrationOrders,

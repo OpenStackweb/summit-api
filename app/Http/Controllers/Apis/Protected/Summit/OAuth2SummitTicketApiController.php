@@ -15,14 +15,18 @@
 use App\Http\Utils\BooleanCellFormatter;
 use App\Http\Utils\EpochCellFormatter;
 use App\libs\Utils\Doctrine\ReplicaAwareTrait;
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Registration\ISummitExternalRegistrationFeedType;
 use App\ModelSerializers\ISummitAttendeeTicketSerializerTypes;
 use App\ModelSerializers\SerializerUtils;
 use App\Rules\Boolean;
+use App\Security\SummitScopes;
 use App\Services\Model\ISummitOrderService;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use OpenApi\Attributes as OA;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
@@ -103,11 +107,113 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         $this->service = $service;
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}',
+        operationId: 'getSummitAttendeeTicketById',
+        summary: 'Get a specific ticket for a summit by ticket ID',
+        description: '',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+            IGroup::SummitAccessControl
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', in: 'query', required: false, description: 'Relationships, allowed values: applied_taxes, refund_requests', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships, allowed values: owner, order, ticket_type, badge, promo_code, refund_requests, applied_taxes', schema: new OA\Schema(type: 'string')),
 
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeTicket')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets',
+        operationId: 'getAllSummitAttendeeTickets',
+        summary: 'Get all tickets for a summit',
+        description: 'Returns a paginated list of tickets for the specified summit with filtering and sorting capabilities',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by number, owner_name, owner_email, status, ticket_type_id, etc.', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by id, number, status, owner_name, etc.', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'not_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filter by ticket status, allowed values: Reserved, Cancelled, Confirmed, Paid, Error'),
+            new OA\Parameter(name: 'number', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order_number', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_name', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_first_name', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_last_name', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_email', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_company', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'summit_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'owner_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'order_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'is_active', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'has_requested_refund_requests', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'access_level_type_name', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'access_level_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'view_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'has_owner', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'owner_status', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filter by owner status, allowed values: Complete, Incomplete'),
+            new OA\Parameter(name: 'has_badge', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'promo_code_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'promo_code', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'promo_code_description', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'promo_code_tag_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'promo_code_tag', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'final_amount', in: 'query', required: false, schema: new OA\Schema(type: 'number')),
+            new OA\Parameter(name: 'is_printable', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'badge_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'has_badge_prints', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'badge_prints_count', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'has_owner_company', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'exclude_is_printable_free_unassigned', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitAttendeeTicketsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getAllBySummit($summit_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -228,10 +334,35 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @return mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets/external',
+        operationId: 'getExternalTickets',
+        summary: 'Get external ticket data',
+        description: 'Returns ticket data from external registration feed by owner email',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::BadgePrinters,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'filter', in: 'query', required: true, description: 'Filter by owner_email', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitAttendeeTicketsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Summit has no external feed'),
+        ]
+    )]
     public function getAllBySummitExternal($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -285,10 +416,78 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets/csv',
+        operationId: 'getAllTicketsCSV',
+        summary: 'Export all tickets for a summit as CSV',
+        description: 'Exports all tickets for the specified summit as a CSV file with filtering and sorting capabilities',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by number, owner_name, owner_email, status, ticket_type_id, etc.', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by id, number, status, owner_name, etc.', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'not_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filter by ticket status, allowed values: Reserved, Cancelled, Confirmed, Paid, Error'),
+            new OA\Parameter(name: 'number', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order_number', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_name', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_first_name', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_last_name', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_email', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'owner_company', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'summit_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'owner_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'order_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'is_active', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'has_requested_refund_requests', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'access_level_type_name', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'access_level_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'view_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'has_owner', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'owner_status', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filter by owner status, allowed values: Complete, Incomplete'),
+            new OA\Parameter(name: 'has_badge', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'promo_code_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'promo_code', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'promo_code_description', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'promo_code_tag_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'promo_code_tag', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'final_amount', in: 'query', required: false, schema: new OA\Schema(type: 'number')),
+            new OA\Parameter(name: 'is_printable', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'badge_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'has_badge_prints', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'badge_prints_count', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'has_owner_company', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'exclude_is_printable_free_unassigned', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\MediaType(
+                    mediaType: 'text/csv',
+                    schema: new OA\Schema(type: 'string', format: 'binary')
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getAllBySummitCSV($summit_id)
     {
         return $this->withReplica(function() use ($summit_id) {
@@ -491,10 +690,36 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/tickets/ingest',
+        operationId: 'ingestExternalTicketData',
+        summary: 'Ingest external ticket data',
+        description: 'Triggers ingestion of ticket data from external registration feed',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationData,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/IngestExternalTicketDataRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Ingestion process started successfully'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function ingestExternalTicketData($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -516,10 +741,35 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets/csv/template',
+        operationId: 'getTicketImportTemplate',
+        summary: 'Get ticket import template',
+        description: 'Returns a CSV template for importing ticket data',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationData,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'CSV template',
+                content: new OA\MediaType(mediaType: 'text/csv', schema: new OA\Schema(type: 'string'))
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+        ]
+    )]
     public function getImportTicketDataTemplate($summit_id)
     {
         return $this->processRequest(function () use ($summit_id) {
@@ -581,11 +831,45 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param LaravelRequest $request
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/tickets/csv',
+        operationId: 'importTicketData',
+        summary: 'Import ticket data from CSV',
+        description: 'Imports ticket data from a CSV file',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::WriteRegistrationData,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['file'],
+                    properties: [
+                        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'CSV file to import')
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Import process started successfully'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'File parameter not set'),
+        ]
+    )]
     public function importTicketData(LaravelRequest $request, $summit_id)
     {
 
@@ -609,14 +893,75 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @return mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/summits/all/orders/all/tickets/me',
+        operationId: 'getAllMyTickets',
+        summary: 'Get all my tickets across all summits',
+        description: 'Returns all tickets owned by the current user across all summits',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadMyRegistrationOrders,
+        ]]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by number, order_number, status, etc.', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by id, number, status, created', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitAttendeeTicketsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+        ]
+    )]
     public function getAllMyTickets()
     {
         return $this->getAllMyTicketsBySummit('all');
     }
 
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/orders/all/tickets/me',
+        operationId: 'getMyTicketsBySummit',
+        summary: 'Get my tickets for a summit',
+        description: 'Returns all tickets owned by the current user for a specific summit',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadMyRegistrationOrders,
+        ]]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by number, order_number, status, etc.', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by id, number, status, created', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'number', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order_number', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order_owner_email', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'order_owner_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'has_order_owner', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Valid values: Reserved, Cancelled, Confirmed, Paid, Error'),
+            new OA\Parameter(name: 'final_amount', in: 'query', required: false, schema: new OA\Schema(type: 'number')),
+            new OA\Parameter(name: 'assigned_to', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Valid values: Me, SomeoneElse, Nobody'),
+            new OA\Parameter(name: 'owner_status', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Valid values: Complete, Incomplete'),
+            new OA\Parameter(name: 'badge_features_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_type_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'promo_code', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitAttendeeTicketsResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+        ]
+    )]
     public function getAllMyTicketsBySummit($summit_id)
     {
         $owner = $this->getResourceServerContext()->getCurrentUser();
@@ -715,11 +1060,42 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
 
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @return mixed
-     */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/refund',
+        operationId: 'refundTicket',
+        summary: 'Refund a ticket',
+        description: 'Processes a refund for a specific ticket',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/RefundTicketRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Ticket refunded successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeTicket')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or ticket not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error'),
+        ]
+    )]
     public function refundTicket($summit_id, $ticket_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id) {
@@ -757,11 +1133,37 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge',
+        operationId: 'getTicketBadge',
+        summary: 'Get ticket badge',
+        description: 'Returns the badge associated with a ticket',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::ReadRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or badge not found'),
+        ]
+    )]
     public function getAttendeeBadge($summit_id, $ticket_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id) {
@@ -784,11 +1186,40 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Post(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge',
+        operationId: 'createTicketBadge',
+        summary: 'Create ticket badge',
+        description: 'Creates a badge for a specific ticket',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/CreateBadgeRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Badge created successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or ticket not found'),
+        ]
+    )]
     public function createAttendeeBadge($summit_id, $ticket_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id) {
@@ -809,11 +1240,32 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current',
+        operationId: 'deleteTicketBadge',
+        summary: 'Delete ticket badge',
+        description: 'Deletes the badge associated with a ticket',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrders,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Badge deleted successfully'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or badge not found'),
+        ]
+    )]
     public function deleteAttendeeBadge($summit_id, $ticket_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id) {
@@ -824,12 +1276,37 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @param $type_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/type/{type_id}',
+        operationId: 'updateTicketBadgeType',
+        summary: 'Update badge type',
+        description: 'Updates the badge type for a ticket',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Badge Type ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Badge type updated successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or badge type not found'),
+        ]
+    )]
     public function updateAttendeeBadgeType($summit_id, $ticket_id, $type_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id, $type_id) {
@@ -845,12 +1322,37 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @param $feature_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/features/{feature_id}',
+        operationId: 'addTicketBadgeFeature',
+        summary: 'Add badge feature',
+        description: 'Adds a feature to a ticket badge',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'feature_id', in: 'path', required: true, description: 'Feature ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Feature added successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or feature not found'),
+        ]
+    )]
     public function addAttendeeBadgeFeature($summit_id, $ticket_id, $feature_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id, $feature_id) {
@@ -866,12 +1368,37 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @param $feature_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Delete(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/features/{feature_id}',
+        operationId: 'removeTicketBadgeFeature',
+        summary: 'Remove badge feature',
+        description: 'Removes a feature from a ticket badge',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::UpdateRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'feature_id', in: 'path', required: true, description: 'Feature ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Feature removed successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or feature not found'),
+        ]
+    )]
     public function removeAttendeeBadgeFeature($summit_id, $ticket_id, $feature_id)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id, $feature_id) {
@@ -887,11 +1414,42 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
+        operationId: 'printTicketBadge',
+        summary: 'Print badge with default view',
+        description: 'Prints a badge using the summit\'s default view type',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::PrintRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/PrintBadgeRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Badge printed successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or default view type not found'),
+        ]
+    )]
     public function printAttendeeBadgeDefault($summit_id, $ticket_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -904,12 +1462,43 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         return $this->printAttendeeBadge($summit_id, $ticket_id, $viewType->getName());
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @param $view_type
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Put(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/{view_type}/print',
+        operationId: 'printTicketBadgeByViewType',
+        summary: 'Print badge with specific view type',
+        description: 'Prints a badge using a specific view type',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::WriteSummitData,
+            SummitScopes::PrintRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'view_type', in: 'path', required: true, description: 'View type name', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/PrintBadgeRequest')
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Badge printed successfully',
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitAttendeeBadge')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or view type not found'),
+        ]
+    )]
     public function printAttendeeBadge($summit_id, $ticket_id, $view_type)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id, $view_type) {
@@ -939,11 +1528,38 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         });
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
+        operationId: 'canPrintTicketBadge',
+        summary: 'Check if badge can be printed (default view)',
+        description: 'Checks if a badge can be printed using the default view type',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::PrintRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Badge printability status',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or ticket not found'),
+        ]
+    )]
     public function canPrintAttendeeBadgeDefault($summit_id, $ticket_id)
     {
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -956,12 +1572,39 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         return $this->canPrintAttendeeBadge($summit_id, $ticket_id, $viewType->getName());
     }
 
-    /**
-     * @param $summit_id
-     * @param $ticket_id
-     * @param $view_type
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/{view_type}/print',
+        operationId: 'canPrintTicketBadgeByViewType',
+        summary: 'Check if badge can be printed (specific view)',
+        description: 'Checks if a badge can be printed using a specific view type',
+        security: [['summit_tickets_oauth2' => [
+            SummitScopes::ReadAllSummitData,
+            SummitScopes::PrintRegistrationOrdersBadges,
+        ]]],
+        x: ['required-groups' => [
+            IGroup::SuperAdmins,
+            IGroup::Administrators,
+            IGroup::SummitAdministrators,
+            IGroup::SummitRegistrationAdmins,
+            IGroup::BadgePrinters,
+        ]],
+        tags: ['Tickets'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'view_type', in: 'path', required: true, description: 'View type name', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Badge printability status',
+                content: new OA\JsonContent(type: 'object')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit, ticket or view type not found'),
+        ]
+    )]
     public function canPrintAttendeeBadge($summit_id, $ticket_id, $view_type)
     {
         return $this->processRequest(function () use ($summit_id, $ticket_id, $view_type) {

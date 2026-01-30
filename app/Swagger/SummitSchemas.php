@@ -494,3 +494,55 @@ class SummitMediaFileTypeCreateRequestSchema {}
     ]
 )]
 class SummitMediaFileTypeUpdateRequestSchema {}
+
+#[OA\Schema(
+    schema: 'RegistrationStat',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'qty', type: 'integer'),
+        new OA\Property(property: 'label', type: 'string'),
+    ]
+)]
+class RegistrationStatSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'PaginatedRegistrationStatsCheckInsResponse',
+    type: 'object',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/RegistrationStat')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedRegistrationStatsCheckInsResponse
+{
+}
+
+#[OA\Schema(
+    schema: 'PaginatedRegistrationStatsPurchasedTicketsResponse',
+    type: 'object',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),
+        new OA\Schema(
+            properties: [
+                new OA\Property(
+                    property: 'data',
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/RegistrationStat')
+                )
+            ]
+        )
+    ]
+)]
+class PaginatedRegistrationStatsPurchasedTicketsResponseSchema
+{
+}

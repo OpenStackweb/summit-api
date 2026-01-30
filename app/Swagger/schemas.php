@@ -12,6 +12,24 @@ use OpenApi\Attributes as OA;
 use function Laravel\Prompts\form;
 
 #[OA\Schema(
+    schema: "SummitCollection",
+    title: "Summit Collection",
+    allOf: [
+        new OA\Schema(ref: "#/components/schemas/PaginateDataSchemaResponse"),
+        new OA\Schema(
+            properties: [
+                new OA\Property(
+                    property: "data",
+                    type: "array",
+                    items: new OA\Items(ref: "#/components/schemas/Summit")
+                )
+            ]
+        )
+    ]
+)]
+class SummitCollection {}
+
+#[OA\Schema(
     schema: 'Owner',
     type: 'object',
     properties: [
@@ -154,22 +172,6 @@ class RSVPInvitationSchema
     ]
 )]
 class RSVPInvitationCSVSchema {}
-
-
-#[OA\Schema(
-    schema: 'SummitEvent',
-    type: 'object',
-    properties: [
-        new OA\Property(property: 'id', type: 'integer'),
-        new OA\Property(property: 'created', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'title', type: 'string', example: 'This is a title'),
-        new OA\Property(property: 'description', type: 'string', example: 'This is a Description'),
-    ]
-)]
-class SummitEventSchema
-{
-}
 
 #[OA\Schema(
     schema: 'SendRSVPInvitationsRequest',

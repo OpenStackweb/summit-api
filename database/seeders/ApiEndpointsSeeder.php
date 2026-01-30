@@ -6439,13 +6439,17 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'get-external-order',
                 'route' => '/api/v1/summits/{id}/external-orders/{external_order_id}',
                 'http_method' => 'GET',
-                'scopes' => [sprintf('%s/summits/read-external-orders', $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::ReadSummitsConfirmExternalOrders, $current_realm)
+                ],
             ),
             array(
                 'name' => 'confirm-external-order',
                 'route' => '/api/v1/summits/{id}/external-orders/{external_order_id}/external-attendees/{external_attendee_id}/confirm',
                 'http_method' => 'POST',
-                'scopes' => [sprintf('%s/summits/confirm-external-orders', $current_realm)],
+                'scopes' => [
+                    sprintf(SummitScopes::WriteSummitsConfirmExternalOrders, $current_realm)
+                ],
             ),
             [
                 'name' => 'import-assets-from-mux',

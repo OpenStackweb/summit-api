@@ -281,22 +281,6 @@ class PresentationSpeakerSummitAssistanceConfirmationRequestUpdateRequest
 //
 
 #[OA\Schema(
-    schema: 'PresentationActionType',
-    type: 'object',
-    properties: [
-        new OA\Property(property: 'id', type: 'integer', example: 1),
-        new OA\Property(property: 'created', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'last_edited', type: 'integer', example: 1630500518),
-        new OA\Property(property: 'label', type: 'string', example: 'Review'),
-        new OA\Property(property: 'summit_id', type: 'integer', example: 42, description: 'Summit ID, add ?expand=summit to get full summit object'),
-        new OA\Property(property: 'order', type: 'integer', example: 1, description: 'Order within a selection plan. Only present when filtering by selection_plan_id', ),
-    ]
-)]
-class PresentationActionTypeSchema
-{
-}
-
-#[OA\Schema(
     schema: 'PaginatedPresentationActionTypesResponse',
     allOf: [
         new OA\Schema(ref: '#/components/schemas/PaginateDataSchemaResponse'),

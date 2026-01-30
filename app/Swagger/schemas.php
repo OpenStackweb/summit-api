@@ -482,22 +482,6 @@ class RSVPAdminAddRequestSchema
 {
 }
 
-#[OA\Schema(
-    schema: "ExtraQuestionTypeValue",
-    description: "Extra Question Type Value",
-    type: "object",
-    properties: [
-        new OA\Property(property: "id", type: "integer", format: "int64", example: 1),
-        new OA\Property(property: "value", type: "string", example: "Value 1"),
-        new OA\Property(property: "label", type: "string", example: "Label 1"),
-        new OA\Property(property: "order", type: "integer", format: "int32", example: 1),
-        new OA\Property(property: "question_id", type: "integer", format: "int64", example: 10),
-    ]
-)]
-class ExtraQuestionTypeValue
-{
-}
-
 // SubQuestionRule Schema
 #[OA\Schema(
     schema: "SubQuestionRule",

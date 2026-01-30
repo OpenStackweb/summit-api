@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping AS ORM;
+use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 /**
  * @ORM\Entity
@@ -65,6 +68,22 @@ class DataCenterLocation extends SilverstripeBaseModel
      * @var DataCenterRegion
      */
     private $region;
+
+    /**
+     * @ORM\OneToMany(targetEntity="AvailabilityZone", mappedBy="location", cascade={"persist"}, orphanRemoval=true)
+     * @var AvailabilityZone[]
+     */
+    protected $availability_zones;
+
+    use One2ManyPropertyTrait;
+
+    protected $getIdMappings = [
+        'getRegionId' => 'region',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasRegion' => 'region',
+    ];
 
     /**
      * @return string
@@ -122,15 +141,13 @@ class DataCenterLocation extends SilverstripeBaseModel
         return $this->region;
     }
 
-    /**
-     * @return int
-     */
-    public function getRegionId(){
-        try{
-            return !is_null($this->region) ? $this->region->getId(): 0;
-        }
-        catch (\Exception $ex){
-            return 0;
-        }
+    public function __construct()
+    {
+        parent::__construct();
+        $this->availability_zones   = new ArrayCollection();
+    }
+
+    public function getAvailabilityZones(){
+        return $this->availability_zones;
     }
 }

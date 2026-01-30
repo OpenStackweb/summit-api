@@ -33,6 +33,7 @@ use App\ModelSerializers\Locations\SummitBookableVenueRoomSerializer;
 use App\ModelSerializers\Locations\SummitRoomReservationCSVSerializer;
 use App\ModelSerializers\Locations\SummitRoomReservationSerializer;
 use App\ModelSerializers\Marketplace\ApplianceSerializer;
+use App\ModelSerializers\Marketplace\AvailabilityZoneSerializer;
 use App\ModelSerializers\Marketplace\CloudServiceOfferedSerializer;
 use App\ModelSerializers\Marketplace\CompanyServiceResourceSerializer;
 use App\ModelSerializers\Marketplace\CompanyServiceSerializer;
@@ -660,6 +661,7 @@ final class SerializerRegistry
         $this->registry['RemoteCloudService'] = RemoteCloudServiceSerializer::class;
         $this->registry['CloudServiceOffered'] = CloudServiceOfferedSerializer::class;
         $this->registry['TrainingService'] = TrainingServiceSerializer::class;
+        $this->registry['AvailabilityZone'] = AvailabilityZoneSerializer::class;
         // software
 
         $this->registry['OpenStackComponent'] = OpenStackComponentSerializer::class;

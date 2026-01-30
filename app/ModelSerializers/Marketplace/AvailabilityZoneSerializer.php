@@ -1,6 +1,7 @@
 <?php namespace App\ModelSerializers\Marketplace;
+
 /**
- * Copyright 2017 OpenStack Foundation
+ * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,19 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use ModelSerializers\SilverStripeSerializer;
-/**
- * Class DataCenterRegionSerializer
- * @package App\ModelSerializers\Marketplace
- */
-final class DataCenterRegionSerializer extends SilverStripeSerializer
+class AvailabilityZoneSerializer extends SilverStripeSerializer
 {
     /**
      * @var array
      */
     protected static $array_mappings = [
-        'Name'     => 'name:json_string',
-        'Color'    => 'color:json_string',
-        'Endpoint' => 'endpoint:json_string',
+        'Name'  => 'name:json_string',
     ];
 }

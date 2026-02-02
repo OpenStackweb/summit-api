@@ -25,7 +25,9 @@ use OpenApi\Attributes as OA;
         )
     ]
 )]
-class PaginatedSelectionPlansResponseSchema {}
+class PaginatedSelectionPlansResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedSummitSelectionPlanExtraQuestionTypesResponse',
@@ -44,7 +46,9 @@ class PaginatedSelectionPlansResponseSchema {}
         )
     ]
 )]
-class PaginatedSummitSelectionPlanExtraQuestionTypesResponseSchema {}
+class PaginatedSummitSelectionPlanExtraQuestionTypesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedAssignedSelectionPlanExtraQuestionTypesResponse',
@@ -63,7 +67,9 @@ class PaginatedSummitSelectionPlanExtraQuestionTypesResponseSchema {}
         )
     ]
 )]
-class PaginatedAssignedSelectionPlanExtraQuestionTypesResponseSchema {}
+class PaginatedAssignedSelectionPlanExtraQuestionTypesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedSelectionPlanAllowedMembersResponse',
@@ -82,7 +88,9 @@ class PaginatedAssignedSelectionPlanExtraQuestionTypesResponseSchema {}
         )
     ]
 )]
-class PaginatedSelectionPlanAllowedMembersResponseSchema {}
+class PaginatedSelectionPlanAllowedMembersResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedSummitCategoryChangesResponse',
@@ -101,7 +109,9 @@ class PaginatedSelectionPlanAllowedMembersResponseSchema {}
         )
     ]
 )]
-class PaginatedSummitCategoryChangesResponseSchema {}
+class PaginatedSummitCategoryChangesResponseSchema
+{
+}
 
 #[OA\Schema(
     schema: 'PaginatedTrackChairPresentationsResponse',
@@ -120,7 +130,9 @@ class PaginatedSummitCategoryChangesResponseSchema {}
         )
     ]
 )]
-class PaginatedTrackChairPresentationsResponseSchema {}
+class PaginatedTrackChairPresentationsResponseSchema
+{
+}
 
 /**
  * Metadata Response Schemas
@@ -139,25 +151,9 @@ class PaginatedTrackChairPresentationsResponseSchema {}
         ),
     ]
 )]
-class ExtraQuestionTypeMetadataSchema {}
-
-/**
- * Extra Question Value Schema
- */
-
-#[OA\Schema(
-    schema: 'ExtraQuestionTypeValue',
-    type: 'object',
-    properties: [
-        new OA\Property(property: 'id', type: 'integer', example: 1),
-        new OA\Property(property: 'created', type: 'integer', description: 'Unix timestamp', example: 1640995200),
-        new OA\Property(property: 'last_edited', type: 'integer', description: 'Unix timestamp', example: 1640995200),
-        new OA\Property(property: 'value', type: 'string', example: 'beginner'),
-        new OA\Property(property: 'label', type: 'string', example: 'Beginner'),
-        new OA\Property(property: 'order', type: 'integer', example: 1),
-    ]
-)]
-class ExtraQuestionTypeValueSchema {}
+class ExtraQuestionTypeMetadataSchema
+{
+}
 
 /**
  * Request Body Schemas
@@ -172,7 +168,9 @@ class ExtraQuestionTypeValueSchema {}
         new OA\Property(property: 'is_public', type: 'boolean', description: 'Whether the comment is public'),
     ]
 )]
-class PresentationCommentPayloadSchema {}
+class PresentationCommentPayloadSchema
+{
+}
 
 #[OA\Schema(
     schema: 'CategoryChangeRequestPayload',
@@ -182,7 +180,9 @@ class PresentationCommentPayloadSchema {}
         new OA\Property(property: 'new_category_id', type: 'integer', description: 'The ID of the new category/track'),
     ]
 )]
-class CategoryChangeRequestPayloadSchema {}
+class CategoryChangeRequestPayloadSchema
+{
+}
 
 #[OA\Schema(
     schema: 'ResolveCategoryChangeRequestPayload',
@@ -193,7 +193,9 @@ class CategoryChangeRequestPayloadSchema {}
         new OA\Property(property: 'reason', type: 'string', description: 'Optional reason for rejection'),
     ]
 )]
-class ResolveCategoryChangeRequestPayloadSchema {}
+class ResolveCategoryChangeRequestPayloadSchema
+{
+}
 
 #[OA\Schema(
     schema: 'AllowedMemberPayload',
@@ -203,7 +205,9 @@ class ResolveCategoryChangeRequestPayloadSchema {}
         new OA\Property(property: 'email', type: 'string', format: 'email', description: 'The email of the allowed member'),
     ]
 )]
-class AllowedMemberPayloadSchema {}
+class AllowedMemberPayloadSchema
+{
+}
 
 #[OA\Schema(
     schema: 'AddSelectionPlanPayload',
@@ -233,7 +237,9 @@ class AllowedMemberPayloadSchema {}
         new OA\Property(property: 'allow_track_change_requests', type: 'boolean', description: 'Whether track change requests are allowed'),
     ]
 )]
-class AddSelectionPlanPayloadSchema {}
+class AddSelectionPlanPayloadSchema
+{
+}
 
 #[OA\Schema(
     schema: 'UpdateSelectionPlanPayload',
@@ -262,7 +268,9 @@ class AddSelectionPlanPayloadSchema {}
         new OA\Property(property: 'allow_track_change_requests', type: 'boolean', description: 'Whether track change requests are allowed'),
     ]
 )]
-class UpdateSelectionPlanPayloadSchema {}
+class UpdateSelectionPlanPayloadSchema
+{
+}
 
 #[OA\Schema(
     schema: 'AddAllowedPresentationActionTypePayload',
@@ -272,7 +280,9 @@ class UpdateSelectionPlanPayloadSchema {}
         new OA\Property(property: 'order', type: 'integer', minimum: 1, description: 'Order of the action type'),
     ]
 )]
-class AddAllowedPresentationActionTypePayloadSchema {}
+class AddAllowedPresentationActionTypePayloadSchema
+{
+}
 
 #[OA\Schema(
     schema: 'UpdateAllowedPresentationActionTypePayload',
@@ -283,4 +293,6 @@ class AddAllowedPresentationActionTypePayloadSchema {}
         new OA\Property(property: 'order', type: 'integer', minimum: 1, description: 'Order of the action type'),
     ]
 )]
-class UpdateAllowedPresentationActionTypePayloadSchema {}
+class UpdateAllowedPresentationActionTypePayloadSchema
+{
+}

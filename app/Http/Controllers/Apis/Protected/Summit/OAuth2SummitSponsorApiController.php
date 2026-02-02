@@ -298,10 +298,45 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/public/v1/summits/all/{id}/sponsors",
-        description: "Get a specific sponsor by id",
+        description: "Get all sponsors for a summit",
         summary: 'Get Sponsors by Summit ID (Public)',
         operationId: 'getSponsorsV2BySummitPublic',
         tags: ['Sponsors (Public)'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/SponsorV2')
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    /**
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function getAllBySummitPublic($summit_id)
+    {
+        $this->serializer_version = 2;
+        return $this->getAllBySummit($summit_id);
+    }
+
+    #[OA\Get(
+        path: "/api/v2/summits/{id}/sponsors/{sponsor_id}",
+        description: "Get a specific sponsor by id",
+        summary: 'Read Sponsor by Summit',
+        operationId: 'getSponsorsV2BySummit',
+        tags: ['Sponsors'],
         security: [
             [
                 'summit_sponsor_oauth2' => [
@@ -333,43 +368,6 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 required: true,
                 schema: new OA\Schema(type: 'integer'),
                 description: 'The sponsor id'
-            ),
-        ],
-        responses: [
-            new OA\Response(
-                response: Response::HTTP_OK,
-                description: 'Success',
-                content: new OA\JsonContent(ref: '#/components/schemas/SponsorV2')
-            ),
-            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
-        ]
-    )]
-    /**
-     * @param $summit_id
-     * @return \Illuminate\Http\JsonResponse|mixed
-     */
-    public function getAllBySummitPublic($summit_id)
-    {
-        $this->serializer_version = 2;
-        return $this->getAllBySummit($summit_id);
-    }
-
-    #[OA\Get(
-        path: "/api/v2/summits/{id}/sponsors/{sponsor_id}",
-        description: "Get all sponsors for a summit (Public API)",
-        summary: 'Read Sponsors by Summit',
-        operationId: 'getSponsorsV2BySummit',
-        tags: ['Sponsors'],
-        parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'integer'),
-                description: 'The summit id'
             ),
         ],
         responses: [
@@ -2057,7 +2055,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/materials",
-        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors,
         summary: 'Read Sponsor Materials',
         operationId: 'getSponsorMaterials',
         tags: ['Sponsors'],
@@ -2067,7 +2065,6 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
                 IGroup::Sponsors,
-                IGroup::SponsorExternalUsers,
             ]
         ],
         security: [
@@ -2512,7 +2509,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks",
-        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors,
         summary: 'Read Sponsor Social Networks',
         operationId: 'getSponsorSocialNetworks',
         tags: ['Sponsors'],
@@ -2522,7 +2519,6 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
                 IGroup::Sponsors,
-                IGroup::SponsorExternalUsers,
             ]
         ],
         security: [

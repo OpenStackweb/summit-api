@@ -14,7 +14,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'last_edited', type: 'integer', example: 1, format: "time_epoch"),
         new OA\Property(property: 'visibility', type: 'string'),
         new OA\Property(property: 'visibility_condition', type: 'string'),
-        new OA\Property(property: 'answer_values', type: 'string_array'),
+        new OA\Property(property: 'answer_values', type: 'array', items: new OA\Items(type: 'string')),
         new OA\Property(property: 'answer_values_operator', type: 'string'),
         new OA\Property(property: 'order', type: 'integer'),
         new OA\Property(property: 'sub_question_id', type: 'integer'),

@@ -21,6 +21,7 @@ use Doctrine\ORM\Mapping AS ORM;
  */
 class ConsultantServiceOfferedType extends BaseEntity
 {
+
     /**
      * @ORM\ManyToOne(targetEntity="Consultant", inversedBy="services_offered")
      * @ORM\JoinColumn(name="ConsultantID", referencedColumnName="ID")
@@ -65,4 +66,5 @@ class ConsultantServiceOfferedType extends BaseEntity
     {
         return $this->region;
     }
+
 }

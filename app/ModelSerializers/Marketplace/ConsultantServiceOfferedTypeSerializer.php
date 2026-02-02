@@ -20,12 +20,6 @@ use ModelSerializers\SilverStripeSerializer;
  */
 final class ConsultantServiceOfferedTypeSerializer extends SilverStripeSerializer
 {
-    /**
-     * @var array
-     */
-    protected static $array_mappings = [
-
-    ];
 
     protected static $allowed_relations = [
         'service_offered_type',

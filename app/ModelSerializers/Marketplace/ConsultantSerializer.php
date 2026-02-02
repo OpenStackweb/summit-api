@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Marketplace\Consultant;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
 use ModelSerializers\SerializerRegistry;
 /**
  * Class ConsultantSerializer
@@ -41,75 +42,75 @@ final class ConsultantSerializer extends RegionalSupportedCompanyServiceSerializ
         $consultant  = $this->object;
         if(!$consultant instanceof Consultant) return [];
         $values           = parent::serialize($expand, $fields, $relations, $params);
-
-        if(in_array('offices', $relations)){
-            $res = [];
-            foreach ($consultant->getOffices() as $office){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($office)
-                    ->serialize($expand);
+        if(in_array('offices', $relations) && !isset($values['offices'])) {
+            $offices = [];
+            foreach ($consultant->getOffices() as $e) {
+                $offices[] = $e->getId();
             }
-            $values['offices'] = $res;
+            $values['offices'] = $offices;
         }
-
-        if(in_array('clients', $relations)){
-            $res = [];
-            foreach ($consultant->getClients() as $client){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($client)
-                    ->serialize($expand);
+        if(in_array('clients', $relations) && !isset($values['clients'])) {
+            $clients = [];
+            foreach ($consultant->getClients() as $e) {
+                $clients[] = $e->getId();
             }
-            $values['clients'] = $res;
+            $values['clients'] = $clients;
         }
-
-        if(in_array('spoken_languages', $relations)){
-            $res = [];
-            foreach ($consultant->getSpokenLanguages() as $lang){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($lang)
-                    ->serialize($expand);
+        if(in_array('spoken_languages', $relations) && !isset($values['spoken_languages'])) {
+            $spoken_languages = [];
+            foreach ($consultant->getSpokenLanguages() as $e) {
+                $spoken_languages[] = $e->getId();
             }
-            $values['spoken_languages'] = $res;
+            $values['spoken_languages'] = $spoken_languages;
         }
-
-        if(in_array('configuration_management_expertise', $relations)){
-            $res = [];
-            foreach ($consultant->getConfigurationManagementExpertise() as $exp){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($exp)
-                    ->serialize($expand);
+        if(in_array('configuration_management_expertise', $relations) && !isset($values['configuration_management_expertise'])) {
+            $configuration_management_expertise = [];
+            foreach ($consultant->getConfigurationManagementExpertise() as $e) {
+                $configuration_management_expertise[] = $e->getId();
             }
-            $values['configuration_management_expertise'] = $res;
+            $values['configuration_management_expertise'] = $configuration_management_expertise;
         }
-
-        if(in_array('expertise_areas', $relations)){
-            $res = [];
-            foreach ($consultant->getExpertiseAreas() as $area){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($area)
-                    ->serialize($expand);
+        if(in_array('expertise_areas', $relations) && !isset($values['expertise_areas'])) {
+            $expertise_areas = [];
+            foreach ($consultant->getExpertiseAreas() as $e) {
+                $expertise_areas[] = $e->getId();
             }
-            $values['expertise_areas'] = $res;
+            $values['expertise_areas'] = $expertise_areas;
         }
-
-        if(in_array('services_offered', $relations)){
-            $res = [];
-            foreach ($consultant->getServicesOffered() as $service){
-                $res[] = SerializerRegistry::getInstance()
-                    ->getSerializer($service)
-                    ->serialize($expand);
+        if(in_array('services_offered', $relations) && !isset($values['services_offered'])) {
+            $services_offered = [];
+            foreach ($consultant->getServicesOffered() as $e) {
+                $services_offered[] = $e->getId();
             }
-            $values['services_offered'] = $res;
-        }
-
-        if (!empty($expand)) {
-            $exp_expand = explode(',', $expand);
-            foreach ($exp_expand as $relation) {
-                switch (trim($relation)) {
-
-                }
-            }
+            $values['services_offered'] = $services_offered;
         }
         return $values;
     }
+
+    protected static $expand_mappings = [
+        'offices' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getOffices',
+        ],
+        'clients' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getClients',
+        ],
+        'spoken_languages' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getSpokenLanguages',
+        ],
+        'configuration_management_expertise' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getConfigurationManagementExpertise',
+        ],
+        'expertise_areas' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getExpertiseAreas',
+        ],
+        'services_offered' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getServicesOffered',
+        ],
+    ];
 }

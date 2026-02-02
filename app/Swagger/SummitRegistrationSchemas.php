@@ -229,7 +229,7 @@ class TicketRequestSchema
         new OA\Property(property: 'assigned_to', type: 'string', enum: ['Me', 'SomeoneElse', 'Nobody']),
         new OA\Property(property: 'owner_status', type: 'string', enum: ['Complete', 'Incomplete']),
         new OA\Property(property: 'badge_features_id', type: 'integer'),
-        new OA\Property(property: 'final_amount', type: 'float'),
+        new OA\Property(property: 'final_amount', type: 'number', format: 'float'),
         new OA\Property(property: 'ticket_type_id', type: 'integer'),
         new OA\Property(property: 'promo_code', type: 'string'),
     ]
@@ -529,85 +529,6 @@ class SummitOrderSchema
 }
 
 #[OA\Schema(
-    schema: 'SummitAttendeeTicket',
-    description: 'Generic SummitAttendeeTicket response - fields may vary based on context and serializer type',
-    type: 'object',
-    required: [
-        'id',
-        'number',
-        'status',
-        'external_order_id',
-        'external_attendee_id',
-        'bought_date',
-        'ticket_type_id',
-        'owner_id',
-        'order_id',
-        'badge_id',
-        'promo_code_id',
-        'raw_cost',
-        'net_selling_cost',
-        'raw_cost_in_cents',
-        'final_amount',
-        'final_amount_in_cents',
-        'discount',
-        'discount_rate',
-        'discount_in_cents',
-        'refunded_amount',
-        'refunded_amount_in_cents',
-        'total_refunded_amount',
-        'total_refunded_amount_in_cents',
-        'currency',
-        'currency_symbol',
-        'taxes_amount',
-        'taxes_amount_in_cents',
-        'is_active',
-        'qr_code',
-        'owner_email',
-        'created'
-    ],
-    properties: [
-        new OA\Property(property: 'id', type: 'integer'),
-        new OA\Property(property: 'created', type: 'integer', description: 'Unix timestamp'),
-        new OA\Property(property: 'last_edited', type: 'integer', description: 'Unix timestamp'),
-        new OA\Property(property: 'number', type: 'string'),
-        new OA\Property(property: 'status', type: 'string'),
-        new OA\Property(property: 'external_order_id', type: 'string'),
-        new OA\Property(property: 'external_attendee_id', type: 'string'),
-        new OA\Property(property: 'bought_date', type: 'integer'),
-        new OA\Property(property: 'ticket_type_id', type: 'integer'),
-        new OA\Property(property: 'owner_id', type: 'integer'),
-        new OA\Property(property: 'order_id', type: 'integer'),
-        new OA\Property(property: 'badge_id', type: 'integer'),
-        new OA\Property(property: 'promo_code_id', type: 'integer'),
-        new OA\Property(property: 'raw_cost', type: 'float'),
-        new OA\Property(property: 'net_selling_cost', type: 'float'),
-        new OA\Property(property: 'raw_cost_in_cents', type: 'integer'),
-        new OA\Property(property: 'final_amount', type: 'float'),
-        new OA\Property(property: 'final_amount_in_cents', type: 'integer'),
-        new OA\Property(property: 'discount', type: 'float'),
-        new OA\Property(property: 'discount_rate', type: 'float'),
-        new OA\Property(property: 'discount_in_cents', type: 'integer'),
-        new OA\Property(property: 'refunded_amount', type: 'float'),
-        new OA\Property(property: 'refunded_amount_in_cents', type: 'integer'),
-        new OA\Property(property: 'total_refunded_amount', type: 'float'),
-        new OA\Property(property: 'total_refunded_amount_in_cents', type: 'integer'),
-        new OA\Property(property: 'currency', type: 'string'),
-        new OA\Property(property: 'currency_symbol', type: 'string'),
-        new OA\Property(property: 'taxes_amount', type: 'float'),
-        new OA\Property(property: 'taxes_amount_in_cents', type: 'integer'),
-        new OA\Property(property: 'is_active', type: 'boolean'),
-        new OA\Property(property: 'qr_code', type: 'string'),
-        new OA\Property(property: 'owner_email', type: 'string'),
-        new OA\Property(property: 'owner', ref: '#/components/schemas/SummitAttendee', description: 'Owner of the ticket, only available when ?expand=owner'),
-        new OA\Property(property: 'order', ref: '#/components/schemas/SummitOrder', description: 'Order associated to the ticket, only available when ?expand=order'),
-    ]
-)]
-class SummitAttendeeTicketSchema
-{
-}
-
-
-#[OA\Schema(
     schema: 'SummitOrderReservation',
     description: 'SummitOrder with ReservationType serialization - used for order reservations',
     type: 'object',
@@ -665,22 +586,22 @@ class SummitAttendeeTicketSchema
         new OA\Property(property: 'summit_id', type: 'integer'),
         new OA\Property(property: 'currency', type: 'string'),
         new OA\Property(property: 'currency_symbol', type: 'string'),
-        new OA\Property(property: 'raw_amount', type: 'float'),
+        new OA\Property(property: 'raw_amount', type: 'number', format: 'float'),
         new OA\Property(property: 'raw_amount_in_cents', type: 'integer'),
         new OA\Property(property: 'amount', type: 'number', format: 'float'),
         new OA\Property(property: 'amount_in_cents', type: 'integer'),
         new OA\Property(property: 'taxes_amount', type: 'number', format: 'float'),
         new OA\Property(property: 'taxes_amount_in_cents', type: 'integer'),
         new OA\Property(property: 'discount_amount', type: 'number', format: 'float'),
-        new OA\Property(property: 'discount_rate', type: 'float'),
+        new OA\Property(property: 'discount_rate', type: 'number', format: 'float'),
         new OA\Property(property: 'discount_amount_in_cents', type: 'integer'),
         new OA\Property(property: 'payment_gateway_client_token', type: 'string'),
         new OA\Property(property: 'payment_gateway_cart_id', type: 'string'),
         new OA\Property(property: 'hash_creation_date', type: 'integer', description: 'Unix timestamp'),
         new OA\Property(property: 'refunded_amount', type: 'number', format: 'float'),
-        new OA\Property(property: 'refunded_amount_in_cents', type: 'integer', format: 'float'),
-        new OA\Property(property: 'total_refunded_amount', type: 'float', format: 'float'),
-        new OA\Property(property: 'total_refunded_amount_in_cents', type: 'integer', format: 'float'),
+        new OA\Property(property: 'refunded_amount_in_cents', type: 'integer'),
+        new OA\Property(property: 'total_refunded_amount', type: 'number', format: 'float'),
+        new OA\Property(property: 'total_refunded_amount_in_cents', type: 'integer'),
         new OA\Property(property: 'credit_card_type', type: 'string'),
         new OA\Property(property: 'credit_card_4number', type: 'string'),
         new OA\Property(property: 'payment_info_type', type: 'string'),
@@ -1033,6 +954,57 @@ class SummitBadgeTypeCreateRequestSchema
     ]
 )]
 class SummitBadgeTypeUpdateRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'RefundTicketRequest',
+    type: 'object',
+    required: ['amount'],
+    properties: [
+        new OA\Property(property: 'amount', type: 'number', format: 'float', description: 'Amount to refund'),
+        new OA\Property(property: 'notes', type: 'string', maxLength: 255, description: 'Refund notes'),
+    ]
+)]
+class RefundTicketRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'CreateBadgeRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'badge_type_id', type: 'integer'),
+        new OA\Property(
+            property: 'features',
+            type: 'array',
+            items: new OA\Items(type: 'integer')
+        ),
+    ]
+)]
+class CreateBadgeRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'PrintBadgeRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'check_in', type: 'boolean'),
+    ]
+)]
+class PrintBadgeRequestSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'IngestExternalTicketDataRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'email_to', type: 'string', format: 'email'),
+    ]
+)]
+class IngestExternalTicketDataRequestSchema
 {
 }
 

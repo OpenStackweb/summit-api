@@ -3815,7 +3815,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings/metadata",
         description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
         summary: 'Get Lead Report Settings Metadata',
-        operationId: 'getLeadReportSettingsMetadata',
+        operationId: 'getLeadReportSettingsMetadataForSponsor',
         tags: ['Sponsors'],
         x: [
             'required-groups' => [
@@ -3882,7 +3882,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings",
         description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
         summary: 'Add Lead Report Settings',
-        operationId: 'addLeadReportSettings',
+        operationId: 'addLeadReportSettingsForSponsor',
         tags: ['Sponsors'],
         x: [
             'required-groups' => [
@@ -3963,7 +3963,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings",
         description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
         summary: 'Update Lead Report Settings',
-        operationId: 'updateLeadReportSettings',
+        operationId: 'updateLeadReportSettingsForSponsor',
         tags: ['Sponsors'],
         x: [
             'required-groups' => [

@@ -12,6 +12,10 @@
  * limitations under the License.
  **/
 
+use App\Events\SponsorServices\DeletedEventDTO;
+use App\Events\SponsorServices\SummitMediaFileTypeCreatedEventDTO;
+use App\Events\SponsorServices\SummitMediaFileTypeDomainEvents;
+use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
 use App\Models\Foundation\Summit\Factories\SummitMediaFileTypeFactory;
 use App\Models\Foundation\Summit\Repositories\ISummitMediaFileTypeRepository;
 use App\Services\Model\ISummitMediaFileTypeService;
@@ -49,7 +53,7 @@ extends AbstractModelService
      */
     public function add(array $payload): SummitMediaFileType
     {
-        return $this->tx_service->transaction(function() use($payload){
+        $media_file_type = $this->tx_service->transaction(function() use($payload){
             $type = $this->repository->getByName(trim($payload['name']));
             if(!is_null($type))
                 throw new ValidationException(sprintf("Name %s already exists.", $payload['name']));
@@ -57,6 +61,12 @@ extends AbstractModelService
             $this->repository->add($type);
             return $type;
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitMediaFileTypeCreatedEventDTO::fromSummitMediaFileType($media_file_type)->serialize(),
+            SummitMediaFileTypeDomainEvents::SummitMediaFileTypeCreated);
+
+        return $media_file_type;
     }
 
     /**
@@ -77,7 +87,13 @@ extends AbstractModelService
                     throw new ValidationException(sprintf("Name %s already exists.", $payload['name']));
             }
 
-            return SummitMediaFileTypeFactory::populate($type, $payload);
+            $media_file_type = SummitMediaFileTypeFactory::populate($type, $payload);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitMediaFileTypeCreatedEventDTO::fromSummitMediaFileType($media_file_type)->serialize(),
+                SummitMediaFileTypeDomainEvents::SummitMediaFileTypeUpdated);
+
+            return $media_file_type;
         });
     }
 
@@ -94,6 +110,10 @@ extends AbstractModelService
                 throw new ValidationException("You can not delete a system defined type.");
 
             $this->repository->delete($type);
+
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                DeletedEventDTO::fromEntity($type)->serialize(),
+                SummitMediaFileTypeDomainEvents::SummitMediaFileTypeDeleted);
         });
     }
 }

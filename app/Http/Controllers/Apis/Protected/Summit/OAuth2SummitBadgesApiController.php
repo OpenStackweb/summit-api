@@ -15,7 +15,7 @@ namespace App\Http\Controllers;
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
-use App\Security\SummitScopes;
+use App\Swagger\schemas\SummitScopes;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;

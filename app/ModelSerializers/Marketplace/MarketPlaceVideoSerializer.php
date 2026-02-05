@@ -22,7 +22,7 @@ class MarketPlaceVideoSerializer  extends SilverStripeSerializer
     protected static $array_mappings = [
         'Name' => 'name:json_string',
         'Description' => 'description:json_string',
-        'YouTubeID' => 'youtube_id;:json_string',
+        'YouTubeID' => 'youtube_id:json_string',
         "TypeId" => "type_id:json_int",
         "Length" => "length:json_int",
     ];

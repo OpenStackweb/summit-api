@@ -34,19 +34,17 @@ class SummitTaxTypeAuditLogFormatter extends AbstractAuditLogFormatter
             $summit = $subject->getSummit();
             $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
             $tax_id = $subject->getTaxId() ?? 'Not set';
-            $rate = ($subject->getRate() ?? 0) * 100;
+            $rate = $subject->getRate();
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
-                    $ticket_types_count = $subject->getTicketTypes()->count();
                     return sprintf(
-                        "Tax Type '%s' (%d) created for Summit '%s': Tax ID %s, rate %.2f%%, applied to %d ticket types by user %s",
+                        "Tax Type '%s' (%d) created for Summit '%s': Tax ID %s, rate %s by user %s",
                         $name,
                         $id,
                         $summit_name,
                         $tax_id,
-                        $rate,
-                        $ticket_types_count,
+                        ($rate !== null ? sprintf("%.2f%%", $rate * 100) : 'N/A'),
                         $this->getUserInfo()
                     );
 
@@ -62,15 +60,13 @@ class SummitTaxTypeAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
-                    $ticket_types_count = $subject->getTicketTypes()->count();
                     return sprintf(
-                        "Tax Type '%s' (%d) for Summit '%s' (Tax ID: %s, rate: %.2f%%, applied to %d ticket types) was deleted by user %s",
+                        "Tax Type '%s' (%d) for Summit '%s' (Tax ID: %s, rate: %s) was deleted by user %s",
                         $name,
                         $id,
                         $summit_name,
                         $tax_id,
-                        $rate,
-                        $ticket_types_count,
+                        ($rate !== null ? sprintf("%.2f%%", $rate * 100) : 'N/A'),
                         $this->getUserInfo()
                     );
             }

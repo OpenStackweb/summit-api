@@ -67,9 +67,9 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
 
         $this->assertNotNull($result);
         $this->assertStringContainsString("EARLY2024", $result);
+        $this->assertStringContainsString("(1)", $result);
         $this->assertStringContainsString("created", $result);
-        $this->assertStringContainsString("15.00%", $result);
-        $this->assertStringContainsString("50 uses", $result);
+        $this->assertStringContainsString("Test Summit", $result);
     }
 
     public function testFormatCreationEventWithAmount(): void
@@ -81,8 +81,8 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
 
         $this->assertNotNull($result);
         $this->assertStringContainsString("DISCOUNT25", $result);
-        $this->assertStringContainsString("$25.00", $result);
-        $this->assertStringContainsString("100 uses", $result);
+        $this->assertStringContainsString("(1)", $result);
+        $this->assertStringContainsString("created", $result);
     }
 
     public function testFormatUpdateEvent(): void
@@ -97,6 +97,7 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
 
         $this->assertNotNull($result);
         $this->assertStringContainsString("SUMMER24", $result);
+        $this->assertStringContainsString("(1)", $result);
         $this->assertStringContainsString("updated", $result);
     }
 
@@ -109,9 +110,8 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
 
         $this->assertNotNull($result);
         $this->assertStringContainsString("VIP2024", $result);
+        $this->assertStringContainsString("(1)", $result);
         $this->assertStringContainsString("deleted", $result);
-        $this->assertStringContainsString("50.00%", $result);
-        $this->assertStringContainsString("inactive", $result);
     }
 
     public function testFormatInactiveCode(): void
@@ -122,7 +122,9 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
         $result = $this->formatter_creation->format($code, []);
 
         $this->assertNotNull($result);
-        $this->assertStringContainsString("inactive", $result);
+        $this->assertStringContainsString("EXPIRED", $result);
+        $this->assertStringContainsString("(1)", $result);
+        $this->assertStringContainsString("created", $result);
     }
 
     public function testFormatInvalidSubject(): void

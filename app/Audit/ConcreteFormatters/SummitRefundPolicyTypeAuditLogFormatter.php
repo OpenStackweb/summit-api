@@ -33,18 +33,18 @@ class SummitRefundPolicyTypeAuditLogFormatter extends AbstractAuditLogFormatter
             $id = $subject->getId() ?? 'unknown';
             $summit = $subject->getSummit();
             $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
-            $days_before = $subject->getUntilXDaysBeforeEventStarts() ?? 0;
-            $refund_rate = ($subject->getRefundRate() ?? 0) * 100;
+            $days_before = $subject->getUntilXDaysBeforeEventStarts();
+            $refund_rate = $subject->getRefundRate();
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Refund Policy '%s' (%d) created for Summit '%s': %d%% refund if cancelled %d days before event by user %s",
+                        "Refund Policy '%s' (%d) created for Summit '%s': %s%% refund if cancelled %s days before event by user %s",
                         $name,
                         $id,
                         $summit_name,
-                        $refund_rate,
-                        $days_before,
+                        ($refund_rate !== null ? sprintf("%.0f", $refund_rate * 100) : 'N/A'),
+                        ($days_before !== null ? $days_before : 'N/A'),
                         $this->getUserInfo()
                     );
 
@@ -61,12 +61,12 @@ class SummitRefundPolicyTypeAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Refund Policy '%s' (%d) for Summit '%s' (%d%% refund, %d days before) was deleted by user %s",
+                        "Refund Policy '%s' (%d) for Summit '%s' (%s%% refund, %s days before) was deleted by user %s",
                         $name,
                         $id,
                         $summit_name,
-                        $refund_rate,
-                        $days_before,
+                        ($refund_rate !== null ? sprintf("%.0f", $refund_rate * 100) : 'N/A'),
+                        ($days_before !== null ? $days_before : 'N/A'),
                         $this->getUserInfo()
                     );
             }

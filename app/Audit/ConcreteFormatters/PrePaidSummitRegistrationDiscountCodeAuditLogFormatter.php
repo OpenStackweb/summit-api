@@ -33,24 +33,14 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
             $id = $subject->getId() ?? 'unknown';
             $summit = $subject->getSummit();
             $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
-            
-            $rate = ($subject->getRate() ?? 0) * 100;
-            $amount = $subject->getAmount() ?? 0;
-            $discount_display = $rate > 0 ? sprintf("%.2f%%", $rate) : sprintf("$%.2f", $amount);
-          
-            $quantity_available = $subject->getQuantityAvailable() ?? 0;
-            $is_active = $subject->isLive() ? 'active' : 'inactive';
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Pre-Paid Discount Code '%s' (%d) created for Summit '%s': discount %s, %d uses, status: %s by user %s",
+                        "Pre-Paid Discount Code '%s' (%d) created for Summit '%s' by user %s",
                         $code,
                         $id,
                         $summit_name,
-                        $discount_display,
-                        $quantity_available,
-                        $is_active,
                         $this->getUserInfo()
                     );
 
@@ -66,16 +56,11 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
-                    $quantity_used = ($subject->getQuantityAvailable() ?? 0) - ($quantity_available ?? 0);
                     return sprintf(
-                        "Pre-Paid Discount Code '%s' (%d) for Summit '%s' (discount: %s, %d used of %d, status: %s) was deleted by user %s",
+                        "Pre-Paid Discount Code '%s' (%d) for Summit '%s' was deleted by user %s",
                         $code,
                         $id,
                         $summit_name,
-                        $discount_display,
-                        abs($quantity_used),
-                        $quantity_available,
-                        $is_active,
                         $this->getUserInfo()
                     );
             }

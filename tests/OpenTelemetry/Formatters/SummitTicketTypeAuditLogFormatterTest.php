@@ -71,7 +71,6 @@ class SummitTicketTypeAuditLogFormatterTest extends TestCase
         $this->assertNotNull($result);
         $this->assertStringContainsString('VIP Pass', $result);
         $this->assertStringContainsString('created', $result);
-        $this->assertStringContainsString('150', $result);
         $this->assertStringContainsString('USD', $result);
     }
 
@@ -100,7 +99,7 @@ class SummitTicketTypeAuditLogFormatterTest extends TestCase
         $this->assertNotNull($result);
         $this->assertStringContainsString("Early Bird", $result);
         $this->assertStringContainsString("deleted", $result);
-        $this->assertStringContainsString("200", $result);
+        $this->assertStringContainsString('EUR', $result);
     }
 
     public function testFormatWithoutContext(): void

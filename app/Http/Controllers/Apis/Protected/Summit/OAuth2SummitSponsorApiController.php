@@ -243,6 +243,52 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     }
 
     #[OA\Get(
+        path: "/api/v1/summits/{id}/sponsors",
+        description: "Get all sponsors for a summit",
+        summary: 'Read Sponsors by Summit',
+        operationId: 'getSponsorsBySummitV1',
+        tags: ['Sponsors'],
+        security: [
+            [
+                'summit_sponsor_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::Sponsors,
+                IGroup::SponsorExternalUsers,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), description: 'The summit id'),
+            new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 1), description: 'Page number'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 10), description: 'Items per page'),
+            new OA\Parameter(name: 'order', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Order by field (e.g., +id, -company_name)'),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Expand relationships (company)'),
+            new OA\Parameter(name: 'fields', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Fields to include (id,company_name)'),
+            new OA\Parameter(name: 'filter', in: 'query', required: false, schema: new OA\Schema(type: 'string'), description: 'Filter expression (e.g., is_published==true)'),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSponsorResponse')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    // getAllBySummit function is provided by GetAllBySummit trait
+
+    #[OA\Get(
         path: "/api/v2/summits/{id}/sponsors",
         description: "Get all sponsors for a summit",
         summary: 'Read Sponsors by Summit (V2)',
@@ -278,7 +324,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: 'Success',
-                content: new OA\JsonContent(ref: '#/components/schemas/SponsorV2')
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSponsorV2Response')
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
@@ -330,6 +376,57 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         $this->serializer_version = 2;
         return $this->getAllBySummit($summit_id);
     }
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}",
+        description: "Get a specific sponsor by id",
+        summary: 'Read Sponsor by Summit',
+        operationId: 'getSponsorsBySummitV1',
+        tags: ['Sponsors'],
+        security: [
+            [
+                'summit_sponsor_oauth2' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+                IGroup::Sponsors,
+                IGroup::SponsorExternalUsers,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'sponsor_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsor id'
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Success',
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Sponsor'))
+            ),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // get function is provided by GetSummitChildElementById trait
 
     #[OA\Get(
         path: "/api/v2/summits/{id}/sponsors/{sponsor_id}",
@@ -407,6 +504,55 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
         return $this->service->addSponsor($summit, $payload);
     }
+
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/sponsors",
+        description: "Create a new sponsor",
+        summary: 'Create Sponsor',
+        operationId: 'addSponsor',
+        tags: ['Sponsors'],
+        security: [
+            [
+                'summit_sponsor_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SponsorCreateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Created',
+                content: new OA\JsonContent(ref: '#/components/schemas/Sponsor')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // add function is provided by AddSummitChildElement trait
 
     #[OA\Post(
         path: "/api/v2/summits/{id}/sponsors",
@@ -529,6 +675,110 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
         return $this->service->updateSponsor($summit, $child_id, $payload);
     }
+
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}",
+        description: "Delete an existing sponsor",
+        summary: 'Delete Sponsor (V1)',
+        operationId: 'deleteSponsorV1',
+        tags: ['Sponsors'],
+        security: [
+            [
+                'summit_sponsor_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'sponsor_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsor id'
+            ),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "Success"),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // delete function is provided by DeleteSummitChildElement trait
+
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}",
+        description: "Update an existing sponsor",
+        summary: 'Update Sponsor (V1)',
+        operationId: 'updateSponsorV1',
+        tags: ['Sponsors'],
+        security: [
+            [
+                'summit_sponsor_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'sponsor_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsor id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SponsorUpdateRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Sponsor')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    // update function is provided by UpdateSummitChildElement trait
 
     #[OA\Put(
         path: "/api/v2/summits/{id}/sponsors/{sponsor_id}",

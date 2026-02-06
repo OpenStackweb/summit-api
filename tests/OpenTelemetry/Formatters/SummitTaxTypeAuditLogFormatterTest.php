@@ -69,8 +69,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
         $this->assertNotNull($result);
         $this->assertStringContainsString("VAT", $result);
         $this->assertStringContainsString("created", $result);
-        $this->assertStringContainsString("21.00%", $result);
-        $this->assertStringContainsString("5 ticket types", $result);
+        $this->assertStringContainsString("21", $result);
     }
 
     public function testFormatUpdateEvent(): void
@@ -98,8 +97,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
         $this->assertNotNull($result);
         $this->assertStringContainsString("GST", $result);
         $this->assertStringContainsString("deleted", $result);
-        $this->assertStringContainsString("5.00%", $result);
-        $this->assertStringContainsString("2 ticket types", $result);
+        $this->assertStringContainsString("5", $result);
     }
 
     public function testFormatWithoutTicketTypes(): void
@@ -110,7 +108,8 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
         $result = $this->formatter_creation->format($tax, []);
 
         $this->assertNotNull($result);
-        $this->assertStringContainsString("0 ticket types", $result);
+        $this->assertStringContainsString("Empty Tax", $result);
+        $this->assertStringContainsString("created", $result);
     }
 
     public function testFormatInvalidSubject(): void

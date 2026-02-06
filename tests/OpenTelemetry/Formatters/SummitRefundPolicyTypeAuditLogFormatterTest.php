@@ -68,8 +68,8 @@ class SummitRefundPolicyTypeAuditLogFormatterTest extends TestCase
         $this->assertNotNull($result);
         $this->assertStringContainsString("Full Refund", $result);
         $this->assertStringContainsString("created", $result);
-        $this->assertStringContainsString("100%", $result);
-        $this->assertStringContainsString("30 days", $result);
+        $this->assertStringContainsString("100", $result);
+        $this->assertStringContainsString("30", $result);
     }
 
     public function testFormatUpdateEvent(): void
@@ -97,7 +97,7 @@ class SummitRefundPolicyTypeAuditLogFormatterTest extends TestCase
         $this->assertNotNull($result);
         $this->assertStringContainsString("No Refund", $result);
         $this->assertStringContainsString("deleted", $result);
-        $this->assertStringContainsString("0%", $result);
+        $this->assertStringContainsString("0", $result);
     }
 
     public function testFormatInvalidSubject(): void

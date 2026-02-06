@@ -33,21 +33,21 @@ class SummitTicketTypeAuditLogFormatter extends AbstractAuditLogFormatter
             $id = $subject->getId() ?? 'unknown';
             $summit = $subject->getSummit();
             $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
-            $cost = $subject->getCost() ?? 0;
+            $cost = $subject->getCost();
             $currency = $subject->getCurrency() ?? 'USD';
-            $quantity_available = $subject->getQuantity2Sell() ?? 0;
+            $quantity_available = $subject->getQuantity2Sell();
             $audience = $subject->getAudience() ?? 'All';
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Ticket Type '%s' (%d) created for Summit '%s': price %s %s, %d available, audience: %s by user %s",
+                        "Ticket Type '%s' (%d) created for Summit '%s': price %s %s, %s available, audience: %s by user %s",
                         $name,
                         $id,
                         $summit_name,
-                        $cost,
+                        ($cost !== null ? $cost : 'N/A'),
                         $currency,
-                        $quantity_available,
+                        ($quantity_available !== null ? $quantity_available : 'N/A'),
                         $audience,
                         $this->getUserInfo()
                     );
@@ -64,16 +64,16 @@ class SummitTicketTypeAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
-                    $quantity_sold = $subject->getQuantitySold() ?? 0;
+                    $quantity_sold = $subject->getQuantitySold();
                     return sprintf(
-                        "Ticket Type '%s' (%d) for Summit '%s' with price %s %s (%d sold, %d available) was deleted by user %s",
+                        "Ticket Type '%s' (%d) for Summit '%s' with price %s %s (%s sold, %s available) was deleted by user %s",
                         $name,
                         $id,
                         $summit_name,
-                        $cost,
+                        ($cost !== null ? $cost : 'N/A'),
                         $currency,
-                        $quantity_sold,
-                        $quantity_available,
+                        ($quantity_sold !== null ? $quantity_sold : 'N/A'),
+                        ($quantity_available !== null ? $quantity_available : 'N/A'),
                         $this->getUserInfo()
                     );
             }

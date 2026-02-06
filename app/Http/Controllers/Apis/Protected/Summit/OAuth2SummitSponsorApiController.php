@@ -381,7 +381,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}",
         description: "Get a specific sponsor by id",
         summary: 'Read Sponsor by Summit',
-        operationId: 'getSponsorsBySummitV1',
+        operationId: 'getSponsorBySummitV1',
         tags: ['Sponsors'],
         security: [
             [

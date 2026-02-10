@@ -228,5 +228,21 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\PresentationAttendeeVoteAuditLogFormatter::class,
         ],
+        \models\summit\SummitTaxType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitTaxTypeAuditLogFormatter::class,
+        ],
+        \models\summit\SummitRefundPolicyType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitRefundPolicyTypeAuditLogFormatter::class,
+        ],
+        \models\summit\SummitTicketType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitTicketTypeAuditLogFormatter::class,
+        ],
+        \models\summit\PrePaidSummitRegistrationDiscountCode::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PrePaidSummitRegistrationDiscountCodeAuditLogFormatter::class,
+        ],
     ]
 ];

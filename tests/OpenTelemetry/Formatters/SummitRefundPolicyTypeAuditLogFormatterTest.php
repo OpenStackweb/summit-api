@@ -60,7 +60,7 @@ class SummitRefundPolicyTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatCreationEvent(): void
     {
-        $policy = $this->createMockPolicy('Full Refund', 30, 1.0);
+        $policy = $this->createMockPolicy('Full Refund', 30, 100.0);
 
         $this->formatter_creation->setContext($this->audit_context);
         $result = $this->formatter_creation->format($policy, []);
@@ -74,12 +74,12 @@ class SummitRefundPolicyTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatUpdateEvent(): void
     {
-        $policy = $this->createMockPolicy('Partial Refund', 14, 0.5);
+        $policy = $this->createMockPolicy('Partial Refund', 14, 50.0);
 
         $this->formatter_update->setContext($this->audit_context);
         $result = $this->formatter_update->format($policy, [
             'until_x_days_before_event_starts' => [30, 14],
-            'refund_rate' => [1.0, 0.5]
+            'refund_rate' => [100.0, 50.0]
         ]);
 
         $this->assertNotNull($result);

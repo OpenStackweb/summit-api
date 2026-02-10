@@ -43,7 +43,7 @@ class SummitRefundPolicyTypeAuditLogFormatter extends AbstractAuditLogFormatter
                         $name,
                         $id,
                         $summit_name,
-                        ($refund_rate !== null ? sprintf("%.0f", $refund_rate * 100) : 'N/A'),
+                        ($refund_rate !== null ? sprintf("%.0f", $refund_rate) : 'N/A'),
                         ($days_before !== null ? $days_before : 'N/A'),
                         $this->getUserInfo()
                     );
@@ -65,7 +65,7 @@ class SummitRefundPolicyTypeAuditLogFormatter extends AbstractAuditLogFormatter
                         $name,
                         $id,
                         $summit_name,
-                        ($refund_rate !== null ? sprintf("%.0f", $refund_rate * 100) : 'N/A'),
+                        ($refund_rate !== null ? sprintf("%.0f", $refund_rate) : 'N/A'),
                         ($days_before !== null ? $days_before : 'N/A'),
                         $this->getUserInfo()
                     );

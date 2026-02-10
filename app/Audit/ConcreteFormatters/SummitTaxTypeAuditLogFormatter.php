@@ -44,7 +44,7 @@ class SummitTaxTypeAuditLogFormatter extends AbstractAuditLogFormatter
                         $id,
                         $summit_name,
                         $tax_id,
-                        ($rate !== null ? sprintf("%.2f%%", $rate * 100) : 'N/A'),
+                        ($rate !== null ? sprintf("%.2f%%", $rate) : 'N/A'),
                         $this->getUserInfo()
                     );
 
@@ -66,7 +66,7 @@ class SummitTaxTypeAuditLogFormatter extends AbstractAuditLogFormatter
                         $id,
                         $summit_name,
                         $tax_id,
-                        ($rate !== null ? sprintf("%.2f%%", $rate * 100) : 'N/A'),
+                        ($rate !== null ? sprintf("%.2f%%", $rate) : 'N/A'),
                         $this->getUserInfo()
                     );
             }

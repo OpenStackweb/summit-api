@@ -19,6 +19,10 @@ class SummitSponsorshipAddOnCreatedEventDTO
 {
     private int $id;
     private int $sponsorship_id;
+
+    private int $summit_sponsorship_type_id;
+    private int $sponsorship_type_id;
+    private string $sponsorship_type_name;
     private string $type;
     private string $name;
 
@@ -29,6 +33,9 @@ class SummitSponsorshipAddOnCreatedEventDTO
     public function __construct(
         int    $id,
         int    $sponsorship_id,
+        int    $summit_sponsorship_type_id,
+        int    $sponsorship_type_id,
+        string $sponsorship_type_name,
         string $type,
         string $name,
         int $sponsor_id,
@@ -37,6 +44,9 @@ class SummitSponsorshipAddOnCreatedEventDTO
     {
         $this->id = $id;
         $this->sponsorship_id = $sponsorship_id;
+        $this->summit_sponsorship_type_id = $summit_sponsorship_type_id;
+        $this->sponsorship_type_id = $sponsorship_type_id;
+        $this->sponsorship_type_name = $sponsorship_type_name;
         $this->type = $type;
         $this->name = $name;
         $this->sponsor_id = $sponsor_id;
@@ -45,9 +55,16 @@ class SummitSponsorshipAddOnCreatedEventDTO
 
     public static function fromSponsorshipAddOn(SummitSponsorshipAddOn $add_on): self
     {
+        $sponsorship = $add_on->getSponsorship();
+        $summit_sponsorship_type = $sponsorship->getType();
+        $sponsorship_type = $summit_sponsorship_type->getType();
+
         return new self(
             $add_on->getId(),
-            $add_on->getSponsorship()->getId(),
+            $sponsorship->getId(),
+            $summit_sponsorship_type->getId(),
+            $sponsorship_type->getId(),
+            $sponsorship_type->getName(),
             $add_on->getType(),
             $add_on->getName(),
             $add_on->getSponsorship()->getSponsor()->getId(),
@@ -61,9 +78,13 @@ class SummitSponsorshipAddOnCreatedEventDTO
             'id' => $this->id,
             'type' => $this->type,
             'name' => $this->name,
-            'sponsorship_id' => $this->sponsorship_id,
             'sponsor_id' => $this->sponsor_id,
             'summit_id' => $this->summit_id,
+            'sponsorship_id' => $this->sponsorship_id,
+            // add extra info in order to be able to recreate missing sponsorship
+            'summit_sponsorship_type_id' => $this->summit_sponsorship_type_id,
+            'sponsorship_type_id' => $this->sponsorship_type_id,
+            'sponsorship_type_name' => $this->sponsorship_type_name,
         ];
     }
 }

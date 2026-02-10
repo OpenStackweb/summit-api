@@ -61,7 +61,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatCreationEvent(): void
     {
-        $tax = $this->createMockTax('VAT', 'VAT-001', 0.21, 5);
+        $tax = $this->createMockTax('VAT', 'VAT-001', 21.0, 5);
 
         $this->formatter_creation->setContext($this->audit_context);
         $result = $this->formatter_creation->format($tax, []);
@@ -74,11 +74,11 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatUpdateEvent(): void
     {
-        $tax = $this->createMockTax('Sales Tax', 'ST-002', 0.08, 3);
+        $tax = $this->createMockTax('Sales Tax', 'ST-002', 8.0, 3);
 
         $this->formatter_update->setContext($this->audit_context);
         $result = $this->formatter_update->format($tax, [
-            'rate' => [0.07, 0.08],
+            'rate' => [7.0, 8.0],
             'ticket_types' => [[], []]
         ]);
 
@@ -89,7 +89,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatDeletionEvent(): void
     {
-        $tax = $this->createMockTax('GST', 'GST-CA', 0.05, 2);
+        $tax = $this->createMockTax('GST', 'GST-CA', 5.0, 2);
 
         $this->formatter_deletion->setContext($this->audit_context);
         $result = $this->formatter_deletion->format($tax, []);
@@ -102,7 +102,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatWithoutTicketTypes(): void
     {
-        $tax = $this->createMockTax('Empty Tax', 'EMPTY', 0.1, 0);
+        $tax = $this->createMockTax('Empty Tax', 'EMPTY', 10.0, 0);
 
         $this->formatter_creation->setContext($this->audit_context);
         $result = $this->formatter_creation->format($tax, []);

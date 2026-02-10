@@ -228,5 +228,17 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\PresentationAttendeeVoteAuditLogFormatter::class,
         ],
+        \models\summit\SummitOrder::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitOrderAuditLogFormatter::class,
+        ],
+        \models\summit\SummitOrderExtraQuestionType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitOrderExtraQuestionTypeAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\ExtraQuestionTypeValueAuditLogFormatter::class,
+        ],
     ]
 ];

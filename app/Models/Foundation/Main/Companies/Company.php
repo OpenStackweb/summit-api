@@ -532,12 +532,13 @@ class Company extends SilverstripeBaseModel
         $this->admin_email = $admin_email;
     }
 
+    const DefaultColor = 'C34431';
     /**
      * @return string
      */
     public function getColor(): ?string
     {
-        return $this->color;
+        return empty($this->color) ? self::DefaultColor : $this->color;
     }
 
     /**

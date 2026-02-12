@@ -228,5 +228,21 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\PresentationAttendeeVoteAuditLogFormatter::class,
         ],
+        \models\summit\SummitAccessLevelType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitAccessLevelTypeAuditLogFormatter::class,
+        ],
+        \models\summit\SummitBadgeFeatureType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitBadgeFeatureTypeAuditLogFormatter::class,
+        ],
+        \models\summit\SummitBadgeType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitBadgeTypeAuditLogFormatter::class,
+        ],
+        \models\summit\SummitBadgeViewType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitBadgeViewTypeAuditLogFormatter::class,
+        ],
     ]
 ];

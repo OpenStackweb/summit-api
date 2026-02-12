@@ -86,7 +86,7 @@ jobs:
           done
 
       - name: Create Redis
-        uses: supercharge/redis-github-action@1.7.0
+        uses: supercharge/redis-github-action@1.8.1
         with:
           redis-port: ${{ env.REDIS_PORT }}
           redis-password: ${{ env.REDIS_PASSWORD }}

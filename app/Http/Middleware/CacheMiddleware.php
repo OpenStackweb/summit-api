@@ -1,9 +1,20 @@
 <?php namespace App\Http\Middleware;
+/**
+ * Copyright 2026 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
 
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\CacheRegions;
 use models\oauth2\IResourceServerContext;
@@ -17,9 +28,11 @@ final class CacheMiddleware
         $this->context = $context;
     }
 
-    private const ENC_DF = 'DF1:';  // gzdeflate/gzinflate
-    private const ENC_P0 = 'P0:';   // without compression
-    private int $gzipLevel = 9;           //
+    private const ENC_DF = 'DF1:';    // gzdeflate/gzinflate
+    private const ENC_P0 = 'P0:';    // without compression
+    private const LOCK_TTL = 10;      // lock auto-expires after 10s (safety net if holder crashes)
+    private const LOCK_WAIT = 5;      // losers wait up to 5s for the winner to finish
+    private int $gzipLevel = 9;
 
     private function encode(array $payload):string{
         $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
@@ -86,70 +99,87 @@ final class CacheMiddleware
                 $regionTag = CacheRegions::getCacheRegionFor($cache_region, $id);
             }
         }
-        $status = 200;
-        $wasHit = false;
-        if ($regionTag) {
-            Log::debug("CacheMiddleware: using region tag {$regionTag} ip {$ip} agent {$agent}");
-            $wasHit = Cache::tags($regionTag)->has($key);
-            Log::debug($wasHit ? "CacheMiddleware: cache HIT (tagged)" : "CacheMiddleware: cache MISS (tagged)", [
-                'tag' => $regionTag,
-                'ip' => $ip,
-                'agent' => $agent,
-                'key' => $key,
-            ]);
+        $cache = $regionTag ? Cache::tags($regionTag) : Cache::store();
+        $logCtx = array_filter([
+            'tag' => $regionTag,
+            'ip' => $ip,
+            'agent' => $agent,
+            'key' => $key,
+        ]);
 
-            $encoded = Cache::tags($regionTag)
-                ->remember($key, $cache_lifetime, function() use ($next, $request, $regionTag, $key, $cache_lifetime, &$status,$ip, $agent) {
-                    $resp = $next($request);
-                    if ($resp instanceof JsonResponse) {
-                        $status = $resp->getStatusCode();
-                        if($status === 200) {
-                            return $this->encode($resp->getData(true));
-                        }
-                    }
-                    // don’t cache non-200 or non-JSON
-                    return Cache::get($key);
-                });
+        // Phase 1: optimistic read — no lock needed on hit
+        $encoded = $cache->get($key);
+
+        if ($encoded !== null) {
+            Log::debug("CacheMiddleware: cache HIT", $logCtx);
+
             $data = $this->decode($encoded);
+            if ($data === null) $data = is_array($encoded) ? $encoded : [];
+
+            $response = new JsonResponse($data, 200, ['Content-Type' => 'application/json']);
+            $wasHit = true;
         } else {
-            $wasHit = Cache::has($key);
+            // Phase 2: cache miss — acquire lock so only one request executes the handler
+            $lockKey = $regionTag ? "cache_lock:{$regionTag}:{$key}" : "cache_lock:{$key}";
+            $lock = Cache::lock($lockKey, self::LOCK_TTL);
+            $wasHit = false;
 
-            Log::debug($wasHit ? "CacheMiddleware: cache HIT" : "CacheMiddleware: cache MISS", [
-                'ip' => $ip,
-                'agent' => $agent,
-                'key' => $key,
-            ]);
+            try {
+                if ($lock->block(self::LOCK_WAIT)) {
+                    // Won the lock — double-check: another request may have populated the cache
+                    $encoded = $cache->get($key);
 
-            $encoded = Cache::remember($key, $cache_lifetime, function() use ($next, $request, $key, &$status, $ip, $agent) {
-                $resp = $next($request);
-                if ($resp instanceof JsonResponse) {
-                    $status = $resp->getStatusCode();
-                    if($status === 200)
-                        return $this->encode($resp->getData(true));
+                    if ($encoded !== null) {
+                        Log::debug("CacheMiddleware: cache HIT (after lock)", $logCtx);
+
+                        $data = $this->decode($encoded);
+                        if ($data === null) $data = is_array($encoded) ? $encoded : [];
+
+                        $response = new JsonResponse($data, 200, ['Content-Type' => 'application/json']);
+                        $wasHit = true;
+                    } else {
+                        Log::debug("CacheMiddleware: cache MISS (executing handler)", $logCtx);
+
+                        $resp = $next($request);
+
+                        // Only cache 200 JSON responses; let everything else pass through as-is
+                        if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
+                            $cache->put($key, $this->encode($resp->getData(true)), $cache_lifetime);
+                        } else {
+                            return $resp;
+                        }
+
+                        $response = $resp;
+                    }
+                } else {
+                    // Could not acquire lock within LOCK_WAIT seconds — fall through without lock
+                    Log::warning("CacheMiddleware: lock timeout, executing handler without lock", $logCtx);
+
+                    $resp = $next($request);
+
+                    if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
+                        $cache->put($key, $this->encode($resp->getData(true)), $cache_lifetime);
+                    } else {
+                        return $resp;
+                    }
+
+                    $response = $resp;
                 }
-                return Cache::get($key);
-            });
-            $data = $this->decode($encoded);
+            } finally {
+                $lock->release();
+            }
         }
-        // safe guard
-        if ($data === null) $data = is_array($encoded) ? $encoded : [];
 
-        // Build the JsonResponse (either from cache or fresh)
-        $response = new JsonResponse($data, $status, ['Content-Type' => 'application/json']);
-
-        // Mark for revalidation so your ETag middleware can return 304 when unchanged
+        // Mark for revalidation so ETag middleware can return 304 when unchanged
         $response->setPublic();
         $response->setMaxAge(0);
         $response->headers->addCacheControlDirective('must-revalidate', true);
         $response->headers->addCacheControlDirective('proxy-revalidate', true);
         $response->headers->add([
-            'X-Cache-Result' => $wasHit ? 'HIT':'MISS',
+            'X-Cache-Result' => $wasHit ? 'HIT' : 'MISS',
         ]);
-        Log::debug( "CacheMiddleware: returning response", [
-            'ip' => $ip,
-            'agent' => $agent,
-            'key' => $key,
-        ]);
+
+        Log::debug("CacheMiddleware: returning response", $logCtx);
 
         return $response;
     }

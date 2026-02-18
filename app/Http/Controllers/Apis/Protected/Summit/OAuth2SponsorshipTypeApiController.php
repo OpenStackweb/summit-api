@@ -142,40 +142,6 @@ final class OAuth2SponsorshipTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function getAll()
-    {
-        return $this->_getAll(
-            function(){
-                return [
-                    'name' => ['==', '=@'],
-                    'label' => ['==', '=@'],
-                    'size' => ['==', '=@'],
-                ];
-            },
-            function(){
-                return [
-                    'name' => 'sometimes|required|string',
-                    'label' => 'sometimes|required|string',
-                    'size' => 'sometimes|required|string',
-                ];
-            },
-            function(){
-                return [
-                    'id',
-                    'name',
-                    'order',
-                    'label',
-                    'size',
-                ];
-            },
-            function($filter){
-                return $filter;
-            },
-            function(){
-                return SerializerRegistry::SerializerType_Public;
-            }
-        );
-    }
 
     #[OA\Post(
         path: "/api/v1/sponsorship-types",

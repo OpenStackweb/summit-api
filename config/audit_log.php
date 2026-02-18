@@ -292,5 +292,13 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SummitSponsorExtraQuestionTypeAuditLogFormatter::class,
         ],
+        \models\summit\Sponsor::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorAuditLogFormatter::class,
+        ],
+        \models\summit\SummitEventType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitEventTypeAuditLogFormatter::class,
+        ],
     ]
 ];

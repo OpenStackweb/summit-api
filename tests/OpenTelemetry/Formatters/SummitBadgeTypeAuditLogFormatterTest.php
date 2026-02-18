@@ -28,8 +28,10 @@ class SummitBadgeTypeAuditLogFormatterTest extends TestCase
     private const USER_EMAIL = 'coordinator@example.com';
     private const USER_FIRST_NAME = 'Robert';
     private const USER_LAST_NAME = 'Brown';
-    private const MOCK_ID = 1;
     private const SUMMIT_NAME = 'Test Summit';
+    private const NULL_SUMMIT_BADGE_TYPE_NAME = 'Standard Badge Type';
+    private const NULL_SUMMIT_BADGE_TYPE_ID = 1;
+    private const NULL_SUMMIT_LABEL = 'Unknown Summit';
 
     private SummitBadgeTypeAuditLogFormatter $formatter_creation;
     private SummitBadgeTypeAuditLogFormatter $formatter_update;
@@ -132,6 +134,21 @@ class SummitBadgeTypeAuditLogFormatterTest extends TestCase
         $this->assertTrue(method_exists($badge_type, 'getId'));
         $this->assertTrue(method_exists($badge_type, 'getName'));
         $this->assertTrue(method_exists($badge_type, 'getSummit'));
+    }
+
+    public function testFormatCreationWithNullSummit(): void
+    {
+        $badge_type = Mockery::mock(SummitBadgeType::class);
+        $badge_type->shouldReceive('getName')->andReturn(self::NULL_SUMMIT_BADGE_TYPE_NAME);
+        $badge_type->shouldReceive('getId')->andReturn(self::NULL_SUMMIT_BADGE_TYPE_ID);
+        $badge_type->shouldReceive('getSummit')->andReturn(null);
+
+        $this->formatter_creation->setContext($this->audit_context);
+        $result = $this->formatter_creation->format($badge_type, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::NULL_SUMMIT_LABEL, $result);
+        $this->assertStringContainsString(self::NULL_SUMMIT_BADGE_TYPE_NAME, $result);
     }
 
     private function createMockBadgeType(string $name, int $id): object

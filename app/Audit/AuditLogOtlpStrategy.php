@@ -150,7 +150,14 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         $data['client.ip'] = $ctx->clientIp ?? null;
         $data['user_agent']= $ctx->userAgent ?? null;
 
-        if (method_exists($entity, 'getSummitId')) {
+        if ($entity instanceof \models\summit\Summit) {
+            if (method_exists($entity, 'getId')) {
+                $summitId = $entity->getId();
+                if ($summitId !== null) {
+                    $data['audit.summit_id'] = (string) $summitId;
+                }
+            }
+        } elseif (method_exists($entity, 'getSummitId')) {
             $summitId = $entity->getSummitId();
             if ($summitId !== null) {
                 $data['audit.summit_id'] = (string) $summitId;

@@ -271,6 +271,10 @@ Route::group(array('prefix' => 'marketplace'), function () {
     Route::group(array('prefix' => 'public-clouds'), function () {
         Route::get('', 'PublicCloudsApiController@getAll');
     });
+
+    Route::group(array('prefix' => 'trainings'), function () {
+        Route::get('', 'TrainingApiController@getAll');
+    });
 });
 
 // countries

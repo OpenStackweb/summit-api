@@ -1,4 +1,4 @@
-name: Unit Tests On Push
+name: Run Unit Tests On Push
 
 on:
     push:
@@ -6,6 +6,59 @@ on:
 jobs:
     unit-tests:
         runs-on: ubuntu-latest
+        env:
+            APP_ENV: testing
+            APP_DEBUG: true
+            PHP_VERSION: "8.3"
+
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v4
+
+            - name: Install PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ env.PHP_VERSION }}
+                  extensions: mbstring, exif, pcntl, bcmath
+
+            - name: Install dependencies
+              uses: ramsey/composer-install@v3
+              env:
+                  COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"} }'
+
+            - name: Run Unit Tests
+              run: |
+                  echo "running OpenTelemetry Formatter tests"
+                  vendor/bin/phpunit tests/OpenTelemetry/Formatters/ --log-junit results_opentelemetry_tests.xml
+
+            - name: Upload OpenTelemetry Tests Output
+              uses: actions/upload-artifact@v4
+              with:
+                  name: results_opentelemetry_tests
+                  path: results_opentelemetry_tests.xml
+                  retention-days: 5
+
+    integration-tests:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                suite:
+                    - { name: "OAuth2SummitApiTest", filter: "--filter OAuth2SummitApiTest" }
+                    - { name: "OAuth2SummitEventsApiTest", filter: "--filter OAuth2SummitEventsApiTest" }
+                    - { name: "OAuth2PresentationSubmissionTest", filter: "--filter OAuth2PresentationSubmissionTest" }
+                    - { name: "OAuth2EventTypesApiTest", filter: "--filter OAuth2EventTypesApiTest" }
+                    - { name: "OAuth2SummitBadgeScanApiControllerTest", filter: "--filter OAuth2SummitBadgeScanApiControllerTest" }
+                    - { name: "SummitOrderServiceTest", filter: "--filter SummitOrderServiceTest" }
+                    - { name: "SummitRSVPServiceTest", filter: "--filter SummitRSVPServiceTest" }
+                    - { name: "SummitRSVPInvitationServiceTest", filter: "--filter SummitRSVPInvitationServiceTest" }
+                    - { name: "OAuth2RSVPApiTest", filter: "--filter OAuth2RSVPApiTest" }
+                    - { name: "OAuth2RSVPApiWithMocksTest", filter: "--filter OAuth2RSVPApiWithMocksTest" }
+                    - { name: "OAuth2RSVPInvitationApiTest", filter: "--filter OAuth2RSVPInvitationApiTest" }
+                    - { name: "EntityModelUnitTests", filter: "tests/Unit/Entities/" }
+                    - { name: "AuditOtlpStrategyTest", filter: "--filter AuditOtlpStrategyTest" }
+                    - { name: "AuditEventTypesTest", filter: "--filter AuditEventTypesTest" }
+                    - { name: "GuzzleTracingTest", filter: "--filter GuzzleTracingTest" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing
@@ -109,75 +162,18 @@ jobs:
               env:
                   COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"} }'
 
-            - name: Run Tests
+            - name: Run ${{ matrix.suite.name }}
               run: |
                   ./update_doctrine.sh
                   php artisan db:create_test_db --schema=config
                   php artisan db:create_test_db --schema=model
                   php artisan doctrine:migrations:migrate --no-interaction --em=model_write
-                  echo "running OAuth2SummitApiTest"
-                  vendor/bin/phpunit --filter "OAuth2SummitApiTest" --log-junit results_summit_api_test.xml
-                  echo "running OAuth2SummitEventsApiTest"
-                  vendor/bin/phpunit --filter "OAuth2SummitEventsApiTest" --log-junit results_events_api_test.xml
-                  echo "running OAuth2PresentationSubmissionTest"
-                  vendor/bin/phpunit --filter "OAuth2PresentationSubmissionTest" --log-junit results_presentation_submissions_api_test.xml
-                  echo "running OAuth2EventTypesApiTest"
-                  vendor/bin/phpunit --filter "OAuth2EventTypesApiTest" --log-junit results_event_types_api_test.xml
-                  echo "running model unit tests"
-                  vendor/bin/phpunit tests/Unit/Entities/ --log-junit results_model_unit_tests.xml
-                  echo "running OAuth2SummitBadgeScanApiControllerTest"
-                  vendor/bin/phpunit --filter "OAuth2SummitBadgeScanApiControllerTest" --log-junit results_badge_scan_api_test.xml
-                  echo "running SummitOrderService tests"
-                  vendor/bin/phpunit --filter "SummitOrderServiceTest" --log-junit results_summitorder_service_unit_tests.xml
-                  echo "running SummitRSVPServiceTest tests"
-                  vendor/bin/phpunit --filter "SummitRSVPServiceTest" --log-junit results_rsvp_service_unit_tests.xml
-                  echo "running SummitRSVPInvitationServiceTest tests"
-                  vendor/bin/phpunit --filter "SummitRSVPInvitationServiceTest" --log-junit results_rsvp_invitation_service_unit_tests.xml
-                  echo "running OAuth2RSVPApiTest tests"
-                  vendor/bin/phpunit --filter "OAuth2RSVPApiTest" --log-junit results_rsvp_api_test_unit_tests.xml
-                  echo "running OAuth2RSVPApiWithMocksTest tests"
-                  vendor/bin/phpunit --filter "OAuth2RSVPApiWithMocksTest" --log-junit results_rsvp_api_with_mocks_test_unit_tests.xml
-                  echo "running OAuth2RSVPInvitationApiTest tests"
-                  vendor/bin/phpunit --filter "OAuth2RSVPInvitationApiTest" --log-junit results_rsvp_invitations_api_test_unit_tests.xml
+                  echo "running ${{ matrix.suite.name }}"
+                  vendor/bin/phpunit ${{ matrix.suite.filter }} --log-junit results.xml
 
-            - name: Upload Unit Test Output For OAuth2SummitApiTest
+            - name: Upload Test Results
               uses: actions/upload-artifact@v4
               with:
-                  name: results_summit_api_test
-                  path: results_summit_api_test.xml
-                  retention-days: 5
-
-            - name: Upload Unit Test Output For OAuth2SummitEventsApiTest
-              uses: actions/upload-artifact@v4
-              with:
-                  name: results_events_api_test
-                  path: results_events_api_test.xml
-                  retention-days: 5
-
-            - name: Upload Unit Test Output For OAuth2PresentationSubmissionTest
-              uses: actions/upload-artifact@v4
-              with:
-                  name: results_presentation_submissions_api_test
-                  path: results_presentation_submissions_api_test.xml
-                  retention-days: 5
-
-            - name: Upload Entity Model Unit Tests Output
-              uses: actions/upload-artifact@v4
-              with:
-                  name: results_model_unit_tests
-                  path: results_model_unit_tests.xml
-                  retention-days: 5
-
-            - name: Upload Unit Test Output For OAuth2SummitBadgeScanApiControllerTest
-              uses: actions/upload-artifact@v4
-              with:
-                  name: results_badge_scan_api_test
-                  path: results_badge_scan_api_test.xml
-                  retention-days: 5
-
-            - name: Upload Unit Test Output For SummitOrderServiceTest
-              uses: actions/upload-artifact@v4
-              with:
-                  name: results_summitorder_service_unit_tests
-                  path: results_summitorder_service_unit_tests.xml
+                  name: results_${{ matrix.suite.name }}
+                  path: results.xml
                   retention-days: 5

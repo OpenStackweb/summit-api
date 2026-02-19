@@ -24,6 +24,7 @@ use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
 use App\Models\Foundation\Main\Repositories\IUserStoryRepository;
 use App\Models\Foundation\Marketplace\ICompanyServiceRepository;
 use App\Models\Foundation\Marketplace\IReviewRepository;
+use App\Models\Foundation\Marketplace\ITrainingRepository;
 use App\Models\Foundation\Marketplace\MarketPlaceReview;
 use App\Models\Foundation\Software\OpenStackRelease;
 use App\Models\Foundation\Software\Repositories\IOpenStackReleaseRepository;
@@ -182,7 +183,6 @@ use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use models\summit\SummitTrackChair;
 use repositories\main\DoctrineLegalDocumentRepository;
-
 /**
  * Class RepositoriesProvider
  * @package repositories
@@ -338,6 +338,12 @@ final class RepositoriesProvider extends ServiceProvider
             'App\Models\Foundation\Marketplace\IDistributionRepository',
             function () {
                 return EntityManager::getRepository(\App\Models\Foundation\Marketplace\Distribution::class);
+            });
+
+        App::singleton(
+            ITrainingRepository::class,
+            function () {
+                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\TrainingService::class);
             });
 
         App::singleton(

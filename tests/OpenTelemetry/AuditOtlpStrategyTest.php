@@ -12,11 +12,14 @@
 namespace Tests\OpenTelemetry;
 
 use App\Audit\AuditLogOtlpStrategy;
+use App\Audit\AuditContext;
+use App\Jobs\EmitAuditLogJob;
 use App\Models\Foundation\Main\IGroup;
 use Tests\InsertMemberTestData;
 use Tests\InsertSummitTestData;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\API\Trace\TracerInterface;
+use Illuminate\Support\Facades\Queue;
 
 class AuditOtlpStrategyTest extends OpenTelemetryTestCase
 {
@@ -177,5 +180,45 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
     private function isOpenTelemetryEnabled(): bool
     {
         return getenv('OTEL_SERVICE_ENABLED') === 'true';
+    }
+
+    
+    public function testAuditSummitEntityPopulatesSummitIdCorrectly(): void
+    {
+        $this->skipIfOpenTelemetryDisabled();
+        
+        Queue::fake();
+
+        $ctx = new AuditContext();
+        $ctx->userId = self::$member->getId();
+        $ctx->userEmail = self::$member->getEmail();
+        $ctx->userFirstName = self::$member->getFirstName();
+        $ctx->userLastName = self::$member->getLastName();
+        $ctx->uiApp = 'test-app';
+        $ctx->uiFlow = 'test-flow';
+        $ctx->route = 'api.summits.update';
+        $ctx->httpMethod = 'PUT';
+        $ctx->clientIp = '127.0.0.1';
+        $ctx->userAgent = 'Test-Agent/1.0';
+
+        $simulatedChangeSet = [
+            'name' => [self::$summit->getName(), self::$summit->getName() . ' [UPDATED]']
+        ];
+
+        $this->auditStrategy->audit(
+            self::$summit,
+            $simulatedChangeSet,
+            AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE,
+            $ctx
+        );
+
+        Queue::assertPushed(EmitAuditLogJob::class, function ($job) {
+            $this->assertArrayHasKey('audit.summit_id', $job->auditData);
+            $this->assertEquals((string)self::$summit->getId(), $job->auditData['audit.summit_id']);
+            
+            $this->assertEquals('Summit', $job->auditData['audit.entity']);
+            
+            return true;
+        });
     }
 }

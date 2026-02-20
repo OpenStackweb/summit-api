@@ -541,7 +541,7 @@ SQL,
             $need['av'] = true;
 
         if($has("selection_status") || $ord('selection_status')){
-            $need['selp'] = $need['ssp'] = $need['sspl'] = true;
+            $need['selp'] = $need['ssp'] = $need['sspl'] = $need['c'] = true;
         }
 
         if($has('track_chairs_status'))
@@ -616,10 +616,6 @@ SQL,
             ->distinct(false);
 
         $query = $this->applyExtraJoins($query, $filter, $order);
-
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings($filter));
-        }
 
         if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getFilterMappings($filter));

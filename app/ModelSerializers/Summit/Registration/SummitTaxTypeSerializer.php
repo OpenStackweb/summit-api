@@ -23,7 +23,7 @@ final class SummitTaxTypeSerializer extends SilverStripeSerializer
     protected static $array_mappings = [
         'Name'     => 'name:json_string',
         'TaxId'    => 'tax_id:json_string',
-        'Rate'     => 'rate:json_float',
+        'Rate'     => 'rate:json_money:3',
         'SummitId' => 'summit_id:json_int',
     ];
 

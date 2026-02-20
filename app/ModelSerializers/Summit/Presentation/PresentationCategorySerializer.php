@@ -105,7 +105,7 @@ final class PresentationCategorySerializer extends SilverStripeSerializer
                 $allowed_access_levels[] = intval($access_level->getId());
             }
 
-            $values['allowed_access_levels'] = $allowed_access_levels;
+            $values['.'] = $allowed_access_levels;
         }
 
         if(in_array('proposed_schedule_allowed_locations', $relations)) {

@@ -174,12 +174,13 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $current_user = $this->resource_server_context->getCurrentUser(true);
             return $this->withReplica(function() use ($summit_id, $current_user) {
                 $strategy = new RetrieveAllSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
-                $response = $strategy->getEvents(['summit_id' => $summit_id]);
+                $expand = SerializerUtils::getExpand();
+                $response = $strategy->getEvents(['summit_id' => $summit_id, 'expand' => $expand]);
                 return $this->ok
                 (
                     $response->toArray
                     (
-                        SerializerUtils::getExpand(),
+                        $expand,
                         SerializerUtils::getFields(),
                         SerializerUtils::getRelations(),
                         [
@@ -234,12 +235,13 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                     $this->event_repository,
                     $this->resource_server_context
                 );
-                $response = $strategy->getEvents(['summit_id' => $summit_id]);
+                $expand = SerializerUtils::getExpand();
+                $response = $strategy->getEvents(['summit_id' => $summit_id, 'expand' => $expand]);
 
                 $filename = "activities-" . date('Ymd');
                 $list = $response->toArray
                 (
-                    SerializerUtils::getExpand(),
+                    $expand,
                     SerializerUtils::getFields(),
                     ['none'],
                     [
@@ -328,18 +330,20 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
                 if (is_null($summit)) return $this->error404();
 
+                $expand = SerializerUtils::getExpand();
                 $params = [
                     'summit_id'    => $summit_id,
                     'summit'       => $summit,
                     'published'    => true,
-                    'current_user' => $current_user
+                    'current_user' => $current_user,
+                    'expand'       => $expand,
                 ];
 
                 $strategy = new RetrievePublishedSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
                 $response = $strategy->getEvents($params);
                 return $this->ok($response->toArray
                 (
-                    SerializerUtils::getExpand(),
+                    $expand,
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
                     $params,
@@ -430,13 +434,14 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $current_user = $this->resource_server_context->getCurrentUser(true);
 
             return $this->withReplica(function() use($current_user){
+                $expand = SerializerUtils::getExpand();
                 $strategy = new RetrieveAllSummitEventsStrategy($this->event_repository);
-                $response = $strategy->getEvents();
+                $response = $strategy->getEvents(['expand' => $expand]);
                 return $this->ok
                 (
                     $response->toArray
                     (
-                        SerializerUtils::getExpand(),
+                        $expand,
                         SerializerUtils::getFields(),
                         SerializerUtils::getRelations(),
                         [
@@ -482,8 +487,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $current_user = $this->resource_server_context->getCurrentUser(true);
 
             return $this->withReplica(function() use($current_user, $summit_id){
+                $expand = SerializerUtils::getExpand();
                 $strategy = new RetrieveAllSummitPresentationsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
-                $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+                $response = $strategy->getEvents(['summit_id' => intval($summit_id), 'expand' => $expand]);
                 $params = [
                     'current_user' => $current_user,
                 ];
@@ -491,7 +497,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 (
                     $response->toArray
                     (
-                        SerializerUtils::getExpand(),
+                        $expand,
                         SerializerUtils::getFields(),
                         SerializerUtils::getRelations(),
                         $params,
@@ -536,6 +542,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) throw new EntityNotFoundException;
 
+            $expand = SerializerUtils::getExpand();
             $strategy = new RetrieveAllSummitVoteablePresentationsStrategy
             (
                 $this->repository,
@@ -543,7 +550,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 $this->resource_server_context
             );
 
-            $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+            $response = $strategy->getEvents(['summit_id' => intval($summit_id), 'expand' => $expand]);
 
             $params = [
                 'current_user' => $this->resource_server_context->getCurrentUser(true),
@@ -554,7 +561,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             (
                 $response->toArray
                 (
-                    SerializerUtils::getExpand(),
+                    $expand,
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
                     $params,
@@ -599,13 +606,14 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) throw new EntityNotFoundException;
 
+            $expand = SerializerUtils::getExpand();
             $strategy = new RetrieveAllSummitVoteablePresentationsStrategy
             (
                 $this->repository,
                 $this->event_repository,
                 $this->resource_server_context
             );
-            $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+            $response = $strategy->getEvents(['summit_id' => intval($summit_id), 'expand' => $expand]);
 
             $params = [
                 'current_user' => $this->resource_server_context->getCurrentUser(true),
@@ -628,7 +636,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             (
                 $response->toArray
                 (
-                    SerializerUtils::getExpand(),
+                    $expand,
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
                     $params,
@@ -667,6 +675,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) throw new EntityNotFoundException;
 
+            $expand = SerializerUtils::getExpand();
             $strategy = new RetrieveAllSummitVoteablePresentationsStrategyCSV
             (
                 $this->repository,
@@ -674,7 +683,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 $this->resource_server_context
             );
 
-            $response = $strategy->getEvents(['summit_id' => intval($summit_id)]);
+            $response = $strategy->getEvents(['summit_id' => intval($summit_id), 'expand' => $expand]);
 
             $params = [
                 'current_user' => $this->resource_server_context->getCurrentUser(true),
@@ -697,7 +706,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $filename = "voteable-presentations-" . date('Ymd');
             $list = $response->toArray
             (
-                SerializerUtils::getExpand(),
+                $expand,
                 SerializerUtils::getFields(),
                 ['none'],
                 $params,
@@ -784,13 +793,14 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $current_user = $this->resource_server_context->getCurrentUser(true);
 
             return $this->withReplica(function () use ($current_user) {
+                $expand = SerializerUtils::getExpand();
                 $strategy = new RetrieveAllPublishedSummitEventsStrategy($this->event_repository);
-                $response = $strategy->getEvents();
+                $response = $strategy->getEvents(['expand' => $expand]);
                 return $this->ok
                 (
                     $response->toArray
                     (
-                        SerializerUtils::getExpand(),
+                        $expand,
                         SerializerUtils::getFields(),
                         SerializerUtils::getRelations(),
                         [
@@ -1970,13 +1980,14 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             }
 
             return $this->withReplica(function() use($summit_id, $serializer_type){
+                $expand = SerializerUtils::getExpand();
                 $strategy = new RetrieveAllUnPublishedSummitEventsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
 
-                $response = $strategy->getEvents(['summit_id' => $summit_id]);
+                $response = $strategy->getEvents(['summit_id' => $summit_id, 'expand' => $expand]);
                 return $this->ok($response->toArray
                 (
 
-                    SerializerUtils::getExpand(),
+                    $expand,
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
                     [],

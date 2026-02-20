@@ -463,6 +463,10 @@ final class Filter
         if (is_array($value)) {
             $res = [];
             foreach ($value as $val) {
+                if (!is_numeric($val)) {
+                    $res[] = $val;
+                    continue;
+                }
                 $datetime = new \DateTime("@$val", $timezone);
                 if (!is_null($timezone))
                     $datetime = $datetime->setTimezone($timezone);
@@ -471,6 +475,9 @@ final class Filter
             return $res;
         }
         // single value
+        if (!is_numeric($value)) {
+            return $value;
+        }
         $datetime = new \DateTime("@$value");
         Log::debug(sprintf("Filter::convertToDateTime original date value %s", $datetime->format("Y-m-d H:i:s")));
         if (!is_null($timezone))

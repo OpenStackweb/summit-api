@@ -25,6 +25,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\Selectable;
+use App\libs\Utils\Doctrine\GraphLoaderTrait;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\IBaseRepository;
@@ -40,6 +41,8 @@ use utils\PagingResponse;
  */
 abstract class DoctrineRepository extends EntityRepository implements IBaseRepository
 {
+    use GraphLoaderTrait;
+
     protected $fetchJoinCollection = true;
 
     public function __construct(EntityManagerInterface $em, ClassMetadata $class)

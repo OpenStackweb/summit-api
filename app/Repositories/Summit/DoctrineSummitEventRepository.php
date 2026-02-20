@@ -58,6 +58,27 @@ final class DoctrineSummitEventRepository
         SummitGroupEvent::ClassName,
     ];
 
+    /**
+     * Maps serializer expand names to Doctrine field names — only for mismatches.
+     * The trait's ClassMetadata auto-detection handles association type and entity ownership.
+     */
+    private static array $expandFieldMap = [
+        'track'              => 'category',
+        'creator'            => 'created_by',
+        'current_attendance' => 'attendance_metrics',
+        'slides'             => 'materials',
+        'videos'             => 'materials',
+        'media_uploads'      => 'materials',
+        'links'              => 'materials',
+        'extra_questions'    => 'extra_question_answers',
+        'public_comments'    => 'comments',
+    ];
+
+    public static function getExpandFieldMap(): array
+    {
+        return self::$expandFieldMap;
+    }
+
 
     private function ensureJoin(QueryBuilder $qb, string $alias): void
     {
@@ -701,7 +722,7 @@ SQL,
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null, array $expands = [])
     {
 
         $start = time();
@@ -720,7 +741,21 @@ SQL,
             ->where('e.id IN (:ids)')
             ->setParameter('ids', $ids);
 
+        $em = $this->getEntityManager();
 
+        // Fetch-join requested toOne associations into the hydration query
+        if (!empty($expands)) {
+            $query = $this->addExpandFetchJoins(
+                $em,
+                $query,
+                $expands,
+                'e',
+                SummitEvent::class,
+                self::$expandFieldMap,
+                [Presentation::class => 'p'],
+                ['type'] // already inner-joined
+            );
+        }
 
         $rows = $query->getQuery()->getResult();
         $byId = [];

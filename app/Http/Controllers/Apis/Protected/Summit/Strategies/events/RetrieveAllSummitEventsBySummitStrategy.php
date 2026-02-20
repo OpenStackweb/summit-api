@@ -105,9 +105,9 @@ class RetrieveAllSummitEventsBySummitStrategy extends RetrieveSummitEventsStrate
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function retrieveEventsFromSource(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
+    public function retrieveEventsFromSource(PagingInfo $paging_info, Filter $filter = null, Order $order = null, array $expands = []): PagingResponse
     {
-        return $this->events_repository->getAllByPage($paging_info, $filter, $order);
+        return $this->events_repository->getAllByPage($paging_info, $filter, $order, $expands);
     }
 
 }

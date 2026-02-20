@@ -744,6 +744,24 @@ SQL,
             if (isset($byId[$id])) $data[] = $byId[$id];
         }
 
+        // Batch-load toMany collections (level 1) and nested relations (level 2+)
+        if (!empty($expands) && !empty($data)) {
+            $this->batchLoadExpandedRelations(
+                $em,
+                $data,
+                $expands,
+                SummitEvent::class,
+                self::$expandFieldMap,
+                [
+                    // Presentation.speakers returns PresentationSpeakerAssignment items;
+                    // the serializer calls $assignment->getSpeaker() to get the actual speaker.
+                    'speakers' => fn($assignment) => method_exists($assignment, 'getSpeaker')
+                        ? $assignment->getSpeaker()
+                        : $assignment,
+                ]
+            );
+        }
+
         if ($shuffleResults) shuffle($data);
 
         $end = time() - $start;

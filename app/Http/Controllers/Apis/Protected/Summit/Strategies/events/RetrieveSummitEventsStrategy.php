@@ -55,9 +55,13 @@ abstract class RetrieveSummitEventsStrategy
 
         list($page, $per_page) = $this->getPaginationParams();
 
+        // Parse expand parameter into array for repository batch-loading
+        $expandStr = $params['expand'] ?? '';
+        $expands = !empty($expandStr) ? array_map('trim', explode(',', $expandStr)) : [];
+
         return $this->retrieveEventsFromSource
         (
-            new PagingInfo($page, $per_page), $this->buildFilter(), $this->buildOrder()
+            new PagingInfo($page, $per_page), $this->buildFilter(), $this->buildOrder(), $expands
         );
     }
 
@@ -152,7 +156,7 @@ abstract class RetrieveSummitEventsStrategy
      * @param Order|null $order
      * @return PagingResponse
      */
-    abstract public function retrieveEventsFromSource(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+    abstract public function retrieveEventsFromSource(PagingInfo $paging_info, Filter $filter = null, Order $order = null, array $expands = []);
 
     /**
      * @return array

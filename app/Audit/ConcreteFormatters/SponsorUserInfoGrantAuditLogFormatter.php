@@ -38,7 +38,7 @@ class SponsorUserInfoGrantAuditLogFormatter extends AbstractAuditLogFormatter
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Sponsor User Info Grant (ID: %s) granting access to user '%s' for Sponsor %s  created by user %s",
+                        "Sponsor User Info Grant (ID: %s) granting access to user '%s' for Sponsor %s created by user %s",
                         $id,
                         $user_email,
                         $sponsor_id,

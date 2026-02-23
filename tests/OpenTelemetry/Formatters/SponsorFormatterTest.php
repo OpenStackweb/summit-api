@@ -2,20 +2,18 @@
 
 namespace Tests\OpenTelemetry\Formatters;
 
-use App\Audit\ConcreteFormatters\SponsorSummitRegistrationDiscountCodeAuditLogFormatter;
+use App\Audit\ConcreteFormatters\SponsorAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use Tests\OpenTelemetry\Formatters\Support\AuditContextBuilder;
 use Mockery;
 use Tests\TestCase;
 
-class SponsorSummitRegistrationDiscountCodeFormatterTest extends TestCase
+class SponsorFormatterTest extends TestCase
 {
-    private const CODE_ID = 666;
-    private const CODE_VALUE = 'SPONSORDISCOUNT2024';
-    private const SPONSOR_ID = 101;
+    private const SPONSOR_ID = 42;
+    private const COMPANY_NAME = 'OpenStack Foundation';
     private const SUMMIT_NAME = 'OpenStack Summit 2024';
-    private const DISCOUNT_RATE = 10.5;
-    private const NEW_CODE_VALUE = 'SPONSORDISCOUNT2025';
+    private const SPONSOR_ORDER = 1;
 
     private mixed $mockSubject;
 
@@ -33,62 +31,62 @@ class SponsorSummitRegistrationDiscountCodeFormatterTest extends TestCase
 
     private function createMockSubject(): mixed
     {
+        $mockCompany = Mockery::mock('models\main\Company');
+        $mockCompany->shouldReceive('getName')->andReturn(self::COMPANY_NAME);
+
         $mockSummit = Mockery::mock('models\summit\Summit');
         $mockSummit->shouldReceive('getName')->andReturn(self::SUMMIT_NAME);
 
-        $mock = Mockery::mock('models\summit\SponsorSummitRegistrationDiscountCode');
-        $mock->shouldReceive('getId')->andReturn(self::CODE_ID);
-        $mock->shouldReceive('getCode')->andReturn(self::CODE_VALUE);
+        $mock = Mockery::mock('models\summit\Sponsor');
+        $mock->shouldReceive('getId')->andReturn(self::SPONSOR_ID);
+        $mock->shouldReceive('getCompany')->andReturn($mockCompany);
         $mock->shouldReceive('getSummit')->andReturn($mockSummit);
-        $mock->shouldReceive('getSponsorId')->andReturn(self::SPONSOR_ID);
-        $mock->shouldReceive('getRate')->andReturn(self::DISCOUNT_RATE);
-        $mock->shouldReceive('getAmount')->andReturn(0);
+        $mock->shouldReceive('getOrder')->andReturn(self::SPONSOR_ORDER);
 
         return $mock;
     }
 
     public function testSubjectCreationAuditMessage(): void
     {
-        $formatter = new SponsorSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
+        $formatter = new SponsorAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
         $formatter->setContext(AuditContextBuilder::default()->build());
         $result = $formatter->format($this->mockSubject, []);
 
         $this->assertNotNull($result);
         $this->assertStringContainsString('created', $result);
-        $this->assertStringContainsString(self::CODE_VALUE, $result);
-        $this->assertStringContainsString((string)self::CODE_ID, $result);
+        $this->assertStringContainsString(self::COMPANY_NAME, $result);
+        $this->assertStringContainsString(self::SUMMIT_NAME, $result);
         $this->assertStringContainsString((string)self::SPONSOR_ID, $result);
-        $this->assertStringContainsString('rate', $result);
+        $this->assertStringContainsString('order', $result);
     }
 
     public function testSubjectUpdateAuditMessage(): void
     {
-        $formatter = new SponsorSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter = new SponsorAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
         $formatter->setContext(AuditContextBuilder::default()->build());
-        $changeSet = ['code' => [self::CODE_VALUE, self::NEW_CODE_VALUE]];
+        $changeSet = ['order' => [1, 2]];
 
         $result = $formatter->format($this->mockSubject, $changeSet);
 
         $this->assertNotNull($result);
         $this->assertStringContainsString('updated', $result);
-        $this->assertStringContainsString('current:', $result);
-        $this->assertStringContainsString('rate', $result);
+        $this->assertStringContainsString(self::COMPANY_NAME, $result);
     }
 
     public function testSubjectDeletionAuditMessage(): void
     {
-        $formatter = new SponsorSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
+        $formatter = new SponsorAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
         $formatter->setContext(AuditContextBuilder::default()->build());
         $result = $formatter->format($this->mockSubject, []);
 
         $this->assertNotNull($result);
         $this->assertStringContainsString('deleted', $result);
-        $this->assertStringContainsString('rate', $result);
+        $this->assertStringContainsString(self::COMPANY_NAME, $result);
     }
 
     public function testFormatterReturnsNullForInvalidSubject(): void
     {
-        $formatter = new SponsorSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
+        $formatter = new SponsorAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
         $formatter->setContext(AuditContextBuilder::default()->build());
         $result = $formatter->format(new \stdClass(), []);
 
@@ -97,7 +95,7 @@ class SponsorSummitRegistrationDiscountCodeFormatterTest extends TestCase
 
     public function testFormatterHandlesEmptyChangeSet(): void
     {
-        $formatter = new SponsorSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter = new SponsorAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
         $formatter->setContext(AuditContextBuilder::default()->build());
         $result = $formatter->format($this->mockSubject, []);
 

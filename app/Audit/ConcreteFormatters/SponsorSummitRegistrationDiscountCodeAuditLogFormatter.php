@@ -22,6 +22,24 @@ use Illuminate\Support\Facades\Log;
 
 class SponsorSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAuditLogFormatter
 {
+    private function buildDiscountDetails($subject): string
+    {
+        $details = [];
+        
+        $rate = $subject->getRate();
+        $amount = $subject->getAmount();
+        
+        if ($rate > 0) {
+            $details[] = sprintf("rate: %.2f%%", $rate);
+        }
+        
+        if ($amount > 0) {
+            $details[] = sprintf("amount: $%.2f", $amount);
+        }
+        
+        return implode(", ", $details);
+    }
+
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof SponsorSummitRegistrationDiscountCode) {
@@ -34,35 +52,39 @@ class SponsorSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
             $summit = $subject->getSummit();
             $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
             $sponsor_id = $subject->getSponsorId() ?? 'unknown';
+            $discount_details = $this->buildDiscountDetails($subject);
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Sponsor Registration Discount Code '%s' (ID: %s) for Sponsor %s in Summit '%s' created by user %s",
+                        "Sponsor Registration Discount Code '%s' (ID: %s) for Sponsor %s in Summit '%s' with %s created by user %s",
                         $code,
                         $id,
                         $sponsor_id,
                         $summit_name,
+                        $discount_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Sponsor Registration Discount Code '%s' (ID: %s) in Summit '%s' updated: %s by user %s",
+                        "Sponsor Registration Discount Code '%s' (ID: %s) in Summit '%s' updated: %s (current: %s) by user %s",
                         $code,
                         $id,
                         $summit_name,
                         $details,
+                        $discount_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Sponsor Registration Discount Code '%s' (ID: %s) in Summit '%s' deleted by user %s",
+                        "Sponsor Registration Discount Code '%s' (ID: %s) in Summit '%s' with %s was deleted by user %s",
                         $code,
                         $id,
                         $summit_name,
+                        $discount_details,
                         $this->getUserInfo()
                     );
             }

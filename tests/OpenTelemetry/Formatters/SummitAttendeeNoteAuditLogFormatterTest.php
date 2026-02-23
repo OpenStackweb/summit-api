@@ -15,6 +15,8 @@ class SummitAttendeeNoteAuditLogFormatterTest extends TestCase
     private const ATTENDEE_EMAIL = 'attendee@example.com';
     private const NOTE_CONTENT = 'This is a test note content';
     private const SUMMIT_NAME = 'OpenStack Summit 2024';
+    private const ATTENDEE_FIRST_NAME = 'Jane';
+    private const ATTENDEE_LAST_NAME = 'Smith';
 
     private mixed $mockSubject;
 
@@ -39,6 +41,8 @@ class SummitAttendeeNoteAuditLogFormatterTest extends TestCase
         $mockAttendee->shouldReceive('getId')->andReturn(self::ATTENDEE_ID);
         $mockAttendee->shouldReceive('getEmail')->andReturn(self::ATTENDEE_EMAIL);
         $mockAttendee->shouldReceive('getSummit')->andReturn($mockSummit);
+        $mockAttendee->shouldReceive('getFirstName')->andReturn(self::ATTENDEE_FIRST_NAME);
+        $mockAttendee->shouldReceive('getSurname')->andReturn(self::ATTENDEE_LAST_NAME);
 
         $mock = Mockery::mock('models\summit\SummitAttendeeNote');
         $mock->shouldReceive('getId')->andReturn(self::NOTE_ID);
@@ -56,8 +60,8 @@ class SummitAttendeeNoteAuditLogFormatterTest extends TestCase
 
         $this->assertNotNull($result);
         $this->assertStringContainsString('created', $result);
-        $this->assertStringContainsString(self::ATTENDEE_EMAIL, $result);
-        $this->assertStringContainsString((string)self::ATTENDEE_ID, $result);
+        $this->assertStringContainsString(self::ATTENDEE_FIRST_NAME . ' ' . self::ATTENDEE_LAST_NAME, $result);
+        $this->assertStringContainsString((string)self::NOTE_ID, $result);
     }
 
     public function testSubjectUpdateAuditMessage(): void

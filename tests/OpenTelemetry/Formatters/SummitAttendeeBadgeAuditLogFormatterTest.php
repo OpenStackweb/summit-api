@@ -14,6 +14,8 @@ class SummitAttendeeBadgeAuditLogFormatterTest extends TestCase
     private const TICKET_ID = 789;
     private const TICKET_NUMBER = 'TICKET-2024-001';
     private const SUMMIT_NAME = 'OpenStack Summit 2024';
+    private const OWNER_FIRST_NAME = 'John';
+    private const OWNER_LAST_NAME = 'Doe';
 
     private mixed $mockSubject;
 
@@ -37,10 +39,15 @@ class SummitAttendeeBadgeAuditLogFormatterTest extends TestCase
         $mockOrder = Mockery::mock('models\summit\SummitOrder');
         $mockOrder->shouldReceive('getSummit')->andReturn($mockSummit);
 
+        $mockOwner = Mockery::mock('models\summit\SummitAttendee');
+        $mockOwner->shouldReceive('getFirstName')->andReturn(self::OWNER_FIRST_NAME);
+        $mockOwner->shouldReceive('getSurname')->andReturn(self::OWNER_LAST_NAME);
+
         $mockTicket = Mockery::mock('models\summit\SummitAttendeeTicket');
         $mockTicket->shouldReceive('getId')->andReturn(self::TICKET_ID);
         $mockTicket->shouldReceive('getNumber')->andReturn(self::TICKET_NUMBER);
         $mockTicket->shouldReceive('getOrder')->andReturn($mockOrder);
+        $mockTicket->shouldReceive('getOwner')->andReturn($mockOwner);
 
         $mock = Mockery::mock('models\summit\SummitAttendeeBadge');
         $mock->shouldReceive('getId')->andReturn(self::BADGE_ID);
@@ -58,8 +65,8 @@ class SummitAttendeeBadgeAuditLogFormatterTest extends TestCase
 
         $this->assertNotNull($result);
         $this->assertStringContainsString('created', $result);
-        $this->assertStringContainsString(self::TICKET_NUMBER, $result);
-        $this->assertStringContainsString((string)self::TICKET_ID, $result);
+        $this->assertStringContainsString(self::OWNER_FIRST_NAME . ' ' . self::OWNER_LAST_NAME, $result);
+        $this->assertStringContainsString((string)self::BADGE_ID, $result);
     }
 
     public function testSubjectUpdateAuditMessage(): void

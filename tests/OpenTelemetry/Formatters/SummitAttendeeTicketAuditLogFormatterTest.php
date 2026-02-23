@@ -19,6 +19,8 @@ class SummitAttendeeTicketAuditLogFormatterTest extends TestCase
     private const OWNER_EMAIL = 'owner@example.com';
     private const SUMMIT_NAME = 'OpenStack Summit 2024';
     private const NEW_STATUS = 'Cancelled';
+    private const OWNER_FIRST_NAME = 'John';
+    private const OWNER_LAST_NAME = 'Doe';
 
     private mixed $mockSubject;
 
@@ -39,14 +41,14 @@ class SummitAttendeeTicketAuditLogFormatterTest extends TestCase
         $mockSummit = Mockery::mock('models\summit\Summit');
         $mockSummit->shouldReceive('getName')->andReturn(self::SUMMIT_NAME);
 
-        $mockOwner = Mockery::mock('models\main\Member');
-        $mockOwner->shouldReceive('getEmail')->andReturn(self::OWNER_EMAIL);
+        $mockOwner = Mockery::mock('models\summit\SummitAttendee');
+        $mockOwner->shouldReceive('getFirstName')->andReturn(self::OWNER_FIRST_NAME);
+        $mockOwner->shouldReceive('getSurname')->andReturn(self::OWNER_LAST_NAME);
 
         $mockOrder = Mockery::mock('models\summit\SummitOrder');
         $mockOrder->shouldReceive('getId')->andReturn(self::ORDER_ID);
         $mockOrder->shouldReceive('getNumber')->andReturn(self::ORDER_NUMBER);
         $mockOrder->shouldReceive('getSummit')->andReturn($mockSummit);
-        $mockOrder->shouldReceive('getOwner')->andReturn($mockOwner);
 
         $mockTicketType = Mockery::mock('models\summit\SummitTicketType');
         $mockTicketType->shouldReceive('getName')->andReturn(self::TICKET_TYPE);
@@ -57,6 +59,7 @@ class SummitAttendeeTicketAuditLogFormatterTest extends TestCase
         $mock->shouldReceive('getOrder')->andReturn($mockOrder);
         $mock->shouldReceive('getTicketType')->andReturn($mockTicketType);
         $mock->shouldReceive('getStatus')->andReturn(self::TICKET_STATUS);
+        $mock->shouldReceive('getOwner')->andReturn($mockOwner);
 
         return $mock;
     }
@@ -69,10 +72,8 @@ class SummitAttendeeTicketAuditLogFormatterTest extends TestCase
 
         $this->assertNotNull($result);
         $this->assertStringContainsString('created', $result);
-        $this->assertStringContainsString(self::TICKET_NUMBER, $result);
+        $this->assertStringContainsString(self::OWNER_FIRST_NAME . ' ' . self::OWNER_LAST_NAME, $result);
         $this->assertStringContainsString((string)self::TICKET_ID, $result);
-        $this->assertStringContainsString(self::TICKET_TYPE, $result);
-        $this->assertStringContainsString(self::ORDER_NUMBER, $result);
     }
 
     public function testSubjectUpdateAuditMessage(): void

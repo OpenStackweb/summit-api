@@ -189,11 +189,11 @@ return [
             'driver' => 'rabbitmq',
             'hosts' => [
                 [
-                    'host' => env('DOMAIN_EVENTS_RABBITMQ_HOST', '127.0.0.1'),
+                    'host' => env('RABBITMQ_HOST', '127.0.0.1'),
                     'port' => $rabbit_port,
-                    'user' => env('DOMAIN_EVENTS_RABBITMQ_LOGIN', 'guest'),
-                    'password' => env('DOMAIN_EVENTS_RABBITMQ_PASSWORD', 'guest'),
-                    'vhost' => env('DOMAIN_EVENTS_RABBITMQ_VHOST', '/'),
+                    'user' => env('RABBITMQ_LOGIN', 'guest'),
+                    'password' => env('RABBITMQ_PASSWORD', 'guest'),
+                    'vhost' => env('RABBITMQ_VHOST', '/'),
                 ],
             ],
             'options' => [

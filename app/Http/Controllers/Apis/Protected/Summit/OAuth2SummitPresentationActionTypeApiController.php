@@ -177,10 +177,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function add($summit_id)
-    {
-        return parent::add($summit_id);
-    }
+    // From Trait: public function add($summit_id)
 
     /**
      * @param $summit_id
@@ -225,10 +222,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function get($summit_id, $action_id)
-    {
-        return parent::get($summit_id, $action_id);
-    }
+    // public function get($summit_id, $action_id)
 
     /**
      * @param $summit_id
@@ -277,10 +271,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function update($summit_id, $action_id)
-    {
-        return parent::update($summit_id, $action_id);
-    }
+    // public function update($summit_id, $action_id)
 
     /**
      * @param $summit_id
@@ -320,10 +311,7 @@ final class OAuth2SummitPresentationActionTypeApiController extends OAuth2Protec
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
     )]
-    public function delete($summit_id, $action_id)
-    {
-        return parent::delete($summit_id, $action_id);
-    }
+    // public function delete($summit_id, $action_id)
 
     /**
      * @param $summit_id

@@ -30,6 +30,8 @@ jobs:
               run: |
                   echo "running OpenTelemetry Formatter tests"
                   vendor/bin/phpunit tests/OpenTelemetry/Formatters/ --log-junit results_opentelemetry_tests.xml
+                  echo "running Redis Resilience tests"
+                  vendor/bin/phpunit tests/Redis/ --log-junit results_redis_tests.xml
 
             - name: Upload OpenTelemetry Tests Output
               uses: actions/upload-artifact@v4
@@ -37,6 +39,13 @@ jobs:
                   name: results_opentelemetry_tests
                   path: results_opentelemetry_tests.xml
                   retention-days: 5
+
+            - name: Upload Redis Tests Output
+              uses: actions/upload-artifact@v4
+              with:
+                   name: results_redis_tests
+                   path: results_redis_tests.xml
+                   retention-days: 5
 
     integration-tests:
         runs-on: ubuntu-latest

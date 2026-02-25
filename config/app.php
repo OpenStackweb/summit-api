@@ -156,6 +156,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\RedisResilienceServiceProvider::class,
         // Services
         App\Repositories\RepositoriesProvider::class,
         App\Services\FileSystem\Swift\SwiftServiceProvider::class,

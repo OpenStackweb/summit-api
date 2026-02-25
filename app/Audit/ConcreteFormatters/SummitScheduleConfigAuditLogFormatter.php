@@ -33,7 +33,7 @@ class SummitScheduleConfigAuditLogFormatter extends AbstractAuditLogFormatter
             $id = $subject->getId() ?? 'unknown';
             $summit = $subject->getSummit();
             $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
-            $is_default = $subject->getIsDefault() ? 'default' : 'non-default';
+            $is_default = $subject->isDefault() ? 'default' : 'non-default';
             $color_source = $subject->getColorSource() ?? 'Unknown';
 
             switch ($this->event_type) {

@@ -527,7 +527,7 @@ final class OAuth2SummitPromoCodesApiTest
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
 
-        $this->action(
+        $response = $this->action(
             "GET",
             "OAuth2SummitPromoCodesApiController@preValidatePromoCode",
             $params,
@@ -538,6 +538,43 @@ final class OAuth2SummitPromoCodesApiTest
         );
 
         $this->assertResponseStatus(200);
+        $content = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('allows_to_reassign', $content);
+        $this->assertTrue($content['allows_to_reassign']);
+    }
+
+    public function testPreValidatePromoCodeReturnsAllowsToReassignFalse()
+    {
+        self::$default_prepaid_discount_code->setAllowsToReassign(false);
+
+        $type_id = self::$default_ticket_type->getId();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'promo_code_val' => self::$default_prepaid_discount_code->getCode(),
+            'filter' => [
+                'ticket_type_id==' . $type_id,
+                'ticket_type_qty==1',
+                'ticket_type_subtype==' . SummitTicketType::Subtype_PrePaid
+            ]
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@preValidatePromoCode",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $content = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('allows_to_reassign', $content);
+        $this->assertFalse($content['allows_to_reassign']);
     }
 
     public function testPreValidatePromoCodeInvalid()

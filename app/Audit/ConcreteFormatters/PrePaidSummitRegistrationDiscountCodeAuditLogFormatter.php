@@ -22,6 +22,30 @@ use Illuminate\Support\Facades\Log;
 
 class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAuditLogFormatter
 {
+
+    private function buildDiscountDetails($subject): string
+    {
+        $details = [];
+
+        $rate = $subject->getRate();
+        $amount = $subject->getAmount();
+        $quantity_available = $subject->getQuantityAvailable();
+
+        if ($rate > 0) {
+            $details[] = sprintf("rate: %.2f%%", $rate);
+        }
+
+        if ($amount > 0) {
+            $details[] = sprintf("amount: $%.2f", $amount);
+        }
+
+        if ($quantity_available > 0) {
+            $details[] = sprintf("quantity: %d", $quantity_available);
+        }
+
+        return implode(", ", $details);
+    }
+
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof PrePaidSummitRegistrationDiscountCode) {
@@ -33,34 +57,38 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
             $id = $subject->getId() ?? 'unknown';
             $summit = $subject->getSummit();
             $summit_name = $summit ? ($summit->getName() ?? 'Unknown Summit') : 'Unknown Summit';
+            $discount_details = $this->buildDiscountDetails($subject);
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Pre-Paid Discount Code '%s' (%d) created for Summit '%s' by user %s",
+                        "Pre-Paid Discount Code '%s' (%d) created for Summit '%s' with %s by user %s",
                         $code,
                         $id,
                         $summit_name,
+                        $discount_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Pre-Paid Discount Code '%s' (%d) for Summit '%s' updated: %s by user %s",
+                        "Pre-Paid Discount Code '%s' (%d) for Summit '%s' updated: %s (current: %s) by user %s",
                         $code,
                         $id,
                         $summit_name,
                         $change_details,
+                        $discount_details,
                         $this->getUserInfo()
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Pre-Paid Discount Code '%s' (%d) for Summit '%s' was deleted by user %s",
+                        "Pre-Paid Discount Code '%s' (%d) for Summit '%s' with %s was deleted by user %s",
                         $code,
                         $id,
                         $summit_name,
+                        $discount_details,
                         $this->getUserInfo()
                     );
             }

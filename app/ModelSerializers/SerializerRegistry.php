@@ -168,6 +168,7 @@ final class SerializerRegistry
     const SerializerType_Admin_Voteable_CSV = "ADMIN_VOTEABLE_CSV";
     const SerializerType_CSV = 'CSV';
     const SerializerType_Admin_Registration_Stats = 'ADMIN_REG_STATS';
+    const SerializerType_PreValidation = 'PRE_VALIDATION';
 
     private function __clone()
     {
@@ -434,61 +435,73 @@ final class SerializerRegistry
         $this->registry['SummitRegistrationPromoCode'] = [
             self::SerializerType_Public => SummitRegistrationPromoCodeSerializer::class,
             self::SerializerType_CSV => SummitRegistrationPromoCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['SummitRegistrationDiscountCode'] = [
             self::SerializerType_Public => SummitRegistrationDiscountCodeSerializer::class,
             self::SerializerType_CSV => SummitRegistrationDiscountCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['MemberSummitRegistrationPromoCode'] = [
             self::SerializerType_Public => MemberSummitRegistrationPromoCodeSerializer::class,
             self::SerializerType_CSV => MemberSummitRegistrationPromoCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['MemberSummitRegistrationDiscountCode'] = [
             self::SerializerType_Public => MemberSummitRegistrationDiscountCodeSerializer::class,
             self::SerializerType_CSV => MemberSummitRegistrationDiscountCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['SpeakerSummitRegistrationPromoCode'] = [
             self::SerializerType_Public => SpeakerSummitRegistrationPromoCodeSerializer::class,
             self::SerializerType_CSV => SpeakerSummitRegistrationPromoCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['SpeakerSummitRegistrationDiscountCode'] = [
             self::SerializerType_Public => SpeakerSummitRegistrationDiscountCodeSerializer::class,
             self::SerializerType_CSV => SpeakerSummitRegistrationDiscountCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['SponsorSummitRegistrationPromoCode'] = [
             self::SerializerType_Public => SponsorSummitRegistrationPromoCodeSerializer::class,
             self::SerializerType_CSV => SponsorSummitRegistrationPromoCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['SponsorSummitRegistrationDiscountCode'] = [
             self::SerializerType_Public => SponsorSummitRegistrationDiscountCodeSerializer::class,
             self::SerializerType_CSV => SponsorSummitRegistrationDiscountCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['SpeakersSummitRegistrationPromoCode'] = [
             self::SerializerType_Public => SpeakersSummitRegistrationPromoCodeSerializer::class,
             self::SerializerType_CSV => SpeakersSummitRegistrationPromoCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['SpeakersRegistrationDiscountCode'] = [
             self::SerializerType_Public => SpeakersRegistrationDiscountCodeSerializer::class,
             self::SerializerType_CSV => SpeakersRegistrationDiscountCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['PrePaidSummitRegistrationPromoCode'] = [
             self::SerializerType_Public => SummitRegistrationPromoCodeSerializer::class,
             self::SerializerType_CSV => SummitRegistrationPromoCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['PrePaidSummitRegistrationDiscountCode'] = [
             self::SerializerType_Public => SummitRegistrationDiscountCodeSerializer::class,
             self::SerializerType_CSV => SummitRegistrationDiscountCodeCSVSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
         $this->registry['PresentationSpeakerSummitAssistanceConfirmationRequest'] = PresentationSpeakerSummitAssistanceConfirmationRequestSerializer::class;

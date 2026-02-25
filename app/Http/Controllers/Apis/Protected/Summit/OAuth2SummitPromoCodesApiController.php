@@ -1462,10 +1462,12 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 'ticket_type_subtype' => 'required|string|in:'.join(",", SummitTicketType::SubTypes),
             ]);
 
-            $this->promo_code_service
+            $promo_code = $this->promo_code_service
                 ->preValidatePromoCode($summit, $this->resource_server_context->getCurrentUser(), $promo_code_val, $filter);
 
-            return $this->ok();
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($promo_code, SerializerRegistry::SerializerType_PreValidation)
+                ->serialize());
         });
     }
 

@@ -172,7 +172,6 @@ return [
     */
 
     'redis' => [
-
         'client' => env('REDIS_CLIENT', 'predis'),
         /*
          * @see https://github.com/predis/predis/wiki/Connection-Parameters
@@ -186,8 +185,9 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 30),
+            'retry_limit' => (int) env('REDIS_RETRY_LIMIT', 2),
+            'retry_delay' => (int) env('REDIS_RETRY_DELAY', 50),
         ],
-
         'cache' => [
             'host' => env('REDIS_HOST'),
             'port' => env('REDIS_PORT'),
@@ -196,8 +196,9 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
             'timeout' => env('REDIS_TIMEOUT', 5),
+            'retry_limit' => (int) env('REDIS_RETRY_LIMIT', 2),
+            'retry_delay' => (int) env('REDIS_RETRY_DELAY', 50),
         ],
-
         'session' => [
             'host' => env('REDIS_HOST'),
             'port' => env('REDIS_PORT'),
@@ -206,6 +207,8 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
             'timeout' => env('REDIS_TIMEOUT', 5),
+            'retry_limit' => (int) env('REDIS_RETRY_LIMIT', 2),
+            'retry_delay' => (int) env('REDIS_RETRY_DELAY', 50),
         ],
 
         'worker' => [
@@ -216,6 +219,8 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_WORKER_READ_WRITE_TIMEOUT', 10),
             'timeout' => env('REDIS_WORKER_TIMEOUT', 5),
+            'retry_limit' => (int) env('REDIS_RETRY_LIMIT', 2),
+            'retry_delay' => (int) env('REDIS_RETRY_DELAY', 50),
         ],
     ],
     'allow_disabled_pk' => env('DB_ALLOW_DISABLED_PK', false),

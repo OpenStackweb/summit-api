@@ -45,9 +45,9 @@ class SummitTicketTypeAuditLogFormatter extends AbstractAuditLogFormatter
                         $name,
                         $id,
                         $summit_name,
-                        ($cost !== null ? $cost : 'N/A'),
+                        $cost,
                         $currency,
-                        ($quantity_available !== null ? $quantity_available : 'N/A'),
+                        $quantity_available,
                         $audience,
                         $this->getUserInfo()
                     );
@@ -70,10 +70,10 @@ class SummitTicketTypeAuditLogFormatter extends AbstractAuditLogFormatter
                         $name,
                         $id,
                         $summit_name,
-                        ($cost !== null ? $cost : 'N/A'),
+                        $cost,
                         $currency,
-                        ($quantity_sold !== null ? $quantity_sold : 'N/A'),
-                        ($quantity_available !== null ? $quantity_available : 'N/A'),
+                        $quantity_sold,
+                        $quantity_available,
                         $this->getUserInfo()
                     );
             }

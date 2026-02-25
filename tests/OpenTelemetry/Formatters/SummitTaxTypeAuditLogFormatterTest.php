@@ -19,7 +19,6 @@ use App\Audit\AuditContext;
 use App\Audit\ConcreteFormatters\SummitTaxTypeAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use models\summit\SummitTaxType;
-use Doctrine\Common\Collections\ArrayCollection;
 use Mockery;
 use Tests\TestCase;
 
@@ -61,7 +60,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatCreationEvent(): void
     {
-        $tax = $this->createMockTax('VAT', 'VAT-001', 21.0, 5);
+        $tax = $this->createMockTax('VAT', 'VAT-001', 21.0);
 
         $this->formatter_creation->setContext($this->audit_context);
         $result = $this->formatter_creation->format($tax, []);
@@ -74,7 +73,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatUpdateEvent(): void
     {
-        $tax = $this->createMockTax('Sales Tax', 'ST-002', 8.0, 3);
+        $tax = $this->createMockTax('Sales Tax', 'ST-002', 8.0);
 
         $this->formatter_update->setContext($this->audit_context);
         $result = $this->formatter_update->format($tax, [
@@ -89,7 +88,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatDeletionEvent(): void
     {
-        $tax = $this->createMockTax('GST', 'GST-CA', 5.0, 2);
+        $tax = $this->createMockTax('GST', 'GST-CA', 5.0);
 
         $this->formatter_deletion->setContext($this->audit_context);
         $result = $this->formatter_deletion->format($tax, []);
@@ -102,7 +101,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
     public function testFormatWithoutTicketTypes(): void
     {
-        $tax = $this->createMockTax('Empty Tax', 'EMPTY', 10.0, 0);
+        $tax = $this->createMockTax('Empty Tax', 'EMPTY', 10.0);
 
         $this->formatter_creation->setContext($this->audit_context);
         $result = $this->formatter_creation->format($tax, []);
@@ -121,19 +120,13 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
         $this->assertNull($result);
     }
 
-    private function createMockTax(string $name, string $tax_id, float $rate, int $ticket_count): object
+    private function createMockTax(string $name, string $tax_id,  $rate): object
     {
         $mock = Mockery::mock(SummitTaxType::class);
         $mock->shouldReceive('getName')->andReturn($name);
         $mock->shouldReceive('getId')->andReturn(self::MOCK_ID);
         $mock->shouldReceive('getTaxId')->andReturn($tax_id);
         $mock->shouldReceive('getRate')->andReturn($rate);
-
-        $tickets = new ArrayCollection();
-        for ($i = 0; $i < $ticket_count; $i++) {
-            $tickets->add(Mockery::mock(\models\summit\SummitTicketType::class));
-        }
-        $mock->shouldReceive('getTicketTypes')->andReturn($tickets);
 
         $summit = Mockery::mock(\models\summit\Summit::class);
         $summit->shouldReceive('getName')->andReturn(self::SUMMIT_NAME);

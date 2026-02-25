@@ -55,7 +55,7 @@ class SummitScheduleConfigAuditLogFormatterTest extends TestCase
         // Configure return values
         $mock->shouldReceive('getId')->andReturn(self::CONFIG_ID);
         $mock->shouldReceive('getKey')->andReturn(self::CONFIG_KEY);
-        $mock->shouldReceive('getIsDefault')->andReturn(self::CONFIG_IS_DEFAULT);
+        $mock->shouldReceive('isDefault')->andReturn(self::CONFIG_IS_DEFAULT);
         $mock->shouldReceive('getColorSource')->andReturn(self::CONFIG_COLOR_SOURCE);
         $mock->shouldReceive('getSummit')->andReturn($mockSummit);
         

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Audit\Interfaces\IAuditStrategy;
+use App\Jobs\Utils\JobDispatcher;
 use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\EmitAuditLogJob;
@@ -70,8 +71,10 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             if (!empty($description)) {
                 $auditData['audit.description'] = $description;
             }
-            Log::debug("AuditLogOtlpStrategy::audit sending entry to OTEL", ["user_id" => $ctx->userId, "user_email" => $ctx->userEmail, 'payload' => $auditData]);
-            EmitAuditLogJob::dispatch($this->getLogMessage($event_type), $auditData);
+            $job = new EmitAuditLogJob($this->getLogMessage($event_type), $auditData);
+            JobDispatcher::withDbFallback(
+                job: $job,
+            );
             Log::debug("AuditLogOtlpStrategy::audit entry sent to OTEL", ["user_id" => $ctx->userId, "user_email" => $ctx->userEmail]);
 
         } catch (\Exception $ex) {

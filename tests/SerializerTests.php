@@ -15,8 +15,10 @@
 use models\oauth2\IResourceServerContext;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitRegistrationPromoCode;
 use ModelSerializers\SerializerDecorator;
 use ModelSerializers\SummitAttendeeAdminSerializer;
+use ModelSerializers\SummitRegistrationPromoCodePreValidationSerializer;
 use Mockery;
 
 /**
@@ -28,6 +30,43 @@ final class SerializerTests extends TestCase
     public function tearDown():void
     {
         Mockery::close();
+    }
+
+    public function testPreValidationSerializerReturnsAllowsToReassignTrue()
+    {
+        $promo_code = Mockery::mock(SummitRegistrationPromoCode::class)->makePartial();
+        $promo_code->shouldReceive('isAllowsToReassign')->andReturn(true);
+        $promo_code->shouldReceive('getIdentifier')->andReturn(1);
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new SerializerDecorator(
+            new SummitRegistrationPromoCodePreValidationSerializer($promo_code, $resource_server_context)
+        );
+        $values = $serializer->serialize();
+
+        $this->assertIsArray($values);
+        $this->assertArrayHasKey('allows_to_reassign', $values);
+        $this->assertTrue($values['allows_to_reassign']);
+        // should only contain allows_to_reassign and inherited id fields
+        $this->assertArrayNotHasKey('code', $values);
+        $this->assertArrayNotHasKey('redeemed', $values);
+    }
+
+    public function testPreValidationSerializerReturnsAllowsToReassignFalse()
+    {
+        $promo_code = Mockery::mock(SummitRegistrationPromoCode::class)->makePartial();
+        $promo_code->shouldReceive('isAllowsToReassign')->andReturn(false);
+        $promo_code->shouldReceive('getIdentifier')->andReturn(1);
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new SerializerDecorator(
+            new SummitRegistrationPromoCodePreValidationSerializer($promo_code, $resource_server_context)
+        );
+        $values = $serializer->serialize();
+
+        $this->assertIsArray($values);
+        $this->assertArrayHasKey('allows_to_reassign', $values);
+        $this->assertFalse($values['allows_to_reassign']);
     }
 
     public function testAdminSummitAttendeeSerilizer(){

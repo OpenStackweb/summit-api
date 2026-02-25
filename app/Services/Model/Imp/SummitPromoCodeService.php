@@ -897,12 +897,12 @@ final class SummitPromoCodeService
      * @param Member $owner
      * @param string $promo_code_value
      * @param Filter $filter
-     * @return void
+     * @return SummitRegistrationPromoCode
      * @throws \Exception
      */
-    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter):void
+    public function preValidatePromoCode(Summit $summit, Member $owner, string $promo_code_value, Filter $filter):SummitRegistrationPromoCode
     {
-        $this->tx_service->transaction(function () use ($summit, $owner, $promo_code_value, $filter) {
+        return $this->tx_service->transaction(function () use ($summit, $owner, $promo_code_value, $filter) {
 
             $ticket_type_id = intval($filter->getUniqueFilter('ticket_type_id')->getValue());
 
@@ -921,7 +921,7 @@ final class SummitPromoCodeService
             if (!$promo_code instanceof SummitRegistrationPromoCode || $promo_code->getSummitId() != $summit->getId() || !$validator->isValid($promo_code)){
                 throw new ValidationException(sprintf('The Promo Code "%s" is not a valid code.', $promo_code_value));
             }
-
+            return $promo_code;
         });
     }
 

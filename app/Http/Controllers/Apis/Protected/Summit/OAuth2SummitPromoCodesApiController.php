@@ -1417,7 +1417,15 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             new OA\Parameter(name: "filter", in: "query", required: false, schema: new OA\Schema(type: "string")),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Pre-validation result",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'allows_to_reassign', type: 'boolean', description: 'Whether the promo code allows ticket reassignment'),
+                    ]
+                )
+            ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation error"),
@@ -1462,10 +1470,12 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
                 'ticket_type_subtype' => 'required|string|in:'.join(",", SummitTicketType::SubTypes),
             ]);
 
-            $this->promo_code_service
+            $promo_code = $this->promo_code_service
                 ->preValidatePromoCode($summit, $this->resource_server_context->getCurrentUser(), $promo_code_val, $filter);
 
-            return $this->ok();
+            return $this->ok(SerializerRegistry::getInstance()
+                ->getSerializer($promo_code, SerializerRegistry::SerializerType_PreValidation)
+                ->serialize());
         });
     }
 

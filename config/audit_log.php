@@ -316,6 +316,38 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SponsorAuditLogFormatter::class,
         ],
+        \models\main\Company::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\CompanyAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationCategory::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationCategoryAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationCategoryGroup::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationCategoryGroupAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationTypeAuditLogFormatter::class,
+        ],
+        \models\summit\RSVP::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPInvitationAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPTemplateAuditLogFormatter::class,
+        ],
         \models\summit\SummitEventType::class => [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SummitEventTypeAuditLogFormatter::class,

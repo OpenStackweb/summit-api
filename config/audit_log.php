@@ -256,5 +256,49 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\ExtraQuestionTypeValueAuditLogFormatter::class,
         ],
+        \models\summit\SponsorAd::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorAdAuditLogFormatter::class,
+        ],
+        \models\summit\SponsorBadgeScan::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorBadgeScanAuditLogFormatter::class,
+        ],
+        \models\summit\SponsorBadgeScanExtraQuestionAnswer::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorBadgeScanExtraQuestionAnswerAuditLogFormatter::class,
+        ],
+        \models\summit\SponsorMaterial::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorMaterialAuditLogFormatter::class,
+        ],
+        \models\summit\SponsorSocialNetwork::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorSocialNetworkAuditLogFormatter::class,
+        ],
+        \models\summit\SponsorSummitRegistrationDiscountCode::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorSummitRegistrationDiscountCodeAuditLogFormatter::class,
+        ],
+        \models\summit\SponsorSummitRegistrationPromoCode::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorSummitRegistrationPromoCodeAuditLogFormatter::class,
+        ],
+        \models\summit\SponsorUserInfoGrant::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorUserInfoGrantAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitSponsorExtraQuestionTypeAuditLogFormatter::class,
+        ],
+        \models\summit\Sponsor::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SponsorAuditLogFormatter::class,
+        ],
+        \models\summit\SummitEventType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitEventTypeAuditLogFormatter::class,
+        ],
     ]
 ];

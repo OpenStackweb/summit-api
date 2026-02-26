@@ -97,9 +97,7 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         ];
     }
 
-    use GetAllBySummit {
-        getAllBySummit as protected traitGetAllBySummit;
-    }
+    use GetAllBySummit;
 
     use GetSummitChildElementById;
 

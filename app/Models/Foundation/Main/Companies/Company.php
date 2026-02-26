@@ -645,4 +645,22 @@ class Company extends SilverstripeBaseModel
     public function setUrlSegment(string $url_segment): void{
         $this->url_segment = $url_segment;
     }
+
+    public function isCOAPartner():bool{
+        try {
+            $sql = <<<SQL
+SELECT COUNT(ID) FROM `COALandingPage_TrainingPartners` where CompanyID = :company_id;
+SQL;
+
+            $stmt = $this->prepareRawSQL($sql);
+            $stmt->execute(['company_id' => $this->id]);
+            $res = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            $res = count($res) > 0 ? $res[0] : 0;
+            $count = !is_null($res) ? $res : 0;
+            return $count > 0;
+        }
+        catch(\Exception $ex){
+            return false;
+        }
+    }
 }

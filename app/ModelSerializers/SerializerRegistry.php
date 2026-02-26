@@ -61,6 +61,13 @@ use App\ModelSerializers\Marketplace\RemoteCloudServiceSerializer;
 use App\ModelSerializers\Marketplace\ServiceOfferedTypeSerializer;
 use App\ModelSerializers\Marketplace\SpokenLanguageSerializer;
 use App\ModelSerializers\Marketplace\SupportChannelTypeSerializer;
+use App\ModelSerializers\Marketplace\ProjectSerializer;
+use App\ModelSerializers\Marketplace\TrainingCourseLevelSerializer;
+use App\ModelSerializers\Marketplace\TrainingCoursePrerequisiteSerializer;
+use App\ModelSerializers\Marketplace\TrainingCourseScheduleSerializer;
+use App\ModelSerializers\Marketplace\TrainingCourseScheduleTimeSerializer;
+use App\ModelSerializers\Marketplace\TrainingCourseSerializer;
+use App\ModelSerializers\Marketplace\TrainingCourseTypeSerializer;
 use App\ModelSerializers\Marketplace\TrainingServiceSerializer;
 use App\ModelSerializers\PushNotificationMessageSerializer;
 use App\ModelSerializers\ResourceServer\ApiEndpointAuthzGroupSerializer;
@@ -661,6 +668,13 @@ final class SerializerRegistry
         $this->registry['RemoteCloudService'] = RemoteCloudServiceSerializer::class;
         $this->registry['CloudServiceOffered'] = CloudServiceOfferedSerializer::class;
         $this->registry['TrainingService'] = TrainingServiceSerializer::class;
+        $this->registry['TrainingCourse'] = TrainingCourseSerializer::class;
+        $this->registry['TrainingCourseType'] = TrainingCourseTypeSerializer::class;
+        $this->registry['TrainingCourseLevel'] = TrainingCourseLevelSerializer::class;
+        $this->registry['TrainingCoursePrerequisite'] = TrainingCoursePrerequisiteSerializer::class;
+        $this->registry['TrainingCourseSchedule'] = TrainingCourseScheduleSerializer::class;
+        $this->registry['TrainingCourseScheduleTime'] = TrainingCourseScheduleTimeSerializer::class;
+        $this->registry['Project'] = ProjectSerializer::class;
         $this->registry['AvailabilityZone'] = AvailabilityZoneSerializer::class;
         // software
 

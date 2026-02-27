@@ -766,7 +766,7 @@ final class SpeakerService
     {
         $this->tx_service->transaction(function () use ($speaker_id) {
             $speaker = $this->speaker_repository->getById($speaker_id);
-            if (!$speaker instanceof PresentationSpeaker::class)
+            if (!$speaker instanceof PresentationSpeaker)
                 throw new EntityNotFoundException;
 
             // Break circular FK reference to avoid Doctrine CycleDetectedException:

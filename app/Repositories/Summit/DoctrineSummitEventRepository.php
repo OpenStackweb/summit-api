@@ -545,7 +545,7 @@ SQL,
         }
 
         if($has('track_chairs_status'))
-            $need['sspl'] = $need['ssp'] = true;
+            $need['sspl'] = $need['ssp'] = $need['ssp_member'] = true;
 
         if($ord('trackchairsel'))
             $need['ssp'] = true;

@@ -1,8 +1,8 @@
 create table DoctrineMigration
 (
-    version     varchar(14) not null
+    version     varchar(191) not null
         primary key,
-    executed_at datetime    not null comment '(DC2Type:datetime_immutable)'
+    executed_at datetime     not null comment '(DC2Type:datetime_immutable)'
 )
     collate = utf8mb3_unicode_ci;
 

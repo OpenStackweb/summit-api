@@ -2167,8 +2167,9 @@ create table Distribution
 
 create table DoctrineMigration
 (
-    version     varchar(14) not null,
-    executed_at datetime    null comment '(DC2Type:datetime_immutable)'
+    version     varchar(191) not null,
+    executed_at datetime     null comment '(DC2Type:datetime_immutable)',
+    primary key (version)
 )
     collate = utf8mb3_unicode_ci;
 

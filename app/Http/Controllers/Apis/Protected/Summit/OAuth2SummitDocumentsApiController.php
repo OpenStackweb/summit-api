@@ -42,17 +42,11 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
 {
     // traits
 
-    use GetAllBySummit {
-        getAllBySummit as protected traitGetAllBySummit;
-    }
+    use GetAllBySummit;
 
-    use GetSummitChildElementById {
-        get as protected traitGet;
-    }
+    use GetSummitChildElementById;
 
-    use DeleteSummitChildElement {
-        delete as protected traitDelete;
-    }
+    use DeleteSummitChildElement;
 
     use RequestProcessor;
 
@@ -163,9 +157,6 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function getAllBySummit($summit_id) {
-        return $this->traitGetAllBySummit($summit_id);
-    }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/summit-documents/{document_id}",
@@ -220,9 +211,6 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function get($summit_id, $document_id) {
-        return $this->traitGet($summit_id, $document_id);
-    }
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/summit-documents",
@@ -486,9 +474,6 @@ class OAuth2SummitDocumentsApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function delete($summit_id, $document_id) {
-        return $this->traitDelete($summit_id, $document_id);
-    }
 
     /**
      * @inheritDoc

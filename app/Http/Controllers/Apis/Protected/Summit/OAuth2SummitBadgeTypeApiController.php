@@ -97,25 +97,15 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
         ];
     }
 
-    use GetAllBySummit {
-        getAllBySummit as protected traitGetAllBySummit;
-    }
+    use GetAllBySummit;
 
-    use GetSummitChildElementById {
-        get as protected traitGet;
-    }
+    use GetSummitChildElementById;
 
-    use AddSummitChildElement {
-        add as protected traitAdd;
-    }
+    use AddSummitChildElement;
 
-    use UpdateSummitChildElement {
-        update as protected traitUpdate;
-    }
+    use UpdateSummitChildElement;
 
-    use DeleteSummitChildElement {
-        delete as protected traitDelete;
-    }
+    use DeleteSummitChildElement;
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/badge-types",
@@ -202,9 +192,6 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function getAllBySummit($summit_id) {
-        return $this->traitGetAllBySummit($summit_id);
-    }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/badge-types/{badge_type_id}",
@@ -268,9 +255,6 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function get($summit_id, $badge_type_id) {
-        return $this->traitGet($summit_id, $badge_type_id);
-    }
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/badge-types",
@@ -316,9 +300,6 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function add($summit_id) {
-        return $this->traitAdd($summit_id);
-    }
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/badge-types/{badge_type_id}",
@@ -371,9 +352,6 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function update($summit_id, $badge_type_id) {
-        return $this->traitUpdate($summit_id, $badge_type_id);
-    }
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/badge-types/{badge_type_id}",
@@ -416,9 +394,6 @@ final class OAuth2SummitBadgeTypeApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function delete($summit_id, $badge_type_id) {
-        return $this->traitDelete($summit_id, $badge_type_id);
-    }
 
     /**
      * @param array $payload

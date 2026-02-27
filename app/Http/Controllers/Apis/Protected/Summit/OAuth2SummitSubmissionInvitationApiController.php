@@ -48,21 +48,13 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
 
     use ParametrizedGetAll;
 
-    use GetSummitChildElementById {
-        get as protected traitGet;
-    }
+    use GetSummitChildElementById;
 
-    use DeleteSummitChildElement {
-        delete as protected traitDelete;
-    }
+    use DeleteSummitChildElement;
 
-    use AddSummitChildElement {
-        add as protected traitAdd;
-    }
+    use AddSummitChildElement;
 
-    use UpdateSummitChildElement {
-        update as protected traitUpdate;
-    }
+    use UpdateSummitChildElement;
 
     /**
      * @var ISummitRepository
@@ -578,10 +570,6 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function get($summit_id, $invitation_id)
-    {
-        return $this->traitGet($summit_id, $invitation_id);
-    }
 
     #[OA\Post(
         path: "/api/v1/summits/{id}/submission-invitations",
@@ -632,10 +620,6 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function add($summit_id)
-    {
-        return $this->traitAdd($summit_id);
-    }
 
     #[OA\Put(
         path: "/api/v1/summits/{id}/submission-invitations/{invitation_id}",
@@ -693,10 +677,6 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function update($summit_id, $invitation_id)
-    {
-        return $this->traitUpdate($summit_id, $invitation_id);
-    }
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/submission-invitations/{invitation_id}",
@@ -744,10 +724,6 @@ final class OAuth2SummitSubmissionInvitationApiController extends OAuth2Protecte
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
-    public function delete($summit_id, $invitation_id)
-    {
-        return $this->traitDelete($summit_id, $invitation_id);
-    }
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/submission-invitations/all",

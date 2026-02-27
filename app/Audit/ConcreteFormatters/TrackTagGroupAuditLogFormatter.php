@@ -38,7 +38,7 @@ class TrackTagGroupAuditLogFormatter extends AbstractAuditLogFormatter
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Track Tag Group '%s' (%d) created for Summit '%s' with label '%s' by user %s",
+                        "Track Tag Group '%s' (%s) created for Summit '%s' with label '%s' by user %s",
                         $name,
                         $id,
                         $summit_name,
@@ -49,7 +49,7 @@ class TrackTagGroupAuditLogFormatter extends AbstractAuditLogFormatter
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Track Tag Group '%s' (%d) for Summit '%s' updated: %s by user %s",
+                        "Track Tag Group '%s' (%s) for Summit '%s' updated: %s by user %s",
                         $name,
                         $id,
                         $summit_name,
@@ -59,7 +59,7 @@ class TrackTagGroupAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Track Tag Group '%s' (%d) for Summit '%s' was deleted by user %s",
+                        "Track Tag Group '%s' (%s) for Summit '%s' was deleted by user %s",
                         $name,
                         $id,
                         $summit_name,

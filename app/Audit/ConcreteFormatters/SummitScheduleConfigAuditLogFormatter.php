@@ -39,7 +39,7 @@ class SummitScheduleConfigAuditLogFormatter extends AbstractAuditLogFormatter
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Schedule Config '%s' (%d) created for Summit '%s' (%s, color source: %s) by user %s",
+                        "Schedule Config '%s' (%s) created for Summit '%s' (%s, color source: %s) by user %s",
                         $key,
                         $id,
                         $summit_name,
@@ -51,7 +51,7 @@ class SummitScheduleConfigAuditLogFormatter extends AbstractAuditLogFormatter
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Schedule Config '%s' (%d) for Summit '%s' updated: %s by user %s",
+                        "Schedule Config '%s' (%s) for Summit '%s' updated: %s by user %s",
                         $key,
                         $id,
                         $summit_name,
@@ -61,7 +61,7 @@ class SummitScheduleConfigAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Schedule Config '%s' (%d) for Summit '%s' was deleted by user %s",
+                        "Schedule Config '%s' (%s) for Summit '%s' was deleted by user %s",
                         $key,
                         $id,
                         $summit_name,

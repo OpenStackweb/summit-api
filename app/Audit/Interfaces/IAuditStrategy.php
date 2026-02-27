@@ -33,6 +33,8 @@ interface IAuditStrategy
     public const EVENT_ENTITY_CREATION = 'event_entity_creation';
     public const EVENT_ENTITY_DELETION = 'event_entity_deletion';
     public const EVENT_ENTITY_UPDATE = 'event_entity_update';
+    public const EVENT_COLLECTION_MANYTOMANY_UPDATE = 'event_collection_manytomany_update';
+    public const EVENT_COLLECTION_MANYTOMANY_DELETE = 'event_collection_manytomany_delete';
 
     public const ACTION_CREATE = 'create';
     public const ACTION_UPDATE = 'update';

@@ -107,6 +107,20 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
 
                 $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
                 break;
+            case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
+                if (is_null($formatter)) {
+                    $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
+                    $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
+                }
+                break;
+            case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
+                if (is_null($formatter)) {
+                    $child_entity_formatter = ChildEntityFormatterFactory::build($subject);
+                    $formatter = new EntityDeletionAuditLogFormatter($child_entity_formatter);
+                }
+                break;
             case IAuditStrategy::EVENT_ENTITY_CREATION:
                 $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
                 if(is_null($formatter)) {

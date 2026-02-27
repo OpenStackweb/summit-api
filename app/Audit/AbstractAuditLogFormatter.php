@@ -3,6 +3,8 @@
 namespace App\Audit;
 
 use App\Audit\Utils\DateFormatter;
+use Doctrine\ORM\PersistentCollection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -30,6 +32,90 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
     final public function setContext(AuditContext $ctx): void
     {
         $this->ctx = $ctx;
+    }
+
+
+    protected function processCollection(
+        mixed $owner,
+        mixed $col,
+        mixed $uow,
+        bool $isDeletion = false
+    ): ?array
+    {
+        if (!is_object($col) || !method_exists($col, 'getMapping') || !method_exists($col, 'getInsertDiff') || !method_exists($col, 'getDeleteDiff')) {
+            return null;
+        }
+
+        $mapping = $col->getMapping();
+
+        $addedEntities = $col->getInsertDiff();
+        $removedEntities = $col->getDeleteDiff();
+
+        $addedIds = $this->extractCollectionEntityIds($addedEntities);
+        $removedIds = $this->extractCollectionEntityIds($removedEntities);
+
+        if (empty($removedIds) && $isDeletion) {
+            $this->recoverCollectionRemovalIds($uow, $owner, $mapping, $removedIds);
+        }
+
+        if (empty($addedIds) && empty($removedIds)) {
+            return null;
+        }
+
+        return [
+            'field'         => $mapping['fieldName'] ?? 'unknown',
+            'target_entity' => $mapping['targetEntity'] ?? null,
+            'is_deletion'   => $isDeletion,
+            'added_ids'     => $addedIds,
+            'removed_ids'   => $removedIds,
+            'join_table'    => $mapping['joinTable']['name'] ?? null,
+        ];
+    }
+
+    /**
+     * Recover removed IDs from original entity data
+     */
+    protected function recoverCollectionRemovalIds($uow, $owner, $mapping, &$removedIds): void
+    {
+        try {
+            $originalData = $uow->getOriginalEntityData($owner);
+            $fieldName = $mapping['fieldName'] ?? null;
+            
+            if ($fieldName && isset($originalData[$fieldName])) {
+                $originalCollection = $originalData[$fieldName];
+                if ($originalCollection instanceof PersistentCollection || is_array($originalCollection)) {
+                    $originalEntities = is_array($originalCollection) 
+                        ? $originalCollection 
+                        : $originalCollection->toArray();
+                    $removedIds = $this->extractCollectionEntityIds($originalEntities);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to recover removed IDs from original entity data', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Extract IDs from entity objects in collection
+     */
+    protected function extractCollectionEntityIds(array $entities): array
+    {
+        $ids = [];
+        foreach ($entities as $entity) {
+            if (method_exists($entity, 'getId')) {
+                $id = $entity->getId();
+                if ($id !== null) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        $uniqueIds = array_unique($ids);
+        sort($uniqueIds);
+
+        return array_values($uniqueIds);
     }
 
     protected function getUserInfo(): string

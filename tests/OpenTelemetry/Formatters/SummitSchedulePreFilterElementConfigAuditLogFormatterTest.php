@@ -44,15 +44,23 @@ class SummitSchedulePreFilterElementConfigAuditLogFormatterTest extends TestCase
 
     private function createMockSubject(): mixed
     {
-        $mockConfig = Mockery::mock('models\summit\SummitScheduleConfig');
-        $mockConfig->shouldReceive('getKey')->andReturn(self::CONFIG_KEY);
-        
+        return $this->createMockSubjectWithConfig(true);
+    }
+
+    private function createMockSubjectWithConfig(bool $hasConfig): mixed
+    {
         $mock = Mockery::mock('models\summit\SummitSchedulePreFilterElementConfig');
         
         // Configure return values
         $mock->shouldReceive('getId')->andReturn(self::FILTER_ELEMENT_ID);
         $mock->shouldReceive('getType')->andReturn(self::FILTER_ELEMENT_TYPE);
-        $mock->shouldReceive('getConfig')->andReturn($mockConfig);
+        $mock->shouldReceive('hasConfig')->andReturn($hasConfig);
+        
+        if ($hasConfig) {
+            $mockConfig = Mockery::mock('models\summit\SummitScheduleConfig');
+            $mockConfig->shouldReceive('getKey')->andReturn(self::CONFIG_KEY);
+            $mock->shouldReceive('getConfig')->andReturn($mockConfig);
+        }
         
         return $mock;
     }
@@ -98,5 +106,19 @@ class SummitSchedulePreFilterElementConfigAuditLogFormatterTest extends TestCase
         $formatter->setContext(AuditContextBuilder::default()->build());
         $result = $formatter->format(new \stdClass(), []);
         $this->assertNull($result);
+    }
+
+    public function testFormatterHandlesNullConfigGracefully(): void
+    {
+        $mockSubjectNoConfig = $this->createMockSubjectWithConfig(false);
+        
+        $formatter = new SummitSchedulePreFilterElementConfigAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $result = $formatter->format($mockSubjectNoConfig, []);
+        
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('deleted', $result);
+        $this->assertStringContainsString('Unknown Config', $result);
+        $this->assertStringContainsString((string)self::FILTER_ELEMENT_ID, $result);
     }
 }

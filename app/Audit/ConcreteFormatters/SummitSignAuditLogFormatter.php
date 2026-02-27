@@ -39,7 +39,7 @@ class SummitSignAuditLogFormatter extends AbstractAuditLogFormatter
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Summit Sign (%d) created for Summit '%s' at Location '%s' with template '%s' by user %s",
+                        "Summit Sign (%s) created for Summit '%s' at Location '%s' with template '%s' by user %s",
                         $id,
                         $summit_name,
                         $location_name,
@@ -50,7 +50,7 @@ class SummitSignAuditLogFormatter extends AbstractAuditLogFormatter
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Summit Sign (%d) for Summit '%s' at Location '%s' updated: %s by user %s",
+                        "Summit Sign (%s) for Summit '%s' at Location '%s' updated: %s by user %s",
                         $id,
                         $summit_name,
                         $location_name,
@@ -60,7 +60,7 @@ class SummitSignAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Summit Sign (%d) for Summit '%s' at Location '%s' was deleted by user %s",
+                        "Summit Sign (%s) for Summit '%s' at Location '%s' was deleted by user %s",
                         $id,
                         $summit_name,
                         $location_name,

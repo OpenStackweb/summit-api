@@ -32,13 +32,12 @@ class SummitSchedulePreFilterElementConfigAuditLogFormatter extends AbstractAudi
             $id = $subject->getId() ?? 'unknown';
             $type = $subject->getType() ?? 'Unknown Type';
             
-            $schedule_config = $subject->getConfig();
-            $config_key = $schedule_config ? ($schedule_config->getKey() ?? 'Unknown Config') : 'Unknown Config';
+            $config_key = $subject->hasConfig() ? ($subject->getConfig()->getKey() ?? 'Unknown Config') : 'Unknown Config';
 
             switch ($this->event_type) {
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf(
-                        "Schedule Pre-Filter Element Config (%d) created for Config '%s' with type '%s' by user %s",
+                        "Schedule Pre-Filter Element Config (%s) created for Config '%s' with type '%s' by user %s",
                         $id,
                         $config_key,
                         $type,
@@ -48,7 +47,7 @@ class SummitSchedulePreFilterElementConfigAuditLogFormatter extends AbstractAudi
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
                     return sprintf(
-                        "Schedule Pre-Filter Element Config (%d) for Config '%s' updated: %s by user %s",
+                        "Schedule Pre-Filter Element Config (%s) for Config '%s' updated: %s by user %s",
                         $id,
                         $config_key,
                         $change_details,
@@ -57,7 +56,7 @@ class SummitSchedulePreFilterElementConfigAuditLogFormatter extends AbstractAudi
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(
-                        "Schedule Pre-Filter Element Config (%d) for Config '%s' was deleted by user %s",
+                        "Schedule Pre-Filter Element Config (%s) for Config '%s' was deleted by user %s",
                         $id,
                         $config_key,
                         $this->getUserInfo()

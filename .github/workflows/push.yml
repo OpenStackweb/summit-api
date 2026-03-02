@@ -30,12 +30,21 @@ jobs:
               run: |
                   echo "running OpenTelemetry Formatter tests"
                   vendor/bin/phpunit tests/OpenTelemetry/Formatters/ --log-junit results_opentelemetry_tests.xml
+                  echo "running AuditLogFormatterFactoryTest"
+                  vendor/bin/phpunit tests/OpenTelemetry/AuditLogFormatterFactoryTest.php --log-junit results_audit_formatter_tests.xml
 
             - name: Upload OpenTelemetry Tests Output
               uses: actions/upload-artifact@v4
               with:
                   name: results_opentelemetry_tests
                   path: results_opentelemetry_tests.xml
+                  retention-days: 5
+
+            - name: Upload AuditLogFormatterFactory Tests Output
+              uses: actions/upload-artifact@v4
+              with:
+                  name: results_audit_formatter_tests
+                  path: results_audit_formatter_tests.xml
                   retention-days: 5
 
     integration-tests:

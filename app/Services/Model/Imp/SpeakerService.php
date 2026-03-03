@@ -762,12 +762,19 @@ final class SpeakerService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function deleteSpeaker($speaker_id)
+    public function deleteSpeaker(int $speaker_id):void
     {
-        return $this->tx_service->transaction(function () use ($speaker_id) {
+        $this->tx_service->transaction(function () use ($speaker_id) {
             $speaker = $this->speaker_repository->getById($speaker_id);
-            if (is_null($speaker))
+            if (!$speaker instanceof PresentationSpeaker::class)
                 throw new EntityNotFoundException;
+
+            // Break circular FK reference to avoid Doctrine CycleDetectedException:
+            // PresentationSpeaker.RegistrationRequestID -> SpeakerRegistrationRequest
+            // SpeakerRegistrationRequest.SpeakerID -> PresentationSpeaker
+            if ($speaker->hasRegistrationRequest()) {
+                $speaker->getRegistrationRequest()->clearSpeaker();
+            }
 
             $this->speaker_repository->delete($speaker);
         });

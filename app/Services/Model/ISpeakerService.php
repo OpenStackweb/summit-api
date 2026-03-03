@@ -86,7 +86,7 @@ interface ISpeakerService
      * @throws EntityNotFoundException
      * @return void
      */
-    public function deleteSpeaker($speaker_id);
+    public function deleteSpeaker(int $speaker_id):void;
 
     /**
      * @param Summit $summit

@@ -256,5 +256,25 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\ExtraQuestionTypeValueAuditLogFormatter::class,
         ],
+        \models\summit\SummitDocument::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitDocumentAuditLogFormatter::class,
+        ],
+        \models\summit\SummitScheduleConfig::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitScheduleConfigAuditLogFormatter::class,
+        ],
+        \models\summit\SummitSchedulePreFilterElementConfig::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitSchedulePreFilterElementConfigAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Signs\SummitSign::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\SummitSignAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\TrackTagGroup::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\TrackTagGroupAuditLogFormatter::class,
+        ],
     ]
 ];

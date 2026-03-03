@@ -20,14 +20,12 @@ use App\Audit\ConcreteFormatters\PrePaidSummitRegistrationDiscountCodeAuditLogFo
 use App\Audit\Interfaces\IAuditStrategy;
 use models\summit\PrePaidSummitRegistrationDiscountCode;
 use Mockery;
+use models\summit\Summit;
+use Tests\OpenTelemetry\Formatters\Support\AuditContextBuilder;
 use Tests\TestCase;
 
 class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCase
 {
-    private const USER_ID = 999;
-    private const USER_EMAIL = 'andres.tejerina@fntech.com';
-    private const USER_FIRST_NAME = 'Andres';
-    private const USER_LAST_NAME = 'Tejerina';
     private const MOCK_ID = 1;
     private const SUMMIT_NAME = 'Test Summit';
 
@@ -73,15 +71,14 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
         parent::setUp();
 
         $this->formatter_creation = new PrePaidSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
-        $this->formatter_update = new PrePaidSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
-        $this->formatter_deletion = new PrePaidSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
+        $this->formatter_creation->setContext(AuditContextBuilder::default()->build());
 
-        $this->audit_context = new AuditContext(
-            userId: self::USER_ID,
-            userEmail: self::USER_EMAIL,
-            userFirstName: self::USER_FIRST_NAME,
-            userLastName: self::USER_LAST_NAME
-        );
+        $this->formatter_update = new PrePaidSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $this->formatter_update->setContext(AuditContextBuilder::default()->build());
+
+        $this->formatter_deletion = new PrePaidSummitRegistrationDiscountCodeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
+        $this->formatter_deletion->setContext(AuditContextBuilder::default()->build());
+
     }
 
     protected function tearDown(): void
@@ -90,118 +87,6 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
         parent::tearDown();
     }
 
-    public function testFormatCreationEventWithRate(): void
-    {
-        $code = $this->createMockCode(
-            self::DISCOUNT_CODE_RATE_EARLY,
-            self::RATE_EARLY,
-            self::AMOUNT_ZERO,
-            self::QUANTITY_EARLY
-        );
-
-        $this->formatter_creation->setContext($this->audit_context);
-        $result = $this->formatter_creation->format($code, []);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString(self::DISCOUNT_CODE_RATE_EARLY, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
-        $this->assertStringContainsString(self::EVENT_CREATED, $result);
-        $this->assertStringContainsString(self::SUMMIT_NAME, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_RATE_FORMAT, self::RATE_EARLY), $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_QUANTITY_FORMAT, self::QUANTITY_EARLY), $result);
-    }
-
-    public function testFormatCreationEventWithAmount(): void
-    {
-        $code = $this->createMockCode(
-            self::DISCOUNT_CODE_AMOUNT,
-            self::AMOUNT_ZERO,
-            self::AMOUNT_DISCOUNT,
-            self::QUANTITY_AMOUNT
-        );
-
-        $this->formatter_creation->setContext($this->audit_context);
-        $result = $this->formatter_creation->format($code, []);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString(self::DISCOUNT_CODE_AMOUNT, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
-        $this->assertStringContainsString(self::EVENT_CREATED, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_AMOUNT_FORMAT, self::AMOUNT_DISCOUNT), $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_QUANTITY_FORMAT, self::QUANTITY_AMOUNT), $result);
-    }
-
-    public function testFormatUpdateEvent(): void
-    {
-        $code = $this->createMockCode(
-            self::DISCOUNT_CODE_UPDATE,
-            self::RATE_UPDATE_NEW,
-            self::AMOUNT_ZERO,
-            self::QUANTITY_UPDATE_NEW
-        );
-
-        $this->formatter_update->setContext($this->audit_context);
-        $result = $this->formatter_update->format($code, [
-            'rate' => [self::RATE_UPDATE_OLD, self::RATE_UPDATE_NEW],
-            'quantity_available' => [self::QUANTITY_UPDATE_OLD, self::QUANTITY_UPDATE_NEW]
-        ]);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString(self::DISCOUNT_CODE_UPDATE, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
-        $this->assertStringContainsString(self::EVENT_UPDATED, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_RATE_FORMAT, self::RATE_UPDATE_NEW), $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_QUANTITY_FORMAT, self::QUANTITY_UPDATE_NEW), $result);
-        $this->assertStringContainsString(self::EVENT_CURRENT, $result);
-    }
-
-    public function testFormatDeletionEvent(): void
-    {
-        $code = $this->createMockCode(
-            self::DISCOUNT_CODE_DELETE,
-            self::RATE_HIGH,
-            self::AMOUNT_ZERO,
-            self::QUANTITY_HIGH
-        );
-
-        $this->formatter_deletion->setContext($this->audit_context);
-        $result = $this->formatter_deletion->format($code, []);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString(self::DISCOUNT_CODE_DELETE, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
-        $this->assertStringContainsString(self::EVENT_DELETED, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_RATE_FORMAT, self::RATE_HIGH), $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_QUANTITY_FORMAT, self::QUANTITY_HIGH), $result);
-    }
-
-    public function testFormatInactiveCode(): void
-    {
-        $code = $this->createMockCode(
-            self::DISCOUNT_CODE_EXPIRED,
-            self::RATE_EXPIRED,
-            self::AMOUNT_ZERO,
-            self::QUANTITY_NONE
-        );
-
-        $this->formatter_creation->setContext($this->audit_context);
-        $result = $this->formatter_creation->format($code, []);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString(self::DISCOUNT_CODE_EXPIRED, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
-        $this->assertStringContainsString(self::EVENT_CREATED, $result);
-        $this->assertStringContainsString(sprintf(self::EXPECTED_RATE_FORMAT, self::RATE_EXPIRED), $result);
-    }
-
-    public function testFormatInvalidSubject(): void
-    {
-        $invalid_subject = new \stdClass();
-
-        $result = $this->formatter_creation->format($invalid_subject, []);
-
-        $this->assertNull($result);
-    }
 
     private function createMockCode(
         string $code,
@@ -216,10 +101,127 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
         $mock->shouldReceive('getAmount')->andReturn($amount);
         $mock->shouldReceive('getQuantityAvailable')->andReturn($quantity_available);
 
-        $summit = Mockery::mock(\models\summit\Summit::class);
+        $summit = Mockery::mock(Summit::class);
         $summit->shouldReceive('getName')->andReturn(self::SUMMIT_NAME);
         $mock->shouldReceive('getSummit')->andReturn($summit);
 
         return $mock;
     }
+
+    public function testSubjectCreationAuditMessageWithRate(): void
+    {
+        $code = $this->createMockCode(
+            self::DISCOUNT_CODE_RATE_EARLY,
+            self::RATE_EARLY,
+            self::AMOUNT_ZERO,
+            self::QUANTITY_EARLY
+        );
+
+        $result = $this->formatter_creation->format($code, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::DISCOUNT_CODE_RATE_EARLY, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
+        $this->assertStringContainsString(self::EVENT_CREATED, $result);
+        $this->assertStringContainsString(self::SUMMIT_NAME, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_RATE_FORMAT, self::RATE_EARLY), $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_QUANTITY_FORMAT, self::QUANTITY_EARLY), $result);
+    }
+
+    public function testSubjectCreationAuditMessageWithAmount(): void
+    {
+        $code = $this->createMockCode(
+            self::DISCOUNT_CODE_AMOUNT,
+            self::AMOUNT_ZERO,
+            self::AMOUNT_DISCOUNT,
+            self::QUANTITY_AMOUNT
+        );
+
+        $result = $this->formatter_creation->format($code, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::DISCOUNT_CODE_AMOUNT, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
+        $this->assertStringContainsString(self::EVENT_CREATED, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_AMOUNT_FORMAT, self::AMOUNT_DISCOUNT), $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_QUANTITY_FORMAT, self::QUANTITY_AMOUNT), $result);
+    }
+
+    public function testSubjectUpdateAuditMessage(): void
+    {
+        $code = $this->createMockCode(
+            self::DISCOUNT_CODE_UPDATE,
+            self::RATE_UPDATE_NEW,
+            self::AMOUNT_ZERO,
+            self::QUANTITY_UPDATE_NEW
+        );
+
+        $result = $this->formatter_update->format($code, [
+            'rate' => [self::RATE_UPDATE_OLD, self::RATE_UPDATE_NEW],
+            'quantity_available' => [self::QUANTITY_UPDATE_OLD, self::QUANTITY_UPDATE_NEW]
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::DISCOUNT_CODE_UPDATE, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
+        $this->assertStringContainsString(self::EVENT_UPDATED, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_RATE_FORMAT, self::RATE_UPDATE_NEW), $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_QUANTITY_FORMAT, self::QUANTITY_UPDATE_NEW), $result);
+        $this->assertStringContainsString(self::EVENT_CURRENT, $result);
+    }
+
+    public function testSubjectDeletionAuditMessage(): void
+    {
+        $code = $this->createMockCode(
+            self::DISCOUNT_CODE_DELETE,
+            self::RATE_HIGH,
+            self::AMOUNT_ZERO,
+            self::QUANTITY_HIGH
+        );
+
+        $result = $this->formatter_deletion->format($code, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::DISCOUNT_CODE_DELETE, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
+        $this->assertStringContainsString(self::EVENT_DELETED, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_RATE_FORMAT, self::RATE_HIGH), $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_QUANTITY_FORMAT, self::QUANTITY_HIGH), $result);
+    }
+
+    public function testFormatterHandlesInactiveCode(): void
+    {
+        $code = $this->createMockCode(
+            self::DISCOUNT_CODE_EXPIRED,
+            self::RATE_EXPIRED,
+            self::AMOUNT_ZERO,
+            self::QUANTITY_NONE
+        );
+
+        $result = $this->formatter_creation->format($code, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::DISCOUNT_CODE_EXPIRED, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_ID_FORMAT, self::MOCK_ID), $result);
+        $this->assertStringContainsString(self::EVENT_CREATED, $result);
+        $this->assertStringContainsString(sprintf(self::EXPECTED_RATE_FORMAT, self::RATE_EXPIRED), $result);
+    }
+
+    public function testFormatterReturnsNullForInvalidSubject(): void
+    {
+        $invalid_subject = new \stdClass();
+
+        $result = $this->formatter_creation->format($invalid_subject, []);
+
+        $this->assertNull($result);
+    }
+
+    public function testFormatterHandlesEmptyChangeSet(): void
+    {
+        $code = $this->createMockCode("Empty", 0, 0, 0);
+        $result = $this->formatter_update->format($code, []);
+
+        $this->assertStringContainsString("properties without changes registered", $result);
+    }
+
 }

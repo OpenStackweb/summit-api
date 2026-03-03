@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Log;
 class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAuditLogFormatter
 {
 
-    private function buildDiscountDetails($subject): string
+    private function buildDiscountDetails(PrePaidSummitRegistrationDiscountCode $subject): string
     {
         $details = [];
 

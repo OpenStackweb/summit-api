@@ -20,6 +20,7 @@ use App\Audit\ConcreteFormatters\SummitTaxTypeAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use models\summit\SummitTaxType;
 use Mockery;
+use Tests\OpenTelemetry\Formatters\Support\AuditContextBuilder;
 use Tests\TestCase;
 
 class SummitTaxTypeAuditLogFormatterTest extends TestCase
@@ -41,15 +42,13 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
         parent::setUp();
 
         $this->formatter_creation = new SummitTaxTypeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
-        $this->formatter_update = new SummitTaxTypeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
-        $this->formatter_deletion = new SummitTaxTypeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
+        $this->formatter_creation->setContext(AuditContextBuilder::default()->build());
 
-        $this->audit_context = new AuditContext(
-            userId: self::USER_ID,
-            userEmail: self::USER_EMAIL,
-            userFirstName: self::USER_FIRST_NAME,
-            userLastName: self::USER_LAST_NAME
-        );
+        $this->formatter_update = new SummitTaxTypeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $this->formatter_update->setContext(AuditContextBuilder::default()->build());
+
+        $this->formatter_deletion = new SummitTaxTypeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
+        $this->formatter_deletion->setContext(AuditContextBuilder::default()->build());
     }
 
     protected function tearDown(): void
@@ -58,69 +57,8 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
         parent::tearDown();
     }
 
-    public function testFormatCreationEvent(): void
-    {
-        $tax = $this->createMockTax('VAT', 'VAT-001', 21.0);
 
-        $this->formatter_creation->setContext($this->audit_context);
-        $result = $this->formatter_creation->format($tax, []);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString("VAT", $result);
-        $this->assertStringContainsString("created", $result);
-        $this->assertStringContainsString("21", $result);
-    }
-
-    public function testFormatUpdateEvent(): void
-    {
-        $tax = $this->createMockTax('Sales Tax', 'ST-002', 8.0);
-
-        $this->formatter_update->setContext($this->audit_context);
-        $result = $this->formatter_update->format($tax, [
-            'rate' => [7.0, 8.0],
-            'ticket_types' => [[], []]
-        ]);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString("Sales Tax", $result);
-        $this->assertStringContainsString("updated", $result);
-    }
-
-    public function testFormatDeletionEvent(): void
-    {
-        $tax = $this->createMockTax('GST', 'GST-CA', 5.0);
-
-        $this->formatter_deletion->setContext($this->audit_context);
-        $result = $this->formatter_deletion->format($tax, []);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString("GST", $result);
-        $this->assertStringContainsString("deleted", $result);
-        $this->assertStringContainsString("5", $result);
-    }
-
-    public function testFormatWithoutTicketTypes(): void
-    {
-        $tax = $this->createMockTax('Empty Tax', 'EMPTY', 10.0);
-
-        $this->formatter_creation->setContext($this->audit_context);
-        $result = $this->formatter_creation->format($tax, []);
-
-        $this->assertNotNull($result);
-        $this->assertStringContainsString("Empty Tax", $result);
-        $this->assertStringContainsString("created", $result);
-    }
-
-    public function testFormatInvalidSubject(): void
-    {
-        $invalid_subject = new \stdClass();
-
-        $result = $this->formatter_creation->format($invalid_subject, []);
-
-        $this->assertNull($result);
-    }
-
-    private function createMockTax(string $name, string $tax_id,  $rate): object
+    private function createMockTax(string $name, string $tax_id, $rate): object
     {
         $mock = Mockery::mock(SummitTaxType::class);
         $mock->shouldReceive('getName')->andReturn($name);
@@ -134,4 +72,71 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
 
         return $mock;
     }
+
+    public function testSubjectCreationAuditMessage(): void
+    {
+        $tax = $this->createMockTax('VAT', 'VAT-001', 21.0);
+
+        $result = $this->formatter_creation->format($tax, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString("VAT", $result);
+        $this->assertStringContainsString("created", $result);
+        $this->assertStringContainsString("21", $result);
+    }
+
+    public function testSubjectUpdateAuditMessage(): void
+    {
+        $tax = $this->createMockTax('Sales Tax', 'ST-002', 8.0);
+
+        $result = $this->formatter_update->format($tax, [
+            'rate' => [7.0, 8.0],
+            'ticket_types' => [[], []]
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString("Sales Tax", $result);
+        $this->assertStringContainsString("updated", $result);
+    }
+
+    public function testSubjectDeletionAuditMessage(): void
+    {
+        $tax = $this->createMockTax('GST', 'GST-CA', 5.0);
+
+        $result = $this->formatter_deletion->format($tax, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString("GST", $result);
+        $this->assertStringContainsString("deleted", $result);
+        $this->assertStringContainsString("5", $result);
+    }
+
+    public function testSubjectFormatWithoutTicketTypes(): void
+    {
+        $tax = $this->createMockTax('Empty Tax', 'EMPTY', 10.0);
+
+        $result = $this->formatter_creation->format($tax, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString("Empty Tax", $result);
+        $this->assertStringContainsString("created", $result);
+    }
+
+    public function testFormatterReturnsNullForInvalidSubject(): void
+    {
+        $invalid_subject = new \stdClass();
+
+        $result = $this->formatter_creation->format($invalid_subject, []);
+
+        $this->assertNull($result);
+    }
+
+    public function testFormatterHandlesEmptyChangeSet(): void
+    {
+        $code = $this->createMockTax('Empty Tax', 'EMPTY', 10.0);
+        $result = $this->formatter_update->format($code, []);
+
+        $this->assertStringContainsString("properties without changes registered", $result);
+    }
+
 }

@@ -29,8 +29,8 @@ class RSVPInvitationAuditLogFormatter extends AbstractAuditLogFormatter
         }
 
         try {
-            $attendeeEmail = $subject->getAttendee()?->getEmail() ?? 'Unknown';
-            $attendeeId = $subject->getAttendee()?->getId() ?? 'unknown';
+            $attendeeEmail = $subject->getInvitee()?->getEmail() ?? 'Unknown';
+            $attendeeId = $subject->getInvitee()?->getId() ?? 'unknown';
             $eventTitle = $subject->getEvent()?->getTitle() ?? 'Unknown Event';
             $eventId = $subject->getEvent()?->getId() ?? 'unknown';
             $id = $subject->getId() ?? 'unknown';

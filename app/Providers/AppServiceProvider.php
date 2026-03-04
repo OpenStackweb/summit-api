@@ -13,7 +13,6 @@
  **/
 
 use App\Http\Utils\Logs\LaravelMailerHandler;
-use App\Utils\Redis\RedisClientNamer;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -27,8 +26,6 @@ use models\main\PushNotificationMessagePriority;
 use models\oauth2\IResourceServerContext;
 use models\oauth2\ResourceServerContext;
 use Sokil\IsoCodes\IsoCodesFactory;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Redis;
 /**
  * Class AppServiceProvider
  * @package App\Providers
@@ -197,7 +194,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if (app()->environment('production') || app()->environment('dev')  ) {
+        if (!App::isLocal()){
             URL::forceScheme('https');
         }
 

@@ -60,7 +60,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $params = [
             'id' => self::$summit->getId(),
             'filter'=> 'company_name=@'.substr(self::$companies[0]->getName(),0,3),
-            'expand' => 'summit,company,extra_questions,featured_event,lead_report_setting',
+            'expand' => 'summit,company,extra_questions,featured_event,lead_report_setting,sponsorservices_statistics',
             'order' => '-sponsorship_name'
         ];
 
@@ -89,7 +89,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $params = [
             'id' => self::$summit->getId(),
             'filter'=> 'company_name=@'.substr(self::$companies[0]->getName(),0,3),
-            'expand' => 'summit,company,sponsorships,sponsorships.type,sponsorships.add_ons,extra_questions,featured_event,lead_report_setting',
+            'expand' => 'summit,company,sponsorships,sponsorships.type,sponsorships.add_ons,extra_questions,featured_event,lead_report_setting,sponsorservices_statistics',
             'order' => '-sponsorship_name'
         ];
 
@@ -115,6 +115,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertNotNull($sponsor->sponsorships[0]->add_ons[0]->name);
         $this->assertNotNull($sponsor->sponsorships[0]->type);
         $this->assertNotNull($sponsor->sponsorships[0]->type->type_id);
+        $this->assertNotNull($sponsor->sponsorservices_statistics);
         return $page;
     }
 
@@ -812,5 +813,69 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
         $metadata = json_decode($content);
         $this->assertNotNull($metadata);
+    }
+
+    public function testUpdateSponsorServicesStatistics(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+        ];
+
+        $new_forms_qty = 10;
+
+        $data = [
+            'forms_qty' => $new_forms_qty,
+            'purchases_qty' => 8,
+            'pages_qty' => 7,
+            'documents_qty' => 6
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSponsorApiController@updateSponsorServicesStatistics",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $statistics = json_decode($content);
+        $this->assertEquals($new_forms_qty, $statistics->forms_qty);
+    }
+
+    public function testUpdatePartiallySponsorServicesStatistics(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+        ];
+
+
+        $new_forms_qty = 10;
+        $pages_qty = self::$sponsors[0]->getSponsorServicesStatistics()->getPagesQty();
+
+        $data = [
+            'forms_qty' => $new_forms_qty
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSponsorApiController@updateSponsorServicesStatistics",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $statistics = json_decode($content);
+        $this->assertEquals($new_forms_qty, $statistics->forms_qty);
+        $this->assertEquals($pages_qty, $statistics->pages_qty);
     }
 }

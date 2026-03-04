@@ -25,9 +25,11 @@ use App\Models\Foundation\Summit\Factories\SponsorAdFactory;
 use App\Models\Foundation\Summit\Factories\SponsorExtraQuestionFactory;
 use App\Models\Foundation\Summit\Factories\SponsorFactory;
 use App\Models\Foundation\Summit\Factories\SponsorMaterialFactory;
+use App\Models\Foundation\Summit\Factories\SponsorServicesStatisticsFactory;
 use App\Models\Foundation\Summit\Factories\SponsorSocialNetworkFactory;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
+use App\Models\Foundation\Summit\SponsorStatistics;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Http\UploadedFile;
@@ -1162,6 +1164,30 @@ final class SummitSponsorService
             $summit_sponsor->setLeadReportSetting($lead_report_settings);
 
             return $lead_report_settings;
+        });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SponsorStatistics
+     * @throws \Exception
+     */
+    public function updateSponsorServicesStatistics(Summit $summit, int $sponsor_id, array $payload): SponsorStatistics
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
+
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $statistics = $summit_sponsor->getSponsorServicesStatistics();
+            if (!$statistics) {
+                $statistics = new SponsorStatistics();
+                $statistics->setSponsor($summit_sponsor);
+            }
+            return SponsorServicesStatisticsFactory::populate($statistics, $payload);
         });
     }
 }

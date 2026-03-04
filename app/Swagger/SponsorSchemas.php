@@ -258,3 +258,15 @@ class PaginatedSponsorResponseSchema {}
     ]
 )]
 class PaginatedSponsorV2ResponseSchema {}
+
+#[OA\Schema(
+    schema: 'SponsorServicesStatisticsUpsertRequest',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'forms_qty', type: 'integer', example: 1, nullable: true),
+        new OA\Property(property: 'purchases_qty', type: 'integer', example: 1, nullable: true),
+        new OA\Property(property: 'pages_qty', type: 'integer', example: 1, nullable: true),
+        new OA\Property(property: 'documents_qty', type: 'integer', example: 1, nullable: true)
+    ]
+)]
+class SponsorServicesStatisticsUpsertRequestSchema {}

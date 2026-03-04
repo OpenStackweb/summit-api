@@ -50,6 +50,7 @@ abstract class SponsorBaseSerializer extends SilverStripeSerializer
         'CarouselAdvertiseImageAltText' => 'carousel_advertise_image_alt_text:json_string',
         'ShowLogoInEventPage' => 'show_logo_in_event_page:json_boolean',
         'LeadReportSettingId' => 'lead_report_setting_id:json_int',
+        'SponsorServicesStatisticsId' => 'sponsorservices_statistics_id:json_int',
     ];
 
 
@@ -192,6 +193,12 @@ abstract class SponsorBaseSerializer extends SilverStripeSerializer
             'original_attribute' => 'lead_report_setting_id',
             'getter' => 'getLeadReportSetting',
             'has' => 'hasLeadReportSetting'
+        ],
+        'sponsorservices_statistics' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'sponsorservices_statistics_id',
+            'getter' => 'getSponsorServicesStatistics',
+            'has' => 'hasSponsorServicesStatistics'
         ],
     ];
 }

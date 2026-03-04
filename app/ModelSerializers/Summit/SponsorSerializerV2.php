@@ -23,6 +23,7 @@ final class SponsorSerializerV2 extends SponsorBaseSerializer
 {
     protected static $allowed_relations = [
         'sponsorships',
+        'statistics',
     ];
 
     /**
@@ -53,6 +54,6 @@ final class SponsorSerializerV2 extends SponsorBaseSerializer
         'sponsorships' => [
             'type' => Many2OneExpandSerializer::class,
             'getter' => 'getSponsorships',
-        ],
+        ]
     ];
 }

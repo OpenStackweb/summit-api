@@ -1343,6 +1343,11 @@ Route::group(array('prefix' => 'summits'), function () {
                         });
                     });
                 });
+
+                // sponsor services statistics
+                Route::group(['prefix' => 'sponsorservices-statistics'], function(){
+                    Route::put('', ['uses' => 'OAuth2SummitSponsorApiController@updateSponsorServicesStatistics']);
+                });
             });
         });
 

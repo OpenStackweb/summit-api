@@ -14,6 +14,8 @@
 
 use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -53,10 +55,13 @@ class AuditEventListener
             foreach ($uow->getScheduledEntityDeletions() as $entity) {
                 $strategy->audit($entity, [], IAuditStrategy::EVENT_ENTITY_DELETION, $ctx);
             }
-
-            foreach ($uow->getScheduledCollectionUpdates() as $col) {
-                $strategy->audit($col, [], IAuditStrategy::EVENT_COLLECTION_UPDATE, $ctx);
+            foreach ($uow->getScheduledCollectionDeletions() as $col) {
+                $this->auditCollection($col, $strategy, $ctx, $uow, true);
             }
+            foreach ($uow->getScheduledCollectionUpdates() as $col) {
+                $this->auditCollection($col, $strategy, $ctx, $uow, false);
+            }
+
         } catch (\Exception $e) {
             Log::error('Audit event listener failed', [
                 'error' => $e->getMessage(),
@@ -98,7 +103,7 @@ class AuditEventListener
             $member = $memberRepo->findOneBy(["user_external_id" => $userExternalId]);
         }
 
-        //$ui = app()->bound('ui.context') ? app('ui.context') : [];
+        $ui = [];
 
         $req = request();
         $rawRoute = null;
@@ -126,5 +131,44 @@ class AuditEventListener
             userAgent:     $req?->userAgent(),
             rawRoute:      $rawRoute
         );
+    }
+
+    /**
+     * Audit collection changes
+     * Only determines if it's ManyToMany and emits appropriate event
+     */
+    private function auditCollection($subject, IAuditStrategy $strategy, AuditContext $ctx, $uow, bool $isDeletion = false): void
+    {
+        if (!$subject instanceof PersistentCollection) {
+            return;
+        }
+
+        $mapping = $subject->getMapping();
+        if (!$mapping->isManyToMany()) {
+            $strategy->audit($subject, [], IAuditStrategy::EVENT_COLLECTION_UPDATE, $ctx);
+            return;
+        }
+
+        $isOwningSide = $mapping->isOwningSide();
+        if (!$isOwningSide) {
+            Log::debug("AuditEventListerner::Skipping audit for non-owning side of many-to-many collection");
+            return;
+        }
+
+        $owner = $subject->getOwner();
+        if ($owner === null) {
+            return;
+        }
+
+        $payload = [
+            'collection' => $subject,
+            'uow' => $uow,
+            'is_deletion' => $isDeletion,
+        ];
+        $eventType = $isDeletion 
+            ? IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE 
+            : IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE;
+
+        $strategy->audit($owner, $payload, $eventType, $ctx);
     }
 }

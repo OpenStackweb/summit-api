@@ -42,11 +42,100 @@ class SummitAttendeeAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Attendee (%s) '%s' deleted by user %s", $id, $name, $this->getUserInfo());
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                    return $this->handleManyToManyCollection($subject, $change_set, $id, $name, false);
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->handleManyToManyCollection($subject, $change_set, $id, $name, true);
             }
-        } catch (\Exception $ex) {
+        } catch (\Throwable $ex) {
             Log::warning("SummitAttendeeAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;
+    }
+
+    private function handleManyToManyCollection(SummitAttendee $subject, array $change_set, $id, $name, bool $isDeletion): ?string
+    {
+        if (!isset($change_set['collection'])) {
+            return null;
+        }
+        
+        $col = $change_set['collection'];
+        
+        $collectionData = $this->processCollection($col, $isDeletion);
+        if (!$collectionData) {
+            return null;
+        }
+        
+        return $isDeletion
+            ? $this->formatManyToManyDelete($collectionData, $id, $name)
+            : $this->formatManyToManyUpdate($collectionData, $id, $name);
+    }
+
+    private function formatManyToManyUpdate(array $collectionData, $id, $name): ?string
+    {
+        try {
+            $field = $collectionData['field'] ?? 'unknown';
+            $targetEntity = $collectionData['target_entity'] ?? 'unknown';
+            $added_ids = $collectionData['added_ids'] ?? [];
+            $removed_ids = $collectionData['removed_ids'] ?? [];
+
+            $idsPart = '';
+            if (!empty($added_ids)) {
+                $idsPart .= 'Added IDs: ' . json_encode($added_ids);
+            }
+            if (!empty($removed_ids)) {
+                $idsPart .= (!empty($added_ids) ? ', ' : '') . 'Removed IDs: ' . json_encode($removed_ids);
+            }
+            if (empty($idsPart)) {
+                $idsPart = 'No changes';
+            }
+
+            $description = sprintf(
+                "Attendee (%s) '%s', Field: %s, Target: %s, %s, by user %s",
+                $id,
+                $name,
+                $field,
+                class_basename($targetEntity),
+                $idsPart,
+                $this->getUserInfo()
+            );
+
+            return $description;
+
+        } catch (\Throwable $ex) {
+            Log::warning("SummitAttendeeAuditLogFormatter::formatManyToManyUpdate error: " . $ex->getMessage());
+            return sprintf("Attendee (%s) '%s' association updated by user %s", $id, $name, $this->getUserInfo());
+        }
+    }
+
+    private function formatManyToManyDelete(array $collectionData, $id, $name): ?string
+    {
+        try {
+            $removed_ids = $collectionData['removed_ids'] ?? [];
+
+            
+
+            $field = $collectionData['field'] ?? 'unknown';
+            $targetEntity = $collectionData['target_entity'] ?? 'unknown';
+
+            $description = sprintf(
+                "Attendee (%s) '%s' association deleted: Field: %s, Target: %s, Removed IDs: %s, by user %s",
+                $id,
+                $name,
+                $field,
+                class_basename($targetEntity),
+                json_encode($removed_ids),
+                $this->getUserInfo()
+            );
+
+            return $description;
+
+        } catch (\Throwable $ex) {
+            Log::warning("SummitAttendeeAuditLogFormatter::formatManyToManyDelete error: " . $ex->getMessage());
+            return null;
+        }
     }
 }

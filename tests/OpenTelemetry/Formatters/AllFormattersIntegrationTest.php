@@ -86,6 +86,8 @@ class AllFormattersIntegrationTest extends TestCase
                 'EntityDeletionAuditLogFormatter',
                 'EntityUpdateAuditLogFormatter',
                 'EntityCollectionUpdateAuditLogFormatter',
+                'EntityManyToManyCollectionDeleteAuditLogFormatter',
+                'EntityManyToManyCollectionUpdateAuditLogFormatter',
             ];
 
             return !in_array($reflection->getShortName(), $genericFormatters) &&
@@ -138,6 +140,8 @@ class AllFormattersIntegrationTest extends TestCase
             IAuditStrategy::EVENT_ENTITY_UPDATE,
             IAuditStrategy::EVENT_ENTITY_DELETION,
             IAuditStrategy::EVENT_COLLECTION_UPDATE,
+            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE,
+            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE,
         ];
 
         $errors = [];

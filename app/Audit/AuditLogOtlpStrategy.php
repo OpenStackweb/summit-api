@@ -176,6 +176,19 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                     $data['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
                 }
                 break;
+            case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+            case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                if (isset($change_set['collection']) && $change_set['collection'] instanceof PersistentCollection) {
+                    $collection = $change_set['collection'];
+                    $data['audit.collection_type'] = $this->getCollectionType($collection);
+                    $data['audit.collection_count'] = count($collection);
+
+                    $changes = $this->getCollectionChanges($collection, $change_set);
+                    $data['audit.collection_current_count'] = $changes['current_count'];
+                    $data['audit.collection_snapshot_count'] = $changes['snapshot_count'];
+                    $data['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
+                }
+                break;
         }
 
         return $data;
@@ -184,19 +197,16 @@ class AuditLogOtlpStrategy implements IAuditStrategy
     private function getCollectionType(PersistentCollection $collection): string
     {
         try {
-            if (!method_exists($collection, 'getMapping')) {
-                return 'unknown';
-            }
-
+            
             $mapping = $collection->getMapping();
+            $targetEntity = $mapping->targetEntity ?? null;
 
-            if (!isset($mapping['targetEntity']) || empty($mapping['targetEntity'])) {
+            if (!$targetEntity) {
                 return 'unknown';
             }
-
-            return class_basename($mapping['targetEntity']);
+            return class_basename($targetEntity);
         } catch (\Exception $ex) {
-            return 'unknown';
+            return 'AuditLogOtlpStrategy:: unknown targetEntity';
         }
     }
 
@@ -216,6 +226,8 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             IAuditStrategy::EVENT_ENTITY_UPDATE => IAuditStrategy::ACTION_UPDATE,
             IAuditStrategy::EVENT_ENTITY_DELETION => IAuditStrategy::ACTION_DELETE,
             IAuditStrategy::EVENT_COLLECTION_UPDATE => IAuditStrategy::ACTION_COLLECTION_UPDATE,
+            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE => IAuditStrategy::ACTION_COLLECTION_MANYTOMANY_UPDATE,
+            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE => IAuditStrategy::ACTION_COLLECTION_MANYTOMANY_DELETE,
             default => IAuditStrategy::ACTION_UNKNOWN
         };
     }
@@ -227,6 +239,8 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             IAuditStrategy::EVENT_ENTITY_UPDATE => IAuditStrategy::LOG_MESSAGE_UPDATED,
             IAuditStrategy::EVENT_ENTITY_DELETION => IAuditStrategy::LOG_MESSAGE_DELETED,
             IAuditStrategy::EVENT_COLLECTION_UPDATE => IAuditStrategy::LOG_MESSAGE_COLLECTION_UPDATED,
+            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE => IAuditStrategy::LOG_MESSAGE_COLLECTION_UPDATED,
+            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE => IAuditStrategy::LOG_MESSAGE_DELETED,
             default => IAuditStrategy::LOG_MESSAGE_CHANGED
         };
     }

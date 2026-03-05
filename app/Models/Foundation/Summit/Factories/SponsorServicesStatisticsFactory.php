@@ -37,16 +37,16 @@ final class SponsorServicesStatisticsFactory
     public static function populate(SponsorStatistics $statistics, array $data): SponsorStatistics
     {
         if(isset($data['forms_qty'])) {
-            $statistics->setFormsQty($data['forms_qty']);
+            $statistics->setFormsQty(intval($data['forms_qty']));
         }
         if(isset($data['purchases_qty'])) {
-            $statistics->setPurchasesQty($data['purchases_qty']);
+            $statistics->setPurchasesQty(intval($data['purchases_qty']));
         }
         if(isset($data['pages_qty'])) {
-            $statistics->setPagesQty($data['pages_qty']);
+            $statistics->setPagesQty(intval($data['pages_qty']));
         }
         if(isset($data['documents_qty'])) {
-            $statistics->setDocumentsQty($data['documents_qty']);
+            $statistics->setDocumentsQty(intval($data['documents_qty']));
         }
         return $statistics;
     }

@@ -39,7 +39,7 @@ class Version20260302173010 extends AbstractMigration
             $table->integer('DocumentsQty')->setNotnull(true)->setDefault(0);
 
             // FK
-            $table->integer("SponsorID", false, false)->setNotnull(false)->setDefault('NULL');
+            $table->integer("SponsorID", false, false)->setNotnull(false)->setDefault(null);
             $table->index("SponsorID", "SponsorID");
             $table->foreign("Sponsor", "SponsorID", "ID", ["onDelete" => "CASCADE"], 'FK_Sponsor_SponsorStatistic');
         });

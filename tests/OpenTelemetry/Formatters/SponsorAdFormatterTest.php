@@ -50,7 +50,7 @@ class SponsorAdFormatterTest extends TestCase
         return $mock;
     }
 
-    public function testCreationAuditMessage(): void
+    public function testSubjectCreationAuditMessage(): void
     {
         $formatter = new SponsorAdAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
         $formatter->setContext(AuditContextBuilder::default()->build());
@@ -61,7 +61,22 @@ class SponsorAdFormatterTest extends TestCase
         $this->assertStringContainsString(self::AD_TEXT, $result);
     }
 
-    public function testDeletionAuditMessage(): void
+    public function testSubjectUpdateAuditMessage(): void
+    {
+        $formatter = new SponsorAdAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $changeSet = [
+            'text' => ['Old Text', self::AD_TEXT],
+            'order' => [2, self::AD_ORDER]
+        ];
+        $result = $formatter->format($this->mockSubject, $changeSet);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
+        $this->assertStringContainsString(self::AD_TEXT, $result);
+    }
+
+    public function testSubjectDeletionAuditMessage(): void
     {
         $formatter = new SponsorAdAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
         $formatter->setContext(AuditContextBuilder::default()->build());
@@ -78,5 +93,15 @@ class SponsorAdFormatterTest extends TestCase
         $result = $formatter->format(new \stdClass(), []);
 
         $this->assertNull($result);
+    }
+
+    public function testFormatterHandlesEmptyChangeSet(): void
+    {
+        $formatter = new SponsorAdAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $result = $formatter->format($this->mockSubject, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
     }
 }

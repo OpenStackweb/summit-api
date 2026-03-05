@@ -49,7 +49,7 @@ class SponsorUserInfoGrantFormatterTest extends TestCase
         return $mock;
     }
 
-    public function testCreationAuditMessage(): void
+    public function testSubjectCreationAuditMessage(): void
     {
         $formatter = new SponsorUserInfoGrantAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
         $formatter->setContext(AuditContextBuilder::default()->build());
@@ -60,7 +60,23 @@ class SponsorUserInfoGrantFormatterTest extends TestCase
         $this->assertStringContainsString(self::ALLOWED_USER_EMAIL, $result);
     }
 
-    public function testDeletionAuditMessage(): void
+    public function testSubjectUpdateAuditMessage(): void
+    {
+        $formatter = new SponsorUserInfoGrantAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $changeSet = [
+            'allowed_user_id' => [101, 102]
+        ];
+        $result = $formatter->format($this->mockSubject, $changeSet);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
+        $this->assertStringContainsString('allowed_user_id', $result);
+        $this->assertStringContainsString('101', $result);
+        $this->assertStringContainsString('102', $result);
+    }
+
+    public function testSubjectDeletionAuditMessage(): void
     {
         $formatter = new SponsorUserInfoGrantAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
         $formatter->setContext(AuditContextBuilder::default()->build());
@@ -77,5 +93,15 @@ class SponsorUserInfoGrantFormatterTest extends TestCase
         $result = $formatter->format(new \stdClass(), []);
 
         $this->assertNull($result);
+    }
+
+    public function testFormatterHandlesEmptyChangeSet(): void
+    {
+        $formatter = new SponsorUserInfoGrantAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $result = $formatter->format($this->mockSubject, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
     }
 }

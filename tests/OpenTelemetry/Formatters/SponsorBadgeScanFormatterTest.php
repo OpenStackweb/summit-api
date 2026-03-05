@@ -54,7 +54,7 @@ class SponsorBadgeScanFormatterTest extends TestCase
         return $mock;
     }
 
-    public function testCreationAuditMessage(): void
+    public function testSubjectCreationAuditMessage(): void
     {
         $formatter = new SponsorBadgeScanAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
         $formatter->setContext(AuditContextBuilder::default()->build());
@@ -65,7 +65,23 @@ class SponsorBadgeScanFormatterTest extends TestCase
         $this->assertStringContainsString(self::USER_EMAIL, $result);
     }
 
-    public function testDeletionAuditMessage(): void
+    public function testSubjectUpdateAuditMessage(): void
+    {
+        $formatter = new SponsorBadgeScanAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $changeSet = [
+            'qr_code' => ['QR999999', self::QR_CODE]
+        ];
+        $result = $formatter->format($this->mockSubject, $changeSet);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
+        $this->assertStringContainsString('qr_code', $result);
+        $this->assertStringContainsString('QR999999', $result);
+        $this->assertStringContainsString(self::QR_CODE, $result);
+    }
+
+    public function testSubjectDeletionAuditMessage(): void
     {
         $formatter = new SponsorBadgeScanAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
         $formatter->setContext(AuditContextBuilder::default()->build());
@@ -82,5 +98,15 @@ class SponsorBadgeScanFormatterTest extends TestCase
         $result = $formatter->format(new \stdClass(), []);
 
         $this->assertNull($result);
+    }
+
+    public function testFormatterHandlesEmptyChangeSet(): void
+    {
+        $formatter = new SponsorBadgeScanAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $result = $formatter->format($this->mockSubject, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
     }
 }

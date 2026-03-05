@@ -50,7 +50,7 @@ class SponsorMaterialFormatterTest extends TestCase
         return $mock;
     }
 
-    public function testCreationAuditMessage(): void
+    public function testSubjectCreationAuditMessage(): void
     {
         $formatter = new SponsorMaterialAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);
         $formatter->setContext(AuditContextBuilder::default()->build());
@@ -62,7 +62,22 @@ class SponsorMaterialFormatterTest extends TestCase
         $this->assertStringContainsString(self::MATERIAL_TYPE, $result);
     }
 
-    public function testDeletionAuditMessage(): void
+    public function testSubjectUpdateAuditMessage(): void
+    {
+        $formatter = new SponsorMaterialAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $changeSet = [
+            'name' => ['Old Report', self::MATERIAL_NAME],
+            'order' => [1, self::MATERIAL_ORDER]
+        ];
+        $result = $formatter->format($this->mockSubject, $changeSet);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
+        $this->assertStringContainsString(self::MATERIAL_NAME, $result);
+    }
+
+    public function testSubjectDeletionAuditMessage(): void
     {
         $formatter = new SponsorMaterialAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);
         $formatter->setContext(AuditContextBuilder::default()->build());
@@ -79,5 +94,15 @@ class SponsorMaterialFormatterTest extends TestCase
         $result = $formatter->format(new \stdClass(), []);
 
         $this->assertNull($result);
+    }
+
+    public function testFormatterHandlesEmptyChangeSet(): void
+    {
+        $formatter = new SponsorMaterialAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $result = $formatter->format($this->mockSubject, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
     }
 }

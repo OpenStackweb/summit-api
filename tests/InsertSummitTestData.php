@@ -20,6 +20,7 @@ use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTr
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\SelectionPlan;
+use App\Models\Foundation\Summit\SponsorStatistics;
 use App\Models\Foundation\Summit\TrackTagGroup;
 use DateInterval;
 use DateTime;
@@ -911,6 +912,13 @@ trait InsertSummitTestData
                     $s->addExtraQuestion($q);
                 }
             }
+
+            $statistics = new SponsorStatistics();
+            $statistics->setFormsQty(random_int(1, 30));
+            $statistics->setPurchasesQty(random_int(1, 30));
+            $statistics->setPagesQty(random_int(1, 30));
+            $statistics->setDocumentsQty(random_int(1, 30));
+            $s->setSponsorServicesStatistics($statistics);
 
             self::$em->persist($s);
             self::$summit->addSummitSponsor($s);

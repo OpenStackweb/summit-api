@@ -14,8 +14,6 @@
 
 use App\ModelSerializers\Summit\SponsorBaseSerializer;
 use Libs\ModelSerializers\AbstractSerializer;
-use Libs\ModelSerializers\Many2OneExpandSerializer;
-use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\Sponsor;
 
 /**
@@ -54,6 +52,21 @@ final class SponsorSerializer extends SponsorBaseSerializer
                                 unset($values['sponsorship_id']);
                                 $sponsorship = $sponsor->getSponsorships()->first();
                                 $values['sponsorship'] = SerializerRegistry::getInstance()->getSerializer($sponsorship->getType())->serialize
+                                (
+                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
+                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
+                                    $params
+                                );
+                            }
+                        }
+                        break;
+                    case 'sponsorservices_statistics':
+                        {
+                            if ($sponsor->hasStatistics()) {
+                                unset($values['sponsorservices_statistics_id']);
+                                $statistics = $sponsor->getStatistics();
+                                $values['sponsorservices_statistics'] = SerializerRegistry::getInstance()->getSerializer($statistics)->serialize
                                 (
                                     AbstractSerializer::filterExpandByPrefix($expand, $relation),
                                     AbstractSerializer::filterFieldsByPrefix($fields, $relation),

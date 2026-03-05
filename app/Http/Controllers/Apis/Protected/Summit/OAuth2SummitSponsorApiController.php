@@ -4288,4 +4288,84 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             );
         });
     }
+
+     #[OA\Put(
+        path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorservices-statistics",
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        summary: 'Upsert Sponsor Services Statistics',
+        operationId: 'updateSponsorServicesStatistics',
+        tags: ['Sponsors'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [
+            [
+                'summit_sponsor_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+            new OA\Parameter(
+                name: 'sponsor_id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The sponsor id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: "#/components/schemas/SponsorServicesStatisticsUpsertRequest")
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: 'Sponsor Services Statistics created/updated successfully'
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    /**
+     * @param $summit_id
+     * @param $sponsor_id
+     * @return mixed
+     */
+    public function updateSponsorServicesStatistics($summit_id, $sponsor_id) {
+        return $this->processRequest(function () use ($summit_id, $sponsor_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $sponsor = $summit->getSummitSponsorById(intval($sponsor_id));
+            if (is_null($sponsor)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SponsorServicesStatisticsValidationRulesFactory::buildForUpdate(), true);
+
+            $statistics = $this->service->updateSponsorServicesStatistics($summit, $sponsor->getId(), $payload);
+
+            return $this->updated(SerializerRegistry::getInstance()
+                ->getSerializer($statistics)
+                ->serialize(
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                )
+            );
+        });
+    }
 }

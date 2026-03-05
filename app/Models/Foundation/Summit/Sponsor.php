@@ -18,6 +18,7 @@ use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\IOrderable;
 use App\Models\Foundation\Main\OrderableChilds;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
+use App\Models\Foundation\Summit\SponsorStatistics;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
@@ -53,6 +54,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         'getFeaturedEventId' => 'featured_event',
         'getCompanyId' => 'company',
         'getLeadReportSettingId' => 'lead_report_setting',
+        'getSponsorServicesStatisticsId' => 'sponsorservices_statistics',
     ];
 
     protected $hasPropertyMappings = [
@@ -63,6 +65,7 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
         'hasFeaturedEvent' => 'featured_event',
         'hasCompany' => 'company',
         'hasLeadReportSetting' => 'lead_report_setting',
+        'hasSponsorServicesStatistics' => 'sponsorservices_statistics',
     ];
 
     /**
@@ -229,6 +232,12 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
      */
     #[ORM\OneToMany(targetEntity: \models\summit\SummitSponsorship::class, mappedBy: 'sponsor', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $sponsorships;
+
+    /**
+     * @var SponsorStatistics
+     */
+    #[ORM\OneToOne(targetEntity: SponsorStatistics::class, mappedBy: 'sponsor', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    private $sponsorservices_statistics;
 
     /**
      * Sponsor constructor.
@@ -1080,5 +1089,52 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
     public function getSponsorshipId():int{
         if(!$this->hasSponsorships()) return 0;
         return $this->sponsorships->first()->getType()->getId();
+    }
+
+    /**
+     * @return SponsorStatistics
+     */
+    public function getSponsorServicesStatistics()
+    {
+        return $this->sponsorservices_statistics;
+    }
+
+    /**
+     * @param SponsorStatistics $statistics
+     */
+    public function setSponsorServicesStatistics(SponsorStatistics $statistics): void
+    {
+        $statistics->setSponsor($this);
+        $this->sponsorservices_statistics = $statistics;
+    }
+
+     /**
+     * @return int
+     */
+    public function getSponsorServicesStatisticsId(): int
+    {
+        try {
+            return is_null($this->sponsorservices_statistics) ? 0 : $this->sponsorservices_statistics->getId();
+        } catch (\Exception $ex) {
+            return 0;
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function clearSponsorServicesStatistics()
+    {
+        if (is_null($this->sponsorservices_statistics)) return;
+        $this->sponsorservices_statistics->clearSponsor();
+        $this->sponsorservices_statistics = null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasSponsorServicesStatistics(): bool
+    {
+        return $this->getSponsorServicesStatisticsId() > 0;
     }
 }

@@ -108,6 +108,7 @@ use App\ModelSerializers\Summit\SponsorBadgeScanSerializer;
 use App\ModelSerializers\Summit\SponsorMaterialSerializer;
 use App\ModelSerializers\Summit\SponsorSerializerV2;
 use App\ModelSerializers\Summit\SponsorSocialNetworkSerializer;
+use App\ModelSerializers\Summit\SponsorStatisticsSerializer;
 use App\ModelSerializers\Summit\SponsorUserInfoGrantSerializer;
 use App\ModelSerializers\Summit\StripePaymentProfileSerializer;
 use App\ModelSerializers\Summit\SummitAttendeeBadgeSerializer;
@@ -268,7 +269,7 @@ final class SerializerRegistry
         $this->registry['SummitSelectionPlanExtraQuestionType'] = SummitSelectionPlanExtraQuestionTypeSerializer::class;
         $this->registry['AssignedSelectionPlanExtraQuestionType'] = AssignedSelectionPlanExtraQuestionTypeSerializer::class;
         $this->registry['SelectionPlanAllowedMember'] = SelectionPlanAllowedMemberSerializer::class;
-        
+
         $this->registry['SummitWIFIConnection'] = SummitWIFIConnectionSerializer::class;
         $this->registry['SummitType'] = SummitTypeSerializer::class;
         $this->registry['SummitEventType'] = SummitEventTypeSerializer::class;
@@ -602,6 +603,7 @@ final class SerializerRegistry
         $this->registry['SponsorAd'] = SponsorAdSerializer::class;
         $this->registry['SponsorMaterial'] = SponsorMaterialSerializer::class;
         $this->registry['SponsorSocialNetwork'] = SponsorSocialNetworkSerializer::class;
+        $this->registry['SponsorStatistics'] = SponsorStatisticsSerializer::class;
 
         // locations
 

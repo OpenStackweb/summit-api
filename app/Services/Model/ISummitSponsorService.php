@@ -15,6 +15,7 @@
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
+use App\Models\Foundation\Summit\SponsorStatistics;
 use Illuminate\Http\UploadedFile;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -326,4 +327,13 @@ interface ISummitSponsorService
      * @throws \Exception
      */
     public function updateLeadReportSettings(Summit $summit, int $sponsor_id, array $payload): SummitLeadReportSetting;
+
+     /**
+     * @param Summit $summit
+     * @param int $sponsor_id
+     * @param array $payload
+     * @return SponsorStatistics
+     * @throws \Exception
+     */
+    public function updateSponsorServicesStatistics(Summit $summit, int $sponsor_id, array $payload): SponsorStatistics;
 }

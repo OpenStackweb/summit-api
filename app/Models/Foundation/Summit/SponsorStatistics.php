@@ -74,7 +74,7 @@ class SponsorStatistics extends SilverstripeBaseModel
 
     public function getFormsQty(): int
     {
-        return $this->formsQty;
+        return $this->formsQty ?? 0;
     }
 
     public function setFormsQty(int $formsQty): void
@@ -84,7 +84,7 @@ class SponsorStatistics extends SilverstripeBaseModel
 
     public function getPurchasesQty(): int
     {
-        return $this->purchasesQty;
+        return $this->purchasesQty ?? 0;
     }
 
     public function setPurchasesQty(int $purchasesQty): void
@@ -94,7 +94,7 @@ class SponsorStatistics extends SilverstripeBaseModel
 
     public function getPagesQty(): int
     {
-        return $this->pagesQty;
+        return $this->pagesQty ?? 0;
     }
 
     public function setPagesQty(int $pagesQty): void
@@ -104,7 +104,7 @@ class SponsorStatistics extends SilverstripeBaseModel
 
     public function getDocumentsQty(): int
     {
-        return $this->documentsQty;
+        return $this->documentsQty ?? 0;
     }
 
     public function setDocumentsQty(int $documentsQty): void

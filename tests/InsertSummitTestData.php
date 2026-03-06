@@ -913,12 +913,14 @@ trait InsertSummitTestData
                 }
             }
 
-            $statistics = new SponsorStatistics();
-            $statistics->setFormsQty(random_int(1, 30));
-            $statistics->setPurchasesQty(random_int(1, 30));
-            $statistics->setPagesQty(random_int(1, 30));
-            $statistics->setDocumentsQty(random_int(1, 30));
-            $s->setSponsorServicesStatistics($statistics);
+            if ($i % 2 == 0) {
+                $statistics = new SponsorStatistics();
+                $statistics->setFormsQty(random_int(1, 30));
+                $statistics->setPurchasesQty(random_int(1, 30));
+                $statistics->setPagesQty(random_int(1, 30));
+                $statistics->setDocumentsQty(random_int(1, 30));
+                $s->setSponsorServicesStatistics($statistics);
+            }
 
             self::$em->persist($s);
             self::$summit->addSummitSponsor($s);

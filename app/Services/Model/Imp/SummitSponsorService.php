@@ -1184,8 +1184,9 @@ final class SummitSponsorService
 
             $statistics = $summit_sponsor->getSponsorServicesStatistics();
             if (!$statistics) {
-                $statistics = new SponsorStatistics();
-                $statistics->setSponsor($summit_sponsor);
+                $statistics = SponsorServicesStatisticsFactory::build($payload);
+                $summit_sponsor->setSponsorServicesStatistics($statistics);
+                return $statistics;
             }
             return SponsorServicesStatisticsFactory::populate($statistics, $payload);
         });

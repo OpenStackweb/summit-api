@@ -57,6 +57,15 @@ class SponsorStatistics extends SilverstripeBaseModel
     #[ORM\Column(name: 'DocumentsQty', type: 'integer')]
     private $documentsQty;
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->formsQty = 0;
+        $this->purchasesQty = 0;
+        $this->pagesQty = 0;
+        $this->documentsQty = 0;
+    }
+
     public function getSponsor(): Sponsor
     {
         return $this->sponsor;

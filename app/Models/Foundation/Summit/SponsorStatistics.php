@@ -57,6 +57,15 @@ class SponsorStatistics extends SilverstripeBaseModel
     #[ORM\Column(name: 'DocumentsQty', type: 'integer')]
     private $documentsQty;
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->formsQty = 0;
+        $this->purchasesQty = 0;
+        $this->pagesQty = 0;
+        $this->documentsQty = 0;
+    }
+
     public function getSponsor(): Sponsor
     {
         return $this->sponsor;
@@ -74,7 +83,7 @@ class SponsorStatistics extends SilverstripeBaseModel
 
     public function getFormsQty(): int
     {
-        return $this->formsQty ?? 0;
+        return $this->formsQty;
     }
 
     public function setFormsQty(int $formsQty): void
@@ -84,7 +93,7 @@ class SponsorStatistics extends SilverstripeBaseModel
 
     public function getPurchasesQty(): int
     {
-        return $this->purchasesQty ?? 0;
+        return $this->purchasesQty;
     }
 
     public function setPurchasesQty(int $purchasesQty): void
@@ -94,7 +103,7 @@ class SponsorStatistics extends SilverstripeBaseModel
 
     public function getPagesQty(): int
     {
-        return $this->pagesQty ?? 0;
+        return $this->pagesQty;
     }
 
     public function setPagesQty(int $pagesQty): void
@@ -104,7 +113,7 @@ class SponsorStatistics extends SilverstripeBaseModel
 
     public function getDocumentsQty(): int
     {
-        return $this->documentsQty ?? 0;
+        return $this->documentsQty;
     }
 
     public function setDocumentsQty(int $documentsQty): void

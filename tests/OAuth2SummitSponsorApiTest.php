@@ -878,4 +878,33 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertEquals($new_forms_qty, $statistics->forms_qty);
         $this->assertEquals($pages_qty, $statistics->pages_qty);
     }
+
+    public function testInsertPartiallySponsorServicesStatistics(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[1]->getId(),
+        ];
+
+        $new_forms_qty = 10;
+
+        $data = [
+            'forms_qty' => $new_forms_qty
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSponsorApiController@updateSponsorServicesStatistics",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $statistics = json_decode($content);
+        $this->assertEquals($new_forms_qty, $statistics->forms_qty);
+    }
 }

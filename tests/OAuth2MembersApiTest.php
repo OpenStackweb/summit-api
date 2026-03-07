@@ -534,4 +534,221 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertTrue($companies->total == 1 );
         $this->assertResponseStatus(200);
     }
+
+    public function testGetMemberById(){
+        $params = [
+            'member_id' => self::$member->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2MembersApiController@getById",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $member = json_decode($content);
+        $this->assertNotNull($member);
+        $this->assertEquals(self::$member->getId(), $member->id);
+    }
+
+    public function testUpdateMyMember(){
+        $params = [];
+
+        $data = [
+            'shirt_size' => 'Large',
+            'display_on_site' => true,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@updateMyMember",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertNotNull($member);
+    }
+
+    public function testGetMyMemberAffiliations(){
+        // add an affiliation first
+        $this->testAddMyMemberAffiliation();
+
+        $params = [];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2MembersApiController@getMyMemberAffiliations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $affiliations = json_decode($content);
+        $this->assertNotNull($affiliations);
+        $this->assertGreaterThan(0, $affiliations->total);
+    }
+
+    public function testUpdateMyAffiliation(){
+        $affiliation = $this->testAddMyMemberAffiliation();
+
+        $params = [
+            'affiliation_id' => $affiliation->id,
+        ];
+
+        $data = [
+            'job_title' => 'updated job title',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@updateMyAffiliation",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $affiliation = json_decode($content);
+        $this->assertNotNull($affiliation);
+    }
+
+    public function testDeleteMyAffiliation(){
+        $affiliation = $this->testAddMyMemberAffiliation();
+
+        $params = [
+            'affiliation_id' => $affiliation->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2MembersApiController@deleteMyAffiliation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testDeleteRSVP(){
+        // RSVP data is not part of test fixtures; create member context and expect 404 for non-existent RSVP
+        $params = [
+            'member_id' => self::$member->getId(),
+            'rsvp_id'   => 0,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2MembersApiController@deleteRSVP",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    public function testSignCommunityMembership(){
+        // Create the CommunityMembers group needed by the service
+        $communityGroup = new Group();
+        $communityGroup->setCode(IGroup::CommunityMembers);
+        $communityGroup->setTitle(IGroup::CommunityMembers);
+        self::$em->persist($communityGroup);
+        self::$em->flush();
+
+        $params = [];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@signCommunityMembership",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertNotNull($member);
+    }
+
+    public function testSignIndividualMembership(){
+        $params = [];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@signIndividualMembership",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertNotNull($member);
+    }
 }

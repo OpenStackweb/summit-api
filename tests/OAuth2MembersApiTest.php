@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use models\main\Group;
+use models\main\LegalAgreement;
 use Mockery;
 use DateTime;
 /**
@@ -39,6 +41,9 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
 
     public function tearDown():void
     {
+        try {
+            self::$em->getConnection()->executeStatement("DROP TABLE IF EXISTS SiteTree");
+        } catch (\Exception $e) {}
         self::clearSummitTestData();
         Mockery::close();
         parent::tearDown();
@@ -217,7 +222,8 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
     }
 
-    public function testAddMemberAffiliation($member_id = 11624){
+    public function testAddMemberAffiliation(){
+        $member_id = self::$member->getId();
         $params = [
             'member_id'      => $member_id,
         ];
@@ -230,7 +236,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
             'start_date' => $start_datetime_unix,
             'job_title'  => 'test affiliation',
             'end_date'   => null,
-            'organization_id' => 1
+            'organization_name' => 'test organization'
         ];
 
         $headers = [
@@ -295,9 +301,9 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         return $affiliation;
     }
 
-    public function testUpdateMemberAffiliation($member_id = 11624){
-
-        $new_affiliation = $this->testAddMemberAffiliation($member_id);
+    public function testUpdateMemberAffiliation(){
+        $member_id = self::$member->getId();
+        $new_affiliation = $this->testAddMemberAffiliation();
         $params = [
             'member_id'      => $member_id,
             'affiliation_id' => $new_affiliation->id,
@@ -330,9 +336,9 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         return $affiliation;
     }
 
-    public function testDeleteMemberAffiliation($member_id = 11624){
-
-        $new_affiliation = $this->testAddMemberAffiliation($member_id);
+    public function testDeleteMemberAffiliation(){
+        $member_id = self::$member->getId();
+        $new_affiliation = $this->testAddMemberAffiliation();
         $params = [
             'member_id'      => $member_id,
             'affiliation_id' => $new_affiliation->id,
@@ -357,11 +363,10 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(204);
     }
 
-    public function testGetMemberAffiliation($member_id = 11624)
+    public function testGetMemberAffiliation()
     {
-
+        $member_id = self::$member->getId();
         $params = [
-            //AND FILTER
             'member_id' => $member_id
         ];
 
@@ -382,9 +387,39 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
     }
 
+    private function createFoundationMembershipPrerequisites(): void
+    {
+        // Create the FoundationMembers group needed by signFoundationMembership service
+        $foundationGroup = new Group();
+        $foundationGroup->setCode(IGroup::FoundationMembers);
+        $foundationGroup->setTitle(IGroup::FoundationMembers);
+        self::$em->persist($foundationGroup);
+        self::$em->flush();
+
+        // Create the SiteTree legal document record needed by DoctrineLegalDocumentRepository
+        $conn = self::$em->getConnection();
+        $conn->executeStatement("CREATE TABLE IF NOT EXISTS SiteTree (
+            ID INT AUTO_INCREMENT PRIMARY KEY,
+            Title VARCHAR(255),
+            URLSegment VARCHAR(255),
+            Content TEXT,
+            ClassName VARCHAR(255)
+        )");
+        $conn->executeStatement(
+            "INSERT INTO SiteTree (Title, URLSegment, Content, ClassName) VALUES (?, ?, ?, ?)",
+            [
+                'The OpenStack Foundation Individual Member Agreement',
+                LegalAgreement::Slug,
+                'Test legal content',
+                'LegalDocumentPage'
+            ]
+        );
+    }
+
     public function testSignFoundationMembership(){
+        $this->createFoundationMembershipPrerequisites();
+
         $params = [
-            'member_id'      => 'me',
         ];
 
         $headers = [
@@ -411,8 +446,9 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
     }
 
     public function testSignResignFoundationMembership(){
+        $this->createFoundationMembershipPrerequisites();
+
         $params = [
-            'member_id' => 'me',
         ];
 
         $headers = [

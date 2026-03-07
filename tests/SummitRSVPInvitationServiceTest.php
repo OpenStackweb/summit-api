@@ -38,9 +38,9 @@ use App\Services\Utils\Facades\EmailExcerpt;
 use models\summit\RSVP;
 use Illuminate\Support\Facades\App;
 use models\summit\ISummitAttendeeRepository;
-/**
- * @covers \App\Services\Model\Imp\SummitRSVPInvitationService
- */
+use PHPUnit\Framework\Attributes\CoversClass;
+
+#[CoversClass(SummitRSVPInvitationService::class)]
 class SummitRSVPInvitationServiceTest extends TestCase
 {
     use MockeryPHPUnitIntegration, WithFaker;

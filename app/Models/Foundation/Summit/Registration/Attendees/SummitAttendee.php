@@ -440,7 +440,7 @@ class SummitAttendee extends SilverstripeBaseModel
      * @param int $ticket_id
      * @return SummitAttendeeTicket
      */
-    public function getTicketById($ticket_id)
+    public function getTicketById(int $ticket_id)
     {
         $ticket = $this->tickets->matching(
             $criteria = Criteria::create()
@@ -1223,8 +1223,8 @@ SQL;
     {
         try {
             $sql = <<<SQL
-SELECT TicketTypeID AS type_id, COUNT(SummitTicketType.ID) AS qty, SummitTicketType.Name AS type_name FROM `SummitAttendeeTicket` 
-INNER JOIN SummitTicketType ON SummitTicketType.ID = SummitAttendeeTicket.TicketTypeID                                                  
+SELECT TicketTypeID AS type_id, COUNT(SummitTicketType.ID) AS qty, SummitTicketType.Name AS type_name FROM `SummitAttendeeTicket`
+INNER JOIN SummitTicketType ON SummitTicketType.ID = SummitAttendeeTicket.TicketTypeID
 WHERE OwnerID = :owner_id AND
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid'
@@ -1311,12 +1311,12 @@ SQL;
         }
 
         $query = <<<SQL
-SELECT DISTINCT E.* 
+SELECT DISTINCT E.*
 FROM SummitBadgeFeatureType E
 INNER JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID = E.ID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.ID = SummitAttendeeBadge_Features.SummitAttendeeBadgeID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
-WHERE SummitAttendeeTicket.OwnerID = :owner_id 
+WHERE SummitAttendeeTicket.OwnerID = :owner_id
   AND SummitAttendeeTicket.Status = 'Paid'
   {$extra_where}
 UNION

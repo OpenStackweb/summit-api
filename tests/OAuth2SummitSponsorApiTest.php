@@ -13,11 +13,10 @@
  **/
 
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
-use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
 use Mockery;
 use models\summit\SummitLeadReportSetting;
-
+use App\Models\Foundation\Main\IGroup;
 /**
  * Class OAuth2SummitSponsorApiTest
  */
@@ -25,7 +24,6 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
 
     public function createApplication()
     {
@@ -43,8 +41,8 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 
     protected function setUp(): void
     {
+        $this->current_group = IGroup::Sponsors;
         parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::insertSummitTestData();
     }
@@ -52,7 +50,6 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
     protected function tearDown(): void
     {
         self::clearSummitTestData();
-        self::clearMemberTestData();
         parent::tearDown();
     }
 
@@ -478,10 +475,12 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
     }
 
     public function testDeleteSponsor(){
+        // create a fresh sponsor so it has no FK dependencies (e.g. promo codes)
+        $sponsor = $this->testAddSponsor();
 
         $params = [
             'id' => self::$summit->getId(),
-            'sponsor_id'=> self::$sponsors[0]->getId()
+            'sponsor_id'=> $sponsor->id
         ];
 
         $response = $this->action(
@@ -524,6 +523,22 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
     }
 
     public function testAddSponsorExtraQuestions(){
+
+        // remove the last extra question first (sponsors already have 5, the max)
+        // using last() keeps order numbering compact so new question order == count
+        $existingQuestion = self::$sponsors[0]->getExtraQuestions()->last();
+        $this->action(
+            "DELETE",
+            "OAuth2SummitSponsorApiController@deleteExtraQuestion",
+            [
+                'id' => self::$summit->getId(),
+                'sponsor_id' => self::$sponsors[0]->getId(),
+                'extra_question_id' => $existingQuestion->getId()
+            ],
+            [], [], [],
+            $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(204);
 
         $params = [
             'id' => self::$summit->getId(),
@@ -648,7 +663,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         ];
 
         $upd_label = 'Updated label';
-        $upd_type = ExtraQuestionTypeConstants::RadioButtonQuestionType;
+        $upd_type = ExtraQuestionTypeConstants::ComboBoxQuestionType;
         $upd_order = 2;
 
         $data = [
@@ -701,10 +716,23 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 
     public function testAddLeadReportSettings(){
 
+        // create an order extra question since test data doesn't include one
+        $orderExtraQuestion = new \models\summit\SummitOrderExtraQuestionType();
+        $orderExtraQuestion->setType(ExtraQuestionTypeConstants::TextQuestionType);
+        $orderExtraQuestion->setLabel('TEST_ORDER_EXTRA_QUESTION');
+        $orderExtraQuestion->setName('TEST_ORDER_EXTRA_QUESTION');
+        $orderExtraQuestion->setUsage(\models\summit\SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage);
+        self::$summit->addOrderExtraQuestion($orderExtraQuestion);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
         $params = [
             'id' => self::$summit->getId(),
             'sponsor_id' => self::$sponsors[0]->getId(),
         ];
+
+        $attendeeExtraQuestions = self::$summit->getOrderExtraQuestions();
+        $sponsorExtraQuestions = self::$sponsors[0]->getExtraQuestions();
 
         $allowed_columns = [
             'scan_date',
@@ -712,19 +740,15 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'attendee_company',
             SummitLeadReportSetting::AttendeeExtraQuestionsKey => [
                 [
-                    'id'   => 392,
-                    'name' => 'QUESTION1'
+                    'id'   => $attendeeExtraQuestions->first()->getId(),
+                    'name' => $attendeeExtraQuestions->first()->getName()
                 ],
             ],
             SummitLeadReportSetting::SponsorExtraQuestionsKey => [
                 [
-                    'id'   => 519,
-                    'name' => 'ADDED_EXTRA_QUESTION_TYPE'
+                    'id'   => $sponsorExtraQuestions->first()->getId(),
+                    'name' => $sponsorExtraQuestions->first()->getName()
                 ],
-                [
-                    'id'   => 520,
-                    'name' => 'ADDED_EXTRA_QUESTION_TYPE_RRRJc'
-                ]
             ]
         ];
 
@@ -760,12 +784,14 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'sponsor_id' => self::$sponsors[0]->getId(),
         ];
 
+        $sponsorExtraQuestions = self::$sponsors[0]->getExtraQuestions();
+
         $allowed_columns = [
             'scan_date',
             'extra_questions' => [
                 [
-                    'id'   => 519,
-                    'name' => 'ADDED_EXTRA_QUESTION_TYPE'
+                    'id'   => $sponsorExtraQuestions->first()->getId(),
+                    'name' => $sponsorExtraQuestions->first()->getName()
                 ]
             ]
         ];

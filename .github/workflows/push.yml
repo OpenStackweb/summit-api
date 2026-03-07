@@ -71,6 +71,7 @@ jobs:
                     - { name: "Repositories", filter: "--filter tests/Repositories/" }
                     - { name: "OAuth2AttendeesApiTest", filter: "--filter test/OAuth2AttendeesApiTest"}
                     - { name: "OAuth2SummitSponsorApiTest", filter: "--filter test/OAuth2SummitSponsorApiTest"}
+                    - { name: "OAuth2BookableRoomAttributeTypesApiTest", filter: "--filter test/OAuth2BookableRoomAttributeTypesApiTest"}
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

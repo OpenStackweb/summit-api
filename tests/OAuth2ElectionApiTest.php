@@ -29,6 +29,7 @@ class OAuth2ElectionApiTest extends ProtectedApiTestCase
     protected function setUp():void
     {
         parent::setUp();
+        self::$member->signIndividualMembership();
         self::$election = new Election();
         self::$election->setName("TEST ELECTION");
         $now = new \DateTime("now", new \DateTimeZone("UTC"));

@@ -75,6 +75,7 @@ jobs:
                     - { name: "OAuth2CompaniesApiTest", filter: "--filter test/OAuth2CompaniesApiTest"}
                     - { name: "OAuth2ElectionsApiController", filter: "--filter test/OAuth2ElectionsApiController"}
                     - { name: "OAuth2MembersApiTest", filter: "--filter test/OAuth2MembersApiTest"}
+                    - { name: "OAuth2GroupsApiTest", filter: "--filter test/OAuth2GroupsApiTest"}
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

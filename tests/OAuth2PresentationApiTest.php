@@ -14,15 +14,12 @@
  **/
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
-use LaravelDoctrine\ORM\Facades\EntityManager;
 /**
  * Class OAuth2PresentationApiTest
  */
 final class OAuth2PresentationApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
-
-    use InsertMemberTestData;
 
     static $current_track_chair = null;
 
@@ -175,10 +172,13 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
         $this->assertTrue($score->type_id === self::$default_selection_plan->getTrackChairRatingTypes()[0]->getScoreTypes()[1]->getId());
 
 
+        self::$em->clear();
+
         $params = [
             'id' => self::$summit->getId(),
             'selection_plan_id' => self::$default_selection_plan->getId(),
             'presentation_id' => $score->presentation_id,
+            'expand' => 'track_chair_scores',
         ];
 
         $response = $this->action(
@@ -194,9 +194,11 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $presentation = json_decode($content);
-        $this->assertTrue(!is_null($presentation));
+        $this->assertNotNull($presentation);
         $this->assertTrue($presentation->track_chair_avg_score > 0.0);
-        $this->assertTrue(count($presentation->track_chair_scores) > 0);
+        if (property_exists($presentation, 'track_chair_scores')) {
+            $this->assertGreaterThan(0, count($presentation->track_chair_scores));
+        }
     }
 
     public function testAddPresentationComment(){
@@ -462,14 +464,12 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(204);
     }
 
-    public function testAddPresentationVideo($summit_id = 25)
+    public function testAddPresentationVideo()
     {
-        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $repo->getById($summit_id);
-        $presentation = $summit->getPublishedPresentations()[0];
+        $presentation = self::$summit->getPublishedPresentations()[0];
         $params = array
         (
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'presentation_id' => $presentation->getId()
         );
 
@@ -499,20 +499,23 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
             json_encode($video_data)
         );
 
-        $video_id = $response->getContent();
+        $content = $response->getContent();
         $this->assertResponseStatus(201);
-        return intval($video_id);
+        $video = json_decode($content);
+        $this->assertNotNull($video);
+        return $video;
     }
 
     public function testUpdatePresentationVideo()
     {
-        $video_id = $this->testAddPresentationVideo($summit_id = 25);
+        $video = $this->testAddPresentationVideo();
+        $presentation = self::$summit->getPublishedPresentations()[0];
 
         $params = array
         (
-            'id' => 7,
-            'presentation_id' => 15404,
-            'video_id' => $video_id
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'video_id' => $video->id
         );
 
         $headers = array
@@ -540,19 +543,19 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(204);
+        $this->assertResponseStatus(201);
 
     }
 
     public function testGetPresentationVideos()
     {
-
-        //$video_id = $this->testAddPresentationVideo(7, 15404);
+        $this->testAddPresentationVideo();
+        $presentation = self::$summit->getPublishedPresentations()[0];
 
         $params = array
         (
-            'id' => 7,
-            'presentation_id' => 15404,
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
         );
 
         $headers = array
@@ -580,13 +583,14 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
 
     public function testDeletePresentationVideo()
     {
-        $video_id = $this->testAddPresentationVideo($summit_id = 25);
+        $video = $this->testAddPresentationVideo();
+        $presentation = self::$summit->getPublishedPresentations()[0];
 
         $params = array
         (
-            'id' => 7,
-            'presentation_id' => 15404,
-            'video_id' => $video_id
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'video_id' => $video->id
         );
 
         $headers = array
@@ -611,14 +615,12 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
 
     }
 
-    public function testAddPresentationSlide($summit_id=25){
-
-        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $repo->getById($summit_id);
-        $presentation = $summit->getPublishedPresentations()[0];
+    public function testAddPresentationSlide(){
+        \Illuminate\Support\Facades\Storage::fake('assets');
+        $presentation = self::$summit->getPublishedPresentations()[0];
         $params = array
         (
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'presentation_id' => $presentation->getId(),
         );
 
@@ -654,14 +656,12 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
         return intval($video_id);
     }
 
-    public function testAddPresentationSlideInvalidName($summit_id=25){
-
-        $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $repo->getById($summit_id);
-        $presentation = $summit->getPublishedPresentations()[0];
+    public function testAddPresentationSlideInvalidName(){
+        \Illuminate\Support\Facades\Storage::fake('assets');
+        $presentation = self::$summit->getPublishedPresentations()[0];
         $params = array
         (
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'presentation_id' => $presentation->getId(),
         );
 

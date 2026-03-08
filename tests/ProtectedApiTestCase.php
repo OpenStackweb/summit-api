@@ -66,6 +66,36 @@ class AccessTokenServiceStub implements IAccessTokenService
     private $user_id;
 
     private $user_external_id;
+
+    private $user_email;
+
+    private $user_first_name;
+
+    private $user_last_name;
+
+    /**
+     * @param string|null $user_email
+     */
+    public function setUserEmail(?string $user_email): void
+    {
+        $this->user_email = $user_email;
+    }
+
+    /**
+     * @param string|null $user_first_name
+     */
+    public function setUserFirstName(?string $user_first_name): void
+    {
+        $this->user_first_name = $user_first_name;
+    }
+
+    /**
+     * @param string|null $user_last_name
+     */
+    public function setUserLastName(?string $user_last_name): void
+    {
+        $this->user_last_name = $user_last_name;
+    }
     /**
      * @param string $token_value
      * @return AccessToken
@@ -154,6 +184,10 @@ class AccessTokenServiceStub implements IAccessTokenService
                 'audience'            => $realm,
                 'user_id'             => $this->user_id,
                 'user_external_id'    => $this->user_external_id,
+                'user_email'          => $this->user_email,
+                'user_email_verified' => true,
+                'user_first_name'     => $this->user_first_name,
+                'user_last_name'      => $this->user_last_name,
                 'expires_in'          => 3600,
                 'application_type'    => 'WEB_APPLICATION',
                 'allowed_return_uris' => 'https://www.openstack.org/OpenStackIdAuthenticator,https://www.openstack.org/Security/login',
@@ -332,6 +366,9 @@ abstract class ProtectedApiTestCase extends \Tests\BrowserKitTestCase
         self::insertMemberTestData($this->current_group);
         self::$service->setUserId(self::$member->getUserExternalId());
         self::$service->setUserExternalId(self::$member->getUserExternalId());
+        self::$service->setUserEmail(self::$member->getEmail());
+        self::$service->setUserFirstName(self::$member->getFirstName());
+        self::$service->setUserLastName(self::$member->getLastName());
     }
 
     protected function tearDown():void

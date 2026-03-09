@@ -79,6 +79,8 @@ jobs:
                     - { name: "OAuth2OAuth2SponsorshipTypeApiTest", filter: "--filter test/OAuth2OAuth2SponsorshipTypeApiTest"}
                     - { name: "OAuth2OrganizationsApiTest", filter: "--filter test/OAuth2OrganizationsApiTest"}
                     - { name: "OAuth2PresentationApiTest", filter: "--filter test/OAuth2PresentationApiTest"}
+                    - { name: "OAuth2PromoCodesApiTest", filter: "--filter test/OAuth2PromoCodesApiTest"}
+                    - { name: "OAuth2SummitPromoCodesApiTest", filter: "--filter test/OAuth2SummitPromoCodesApiTest"}
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

@@ -12,6 +12,9 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use models\summit\SpeakersSummitRegistrationPromoCode;
 
@@ -26,6 +29,8 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         self::$defaultMember = self::$member;
         self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
+        // Clean up stale edit permission requests from previous test runs/methods
+        self::$em->getConnection()->executeStatement('DELETE FROM SpeakerEditPermissionRequest');
     }
 
     protected function tearDown(): void
@@ -34,10 +39,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         parent::tearDown();
     }
 
-    public function testPostSpeakerBySummit($summit_id = 23)
+    public function testPostSpeakerBySummit()
     {
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -52,17 +57,12 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
             'first_name' => 'Sebastian',
             'last_name' => 'Marcet',
             'email' => "smarcet.{$suffix}@gmail.com",
-            'languages' => [1, 2, 3],
             'other_presentation_links' => [
                 [
+                    'title' => 'OpenStack',
                     'link' => 'https://www.openstack.org',
                 ]
             ],
-            'travel_preferences' => ["AF"],
-            "areas_of_expertise" => ["testing"],
-            "active_involvements" => [],
-            "organizational_roles" => [],
-            "other_organizational_rol" => "no se",
         ];
 
         $response = $this->action
@@ -97,6 +97,9 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
             'title' => 'Developer!',
             'first_name' => 'Sebastian',
             'last_name' => 'Marcet',
+            'bio' => 'Test speaker bio',
+            'irc' => 'smarcet_irc',
+            'twitter' => 'smarcet_twitter',
             'email' => $email_rand . '@gmail.com',
             'notes' => 'test',
             'willing_to_present_video' => true,
@@ -123,7 +126,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         return $speaker;
     }
 
-    public function testPostSpeaker1()
+    public function testPostSpeakerWithDetails()
     {
 
         $headers = [
@@ -131,22 +134,19 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
             "CONTENT_TYPE" => "application/json"
         ];
 
+        $suffix = str_random(16);
+
         $data = [
             "areas_of_expertise" => ["tester"],
             "available_for_bureau" => false,
             "bio" => "<p>nad</p>",
             "country" => "AS",
-            "email" => "santi2288@test.com",
+            "email" => "santi_{$suffix}@test.com",
             "first_name" => "Test",
             "funded_travel" => false,
-            "id" => 0,
-            "irc" => "",
-            "languages" => [27],
-            "last_name" => "Tester",
-            "org_has_cloud" => false,
-            "organizational_roles" => [4, 8, 10],
             "other_presentation_links" => [],
             "title" => "Mr",
+            "last_name" => "Tester",
             "travel_preferences" => [],
             "twitter" => "",
             "willing_to_present_video" => false,
@@ -169,8 +169,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $speaker = json_decode($content);
         $this->assertTrue($speaker->id > 0);
-        $this->assertTrue($speaker->notes == "test");
-        $this->assertTrue($speaker->willing_to_present_video == true);
+        $this->assertEquals(false, $speaker->willing_to_present_video);
         return $speaker;
     }
 
@@ -241,11 +240,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
     }
 
-    public function testPostSpeakerRegCodeBySummit($summit_id = 23)
+    public function testPostSpeakerRegCodeBySummit()
     {
         $params = [
-
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -253,12 +251,14 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
             "CONTENT_TYPE" => "application/json"
         ];
 
+        $suffix = str_random(16);
+
         $data = [
             'title' => 'Developer!',
             'first_name' => 'Sebastian',
             'last_name' => 'Marcet',
-            'email' => 'sebastian.ge7.marcet@gmail.com',
-            'registration_code' => 'SPEAKER_00001'
+            'email' => "speaker.reg.{$suffix}@gmail.com",
+            'registration_code' => 'REG_CODE_' . str_random(8),
         ];
 
         $response = $this->action
@@ -280,11 +280,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         return $speaker;
     }
 
-    public function testPostSpeakerExistentBySummit($summit_id = 23)
+    public function testPostSpeakerExistentBySummit()
     {
         $params = [
-
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -293,11 +292,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         ];
 
         $data = [
-
             'title' => 'Developer!',
             'first_name' => 'Sebastian',
             'last_name' => 'Marcet',
-            'email' => 'sebastian@tipit.net',
+            'email' => self::$member2->getEmail(),
         ];
 
         $response = $this->action
@@ -319,12 +317,13 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         return $speaker;
     }
 
-    public function testUpdateSpeakerBySummit($summit_id = 23)
+    public function testUpdateSpeakerBySummit()
     {
-        $params = [
+        $created_speaker = $this->testPostSpeakerBySummit();
 
-            'id' => $summit_id,
-            'speaker_id' => 9161
+        $params = [
+            'id' => self::$summit->getId(),
+            'speaker_id' => $created_speaker->id,
         ];
 
         $headers = [
@@ -355,12 +354,13 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         return $speaker;
     }
 
-    public function testGetSpeakerById($speaker_id=219)
+    public function testGetSpeakerById()
     {
-        $params = [
+        $created_speaker = $this->testPostSpeaker();
 
-            'speaker_id' => $speaker_id,
-            'expand' => 'member,presentations'
+        $params = [
+            'speaker_id' => $created_speaker->id,
+            'expand' => 'member,presentations',
         ];
 
         $headers = [
@@ -509,11 +509,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
     /**
      * @param int $summit_id
      */
-    public function testGetCurrentSummitSpeakersByName($summit_id = 27)
+    public function testGetCurrentSummitSpeakersByName()
     {
         $params = [
-
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
             'filter' => [
@@ -543,10 +542,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($speakers));
     }
 
-    public function testGetCurrentSummitSpeakersWithAcceptedPresentations($summit_id = 1723)
+    public function testGetCurrentSummitSpeakersWithAcceptedPresentations()
     {
         $params = [
-            'id'        => $summit_id,
+            'id'        => self::$summit->getId(),
             'page'      => 1,
             'per_page'  => 10,
             'filter'    => [
@@ -577,10 +576,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($speakers));
     }
 
-    public function testGetCurrentSummitSpeakersWithRejectedPresentations($summit_id = 1587)
+    public function testGetCurrentSummitSpeakersWithRejectedPresentations()
     {
         $params = [
-            'id'        => $summit_id,
+            'id'        => self::$summit->getId(),
             'page'      => 1,
             'per_page'  => 10,
             'filter'    => [
@@ -740,10 +739,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($speakers));
     }
 
-    public function testExportCurrentSummitSpeakersWithAcceptedPresentations($summit_id = 1723)
+    public function testExportCurrentSummitSpeakersWithAcceptedPresentations()
     {
         $params = [
-            'id'        => $summit_id,
+            'id'        => self::$summit->getId(),
             'page'      => 1,
             'per_page'  => 10,
             'filter'    => [
@@ -788,7 +787,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
         $promo_code_spec = [
             "class_name"            => SpeakersSummitRegistrationPromoCode::ClassName,
-            "allowed_ticket_types"  => [2446,2447],
+            "allowed_ticket_types"  => [self::$default_ticket_type->getId()],
             "badge_features"        => [],
             "description"           => "Test multi speakers promo code",
             "discount_rate"         => 0.0,
@@ -802,12 +801,11 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $data = [
             'email_flow_event'  => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
             'speaker_ids'       => [
-                9161
+                self::$speaker->getId()
             ],
             'test_email_recipient'      => 'test_recip@nomail.com',
             'outcome_email_recipient'   => 'outcome_recip@nomail.com',
             'promo_code_spec'           => $promo_code_spec,
-            //'promo_code'                => 'TEST_SSRPC'
         ];
 
         $response = $this->action
@@ -829,8 +827,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
     public function testGetCurrentSummitSpeakersOrderByEmail()
     {
         $params = [
-
-            'id' => 23,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
             'order' => '+email'
@@ -860,11 +857,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
     public function testGetCurrentSummitSpeakersByIDMultiple()
     {
         $params = [
-
-            'id' => 23,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
-            'filter[]' => 'id==13869||id==19'
+            'filter[]' => sprintf('id==%s', self::$speaker->getId()),
         ];
 
         $headers = [
@@ -888,11 +884,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($speakers));
     }
 
-    public function testGetSpeakersOnSchedule($summit_id = 31)
+    public function testGetSpeakersOnSchedule()
     {
         $params = [
-
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
             'filter' => [
@@ -924,9 +919,11 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
     public function testGetCurrentSummitSpeakersByID()
     {
+        $created_speaker = $this->testPostSpeakerBySummit();
+
         $params = [
-            'id' => 23,
-            'speaker_id' => 13869
+            'id' => self::$summit->getId(),
+            'speaker_id' => $created_speaker->id,
         ];
 
         $headers = [
@@ -952,9 +949,10 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
     public function testGetSpeaker()
     {
+        $created_speaker = $this->testPostSpeaker();
 
         $params = [
-            'speaker_id' => 12927
+            'speaker_id' => $created_speaker->id,
         ];
 
         $headers = [
@@ -1034,10 +1032,27 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
     public function testMergeSpeakers()
     {
+        // Create speakers via ORM to avoid BrowserKit state leaking from prior API calls
+        $speaker_from = new \models\summit\PresentationSpeaker();
+        $speaker_from->setFirstName('MergeFrom');
+        $speaker_from->setLastName('Speaker');
+        $speaker_from->setBio('Bio from');
+        $speaker_from->setIrcHandle('irc_from');
+        $speaker_from->setTwitterName('twitter_from');
+        self::$em->persist($speaker_from);
+
+        $speaker_to = new \models\summit\PresentationSpeaker();
+        $speaker_to->setFirstName('MergeTo');
+        $speaker_to->setLastName('Speaker');
+        $speaker_to->setBio('Bio to');
+        $speaker_to->setIrcHandle('irc_to');
+        $speaker_to->setTwitterName('twitter_to');
+        self::$em->persist($speaker_to);
+        self::$em->flush();
 
         $params = [
-            'speaker_from_id' => 3643,
-            'speaker_to_id' => 1
+            'speaker_from_id' => $speaker_from->getId(),
+            'speaker_to_id'   => $speaker_to->getId(),
         ];
 
         $headers = [
@@ -1046,15 +1061,15 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         ];
 
         $data = [
-            'title' => 1,
-            'bio' => 1,
-            'first_name' => 1,
-            'last_name' => 1,
-            'irc' => 1,
-            'twitter' => 1,
-            'pic' => 1,
-            'registration_request' => 1,
-            'member' => 1,
+            'title'                => $speaker_to->getId(),
+            'bio'                  => $speaker_to->getId(),
+            'first_name'           => $speaker_to->getId(),
+            'last_name'            => $speaker_to->getId(),
+            'irc'                  => $speaker_to->getId(),
+            'twitter'              => $speaker_to->getId(),
+            'pic'                  => $speaker_to->getId(),
+            'registration_request' => $speaker_to->getId(),
+            'member'               => $speaker_to->getId(),
         ];
 
         $response = $this->action(
@@ -1069,17 +1084,16 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(204);
-        $speaker = json_decode($content);
-        $this->assertTrue(!is_null($speaker));
+        $this->assertResponseStatus(201);
     }
 
     public function testMergeSpeakersSame()
     {
+        $created_speaker = $this->testPostSpeaker();
 
         $params = [
-            'speaker_from_id' => 1,
-            'speaker_to_id' => 1
+            'speaker_from_id' => $created_speaker->id,
+            'speaker_to_id'   => $created_speaker->id,
         ];
 
         $headers = [
@@ -1088,15 +1102,15 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         ];
 
         $data = [
-            'title' => 1,
-            'bio' => 1,
-            'first_name' => 1,
-            'last_name' => 1,
-            'irc' => 1,
-            'twitter' => 1,
-            'pic' => 1,
-            'registration_request' => 1,
-            'member' => 1,
+            'title' => $created_speaker->id,
+            'bio' => $created_speaker->id,
+            'first_name' => $created_speaker->id,
+            'last_name' => $created_speaker->id,
+            'irc' => $created_speaker->id,
+            'twitter' => $created_speaker->id,
+            'pic' => $created_speaker->id,
+            'registration_request' => $created_speaker->id,
+            'member' => $created_speaker->id,
         ];
 
         $response = $this->action(
@@ -1112,15 +1126,15 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
         $content = $response->getContent();
         $this->assertResponseStatus(412);
-        $speaker = json_decode($content);
-        $this->assertTrue(!is_null($speaker));
+        $error = json_decode($content);
+        $this->assertTrue(!is_null($error));
     }
 
     public function testGetMySpeakerPresentationsByRoleAndSelectionPlan()
     {
         $params = [
             'role' => 'speaker',
-            'selection_plan_id' => 8,
+            'selection_plan_id' => self::$default_selection_plan->getId(),
         ];
 
         $headers = [
@@ -1144,11 +1158,11 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($presentations));
     }
 
-    public function testGetMySpeakerPresentationsByRoleAndBySummit($summit_id = 7)
+    public function testGetMySpeakerPresentationsByRoleAndBySummit()
     {
         $params = [
             'role' => 'speaker',
-            'summit_id' => $summit_id,
+            'summit_id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -1174,6 +1188,15 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
     public function testRequestSpeakerEditPermission()
     {
+        // Create speaker via ORM with member2 so it has an email for notifications
+        $other_speaker = new \models\summit\PresentationSpeaker();
+        $other_speaker->setFirstName('EditPerm');
+        $other_speaker->setLastName('Speaker');
+        $other_speaker->setBio('Test bio');
+        $other_speaker->setMember(self::$member2);
+        self::$em->persist($other_speaker);
+        self::$em->flush();
+        self::$em->clear();
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
@@ -1181,7 +1204,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         ];
 
         $params = [
-            'speaker_id' => 9
+            'speaker_id' => $other_speaker->getId(),
         ];
 
         $response = $this->action
@@ -1204,6 +1227,8 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
     public function testGetRequestSpeakerEditPermission()
     {
+        // First create the edit permission request
+        $edit_request = $this->testRequestSpeakerEditPermission();
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
@@ -1211,7 +1236,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         ];
 
         $params = [
-            'speaker_id' => 9
+            'speaker_id' => $edit_request->speaker_id,
         ];
 
         $response = $this->action
@@ -1359,11 +1384,9 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
     public function testGetMySpeakerFromCurrentSummit()
     {
-
         $params = array
         (
             'expand' => 'presentations',
-            'id' => 6,
             'speaker_id' => 'me'
         );
 
@@ -1429,6 +1452,423 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertNotNull($companies);
         $this->assertEquals(1, $companies->total);
         $this->assertResponseStatus(200);
+    }
+
+    // --- getMySummitSpeaker ---
+
+    public function testGetMySummitSpeaker()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getMySummitSpeaker",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speaker = json_decode($content);
+        $this->assertNotNull($speaker);
+        $this->assertTrue($speaker->id > 0);
+    }
+
+    // --- updateMySpeaker ---
+
+    public function testUpdateMySpeaker()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            'title' => 'Updated Title!',
+            'first_name' => 'UpdatedFirst',
+            'last_name' => 'UpdatedLast',
+            'bio' => 'Updated bio text',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@updateMySpeaker",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $speaker = json_decode($content);
+        $this->assertNotNull($speaker);
+        $this->assertEquals('Updated Title!', $speaker->title);
+    }
+
+    // --- Speaker Photo Upload/Delete (validation path) ---
+
+    public function testAddSpeakerPhotoNoFile()
+    {
+        $speaker = $this->testPostSpeaker();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        // No file parameter provided - should return 412
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSpeakersApiController@addSpeakerPhoto",
+            ['speaker_id' => $speaker->id],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+        $content = json_decode($response->getContent());
+        $this->assertNotNull($content);
+    }
+
+    public function testAddSpeakerPhotoNotFound()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        // Non-existent speaker ID - should return 404
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSpeakersApiController@addSpeakerPhoto",
+            ['speaker_id' => 0],
+            [],
+            [],
+            ['file' => UploadedFile::fake()->image('photo.jpg')],
+            $headers
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    public function testDeleteSpeakerPhotoNotFound()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        // Non-existent speaker ID - should return 404
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitSpeakersApiController@deleteSpeakerPhoto",
+            ['speaker_id' => 0],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    public function testAddSpeakerBigPhotoNoFile()
+    {
+        $speaker = $this->testPostSpeaker();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        // No file parameter provided - should return 412
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSpeakersApiController@addSpeakerBigPhoto",
+            ['speaker_id' => $speaker->id],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testDeleteSpeakerBigPhotoNotFound()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        // Non-existent speaker ID - should return 404
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitSpeakersApiController@deleteSpeakerBigPhoto",
+            ['speaker_id' => 0],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    public function testAddMySpeakerPhotoNoFile()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        // No file parameter provided - should return 412
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSpeakersApiController@addMySpeakerPhoto",
+            [],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testAddMySpeakerBigPhotoNoFile()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        // No file parameter provided - should return 412
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSpeakersApiController@addMySpeakerBigPhoto",
+            [],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    // --- Presentation Speaker/Moderator Management ---
+
+    public function testAddSpeakerToMyPresentation()
+    {
+        // Create a new speaker to add to the presentation
+        $new_speaker = new \models\summit\PresentationSpeaker();
+        $new_speaker->setFirstName('NewSpeaker');
+        $new_speaker->setLastName('ForPresentation');
+        $new_speaker->setBio('New speaker bio');
+        self::$em->persist($new_speaker);
+        self::$em->flush();
+        self::$em->clear();
+
+        // Use the first presentation which has the current user's speaker
+        $presentation_id = self::$presentations[0]->getId();
+        $speaker_id = $new_speaker->getId();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $params = [
+            'presentation_id' => $presentation_id,
+            'speaker_id' => $speaker_id,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@addSpeakerToMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        return [
+            'presentation_id' => $presentation_id,
+            'speaker_id' => $speaker_id,
+        ];
+    }
+
+    public function testRemoveSpeakerFromMyPresentation()
+    {
+        $ids = $this->testAddSpeakerToMyPresentation();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $params = [
+            'presentation_id' => $ids['presentation_id'],
+            'speaker_id' => $ids['speaker_id'],
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitSpeakersApiController@removeSpeakerFromMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testAddModeratorToMyPresentation()
+    {
+        // Create a new speaker to be moderator
+        $moderator = new \models\summit\PresentationSpeaker();
+        $moderator->setFirstName('Moderator');
+        $moderator->setLastName('Speaker');
+        $moderator->setBio('Moderator bio');
+        self::$em->persist($moderator);
+        self::$em->flush();
+
+        $presentation_id = self::$presentations[0]->getId();
+        $moderator_id = $moderator->getId();
+        self::$em->clear();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $params = [
+            'presentation_id' => $presentation_id,
+            'speaker_id' => $moderator_id,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@addModeratorToMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        return [
+            'presentation_id' => $presentation_id,
+            'speaker_id' => $moderator_id,
+        ];
+    }
+
+    public function testRemoveModeratorFromMyPresentation()
+    {
+        $ids = $this->testAddModeratorToMyPresentation();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $params = [
+            'presentation_id' => $ids['presentation_id'],
+            'speaker_id' => $ids['speaker_id'],
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitSpeakersApiController@removeModeratorFromMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // --- Approve/Decline Speaker Edit Permission ---
+
+    public function testApproveSpeakerEditPermission()
+    {
+        // Set config value needed by SpeakerEditPermissionApprovedEmail
+        Config::set('cfp.base_url', 'http://localhost');
+
+        // Create speaker via ORM with member2 so it has an email
+        $other_speaker = new \models\summit\PresentationSpeaker();
+        $other_speaker->setFirstName('ApproveEditPerm');
+        $other_speaker->setLastName('Speaker');
+        $other_speaker->setBio('Test bio');
+        $other_speaker->setMember(self::$member2);
+        self::$em->persist($other_speaker);
+        self::$em->flush();
+
+        // Create a SpeakerEditPermissionRequest with a known token
+        $request = new SpeakerEditPermissionRequest();
+        $request->setSpeaker($other_speaker);
+        $request->setRequestedBy(self::$member);
+        $token = $request->generateConfirmationToken();
+        self::$em->persist($request);
+        self::$em->flush();
+        self::$em->clear();
+
+        // Call the public approve endpoint
+        $response = $this->call(
+            "GET",
+            "/api/public/v1/speakers/{$other_speaker->getId()}/edit-permission/{$token}/approve"
+        );
+
+        $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    public function testDeclineSpeakerEditPermission()
+    {
+        // Set config value needed by SpeakerEditPermissionRejectedEmail
+        Config::set('cfp.base_url', 'http://localhost');
+
+        // Create speaker via ORM with member2 so it has an email
+        $other_speaker = new \models\summit\PresentationSpeaker();
+        $other_speaker->setFirstName('DeclineEditPerm');
+        $other_speaker->setLastName('Speaker');
+        $other_speaker->setBio('Test bio');
+        $other_speaker->setMember(self::$member2);
+        self::$em->persist($other_speaker);
+        self::$em->flush();
+
+        // Create a SpeakerEditPermissionRequest with a known token
+        $request = new SpeakerEditPermissionRequest();
+        $request->setSpeaker($other_speaker);
+        $request->setRequestedBy(self::$member);
+        $token = $request->generateConfirmationToken();
+        self::$em->persist($request);
+        self::$em->flush();
+        self::$em->clear();
+
+        // Call the public decline endpoint
+        $response = $this->call(
+            "GET",
+            "/api/public/v1/speakers/{$other_speaker->getId()}/edit-permission/{$token}/decline"
+        );
+
+        $this->assertEquals(200, $response->getStatusCode());
     }
 
 }

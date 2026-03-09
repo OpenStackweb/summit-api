@@ -14,6 +14,7 @@
  **/
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 /**
  * Class OAuth2PresentationApiTest
  */
@@ -651,9 +652,11 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
             json_encode($video_data)
         );
 
-        $video_id = $response->getContent();
+        $content = $response->getContent();
         $this->assertResponseStatus(201);
-        return intval($video_id);
+        $slide = json_decode($content);
+        $this->assertNotNull($slide);
+        return $slide;
     }
 
     public function testAddPresentationSlideInvalidName(){
@@ -692,8 +695,913 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
             json_encode($video_data)
         );
 
-        $video_id = $response->getContent();
+        $content = $response->getContent();
         $this->assertResponseStatus(201);
-        return intval($video_id);
+        $slide = json_decode($content);
+        $this->assertNotNull($slide);
+        return $slide;
+    }
+
+    // --- Single Video GET ---
+
+    public function testGetPresentationVideo()
+    {
+        $video = $this->testAddPresentationVideo();
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'video_id' => $video->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationVideo",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        $this->assertEquals($video->id, $result->id);
+    }
+
+    // --- Slides CRUD ---
+
+    public function testGetPresentationSlides()
+    {
+        $this->testAddPresentationSlide();
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationSlides",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetPresentationSlide()
+    {
+        $slide = $this->testAddPresentationSlide();
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'slide_id' => $slide->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationSlide",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        $this->assertEquals($slide->id, $result->id);
+    }
+
+    public function testUpdatePresentationSlide()
+    {
+        $slide = $this->testAddPresentationSlide();
+        \Illuminate\Support\Facades\Storage::fake('assets');
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'slide_id' => $slide->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
+        ];
+
+        $data = [
+            'name' => 'test slide updated',
+            'description' => 'test slide updated',
+            'display_on_site' => true,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationApiController@updatePresentationSlide",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+    }
+
+    public function testDeletePresentationSlide()
+    {
+        $slide = $this->testAddPresentationSlide();
+        \Illuminate\Support\Facades\Storage::fake('assets');
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'slide_id' => $slide->id,
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@deletePresentationSlide",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // --- Links CRUD ---
+
+    public function testAddPresentationLink()
+    {
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+        ];
+
+        $data = [
+            'link' => 'https://www.example.com/slides',
+            'name' => 'Test Link',
+            'description' => 'Test link description',
+            'display_on_site' => true,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addPresentationLink",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $link = json_decode($content);
+        $this->assertNotNull($link);
+        return $link;
+    }
+
+    public function testGetPresentationLinks()
+    {
+        $this->testAddPresentationLink();
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationLinks",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetPresentationLink()
+    {
+        $link = $this->testAddPresentationLink();
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'link_id' => $link->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationLink",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        $this->assertEquals($link->id, $result->id);
+    }
+
+    public function testUpdatePresentationLink()
+    {
+        $link = $this->testAddPresentationLink();
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'link_id' => $link->id,
+        ];
+
+        $data = [
+            'link' => 'https://www.example.com/slides-updated',
+            'name' => 'Test Link Updated',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationApiController@updatePresentationLink",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+    }
+
+    public function testDeletePresentationLink()
+    {
+        $link = $this->testAddPresentationLink();
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'link_id' => $link->id,
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@deletePresentationLink",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // --- Media Uploads ---
+
+    public function testGetPresentationMediaUploads()
+    {
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationMediaUploads",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetPresentationMediaUpload()
+    {
+        $presentation = self::$summit->getPublishedPresentations()[0];
+        $mediaUpload = $presentation->getMediaUploads()->first();
+        $this->assertNotNull($mediaUpload);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'media_upload_id' => $mediaUpload->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationMediaUpload",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        $this->assertEquals($mediaUpload->getId(), $result->id);
+    }
+
+    public function testAddPresentationMediaUpload()
+    {
+        \Illuminate\Support\Facades\Storage::fake('assets');
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        // find a media upload type not already used by this presentation
+        $usedTypeIds = [];
+        foreach ($presentation->getMediaUploads() as $mu) {
+            $usedTypeIds[] = $mu->getMediaUploadType()->getId();
+        }
+        $availableType = null;
+        foreach (self::$media_uploads_types as $type) {
+            if (!in_array($type->getId(), $usedTypeIds)) {
+                $availableType = $type;
+                break;
+            }
+        }
+        $this->assertNotNull($availableType, 'No available media upload type found');
+
+        // set a max file size so the upload validation passes
+        $availableType->setMaxSize(10 * 1024); // 10 MB (value is in KB)
+        // fix allowed extensions to match file extension format (without dot prefix)
+        self::$default_media_file_type->setAllowedExtensions("PDF");
+        self::$em->persist($availableType);
+        self::$em->persist(self::$default_media_file_type);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addPresentationMediaUpload",
+            $params,
+            [
+                'media_upload_type_id' => $availableType->getId(),
+                'display_on_site' => true,
+            ],
+            [],
+            [
+                'file' => UploadedFile::fake()->create('test.PDF', 100, 'application/pdf')
+            ],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $mediaUpload = json_decode($content);
+        $this->assertNotNull($mediaUpload);
+        return $mediaUpload;
+    }
+
+    public function testUpdatePresentationMediaUpload()
+    {
+        \Illuminate\Support\Facades\Storage::fake('assets');
+        $presentation = self::$summit->getPublishedPresentations()[0];
+        $mediaUpload = $presentation->getMediaUploads()->first();
+        $this->assertNotNull($mediaUpload);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'media_upload_id' => $mediaUpload->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
+        ];
+
+        $data = [
+            'display_on_site' => false,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationApiController@updatePresentationMediaUpload",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+    }
+
+    public function testDeletePresentationMediaUpload()
+    {
+        \Illuminate\Support\Facades\Storage::fake('assets');
+        $presentation = self::$summit->getPublishedPresentations()[0];
+        $mediaUpload = $presentation->getMediaUploads()->first();
+        $this->assertNotNull($mediaUpload);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'media_upload_id' => $mediaUpload->getId(),
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@deletePresentationMediaUpload",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // --- Track Chair Scores ---
+
+    public function testRemoveTrackChairScore()
+    {
+        // first add a score
+        $params = [
+            'id'                => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'presentation_id'   => self::$default_selection_plan->getPresentations()[0]->getId(),
+            'score_type_id'     => self::$default_selection_plan->getTrackChairRatingTypes()[0]->getScoreTypes()[0]->getId(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addTrackChairScore",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(201);
+
+        // now remove it
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@removeTrackChairScore",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // --- Speakers ---
+
+    public function testUpdateSpeakerInPresentation()
+    {
+        // first add speaker
+        $params = [
+            'id'              => self::$summit->getId(),
+            'presentation_id' => self::$default_selection_plan->getPresentations()[0]->getId(),
+            'speaker_id'      => self::$speaker->getId(),
+        ];
+
+        $payload = [
+            'order' => 1,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addSpeaker2Presentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+
+        // now update speaker order
+        $payload = [
+            'order' => 2,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationApiController@updateSpeakerInPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+    }
+
+    // --- Comments ---
+
+    public function testGetComment()
+    {
+        // first add a comment
+        $params = [
+            'id'                => self::$summit->getId(),
+            'presentation_id'   => self::$default_selection_plan->getPresentations()[0]->getId(),
+        ];
+
+        $payload = [
+            'body' => 'test comment for get',
+            'is_public' => true,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addComment",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatus(201);
+        $comment = json_decode($response->getContent());
+        $this->assertNotNull($comment);
+
+        // now get it by ID
+        $params['comment_id'] = $comment->id;
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getComment",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        $this->assertEquals($comment->id, $result->id);
+    }
+
+    // --- Attendee Votes ---
+
+    public function testGetAttendeeVotes()
+    {
+        $presentation = self::$summit->getPublishedPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getAttendeeVotes",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+    }
+
+    public function testCastAttendeeVote()
+    {
+        // create an attendee for the current member
+        $attendee = new \models\summit\SummitAttendee();
+        $attendee->setMember(self::$member);
+        $attendee->setEmail(self::$member->getEmail());
+        $attendee->setFirstName(self::$member->getFirstName());
+        $attendee->setSurname(self::$member->getLastName());
+        self::$summit->addAttendee($attendee);
+
+        // set up the voting period on the track group
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $begin = (clone $now)->sub(new \DateInterval("P1D"));
+        $end = (clone $now)->add(new \DateInterval("P14D"));
+        self::$defaultTrackGroup->setBeginAttendeeVotingPeriodDate($begin);
+        self::$defaultTrackGroup->setEndAttendeeVotingPeriodDate($end);
+        self::$defaultTrackGroup->setMaxAttendeeVotes(100);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // find a votable presentation (allow2VotePresentationType)
+        $votablePresentation = null;
+        foreach (self::$presentations as $p) {
+            if ($p instanceof \models\summit\Presentation &&
+                $p->getType() !== null &&
+                $p->getType()->getId() === self::$allow2VotePresentationType->getId()) {
+                $votablePresentation = $p;
+                break;
+            }
+        }
+        $this->assertNotNull($votablePresentation, 'No votable presentation found');
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $votablePresentation->getId(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@castAttendeeVote",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $vote = json_decode($content);
+        $this->assertNotNull($vote);
+        return $votablePresentation;
+    }
+
+    public function testUnCastAttendeeVote()
+    {
+        $votablePresentation = $this->testCastAttendeeVote();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $votablePresentation->getId(),
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@unCastAttendeeVote",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // --- Presentation Submissions ---
+
+    public function testSubmitPresentation()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            'title' => 'Test Submitted Presentation',
+            'type_id' => self::$defaultPresentationType->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@submitPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $presentation = json_decode($content);
+        $this->assertNotNull($presentation);
+        return $presentation;
+    }
+
+    public function testGetPresentationSubmission()
+    {
+        $submitted = $this->testSubmitPresentation();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $submitted->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationSubmission",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        $this->assertEquals($submitted->id, $result->id);
+    }
+
+    public function testUpdatePresentationSubmission()
+    {
+        $submitted = $this->testSubmitPresentation();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $submitted->id,
+        ];
+
+        $data = [
+            'title' => 'Updated Submitted Presentation',
+            'type_id' => self::$defaultPresentationType->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationApiController@updatePresentationSubmission",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+    }
+
+    public function testCompletePresentationSubmission()
+    {
+        // set min speakers to 0 so completion doesn't require speakers
+        // (isAreSpeakersMandatory() returns min_speakers > 0)
+        self::$defaultPresentationType->setMinSpeakers(0);
+        self::$em->persist(self::$defaultPresentationType);
+        self::$em->flush();
+
+        // set config values required by PresentationCreatorNotificationEmail
+        Config::set('cfp.base_url', 'https://testcfp.openstack.org');
+        Config::set('cfp.support_email', 'test@openstack.org');
+
+        $submitted = $this->testSubmitPresentation();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $submitted->id,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationApiController@completePresentationSubmission",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        $this->assertEquals($submitted->id, $result->id);
+    }
+
+    public function testDeletePresentation()
+    {
+        $submitted = $this->testSubmitPresentation();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $submitted->id,
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@deletePresentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // --- Extra Questions ---
+
+    public function testGetPresentationsExtraQuestions()
+    {
+        $presentation = self::$default_selection_plan->getPresentations()[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationApiController@getPresentationsExtraQuestions",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+    }
+
+    // --- MUX Import ---
+
+    public function testImportAssetsFromMUX()
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            'mux_token_id' => 'test_mux_token_id',
+            'mux_token_secret' => 'test_mux_token_secret',
+            'email_to' => 'test@example.com',
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@importAssetsFromMUX",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
     }
 }

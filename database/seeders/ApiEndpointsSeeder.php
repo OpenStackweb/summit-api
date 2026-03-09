@@ -6508,7 +6508,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'get-attendees-votes',
-                'route' => '/api/v1/summits/{id}/presentations/{id}/attendee-votes',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm),
@@ -6725,7 +6725,7 @@ class ApiEndpointsSeeder extends Seeder
             ],
             [
                 'name' => 'get-presentation-video',
-                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/video/{video_id}',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/videos/{video_id}',
                 'http_method' => 'GET',
                 'scopes' => [
                     sprintf(SummitScopes::ReadSummitData, $current_realm),

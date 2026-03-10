@@ -11,26 +11,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use App\Models\Foundation\Main\IGroup;
 
 /**
  * Class OAuth2SummitTaxTypeApiTest
  */
 class OAuth2SummitTaxTypeApiTest extends ProtectedApiTestCase
 {
-    private $ticket_type;
+    use InsertSummitTestData;
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function addTicketType($summit_id = 27){
+    protected function setUp():void
+    {
+        $this->setCurrentGroup(IGroup::TrackChairs);
+        parent::setUp();
+        self::$defaultMember = self::$member;
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
+    public function testGetAllTaxTypes(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTaxTypeApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $data = json_decode($content);
+        $this->assertNotNull($data);
+    }
+
+    private function createTicketType(){
+        $params = [
+            'id' => self::$summit->getId(),
         ];
 
         $name = str_random(16).'_ticket_type';
-
         $data = [
             'name' => $name,
             'cost' => 250.25,
@@ -53,26 +83,16 @@ class OAuth2SummitTaxTypeApiTest extends ProtectedApiTestCase
             json_encode($data)
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(201);
-        $ticket_type = json_decode($content);
-        $this->assertTrue(!is_null($ticket_type));
-        $this->assertTrue($ticket_type->name == $name);
-        return $ticket_type;
+        return json_decode($response->getContent());
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddTaxType($summit_id = 27){
-        $this->ticket_type = $this->addTicketType($summit_id);
-
+    public function testAddTaxType(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
-        $name        = str_random(16).'_iva';
+        $name = str_random(16).'_iva';
         $data = [
             'name' => $name,
             'rate' => 21.0
@@ -97,18 +117,114 @@ class OAuth2SummitTaxTypeApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $tax_type = json_decode($content);
-        $this->assertTrue(!is_null($tax_type));
-        $this->assertTrue($tax_type->name == $name);
+        $this->assertNotNull($tax_type);
+        $this->assertEquals($name, $tax_type->name);
+        return $tax_type;
+    }
+
+    public function testGetTaxType(){
+        $tax_type = $this->testAddTaxType();
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'tax_id' => $tax_type->id,
-            'ticket_type_id' =>    $this->ticket_type->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTaxTypeApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $retrieved = json_decode($content);
+        $this->assertNotNull($retrieved);
+        $this->assertEquals($tax_type->id, $retrieved->id);
+    }
+
+    public function testUpdateTaxType(){
+        $tax_type = $this->testAddTaxType();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'tax_id' => $tax_type->id,
+        ];
+
+        $updated_name = str_random(16).'_updated';
+        $data = [
+            'name' => $updated_name,
+            'rate' => 15.0,
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitTaxTypeApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $updated = json_decode($content);
+        $this->assertNotNull($updated);
+        $this->assertEquals($updated_name, $updated->name);
+    }
+
+    public function testDeleteTaxType(){
+        $tax_type = $this->testAddTaxType();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'tax_id' => $tax_type->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTaxTypeApiController@delete",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testAddTaxToTicketType(){
+        $tax_type = $this->testAddTaxType();
+        $ticket_type = $this->createTicketType();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'tax_id' => $tax_type->id,
+            'ticket_type_id' => $ticket_type->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
         ];
 
         $response = $this->action(
@@ -123,8 +239,34 @@ class OAuth2SummitTaxTypeApiTest extends ProtectedApiTestCase
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
-        $tax_type = json_decode($content);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        return ['tax_id' => $tax_type->id, 'ticket_type_id' => $ticket_type->id];
+    }
 
-        return $tax_type;
+    public function testRemoveTaxFromTicketType(){
+        $result = $this->testAddTaxToTicketType();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'tax_id' => $result['tax_id'],
+            'ticket_type_id' => $result['ticket_type_id'],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTaxTypeApiController@removeTaxFromTicketType",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
     }
 }

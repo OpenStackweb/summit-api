@@ -161,7 +161,7 @@ CSV;
         $this->assertTrue(!empty($content));
     }
 
-    public function testIngestInvitationsAndResend(){
+    public function testIngestInvitationsAndSend(){
         $csv_content = <<<CSV
 email,first_name,last_name
 smarcet@gmail.com,Sebastian,Marcet
@@ -174,7 +174,7 @@ CSV;
         $file = new UploadedFile($path, "invitations.csv", 'text/csv', null, true);
 
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -193,21 +193,28 @@ CSV;
             $headers
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(200);
 
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $data = [
+            'email_flow_event' => 'SUMMIT_SUBMISSION_REINVITE_REGISTRATION',
+        ];
 
         $response = $this->action(
             "PUT",
-            "OAuth2SummitSubmissionInvitationApiController@resendNonAccepted",
+            "OAuth2SummitSubmissionInvitationApiController@send",
             $params,
             [],
             [],
             [],
-            $headers
+            $headers,
+            json_encode($data)
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(200);
     }
 

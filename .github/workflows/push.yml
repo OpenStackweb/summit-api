@@ -88,6 +88,11 @@ jobs:
                     - { name: "OAuth2TrackTagGroupsApiTest", filter: "--filter test/OAuth2TrackTagGroupsApiTest" }
                     - { name: "OAuth2SummitTracksApiTest", filter: "--filter test/OAuth2SummitTracksApiTest" }
                     - { name: "OAuth2TagsApiTest", filter: "--filter test/OAuth2TagsApiTest" }
+                    - { name: "OAuth2SummitSponsorshipApiControllerTest", filter: "--filter test/OAuth2SummitSponsorshipApiControllerTest" }
+                    - { name: "OAuth2SummitSponsorshipTypeApiControllerTest", filter: "--filter test/OAuth2SummitSponsorshipTypeApiControllerTest" }
+                    - { name: "OAuth2SummitSubmissionInvitationApiTest", filter: "--filter test/OAuth2SummitSubmissionInvitationApiTest" }
+                    - { name: "OAuth2SummitSubmittersApiTest", filter: "--filter test/OAuth2SummitSubmittersApiTest" }
+                    - { name: "OAuth2SummitTaxTypeApiTest", filter: "--filter test/OAuth2SummitTaxTypeApiTest" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

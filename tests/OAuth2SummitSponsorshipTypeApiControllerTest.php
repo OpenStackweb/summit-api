@@ -15,6 +15,8 @@
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
 use Mockery;
+use models\summit\ISponsorshipTypeConstants;
+use models\summit\SponsorshipType;
 use models\summit\SummitSponsorshipType;
 
 /**
@@ -26,7 +28,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
 {
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
+    private static $testSponsorshipType;
 
     public function createApplication()
     {
@@ -44,16 +46,22 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
 
     protected function setUp(): void
     {
+        $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::insertSummitTestData();
+
+        // Create a sponsorship type NOT yet assigned to the summit
+        self::$testSponsorshipType = new SponsorshipType();
+        self::$testSponsorshipType->setName("TestUnassigned");
+        self::$testSponsorshipType->setSize(ISponsorshipTypeConstants::MediumSize);
+        self::$em->persist(self::$testSponsorshipType);
+        self::$em->flush();
     }
 
     protected function tearDown(): void
     {
         self::clearSummitTestData();
-        self::clearMemberTestData();
         parent::tearDown();
     }
 
@@ -72,7 +80,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
             'sponsor_page_use_live_event_widget' => true,
             'sponsor_page_use_schedule_widget' => false,
             'sponsor_page_use_banner_widget' => true,
-            'type_id' => self::$default_sponsor_ship_type2->getId(),
+            'type_id' => self::$testSponsorshipType->getId(),
         ];
 
         $headers = [
@@ -96,7 +104,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
         $summit_sponsorship_type = json_decode($content);
         $this->assertTrue(!is_null($summit_sponsorship_type));
         $this->assertTrue($summit_sponsorship_type->widget_title === 'test');
-        $this->assertObjectHasAttribute('type', $summit_sponsorship_type);
+        $this->assertTrue(property_exists($summit_sponsorship_type, 'type'));
     }
 
     public function testUpdate(){
@@ -113,7 +121,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
             'sponsor_page_use_live_event_widget' => true,
             'sponsor_page_use_schedule_widget' => false,
             'sponsor_page_use_banner_widget' => true,
-            'type_id' => self::$default_sponsor_ship_type2->getId(),
+            'type_id' => self::$testSponsorshipType->getId(),
         ];
 
         $headers = [
@@ -137,7 +145,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
         $summit_sponsorship_type = json_decode($content);
         $this->assertTrue(!is_null($summit_sponsorship_type));
         $this->assertTrue($summit_sponsorship_type->widget_title === 'test');
-        $this->assertObjectHasAttribute('type', $summit_sponsorship_type);
+        $this->assertTrue(property_exists($summit_sponsorship_type, 'type'));
 
         $params = [
             'id' => self::$summit->getId(),
@@ -184,7 +192,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
             'sponsor_page_use_live_event_widget' => true,
             'sponsor_page_use_schedule_widget' => false,
             'sponsor_page_use_banner_widget' => true,
-            'type_id' => self::$default_sponsor_ship_type2->getId(),
+            'type_id' => self::$testSponsorshipType->getId(),
         ];
 
         $headers = [
@@ -243,7 +251,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
             'sponsor_page_use_live_event_widget' => true,
             'sponsor_page_use_schedule_widget' => false,
             'sponsor_page_use_banner_widget' => true,
-            'type_id' => self::$default_sponsor_ship_type2->getId(),
+            'type_id' => self::$testSponsorshipType->getId(),
         ];
 
         $headers = [
@@ -290,7 +298,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
 
         $this->assertTrue(!is_null($summit_sponsorship_type));
         $this->assertTrue($summit_sponsorship_type->widget_title === 'test');
-        $this->assertObjectHasAttribute('type', $summit_sponsorship_type);
+        $this->assertTrue(property_exists($summit_sponsorship_type, 'type'));
     }
 
     public function testGetAllBySummitId(){
@@ -339,7 +347,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
             'sponsor_page_use_live_event_widget' => true,
             'sponsor_page_use_schedule_widget' => false,
             'sponsor_page_use_banner_widget' => true,
-            'type_id' => self::$default_sponsor_ship_type2->getId(),
+            'type_id' => self::$testSponsorshipType->getId(),
         ];
 
         $headers = [
@@ -404,7 +412,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
             'sponsor_page_use_live_event_widget' => true,
             'sponsor_page_use_schedule_widget' => false,
             'sponsor_page_use_banner_widget' => true,
-            'type_id' => self::$default_sponsor_ship_type2->getId(),
+            'type_id' => self::$testSponsorshipType->getId(),
         ];
 
         $headers = [

@@ -118,13 +118,15 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         $message = $payload[IMailTemplatesConstants::message] ?? '';
 
         if(!empty($message)){
+            $owner_email = $payload[IMailTemplatesConstants::owner_email];
             $invite_attendee_ticket_edition_mail_message_key = sprintf
             (
-                "InviteAttendeeTicketEditionMail_message_%s", md5(sprintf("%s_%s", $this->to_email, $this->ticket_id))
+                "InviteAttendeeTicketEditionMail_message_%s", md5(sprintf("%s_%s", $owner_email, $this->ticket_id))
             );
             // if message is not empty store it on cache, just in case that SummitAttendeeTicketEmail is emitted in the middle
             // before the actual dispatching of this email
-            Cache::put($invite_attendee_ticket_edition_mail_message_key, $message);
+            // use a generous TTL (1 hour) to survive queue backlog; SummitAttendeeTicketEmail deletes the entry on retrieval
+            Cache::put($invite_attendee_ticket_edition_mail_message_key, $message, now()->addHours(1));
         }
 
         $payload[IMailTemplatesConstants::message] = $message;
@@ -211,15 +213,12 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
             return;
         }
 
-        // check if we already sent this same email on the configured threshold
-        if(Cache::has($invite_attendee_ticket_edition_mail_key)){
-            $timestamp = Cache::get($invite_attendee_ticket_edition_mail_key);
-            Log::warning(sprintf("InviteAttendeeTicketEditionMail::handle already sent email InviteAttendeeTicketEditionMail to %s at %s", $this->to_email, $timestamp));
+        // atomically check if we already sent this same email on the configured threshold
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        if(!Cache::add($invite_attendee_ticket_edition_mail_key, $now->getTimestamp(), now()->addMinutes($delay))){
+            Log::warning(sprintf("InviteAttendeeTicketEditionMail::handle already sent email InviteAttendeeTicketEditionMail to %s", $this->to_email));
             return;
         }
-
-        $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        Cache::put($invite_attendee_ticket_edition_mail_key, $now->getTimestamp(), now()->addMinutes($delay));
 
         parent::handle($api);
     }

@@ -1,6 +1,7 @@
 const WIP_REGEX = /^wip[:]?$/i;
 const RULE_ERROR_LEVEL = 2;
-const HEADER_MAX_LENGTH = 150;
+const HEADER_MAX_LENGTH = 200;
+const BODY_MAX_LENGTH = 500;
 const SUBJECT_MIN_LENGTH = 5;
 
 module.exports = {
@@ -12,7 +13,8 @@ module.exports = {
         "custom-no-wip-subject": [RULE_ERROR_LEVEL, "always"],
         "subject-min-length": [RULE_ERROR_LEVEL, "always", SUBJECT_MIN_LENGTH],
         "subject-case": [0], // optional: allow flexibility in subject case
-        "header-max-length": [RULE_ERROR_LEVEL, "always", HEADER_MAX_LENGTH]
+        "header-max-length": [RULE_ERROR_LEVEL, "always", HEADER_MAX_LENGTH],
+        "body-max-line-length":  [RULE_ERROR_LEVEL, "always", BODY_MAX_LENGTH]
     },
     plugins: [
         {

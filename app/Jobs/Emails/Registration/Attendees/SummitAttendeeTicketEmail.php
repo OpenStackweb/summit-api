@@ -138,7 +138,7 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         // check if we have a former message in cache
         $invite_attendee_ticket_edition_mail_message_key = sprintf
         (
-            "InviteAttendeeTicketEditionMail_message_%s", md5(sprintf("%s_%s", $this->to_email, $this->ticket_id))
+            "InviteAttendeeTicketEditionMail_message_%s", md5(sprintf("%s_%s", $owner_email, $this->ticket_id))
         );
         if(empty($message) && Cache::has($invite_attendee_ticket_edition_mail_message_key)){
             $message = Cache::get($invite_attendee_ticket_edition_mail_message_key);
@@ -222,18 +222,15 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $summit_attendee_ticket_email_sent_key = sprintf("SummitAttendeeTicketEmail_%s_sent", md5(sprintf("%s_%s", $this->to_email, $this->ticket_id)));
         $delay = intval(Config::get("registration.attendee_invitation_email_threshold", 5));
 
-        // check if we already sent this same email on the configured threshold
-        if(Cache::has($summit_attendee_ticket_email_key)){
-            $timestamp = Cache::get($summit_attendee_ticket_email_key);
-            Log::warning(sprintf("SummitAttendeeTicketEmail::handle already sent email SummitAttendeeTicketEmail to %s at %s", $this->to_email, $timestamp));
+        // atomically check if we already sent this same email on the configured threshold
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        if(!Cache::add($summit_attendee_ticket_email_key, $now->getTimestamp(), now()->addMinutes($delay))){
+            Log::warning(sprintf("SummitAttendeeTicketEmail::handle already sent email SummitAttendeeTicketEmail to %s", $this->to_email));
             return;
         }
-
-        $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        Cache::put($summit_attendee_ticket_email_key, $now->getTimestamp(), now()->addMinutes($delay));
-        // mark the at least of email of this kind was sent
+        // mark that at least one email of this kind was sent
         if(!Cache::has($summit_attendee_ticket_email_sent_key))
-            Cache::forever($summit_attendee_ticket_email_sent_key, $now->getTimestamp());
+            Cache::put($summit_attendee_ticket_email_sent_key, $now->getTimestamp(), now()->addHours(1));
         parent::handle($api);
     }
 

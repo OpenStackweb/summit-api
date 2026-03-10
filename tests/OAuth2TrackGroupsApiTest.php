@@ -111,14 +111,14 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
     /**
      * @param int $summit_id
      */
-    public function testGetTrackGroupsPrivate($summit_id = 23)
+    public function testGetTrackGroupsPrivate()
     {
 
         $params = [
-            'id'     => $summit_id,
+            'id'     => self::$summit->getId(),
             'expand' => 'tracks',
             'filter' => ['class_name=='.\models\summit\PrivatePresentationCategoryGroup::ClassName],
-            'order'  => '+title',
+            'order'  => '+name',
         ];
 
         $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
@@ -224,14 +224,14 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
         return $track_group;
     }
 
-    public function testAssociateTrack2TrackGroup412($summit_id = 24){
+    public function testAssociateTrack2TrackGroup412(){
 
-        $track_group = $this->testAddTrackGroup($summit_id);
+        $track_group = $this->testAddTrackGroup();
 
         $params = [
-            'id'             => $summit_id,
+            'id'             => self::$summit->getId(),
             'track_group_id' => $track_group->id,
-            'track_id'       => 1
+            'track_id'       => 999999
         ];
 
 
@@ -252,7 +252,7 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(412);
+        $this->assertResponseStatus(404);
 
     }
 

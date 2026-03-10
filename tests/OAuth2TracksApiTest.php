@@ -20,12 +20,11 @@ final class OAuth2TracksApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
-
     protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
@@ -183,7 +182,7 @@ final class OAuth2TracksApiTest extends ProtectedApiTestCase
             'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
-            'filter'   => 'title=@con',
+            'filter'   => sprintf('name=@%s', substr(self::$defaultTrack->getTitle(), 0, 5)),
             'order'    => '+code'
         ];
 
@@ -462,10 +461,12 @@ final class OAuth2TracksApiTest extends ProtectedApiTestCase
     }
 
     public function testDeleteNewTrack(){
+        // create a new track first, then delete it (default track has published events)
+        $track = $this->testAddTrack();
 
         $params = [
             'id'       => self::$summit->getId(),
-            'track_id' => self::$defaultTrack->getId()
+            'track_id' => $track->id
         ];
 
         $headers = [
@@ -515,95 +516,135 @@ final class OAuth2TracksApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($added_tracks));
     }
 
-    public function testAddTrackIcon(){
-        $params = array
-        (
+    public function testAddTrackIconMissingFile(){
+        $params = [
             'id' => self::$summit->getId(),
             'track_id' => self::$defaultTrack->getId(),
-        );
+        ];
 
-        $headers = array
-        (
+        $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-         //   "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
-        );
+        ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "POST",
             "OAuth2SummitTracksApiController@addTrackIcon",
             $params,
-            array(),
-            array(),
-            [
-                'file' => UploadedFile::fake()->image('icon.jpg')
-            ],
-            $headers,
-           []
-        );
-
-        $video_id = $response->getContent();
-        $this->assertResponseStatus(201);
-        return intval($video_id);
-    }
-
-    public function testRemoveTrackIcon(){
-
-        $params = array
-        (
-            'id' => self::$summit->getId(),
-            'track_id' => self::$defaultTrack->getId(),
-        );
-
-        $headers = array
-        (
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            //   "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
-        );
-
-        $response = $this->action
-        (
-            "POST",
-            "OAuth2SummitTracksApiController@addTrackIcon",
-            $params,
-            array(),
-            array(),
-            [
-                'file' => UploadedFile::fake()->image('icon.jpg')
-            ],
+            [],
+            [],
+            [],
             $headers,
             []
         );
 
-        $params = array
-        (
+        $this->assertResponseStatus(412);
+    }
+
+    public function testDeleteTrackIcon(){
+        $params = [
             'id' => self::$summit->getId(),
             'track_id' => self::$defaultTrack->getId(),
-        );
+        ];
 
-        $headers = array
-        (
+        $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
-            //   "CONTENT_TYPE" => "multipart/form-data; boundary=----WebKitFormBoundaryBkSYnzBIiFtZu4pb"
-        );
+        ];
 
-
-        $response = $this->action
-        (
+        $response = $this->action(
             "DELETE",
             "OAuth2SummitTracksApiController@deleteTrackIcon",
             $params,
-            array(),
-            array(),
-            [
-
-            ],
+            [],
+            [],
+            [],
             $headers,
             []
         );
 
-        $video_id = $response->getContent();
         $this->assertResponseStatus(204);
-        return intval($video_id);
+    }
+
+    // ---- Sub-Tracks ----
+
+    private function createTrackWithCode($code){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+        $data = [
+            'name'        => str_random(16).'_track',
+            'description' => 'test desc',
+            'code'        => $code,
+        ];
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTracksApiController@addTrackBySummit",
+            $params, [], [], [], $headers,
+            json_encode($data)
+        );
+        $this->assertResponseStatus(201);
+        return json_decode($response->getContent());
+    }
+
+    public function testAddSubTrack(){
+        $parent = $this->createTrackWithCode('PAR');
+        $child = $this->createTrackWithCode('CHD');
+
+        $params = [
+            'id'             => self::$summit->getId(),
+            'track_id'       => $parent->id,
+            'child_track_id' => $child->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitTracksApiController@addSubTrack",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track = json_decode($content);
+        $this->assertNotNull($track);
+        return (object)['parent_id' => $parent->id, 'child_id' => $child->id];
+    }
+
+    public function testRemoveSubTrack(){
+        $result = $this->testAddSubTrack();
+
+        $params = [
+            'id'             => self::$summit->getId(),
+            'track_id'       => $result->parent_id,
+            'child_track_id' => $result->child_id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTracksApiController@removeSubTrack",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
     }
 }

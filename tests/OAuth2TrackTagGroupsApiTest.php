@@ -19,12 +19,11 @@ final class OAuth2TrackTagGroupsApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
-
     protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);

@@ -85,6 +85,7 @@ jobs:
                     - { name: "OAuth2SummitSpeakersApiTest", filter: "--filter test/OAuth2SummitSpeakersApiTest" }
                     - { name: "OAuth2SummitBadgesApiTest", filter: "--filter test/OAuth2SummitBadgesApiTest" }
                     - { name: "OAuth2TracksApiTest", filter: "--filter test/OAuth2TracksApiTest" }
+                    - { name: "OAuth2TrackTagGroupsApiTest", filter: "--filter test/OAuth2TrackTagGroupsApiTest" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

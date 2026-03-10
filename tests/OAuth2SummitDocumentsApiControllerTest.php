@@ -12,8 +12,10 @@
  * limitations under the License.
  **/
 use App\Http\Utils\IFileUploader;
+use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use models\summit\SummitDocument;
 /**
  * Class OAuth2SummitDocumentsApiControllerTest
@@ -24,9 +26,17 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
 
     protected function setUp():void
     {
+        $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
         self::$summit->seedDefaultEmailFlowEvents();
+
+        // Configure assets disk to use local driver for tests (avoids OpenStack/Swift dependency)
+        Config::set('filesystems.disks.assets', [
+            'driver' => 'local',
+            'root' => storage_path('app/testing'),
+        ]);
 
         $fileUploader = App::make(IFileUploader::class);
 
@@ -80,10 +90,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
             'filter'   => 'event_type=@'.self::$summit->getEventTypes()[0]->getType()
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $response = $this->action(
             "GET",
@@ -103,15 +110,38 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
         return $documents;
     }
 
+    public function testGetSummitDocumentById(){
+        $document = self::$summit->getSummitDocuments()[0];
+        $params = [
+            'id'       => self::$summit->getId(),
+            'document_id' => $document->getId()
+        ];
+
+        $headers = $this->getAuthHeaders();
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitDocumentsApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $doc = json_decode($content);
+        $this->assertNotNull($doc);
+        $this->assertEquals($document->getId(), $doc->id);
+    }
+
     public function testAddSummitDocument(){
         $params = [
             'id' => self::$summit->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $payload = [
             'name' => 'doc3',
@@ -142,10 +172,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
             'id' => self::$summit->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $payload = [
             'name' => 'doc 1',
@@ -176,10 +203,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
             'document_id' => $document->getId()
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $payload = [
             'event_types' => [self::$summit->getEventTypes()[0]->getId()],
@@ -210,10 +234,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
             'document_id' => $document->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $response = $this->action(
             "DELETE",
@@ -238,10 +259,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
             'event_type_id' => $event_type->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $response = $this->action(
             "PUT",
@@ -257,6 +275,31 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
     }
 
+    public function testRemoveEventTypeFromDocument(){
+        // doc2 already has event_type[0] assigned in setUp
+        $document = self::$summit->getSummitDocuments()[1];
+        $event_type = self::$summit->getEventTypes()[0];
+        $params = [
+            'id'       => self::$summit->getId(),
+            'document_id' => $document->getId(),
+            'event_type_id' => $event_type->getId(),
+        ];
+
+        $headers = $this->getAuthHeaders();
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitDocumentsApiController@removeEventType",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+    }
+
     public function testAddDocument2EventType(){
         $document = self::$summit->getSummitDocuments()[0];
         $event_type = self::$summit->getEventTypes()[0];
@@ -266,10 +309,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
             'event_type_id' => $event_type->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $response = $this->action(
             "PUT",
@@ -285,6 +325,31 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
     }
 
+    public function testRemoveDocumentFromEventType(){
+        // doc2 already has event_type[0] assigned in setUp
+        $document = self::$summit->getSummitDocuments()[1];
+        $event_type = self::$summit->getEventTypes()[0];
+        $params = [
+            'id'       => self::$summit->getId(),
+            'document_id' => $document->getId(),
+            'event_type_id' => $event_type->getId(),
+        ];
+
+        $headers = $this->getAuthHeaders();
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitsEventTypesApiController@removeSummitDocument",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+    }
+
     public function testAddFile2SummitDocument(){
         $document = self::$summit->getSummitDocuments()[0];
 
@@ -293,10 +358,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
             'document_id' => $document->getId()
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $response = $this->action(
             "POST",
@@ -322,10 +384,7 @@ class OAuth2SummitDocumentsApiControllerTest extends ProtectedApiTestCase
             'document_id' => $document->getId()
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
+        $headers = $this->getAuthHeaders();
 
         $response = $this->action(
             "DELETE",

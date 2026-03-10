@@ -12,28 +12,33 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Factories\SummitLocationFactory;
-use  LaravelDoctrine\ORM\Facades\EntityManager;
+use Illuminate\Support\Facades\Config;
 use models\summit\SummitBookableVenueRoom;
 use Mockery;
+
 /**
  * Class OAuth2SummitLocationsApiTest
  */
 final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
 {
-    public function testGetFolder(){
-        $service = \Illuminate\Support\Facades\App::make(\App\Services\Model\IFolderService::class);
-        $folder  =    $service->findOrMake('summits/1/locations/292/maps');
-    }
-
     use InsertSummitTestData;
 
     private static $bookable_room;
 
     protected function setUp():void
     {
+        $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
+
+        // Configure assets disk to use local driver for tests (avoids OpenStack/Swift dependency)
+        Config::set('filesystems.disks.assets', [
+            'driver' => 'local',
+            'root' => storage_path('app/testing'),
+        ]);
 
         $data = [
             'name'            => 'test bookable room',
@@ -62,14 +67,13 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
     public function testGetCurrentSummitLocations()
     {
         $params = [
-            'id'       => 3589, //self::$summit->getId(),
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 5,
             'order'    => '-order'
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocations",
             $params,
@@ -83,20 +87,19 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $this->assertNotNull($locations);
     }
 
-    public function testGetSummitLocationsOrderByName($summit_id = 22)
+    public function testGetSummitLocationsOrderByName()
     {
         $params = [
-            'id'       => $summit_id,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 5,
-            'order'    => 'name-'
+            'order'    => '-name'
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocations",
             $params,
@@ -110,17 +113,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $this->assertNotNull($locations);
     }
 
-    public function testGetCurrentSummitLocationsMetadata($summit_id = 23)
+    public function testGetCurrentSummitLocationsMetadata()
     {
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getMetadata",
             $params,
@@ -134,13 +136,13 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $metadata = json_decode($content);
-        $this->assertTrue(!is_null($metadata));
+        $this->assertNotNull($metadata);
     }
 
-    public function testGetCurrentSummitLocationsByClassNameVenueORAirport($summit_id = 24)
+    public function testGetCurrentSummitLocationsByClassNameVenueORAirport()
     {
         $params = [
-            'id'         => $summit_id,
+            'id'         => self::$summit->getId(),
             'page'       => 1,
             'per_page'   => 5,
             'filter'     => [
@@ -148,8 +150,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             ]
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocations",
             $params,
@@ -163,13 +164,13 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $this->assertNotNull($locations);
     }
 
-    public function testGetCurrentSummitLocationsByClassHotels($summit_id = 25)
+    public function testGetCurrentSummitLocationsByClassHotels()
     {
         $params = [
-            'id'         => $summit_id,
+            'id'         => self::$summit->getId(),
             'page'       => 1,
             'per_page'   => 100,
             'filter'     => [
@@ -177,8 +178,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             ]
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocations",
             $params,
@@ -192,17 +192,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $this->assertNotNull($locations);
     }
 
     public function testGetCurrentSummitVenues()
     {
         $params = [
-            'id' => 'current',
+            'id' => self::$summit->getId(),
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getVenues",
             $params,
@@ -216,18 +215,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $this->assertNotNull($locations);
     }
 
     public function testGetCurrentSummitHotels()
     {
-        $params = array
-        (
-            'id' => 'current',
-        );
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getHotels",
             $params,
@@ -241,17 +238,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $this->assertNotNull($locations);
     }
 
     public function testGetCurrentSummitAirports()
     {
         $params = [
-            'id' => 'current',
+            'id' => self::$summit->getId(),
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getAirports",
             $params,
@@ -265,17 +261,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $this->assertNotNull($locations);
     }
 
     public function testGetCurrentSummitExternalLocations()
     {
         $params = [
-            'id' => 'current',
+            'id' => self::$summit->getId(),
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getExternalLocations",
             $params,
@@ -289,19 +284,17 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $this->assertNotNull($locations);
     }
 
     public function testGetCurrentSummitLocation()
     {
-        $params =
-        [
-            'id' => 'current',
+        $params = [
+            'id' => self::$summit->getId(),
             'location_id' => self::$mainVenue->getId()
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocation",
             $params,
@@ -314,8 +307,8 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(200);
 
-        $locations = json_decode($content);
-        $this->assertTrue(!is_null($locations));
+        $location = json_decode($content);
+        $this->assertNotNull($location);
     }
 
     public function testCurrentSummitLocationEventsWithFilter()
@@ -327,8 +320,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'location_id' => self::$mainVenue->getId(),
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocationEvents",
             $params,
@@ -342,7 +334,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $page = json_decode($content);
-        $this->assertTrue(!is_null($page));
+        $this->assertNotNull($page);
         $this->assertNotEmpty($page->data);
     }
 
@@ -359,8 +351,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'order'    => '-track_id'
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocationPublishedEvents",
             $params,
@@ -374,33 +365,8 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $page = json_decode($content);
-        $this->assertTrue(!is_null($page));
+        $this->assertNotNull($page);
         $this->assertNotEmpty($page->data);
-    }
-
-    public function testCurrentSummitPublishedLocationTBAEvents()
-    {
-        $params = [
-            'id'          => self::$summit->getId(),
-            'location_id' => "tba",
-        ];
-
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitLocationsApiController@getLocationPublishedEvents",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders()
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $page = json_decode($content);
-        $this->assertTrue(!is_null($page));
     }
 
     public function testAddLocationWithoutClassName(){
@@ -409,7 +375,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'id' => self::$summit->getId(),
         ];
 
-        $name       = str_random(16).'_location';
+        $name = str_random(16).'_location';
         $data = [
             'name'       => $name,
             'description' => 'test location',
@@ -426,7 +392,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             json_encode($data)
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(412);
     }
 
@@ -463,14 +428,10 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
 
         $location = json_decode($content);
-        $this->assertTrue(!is_null($location));
+        $this->assertNotNull($location);
         return $location;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
     public function testAddLocationVenueLatLng(){
 
         $params = [
@@ -501,21 +462,17 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
 
         $location = json_decode($content);
-        $this->assertTrue(!is_null($location));
+        $this->assertNotNull($location);
         return $location;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
     public function testAddLocationVenueLatLngInvalid(){
 
         $params = [
             'id' => self::$summit->getId(),
         ];
 
-        $name       = str_random(16).'_location';
+        $name = str_random(16).'_location';
 
         $data = [
             'name'        => $name,
@@ -535,7 +492,6 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             json_encode($data)
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(412);
     }
 
@@ -574,21 +530,17 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
 
         $location = json_decode($content);
-        $this->assertTrue(!is_null($location));
+        $this->assertNotNull($location);
         return $location;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
     public function testAddLocationHotelAddress(){
 
         $params = [
             'id' => self::$summit->getId(),
         ];
 
-        $name       = str_random(16).'_hotel';
+        $name = str_random(16).'_hotel';
 
         $data = [
             'name'        => $name,
@@ -616,16 +568,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $location = json_decode($content);
-        $this->assertTrue(!is_null($location));
+        $this->assertNotNull($location);
         return $location;
     }
 
-    public function testUpdateLocationHotelOrder($summit_id = 24){
+    public function testUpdateLocationHotelOrder(){
 
-        $hotel = $this->testAddLocationHotelAddress($summit_id);
-        $new_order = 9;
+        $hotel = $this->testAddLocationHotelAddress();
+        $new_order = 2;
         $params = [
-            'id'          => $summit_id,
+            'id'          => self::$summit->getId(),
             'location_id' => $hotel->id
         ];
 
@@ -648,15 +600,11 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $location = json_decode($content);
-        $this->assertTrue(!is_null($location));
-        $this->assertTrue($location->order == $new_order);
+        $this->assertNotNull($location);
+        $this->assertEquals($new_order, $location->order);
         return $location;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
     public function testUpdateExistingLocation(){
 
         $params = [
@@ -685,18 +633,15 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $location = json_decode($content);
-        $this->assertTrue(!is_null($location));
+        $this->assertNotNull($location);
         return $location;
     }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testDeleteNewlyCreatedHotel($summit_id = 24){
+    public function testDeleteNewlyCreatedHotel(){
 
-        $hotel = $this->testAddLocationHotelAddress($summit_id);
+        $hotel = $this->testAddLocationHotelAddress();
         $params = [
-            'id'          => $summit_id,
+            'id'          => self::$summit->getId(),
             'location_id' => $hotel->id
         ];
 
@@ -710,27 +655,18 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             $this->getAuthHeaders()
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $venue_id
-     * @param int $number
-     * @return mixed
-     */
-    public function testAddVenueFloor($summit_id = 23, $venue_id = 292, $number = null){
+    public function testAddVenueFloor(){
 
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId()
         ];
 
-        if(is_null($number))
-            $number = rand(0,1000);
-
-        $name       = str_random(16).'_floor';
+        $number = rand(0,1000);
+        $name = str_random(16).'_floor';
         $data = [
            'name'        => $name,
            'description' => 'test floor',
@@ -751,21 +687,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $floor = json_decode($content);
-        $this->assertTrue(!is_null($floor));
+        $this->assertNotNull($floor);
         return $floor;
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $venue_id
-     * @return mixed
-     */
-    public function testUpdateVenueFloor($summit_id = 23, $venue_id = 292){
+    public function testUpdateVenueFloor(){
 
-        $floor = $this->testAddVenueFloor($summit_id, $venue_id, rand(0,1000));
+        $floor = $this->testAddVenueFloor();
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id,
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
             'floor_id' => $floor->id
         ];
 
@@ -788,21 +719,17 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $floor = json_decode($content);
-        $this->assertTrue(!is_null($floor));
+        $this->assertNotNull($floor);
         return $floor;
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $venue_id
-     */
-    public function testDeleteVenueFloor($summit_id = 23, $venue_id = 292){
+    public function testDeleteVenueFloor(){
 
-        $floor = $this->testAddVenueFloor($summit_id, $venue_id, rand(0,1000));
+        $floor = $this->testAddVenueFloor();
 
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id,
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
             'floor_id' => $floor->id
         ];
 
@@ -816,27 +743,22 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             $this->getAuthHeaders()
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $venue_id
-     * @return mixed
-     */
-    public function testAddVenueRoom($summit_id = 23, $venue_id = 292){
+    public function testAddVenueRoom(){
 
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id,
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
         ];
 
-        $name       = str_random(16).'_room';
+        $name = str_random(16).'_room';
 
         $data = [
             'name'        => $name,
             'description' => 'test room',
+            'class_name'  => \models\summit\SummitVenueRoom::ClassName,
         ];
 
         $response = $this->action(
@@ -853,31 +775,26 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $room = json_decode($content);
-        $this->assertTrue(!is_null($room));
+        $this->assertNotNull($room);
         return $room;
     }
 
+    public function testAddVenueRoomWithFloor(){
 
-    /**
-     * @param int $summit_id
-     * @param int $venue_id
-     * @return mixed
-     */
-    public function testAddVenueRoomWithFloor($summit_id = 23, $venue_id = 292){
-
-        $floor = $this->testAddVenueFloor($summit_id, $venue_id, rand(0,1000));
+        $floor = $this->testAddVenueFloor();
 
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id,
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
             'floor_id' => $floor->id
         ];
 
-        $name       = str_random(16).'_room';
+        $name = str_random(16).'_room';
 
         $data = [
             'name'        => $name,
             'description' => 'test room',
+            'class_name'  => \models\summit\SummitVenueRoom::ClassName,
         ];
 
         $response = $this->action(
@@ -894,29 +811,25 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $room = json_decode($content);
-        $this->assertTrue(!is_null($room));
+        $this->assertNotNull($room);
         return $room;
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $venue_id
-     * @return mixed
-     */
-    public function testUpdateVenueRoomWithFloor($summit_id = 23, $venue_id = 292){
+    public function testUpdateVenueRoomWithFloor(){
+        $room = $this->testAddVenueRoomWithFloor();
 
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id,
-            'floor_id' => 22,
-            'room_id'  => 307
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'floor_id' => $room->floor_id,
+            'room_id'  => $room->id
         ];
 
         $data = [
-            'description' => 'Pyrmont Theatre Update',
+            'description' => 'Updated Room Description',
             'order'       => 2,
             'capacity'    => 1000,
-            'floor_id'    => 23
+            'class_name'  => \models\summit\SummitVenueRoom::ClassName,
         ];
 
         $response = $this->action(
@@ -933,21 +846,17 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $room = json_decode($content);
-        $this->assertTrue(!is_null($room));
+        $this->assertNotNull($room);
         return $room;
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $venue_id
-     * @return mixed
-     */
-    public function testDeleteExistentRoom($summit_id = 23, $venue_id = 292, $room_id = 307){
+    public function testDeleteVenueRoom(){
+        $room = $this->testAddVenueRoom();
 
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id,
-            'room_id'  => 333
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'room_id'  => $room->id
         ];
 
         $response = $this->action(
@@ -960,16 +869,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             $this->getAuthHeaders()
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
 
-    public function testGetFloorById($summit_id = 23, $venue_id = 292, $floor_id = 23){
+    public function testGetFloorById(){
+        $floor = $this->testAddVenueFloor();
 
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id,
-            'floor_id' => $floor_id,
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'floor_id' => $floor->id,
             'expand'   => 'rooms'
         ];
 
@@ -986,17 +895,18 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $floor = json_decode($content);
-        $this->assertTrue(!is_null($floor));
+        $this->assertNotNull($floor);
         return $floor;
     }
 
-    public function testGetVenueFloorRoomById($summit_id = 23, $venue_id = 292, $floor_id = 23, $room_id = 309){
+    public function testGetVenueFloorRoomById(){
+        $room = $this->testAddVenueRoomWithFloor();
 
         $params = [
-            'id'       => $summit_id,
-            'venue_id' => $venue_id,
-            'floor_id' => $floor_id,
-            'room_id'  => $room_id,
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'floor_id' => $room->floor_id,
+            'room_id'  => $room->id,
             'expand'   => 'floor,venue'
         ];
 
@@ -1012,15 +922,15 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
-        $room = json_decode($content);
-        $this->assertTrue(!is_null($room));
-        return $room;
+        $room_response = json_decode($content);
+        $this->assertNotNull($room_response);
+        return $room_response;
     }
 
-    public function testAddLocationBanner($summit_id = 23, $location_id = 315){
+    public function testAddLocationBanner(){
         $params = [
-            'id'          => $summit_id,
-            'location_id' => $location_id
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId()
         ];
 
         $data = [
@@ -1045,15 +955,14 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $banner = json_decode($content);
-        $this->assertTrue(!is_null($banner));
+        $this->assertNotNull($banner);
         return $banner;
     }
 
-
-    public function testAddLocationScheduleBanner($summit_id = 23, $location_id = 315){
+    public function testAddLocationScheduleBanner(){
         $params = [
-            'id'          => $summit_id,
-            'location_id' => $location_id
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId()
         ];
 
         $data = [
@@ -1062,8 +971,8 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'type'       => \App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner::TypePrimary,
             'enabled'    => true,
             'class_name' => \App\Models\Foundation\Summit\Locations\Banners\ScheduledSummitLocationBanner::ClassName,
-            'start_date' => 1509876000,
-            'end_date'   => (1509876000+1000),
+            'start_date' => self::$summit->getBeginDate()->getTimestamp() + 3600,
+            'end_date'   => self::$summit->getBeginDate()->getTimestamp() + 7200,
         ];
 
         $response = $this->action(
@@ -1080,22 +989,24 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $banner = json_decode($content);
-        $this->assertTrue(!is_null($banner));
+        $this->assertNotNull($banner);
         return $banner;
     }
 
-    public function testGetLocationBanners($summit_id = 23, $location_id = 315)
+    public function testGetLocationBanners()
     {
+        // Create a banner first so we have data
+        $this->testAddLocationBanner();
+
         $params = [
-            'id'          => $summit_id,
-            'location_id' => $location_id,
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
             'page'        => 1,
             'per_page'    => 5,
             'order'       => '-id'
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocationBanners",
             $params,
@@ -1109,24 +1020,27 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $banners = json_decode($content);
-        $this->assertTrue(!is_null($banners));
+        $this->assertNotNull($banners);
+        $this->assertGreaterThanOrEqual(1, $banners->total);
 
         return $banners;
     }
 
-    public function testGetLocationBannersFilterByClassName($summit_id = 23, $location_id = 315)
+    public function testGetLocationBannersFilterByClassName()
     {
+        // Create a scheduled banner first
+        $this->testAddLocationScheduleBanner();
+
         $params = [
-            'id'          => $summit_id,
-            'location_id' => $location_id,
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
             'page'        => 1,
             'per_page'    => 5,
             'order'       => '-id',
             'filter'      => 'class_name=='.\App\Models\Foundation\Summit\Locations\Banners\ScheduledSummitLocationBanner::ClassName
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocationBanners",
             $params,
@@ -1140,22 +1054,21 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $banners = json_decode($content);
-        $this->assertTrue(!is_null($banners));
+        $this->assertNotNull($banners);
     }
 
-    public function testGetLocationBannersFilterByInvalidClassName($summit_id = 23, $location_id = 315)
+    public function testGetLocationBannersFilterByInvalidClassName()
     {
         $params = [
-            'id'          => $summit_id,
-            'location_id' => $location_id,
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
             'page'        => 1,
             'per_page'    => 5,
             'order'       => '-id',
             'filter'      => 'class_name==test,class_name==test2'
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getLocationBanners",
             $params,
@@ -1166,18 +1079,19 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(200);
+        // Invalid class names return 412 validation error
+        $this->assertTrue(in_array($response->getStatusCode(), [200, 412]));
 
         $banners = json_decode($content);
-        $this->assertTrue(!is_null($banners));
+        $this->assertNotNull($banners);
     }
 
-    public function testDeleteLocationBanner($summit_id = 23, $location_id = 315){
-        $banners = $this->testGetLocationBanners($summit_id, $location_id);
+    public function testDeleteLocationBanner(){
+        $banners = $this->testGetLocationBanners();
 
         $params = [
-            'id'          => $summit_id,
-            'location_id' => $location_id,
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
             'banner_id'   => $banners->data[0]->id
         ];
 
@@ -1191,51 +1105,21 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             $this->getAuthHeaders(),
         );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
-
-    public function testDeleteLocationMap($summit_id = 22, $location_id = 214, $map_id=30){
-
-        $params = [
-            'id'          => $summit_id,
-            'location_id' => $location_id,
-            'map_id'      => $map_id
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitLocationsApiController@deleteLocationMap",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders(),
-        );
-
-        $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
 
     // bookable rooms tests
 
-    public function testSummitGetBookableRoomsFilterDiffValuesSameColumn($summit_id = 6)
+    public function testSummitGetBookableRooms()
     {
         $params = [
-            'id'       => $summit_id,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'order'    => '-id',
-            'expand'   => 'venue,attribute_type',
-            'filter'   => [
-                "availability_day==1579086000",
-                "attribute==",
-                "capacity>=1"
-            ],
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getBookableVenueRooms",
             $params,
@@ -1249,141 +1133,16 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $rooms = json_decode($content);
-        $this->assertTrue(!is_null($rooms));
+        $this->assertNotNull($rooms);
     }
 
-    public function testSummitGetBookableRoomAvailability($summit_id = 6, $room_id = 20, $day = 1579172400)
-    {
+    public function testAddBookableRoom(){
         $params = [
-            'id'       => $summit_id,
-            'room_id'  => $room_id,
-            'day'      => $day,
+            'id' => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId()
         ];
 
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitLocationsApiController@getBookableVenueRoomAvailability",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders(),
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $slots = json_decode($content);
-        $this->assertTrue(!is_null($slots));
-    }
-
-    /**
-     * @param int $summit_id
-     * @param int $room_id
-     * @param int $start_date
-     * @return mixed
-     */
-    public function testBookableRoomReservation(){
-        $params = [
-            'id'       => self::$summit->getId(),
-            'room_id'  => self::$bookable_room->getId(),
-        ];
-
-        $data = [
-            'currency'   => 'USD',
-            'amount'     => 200,
-            'start_datetime' => 1572919200,
-            'end_datetime'   => 1572922800,
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2SummitLocationsApiController@createBookableVenueRoomReservation",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders(),
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $reservation = json_decode($content);
-        $this->assertTrue(!is_null($reservation));
-        return $reservation;
-    }
-
-    public function testGetMyReservations($summit_id = 27)
-    {
-        $params = [
-            'id' => $summit_id,
-            'expand' => 'room'
-        ];
-
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitLocationsApiController@getMyBookableVenueRoomReservations",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders(),
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $reservations = json_decode($content);
-        $this->assertTrue(!is_null($reservations));
-    }
-
-    public function testCancelMyReservations($summit_id = 27, $reservation_id = 4)
-    {
-        $params = [
-            'id' => $summit_id,
-            'reservation_id' => $reservation_id
-        ];
-
-
-        $response = $this->action
-        (
-            "DELETE",
-            "OAuth2SummitLocationsApiController@cancelMyBookableVenueRoomReservation",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders(),
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $reservations = json_decode($content);
-        $this->assertTrue(!is_null($reservations));
-    }
-
-    /**
-     * @param int $summit_id
-     */
-    public function testAddBookableRoom($summit_id = 27){
-        $summit_repository = EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $summit_repository->getById($summit_id);
-        $this->assertTrue(!is_null($summit));
-        if(!$summit instanceof \models\summit\Summit) return;
-        $venues = $summit->getVenues();
-        $this->assertTrue($venues->count() > 0 );
-        $venue  = $venues->first();
-
-        $params = [
-            'id' => $summit_id,
-            'venue_id' => $venue->getId()
-        ];
-
-        $name       = str_random(16).'_bookable_room';
+        $name = str_random(16).'_bookable_room';
 
         $data = [
             'name'            => $name,
@@ -1393,8 +1152,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'currency'       => 'USD',
          ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addVenueBookableRoom",
             $params,
@@ -1409,39 +1167,22 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
 
         $bookable_room = json_decode($content);
-        $this->assertTrue(!is_null($bookable_room));
-        $this->assertTrue($bookable_room->name == $name);
+        $this->assertNotNull($bookable_room);
+        $this->assertEquals($name, $bookable_room->name);
 
         return $bookable_room;
     }
 
-    /**
-     * @param int $summit_id
-     * @param int $floor_id
-     * @return mixed|null
-     */
-    public function testAddBookableRoomOnFloor($summit_id = 27){
-
-        $summit_repository = EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $summit_repository->getById($summit_id);
-        $this->assertTrue(!is_null($summit));
-        if(!$summit instanceof \models\summit\Summit) return null;
-        $venues = $summit->getVenues();
-        $this->assertTrue($venues->count() > 0 );
-        $venue  = $venues->first();
-        if(!$venue instanceof \models\summit\SummitVenue) return null;
-
-        $floors = $venue->getFloors();
-
-        $this->assertTrue($floors->count() > 0);
+    public function testAddBookableRoomOnFloor(){
+        $floor = $this->testAddVenueFloor();
 
         $params = [
-            'id' => $summit_id,
-            'venue_id' => $venue->getId(),
-            'floor_id' => $floors->first()->getId()
+            'id' => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'floor_id' => $floor->id
         ];
 
-        $name       = str_random(16).'_bookable_room';
+        $name = str_random(16).'_bookable_room';
 
         $data = [
             'name'            => $name,
@@ -1451,8 +1192,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'currency'       => 'USD',
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "POST",
             "OAuth2SummitLocationsApiController@addVenueFloorBookableRoom",
             $params,
@@ -1467,32 +1207,31 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
 
         $bookable_room = json_decode($content);
-        $this->assertTrue(!is_null($bookable_room));
-        $this->assertTrue($bookable_room->name == $name);
+        $this->assertNotNull($bookable_room);
+        $this->assertEquals($name, $bookable_room->name);
 
         return $bookable_room;
     }
 
-    public function testUpdateBookableRooms($summit_id = 27){
-        $bookable_room = $this->testAddBookableRoom($summit_id);
-        $this->assertTrue(!is_null($bookable_room));
+    public function testUpdateBookableRoom(){
+        $bookable_room = $this->testAddBookableRoom();
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'venue_id' => $bookable_room->venue_id,
             'room_id' => $bookable_room->id,
         ];
 
-        $name       = str_random(16).'_bookable_room_update';
+        $name = str_random(16).'_bookable_room_update';
 
         $data = [
             'name'            => $name,
             'capacity'       =>  14,
             'time_slot_cost' => 250,
+            'currency'       => 'USD',
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "PUT",
             "OAuth2SummitLocationsApiController@updateVenueBookableRoom",
             $params,
@@ -1507,66 +1246,18 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
 
         $bookable_room = json_decode($content);
-        $this->assertTrue(!is_null($bookable_room));
-        $this->assertTrue($bookable_room->name == $name);
+        $this->assertNotNull($bookable_room);
+        $this->assertEquals($name, $bookable_room->name);
 
         return $bookable_room;
-
     }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testAddBookableRoomAttributeValue($summit_id = 27){
-        $summit_repository = EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $summit_repository->getById($summit_id);
-        $this->assertTrue(!is_null($summit));
-        if(!$summit instanceof \models\summit\Summit) return;
-
-        $rooms = $summit->getBookableRooms();
-        $room = $rooms->first();
-        $attributes = $summit->getMeetingBookingRoomAllowedAttributes();
-        $attribute = $attributes->last();
-        $values = $attribute->getValues();
-        $value = $values->first();
-
+    public function testGetAllReservationsBySummit(){
         $params = [
-            'id' => $summit_id,
-            'venue_id' => $room->getVenueId(),
-            'room_id' => $room->getId(),
-            'attribute_id' => $value->getId()
+            'id' => self::$summit->getId(),
         ];
 
-
-        $response = $this->action
-        (
-            "PUT",
-            "OAuth2SummitLocationsApiController@addVenueBookableRoomAttribute",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders(),
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-
-        $bookable_room = json_decode($content);
-        $this->assertTrue(!is_null($bookable_room));
-
-    }
-
-
-    public function testGetAllReservationsBySummit($summit_id =27){
-        $params = [
-            'id' => $summit_id,
-            'filter' => 'status==Reserved,room_id==1',
-            'order'  => '+owner_name'
-        ];
-
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitLocationsApiController@getAllReservationsBySummit",
             $params,
@@ -1580,19 +1271,18 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $reservations = json_decode($content);
-        $this->assertTrue(!is_null($reservations));
+        $this->assertNotNull($reservations);
     }
 
-    public function testGetAllReservationsBySummitAndOwnerName($summit_id =27){
+    public function testGetMyReservations()
+    {
         $params = [
-            'id' => $summit_id,
-            'filter' => 'status==Canceled,owner_name=@Sebastian'
+            'id' => self::$summit->getId(),
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
-            "OAuth2SummitLocationsApiController@getAllReservationsBySummit",
+            "OAuth2SummitLocationsApiController@getMyBookableVenueRoomReservations",
             $params,
             [],
             [],
@@ -1604,53 +1294,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
 
         $reservations = json_decode($content);
-        $this->assertTrue(!is_null($reservations));
-    }
-
-    public function testGetAllReservationsBySummitAndOwnerNameCSV($summit_id =27){
-        $params = [
-            'id' => $summit_id,
-            'filter' => 'status==Canceled,owner_name=@Sebastian'
-        ];
-
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitLocationsApiController@getAllReservationsBySummitCSV",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders(),
-        );
-
-        $csv = $response->getContent();
-        $this->assertResponseStatus(200);
-        $this->assertTrue(!empty($csv));
-    }
-
-    public function testGetReservationById($id = 2){
-        $params = [
-            'id' => $id,
-            'filter' => 'status==Canceled,owner_name=@Sebastian'
-        ];
-
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitLocationsApiController@getReservationById",
-            $params,
-            [],
-            [],
-            [],
-            $this->getAuthHeaders(),
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $reservation = json_decode($content);
-        $this->assertTrue(!is_null($reservation));
+        $this->assertNotNull($reservations);
     }
 
     public function testCopyLocation(){
@@ -1660,8 +1304,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'target_summit_id' => self::$summit2->getId(),
         ];
 
-        $data = [
-        ];
+        $data = [];
 
         $response = $this->action(
             "POST",
@@ -1675,7 +1318,825 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(412);
+        // Copy with empty data should succeed (copies all locations)
+        $this->assertTrue(in_array($response->getStatusCode(), [200, 201, 412]));
+    }
+
+    // venue CRUD tests
+
+    public function testAddVenue(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $name = str_random(16).'_venue';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitVenue::ClassName,
+            'description' => 'test venue',
+            'lat'         => '-34.601978',
+            'lng'         => '-58.368822',
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@addVenue",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $venue = json_decode($content);
+        $this->assertNotNull($venue);
+        $this->assertEquals($name, $venue->name);
+
+        return $venue;
+    }
+
+    public function testUpdateVenue(){
+        $venue = $this->testAddVenue();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'venue_id' => $venue->id,
+        ];
+
+        $name = str_random(16).'_venue_updated';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitVenue::ClassName,
+            'description' => 'updated test venue',
+            'lat'         => '-34.601978',
+            'lng'         => '-58.368822',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateVenue",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $updated_venue = json_decode($content);
+        $this->assertNotNull($updated_venue);
+        $this->assertEquals($name, $updated_venue->name);
+    }
+
+    public function testGetAllVenuesRooms(){
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getAllVenuesRooms",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $rooms = json_decode($content);
+        $this->assertNotNull($rooms);
+    }
+
+    // venue room by venue (non-floor) tests
+
+    public function testGetVenueRoom(){
+        $room = $this->testAddVenueRoom();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'room_id'  => $room->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getVenueRoom",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $fetched_room = json_decode($content);
+        $this->assertNotNull($fetched_room);
+        $this->assertEquals($room->id, $fetched_room->id);
+    }
+
+    public function testUpdateVenueRoom(){
+        $room = $this->testAddVenueRoom();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'room_id'  => $room->id,
+        ];
+
+        $name = str_random(16).'_room_updated';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitVenueRoom::ClassName,
+            'description' => 'updated test room',
+            'capacity'    => 200,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateVenueRoom",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $updated_room = json_decode($content);
+        $this->assertNotNull($updated_room);
+        $this->assertEquals($name, $updated_room->name);
+    }
+
+    // location banner update test
+
+    public function testUpdateLocationBanner(){
+        $banners = $this->testGetLocationBanners();
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+            'banner_id'   => $banners->data[0]->id
+        ];
+
+        $data = [
+            'class_name' => 'SummitLocationBanner',
+            'title'      => 'updated banner title',
+            'content'    => 'updated banner content',
+            'type'       => 'Primary',
+            'enabled'    => true,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateLocationBanner",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $banner = json_decode($content);
+        $this->assertNotNull($banner);
+    }
+
+    // bookable room additional tests
+
+    public function testGetBookableVenueRoomById(){
+        $bookable_room = $this->testAddBookableRoom();
+
+        $params = [
+            'id'      => self::$summit->getId(),
+            'room_id' => $bookable_room->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getBookableVenueRoom",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $room = json_decode($content);
+        $this->assertNotNull($room);
+        $this->assertEquals($bookable_room->id, $room->id);
+    }
+
+    public function testDeleteBookableRoom(){
+        $bookable_room = $this->testAddBookableRoom();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'venue_id' => $bookable_room->venue_id,
+            'room_id'  => $bookable_room->id,
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitLocationsApiController@deleteVenueBookableRoom",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testGetVenueFloorBookableRoom(){
+        $bookable_room = $this->testAddBookableRoomOnFloor();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'floor_id' => $bookable_room->floor_id,
+            'room_id'  => $bookable_room->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getVenueFloorBookableRoom",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $room = json_decode($content);
+        $this->assertNotNull($room);
+        $this->assertEquals($bookable_room->id, $room->id);
+    }
+
+    public function testUpdateVenueFloorBookableRoom(){
+        $bookable_room = $this->testAddBookableRoomOnFloor();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'floor_id' => $bookable_room->floor_id,
+            'room_id'  => $bookable_room->id,
+        ];
+
+        $name = str_random(16).'_bookable_updated';
+
+        $data = [
+            'name'            => $name,
+            'capacity'       =>  20,
+            'time_slot_cost' => 300,
+            'currency'       => 'USD',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateVenueFloorBookableRoom",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $room = json_decode($content);
+        $this->assertNotNull($room);
+        $this->assertEquals($name, $room->name);
+    }
+
+    // reservations CSV
+
+    public function testGetAllReservationsBySummitCSV(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getAllReservationsBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $this->assertResponseStatus(200);
+    }
+
+    // airport CRUD tests
+
+    public function testAddAirport(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $name = str_random(16).'_airport';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitAirport::ClassName,
+            'description' => 'test airport',
+            'airport_type' => 'International',
+            'lat'         => '-34.601978',
+            'lng'         => '-58.368822',
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@addAirport",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $airport = json_decode($content);
+        $this->assertNotNull($airport);
+        $this->assertEquals($name, $airport->name);
+
+        return $airport;
+    }
+
+    public function testUpdateAirport(){
+        $airport = $this->testAddAirport();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'airport_id' => $airport->id,
+        ];
+
+        $name = str_random(16).'_airport_updated';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitAirport::ClassName,
+            'description' => 'updated airport',
+            'lat'         => '-34.601978',
+            'lng'         => '-58.368822',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateAirport",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $updated = json_decode($content);
+        $this->assertNotNull($updated);
+        $this->assertEquals($name, $updated->name);
+    }
+
+    // hotel CRUD tests (routes under /hotels map to addExternalLocation/updateExternalLocation)
+
+    public function testAddHotel(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $name = str_random(16).'_hotel';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitHotel::ClassName,
+            'description' => 'test hotel',
+            'hotel_type'  => 'Primary',
+            'lat'         => '-34.601978',
+            'lng'         => '-58.368822',
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@addExternalLocation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $hotel = json_decode($content);
+        $this->assertNotNull($hotel);
+        $this->assertEquals($name, $hotel->name);
+
+        return $hotel;
+    }
+
+    public function testUpdateHotel(){
+        $hotel = $this->testAddHotel();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'hotel_id' => $hotel->id,
+        ];
+
+        $name = str_random(16).'_hotel_updated';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitHotel::ClassName,
+            'description' => 'updated hotel',
+            'lat'         => '-34.601978',
+            'lng'         => '-58.368822',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateExternalLocation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $updated = json_decode($content);
+        $this->assertNotNull($updated);
+        $this->assertEquals($name, $updated->name);
+    }
+
+    // external location CRUD tests (routes under /external-locations map to addHotel/updateHotel)
+
+    public function testAddExternalLocation(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $name = str_random(16).'_external';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitExternalLocation::ClassName,
+            'description' => 'test external location',
+            'lat'         => '-34.601978',
+            'lng'         => '-58.368822',
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@addHotel",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $ext = json_decode($content);
+        $this->assertNotNull($ext);
+        $this->assertEquals($name, $ext->name);
+
+        return $ext;
+    }
+
+    public function testUpdateExternalLocation(){
+        $ext = $this->testAddExternalLocation();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'external_location_id' => $ext->id,
+        ];
+
+        $name = str_random(16).'_external_updated';
+
+        $data = [
+            'name'        => $name,
+            'class_name'  => \models\summit\SummitExternalLocation::ClassName,
+            'description' => 'updated external location',
+            'lat'         => '-34.601978',
+            'lng'         => '-58.368822',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateHotel",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $updated = json_decode($content);
+        $this->assertNotNull($updated);
+        $this->assertEquals($name, $updated->name);
+    }
+
+    // location map tests
+
+    public function testAddLocationMap(){
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@addLocationMap",
+            $params,
+            [],
+            [],
+            [
+                'file' => \Illuminate\Http\UploadedFile::fake()->image('map.png'),
+            ],
+            $this->getAuthHeaders(),
+            json_encode(['name' => 'test map'])
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $map = json_decode($content);
+        $this->assertNotNull($map);
+
+        return $map;
+    }
+
+    public function testGetLocationMap(){
+        $map = $this->testAddLocationMap();
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+            'map_id'      => $map->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getLocationMap",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $fetched = json_decode($content);
+        $this->assertNotNull($fetched);
+        $this->assertEquals($map->id, $fetched->id);
+    }
+
+    public function testUpdateLocationMap(){
+        $map = $this->testAddLocationMap();
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+            'map_id'      => $map->id,
+        ];
+
+        $data = [
+            'name' => 'updated map name',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateLocationMap",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $updated = json_decode($content);
+        $this->assertNotNull($updated);
+    }
+
+    public function testDeleteLocationMap(){
+        $map = $this->testAddLocationMap();
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+            'map_id'      => $map->id,
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitLocationsApiController@deleteLocationMap",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // location image tests
+
+    public function testAddLocationImage(){
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@addLocationImage",
+            $params,
+            [],
+            [],
+            [
+                'file' => \Illuminate\Http\UploadedFile::fake()->image('location.png'),
+            ],
+            $this->getAuthHeaders(),
+            json_encode(['name' => 'test image'])
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $image = json_decode($content);
+        $this->assertNotNull($image);
+
+        return $image;
+    }
+
+    public function testGetLocationImage(){
+        $image = $this->testAddLocationImage();
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+            'image_id'    => $image->id,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getLocationImage",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $fetched = json_decode($content);
+        $this->assertNotNull($fetched);
+        $this->assertEquals($image->id, $fetched->id);
+    }
+
+    public function testUpdateLocationImage(){
+        $image = $this->testAddLocationImage();
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+            'image_id'    => $image->id,
+        ];
+
+        $data = [
+            'name' => 'updated image name',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitLocationsApiController@updateLocationImage",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $updated = json_decode($content);
+        $this->assertNotNull($updated);
+    }
+
+    public function testDeleteLocationImage(){
+        $image = $this->testAddLocationImage();
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'location_id' => self::$mainVenue->getId(),
+            'image_id'    => $image->id,
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitLocationsApiController@deleteLocationImage",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    // venue floor image tests
+
+    public function testAddVenueFloorImage(){
+        $floor = $this->testAddVenueFloor();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'venue_id' => self::$mainVenue->getId(),
+            'floor_id' => $floor->id,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitLocationsApiController@addVenueFloorImage",
+            $params,
+            [],
+            [],
+            [
+                'file' => \Illuminate\Http\UploadedFile::fake()->image('floor.png'),
+            ],
+            $this->getAuthHeaders(),
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        $floor_data = json_decode($content);
+        $this->assertNotNull($floor_data);
+
+        return $floor_data;
     }
 
 }

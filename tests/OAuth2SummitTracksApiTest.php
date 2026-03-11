@@ -435,4 +435,32 @@ class OAuth2SummitTracksApiTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(204);
     }
+
+    public function testCopyTracksToSummit(){
+
+        $params = [
+            'id'            => self::$summit->getId(),
+            'to_summit_id'  => self::$summit2->getId()
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTracksApiController@copyTracksToSummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        $content = $response->getContent();
+        $tracks = json_decode($content);
+        $this->assertNotNull($tracks);
+    }
 }

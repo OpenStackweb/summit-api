@@ -363,12 +363,28 @@ final class OAuth2SummitTicketTypesApiTest extends ProtectedApiTestCase
         return $ticket_type;
     }
 
-    /**
-     * Skipped: SummitTicketTypeService references non-existent class
-     * App\Services\Model\SummitTicketTypeInserted at line 325.
-     */
     public function testSeedDefaultTicketTypes(){
-        $this->markTestSkipped('Service references missing class App\Services\Model\SummitTicketTypeInserted');
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitsTicketTypesApiController@seedDefaultTicketTypesBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        // 412 expected: test summit has external_summit_id but no external_registration_feed_api_key
+        $this->assertResponseStatus(412);
     }
 
     public function testUpdateTicketTypesCurrencySymbol(){

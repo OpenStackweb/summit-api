@@ -319,17 +319,6 @@ final class SummitTicketTypeService
                     $res[] = $new_ticket_type;
                 }
 
-                foreach ($res as $ticket_type) {
-                    Event::dispatch
-                    (
-                        new SummitTicketTypeInserted
-                        (
-                            $ticket_type->getId(),
-                            $ticket_type->getSummitId()
-                        )
-                    );
-                }
-
                 ++$page;
             } while ($has_more_items);
 

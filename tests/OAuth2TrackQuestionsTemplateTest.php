@@ -212,6 +212,32 @@ final class OAuth2TrackQuestionsTemplateTest
         $this->assertResponseStatus(204);
     }
 
+    public function testGetTrackQuestionTemplateById(){
+        $new_track_question_template = $this->testAddTrackQuestionTemplate();
+
+        $params = [
+            'track_question_template_id' => $new_track_question_template->id,
+            'expand' => 'tracks'
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2TrackQuestionsTemplateApiController@getTrackQuestionTemplate",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $track_question_template = json_decode($content);
+        $this->assertNotNull($track_question_template);
+        $this->assertEquals($new_track_question_template->id, $track_question_template->id);
+    }
+
     public function testDeleteTrackQuestionTemplate(){
         $new_track_question_template = $this->testAddTrackQuestionTemplate();
 
@@ -347,6 +373,32 @@ final class OAuth2TrackQuestionsTemplateTest
         $this->assertEquals($label, $track_question_template_value->label);
 
         return $track_question_template_value;
+    }
+
+    public function testGetTrackQuestionTemplateValueById(){
+        $new_track_question_template_value = $this->testAddTrackQuestionTemplateValue();
+
+        $params = [
+            'track_question_template_id' => $new_track_question_template_value->owner_id,
+            'track_question_template_value_id' => $new_track_question_template_value->id
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2TrackQuestionsTemplateApiController@getTrackQuestionTemplateValue",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $track_question_template_value = json_decode($content);
+        $this->assertNotNull($track_question_template_value);
+        $this->assertEquals($new_track_question_template_value->id, $track_question_template_value->id);
     }
 
     public function testDeleteTrackQuestionTemplateValue(){

@@ -291,6 +291,170 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
     }
 
 
+    public function testGetTrackGroupsCSV(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2PresentationCategoryGroupController@getAllBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $content = $response->getContent();
+        $this->assertNotEmpty($content);
+    }
+
+    public function testDisassociateTrack2TrackGroup(){
+        // first associate
+        $track_groups_response = $this->testGetTrackGroups();
+        $track_groups = $track_groups_response->data;
+        $track_group  = $track_groups[0];
+
+        $params = [
+            'id'             => self::$summit->getId(),
+            'track_group_id' => $track_group->id,
+            'track_id'       => self::$defaultTrack->getId()
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationCategoryGroupController@associateTrack2TrackGroup",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+
+        // now disassociate
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationCategoryGroupController@disassociateTrack2TrackGroup",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testAddPrivateTrackGroup(){
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $start_date  = clone(self::$summit->getBeginDate());
+        $end_date    = clone($start_date);
+        $end_date    = $end_date->add(new \DateInterval("P1D"));
+
+        $name = str_random(16).'_private_track_group';
+        $data = [
+            'name'        => $name,
+            'description' => 'test private track group',
+            'class_name'  => \models\summit\PrivatePresentationCategoryGroup::ClassName,
+            'submission_begin_date' => $start_date->getTimestamp(),
+            'submission_end_date'   => $end_date->getTimestamp(),
+            'max_submission_allowed_per_user' => 5,
+            'begin_attendee_voting_period_date' => $start_date->getTimestamp(),
+            'end_attendee_voting_period_date' => $end_date->getTimestamp(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationCategoryGroupController@addTrackGroupBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $track_group = json_decode($content);
+        $this->assertTrue(!is_null($track_group));
+        $this->assertEquals(\models\summit\PrivatePresentationCategoryGroup::ClassName, $track_group->class_name);
+        return $track_group;
+    }
+
+    public function testAssociateAllowedGroup2TrackGroup(){
+        $private_track_group = $this->testAddPrivateTrackGroup();
+
+        $params = [
+            'id'             => self::$summit->getId(),
+            'track_group_id' => $private_track_group->id,
+            'group_id'       => self::$group->getId()
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2PresentationCategoryGroupController@associateAllowedGroup2TrackGroup",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        return $private_track_group;
+    }
+
+    public function testDisassociateAllowedGroup2TrackGroup(){
+        $private_track_group = $this->testAssociateAllowedGroup2TrackGroup();
+
+        $params = [
+            'id'             => self::$summit->getId(),
+            'track_group_id' => $private_track_group->id,
+            'group_id'       => self::$group->getId()
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationCategoryGroupController@disassociateAllowedGroup2TrackGroup",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
     public function testDeleteExistentTrackGroup(){
 
         $params = [

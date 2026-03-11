@@ -96,6 +96,7 @@ jobs:
                     - { name: "OAuth2SummitTicketTypesApiTest", filter: "--filter tests/OAuth2SummitTicketTypesApiTest" }
                     - { name: "OAuth2SummitTicketsApiTest", filter: "--filter tests/OAuth2SummitTicketsApiTest" }
                     - { name: "OAuth2SummitTrackChairsApiTest", filter: "--filter tests/OAuth2SummitTrackChairsApiTest" }
+                    - { name: "OAuth2SummitTrackChairsRankingApiTest", filter: "--filter tests/OAuth2SummitTrackChairsRankingApiTest" }
                     - { name: "OAuth2TrackGroupsApiTest", filter: "--filter tests/OAuth2TrackGroupsApiTest" }
                     - { name: "OAuth2TrackQuestionsTemplateTest", filter: "--filter tests/OAuth2TrackQuestionsTemplateTest" }
                     - { name: "OAuth2SummitBadgeTypeApiTest", filter: "--filter tests/OAuth2SummitBadgeTypeApiTest" }

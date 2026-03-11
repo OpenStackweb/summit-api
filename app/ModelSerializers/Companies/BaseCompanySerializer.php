@@ -36,5 +36,6 @@ class BaseCompanySerializer extends SilverStripeSerializer
         'LogoUrl' => 'logo:json_url',
         'BigLogoUrl' => 'big_logo:json_url',
         'Color' => 'color:json_color',
+        'COAPartner' => 'is_coa_partner:json_boolean',
     ];
 }

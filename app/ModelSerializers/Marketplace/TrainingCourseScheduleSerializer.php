@@ -1,6 +1,6 @@
 <?php namespace App\ModelSerializers\Marketplace;
 /**
- * Copyright 2024 OpenStack Foundation
+ * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,16 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-use App\Models\Foundation\Marketplace\TrainingService;
+use App\Models\Foundation\Marketplace\TrainingCourseSchedule;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
+use ModelSerializers\SilverStripeSerializer;
 /**
- * Class TrainingServiceSerializer
+ * Class TrainingCourseScheduleSerializer
  * @package App\ModelSerializers\Marketplace
  */
-final class TrainingServiceSerializer extends CompanyServiceSerializer
+final class TrainingCourseScheduleSerializer extends SilverStripeSerializer
 {
+    protected static $array_mappings = [
+        'City'    => 'city:json_string',
+        'State'   => 'state:json_string',
+        'Country' => 'country:json_string',
+    ];
+
     protected static $allowed_relations = [
-        'courses',
+        'times',
     ];
 
     /**
@@ -32,25 +39,25 @@ final class TrainingServiceSerializer extends CompanyServiceSerializer
      */
     public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
     {
-        $training_service = $this->object;
-        if (!$training_service instanceof TrainingService) return [];
+        $schedule = $this->object;
+        if (!$schedule instanceof TrainingCourseSchedule) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (in_array('courses', $relations) && !isset($values['courses'])) {
-            $courses = [];
-            foreach ($training_service->getCourses() as $c) {
-                $courses[] = $c->getId();
+        if (in_array('times', $relations) && !isset($values['times'])) {
+            $times = [];
+            foreach ($schedule->getTimes() as $t) {
+                $times[] = $t->getId();
             }
-            $values['courses'] = $courses;
+            $values['times'] = $times;
         }
 
         return $values;
     }
 
     protected static $expand_mappings = [
-        'courses' => [
+        'times' => [
             'type' => Many2OneExpandSerializer::class,
-            'getter' => 'getCourses',
+            'getter' => 'getTimes',
         ],
     ];
 }

@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Formatter for Many-to-Many collection updates
  */
-class EntityManyToManyCollectionUpdateAuditLogFormatter extends AbstractAuditLogFormatter
+class DefaultEntityManyToManyCollectionUpdateAuditLogFormatter extends AbstractAuditLogFormatter
 {
     /**
      * @var IChildEntityAuditLogFormatter|null
@@ -50,6 +50,43 @@ class EntityManyToManyCollectionUpdateAuditLogFormatter extends AbstractAuditLog
 
             if ($collection === null) {
                 return null;
+            }
+
+            $addedIds = $change_set['added_ids'] ?? null;
+            $removedIds = $change_set['removed_ids'] ?? ($change_set['deleted_ids'] ?? null);
+            if ($addedIds !== null || $removedIds !== null) {
+                if (!($collection instanceof PersistentCollection)) {
+                    return null;
+                }
+
+                $addedIds = $addedIds ?? [];
+                $removedIds = $removedIds ?? [];
+                $inserted_count = count($addedIds);
+                $deleted_count = count($removedIds);
+
+                if ($inserted_count === 0 && $deleted_count === 0) {
+                    return null;
+                }
+
+                try {
+                    $mapping = $collection->getMapping();
+                    $fieldName = $mapping->fieldName ?? 'unknown';
+                    $targetEntity = $mapping->targetEntity ?? 'unknown';
+                    if ($targetEntity) {
+                        $targetEntity = class_basename($targetEntity);
+                    }
+
+                    $details = [
+                        'field' => $fieldName,
+                        'target_entity' => $targetEntity,
+                        'added_ids' => $addedIds,
+                        'removed_ids' => $removedIds,
+                    ];
+
+                    return self::formatManyToManyDetailedMessage($details, $inserted_count, $deleted_count, 'updated');
+                } catch (\Exception $e) {
+                    Log::debug("DefaultEntityManyToManyCollectionUpdateAuditLogFormatter::format - error extracting metadata: " . $e->getMessage());
+                }
             }
 
             $changes = [];

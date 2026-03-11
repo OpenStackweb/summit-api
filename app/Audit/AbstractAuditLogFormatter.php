@@ -36,7 +36,8 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
 
     protected function processCollection(
         object $col,
-        bool $isDeletion = false
+        bool $isDeletion = false,
+        ?array $deletedIds = null
     ): ?array
     {
         if (!($col instanceof PersistentCollection)) {
@@ -44,6 +45,8 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         }
 
         $mapping = $col->getMapping();
+        $fieldName = $mapping->fieldName ?? 'unknown';
+        $targetEntity = $mapping->targetEntity ?? 'unknown';
 
         $addedEntities = $col->getInsertDiff();
         $removedEntities = $col->getDeleteDiff();
@@ -51,10 +54,13 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         $addedIds = $this->extractCollectionEntityIds($addedEntities);
         $removedIds = $this->extractCollectionEntityIds($removedEntities);
 
+        if ($isDeletion && !empty($deletedIds) && empty($removedIds)) {
+            $removedIds = $deletedIds;
+        }
 
         return [
-            'field'         => $mapping->fieldName ?? 'unknown',
-            'target_entity' => $mapping->targetEntity ?? 'unknown',
+            'field'         => $fieldName,
+            'target_entity' => $targetEntity,
             'is_deletion'   => $isDeletion,
             'added_ids'     => $addedIds,
             'removed_ids'   => $removedIds,

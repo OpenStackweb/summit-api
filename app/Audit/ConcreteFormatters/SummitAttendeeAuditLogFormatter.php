@@ -64,7 +64,8 @@ class SummitAttendeeAuditLogFormatter extends AbstractAuditLogFormatter
         
         $col = $change_set['collection'];
         
-        $collectionData = $this->processCollection($col, $isDeletion);
+        $deletedIds = $change_set['deleted_ids'] ?? null;
+        $collectionData = $this->processCollection($col, $isDeletion, $deletedIds);
         if (!$collectionData) {
             return null;
         }

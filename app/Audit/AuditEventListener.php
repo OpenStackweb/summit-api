@@ -14,7 +14,6 @@
 
 use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\Event\OnFlushEventArgs;
-use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
@@ -27,16 +26,16 @@ use Illuminate\Http\Request;
 class AuditEventListener
 {
     private const ROUTE_METHOD_SEPARATOR = '|';
-
+    private $em;
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
         if (app()->environment('testing')) {
             return;
         }
-        $em = $eventArgs->getObjectManager();
-        $uow = $em->getUnitOfWork();
+        $this->em = $eventArgs->getObjectManager();
+        $uow = $this->em->getUnitOfWork();
         // Strategy selection based on environment configuration
-        $strategy = $this->getAuditStrategy($em);
+        $strategy = $this->getAuditStrategy($this->em);
         if (!$strategy) {
             return; // No audit strategy enabled
         }
@@ -54,12 +53,21 @@ class AuditEventListener
 
             foreach ($uow->getScheduledEntityDeletions() as $entity) {
                 $strategy->audit($entity, [], IAuditStrategy::EVENT_ENTITY_DELETION, $ctx);
-            }
+            }   
             foreach ($uow->getScheduledCollectionDeletions() as $col) {
-                $this->auditCollection($col, $strategy, $ctx, $uow, true);
+                [$subject, $payload, $eventType] = $this->auditCollection($col, $uow, IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE);
+              
+                if ($subject !== null) {
+                    $strategy->audit($subject, $payload, $eventType, $ctx);
+                }
             }
+
             foreach ($uow->getScheduledCollectionUpdates() as $col) {
-                $this->auditCollection($col, $strategy, $ctx, $uow, false);
+                [$subject, $payload, $eventType] = $this->auditCollection($col, $uow, IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE);
+              
+                if ($subject !== null) {
+                    $strategy->audit($subject, $payload, $eventType, $ctx);
+                }
             }
 
         } catch (\Exception $e) {
@@ -135,40 +143,182 @@ class AuditEventListener
 
     /**
      * Audit collection changes
-     * Only determines if it's ManyToMany and emits appropriate event
+     * Returns triple: [$subject, $payload, $eventType]
+     * Subject will be null if collection should not be audited
+     * 
+     * @param object $subject The collection
+     * @param mixed $uow The UnitOfWork
+     * @param string $eventType The event type constant (EVENT_COLLECTION_MANYTOMANY_DELETE or EVENT_COLLECTION_MANYTOMANY_UPDATE)
+     * @return array [$subject, $payload, $eventType]
      */
-    private function auditCollection($subject, IAuditStrategy $strategy, AuditContext $ctx, $uow, bool $isDeletion = false): void
+    private function auditCollection($subject, $uow, string $eventType): array
     {
         if (!$subject instanceof PersistentCollection) {
-            return;
+            Log::debug("AuditEventListener::auditCollection - subject is not PersistentCollection", [
+                'type' => is_object($subject) ? get_class($subject) : gettype($subject)
+            ]);
+            return [null, [], $eventType];
         }
+
+        Log::debug("AuditEventListener::auditCollection - is PersistentCollection", ['eventType' => $eventType, 'isInitialized' => $subject->isInitialized()]);
 
         $mapping = $subject->getMapping();
+        
         if (!$mapping->isManyToMany()) {
-            $strategy->audit($subject, [], IAuditStrategy::EVENT_COLLECTION_UPDATE, $ctx);
-            return;
+            Log::debug("AuditEventListener::auditCollection - not ManyToMany, skipping");
+            $owner = $subject->getOwner();
+            if ($owner === null) {
+                Log::debug("AuditEventListener::auditCollection - owner is null for non ManyToMany, skipping");
+                return [null, [], IAuditStrategy::EVENT_COLLECTION_UPDATE];
+            }
+            return [$owner, [], IAuditStrategy::EVENT_COLLECTION_UPDATE];
         }
 
-        $isOwningSide = $mapping->isOwningSide();
-        if (!$isOwningSide) {
-            Log::debug("AuditEventListerner::Skipping audit for non-owning side of many-to-many collection");
-            return;
+        Log::debug("AuditEventListener::auditCollection - is ManyToMany");
+
+        if (!$mapping->isOwningSide()) {
+            Log::debug("AuditEventListener::auditCollection - Skipping audit for non-owning side of many-to-many collection");
+            return [null, [], $eventType];
         }
 
         $owner = $subject->getOwner();
         if ($owner === null) {
-            return;
+            Log::debug("AuditEventListener::auditCollection - owner is null, skipping");
+            return [null, [], $eventType];
         }
 
-        $payload = [
-            'collection' => $subject,
-            'uow' => $uow,
-            'is_deletion' => $isDeletion,
-        ];
-        $eventType = $isDeletion 
-            ? IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE 
-            : IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE;
+        Log::debug("AuditEventListener::auditCollection - owner found", ['ownerClass' => get_class($owner)]);
 
-        $strategy->audit($owner, $payload, $eventType, $ctx);
+        $payload = ['collection' => $subject];
+
+        if ($eventType === IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE) {
+            if (!$subject->isInitialized()) {
+                $deletedIds = $this->fetchManyToManyIds($subject, $uow);
+            } else {
+                $deletedIds = $this->fetchDeletedIdsFromInitializedCollection($subject, $uow);
+            }
+
+            if (isset($deletedIds) && $deletedIds !== null) {
+                $payload['deleted_ids'] = $deletedIds;
+            }
+        } else {
+            Log::debug("AuditEventListener::auditCollection - not an uninitialized deletion", [
+                'eventType' => $eventType,
+                'isInitialized' => $subject->isInitialized(),
+                'isDelete' => $eventType === IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
+            ]);
+        }
+
+        return [$owner, $payload, $eventType];
+    }
+
+
+    private function fetchManyToManyIds(PersistentCollection $collection, $uow): ?array
+    {
+        try {
+            
+            $mapping = $collection->getMapping();
+
+            $joinTable = $mapping->joinTable ?? null;
+            $joinTableName = is_array($joinTable) ? ($joinTable['name'] ?? null) : ($joinTable->name ?? null);
+            $joinColumns = is_array($joinTable) ? ($joinTable['joinColumns'] ?? []) : ($joinTable->joinColumns ?? []);
+            $inverseJoinColumns = is_array($joinTable) ? ($joinTable['inverseJoinColumns'] ?? []) : ($joinTable->inverseJoinColumns ?? []);
+
+            $joinColumn = $joinColumns[0] ?? null;
+            $inverseJoinColumn = $inverseJoinColumns[0] ?? null;
+            $joinColumnName = is_object($joinColumn) ? ($joinColumn->name ?? null) : ($joinColumn['name'] ?? null);
+            $inverseColumnName = is_object($inverseJoinColumn) ? ($inverseJoinColumn->name ?? null) : ($inverseJoinColumn['name'] ?? null);
+            if (!$joinTableName) {
+                Log::debug("AuditEventListener::fetchManyToManyIds - no join table name found");
+                return null;
+            }
+
+            $owner = $collection->getOwner();
+            if ($owner === null) {
+                return null;
+            }
+
+            $ownerMeta = $this->em->getClassMetadata(get_class($owner));
+            $ownerIds = $ownerMeta->getIdentifierValues($owner);
+            if (empty($ownerIds)) {
+                Log::debug("AuditEventListener::fetchManyToManyIds - owner IDs are empty");
+                return null;
+            }
+            $ownerId = reset($ownerIds);
+
+            if (empty($joinColumns) || empty($inverseJoinColumns)) {
+                Log::debug("AuditEventListener::fetchManyToManyIds - join or inverse columns are empty");
+                return null;
+            }
+
+            Log::debug("AuditEventListener::fetchManyToManyIds - column names", [
+                'joinColumnName' => $joinColumnName,
+                'inverseColumnName' => $inverseColumnName
+            ]);
+
+            if (!$joinColumnName || !$inverseColumnName) {
+                Log::debug("AuditEventListener::fetchManyToManyIds - column names are missing");
+                return null;
+            }
+
+            $conn = $this->em->getConnection();
+            $qb = $conn->createQueryBuilder();
+
+            $qb->select($inverseColumnName)
+                ->from($joinTableName)
+                ->where($joinColumnName . ' = :ownerId')
+                ->setParameter('ownerId', $ownerId);
+
+            $ids = $qb->fetchFirstColumn();
+            
+            $result = !empty($ids) ? array_map('intval', $ids) : [];
+            
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error("AuditEventListener::fetchManyToManyIds error: " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Compute deleted IDs for initialized collections by diffing DB join table
+     * against current collection contents.
+     */
+    private function fetchDeletedIdsFromInitializedCollection(PersistentCollection $collection, $uow): ?array
+    {
+        try {
+            $allIds = $this->fetchManyToManyIds($collection, $uow);
+            if ($allIds === null) {
+                return null;
+            }
+
+            $currentIds = [];
+            foreach ($collection as $entity) {
+                if (!is_object($entity)) {
+                    continue;
+                }
+                $meta = $this->em->getClassMetadata(get_class($entity));
+                $ids = $meta->getIdentifierValues($entity);
+                if (empty($ids)) {
+                    continue;
+                }
+                $currentIds[] = intval(reset($ids));
+            }
+
+            $currentIds = array_values(array_unique($currentIds));
+            $deleted = array_values(array_diff($allIds, $currentIds));
+
+            return $deleted;
+        } catch (\Exception $e) {
+            Log::error("AuditEventListener::fetchDeletedIdsFromInitializedCollection error: " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
     }
 }

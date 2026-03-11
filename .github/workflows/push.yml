@@ -105,6 +105,16 @@ jobs:
                     - { name: "OAuth2SummitEmailEventFlowApiControllerTest", filter: "--filter tests/OAuth2SummitEmailEventFlowApiControllerTest" }
                     - { name: "OAuth2SummitEventsBulkActionsTest", filter: "--filter tests/OAuth2SummitEventsBulkActionsTest" }
                     - { name: "OAuth2SummitLocationsApiTest", filter: "--filter tests/OAuth2SummitLocationsApiTest" }
+                    - { name: "OAuth2RSVPSummitEventApiTest", filter: "--filter tests/OAuth2RSVPSummitEventApiTest" }
+                    - { name: "OAuth2SpeakerActiveInvolvementApiTest", filter: "--filter tests/OAuth2SpeakerActiveInvolvementApiTest" }
+                    - { name: "OAuth2SpeakerOrganizationalRoleApiTest", filter: "--filter tests/OAuth2SpeakerOrganizationalRoleApiTest" }
+                    - { name: "OAuth2SpeakersAssistancesApiTest", filter: "--filter tests/OAuth2SpeakersAssistancesApiTest" }
+                    - { name: "OAuth2SponsoredProjectsApiTest", filter: "--filter tests/OAuth2SponsoredProjectsApiTest" }
+                    - { name: "OAuth2SummitAccessLevelTypeTest", filter: "--filter tests/OAuth2SummitAccessLevelTypeTest" }
+                    - { name: "OAuth2SummitAdministratorPermissionGroupApiControllerTest", filter: "--filter tests/OAuth2SummitAdministratorPermissionGroupApiControllerTest" }
+                    - { name: "OAuth2SummitAttendeeBadgePrintApiControllerTest", filter: "--filter tests/OAuth2SummitAttendeeBadgePrintApiControllerTest" }
+                    - { name: "OAuth2SummitAttendeeNotesApiTest", filter: "--filter tests/OAuth2SummitAttendeeNotesApiTest" }
+                    - { name: "OAuth2SummitBadgeFeatureTypeApiTest", filter: "--filter tests/OAuth2SummitBadgeFeatureTypeApiTest" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

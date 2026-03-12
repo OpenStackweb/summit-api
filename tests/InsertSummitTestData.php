@@ -1008,7 +1008,9 @@ trait InsertSummitTestData
         self::$em->remove(self::$summit);
         self::$em->remove(self::$summit2);
         self::$em->remove(self::$summit_permission_group);
-        self::$em->remove(self::$default_media_file_type);
+        if (!is_null(self::$default_media_file_type)) {
+            self::$em->remove(self::$default_media_file_type);
+        }
         self::$em->flush();
 
         // reset static vars

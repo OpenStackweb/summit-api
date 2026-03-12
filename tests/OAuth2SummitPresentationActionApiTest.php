@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
-use models\summit\PresentationActionType;
 /**
  * Class OAuth2SummitPresentationActionApiTest
  * @package Tests
@@ -21,34 +20,17 @@ final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
-
-    static $action1 = null;
-    static $action2 = null;
-
     protected function setUp():void
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
         self::$em->flush();
         $track_chair = self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
-
-        self::$action1 = new PresentationActionType();
-        self::$action1->setLabel("ACTION1");
-        self::$action1->setOrder(1);
-        self::$summit->addPresentationActionType(self::$action1);
-
-        self::$action2 = new PresentationActionType();
-        self::$action2->setLabel("ACTION2");
-        self::$action2->setOrder(2);
-        self::$summit->addPresentationActionType(self::$action2);
-
-        //self::$summit->synchAllPresentationActions();
-
         self::$em->persist(self::$summit);
         self::$em->flush();
     }
@@ -60,11 +42,20 @@ final class OAuth2SummitPresentationActionApiTest extends ProtectedApiTestCase
     }
 
     public function testCompleteAction(){
+        // Capture IDs before clearing EM to force fresh DB loads
+        $summit_id = self::$summit->getId();
+        $selection_plan_id = self::$default_selection_plan->getId();
+        $presentation_id = self::$presentations[0]->getId();
+        $action_type_id = self::$default_presentation_action_type->getId();
+
+        // Clear Doctrine identity map so controller loads fresh entities from DB
+        self::$em->clear();
+
         $params = [
-            'id' => self::$summit->getId(),
-            'selection_plan_id' => self::$default_selection_plan->getId(),
-            'presentation_id' => self::$presentations[0]->getId(),
-            'action_type_id' => self::$action1->getId(),
+            'id' => $summit_id,
+            'selection_plan_id' => $selection_plan_id,
+            'presentation_id' => $presentation_id,
+            'action_type_id' => $action_type_id,
             'expand' => 'type,presentation,created_by,updated_by'
         ];
 

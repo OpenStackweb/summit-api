@@ -115,6 +115,14 @@ jobs:
                     - { name: "OAuth2SummitAttendeeBadgePrintApiControllerTest", filter: "--filter tests/OAuth2SummitAttendeeBadgePrintApiControllerTest" }
                     - { name: "OAuth2SummitAttendeeNotesApiTest", filter: "--filter tests/OAuth2SummitAttendeeNotesApiTest" }
                     - { name: "OAuth2SummitBadgeFeatureTypeApiTest", filter: "--filter tests/OAuth2SummitBadgeFeatureTypeApiTest" }
+                    - { name: "OAuth2SummitMediaFileTypeApiControllerTest", filter: "--filter tests/OAuth2SummitMediaFileTypeApiControllerTest" }
+                    - { name: "OAuth2SummitMediaUploadTypeApiControllerTest", filter: "--filter tests/OAuth2SummitMediaUploadTypeApiControllerTest" }
+                    - { name: "OAuth2SummitMetricsApiControllerTest", filter: "--filter tests/OAuth2SummitMetricsApiControllerTest" }
+                    - { name: "OAuth2SummitNotificationsApiControllerTest", filter: "--filter tests/OAuth2SummitNotificationsApiControllerTest" }
+                    - { name: "OAuth2SummitOrderExtraQuestionTypeApiTest", filter: "--filter tests/OAuth2SummitOrderExtraQuestionTypeApiTest" }
+                    - { name: "OAuth2SummitOrdersApiTest", filter: "--filter tests/OAuth2SummitOrdersApiTest" }
+                    - { name: "OAuth2SummitPresentationActionApiTest", filter: "--filter tests/OAuth2SummitPresentationActionApiTest" }
+                    - { name: "OAuth2SummitPresentationActionTypeApiTest", filter: "--filter tests/OAuth2SummitPresentationActionTypeApiTest" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

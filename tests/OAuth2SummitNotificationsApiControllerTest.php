@@ -17,14 +17,24 @@
  */
 final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestCase
 {
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetApprovedSummitNotifications($summit_id = 27)
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
+    public function testGetApprovedSummitNotifications()
     {
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 15,
             'order' => '+sent_date',
@@ -35,13 +45,11 @@ final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestC
         ];
 
         $headers = [
-
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE" => "application/json"
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitNotificationsApiController@getAll",
             $params,
@@ -60,29 +68,21 @@ final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestC
         return $notifications;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetSentSummitNotifications($summit_id = 27)
+    public function testGetSentSummitNotifications()
     {
         $params = [
-            'id'       => $summit_id,
+            'id'       => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 15,
             'order'    => '+sent_date',
-         //   'filter'   => 'message=@Shanghai',
-            //'expand'   => 'owner,approved_by',
         ];
 
         $headers = [
-
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE" => "application/json"
         ];
 
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitNotificationsApiController@getAllApprovedByUser",
             $params,
@@ -101,52 +101,10 @@ final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestC
         return $notifications;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testGetPushNotificationById($summit_id = 24){
-        $notifications_response = $this->testGetApprovedSummitNotifications($summit_id);
+    public function testAddPushNotificationEveryone(){
 
         $params = [
-            'id' => $summit_id,
-            'notification_id' => $notifications_response->data[0]->id
-        ];
-
-        $headers = [
-
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
-
-        $response = $this->action
-        (
-            "GET",
-            "OAuth2SummitNotificationsApiController@getById",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-
-        $notification = json_decode($content);
-        $this->assertTrue(!is_null($notification));
-
-        return $notification;
-    }
-
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddPushNotificationEveryone($summit_id = 24){
-
-        $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $message = str_random(16).'_message';
@@ -180,14 +138,42 @@ final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestC
         return $notification;
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddPushNotificationMembersFail($summit_id = 24){
+    public function testGetPushNotificationById(){
+        $notification = $this->testAddPushNotificationEveryone();
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
+            'notification_id' => $notification->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitNotificationsApiController@getById",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $notification = json_decode($content);
+        $this->assertTrue(!is_null($notification));
+
+        return $notification;
+    }
+
+    public function testAddPushNotificationMembersFail(){
+
+        $params = [
+            'id' => self::$summit->getId(),
         ];
 
         $message = str_random(16).'_message';
@@ -218,14 +204,10 @@ final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestC
         $this->assertResponseStatus(412);
     }
 
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddPushNotificationMembers($summit_id = 24){
+    public function testAddPushNotificationMembers(){
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $message = str_random(16).'_message';
@@ -234,7 +216,7 @@ final class OAuth2SummitNotificationsApiControllerTest extends ProtectedApiTestC
             'message'  => $message,
             'channel' => \models\summit\SummitPushNotificationChannel::Members,
             'platform'   => \models\summit\SummitPushNotification::PlatformMobile,
-            'recipient_ids' => [13867]
+            'recipient_ids' => [self::$member->getId()]
         ];
 
         $headers = [

@@ -275,6 +275,10 @@ Route::group(array('prefix' => 'marketplace'), function () {
     Route::group(array('prefix' => 'trainings'), function () {
         Route::get('', 'TrainingApiController@getAll');
     });
+
+    Route::group(array('prefix' => 'drivers'), function () {
+        Route::get('', 'DriversApiController@getAll');
+    });
 });
 
 // countries

@@ -69,6 +69,8 @@ use App\ModelSerializers\Marketplace\TrainingCourseScheduleTimeSerializer;
 use App\ModelSerializers\Marketplace\TrainingCourseSerializer;
 use App\ModelSerializers\Marketplace\TrainingCourseTypeSerializer;
 use App\ModelSerializers\Marketplace\TrainingServiceSerializer;
+use App\ModelSerializers\Marketplace\DriverSerializer;
+use App\ModelSerializers\Marketplace\DriverReleaseSerializer;
 use App\ModelSerializers\PushNotificationMessageSerializer;
 use App\ModelSerializers\ResourceServer\ApiEndpointAuthzGroupSerializer;
 use App\ModelSerializers\ResourceServer\ApiEndpointSerializer;
@@ -668,6 +670,8 @@ final class SerializerRegistry
         $this->registry['RemoteCloudService'] = RemoteCloudServiceSerializer::class;
         $this->registry['CloudServiceOffered'] = CloudServiceOfferedSerializer::class;
         $this->registry['TrainingService'] = TrainingServiceSerializer::class;
+        $this->registry['Driver'] = DriverSerializer::class;
+        $this->registry['DriverRelease'] = DriverReleaseSerializer::class;
         $this->registry['TrainingCourse'] = TrainingCourseSerializer::class;
         $this->registry['TrainingCourseType'] = TrainingCourseTypeSerializer::class;
         $this->registry['TrainingCourseLevel'] = TrainingCourseLevelSerializer::class;

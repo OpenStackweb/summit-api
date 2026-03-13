@@ -31,8 +31,8 @@ trait CreateTableTrait
                 $table->primary("ID");
                 $table->string('ClassName')->setDefault($table_name);
                 $table->index("ClassName", "ClassName");
-                $table->timestamp('Created');
-                $table->timestamp('LastEdited');
+                $table->timestamp('Created')->setDefault('CURRENT_TIMESTAMP');
+                $table->timestamp('LastEdited')->setDefault('CURRENT_TIMESTAMP');
                 if($add_columns_callback)
                     $add_columns_callback($table);
             });

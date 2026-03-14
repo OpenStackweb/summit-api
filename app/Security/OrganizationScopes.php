@@ -18,6 +18,6 @@
  */
 final class OrganizationScopes
 {
-    const ReadOrganizationData     = '%s/organizations/read';
-    const WriteOrganizationData     = '%s/organizations/write';
+    const ReadOrganizationData     = SCOPE_BASE_REALM.'/organizations/read';
+    const WriteOrganizationData     = SCOPE_BASE_REALM.'/organizations/write';
 }

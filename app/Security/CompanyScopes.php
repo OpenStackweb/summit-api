@@ -18,6 +18,6 @@
  */
 final class CompanyScopes
 {
-    const Read = '%s/companies/read';
-    const Write = '%s/companies/write';
+    const Read = SCOPE_BASE_REALM.'/companies/read';
+    const Write = SCOPE_BASE_REALM.'/companies/write';
 }

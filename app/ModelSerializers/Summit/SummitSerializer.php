@@ -369,8 +369,7 @@ class SummitSerializer extends SilverStripeSerializer
                             // we had proper scopes
                             if (!$summit->isAvailableOnApi()) {
                                 $scopes = $this->resource_server_context->getCurrentScope();
-                                $current_realm = Config::get('app.url');
-                                $needed_scope = sprintf(SummitScopes::ReadAllSummitData, $current_realm);
+                                $needed_scope = SummitScopes::ReadAllSummitData;
                                 if (!in_array($needed_scope, $scopes))
                                     throw new HTTP403ForbiddenException;
                             }

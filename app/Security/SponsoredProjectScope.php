@@ -18,6 +18,6 @@
  */
 final class SponsoredProjectScope
 {
-    const Read = '%s/sponsored-projects/read';
-    const Write = '%s/sponsored-projects/write';
+    const Read = SCOPE_BASE_REALM.'/sponsored-projects/read';
+    const Write = SCOPE_BASE_REALM.'/sponsored-projects/write';
 }

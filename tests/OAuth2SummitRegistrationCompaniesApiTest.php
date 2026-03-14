@@ -2,6 +2,8 @@
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use services\model\ISummitService;
 
 /**
@@ -36,13 +38,13 @@ final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTestCas
     public function testGetCurrentSummitCompanies()
     {
         $summitId = self::$summit->getId();
-        $companyId = 1;
+        $companyId = self::$companies[0]->getId();
 
         $service = App::make(ISummitService::class);
         $company = $service->addCompany($summitId, $companyId);
 
-        $service->addCompany($summitId, 2);
-        $service->addCompany(self::$summit2->getId(), 3);
+        $service->addCompany($summitId, self::$companies[1]->getId());
+        $service->addCompany(self::$summit2->getId(), self::$companies[2]->getId());
 
         $params = [
             'id' => $summitId,
@@ -72,11 +74,11 @@ final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTestCas
         $this->assertTrue(!is_null($data));
     }
 
-    public function testAddCompanyToSummit($summitId = null, $companyId = 1)
+    public function testAddCompanyToSummit()
     {
         $params = array(
-            'id' => $summitId ?? self::$summit->getId(),
-            'company_id' => $companyId,
+            'id' => self::$summit->getId(),
+            'company_id' => self::$companies[0]->getId(),
         );
 
         $headers = [
@@ -97,9 +99,10 @@ final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTestCas
         $this->assertResponseStatus(201);
     }
 
-    public function testRemoveCompanyFromSummit($companyId = 1)
+    public function testRemoveCompanyFromSummit()
     {
-        $summitId = $summitId ?? self::$summit->getId();
+        $summitId = self::$summit->getId();
+        $companyId = self::$companies[0]->getId();
 
         $service = App::make(ISummitService::class);
         $service->addCompany($summitId, $companyId);
@@ -129,6 +132,9 @@ final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTestCas
 
     public function testIngestRegistrationCompanies()
     {
+        Storage::fake('swift');
+        Queue::fake();
+
         $csv_content = <<<CSV
 name,
 Testco,

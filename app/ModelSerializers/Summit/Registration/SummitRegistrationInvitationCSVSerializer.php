@@ -20,7 +20,6 @@ class SummitRegistrationInvitationCSVSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'MemberId' => 'member_id:json_int',
-        'OrderId' => 'order_id:json_int',
         'SummitId' => 'summit_id:json_int',
         'FirstName' => 'first_name:json_string',
         'LastName' => 'last_name:json_string',

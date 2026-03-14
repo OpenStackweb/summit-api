@@ -51,6 +51,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
+            max-parallel: 8
             matrix:
                 suite:
                     - { name: "OAuth2SummitApiTest", filter: "--filter OAuth2SummitApiTest" }
@@ -123,6 +124,16 @@ jobs:
                     - { name: "OAuth2SummitOrdersApiTest", filter: "--filter tests/OAuth2SummitOrdersApiTest" }
                     - { name: "OAuth2SummitPresentationActionApiTest", filter: "--filter tests/OAuth2SummitPresentationActionApiTest" }
                     - { name: "OAuth2SummitPresentationActionTypeApiTest", filter: "--filter tests/OAuth2SummitPresentationActionTypeApiTest" }
+                    - { name: "OAuth2SummitProposedScheduleApiTest", filter: "--filter tests/OAuth2SummitProposedScheduleApiTest" }
+                    - { name: "OAuth2SummitProposedScheduleAllowedLocationApiControllerTest", filter: "--filter tests/OAuth2SummitProposedScheduleAllowedLocationApiControllerTest" }
+                    - { name: "OAuth2SummitRefundPolicyTypeApiTest", filter: "--filter tests/OAuth2SummitRefundPolicyTypeApiTest" }
+                    - { name: "OAuth2SummitRegistrationCompaniesApiTest", filter: "--filter tests/OAuth2SummitRegistrationCompaniesApiTest" }
+                    - { name: "OAuth2SummitRegistrationInvitationApiControllerTest", filter: "--filter tests/OAuth2SummitRegistrationInvitationApiControllerTest" }
+                    - { name: "OAuth2SummitRSVPTemplateApiTest", filter: "--filter tests/OAuth2SummitRSVPTemplateApiTest" }
+                    - { name: "OAuth2SummitScheduleSettingsApiTest", filter: "--filter tests/OAuth2SummitScheduleSettingsApiTest" }
+                    - { name: "OAuth2SummitSelectedPresentationListApiTest", filter: "--filter tests/OAuth2SummitSelectedPresentationListApiTest" }
+                    - { name: "OAuth2SummitSelectionPlanExtraQuestionTypeApiTest", filter: "--filter tests/OAuth2SummitSelectionPlanExtraQuestionTypeApiTest" }
+                    - { name: "OAuth2SummitSelectionPlansApiTest", filter: "--filter tests/OAuth2SummitSelectionPlansApiTest" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

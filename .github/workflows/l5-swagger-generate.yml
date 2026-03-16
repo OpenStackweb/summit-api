@@ -112,3 +112,99 @@ jobs:
             - name: Generate OpenAPI docs
               run: php artisan l5-swagger:generate
 
+            - name: Build Swagger UI preview
+              run: |
+                        mkdir -p swagger-ui
+                        cp storage/api-docs/api-docs.json swagger-ui/api-docs.json
+                        cat > swagger-ui/index.html << 'HTMLEOF'
+                        <!doctype html>
+                        <html lang="en">
+                        <head>
+                         <meta charset="utf-8" />
+                         <title>OpenStackID API - Swagger UI</title>
+                         <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+                        </head>
+                        <body>
+                         <div id="swagger-ui"></div>
+                         <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+                         <script>
+                           window.onload = () => {
+                             window.ui = SwaggerUIBundle({
+                               url: 'api-docs.json',
+                               dom_id: '#swagger-ui'
+                             });
+                           };
+                         </script>
+                        </body>
+                        </html>
+                        HTMLEOF
+
+            - name: Upload Swagger UI artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: swagger-ui
+                  path: swagger-ui/
+                  if-no-files-found: error
+
+    pages-preview:
+        name: Publish Swagger UI to GitHub Pages
+        needs: openapi-generate
+        if: github.event_name == 'pull_request'
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+            issues: write
+            pull-requests: write
+
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+
+            -   name: Download Swagger UI artifact
+                uses: actions/download-artifact@v4
+                with:
+                    name: swagger-ui
+                    path: swagger-ui
+
+            -   name: Build public directory for GitHub Pages
+                run: |
+                    PR_PATH="openapi/pr-${{ github.event.number }}"
+                    mkdir -p "public/${PR_PATH}"
+                    cp -R swagger-ui/* "public/${PR_PATH}/"
+                    echo "Built GitHub Pages content at public/${PR_PATH}"
+
+            -   name: Publish to GitHub Pages
+                uses: peaceiris/actions-gh-pages@v4
+                with:
+                    github_token: ${{ secrets.GITHUB_TOKEN }}
+                    publish_dir: ./public
+                    keep_files: true
+
+            -   name: Comment preview URL on PR
+                uses: actions/github-script@v7
+                with:
+                    github-token: ${{ secrets.GITHUB_TOKEN }}
+                    script: |
+                        const prNumber = context.payload.pull_request.number;
+                        const owner = context.repo.owner;
+                        const repo = context.repo.repo;
+                        const baseUrl = `https://${owner}.github.io/${repo}`;
+                        const previewPath = `/openapi/pr-${prNumber}/`;
+                        const url = `${baseUrl}${previewPath}`;
+
+                        const body = [
+                          '📘 **OpenAPI / Swagger preview**',
+                          '',
+                          `➡️ ${url}`,
+                          '',
+                          'This page is automatically updated on each push to this PR.'
+                        ].join('\n');
+
+                        await github.rest.issues.createComment({
+                          owner,
+                          repo,
+                          issue_number: prNumber,
+                          body,
+                        });
+

@@ -15,15 +15,15 @@
 use App\Security\ElectionScopes;
 use App\Security\RSVPInvitationsScopes;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Config;;
 use App\Models\ResourceServer\ApiScope;
 use LaravelDoctrine\ORM\Facades\EntityManager;
-use Illuminate\Support\Facades\DB;
 use App\Security\SummitScopes;
 use App\Security\OrganizationScopes;
 use App\Security\MemberScopes;
 use App\Security\CompanyScopes;
 use App\Security\SponsoredProjectScope;
+use App\Security\GroupsScopes;
+use App\Security\TeamScopes;
 /**
  * Class ApiScopesSeeder
  */
@@ -50,348 +50,347 @@ final class ApiScopesSeeder extends Seeder
     private function seedSummitScopes()
     {
 
-        $current_realm = Config::get('app.scope_base_realm');
         $api = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'summits']);
 
         $scopes = [
             [
-                'name' => sprintf(SummitScopes::ReadSummitData, $current_realm),
+                'name' => SummitScopes::ReadSummitData,
                 'short_description' => 'Get Summit Data',
                 'description' => 'Grants read only access for Summits Data',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                'name' => SummitScopes::ReadAllSummitData,
                 'short_description' => 'Get All Summits Data',
                 'description' => 'Grants read only access for All Summits Data',
             ],
             [
-                'name' => sprintf(SummitScopes::MeRead, $current_realm),
+                'name' => SummitScopes::MeRead,
                 'short_description' => 'Get own summit member data',
                 'description' => 'Grants read only access for our own summit member data',
             ],
             [
-                'name' => sprintf(SummitScopes::AddMyFavorites, $current_realm),
+                'name' => SummitScopes::AddMyFavorites,
                 'short_description' => 'Allows to add Summit events as favorite',
                 'description' => 'Allows to add Summit events as favorite',
             ],
             [
-                'name' => sprintf(SummitScopes::DeleteMyFavorites, $current_realm),
+                'name' => SummitScopes::DeleteMyFavorites,
                 'short_description' => 'Allows to remove Summit events as favorite',
                 'description' => 'Allows to remove Summit events as favorite',
             ],
             // enter/leave event
             [
-                'name' => sprintf(SummitScopes::EnterEvent, $current_realm),
+                'name' => SummitScopes::EnterEvent,
                 'short_description' => '',
                 'description' => '',
             ],
             [
-                'name' => sprintf(SummitScopes::LeaveEvent, $current_realm),
+                'name' => SummitScopes::LeaveEvent,
                 'short_description' => '',
                 'description' => '',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteMetrics, $current_realm),
+                'name' => SummitScopes::WriteMetrics,
                 'short_description' => '',
                 'description' => '',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadMetrics, $current_realm),
+                'name' => SummitScopes::ReadMetrics,
                 'short_description' => '',
                 'description' => '',
             ],
             [
-                'name' => sprintf(SummitScopes::AddMyRSVP, $current_realm),
+                'name' => SummitScopes::AddMyRSVP,
                 'short_description' => 'Allows to add Summit events as RSVP',
                 'description' => 'Allows to add Summit events as RSVP',
             ],
             [
-                'name' => sprintf(SummitScopes::DeleteMyRSVP, $current_realm),
+                'name' => SummitScopes::DeleteMyRSVP,
                 'short_description' => 'Allows to remove Summit events from RSVP',
                 'description' => 'Allows to remove Summit events from RSVP',
             ],
             [
-                'name' => sprintf(SummitScopes::AddMySchedule, $current_realm),
+                'name' => SummitScopes::AddMySchedule,
                 'short_description' => 'Allows to add Summit events to my schedule',
                 'description' => 'Allows to add Summit events to my schedule',
             ],
             [
-                'name' => sprintf(SummitScopes::DeleteMySchedule, $current_realm),
+                'name' => SummitScopes::DeleteMySchedule,
                 'short_description' => 'Allows to remove Summit events from my schedule',
                 'description' => 'Allows to remove Summit events from my schedule',
             ],
             [
-                'name' => sprintf(SummitScopes::AddMyScheduleShareable, $current_realm),
+                'name' => SummitScopes::AddMyScheduleShareable,
                 'short_description' => 'Allows create a shareable link from my schedule',
                 'description' => 'Allows create a shareable link from my schedule',
             ],
             [
-                'name' => sprintf(SummitScopes::DeleteMyScheduleShareable, $current_realm),
+                'name' => SummitScopes::DeleteMyScheduleShareable,
                 'short_description' => 'Allows to delete shareable links from my schedule',
                 'description' => 'Allows to delete shareable links from my schedule',
             ],
             [
-                'name' => sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                'name' => SummitScopes::AddMyEventFeedback,
                 'short_description' => 'Allows to create event feedback',
                 'description' =>  'Allows to create event feedback',
             ],
             [
-                'name' => sprintf(SummitScopes::DeleteMyEventFeedback, $current_realm),
+                'name' => SummitScopes::DeleteMyEventFeedback,
                 'short_description' =>  'Allows to delete event feedback',
                 'description' =>  'Allows to delete event feedback',
             ],
             [
-                'name' => sprintf(SummitScopes::SendMyScheduleMail, $current_realm),
+                'name' => SummitScopes::SendMyScheduleMail,
                 'short_description' => 'Allows to send my schedule share email',
                 'description' => 'Allows to send my schedule share email',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteSummitData, $current_realm),
+                'name' => SummitScopes::WriteSummitData,
                 'short_description' => 'Write Summit Data',
                 'description' => 'Grants write access for Summits Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteRegistrationData, $current_realm),
+                'name' => SummitScopes::WriteRegistrationData,
                 'short_description' => 'Write Registration Data',
                 'description' => 'Grants write access for Registration Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteEventData, $current_realm),
+                'name' => SummitScopes::WriteEventData,
                 'short_description' => 'Write Summit Events',
                 'description' => 'Grants write access for Summits Events',
             ],
             [
-                'name' => sprintf(SummitScopes::WritePresentationData, $current_realm),
+                'name' => SummitScopes::WritePresentationData,
                 'short_description' => 'Write Summit Presentations',
                 'description' => 'Grants write access for Summits Presentations',
             ],
-            array(
-                'name' => sprintf('%s/summits/delete-event', $current_realm),
+            [
+                'name' => SummitScopes::DeleteEventData,
                 'short_description' => 'Delete Summit Events',
                 'description' => 'Grants delete access for Summits Events',
-            ),
-            array(
-                'name' => sprintf('%s/summits/publish-event', $current_realm),
+            ],
+            [
+                'name' => SummitScopes::PublishEventData,
                 'short_description' => 'Publish/UnPublish Summit Events',
                 'description' => 'Grants Publish/UnPublish access for Summits Events',
-            ),
+            ],
             [
-                'name' => sprintf('%s/summits/read-external-orders', $current_realm),
+                'name' => SummitScopes::ReadSummitsConfirmExternalOrders,
                 'short_description' => 'Allow to read External Orders',
                 'description' => 'Allow to read External Orders',
             ],
             [
-                'name' => sprintf('%s/summits/confirm-external-orders', $current_realm),
+                'name' => SummitScopes::WriteSummitsConfirmExternalOrders,
                 'short_description' => 'Allow to confirm External Orders',
                 'description' => 'Allow to confirm External Orders',
             ],
             [
-                'name' => sprintf('%s/summits/write-videos', $current_realm),
+                'name' => SummitScopes::WriteVideoData,
                 'short_description' => 'Allow to write presentation videos',
                 'description' => 'Allow to write presentation videos',
             ],
             [
-                'name' => sprintf('%s/summits/read-notifications', $current_realm),
+                'name' => SummitScopes::ReadNotifications,
                 'short_description' => 'Allow to read summit notifications',
                 'description' => 'Allow to read summit notifications',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                'name' => SummitScopes::WriteSpeakersData,
                 'short_description' => 'Write Speakers Data',
                 'description' => 'Grants write access for Speakers Data',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadSpeakersData, $current_realm),
+                'name' => SummitScopes::ReadSpeakersData,
                 'short_description' => 'Read Speakers Data',
                 'description' => 'Grants read access for Speakers Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                'name' => SummitScopes::WriteMySpeakersData,
                 'short_description' => 'Write My Speakers Profile Data',
                 'description' => 'Grants write access for My Speaker Profile Data',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadMySpeakersData, $current_realm),
+                'name' => SummitScopes::ReadMySpeakersData,
                 'short_description' => 'Read My Speakers Profile Data',
                 'description' => 'Grants read access for My Speaker Profile Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                'name' => SummitScopes::WriteAttendeesData,
                 'short_description' => 'Write Attendees Data',
                 'description' => 'Grants write access for Attendees Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WritePromoCodeData, $current_realm),
+                'name' => SummitScopes::WritePromoCodeData,
                 'short_description' => 'Write Promo Codes Data',
                 'description' => 'Grants write access for Promo Codes Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteLocationsData, $current_realm),
+                'name' => SummitScopes::WriteLocationsData,
                 'short_description' => 'Write Summit Locations Data',
                 'description' => 'Grants write access for Summit Locations Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteLocationBannersData, $current_realm),
+                'name' => SummitScopes::WriteLocationBannersData,
                 'short_description' => 'Write Summit Location Banners Data',
                 'description' => 'Grants write access for Summit Location Banners Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteTrackTagGroupsData, $current_realm),
+                'name' => SummitScopes::WriteTrackTagGroupsData,
                 'short_description' => 'Write Summit Track Tag Groups Data',
                 'description' => 'Grants write access for Summit Track Tag Groups Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteTrackQuestionTemplateData, $current_realm),
+                'name' => SummitScopes::WriteTrackQuestionTemplateData,
                 'short_description' => 'Write Summit Track Question Template Data',
                 'description' => 'Grants write access for Summit Track Question Template Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WritePresentationVideosData, $current_realm),
+                'name' => SummitScopes::WritePresentationVideosData,
                 'short_description' => 'Write Summit Presentation Videos Data',
                 'description' => 'Grants write access for Summit Presentation Videos Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WritePresentationSlidesData, $current_realm),
+                'name' => SummitScopes::WritePresentationSlidesData,
                 'short_description' => 'Write Summit Presentation Slides Data',
                 'description' => 'Grants write access for Summit Presentation Slides Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WritePresentationLinksData, $current_realm),
+                'name' => SummitScopes::WritePresentationLinksData,
                 'short_description' => 'Write Summit Presentation Links Data',
                 'description' => 'Grants write access for Summit Presentation Links Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
+                'name' => SummitScopes::WritePresentationMaterialsData,
                 'short_description' => 'Write Summit Presentation Materials Data',
                 'description' => 'Grants write access for Summit Materials Links Data',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadMyBookableRoomsReservationData, $current_realm),
+                'name' => SummitScopes::ReadMyBookableRoomsReservationData,
                 'short_description' => 'Read my bookable rooms reservations',
                 'description' => 'Read my bookable rooms reservations',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $current_realm),
+                'name' => SummitScopes::WriteMyBookableRoomsReservationData,
                 'short_description' => 'Write my bookable rooms reservations',
                 'description' => 'Write my bookable rooms reservations',
             ],
             [
-                'name' => sprintf(SummitScopes::CreateOfflineRegistrationOrders, $current_realm),
+                'name' => SummitScopes::CreateOfflineRegistrationOrders,
                 'short_description' => 'Create summit offline registration orders',
                 'description' => 'Create summit offline registration orders',
             ],
             [
-                'name' => sprintf(SummitScopes::CreateRegistrationOrders, $current_realm),
+                'name' => SummitScopes::CreateRegistrationOrders,
                 'short_description' => 'Create summit registration orders',
                 'description' => 'Create summit registration orders',
             ],
             [
-                'name' => sprintf(SummitScopes::DeleteRegistrationOrders, $current_realm),
+                'name' => SummitScopes::DeleteRegistrationOrders,
                 'short_description' => 'Delete summit registration orders',
                 'description' => 'Delete summit registration orders',
             ],
             [
-                'name' => sprintf(SummitScopes::DeleteMyRegistrationOrders, $current_realm),
+                'name' => SummitScopes::DeleteMyRegistrationOrders,
                 'short_description' => 'Delete my summit registration orders',
                 'description' => 'Delete my summit registration orders',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                'name' => SummitScopes::ReadMyRegistrationOrders,
                 'short_description' => 'Read my summit registration orders',
                 'description' => 'Read my summit registration orders',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                'name' => SummitScopes::ReadRegistrationOrders,
                 'short_description' => 'Read summit registration orders',
                 'description' => 'Read summit registration orders',
             ],
             [
-                'name' => sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                'name' => SummitScopes::UpdateRegistrationOrders,
                 'short_description' => 'Update summit registration orders',
                 'description' => 'Update summit registration orders',
             ],
             [
-                'name' => sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                'name' => SummitScopes::UpdateMyRegistrationOrders,
                 'short_description' => 'Update my summit registration orders',
                 'description' => 'Update my summit registration orders',
             ],
             [
-                'name' => sprintf(SummitScopes::UpdateRegistrationOrdersBadges, $current_realm),
+                'name' => SummitScopes::UpdateRegistrationOrdersBadges,
                 'short_description' => 'Update  summit registration orders badges',
                 'description' => 'Update summit registration orders badges',
             ],
             [
-                'name' => sprintf(SummitScopes::PrintRegistrationOrdersBadges, $current_realm),
+                'name' => SummitScopes::PrintRegistrationOrdersBadges,
                 'short_description' => 'print summit registration orders badges',
                 'description' => 'print summit registration orders badges',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadMyBadgeScan, $current_realm),
+                'name' => SummitScopes::ReadMyBadgeScan,
                 'short_description' => 'read my badge scans',
                 'description' => 'read my badge scans',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadBadgeScanValidate, $current_realm),
+                'name' => SummitScopes::ReadBadgeScanValidate,
                 'short_description' => 'validate badge scan',
                 'description' => 'validate badge scan',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteMyBadgeScan, $current_realm),
+                'name' => SummitScopes::WriteMyBadgeScan,
                 'short_description' => 'allow to share my badge with sponsors',
                 'description' => 'allow to share my badge with sponsors',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadBadgeScan, $current_realm),
+                'name' => SummitScopes::ReadBadgeScan,
                 'short_description' => 'read badge scans',
                 'description' => 'read badge scans',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteBadgeScan, $current_realm),
+                'name' => SummitScopes::WriteBadgeScan,
                 'short_description' => 'write badge scans',
                 'description' => 'write badge scans',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadPaymentProfiles, $current_realm),
+                'name' => SummitScopes::ReadPaymentProfiles,
                 'short_description' => 'read summit payment profiles',
                 'description' => 'read summit payment profiles',
             ],
             [
-                'name' => sprintf(SummitScopes::WritePaymentProfiles, $current_realm),
+                'name' => SummitScopes::WritePaymentProfiles,
                 'short_description' => 'write summit payment profiles',
                 'description' => 'write summit payment profiles',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                'name' => SummitScopes::WriteRegistrationInvitations,
                 'short_description' => 'write summit registration invitation',
                 'description' => 'write summit registration invitation',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                'name' => SummitScopes::ReadRegistrationInvitations,
                 'short_description' => 'read summit registration invitation',
                 'description' => 'read summit registration invitation',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadMyRegistrationInvitations, $current_realm),
+                'name' => SummitScopes::ReadMyRegistrationInvitations,
                 'short_description' => 'read my summit registration invitation',
                 'description' => 'read my summit registration invitation',
             ],
             [
-                'name' => sprintf(SummitScopes::DoVirtualCheckIn, $current_realm),
+                'name' => SummitScopes::DoVirtualCheckIn,
                 'short_description' => 'Allow virtual Check In',
                 'description' => 'Allow virtual Check In',
             ],
             [
-                'name' => sprintf(SummitScopes::Allow2PresentationAttendeeVote, $current_realm),
+                'name' => SummitScopes::Allow2PresentationAttendeeVote,
                 'short_description' => 'Allow Attendee Vote on Presentation',
                 'description' => 'Allow Attendee Vote on Presentation',
             ],
             [
-                'name' => sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm),
+                'name' => SummitScopes::ReadAttendeeNotesData,
                 'short_description' => 'Read Attendee Notes Data',
                 'description' => 'Grants read access for Attendee Notes Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm),
+                'name' => SummitScopes::WriteAttendeeNotesData,
                 'short_description' => 'Write Attendee Notes Data',
                 'description' => 'Grants write access for Attendee Notes Data',
             ]
@@ -414,12 +413,11 @@ final class ApiScopesSeeder extends Seeder
 
     private function seedAuditLogScopes()
     {
-        $current_realm = Config::get('app.scope_base_realm');
         $api = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'audit-logs']);
 
         $scopes = [
             [
-                'name' => sprintf(SummitScopes::ReadAuditLogs, $current_realm),
+                'name' => SummitScopes::ReadAuditLogs,
                 'short_description' => 'Get Audit Logs Data',
                 'description' => 'Grants read only access for Audit Logs Data',
             ]
@@ -440,27 +438,26 @@ final class ApiScopesSeeder extends Seeder
     }
 
     private function seedMembersScopes(){
-        $current_realm = Config::get('app.scope_base_realm');
         $api = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'members']);
 
         $scopes = [
             [
-                'name' => sprintf(MemberScopes::ReadMemberData, $current_realm),
+                'name' => MemberScopes::ReadMemberData,
                 'short_description' => 'Get Members Data',
                 'description' => 'Grants read only access for Members Data',
             ],
             [
-                'name' => sprintf(MemberScopes::ReadMyMemberData, $current_realm),
+                'name' => MemberScopes::ReadMyMemberData,
                 'short_description' => 'Get My Member Data',
                 'description' => 'Grants read only access for My Member',
             ],
             [
-                'name' => sprintf(MemberScopes::WriteMemberData, $current_realm),
+                'name' => MemberScopes::WriteMemberData,
                 'short_description' => 'Allows write only access to members',
                 'description' => 'Allows write only access to memberss',
             ],
             [
-                'name' => sprintf(MemberScopes::WriteMyMemberData, $current_realm),
+                'name' => MemberScopes::WriteMyMemberData,
                 'short_description' => 'Allows write only access to my Member Data',
                 'description' =>  'Allows write only access to my Member Data',
             ],
@@ -481,17 +478,16 @@ final class ApiScopesSeeder extends Seeder
     }
 
     private function seedTagsScopes(){
-        $current_realm = Config::get('app.scope_base_realm');
         $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'organizations']);
 
         $scopes = [
             [
-                'name' => sprintf(SummitScopes::ReadTagsData, $current_realm),
+                'name' => SummitScopes::ReadTagsData,
                 'short_description' => 'Get Tags Data',
                 'description' => 'Grants read only access for Tags Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteTagsData, $current_realm),
+                'name' => SummitScopes::WriteTagsData,
                 'short_description' => 'Write Tags Data',
                 'description' => 'Grants write access to Tags Data',
             ],
@@ -512,17 +508,17 @@ final class ApiScopesSeeder extends Seeder
     }
 
     private function seedOrganizationScopes(){
-        $current_realm = Config::get('app.scope_base_realm');
+
         $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'companies']);
 
         $scopes = [
             [
-                'name'              => sprintf(OrganizationScopes::ReadOrganizationData, $current_realm),
+                'name'              => OrganizationScopes::ReadOrganizationData,
                 'short_description' => 'Get Organizations Data',
                 'description'       => 'Grants read only access for Organization Data',
             ],
             [
-                'name'              => sprintf(OrganizationScopes::WriteOrganizationData, $current_realm),
+                'name'              => OrganizationScopes::WriteOrganizationData,
                 'short_description' => 'Write Companies Data',
                 'description'       => 'Grants write access for Organization Data',
             ],
@@ -543,17 +539,16 @@ final class ApiScopesSeeder extends Seeder
     }
 
     private function seedCompaniesScopes(){
-        $current_realm = Config::get('app.scope_base_realm');
         $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'companies']);
 
         $scopes = [
             [
-                'name'              => sprintf(CompanyScopes::Read, $current_realm),
+                'name'              => CompanyScopes::Read,
                 'short_description' => 'Get Companies Data',
                 'description'       => 'Grants read only access for Companies Data',
             ],
             [
-                'name'              => sprintf(CompanyScopes::Write, $current_realm),
+                'name'              => CompanyScopes::Write,
                 'short_description' => 'Write Companies Data',
                 'description'       => 'Grants write only access for Companies Data',
             ],
@@ -574,17 +569,16 @@ final class ApiScopesSeeder extends Seeder
     }
 
     private function seedSponsoredProjectsScopes(){
-        $current_realm = Config::get('app.scope_base_realm');
         $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'sponsored-projects']);
 
         $scopes = [
             [
-                'name'              => sprintf(SponsoredProjectScope::Read, $current_realm),
+                'name'              => SponsoredProjectScope::Read,
                 'short_description' => 'Get Sponsored Projects Data',
                 'description'       => 'Grants read only access for Sponsored Projects Data',
             ],
             [
-                'name'              => sprintf(SponsoredProjectScope::Write, $current_realm),
+                'name'              => SponsoredProjectScope::Write,
                 'short_description' => 'Write Sponsored Projects Data',
                 'description'       => 'Grants write only access for Sponsored Projects Data',
             ],
@@ -605,15 +599,14 @@ final class ApiScopesSeeder extends Seeder
     }
 
     private function seedGroupsScopes(){
-        $current_realm = Config::get('app.scope_base_realm');
         $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'groups']);
 
         $scopes = [
-            array(
-                'name'              => sprintf('%s/groups/read', $current_realm),
+            [
+                'name'              => GroupsScopes::ReadData,
                 'short_description' => 'Get Groups Data',
                 'description'       => 'Grants read only access for Groups Data',
-            ),
+            ],
         ];
 
         foreach ($scopes as $scope_info) {
@@ -631,20 +624,19 @@ final class ApiScopesSeeder extends Seeder
     }
 
     private function seedTeamsScopes(){
-        $current_realm = Config::get('app.scope_base_realm');
         $api = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'teams']);
 
         $scopes = [
-            array(
-                'name' => sprintf('%s/teams/read', $current_realm),
+            [
+                'name' => TeamScopes::Read,
                 'short_description' => 'Get Teams Data',
                 'description' => 'Grants read only access for Teams Data',
-            ),
-            array(
-                'name' => sprintf('%s/teams/write', $current_realm),
+            ],
+            [
+                'name' => TeamScopes::Write,
                 'short_description' => 'Write Teams Data',
                 'description' => 'Grants write access for Teams Data',
-            ),
+            ],
         ];
 
         foreach ($scopes as $scope_info) {
@@ -663,17 +655,17 @@ final class ApiScopesSeeder extends Seeder
 
     private function seedSummitAdminGroupScopes(){
 
-        $current_realm = Config::get('app.scope_base_realm');
+
         $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'summit-administrator-groups']);
 
         $scopes = [
             [
-                'name' => sprintf(SummitScopes::ReadSummitAdminGroups, $current_realm),
+                'name' => SummitScopes::ReadSummitAdminGroups,
                 'short_description' => 'Get Summit Admin Groups Data',
                 'description' => 'Grants read only access for Summit Admin Groups Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                'name' => SummitScopes::WriteSummitAdminGroups,
                 'short_description' => 'Write Summit Admin Groups Data',
                 'description' => 'Grants write access to Summit Admin Groups Data',
             ],
@@ -695,17 +687,16 @@ final class ApiScopesSeeder extends Seeder
 
     private function seedSummitMediaFileTypes(){
 
-        $current_realm = Config::get('app.scope_base_realm');
         $api           = EntityManager::getRepository(\App\Models\ResourceServer\Api::class)->findOneBy(['name' => 'summit-media-file-types']);
 
         $scopes = [
             [
-                'name' => sprintf(SummitScopes::ReadSummitMediaFileTypes, $current_realm),
+                'name' => SummitScopes::ReadSummitMediaFileTypes,
                 'short_description' => 'Get Summit Media File Types Data',
                 'description' => 'Grants read only access for Summit Media File Types Data',
             ],
             [
-                'name' => sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm),
+                'name' => SummitScopes::WriteSummitMediaFileTypes,
                 'short_description' => 'Write Summit Media File Types Data',
                 'description' => 'Grants write access to Summit Media File Types Data',
             ],

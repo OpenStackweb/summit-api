@@ -18,11 +18,11 @@
  */
 final class MemberScopes
 {
-    const ReadMemberData    = '%s/members/read';
+    const ReadMemberData    = SCOPE_BASE_REALM.'/members/read';
 
-    const ReadMyMemberData    = '%s/members/read/me';
+    const ReadMyMemberData    = SCOPE_BASE_REALM.'/members/read/me';
 
-    const WriteMemberData    = '%s/members/write';
+    const WriteMemberData    = SCOPE_BASE_REALM.'/members/write';
 
-    const WriteMyMemberData    = '%s/members/write/me';
+    const WriteMyMemberData    = SCOPE_BASE_REALM.'/members/write/me';
 }

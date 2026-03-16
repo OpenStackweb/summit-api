@@ -16,7 +16,6 @@ use App\Security\ElectionScopes;
 use App\Security\GroupsScopes;
 use App\Security\RSVPInvitationsScopes;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Config;
 use App\Models\ResourceServer\ApiEndpoint;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use App\Security\SummitScopes;
@@ -55,7 +54,6 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedAttendeeBadgesEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
 
         $this->seedApiEndpoints('summits', [
             // admin
@@ -64,7 +62,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badges',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -78,7 +76,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badges/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -92,7 +90,7 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedAttendeeTicketsEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('summits', [
             // admin
@@ -101,8 +99,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -117,8 +115,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/external',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::BadgePrinters,
@@ -129,8 +127,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -144,8 +142,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/csv',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -159,8 +157,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/csv/template',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -174,8 +172,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/ingest',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -189,8 +187,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -206,8 +204,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/refund',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -221,8 +219,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets/all/refund-requests/approved',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -236,8 +234,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -251,8 +249,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrdersBadges, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrdersBadges,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -266,8 +264,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/type/{type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrdersBadges, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrdersBadges,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -281,8 +279,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/features/{feature_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrdersBadges, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrdersBadges,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -296,8 +294,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/features/{feature_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrdersBadges, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrdersBadges,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -311,8 +309,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/{view_type}/print',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::PrintRegistrationOrdersBadges, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::PrintRegistrationOrdersBadges,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -327,8 +325,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/{view_type}/print',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::PrintRegistrationOrdersBadges, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::PrintRegistrationOrdersBadges,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -343,8 +341,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::PrintRegistrationOrdersBadges, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::PrintRegistrationOrdersBadges,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -359,8 +357,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/print',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::PrintRegistrationOrdersBadges, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::PrintRegistrationOrdersBadges,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -375,7 +373,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -389,8 +387,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -404,7 +402,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current/prints/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -419,8 +417,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tickets/{ticket_id}/badge/current',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -435,7 +433,7 @@ class ApiEndpointsSeeder extends Seeder
     private function seedRegistrationOrderEndpoints()
     {
 
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('summits', [
             // admin
@@ -444,8 +442,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -459,8 +457,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -474,8 +472,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::CreateOfflineRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::CreateOfflineRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -489,8 +487,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -504,8 +502,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::DeleteRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DeleteRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -519,8 +517,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -535,7 +533,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/reserve',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::CreateRegistrationOrders, $current_realm)
+                    SummitScopes::CreateRegistrationOrders
                 ],
             ],
             [
@@ -543,7 +541,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{hash}/checkout',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm)
+                    SummitScopes::UpdateMyRegistrationOrders
                 ],
             ],
             [
@@ -551,7 +549,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{hash}/tickets/mine',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm)
+                    SummitScopes::ReadMyRegistrationOrders
                 ],
             ],
             [
@@ -559,7 +557,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{hash}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::DeleteMyRegistrationOrders, $current_realm)
+                    SummitScopes::DeleteMyRegistrationOrders
                 ],
             ],
             [
@@ -567,7 +565,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -575,7 +573,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -583,7 +581,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/all/tickets/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -591,7 +589,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/all/tickets/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -599,7 +597,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/all/tickets/{ticket_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                    SummitScopes::UpdateMyRegistrationOrders,
                 ],
             ],
             [
@@ -607,7 +605,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/all/tickets/{ticket_id}/pdf',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -615,7 +613,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                    SummitScopes::UpdateMyRegistrationOrders,
                 ],
             ],
             [
@@ -623,7 +621,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -631,7 +629,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/tickets',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -639,8 +637,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/resend',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -654,7 +652,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/attendee',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                    SummitScopes::UpdateMyRegistrationOrders,
                 ],
             ],
             [
@@ -662,7 +660,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/attendee',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                    SummitScopes::UpdateMyRegistrationOrders,
                 ],
             ],
             [
@@ -670,9 +668,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/attendee/reinvite',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::UpdateMyRegistrationOrders,
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
             ],
             [
@@ -680,7 +678,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/refund',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                    SummitScopes::UpdateMyRegistrationOrders,
                 ],
             ],
             [
@@ -688,7 +686,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/refund',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                    SummitScopes::UpdateMyRegistrationOrders,
                 ],
             ],
             [
@@ -696,8 +694,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/refund/cancel',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -711,7 +709,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -719,7 +717,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/orders/{order_id}/tickets/{ticket_id}/pdf',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationOrders, $current_realm),
+                    SummitScopes::ReadMyRegistrationOrders,
                 ],
             ],
             [
@@ -727,8 +725,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/pdf',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationOrders, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -742,8 +740,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -757,8 +755,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/activate',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -772,8 +770,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/activate',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -787,7 +785,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets/{ticket_id}/delegate',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::UpdateMyRegistrationOrders, $current_realm),
+                    SummitScopes::UpdateMyRegistrationOrders,
                 ]
             ],
             [
@@ -795,8 +793,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/orders/{order_id}/tickets',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::UpdateRegistrationOrders, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::UpdateRegistrationOrders,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -811,8 +809,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/csv',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -826,8 +824,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -841,8 +839,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/all/send',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -856,8 +854,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -871,8 +869,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -886,7 +884,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationInvitations, $current_realm),
+                    SummitScopes::ReadMyRegistrationInvitations,
                 ],
             ],
             [
@@ -894,8 +892,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/{invitation_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadRegistrationInvitations, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -909,8 +907,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/{invitation_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -924,8 +922,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/{invitation_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -939,8 +937,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-invitations/all',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -954,7 +952,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/registration-invitations/{token}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyRegistrationInvitations, $current_realm),
+                    SummitScopes::ReadMyRegistrationInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -969,8 +967,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations/csv',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -984,8 +982,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -999,8 +997,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations/all/send',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1014,8 +1012,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSubmissionInvitations, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1029,8 +1027,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSubmissionInvitations, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1044,8 +1042,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations/{invitation_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSubmissionInvitations, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1059,8 +1057,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations/{invitation_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1074,8 +1072,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations/{invitation_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1089,8 +1087,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submission-invitations/all',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSubmissionInvitations, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSubmissionInvitations,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1105,7 +1103,7 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedSummitEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('summits', [
             // summits
@@ -1114,8 +1112,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
                 ],
             ],
             [
@@ -1123,7 +1121,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -1131,7 +1129,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/{id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
             ],
             [
@@ -1139,7 +1137,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/{id}/registration-stats',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1153,7 +1151,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/{id}/registration-stats/check-ins',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1167,7 +1165,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/{id}/registration-stats/purchased-tickets',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1182,8 +1180,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -1191,8 +1189,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -1200,7 +1198,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1212,7 +1210,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1225,7 +1223,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/logo',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1238,7 +1236,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/logo',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1251,7 +1249,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/logo/secondary',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1264,7 +1262,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/logo/secondary',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1277,7 +1275,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1290,8 +1288,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1304,8 +1302,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1318,7 +1316,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1331,7 +1329,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings/seed',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1344,7 +1342,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1357,7 +1355,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1370,8 +1368,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1384,7 +1382,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}/filters',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1397,7 +1395,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/schedule-settings/{config_id}/filters/{filter_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1411,8 +1409,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -1420,8 +1418,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -1429,7 +1427,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1442,7 +1440,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1455,7 +1453,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1468,8 +1466,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -1477,7 +1475,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1490,8 +1488,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values/{value_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -1499,7 +1497,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values/{value_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1512,7 +1510,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/bookable-room-attribute-types/{type_id}/values/{value_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1526,8 +1524,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/access-level-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1541,7 +1539,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/access-level-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1555,8 +1553,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/access-level-types/{level_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1571,7 +1569,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/access-level-types/{level_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1585,7 +1583,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/access-level-types/{level_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1600,8 +1598,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/payment-gateway-profiles',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadPaymentProfiles, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadPaymentProfiles
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1615,8 +1613,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/payment-gateway-profiles',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WritePaymentProfiles, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WritePaymentProfiles,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1630,8 +1628,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadPaymentProfiles, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadPaymentProfiles
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1645,8 +1643,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WritePaymentProfiles, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WritePaymentProfiles,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1660,8 +1658,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/payment-gateway-profiles/{payment_profile_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WritePaymentProfiles, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WritePaymentProfiles,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1676,8 +1674,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tax-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -1685,7 +1683,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tax-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1699,8 +1697,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tax-types/{tax_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1714,7 +1712,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tax-types/{tax_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1728,7 +1726,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tax-types/{tax_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1742,7 +1740,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1756,7 +1754,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tax-types/{tax_id}/ticket-types/{ticket_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1771,8 +1769,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-feature-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1786,7 +1784,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-feature-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1800,8 +1798,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-feature-types/{feature_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1815,7 +1813,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-feature-types/{feature_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1829,7 +1827,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-feature-types/{feature_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1843,7 +1841,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-feature-types/{feature_id}/image',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1857,7 +1855,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-feature-types/{feature_id}/image',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1872,8 +1870,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/refund-policies',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1887,7 +1885,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/refund-policies',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1901,8 +1899,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/refund-policies/{policy_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1916,7 +1914,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/refund-policies/{policy_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1930,7 +1928,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/refund-policies/{policy_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1945,8 +1943,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsorships-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1959,7 +1957,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsorships-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1972,8 +1970,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsorships-types/{type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1986,7 +1984,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsorships-types/{type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -1999,7 +1997,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsorships-types/{type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2012,7 +2010,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2025,7 +2023,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsorships-types/{type_id}/badge-image',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2039,8 +2037,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2055,8 +2053,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/sponsors',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2071,7 +2069,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2084,7 +2082,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/sponsors',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2097,8 +2095,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2113,8 +2111,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/sponsors/{sponsor_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2129,7 +2127,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2142,7 +2140,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/sponsors/{sponsor_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2155,7 +2153,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2168,7 +2166,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/header-image',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2181,7 +2179,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/header-image',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2194,7 +2192,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/header-image/mobile',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2207,7 +2205,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/header-image/mobile',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2220,7 +2218,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/carousel-advertise-image',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2233,7 +2231,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/carousel-advertise-image',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2246,7 +2244,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/side-image',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2259,7 +2257,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/side-image',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2273,8 +2271,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2289,7 +2287,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2302,8 +2300,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2316,7 +2314,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2329,7 +2327,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2342,7 +2340,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}/image',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2355,7 +2353,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/ads/{ad_id}/image',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2369,8 +2367,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2384,7 +2382,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2397,8 +2395,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials/{material_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2411,7 +2409,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials/{material_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2424,7 +2422,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/materials/{material_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2438,8 +2436,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2453,7 +2451,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2466,8 +2464,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks/{social_network_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2480,7 +2478,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks/{social_network_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2493,7 +2491,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/social-networks/{social_network_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2507,8 +2505,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2522,7 +2520,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2537,8 +2535,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2553,7 +2551,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2568,7 +2566,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2583,8 +2581,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/all/extra-questions/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2599,7 +2597,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2614,7 +2612,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2629,7 +2627,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2645,8 +2643,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2661,7 +2659,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2674,7 +2672,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/lead-report-settings',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2688,8 +2686,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2702,8 +2700,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2716,7 +2714,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2729,7 +2727,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2743,7 +2741,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    SummitScopes::ReadSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2756,7 +2754,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2769,7 +2767,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    SummitScopes::ReadSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2782,7 +2780,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2795,7 +2793,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorships/{sponsorship_id}/add-ons/{add_on_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2808,7 +2806,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/sponsorservices-statistics',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2822,7 +2820,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/add-ons/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    SummitScopes::ReadSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2836,7 +2834,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/users/{member_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2849,7 +2847,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/users/{member_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2862,7 +2860,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/user-info-grants/me',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMyBadgeScan, $current_realm),
+                    SummitScopes::WriteMyBadgeScan,
                 ]
             ],
             // sponsorship-types
@@ -2871,8 +2869,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/sponsorship-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2885,7 +2883,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/sponsorship-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2898,8 +2896,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/sponsorship-types/{id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -2907,7 +2905,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/sponsorship-types/{id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2920,7 +2918,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/sponsorship-types/{id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2935,8 +2933,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
             ],
             [
@@ -2944,8 +2942,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2959,7 +2957,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2973,7 +2971,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/seed-defaults',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2987,8 +2985,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
             ],
             [
@@ -2996,7 +2994,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3010,7 +3008,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3024,7 +3022,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/values',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3037,7 +3035,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/values/{value_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3051,7 +3049,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/values/{value_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3066,8 +3064,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
             ],
             [
@@ -3075,7 +3073,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3089,7 +3087,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3103,7 +3101,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3117,8 +3115,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/order-extra-questions/{question_id}/sub-question-rules/{rule_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
             ],
             // badge types
@@ -3127,8 +3125,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3142,7 +3140,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3156,8 +3154,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3171,7 +3169,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3185,7 +3183,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3199,7 +3197,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/access-levels/{access_level_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3213,7 +3211,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/access-levels/{access_level_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3227,7 +3225,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/features/{feature_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3241,7 +3239,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/features/{feature_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3255,7 +3253,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/view-types/{badge_view_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3269,7 +3267,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-types/{badge_type_id}/view-types/{badge_view_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3284,8 +3282,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-view-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3299,7 +3297,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-view-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3313,8 +3311,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-view-types/{badge_view_type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3328,7 +3326,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-view-types/{badge_view_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3342,7 +3340,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge-view-types/{badge_view_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3357,8 +3355,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3372,8 +3370,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3387,8 +3385,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/all/send',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3402,8 +3400,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3411,8 +3409,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/me/allowed-extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3420,8 +3418,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3435,8 +3433,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3444,8 +3442,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3459,8 +3457,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3474,8 +3472,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/virtual-check-in',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::DoVirtualCheckIn, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DoVirtualCheckIn,
                 ],
             ],
             [
@@ -3483,35 +3481,35 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/schedule',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
                 'name' => 'add-event-attendee-schedule',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [SummitScopes::WriteSummitData],
             ],
             [
                 'name' => 'delete-event-attendee-schedule',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [SummitScopes::WriteSummitData],
             ],
             array(
                 'name' => 'checking-event-attendee-schedule',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}/check-in',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [SummitScopes::WriteSummitData],
             ),
             [
                 'name' => 'get-attendee-allowed-extra-questions',
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/allowed-extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
             ],
             [
@@ -3519,8 +3517,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3534,8 +3532,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/tickets',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3549,8 +3547,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/tickets/{ticket_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3564,8 +3562,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/tickets/{ticket_id}/reassign',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3579,8 +3577,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/tickets/{ticket_id}/reassign/{other_member_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeesData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeesData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3595,8 +3593,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/all/notes',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadAttendeeNotesData
                 ],
             ],
             [
@@ -3604,8 +3602,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/all/notes/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadAttendeeNotesData
                 ],
             ],
             [
@@ -3613,8 +3611,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadAttendeeNotesData
                 ],
             ],
             [
@@ -3622,8 +3620,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadAttendeeNotesData
                 ],
             ],
             [
@@ -3631,8 +3629,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAttendeeNotesData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadAttendeeNotesData
                 ],
             ],
             [
@@ -3640,8 +3638,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeeNotesData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3655,8 +3653,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeeNotesData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3670,8 +3668,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/notes/{note_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteAttendeeNotesData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteAttendeeNotesData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3686,8 +3684,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submitters',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3695,8 +3693,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submitters/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3709,8 +3707,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/submitters/all/send',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3725,8 +3723,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3734,8 +3732,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3748,8 +3746,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers/on-schedule',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3757,7 +3755,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3771,7 +3769,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers/{speaker_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3785,7 +3783,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}/photo',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
             ],
             [
@@ -3793,7 +3791,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}/photo',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
             ],
             [
@@ -3801,7 +3799,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}/big-photo',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
             ],
             [
@@ -3809,7 +3807,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}/big-photo',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
             ],
             [
@@ -3817,7 +3815,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3830,7 +3828,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3843,7 +3841,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -3855,8 +3853,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3864,8 +3862,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/active-involvements',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3873,8 +3871,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/organizational-roles',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3882,8 +3880,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3891,9 +3889,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMySpeakersData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadMySpeakersData,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3901,8 +3899,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}/edit-permission',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSpeakersData,
+                    SummitScopes::WriteSummitData
                 ],
             ],
             [
@@ -3910,8 +3908,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/{speaker_id}/edit-permission',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -3919,8 +3917,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/presentations/{role}/selection-plans/{selection_plan_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
 
             ],
@@ -3929,8 +3927,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/presentations/{role}/summits/{summit_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
 
             ],
@@ -3939,9 +3937,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/presentations/{presentation_id}/speakers/{speaker_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSpeakersData,
+                    SummitScopes::WriteMySpeakersData
                 ],
             ],
             [
@@ -3949,9 +3947,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/presentations/{presentation_id}/speakers/{speaker_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSpeakersData,
+                    SummitScopes::WriteMySpeakersData
                 ],
             ],
             [
@@ -3959,9 +3957,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/presentations/{presentation_id}/moderators/{speaker_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSpeakersData,
+                    SummitScopes::WriteMySpeakersData
                 ],
             ],
             [
@@ -3969,9 +3967,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/presentations/{presentation_id}/moderators/{speaker_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSpeakersData,
+                    SummitScopes::WriteMySpeakersData
                 ],
             ],
             [
@@ -3979,7 +3977,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                    SummitScopes::WriteMySpeakersData,
                 ],
             ],
             [
@@ -3987,7 +3985,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                    SummitScopes::WriteMySpeakersData,
                 ],
             ],
             [
@@ -3995,7 +3993,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/photo',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                    SummitScopes::WriteMySpeakersData,
                 ],
             ],
             [
@@ -4003,7 +4001,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/photo',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                    SummitScopes::WriteMySpeakersData,
                 ],
             ],
             [
@@ -4011,7 +4009,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/big-photo',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                    SummitScopes::WriteMySpeakersData,
                 ],
             ],
             [
@@ -4019,7 +4017,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/me/big-photo',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMySpeakersData, $current_realm),
+                    SummitScopes::WriteMySpeakersData,
                 ],
             ],
             [
@@ -4027,7 +4025,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/speakers/merge/{speaker_from_id}/{speaker_to_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSpeakersData,
                 ],
             ],
             [
@@ -4035,9 +4033,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers/{speaker_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSpeakersData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSpeakersData,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4045,24 +4043,24 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMySpeakersData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadMySpeakersData,
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
                 'name' => 'add-speaker-feedback',
                 'route' => '/api/v1/summits/{id}/speakers/{speaker_id}/presentations/{presentation_id}/feedback',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [SummitScopes::WriteSummitData],
             ],
             [
                 'name' => 'send bulk speakers emails',
                 'route' => '/api/v1/summits/{id}/speakers/all/send',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4077,8 +4075,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4091,8 +4089,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4105,8 +4103,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/csv',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4119,8 +4117,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/published',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4128,8 +4126,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/all/published/tags',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4137,8 +4135,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/published/empty-spots',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4146,8 +4144,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/unpublished',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4155,8 +4153,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/events',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4164,8 +4162,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/events/published',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4173,8 +4171,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4182,8 +4180,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/published',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4191,8 +4189,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/published/tokens',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4200,8 +4198,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/published/streaming-info',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4209,8 +4207,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/published/media-uploads',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4218,7 +4216,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/published/mail',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::SendMyScheduleMail, $current_realm)
+                    SummitScopes::SendMyScheduleMail
                 ],
                 // 5 request per day
                 'rate_limit' => 5,
@@ -4228,7 +4226,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'add-event',
                 'route' => '/api/v1/summits/{id}/events',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4241,8 +4239,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4257,13 +4255,13 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'update-event-live-info',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/live-info',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
             ],
             [
                 'name' => 'add-event-image',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/image',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4275,7 +4273,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'delete-event-image',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/image',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4287,7 +4285,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'clone-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/clone',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4299,7 +4297,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'update-events',
                 'route' => '/api/v1/summits/{id}/events',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4311,7 +4309,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'publish-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/publish',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::PublishEventData, $current_realm)],
+                'scopes' => [SummitScopes::PublishEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4323,7 +4321,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'publish-events',
                 'route' => '/api/v1/summits/{id}/events/publish',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::PublishEventData, $current_realm)],
+                'scopes' => [SummitScopes::PublishEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4335,7 +4333,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'unpublish-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/publish',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::PublishEventData, $current_realm)],
+                'scopes' => [SummitScopes::PublishEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4347,7 +4345,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'unpublish-events',
                 'route' => '/api/v1/summits/{id}/events/publish',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::PublishEventData, $current_realm)],
+                'scopes' => [SummitScopes::PublishEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4359,7 +4357,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'delete-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf('%s/summits/delete-event', $current_realm)],
+                'scopes' => [SummitScopes::DeleteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4371,7 +4369,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'add-event-attachment',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/attachment',
                 'http_method' => 'POST',
-                'scopes' => [sprintf(SummitScopes::WriteSummitData, $current_realm)],
+                'scopes' => [SummitScopes::WriteSummitData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4384,7 +4382,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                    SummitScopes::AddMyEventFeedback,
                 ],
             ],
             [
@@ -4392,7 +4390,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                    SummitScopes::AddMyEventFeedback,
                 ],
             ],
             [
@@ -4400,7 +4398,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::DeleteMyEventFeedback, $current_realm),
+                    SummitScopes::DeleteMyEventFeedback,
                 ],
             ],
             [
@@ -4408,8 +4406,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/feedback',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::MeRead, $current_realm),
-                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                    SummitScopes::MeRead,
+                    MemberScopes::ReadMyMemberData
                 ],
             ],
             [
@@ -4417,8 +4415,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/events/{event_id}/feedback',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::AddMyEventFeedback
                 ],
             ],
             [
@@ -4426,8 +4424,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/events/{event_id}/feedback',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::AddMyEventFeedback, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::AddMyEventFeedback,
                 ],
             ],
             [
@@ -4435,8 +4433,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/feedback',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
                 ],
             ],
             [
@@ -4444,8 +4442,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/feedback/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4458,8 +4456,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/feedback/{feedback_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4472,8 +4470,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/schedule/{event_id}/rsvp',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::DeleteMyRSVP, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DeleteMyRSVP,
                 ],
 
             ],
@@ -4481,7 +4479,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'upgrade-event',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/type/{type_id}/upgrade',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -4494,8 +4492,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4503,8 +4501,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4517,8 +4515,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4531,8 +4529,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4545,8 +4543,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4560,8 +4558,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/maps',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4574,8 +4572,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/maps/{map_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4588,8 +4586,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/maps/{map_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4597,8 +4595,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/maps/{map_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4612,8 +4610,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/images',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4626,8 +4624,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/images/{image_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4640,8 +4638,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/images/{image_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4649,8 +4647,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/images/{image_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4664,8 +4662,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/banners',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4673,9 +4671,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/banners',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationBannersData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData,
+                    SummitScopes::WriteLocationBannersData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4688,9 +4686,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/banners/{banner_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationBannersData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData,
+                    SummitScopes::WriteLocationBannersData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4703,9 +4701,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/banners/{banner_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationBannersData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData,
+                    SummitScopes::WriteLocationBannersData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4718,9 +4716,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/copy/{target_summit_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationBannersData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData,
+                    SummitScopes::WriteLocationBannersData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4734,8 +4732,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4743,8 +4741,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/all/rooms',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4752,8 +4750,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/all/bookable-rooms',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4761,8 +4759,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4775,8 +4773,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4790,8 +4788,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -4799,8 +4797,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4813,8 +4811,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4827,8 +4825,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4842,7 +4840,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4855,7 +4853,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4868,8 +4866,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4882,7 +4880,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/questions/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4895,8 +4893,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4909,8 +4907,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4924,7 +4922,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}/questions/{question_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4937,8 +4935,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}/questions',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4951,8 +4949,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}/questions/{question_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4965,8 +4963,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}/questions/{question_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4980,8 +4978,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}/questions/{question_id}/values',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -4994,7 +4992,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}/questions/{question_id}/values/{value_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5007,8 +5005,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}/questions/{question_id}/values/{value_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5021,8 +5019,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/rsvp-templates/{template_id}/questions/{question_id}/values/{value_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRSVPTemplateData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRSVPTemplateData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5036,8 +5034,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5045,8 +5043,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5059,8 +5057,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}/image',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5073,8 +5071,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}/image',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5087,8 +5085,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5101,8 +5099,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/rooms/{room_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5116,8 +5114,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5125,8 +5123,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5134,8 +5132,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/availability/{day}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5143,7 +5141,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadMyBookableRoomsReservationData, $current_realm),
+                    SummitScopes::ReadMyBookableRoomsReservationData,
                 ],
             ],
             [
@@ -5151,8 +5149,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/all/locations/bookable-rooms/all/reservations/{id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5166,7 +5164,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/{reservation_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $current_realm),
+                    SummitScopes::WriteMyBookableRoomsReservationData,
                 ],
             ],
             [
@@ -5174,8 +5172,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/refund',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5188,8 +5186,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}/cancel',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5202,8 +5200,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5216,8 +5214,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/all/reservations/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5230,8 +5228,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5244,7 +5242,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteMyBookableRoomsReservationData, $current_realm),
+                    SummitScopes::WriteMyBookableRoomsReservationData,
                 ],
             ],
             [
@@ -5252,8 +5250,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/offline',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5266,8 +5264,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/bookable-rooms/{room_id}/reservations/{reservation_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5280,8 +5278,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5294,8 +5292,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5308,8 +5306,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5323,8 +5321,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5337,8 +5335,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/bookable-rooms/{room_id}/attributes/{attribute_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteBookableRoomsData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5352,8 +5350,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/rooms/{room_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5361,8 +5359,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/rooms',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5375,8 +5373,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/rooms/{room_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5389,8 +5387,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/image',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5403,8 +5401,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/image',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5417,8 +5415,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadBookableRoomsData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5426,9 +5424,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteBookableRoomsData,
+                    SummitScopes::WriteLocationsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5441,9 +5439,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/venues/{venue_id}/floors/{floor_id}/bookable-rooms/{room_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteBookableRoomsData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteBookableRoomsData,
+                    SummitScopes::WriteLocationsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5457,8 +5455,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/external-locations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5466,8 +5464,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/external-locations',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5480,8 +5478,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/external-locations/{external_location_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5494,8 +5492,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/hotels',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5503,8 +5501,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/hotels',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5517,8 +5515,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/hotels/{hotel_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5531,8 +5529,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/airports',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5540,8 +5538,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/airports',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5554,8 +5552,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/airports/{airport_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteLocationsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteLocationsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5568,8 +5566,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5577,8 +5575,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/events',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5586,8 +5584,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/locations/{location_id}/events/published',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             // event types
@@ -5596,8 +5594,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5605,8 +5603,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5614,8 +5612,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types/{event_type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5623,8 +5621,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteEventTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5637,8 +5635,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types/seed-defaults',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteEventTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5651,8 +5649,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types/{event_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteEventTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5665,8 +5663,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types/{event_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteEventTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5680,8 +5678,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types/{event_type_id}/summit-documents/{document_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteEventTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5694,8 +5692,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/event-types/{event_type_id}/summit-documents/{document_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteEventTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteEventTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5709,8 +5707,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-chairs',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5725,8 +5723,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-chairs/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5740,7 +5738,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-chairs',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5754,8 +5752,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-chairs/{track_chair_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5769,7 +5767,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-chairs/{track_chair_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5783,7 +5781,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-chairs/{track_chair_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5797,7 +5795,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-chairs/{track_chair_id}/categories/{track_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5811,7 +5809,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-chairs/{track_chair_id}/categories/{track_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5826,8 +5824,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5835,8 +5833,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5844,8 +5842,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5853,8 +5851,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5862,8 +5860,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/icon',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5876,8 +5874,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/icon',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5890,8 +5888,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/extra-questions/{question_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5904,8 +5902,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/extra-questions/{question_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5918,8 +5916,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/allowed-tags',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -5927,8 +5925,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/copy/{to_summit_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5941,8 +5939,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5955,8 +5953,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5969,8 +5967,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -5984,8 +5982,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6000,8 +5998,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6015,8 +6013,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6031,8 +6029,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/all',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6047,8 +6045,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6061,8 +6059,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6076,8 +6074,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6092,8 +6090,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6108,8 +6106,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/all',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6123,8 +6121,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6138,8 +6136,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/proposed-schedule-allowed-locations/{location_id}/allowed-time-frames/{time_frame_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6154,8 +6152,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/sub-tracks/{child_track_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6170,8 +6168,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/tracks/{track_id}/sub-tracks/{child_track_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTracksData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6187,8 +6185,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6196,8 +6194,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6205,8 +6203,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/ticket-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6220,7 +6218,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types/allowed',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                    MemberScopes::ReadMyMemberData
                 ],
             ],
             [
@@ -6228,8 +6226,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTicketTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTicketTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6243,8 +6241,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types/seed-defaults',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTicketTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTicketTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6258,8 +6256,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types/{ticket_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTicketTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTicketTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6273,8 +6271,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types/{ticket_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTicketTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTicketTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6288,8 +6286,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types/{ticket_type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6297,8 +6295,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/ticket-types/all/currency/{currency_symbol}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTicketTypeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTicketTypeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6313,8 +6311,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6322,8 +6320,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6331,8 +6329,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6345,8 +6343,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/{track_group_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6354,8 +6352,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTrackGroupsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTrackGroupsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6368,8 +6366,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/{track_group_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTrackGroupsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTrackGroupsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6382,8 +6380,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/{track_group_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTrackGroupsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTrackGroupsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6396,8 +6394,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/{track_group_id}/tracks/{track_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTrackGroupsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTrackGroupsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6410,8 +6408,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/{track_group_id}/tracks/{track_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTrackGroupsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTrackGroupsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6424,8 +6422,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/{track_group_id}/allowed-groups/{group_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTrackGroupsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTrackGroupsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6438,8 +6436,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-groups/{track_group_id}/allowed-groups/{group_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteTrackGroupsData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteTrackGroupsData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6453,7 +6451,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/external-orders/{external_order_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitsConfirmExternalOrders, $current_realm)
+                    SummitScopes::ReadSummitsConfirmExternalOrders
                 ],
             ),
             array(
@@ -6461,7 +6459,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/external-orders/{external_order_id}/external-attendees/{external_attendee_id}/confirm',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitsConfirmExternalOrders, $current_realm)
+                    SummitScopes::WriteSummitsConfirmExternalOrders
                 ],
             ),
             [
@@ -6469,9 +6467,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/all/import/mux',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6485,8 +6483,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             // attendees votes
@@ -6495,7 +6493,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::Allow2PresentationAttendeeVote, $current_realm),
+                    SummitScopes::Allow2PresentationAttendeeVote,
                 ],
             ],
             [
@@ -6503,7 +6501,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::Allow2PresentationAttendeeVote, $current_realm),
+                    SummitScopes::Allow2PresentationAttendeeVote,
                 ],
             ],
             [
@@ -6511,8 +6509,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/attendee-votes',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             // comments
@@ -6521,8 +6519,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6537,8 +6535,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6553,9 +6551,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6570,9 +6568,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6587,9 +6585,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/comments/{comment_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6605,8 +6603,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/voteable',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             // voteable presentations v2
@@ -6615,8 +6613,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/presentations/voteable',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6630,8 +6628,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v2/summits/{id}/presentations/voteable/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6644,8 +6642,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/voteable/{presentation_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             // presentation submissions
@@ -6654,9 +6652,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
                 ],
             ],
             [
@@ -6664,8 +6662,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
             ],
             [
@@ -6673,9 +6671,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
                 ],
             ],
             [
@@ -6683,9 +6681,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/completed',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
                 ],
             ],
             [
@@ -6693,9 +6691,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
                 ],
             ],
             //extra-questions
@@ -6704,8 +6702,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6719,8 +6717,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/videos',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6728,8 +6726,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/videos/{video_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6737,9 +6735,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/videos',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteVideoData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationVideosData, $current_realm)
+                    SummitScopes::WriteVideoData,
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationVideosData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6752,9 +6750,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/videos/{video_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteVideoData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationVideosData, $current_realm)
+                    SummitScopes::WriteVideoData,
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationVideosData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6767,9 +6765,9 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/videos/{video_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteVideoData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationVideosData, $current_realm)
+                    SummitScopes::WriteVideoData,
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationVideosData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6783,8 +6781,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/links',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6792,8 +6790,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/links/{link_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6801,8 +6799,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/links',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationLinksData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationLinksData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6815,8 +6813,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/links/{link_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationLinksData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationLinksData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6829,8 +6827,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/links/{link_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationLinksData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationLinksData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6844,8 +6842,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/slides',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6853,8 +6851,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/slides/{slide_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6862,8 +6860,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/slides',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationSlidesData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6876,8 +6874,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/slides/{slide_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationSlidesData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6890,8 +6888,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/slides/{slide_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationSlidesData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6905,8 +6903,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6914,8 +6912,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -6923,8 +6921,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationSlidesData
                 ]
             ],
             [
@@ -6932,8 +6930,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationSlidesData
                 ],
             ],
             [
@@ -6941,8 +6939,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/media-uploads/{media_upload_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationMaterialsData, $current_realm),
-                    sprintf(SummitScopes::WritePresentationSlidesData, $current_realm)
+                    SummitScopes::WritePresentationMaterialsData,
+                    SummitScopes::WritePresentationSlidesData
                 ],
             ],
             // presentation speakers
@@ -6951,8 +6949,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WritePresentationData,
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6965,8 +6963,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WritePresentationData,
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6979,8 +6977,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/speakers/{speaker_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePresentationData, $current_realm),
-                    sprintf(SummitScopes::WriteSpeakersData, $current_realm),
+                    SummitScopes::WritePresentationData,
+                    SummitScopes::WriteSpeakersData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -6994,8 +6992,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/shareable-link',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::AddMyScheduleShareable, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::AddMyScheduleShareable
                 ],
             ],
             [
@@ -7003,8 +7001,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/shareable-link',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::DeleteMyScheduleShareable, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DeleteMyScheduleShareable
                 ],
             ],
             [
@@ -7012,8 +7010,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::MeRead, $current_realm),
-                    sprintf(MemberScopes::ReadMyMemberData, $current_realm),
+                    SummitScopes::MeRead,
+                    MemberScopes::ReadMyMemberData,
                 ],
             ],
             [
@@ -7021,8 +7019,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/favorites',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::MeRead, $current_realm),
-                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                    SummitScopes::MeRead,
+                    MemberScopes::ReadMyMemberData
                 ],
             ],
             [
@@ -7030,8 +7028,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/favorites/{event_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::AddMyFavorites, $current_realm),
-                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                    SummitScopes::AddMyFavorites,
+                    MemberScopes::ReadMyMemberData
                 ],
             ],
             [
@@ -7039,8 +7037,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7054,7 +7052,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/resend',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7068,8 +7066,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7083,7 +7081,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7097,8 +7095,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7112,7 +7110,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7126,7 +7124,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvps/{rsvp_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7139,8 +7137,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/rsvp',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::AddMyRSVP, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::AddMyRSVP
                 ],
             ],
             [
@@ -7148,23 +7146,23 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/{event_id}/unrsvp',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::DeleteMyRSVP, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DeleteMyRSVP
                 ],
             ],
             [
                 'name' => 'remove-from-own-member-favorites',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/favorites/{event_id}',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::DeleteMyFavorites, $current_realm)],
+                'scopes' => [SummitScopes::DeleteMyFavorites],
             ],
             [
                 'name' => 'get-own-member-schedule',
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::MeRead, $current_realm),
-                    sprintf(MemberScopes::ReadMyMemberData, $current_realm)
+                    SummitScopes::MeRead,
+                    MemberScopes::ReadMyMemberData
                 ]
             ],
             [
@@ -7172,8 +7170,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::AddMySchedule, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::AddMySchedule,
                 ],
             ],
             [
@@ -7181,8 +7179,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::DeleteMySchedule, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::DeleteMySchedule,
                 ],
             ],
             // enter/leave
@@ -7191,7 +7189,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/enter',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::EnterEvent, $current_realm)
+                    SummitScopes::EnterEvent
                 ],
             ],
             [
@@ -7199,7 +7197,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/members/{member_id}/schedule/{event_id}/leave',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::LeaveEvent, $current_realm)
+                    SummitScopes::LeaveEvent
                 ],
             ],
             //
@@ -7207,7 +7205,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'get-member-from-summit',
                 'route' => '/api/v1/summits/{id}/members',
                 'http_method' => 'GET',
-                'scopes' => [sprintf(SummitScopes::ReadAllSummitData, $current_realm)],
+                'scopes' => [SummitScopes::ReadAllSummitData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -7218,7 +7216,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'get-member-from-summit-csv',
                 'route' => '/api/v1/summits/{id}/members/csv',
                 'http_method' => 'GET',
-                'scopes' => [sprintf(SummitScopes::ReadAllSummitData, $current_realm)],
+                'scopes' => [SummitScopes::ReadAllSummitData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -7231,8 +7229,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/notifications',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadNotifications, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadNotifications
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7245,8 +7243,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/notifications/sent',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadNotifications, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadNotifications
                 ],
             ],
             [
@@ -7254,8 +7252,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/notifications/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadNotifications, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadNotifications
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7268,8 +7266,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/notifications/{notification_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadNotifications, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadNotifications
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7282,8 +7280,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/notifications',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteNotifications, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteNotifications
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7296,8 +7294,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/notifications/{notification_id}/approve',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteNotifications, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteNotifications
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7310,8 +7308,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/notifications/{notification_id}/approve',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteNotifications, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteNotifications
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7324,8 +7322,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/notifications/{notification_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteNotifications, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteNotifications
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7339,7 +7337,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7353,7 +7351,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7367,7 +7365,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsor-promo-codes',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7381,7 +7379,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsor-promo-codes/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7395,8 +7393,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsor-promo-codes/csv',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7410,8 +7408,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/csv',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7425,7 +7423,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7439,8 +7437,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7454,8 +7452,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7469,8 +7467,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7484,8 +7482,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_id}/mail',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7499,8 +7497,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/sponsors/all/promo-codes/all/send',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7513,7 +7511,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7527,8 +7525,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_id}/badge-features/{badge_feature_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7542,8 +7540,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_id}/badge-features/{badge_feature_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7557,8 +7555,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_id}/ticket-types/{ticket_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7572,8 +7570,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_id}/ticket-types/{ticket_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7587,8 +7585,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_val}/apply',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ]
             ],
             // speakers promo codes
@@ -7597,7 +7595,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7610,8 +7608,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers/{speaker_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7624,8 +7622,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-promo-codes/{promo_code_id}/speakers/{speaker_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7639,7 +7637,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7652,8 +7650,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers/{speaker_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7666,8 +7664,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-discount-codes/{discount_code_id}/speakers/{speaker_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WritePromoCodeData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WritePromoCodeData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7681,7 +7679,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-assistances',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7694,7 +7692,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-assistances/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7707,8 +7705,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-assistances',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitSpeakerAssistanceData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitSpeakerAssistanceData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7721,8 +7719,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-assistances/{assistance_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitSpeakerAssistanceData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitSpeakerAssistanceData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7735,7 +7733,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-assistances/{assistance_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7748,8 +7746,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-assistances/{assistance_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitSpeakerAssistanceData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitSpeakerAssistanceData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7762,8 +7760,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/speakers-assistances/{assistance_id}/mail',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitSpeakerAssistanceData, $current_realm),
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitSpeakerAssistanceData,
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7777,8 +7775,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/current/{status}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
             ],
             [
@@ -7786,8 +7784,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
             ],
             [
@@ -7795,8 +7793,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/me',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
             ],
             [
@@ -7804,8 +7802,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
             ],
             [
@@ -7813,7 +7811,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7826,7 +7824,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7839,7 +7837,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7852,7 +7850,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-groups/{track_group_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7865,7 +7863,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-groups/{track_group_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7880,8 +7878,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7894,8 +7892,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7908,8 +7906,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7922,7 +7920,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7935,7 +7933,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7948,7 +7946,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7962,7 +7960,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}/values',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7975,7 +7973,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}/values/{value_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -7988,7 +7986,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plan-extra-questions/{question_id}/values/{value_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8002,8 +8000,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
             ],
             [
@@ -8011,8 +8009,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
             ],
 
@@ -8021,7 +8019,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8034,7 +8032,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
             ],
             [
@@ -8042,8 +8040,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
             ],
             [
@@ -8051,7 +8049,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8064,7 +8062,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8077,7 +8075,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}/values',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8090,7 +8088,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}/values/{value_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8103,7 +8101,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/extra-questions/{question_id}/values/{value_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8117,7 +8115,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/event-types/{event_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8130,7 +8128,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/event-types/{event_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8144,8 +8142,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8158,7 +8156,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8171,7 +8169,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members/{allowed_member_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8184,7 +8182,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-members/csv',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8198,7 +8196,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8212,7 +8210,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/csv',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8226,7 +8224,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8240,8 +8238,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/complete',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8255,7 +8253,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/actions/{action_type_id}/incomplete',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8269,7 +8267,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/comments',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8283,7 +8281,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/view',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8297,8 +8295,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/all/category-change-requests',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8312,7 +8310,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/category-change-requests',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8326,7 +8324,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/category-change-requests/{category_change_request_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8341,8 +8339,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8357,7 +8355,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types/{type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8372,7 +8370,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types/{type_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8387,7 +8385,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types/{type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8402,7 +8400,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/allowed-presentation-action-types/{type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8418,8 +8416,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/track-chair-scores/{score_type_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteEventData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8433,7 +8431,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/presentations/{presentation_id}/track-chair-scores/{score_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8448,7 +8446,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -8456,7 +8454,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups/all/allowed-tags',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8469,8 +8467,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups/all/allowed-tags/{tag_id}/seed-on-tracks',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteTracksData, $current_realm),
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTracksData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8483,7 +8481,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups/{track_tag_group_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8496,8 +8494,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups/seed-defaults',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteTrackTagGroupsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTrackTagGroupsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8510,8 +8508,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteTrackTagGroupsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTrackTagGroupsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8524,8 +8522,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups/{track_tag_group_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteTrackTagGroupsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTrackTagGroupsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8538,8 +8536,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups/{track_tag_group_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteTrackTagGroupsData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTrackTagGroupsData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8552,8 +8550,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/track-tag-groups/{track_tag_group_id}/allowed-tags/all/copy/tracks/{track_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteTracksData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteTracksData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8568,7 +8566,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/email-flows-events',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8581,7 +8579,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/email-flows-events/{event_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8594,7 +8592,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/email-flows-events/{event_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8608,7 +8606,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8621,7 +8619,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -8629,7 +8627,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents/{document_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
             ],
             [
@@ -8637,7 +8635,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents/{document_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8650,7 +8648,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents/{document_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8663,7 +8661,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents/{document_id}/event-types/{event_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8676,7 +8674,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents/{document_id}/event-types/{event_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8689,7 +8687,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents/{document_id}/file',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8702,7 +8700,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/summit-documents/{document_id}/file',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8716,7 +8714,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/media-upload-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8729,7 +8727,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/media-upload-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8742,7 +8740,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8755,7 +8753,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8768,7 +8766,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8781,7 +8779,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}/presentation-types/{event_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8794,7 +8792,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/media-upload-types/{media_upload_type_id}/presentation-types/{event_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8807,7 +8805,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/media-upload-types/all/clone/{to_summit_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8820,7 +8818,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/owner/me',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8834,7 +8832,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/owner/{owner_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8848,7 +8846,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8862,7 +8860,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/individual/presentation-selections/{collection}/presentations/{presentation_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8876,7 +8874,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/team',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8890,7 +8888,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/team',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8904,7 +8902,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/tracks/{track_id}/selection-lists/{list_id}/reorder',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8919,7 +8917,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ]
             ],
             [
@@ -8927,7 +8925,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8941,7 +8939,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ]
             ],
             [
@@ -8949,7 +8947,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8963,7 +8961,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8977,7 +8975,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -8991,7 +8989,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9005,7 +9003,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9019,7 +9017,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9033,7 +9031,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/selection-plans/{selection_plan_id}/track-chair-rating-types/{type_id}/score-types/{score_type_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9049,8 +9047,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9065,7 +9063,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations/{presentation_id}/propose',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9080,7 +9078,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations/{presentation_id}/propose',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9095,7 +9093,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/presentations/all/publish',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9110,7 +9108,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/lock',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::TrackChairs,
@@ -9122,7 +9120,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/tracks/{track_id}/lock',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9135,7 +9133,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/proposed-schedules/{source}/locks',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm)
+                    SummitScopes::ReadSummitData
                 ]
             ],
             [
@@ -9143,7 +9141,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/qr-codes/all/enc-key',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm)
+                    SummitScopes::WriteSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9156,8 +9154,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-feed-metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9172,8 +9170,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-feed-metadata',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9186,8 +9184,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-feed-metadata/{metadata_id}',
                 'http_method' => 'DELETE',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9200,8 +9198,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-feed-metadata/{metadata_id}',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
-                    sprintf(SummitScopes::WriteRegistrationData, $current_realm)
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteRegistrationData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9214,8 +9212,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/registration-feed-metadata/{metadata_id}',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9229,8 +9227,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/lead-report-settings/metadata',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9245,8 +9243,8 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/lead-report-settings',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadSummitData, $current_realm),
-                    sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9261,7 +9259,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/lead-report-settings',
                 'http_method' => 'POST',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9274,7 +9272,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/lead-report-settings',
                 'http_method' => 'PUT',
                 'scopes' => [
-                    sprintf(SummitScopes::WriteSummitData, $current_realm),
+                    SummitScopes::WriteSummitData,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9287,7 +9285,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'update-overflow-streaming',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/overflow',
                 'http_method' => 'PUT',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -9298,7 +9296,7 @@ class ApiEndpointsSeeder extends Seeder
                 'name' => 'delete-overflow-streaming',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/overflow',
                 'http_method' => 'DELETE',
-                'scopes' => [sprintf(SummitScopes::WriteEventData, $current_realm)],
+                'scopes' => [SummitScopes::WriteEventData],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
@@ -9310,7 +9308,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/badge/{badge}/validate',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadBadgeScanValidate, $current_realm),
+                    SummitScopes::ReadBadgeScanValidate,
                 ],
                 'authz_groups' => [
                     IGroup::SponsorExternalUsers,
@@ -9324,7 +9322,6 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedAuditLogEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
 
         $this->seedApiEndpoints('audit-logs', [
             [
@@ -9332,7 +9329,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/audit-logs',
                 'http_method' => 'GET',
                 'scopes' => [
-                    sprintf(SummitScopes::ReadAuditLogs, $current_realm),
+                    SummitScopes::ReadAuditLogs,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -9391,7 +9388,7 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedMemberEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('members', [
                 // members
@@ -9399,58 +9396,58 @@ class ApiEndpointsSeeder extends Seeder
                     'name' => 'get-members',
                     'route' => '/api/v1/members',
                     'http_method' => 'GET',
-                    'scopes' => [sprintf(MemberScopes::ReadMemberData, $current_realm)],
+                    'scopes' => [MemberScopes::ReadMemberData],
                 ],
                 [
                     'name' => 'get-my-member',
                     'route' => '/api/v1/members/me',
                     'http_method' => 'GET',
-                    'scopes' => [sprintf(MemberScopes::ReadMyMemberData, $current_realm)],
+                    'scopes' => [MemberScopes::ReadMyMemberData],
                 ],
                 [
                     'name' => 'update-my-member',
                     'route' => '/api/v1/members/me',
                     'http_method' => 'PUT',
-                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                    'scopes' => [MemberScopes::WriteMyMemberData],
                 ],
                 // my membership
                 [
                     'name' => 'sign-foundation-membership',
                     'route' => '/api/v1/members/me/membership/foundation',
                     'http_method' => 'PUT',
-                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                    'scopes' => [MemberScopes::WriteMyMemberData],
                 ],
                 [
                     'name' => 'sign-individual-membership',
                     'route' => '/api/v1/members/me/membership/individual',
                     'http_method' => 'PUT',
-                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                    'scopes' => [MemberScopes::WriteMyMemberData],
                 ],
                 [
                     'name' => 'sign-community-membership',
                     'route' => '/api/v1/members/me/membership/community',
                     'http_method' => 'PUT',
-                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                    'scopes' => [MemberScopes::WriteMyMemberData],
                 ],
                 [
                     'name' => 'resign-membership',
                     'route' => '/api/v1/members/me/membership/resign',
                     'http_method' => 'DELETE',
-                    'scopes' => [sprintf(MemberScopes::WriteMyMemberData, $current_realm)],
+                    'scopes' => [MemberScopes::WriteMyMemberData],
                 ],
                 // my member affiliations
                 [
                     'name' => 'get-my-member-affiliations',
                     'route' => '/api/v1/members/me/affiliations',
                     'http_method' => 'GET',
-                    'scopes' => [sprintf(MemberScopes::ReadMyMemberData, $current_realm)],
+                    'scopes' => [MemberScopes::ReadMyMemberData],
                 ],
                 [
                     'name' => 'add-my-member-affiliation',
                     'route' => '/api/v1/members/me/affiliations',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(MemberScopes::WriteMyMemberData, $current_realm)
+                        MemberScopes::WriteMyMemberData
                     ],
                 ],
                 [
@@ -9458,7 +9455,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/members/me/affiliations/{affiliation_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(MemberScopes::WriteMyMemberData, $current_realm)
+                        MemberScopes::WriteMyMemberData
                     ],
                 ],
                 [
@@ -9466,7 +9463,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/members/me/affiliations/{affiliation_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(MemberScopes::WriteMyMemberData, $current_realm)
+                        MemberScopes::WriteMyMemberData
                     ],
                 ],
                 // member affiliations
@@ -9474,7 +9471,7 @@ class ApiEndpointsSeeder extends Seeder
                     'name' => 'get-member-affiliations',
                     'route' => '/api/v1/members/{member_id}/affiliations',
                     'http_method' => 'GET',
-                    'scopes' => [sprintf('%s/members/read', $current_realm)],
+                    'scopes' => [MemberScopes::ReadMemberData],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
@@ -9486,7 +9483,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/members/{member_id}/affiliations',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(MemberScopes::WriteMemberData, $current_realm)
+                        MemberScopes::WriteMemberData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9499,7 +9496,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/members/{member_id}/affiliations/{affiliation_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(MemberScopes::WriteMemberData, $current_realm)
+                        MemberScopes::WriteMemberData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9512,7 +9509,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/members/{member_id}/affiliations/{affiliation_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(MemberScopes::WriteMemberData, $current_realm)
+                        MemberScopes::WriteMemberData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9525,7 +9522,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/members/{member_id}/rsvp/{rsvp_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(MemberScopes::WriteMemberData, $current_realm)
+                        MemberScopes::WriteMemberData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9539,7 +9536,7 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedTagsEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('tags', [
                 // tags
@@ -9548,9 +9545,9 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/tags',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadTagsData, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData,
+                        SummitScopes::ReadTagsData
                     ],
                 ],
                 [
@@ -9558,9 +9555,9 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/tags/{id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadTagsData, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData,
+                        SummitScopes::ReadTagsData
                     ],
                 ],
                 [
@@ -9568,8 +9565,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/tags',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTagsData, $current_realm)
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTagsData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9582,8 +9579,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/tags/{id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTagsData, $current_realm)
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTagsData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9596,8 +9593,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/tags/{id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTagsData, $current_realm)
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTagsData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9611,16 +9608,16 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedCompaniesEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
         $this->seedApiEndpoints('companies', [
                 [
                     'name' => 'get-companies',
                     'route' => '/api/v1/companies',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf(CompanyScopes::Read, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData,
+                        CompanyScopes::Read
                     ],
                 ],
                 [
@@ -9628,7 +9625,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/companies',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(CompanyScopes::Write, $current_realm)
+                        CompanyScopes::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9640,7 +9637,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/companies/{id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(CompanyScopes::Write, $current_realm)
+                        CompanyScopes::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9652,7 +9649,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/companies/{id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(CompanyScopes::Write, $current_realm)
+                        CompanyScopes::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9664,7 +9661,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/companies/{id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(CompanyScopes::Read, $current_realm)
+                        CompanyScopes::Read
                     ]
                 ],
                 [
@@ -9672,7 +9669,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/companies/{id}/logo',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(CompanyScopes::Write, $current_realm)
+                        CompanyScopes::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9684,7 +9681,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/companies/{id}/logo',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(CompanyScopes::Write, $current_realm)
+                        CompanyScopes::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9696,7 +9693,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/companies/{id}/logo/big',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(CompanyScopes::Write, $current_realm)
+                        CompanyScopes::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9708,7 +9705,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/companies/{id}/logo/big',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(CompanyScopes::Write, $current_realm)
+                        CompanyScopes::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9722,14 +9719,14 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedSponsoredProjectsEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
         $this->seedApiEndpoints('sponsored-projects', [
                 [
                     'name' => 'get-sponsored-projects',
                     'route' => '/api/v1/sponsored-projects',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                        SponsoredProjectScope::Read
                     ],
                 ],
                 [
@@ -9737,7 +9734,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9749,7 +9746,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9761,7 +9758,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9773,7 +9770,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                        SponsoredProjectScope::Read
                     ]
                 ],
                 [
@@ -9781,7 +9778,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/logo',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9793,7 +9790,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/logo',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9806,7 +9803,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                        SponsoredProjectScope::Read
                     ],
                 ],
                 [
@@ -9814,7 +9811,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9826,7 +9823,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9839,7 +9836,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9852,7 +9849,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                        SponsoredProjectScope::Read
                     ],
                 ],
                 [
@@ -9860,7 +9857,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                        SponsoredProjectScope::Read
                     ],
                 ],
                 [
@@ -9868,7 +9865,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9880,7 +9877,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9892,7 +9889,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Write, $current_realm)
+                        SponsoredProjectScope::Write
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9904,7 +9901,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/sponsorship-types/{sponsorship_type_id}/supporting-companies/{company_id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                        SponsoredProjectScope::Read
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9916,7 +9913,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/sponsored-projects/{id}/subprojects',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SponsoredProjectScope::Read, $current_realm)
+                        SponsoredProjectScope::Read
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -9929,7 +9926,7 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedGroupsEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('groups', [
                 // members
@@ -9938,9 +9935,9 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/groups',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf(GroupsScopes::ReadData, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData,
+                        GroupsScopes::ReadData
                     ],
                 ]
             ]
@@ -9949,7 +9946,7 @@ class ApiEndpointsSeeder extends Seeder
 
     private function seedOrganizationsEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('organizations', [
                 // organizations
@@ -9958,7 +9955,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/organizations',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(OrganizationScopes::ReadOrganizationData, $current_realm)
+                        OrganizationScopes::ReadOrganizationData
                     ],
                 ]
             ]
@@ -9971,7 +9968,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/organizations',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(OrganizationScopes::WriteOrganizationData, $current_realm)
+                        OrganizationScopes::WriteOrganizationData
                     ],
                 ]
             ]
@@ -9980,7 +9977,7 @@ class ApiEndpointsSeeder extends Seeder
 
     public function seedTrackQuestionTemplateEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('track-question-templates', [
                 // track question templates
@@ -9989,7 +9986,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
+                        SummitScopes::ReadAllSummitData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10002,8 +9999,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTrackQuestionTemplateData, $current_realm),
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTrackQuestionTemplateData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10016,8 +10013,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates/{track_question_template_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTrackQuestionTemplateData, $current_realm),
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTrackQuestionTemplateData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10030,8 +10027,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates/{track_question_template_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTrackQuestionTemplateData, $current_realm),
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTrackQuestionTemplateData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10044,7 +10041,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates/{track_question_template_id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10057,7 +10054,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates/metadata',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10070,8 +10067,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates/{track_question_template_id}/values',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTrackQuestionTemplateData, $current_realm),
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTrackQuestionTemplateData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10084,8 +10081,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates/{track_question_template_id}/values/{track_question_template_value_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTrackQuestionTemplateData, $current_realm),
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTrackQuestionTemplateData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10098,8 +10095,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates/{track_question_template_id}/values/{track_question_template_value_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteTrackQuestionTemplateData, $current_realm),
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteTrackQuestionTemplateData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10112,7 +10109,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/track-question-templates/{track_question_template_id}/values/{track_question_template_value_id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10126,7 +10123,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/badge-scans',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteBadgeScan, $current_realm)
+                        SummitScopes::WriteBadgeScan
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10141,8 +10138,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/badge-scans/{scan_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteBadgeScan, $current_realm),
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteBadgeScan,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10157,9 +10154,9 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/badge-scans/{scan_id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadBadgeScan, $current_realm),
-                        sprintf(SummitScopes::ReadMyBadgeScan, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadBadgeScan,
+                        SummitScopes::ReadMyBadgeScan
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10174,7 +10171,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/badge-scans/me',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadMyBadgeScan, $current_realm)
+                        SummitScopes::ReadMyBadgeScan
                     ],
                 ],
                 [
@@ -10182,8 +10179,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/badge-scans',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadBadgeScan, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadBadgeScan
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10198,8 +10195,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/badge-scans/csv',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadBadgeScan, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadBadgeScan
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10214,8 +10211,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/badge-scans/checkin',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
-                        sprintf(SummitScopes::WriteBadgeScan, $current_realm)
+                        SummitScopes::WriteSummitData,
+                        SummitScopes::WriteBadgeScan
                     ],
                 ],
 
@@ -10226,8 +10223,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/featured-speakers',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm),
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10240,7 +10237,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/featured-speakers/{speaker_id}',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10253,7 +10250,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/featured-speakers/{speaker_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10266,7 +10263,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/featured-speakers/{speaker_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10279,8 +10276,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/presentation-action-types',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10295,8 +10292,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/presentation-action-types/csv',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10310,7 +10307,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/presentation-action-types',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        SummitScopes::WriteSummitData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10324,8 +10321,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/presentation-action-types/{action_id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10339,7 +10336,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/presentation-action-types/{action_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        SummitScopes::WriteSummitData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10353,7 +10350,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/presentation-action-types/{action_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        SummitScopes::WriteSummitData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10368,8 +10365,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/registration-companies',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData
                     ],
                 ],
                 [
@@ -10377,7 +10374,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/registration-companies/csv',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        SummitScopes::WriteSummitData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10391,7 +10388,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/registration-companies/{company_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        SummitScopes::WriteSummitData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10405,7 +10402,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/registration-companies/{company_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm),
+                        SummitScopes::WriteSummitData,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10420,7 +10417,7 @@ class ApiEndpointsSeeder extends Seeder
 
     public function seedSummitAdministratorGroupsEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
+
 
         $this->seedApiEndpoints('summit-administrator-groups', [
                 [
@@ -10428,7 +10425,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadSummitAdminGroups, $current_realm),
+                        SummitScopes::ReadSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10440,7 +10437,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups/{group_id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadSummitAdminGroups, $current_realm),
+                        SummitScopes::ReadSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10452,7 +10449,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                        SummitScopes::WriteSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10464,7 +10461,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups/{group_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                        SummitScopes::WriteSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10476,7 +10473,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups/{group_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                        SummitScopes::WriteSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10488,7 +10485,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups/{group_id}/members/{member_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                        SummitScopes::WriteSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10500,7 +10497,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups/{group_id}/members/{member_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                        SummitScopes::WriteSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10512,7 +10509,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups/{group_id}/summits/{summit_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                        SummitScopes::WriteSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10524,7 +10521,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summit-administrator-groups/{group_id}/summits/{summit_id}',
                     'http_method' => 'DELETE',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitAdminGroups, $current_realm),
+                        SummitScopes::WriteSummitAdminGroups,
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10538,14 +10535,12 @@ class ApiEndpointsSeeder extends Seeder
 
     public function seedSummitMediaFileTypeEndpoints()
     {
-        $current_realm = Config::get('app.scope_base_realm');
-
         $this->seedApiEndpoints('summit-media-file-types', [
                 [
                     'name' => 'get-summit-media-file-types',
                     'route' => '/api/v1/summit-media-file-types',
                     'http_method' => 'GET',
-                    'scopes' => [sprintf(SummitScopes::ReadSummitMediaFileTypes, $current_realm)],
+                    'scopes' => [SummitScopes::ReadSummitMediaFileTypes],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
@@ -10556,7 +10551,7 @@ class ApiEndpointsSeeder extends Seeder
                     'name' => 'get-summit-media-file-type-by-id',
                     'route' => '/api/v1/summit-media-file-types/{id}',
                     'http_method' => 'GET',
-                    'scopes' => [sprintf(SummitScopes::ReadSummitMediaFileTypes, $current_realm)],
+                    'scopes' => [SummitScopes::ReadSummitMediaFileTypes],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
@@ -10567,7 +10562,7 @@ class ApiEndpointsSeeder extends Seeder
                     'name' => 'add-summit-media-file-type',
                     'route' => '/api/v1/summit-media-file-types',
                     'http_method' => 'POST',
-                    'scopes' => [sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm)],
+                    'scopes' => [SummitScopes::WriteSummitMediaFileTypes],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
@@ -10577,7 +10572,7 @@ class ApiEndpointsSeeder extends Seeder
                     'name' => 'update-summit-media-file-type',
                     'route' => '/api/v1/summit-media-file-types/{id}',
                     'http_method' => 'PUT',
-                    'scopes' => [sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm)],
+                    'scopes' => [SummitScopes::WriteSummitMediaFileTypes],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
@@ -10587,7 +10582,7 @@ class ApiEndpointsSeeder extends Seeder
                     'name' => 'delete-summit-media-file-type',
                     'route' => '/api/v1/summit-media-file-types/{id}',
                     'http_method' => 'DELETE',
-                    'scopes' => [sprintf(SummitScopes::WriteSummitMediaFileTypes, $current_realm)],
+                    'scopes' => [SummitScopes::WriteSummitMediaFileTypes],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
                         IGroup::Administrators,
@@ -10598,8 +10593,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/metrics/enter',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::EnterEvent, $current_realm),
-                        sprintf(SummitScopes::WriteMetrics, $current_realm)
+                        SummitScopes::EnterEvent,
+                        SummitScopes::WriteMetrics
                     ],
                 ],
                 [
@@ -10607,8 +10602,8 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/metrics/leave',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::LeaveEvent, $current_realm),
-                        sprintf(SummitScopes::WriteMetrics, $current_realm)
+                        SummitScopes::LeaveEvent,
+                        SummitScopes::WriteMetrics
                     ],
                 ],
                 [
@@ -10616,9 +10611,9 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/metrics/onsite/enter',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadSummitData, $current_realm),
-                        sprintf(SummitScopes::ReadMetrics, $current_realm),
+                        SummitScopes::ReadAllSummitData,
+                        SummitScopes::ReadSummitData,
+                        SummitScopes::ReadMetrics,
                     ],
                     'authz_groups' => [
                         IGroup::SummitAccessControl,
@@ -10629,7 +10624,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/metrics/onsite/enter',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteMetrics, $current_realm)
+                        SummitScopes::WriteMetrics
                     ],
                     'authz_groups' => [
                         IGroup::SummitAccessControl,
@@ -10640,7 +10635,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/metrics/onsite/leave',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteMetrics, $current_realm)
+                        SummitScopes::WriteMetrics
                     ],
                     'authz_groups' => [
                         IGroup::SummitAccessControl,
@@ -10651,7 +10646,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/signs',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData
                     ]
                 ],
                 [
@@ -10659,7 +10654,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/signs',
                     'http_method' => 'POST',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10672,7 +10667,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/signs/{sign_id}',
                     'http_method' => 'PUT',
                     'scopes' => [
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10685,7 +10680,7 @@ class ApiEndpointsSeeder extends Seeder
                     'route' => '/api/v1/summits/{id}/signs/{sign_id}',
                     'http_method' => 'GET',
                     'scopes' => [
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData
                     ],
                 ],
             ]
@@ -10749,7 +10744,7 @@ class ApiEndpointsSeeder extends Seeder
     }
 
     public function seedRSVPInvitationsEndpoints():void{
-        $current_realm = Config::get('app.scope_base_realm');
+
         $this->seedApiEndpoints('rsvp-invitations', [
                 [
                     'name' => 'get-all-rsvp-invitations',
@@ -10757,7 +10752,7 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'GET',
                     'scopes' => [
                         RSVPInvitationsScopes::Read,
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10771,7 +10766,7 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'GET',
                     'scopes' => [
                         RSVPInvitationsScopes::Read,
-                        sprintf(SummitScopes::ReadAllSummitData, $current_realm)
+                        SummitScopes::ReadAllSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10785,7 +10780,7 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'POST',
                     'scopes' => [
                         RSVPInvitationsScopes::Write,
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10799,7 +10794,7 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'POST',
                     'scopes' => [
                         RSVPInvitationsScopes::Write,
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10813,7 +10808,7 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'POST',
                     'scopes' => [
                         RSVPInvitationsScopes::Write,
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10827,7 +10822,7 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'PUT',
                     'scopes' => [
                         RSVPInvitationsScopes::Send,
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10841,7 +10836,7 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'DELETE',
                     'scopes' => [
                         RSVPInvitationsScopes::Write,
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,
@@ -10855,7 +10850,7 @@ class ApiEndpointsSeeder extends Seeder
                     'http_method' => 'DELETE',
                     'scopes' => [
                         RSVPInvitationsScopes::Write,
-                        sprintf(SummitScopes::WriteSummitData, $current_realm)
+                        SummitScopes::WriteSummitData
                     ],
                     'authz_groups' => [
                         IGroup::SuperAdmins,

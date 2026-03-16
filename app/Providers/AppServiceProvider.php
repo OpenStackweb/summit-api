@@ -718,6 +718,13 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
 
+        if (!defined('SCOPE_BASE_REALM')) {
+            $scopeBaseRealm = rtrim((string) config('app.scope_base_realm', ''), '/');
+            if ($scopeBaseRealm === '')
+                throw new \RuntimeException('Missing required config: app.scope_base_realm');
+             define('SCOPE_BASE_REALM', $scopeBaseRealm);
+        }
+
         App::singleton(IResourceServerContext::class, ResourceServerContext::class);
 
         App::bind('resource_server_context', function ($app) {

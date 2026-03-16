@@ -1,6 +1,6 @@
 <?php namespace App\Security;
 /**
- * Copyright 2021 OpenStack Foundation
+ * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,12 @@
  * limitations under the License.
  **/
 
-class GroupsScopes
+/**
+ * Class TeamScopes
+ * @package App\Security
+ */
+final class TeamScopes
 {
-    const ReadData = SCOPE_BASE_REALM.'/groups/read';
+    const Read = SCOPE_BASE_REALM.'/teams/read';
+    const Write = SCOPE_BASE_REALM.'/teams/write';
 }

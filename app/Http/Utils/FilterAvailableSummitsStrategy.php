@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Security\SummitScopes;
-use Illuminate\Support\Facades\Config;
 use models\oauth2\IResourceServerContext;
 /**
  * Class FilterAvailableSummitsStrategy
@@ -27,8 +26,7 @@ final class FilterAvailableSummitsStrategy
      */
     static public function shouldReturnAllSummits(IResourceServerContext $resource_server_ctx){
         $scopes         = $resource_server_ctx->getCurrentScope();
-        $current_realm  = Config::get('app.scope_base_realm');
-        $needed_scope   = sprintf(SummitScopes::ReadAllSummitData, $current_realm);
+        $needed_scope   = SummitScopes::ReadAllSummitData;
         return in_array($needed_scope, $scopes);
     }
 }

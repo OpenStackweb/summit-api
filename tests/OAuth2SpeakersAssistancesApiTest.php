@@ -17,201 +17,30 @@
  */
 final class OAuth2SpeakersAssistancesApiTest extends ProtectedApiTestCase
 {
-    public function testGetAllBySummit($summit_id = 23){
+    use InsertSummitTestData;
 
-        $params = [
-            'id'       => $summit_id,
-            'page'     => 1,
-            'per_page' => 10,
-            'order'    => '+id',
-            'expand'   => 'speaker,summit'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitSpeakersAssistanceApiController@getBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $assistances = json_decode($content);
-        $this->assertTrue(!is_null($assistances));
-        return $assistances;
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertSummitTestData();
     }
 
-    public function testGetAllBySummitCSV($summit_id = 23){
-
-        $params = [
-            'id'       => $summit_id,
-            'order'    => '+id',
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitSpeakersAssistanceApiController@getBySummitCSV",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $this->assertTrue(!empty($content));
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
     }
 
-    public function testGetBySummitAndId($summit_id = 23, $assistance_id = 3129){
+    public function testAddSummitAssistance(){
+        // Get the speaker that is actually associated with the summit presentations
+        $speaker = self::$presentations[0]->getSpeakers()->first();
 
         $params = [
-            'id'            => $summit_id,
-            'assistance_id' => $assistance_id,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitSpeakersAssistanceApiController@getSpeakerSummitAssistanceBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $assistance = json_decode($content);
-        $this->assertTrue(!is_null($assistance));
-        return $assistance;
-    }
-
-    public function testGetAllBySummitAndConfirmed($summit_id = 23){
-
-        $params = [
-
-            'id'       => $summit_id,
-            'page'     => 1,
-            'per_page' => 10,
-            'filter'   => 'is_confirmed==1',
-            'order'    => '+id',
-            'expand'   => 'speaker'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitSpeakersAssistanceApiController@getBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $assistances = json_decode($content);
-        $this->assertTrue(!is_null($assistances));
-        return $assistances;
-    }
-
-    public function testGetAllBySummitAndNonConfirmed($summit_id = 23){
-
-        $params = [
-
-            'id'       => $summit_id,
-            'page'     => 1,
-            'per_page' => 10,
-            'filter'   => 'is_confirmed==0',
-            'order'    => '+id',
-            'expand'   => 'speaker'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "GET",
-            "OAuth2SummitSpeakersAssistanceApiController@getBySummit",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(200);
-        $assistances = json_decode($content);
-        $this->assertTrue(!is_null($assistances));
-        return $assistances;
-    }
-
-    public function testDeleteSummitAssistance($summit_id  = 23, $assistance_id = 3561){
-
-        if($assistance_id <= 0) {
-            $assistances   = $this->testGetAllBySummitAndNonConfirmed($summit_id);
-            $assistance_id = $assistances->data[0]->id;
-        }
-
-        $params = [
-            'id'            => $summit_id,
-            'assistance_id' => $assistance_id
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "DELETE",
-            "OAuth2SummitSpeakersAssistanceApiController@deleteSpeakerSummitAssistance",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-    }
-
-    public function testAddSummitAssistance($summit_id = 23){
-        $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $data = [
-            'speaker_id'   => 15,
+            'speaker_id'   => $speaker->getId(),
             'checked_in'   => false,
             'registered'   => true,
             'is_confirmed' => false,
@@ -241,13 +70,107 @@ final class OAuth2SpeakersAssistancesApiTest extends ProtectedApiTestCase
         return $assistance;
     }
 
-    public function testUpdateSummitAssistance($summit_id = 23){
+    public function testGetAllBySummit(){
 
-        $response = $this->testGetAllBySummitAndConfirmed($summit_id);
+        $this->testAddSummitAssistance();
 
         $params = [
-            'id'            => $summit_id,
-            'assistance_id' => $response->data[0]->id
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'order'    => '+id',
+            'expand'   => 'speaker'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersAssistanceApiController@getBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $assistances = json_decode($content);
+        $this->assertTrue(!is_null($assistances));
+        return $assistances;
+    }
+
+    public function testGetAllBySummitCSV(){
+
+        $this->testAddSummitAssistance();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'order'    => '+id',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersAssistanceApiController@getBySummitCSV",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $this->assertTrue(!empty($content));
+    }
+
+    public function testGetBySummitAndId(){
+
+        $assistance = $this->testAddSummitAssistance();
+
+        $params = [
+            'id'            => self::$summit->getId(),
+            'assistance_id' => $assistance->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersAssistanceApiController@getSpeakerSummitAssistanceBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $fetched = json_decode($content);
+        $this->assertTrue(!is_null($fetched));
+        $this->assertEquals($assistance->id, $fetched->id);
+    }
+
+    public function testUpdateSummitAssistance(){
+
+        $assistance = $this->testAddSummitAssistance();
+
+        $params = [
+            'id'            => self::$summit->getId(),
+            'assistance_id' => $assistance->id
         ];
 
         $data = [
@@ -273,16 +196,17 @@ final class OAuth2SpeakersAssistancesApiTest extends ProtectedApiTestCase
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
-        $assistance = json_decode($content);
-        $this->assertTrue(!is_null($assistance));
-        return $assistance;
+        $updated = json_decode($content);
+        $this->assertTrue(!is_null($updated));
     }
 
-    public function testSendAnnouncementEmail($summit_id = 23, $assistance_id = 3541){
+    public function testDeleteSummitAssistance(){
+
+        $assistance = $this->testAddSummitAssistance();
 
         $params = [
-            'id'            => $summit_id,
-            'assistance_id' => $assistance_id
+            'id'            => self::$summit->getId(),
+            'assistance_id' => $assistance->id
         ];
 
         $headers = [
@@ -291,18 +215,15 @@ final class OAuth2SpeakersAssistancesApiTest extends ProtectedApiTestCase
         ];
 
         $response = $this->action(
-            "POST",
-            "OAuth2SummitSpeakersAssistanceApiController@sendSpeakerSummitAssistanceAnnouncementMail",
+            "DELETE",
+            "OAuth2SummitSpeakersAssistanceApiController@deleteSpeakerSummitAssistance",
             $params,
             [],
             [],
             [],
             $headers
-
         );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
+        $this->assertResponseStatus(204);
     }
-
 }

@@ -31,14 +31,11 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTestCa
 
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
-
     protected function setUp():void
     {
         parent::setUp();
         self::$defaultMember = self::$member;
         self::insertSummitTestData();
-        self::insertMemberTestData(IGroup::TrackChairs);
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
@@ -47,7 +44,6 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTestCa
 
     protected function tearDown():void
     {
-        self::clearMemberTestData();
         self::clearSummitTestData();
         parent::tearDown();
     }
@@ -96,9 +92,11 @@ final class OAuth2SummitOrderExtraQuestionTypeApiTest extends ProtectedApiTestCa
 
     public function testUpdateExtraOrderQuestion(){
 
+        $question = $this->testAddExtraOrderQuestion();
+
         $params = [
             'id' => self::$summit->getId(),
-            'question_id' => self::$summit->getOrderExtraQuestions()->first()
+            'question_id' => $question->id
         ];
 
         $name = str_random(16).'_question';

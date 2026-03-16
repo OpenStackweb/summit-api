@@ -15,9 +15,9 @@ use models\summit\RSVP;
 use models\main\Member;
 use Illuminate\Support\Facades\Event;
 use App\Events\RSVP\RSVPCreated;
-/**
- * @covers \App\Services\Model\Imp\SummitRSVPService
- */
+use PHPUnit\Framework\Attributes\CoversClass;
+
+#[CoversClass(SummitRSVPService::class)]
 class SummitRSVPServiceTest extends TestCase
 {
     use MockeryPHPUnitIntegration;

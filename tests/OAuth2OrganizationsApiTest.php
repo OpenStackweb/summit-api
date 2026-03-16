@@ -55,7 +55,7 @@ class OAuth2OrganizationsApiTest extends ProtectedApiTestCase
 
         $response = $this->action(
             "POST",
-            "OAuth2OrganizationsApiController@addOrganization",
+            "OAuth2OrganizationsApiController@add",
             [],
             [],
             [],

@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use models\main\Group;
+use models\main\LegalAgreement;
 use Mockery;
 use DateTime;
 /**
@@ -39,6 +41,9 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
 
     public function tearDown():void
     {
+        try {
+            self::$em->getConnection()->executeStatement("DROP TABLE IF EXISTS SiteTree");
+        } catch (\Exception $e) {}
         self::clearSummitTestData();
         Mockery::close();
         parent::tearDown();
@@ -217,7 +222,8 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
     }
 
-    public function testAddMemberAffiliation($member_id = 11624){
+    public function testAddMemberAffiliation(){
+        $member_id = self::$member->getId();
         $params = [
             'member_id'      => $member_id,
         ];
@@ -230,7 +236,7 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
             'start_date' => $start_datetime_unix,
             'job_title'  => 'test affiliation',
             'end_date'   => null,
-            'organization_id' => 1
+            'organization_name' => 'test organization'
         ];
 
         $headers = [
@@ -295,9 +301,9 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         return $affiliation;
     }
 
-    public function testUpdateMemberAffiliation($member_id = 11624){
-
-        $new_affiliation = $this->testAddMemberAffiliation($member_id);
+    public function testUpdateMemberAffiliation(){
+        $member_id = self::$member->getId();
+        $new_affiliation = $this->testAddMemberAffiliation();
         $params = [
             'member_id'      => $member_id,
             'affiliation_id' => $new_affiliation->id,
@@ -330,9 +336,9 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         return $affiliation;
     }
 
-    public function testDeleteMemberAffiliation($member_id = 11624){
-
-        $new_affiliation = $this->testAddMemberAffiliation($member_id);
+    public function testDeleteMemberAffiliation(){
+        $member_id = self::$member->getId();
+        $new_affiliation = $this->testAddMemberAffiliation();
         $params = [
             'member_id'      => $member_id,
             'affiliation_id' => $new_affiliation->id,
@@ -357,11 +363,10 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(204);
     }
 
-    public function testGetMemberAffiliation($member_id = 11624)
+    public function testGetMemberAffiliation()
     {
-
+        $member_id = self::$member->getId();
         $params = [
-            //AND FILTER
             'member_id' => $member_id
         ];
 
@@ -382,9 +387,39 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
     }
 
+    private function createFoundationMembershipPrerequisites(): void
+    {
+        // Create the FoundationMembers group needed by signFoundationMembership service
+        $foundationGroup = new Group();
+        $foundationGroup->setCode(IGroup::FoundationMembers);
+        $foundationGroup->setTitle(IGroup::FoundationMembers);
+        self::$em->persist($foundationGroup);
+        self::$em->flush();
+
+        // Create the SiteTree legal document record needed by DoctrineLegalDocumentRepository
+        $conn = self::$em->getConnection();
+        $conn->executeStatement("CREATE TABLE IF NOT EXISTS SiteTree (
+            ID INT AUTO_INCREMENT PRIMARY KEY,
+            Title VARCHAR(255),
+            URLSegment VARCHAR(255),
+            Content TEXT,
+            ClassName VARCHAR(255)
+        )");
+        $conn->executeStatement(
+            "INSERT INTO SiteTree (Title, URLSegment, Content, ClassName) VALUES (?, ?, ?, ?)",
+            [
+                'The OpenStack Foundation Individual Member Agreement',
+                LegalAgreement::Slug,
+                'Test legal content',
+                'LegalDocumentPage'
+            ]
+        );
+    }
+
     public function testSignFoundationMembership(){
+        $this->createFoundationMembershipPrerequisites();
+
         $params = [
-            'member_id'      => 'me',
         ];
 
         $headers = [
@@ -411,8 +446,9 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
     }
 
     public function testSignResignFoundationMembership(){
+        $this->createFoundationMembershipPrerequisites();
+
         $params = [
-            'member_id' => 'me',
         ];
 
         $headers = [
@@ -497,5 +533,222 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($companies));
         $this->assertTrue($companies->total == 1 );
         $this->assertResponseStatus(200);
+    }
+
+    public function testGetMemberById(){
+        $params = [
+            'member_id' => self::$member->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2MembersApiController@getById",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $member = json_decode($content);
+        $this->assertNotNull($member);
+        $this->assertEquals(self::$member->getId(), $member->id);
+    }
+
+    public function testUpdateMyMember(){
+        $params = [];
+
+        $data = [
+            'shirt_size' => 'Large',
+            'display_on_site' => true,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@updateMyMember",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertNotNull($member);
+    }
+
+    public function testGetMyMemberAffiliations(){
+        // add an affiliation first
+        $this->testAddMyMemberAffiliation();
+
+        $params = [];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        $response = $this->action(
+            "GET",
+            "OAuth2MembersApiController@getMyMemberAffiliations",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $affiliations = json_decode($content);
+        $this->assertNotNull($affiliations);
+        $this->assertGreaterThan(0, $affiliations->total);
+    }
+
+    public function testUpdateMyAffiliation(){
+        $affiliation = $this->testAddMyMemberAffiliation();
+
+        $params = [
+            'affiliation_id' => $affiliation->id,
+        ];
+
+        $data = [
+            'job_title' => 'updated job title',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@updateMyAffiliation",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $affiliation = json_decode($content);
+        $this->assertNotNull($affiliation);
+    }
+
+    public function testDeleteMyAffiliation(){
+        $affiliation = $this->testAddMyMemberAffiliation();
+
+        $params = [
+            'affiliation_id' => $affiliation->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2MembersApiController@deleteMyAffiliation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testDeleteRSVP(){
+        // RSVP data is not part of test fixtures; create member context and expect 404 for non-existent RSVP
+        $params = [
+            'member_id' => self::$member->getId(),
+            'rsvp_id'   => 0,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2MembersApiController@deleteRSVP",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    public function testSignCommunityMembership(){
+        // Create the CommunityMembers group needed by the service
+        $communityGroup = new Group();
+        $communityGroup->setCode(IGroup::CommunityMembers);
+        $communityGroup->setTitle(IGroup::CommunityMembers);
+        self::$em->persist($communityGroup);
+        self::$em->flush();
+
+        $params = [];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@signCommunityMembership",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertNotNull($member);
+    }
+
+    public function testSignIndividualMembership(){
+        $params = [];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2MembersApiController@signIndividualMembership",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $member = json_decode($content);
+        $this->assertNotNull($member);
     }
 }

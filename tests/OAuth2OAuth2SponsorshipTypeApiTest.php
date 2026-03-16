@@ -85,6 +85,34 @@ final class OAuth2OAuth2SponsorshipTypeApiTest extends ProtectedApiTestCase
         return $page;
     }
 
+    public function testGetSponsorShipTypeById(){
+        $sponsorship_type = $this->testAddSponsorShipType();
+        $params = [
+            'id' => $sponsorship_type->id
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SponsorshipTypeApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content);
+        $this->assertNotNull($result);
+        $this->assertEquals($sponsorship_type->id, $result->id);
+    }
+
     /**
      * @return mixed
      */

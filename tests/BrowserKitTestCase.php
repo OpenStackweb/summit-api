@@ -37,6 +37,8 @@ abstract class BrowserKitTestCase extends BaseTestCase {
      */
     protected $baseUrl = "http://localhost";
 
+    private static $seeding_done = false;
+
     protected function setUp(): void {
         parent::setUp(); // Don't forget this!
         $this->redis = Redis::connection();
@@ -53,21 +55,26 @@ abstract class BrowserKitTestCase extends BaseTestCase {
         // see https://laravel.com/docs/9.x/mocking#mail-fake
         Mail::fake();
         Model::unguard();
-        // clean up
-        DB::setDefaultConnection("model");
-        Artisan::call("doctrine:migrations:migrate", ["--em" => "config", "--no-interaction" => true]);
-        Artisan::call("doctrine:migrations:migrate", ["--em" => "model", "--no-interaction" => true]);
+        if(!self::$seeding_done) {
+            // clean up
+            DB::setDefaultConnection("model");
+            Artisan::call("doctrine:migrations:migrate", ["--em" => "config", "--no-interaction" => true]);
+            Artisan::call("doctrine:migrations:migrate", ["--em" => "model", "--no-interaction" => true]);
 
-        DB::setDefaultConnection("config");
+            DB::setDefaultConnection("config");
 
-        DB::delete("DELETE FROM endpoint_api_scopes");
-        DB::delete("DELETE FROM endpoint_api_authz_groups");
-        DB::delete("DELETE FROM api_scopes");
-        DB::delete("DELETE FROM api_endpoints");
-        DB::delete("DELETE FROM apis");
+            DB::delete("DELETE FROM endpoint_api_scopes");
+            DB::delete("DELETE FROM endpoint_api_authz_groups");
+            DB::delete("DELETE FROM api_scopes");
+            DB::delete("DELETE FROM api_endpoints");
+            DB::delete("DELETE FROM apis");
 
-        $this->seed(ConfigSeeder::class);
-        $this->seed(MainDataSeeder::class);
-        $this->seed(SummitEmailFlowTypeSeeder::class);
+
+            $this->seed(ConfigSeeder::class);
+
+            $this->seed(MainDataSeeder::class);
+            $this->seed(SummitEmailFlowTypeSeeder::class);
+            self::$seeding_done = true;
+        }
     }
 }

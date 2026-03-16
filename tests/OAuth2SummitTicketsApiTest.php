@@ -12,7 +12,12 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
+use App\Services\Apis\IExternalUserApi;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
+use Mockery;
 use models\summit\IPaymentConstants;
 use models\summit\PaymentGatewayProfileFactory;
 
@@ -56,9 +61,28 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTestCase
 
     use InsertOrdersTestData;
 
+    public function createApplication()
+    {
+        $app = parent::createApplication();
+
+        // Mock external user API before any service singleton is resolved
+        $externalUserApi = Mockery::mock(IExternalUserApi::class)->shouldIgnoreMissing();
+        $externalUserApi->shouldReceive('getUserByEmail')->andReturn([]);
+        $externalUserApi->shouldReceive('registerUser')->andReturn([
+            'set_password_link' => 'https://test.com'
+        ]);
+        App::singleton(IExternalUserApi::class, function() use ($externalUserApi) {
+            return $externalUserApi;
+        });
+
+        return $app;
+    }
+
     protected function setUp(): void
     {
+        $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
         self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
         self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
@@ -76,6 +100,21 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTestCase
         ]);
 
         self::$summit->addPaymentProfile(self::$profile);
+
+        // Set refund request period to allow refund tests
+        $refundTillDate = new \DateTime('now', new \DateTimeZone('UTC'));
+        $refundTillDate->add(new \DateInterval('P30D'));
+        self::$summit->setRegistrationAllowedRefundRequestTillDate($refundTillDate);
+
+        // Set registration admin email for refund request email dispatch
+        Config::set('registration.admin_email', 'test-admin@test.com');
+
+        // Configure swift storage to use local driver for tests (avoids OpenStack/Swift dependency)
+        Config::set('filesystems.disks.swift', [
+            'driver' => 'local',
+            'root' => storage_path('app/testing'),
+        ]);
+
         self::$em->persist(self::$summit);
         self::$em->flush();
     }
@@ -330,7 +369,7 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTestCase
         ];
 
         $data = [
-            'amount' => $ticket->getFinalAmount(),
+            'amount' => $ticket->getNetSellingPrice(),
             'notes' => 'Courtesy refund'
         ];
 
@@ -354,7 +393,7 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
         $ticket1 = json_decode($content);
         $this->assertTrue(!is_null($ticket1));
-        $this->assertTrue($ticket1->refunded_amount == $ticket->getFinalAmount());
+        $this->assertTrue($ticket1->refunded_amount == $ticket->getNetSellingPrice());
 
         $params = [
             'id' => self::$summit->getId(),
@@ -489,7 +528,7 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTestCase
             'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
-            'order' => '+final_amount_adjusted',
+            'order' => '+id',
             'expand' => 'owner,order,ticket_type,badge,promo_code'
         ];
 
@@ -736,14 +775,25 @@ CSV;
             'ticket_id' => $ticket->getId(),
         ];
 
-        $data = [
-            'badge_type_id' => self::$badge_type_2->getId(),
-            'features' => [self::$badge_features[0]->getId(), self::$badge_features[1]->getId()]
-        ];
-
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE" => "application/json"
+        ];
+
+        // Delete existing badge first
+        $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@deleteAttendeeBadge",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $data = [
+            'badge_type_id' => self::$badge_type_2->getId(),
+            'features' => [self::$badge_features[0]->getId(), self::$badge_features[1]->getId()]
         ];
 
         $response = $this->action(
@@ -767,11 +817,6 @@ CSV;
             'id' => self::$summit->getId(),
             'ticket_id' => $ticket->getId(),
             'feature_id' => self::$badge_features[0]->getId(),
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
         ];
 
         $response = $this->action(
@@ -889,7 +934,7 @@ CSV;
     }
 
 
-    function testPrintAttendeeBadge()
+    public function testPrintAttendeeBadge()
     {
         $ticket = self::$summit_orders[0]->getFirstTicket();
 
@@ -905,7 +950,7 @@ CSV;
 
         $response = $this->action(
             "PUT",
-            "OAuth2SummitTicketApiController@printAttendeeBadge",
+            "OAuth2SummitTicketApiController@printAttendeeBadgeDefault",
             $params,
             [],
             [],
@@ -920,11 +965,11 @@ CSV;
     public function testGetAllTicketsByPromoCodeTag()
     {
         $params = [
-            'id' => 3693, //self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'page' => 1,
             'per_page' => 10,
             'filter' => [
-                'badge_type_id==2036',
+                'badge_type_id==' . self::$default_badge_type->getId(),
             ],
             'order' => '+id'
         ];
@@ -983,5 +1028,645 @@ CSV;
         $tickets = json_decode($content);
         $this->assertTrue(!is_null($tickets));
         return $tickets;
+    }
+
+    public function testGetAttendeeBadge()
+    {
+        // Use the testCreateAttendeeBadge helper to ensure a badge exists
+        $created_badge = $this->testCreateAttendeeBadge();
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        // Use ticket number (not ID) because controller uses is_int() check
+        // and URL params are always strings
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getNumber(),
+            'expand' => 'features,type'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAttendeeBadge",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $badge = json_decode($content);
+        $this->assertNotNull($badge);
+        return $badge;
+    }
+
+    public function testCanPrintAttendeeBadgeDefault()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@canPrintAttendeeBadgeDefault",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        // 200 if printable, 412 if virtual-only ticket validation
+        $this->assertTrue(in_array($response->getStatusCode(), [200, 412]));
+    }
+
+    public function testCanPrintAttendeeBadgeByViewType()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
+            'view_type' => self::$default_badge_view_type->getName(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@canPrintAttendeeBadge",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        // 200 if printable, 412 if virtual-only ticket validation
+        $this->assertTrue(in_array($response->getStatusCode(), [200, 412]));
+    }
+
+    public function testPrintAttendeeBadgeByViewType()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getId(),
+            'view_type' => self::$default_badge_view_type->getName(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitTicketApiController@printAttendeeBadge",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        // 412 is expected when badge print rules not met (no attendee assigned, etc)
+        $this->assertTrue(in_array($response->getStatusCode(), [201, 412]));
+    }
+
+    public function testGetAllTicketsExternal412()
+    {
+        // summit has no external feed type set, should return 412
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => 'owner_email==test@test.com',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllBySummitExternal",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testGetAllMyTickets()
+    {
+        // assign order to current member so tickets are "mine"
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'page' => 1,
+            'per_page' => 10,
+            'order' => '+id',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllMyTickets",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $tickets = json_decode($content);
+        $this->assertNotNull($tickets);
+        $this->assertGreaterThanOrEqual(1, $tickets->total);
+        return $tickets;
+    }
+
+    public function testGetAllMyTicketsBySummit()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 10,
+            'order' => '+id',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllMyTicketsBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $tickets = json_decode($content);
+        $this->assertNotNull($tickets);
+        $this->assertGreaterThanOrEqual(1, $tickets->total);
+        return $tickets;
+    }
+
+    public function testAddTicketToOrder()
+    {
+        $order = self::$summit_orders[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'order_id' => $order->getId(),
+        ];
+
+        $data = [
+            'ticket_type_id' => self::$default_ticket_type->getId(),
+            'ticket_qty' => 1,
+            'attendee_email' => 'test-new-ticket@test.com',
+            'attendee_first_name' => 'Test',
+            'attendee_last_name' => 'Attendee',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitOrdersApiController@addTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertNotNull($ticket);
+        return $ticket;
+    }
+
+    public function testUpdateTicket()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $data = [
+            'attendee_email' => 'updated-attendee@test.com',
+            'attendee_first_name' => 'Updated',
+            'attendee_last_name' => 'Name',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@updateTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertNotNull($ticket);
+        return $ticket;
+    }
+
+    public function testDeActivateTicket()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@deActivateTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertNotNull($ticket);
+        $this->assertFalse($ticket->is_active);
+        return $ticket;
+    }
+
+    public function testActivateTicket()
+    {
+        // first deactivate
+        $ticket_data = $this->testDeActivateTicket();
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@activateTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertNotNull($ticket);
+        $this->assertTrue($ticket->is_active);
+        return $ticket;
+    }
+
+    public function testAssignAttendee()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $data = [
+            'attendee_email' => 'assigned-attendee@test.com',
+            'attendee_first_name' => 'Assigned',
+            'attendee_last_name' => 'Attendee',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@assignAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertNotNull($ticket);
+        return $ticket;
+    }
+
+    public function testRemoveAttendee()
+    {
+        $assigned_ticket = $this->testAssignAttendee();
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+
+        $params = [
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@removeAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+    }
+
+    public function testGetMyTicketsByOrderId()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'order_id' => $order->getId(),
+            'page' => 1,
+            'per_page' => 10,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitOrdersApiController@getMyTicketsByOrderId",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $tickets = json_decode($content);
+        $this->assertNotNull($tickets);
+        return $tickets;
+    }
+
+    public function testGetMyTicketById()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+            'expand' => 'order,ticket_type'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitOrdersApiController@getMyTicketById",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $ticket = json_decode($content);
+        $this->assertNotNull($ticket);
+        return $ticket;
+    }
+
+    public function testUpdateMyTicketById()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $data = [
+            'attendee_company' => 'Test Company',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@updateMyTicketById",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        // 201 or 412 depending on whether ticket is reassignable
+        $this->assertTrue(in_array($response->getStatusCode(), [201, 412]));
+    }
+
+    public function testDelegateTicket()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $data = [
+            'attendee_email' => 'delegate-target@test.com',
+            'attendee_first_name' => 'Delegated',
+            'attendee_last_name' => 'User',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@delegateTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $ticket = json_decode($content);
+        $this->assertNotNull($ticket);
+        return $ticket;
+    }
+
+    public function testReInviteAttendee()
+    {
+        // First assign an attendee
+        $assigned_ticket = $this->testAssignAttendee();
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+
+        $params = [
+            'order_id' => $order->getId(),
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@reInviteAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        // 201 on success or 412 if conditions not met
+        $this->assertTrue(in_array($response->getStatusCode(), [201, 412]));
     }
 }

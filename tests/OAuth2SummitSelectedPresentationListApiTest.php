@@ -28,11 +28,24 @@ final class OAuth2SummitSelectedPresentationListApiTest
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::insertMemberTestData(IGroup::TrackChairs);
+        self::$defaultMember = self::$member;
+        self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
         self::$em->persist(self::$summit_permission_group);
         self::$em->flush();
+        // align external ID with DB ID so both getById and getByExternalId resolve the same member
+        self::$member->setUserExternalId(self::$member->getId());
+        self::$em->persist(self::$member);
+        self::$em->flush();
+        // update the access token stub to match the new member
+        self::$service->setUserId(self::$member->getId());
+        self::$service->setUserExternalId(self::$member->getId());
+        self::$service->setUserEmail(self::$member->getEmail());
+        self::$service->setUserFirstName(self::$member->getFirstName());
+        self::$service->setUserLastName(self::$member->getLastName());
         $track_chair = self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ]);
         self::$em->persist(self::$summit);
         self::$em->flush();
@@ -41,6 +54,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
     protected function tearDown():void
     {
         self::clearSummitTestData();
+        self::clearMemberTestData();
         parent::tearDown();
     }
 
@@ -51,6 +65,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
         ];
 
@@ -77,6 +92,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
             'collection' => SummitSelectedPresentation::CollectionSelected,
             'presentation_id' => self::$presentations[0]->getId(),
@@ -114,6 +130,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
         ];
 
@@ -140,6 +157,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
             'collection' => SummitSelectedPresentation::CollectionSelected,
             'presentation_id' => self::$presentations[0]->getId(),
@@ -167,6 +185,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
             'list_id' => $selection_list->id,
         ];
@@ -212,6 +231,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
         ];
 
@@ -238,6 +258,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
             'list_id' => $selection_list->id,
         ];
@@ -285,6 +306,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
         ];
 
@@ -311,6 +333,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
             'collection' => SummitSelectedPresentation::CollectionSelected,
             'presentation_id' => self::$presentations[0]->getId(),
@@ -338,6 +361,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
             'list_id' => $selection_list->id,
         ];
@@ -378,10 +402,151 @@ final class OAuth2SummitSelectedPresentationListApiTest
     /**
      * @return mixed
      */
+    public function testGetTeamSelectionList(){
+
+        // first create a team list
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@createTeamSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        // now get it
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectedPresentationListApiController@getTeamSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $list = json_decode($content);
+        $this->assertTrue(!is_null($list));
+        return $list;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function testGetIndividualSelectionList(){
+
+        // first create an individual list
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSelectedPresentationListApiController@createIndividualSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+
+        // now get it using owner_id
+        $params['owner_id'] = self::$member->getId();
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSelectedPresentationListApiController@getIndividualSelectionList",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $list = json_decode($content);
+        $this->assertTrue(!is_null($list));
+        return $list;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function testAddAndRemovePresentationFromIndividualList(){
+
+        $selection_list = $this->testAddIndividualSelectionListAndAddSelection();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+            'track_id' =>  self::$defaultTrack->getId(),
+            'collection' => SummitSelectedPresentation::CollectionSelected,
+            'presentation_id' => self::$presentations[0]->getId(),
+            'expand' => 'selected_presentations,interested_presentations,',
+        ];
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitSelectedPresentationListApiController@removePresentationFromMyIndividualList",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            ""
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $updated_list = json_decode($content);
+        $this->assertTrue(!is_null($updated_list));
+        $this->assertTrue(count($updated_list->selected_presentations) == 0);
+        return $updated_list;
+    }
+
+    /**
+     * @return mixed
+     */
     public function testAddIndividualSelectionListAndReorderRemoveAll(){
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
         ];
 
@@ -408,6 +573,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
             'collection' => SummitSelectedPresentation::CollectionSelected,
             'presentation_id' => self::$presentations[0]->getId(),
@@ -435,6 +601,7 @@ final class OAuth2SummitSelectedPresentationListApiTest
 
         $params = [
             'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
             'track_id' =>  self::$defaultTrack->getId(),
             'list_id' => $selection_list->id,
         ];

@@ -14,14 +14,24 @@
 
 final class OAuth2SummitRefundPolicyTypeApiTest extends ProtectedApiTestCase
 {
-    /**
-     * @param int $summit_id
-     * @param int $until_x_days_before_event_starts
-     */
-    public function testAddPolicy($summit_id = 27, $until_x_days_before_event_starts = 20)
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
+    public function testAddPolicy($until_x_days_before_event_starts = 20)
     {
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $name = str_random(16) . '_policy';
@@ -55,9 +65,9 @@ final class OAuth2SummitRefundPolicyTypeApiTest extends ProtectedApiTestCase
         return $policy;
     }
 
-    public function testGetAllPoliciesBySummit($summit_id=27){
+    public function testGetAllPoliciesBySummit(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'filter' => 'until_x_days_before_event_starts<=15'
         ];
 
@@ -82,11 +92,103 @@ final class OAuth2SummitRefundPolicyTypeApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($data));
     }
 
-    public function testDeletePolicy($summit_id=27){
-        $policy = $this->testAddPolicy($summit_id, 2);
+    public function testGetPolicyById(){
+        $policy = $this->testAddPolicy();
 
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
+            'policy_id' => $policy->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitRefundPolicyTypeApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $fetched = json_decode($content);
+        $this->assertTrue(!is_null($fetched));
+        $this->assertTrue($fetched->id == $policy->id);
+    }
+
+    public function testGetPolicyById404(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'policy_id' => 0,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitRefundPolicyTypeApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    public function testUpdatePolicy(){
+        $policy = $this->testAddPolicy();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'policy_id' => $policy->id,
+        ];
+
+        $data = [
+            'name'                             => 'updated_policy_name',
+            'until_x_days_before_event_starts' => 10,
+            'refund_rate'                      => 50.00,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitRefundPolicyTypeApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $updated = json_decode($content);
+        $this->assertTrue(!is_null($updated));
+        $this->assertTrue($updated->name == 'updated_policy_name');
+        $this->assertTrue($updated->refund_rate == 50.00);
+    }
+
+    public function testDeletePolicy(){
+        $policy = $this->testAddPolicy(2);
+
+        $params = [
+            'id' => self::$summit->getId(),
             'policy_id' => $policy->id
         ];
 
@@ -107,5 +209,68 @@ final class OAuth2SummitRefundPolicyTypeApiTest extends ProtectedApiTestCase
 
         $content = $response->getContent();
         $this->assertResponseStatus(204);
+    }
+
+    public function testDeletePolicy404(){
+        $params = [
+            'id' => self::$summit->getId(),
+            'policy_id' => 0,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitRefundPolicyTypeApiController@delete",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    public function testDeleteAndVerifyRemoved(){
+        $policy = $this->testAddPolicy(5);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'policy_id' => $policy->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitRefundPolicyTypeApiController@delete",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+
+        // verify it's gone
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitRefundPolicyTypeApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(404);
     }
 }

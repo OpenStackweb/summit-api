@@ -36,6 +36,8 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
 
     use RequestProcessor;
 
+    use GetAndValidateJsonPayload;
+
     /**
      * @var IElectionService
      */

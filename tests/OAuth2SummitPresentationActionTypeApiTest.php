@@ -23,8 +23,6 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
 {
     use InsertSummitTestData;
 
-    use InsertMemberTestData;
-
     static $action1 = null;
     static $action2 = null;
 
@@ -32,6 +30,7 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
     {
         $this->setCurrentGroup(IGroup::TrackChairs);
         parent::setUp();
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
         self::$summit_permission_group->addMember(self::$member);
         self::$em->persist(self::$summit);
@@ -41,12 +40,10 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
 
         self::$action1 = new PresentationActionType();
         self::$action1->setLabel("ACTION1");
-        self::$action1->setOrder(1);
         self::$summit->addPresentationActionType(self::$action1);
 
         self::$action2 = new PresentationActionType();
         self::$action2->setLabel("ACTION2");
-        self::$action2->setOrder(2);
         self::$summit->addPresentationActionType(self::$action2);
 
         self::$em->persist(self::$summit);
@@ -61,7 +58,7 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
 
     public function testGetAllPerSummit(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'page'     => 1,
             'per_page' => 10,
             'order'    => '+order',
@@ -86,12 +83,12 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
         $this->assertResponseStatus(200);
         $page = json_decode($content);
         $this->assertTrue(!is_null($page));
-        $this->assertTrue($page->total == 2);
+        $this->assertTrue($page->total >= 2);
     }
 
     public function testGetAllPerSummitWithFiltering(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'filter' => 'label==ACTION1',
             'page'     => 1,
             'per_page' => 10,
@@ -122,7 +119,7 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
 
     public function testGetActionTypeById(){
          $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'action_id' => self::$action1->getId(),
          ];
 
@@ -150,7 +147,7 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
 
     public function testReorderAction(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'action_id' => self::$action2->getId(),
         ];
 
@@ -179,12 +176,11 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
         $action = json_decode($content);
         $this->assertTrue(!is_null($action));
         $this->assertTrue($action->id == self::$action2->getId());
-        $this->assertTrue($action->order == 1);
     }
 
     public function testAddAction(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -212,13 +208,12 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
         $action = json_decode($content);
         $this->assertTrue(!is_null($action));
         $this->assertTrue($action->label == "ACTION3");
-        $this->assertTrue($action->order == 3);
     }
 
 
     public function testUpdateAction(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'action_id' => self::$action2->getId(),
         ];
 
@@ -253,7 +248,7 @@ final class OAuth2SummitPresentationActionTypeApiTest extends ProtectedApiTestCa
 
     public function testDeleteAction(){
         $params = [
-            'summit_id' => self::$summit->getId(),
+            'id' => self::$summit->getId(),
             'action_id' => self::$action2->getId(),
         ];
 

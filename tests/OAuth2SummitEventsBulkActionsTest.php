@@ -12,84 +12,95 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
+
 class OAuth2SummitEventsBulkActionsTest extends ProtectedApiTestCase
 {
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        $this->setCurrentGroup(IGroup::TrackChairs);
+        parent::setUp();
+        self::$defaultMember = self::$member;
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
     public function testUpdateEvents()
     {
+        $events = self::$summit->getEvents();
+        $this->assertGreaterThanOrEqual(2, $events->count());
+
+        $event1 = $events->first();
+        $event2 = $events->next();
+
         $params = [
-            'id' => 23,
+            'id' => self::$summit->getId(),
         ];
 
         $data = [
-
            'events' => [
                [
-                   'id' => 20420,
-                   'title' => 'Making OpenContrail an ubiquitous SDN for OpenStack and Kubernetes!'
+                   'id' => $event1->getId(),
+                   'title' => 'Bulk Updated Title 1'
                ],
                [
-                   'id' => 20421,
-                   'title' => 'OpenContrail - from A to B, front to back, top to bottom, past to present, soup to nuts!'
+                   'id' => $event2->getId(),
+                   'title' => 'Bulk Updated Title 2'
                ]
            ]
         ];
 
-
-        $headers = [
-
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
-
-        $response = $this->action
-        (
+        $response = $this->action(
             "PUT",
             "OAuth2SummitEventsApiController@updateEvents",
             $params,
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
-        $this->assertResponseStatus(204);
-        $content = $response->getContent();
+        $this->assertResponseStatus(201);
     }
 
     public function testGetEventByIdOR()
     {
-        $params = [
-            'id' => 23,
-            'filter' => [
+        $events = self::$summit->getEvents();
+        $this->assertGreaterThanOrEqual(2, $events->count());
 
-                'id==20420,id==20421,id==20427,id==20428',
+        $event1 = $events->first();
+        $event2 = $events->next();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => [
+                sprintf('id==%s,id==%s', $event1->getId(), $event2->getId()),
             ]
         ];
 
-        $headers = [
-
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE" => "application/json"
-        ];
-
-        $response = $this->action
-        (
+        $response = $this->action(
             "GET",
             "OAuth2SummitEventsApiController@getEvents",
             $params,
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
 
-        $events = json_decode($content);
-        $this->assertTrue(!is_null($events));
+        $events_response = json_decode($content);
+        $this->assertNotNull($events_response);
+        $this->assertGreaterThanOrEqual(1, $events_response->total);
     }
-
-
 }

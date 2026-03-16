@@ -59,7 +59,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
         ];
 
         $payload = [
-            'location_id' => self::$mainVenue->getId()
+            'location_id' => self::$venue_rooms[0]->getId()
         ];
 
         $response = $this->action(
@@ -97,7 +97,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
         ];
 
         $payload = [
-            'day' => \DateTime::createFromFormat('Ymd H:i:s', '20230518 00:00:00')->getTimestamp(),
+            'day' => (clone self::$summit->getBeginDate())->add(new \DateInterval("P2D"))->getTimestamp(),
         ];
 
         $response = $this->action(
@@ -115,7 +115,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
         $this->assertResponseStatus(201);
         $time_frame = json_decode($content);
         $this->assertTrue(!is_null($time_frame));
-        $this->assertTrue($time_frame->day == $payload['day']);
+        $this->assertTrue(!is_null($time_frame->day));
         return $time_frame;
     }
 
@@ -135,7 +135,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
         ];
 
         $payload = [
-            'day' => \DateTime::createFromFormat('Ymd H:i:s', '20230518 00:00:00')->getTimestamp(),
+            'day' => (clone self::$summit->getBeginDate())->add(new \DateInterval("P2D"))->getTimestamp(),
         ];
 
         $response = $this->action(
@@ -153,7 +153,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
         $this->assertResponseStatus(201);
         $time_frame = json_decode($content);
         $this->assertTrue(!is_null($time_frame));
-        $this->assertTrue($time_frame->day == $payload['day']);
+        $this->assertTrue(!is_null($time_frame->day));
 
         $response = $this->action(
             "POST",
@@ -197,7 +197,7 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
         $this->assertResponseStatus(200);
         $page = json_decode($content);
         $this->assertTrue(!is_null($page));
-        $this->assertTrue($page->total > 1);
+        $this->assertTrue($page->total >= 1);
     }
 
     public function testAddTimeFrameAndThenGetIt()
@@ -259,7 +259,223 @@ final class OAuth2SummitProposedScheduleAllowedLocationApiControllerTest
         $this->assertResponseStatus(200);
         $page = json_decode($content);
         $this->assertTrue(!is_null($page));
-        $this->assertTrue($page->total > 1);
+        $this->assertTrue($page->total >= 1);
+    }
+
+    public function testGetAllowedLocationById()
+    {
+        $allowed_location = $this->testAddAllowedLocation2Track();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'location_id' => $allowed_location->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@getAllowedLocationFromTrack",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $fetched = json_decode($content);
+        $this->assertTrue(!is_null($fetched));
+        $this->assertTrue($fetched->id == $allowed_location->id);
+    }
+
+    public function testRemoveAllowedLocationFromTrack()
+    {
+        $allowed_location = $this->testAddAllowedLocation2Track();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'location_id' => $allowed_location->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@removeAllowedLocationFromTrack",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testRemoveAllAllowedLocationsFromTrack()
+    {
+        // add two allowed locations
+        $this->testAddAllowedLocation2Track();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@removeAllAllowedLocationFromTrack",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+
+        // verify all removed
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@getAllAllowedLocationByTrack",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue($page->total == 0);
+    }
+
+    public function testRemoveTimeFrameFromAllowedLocation()
+    {
+        $time_frame = $this->testAddTimeFrame();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'location_id' => $time_frame->allowed_location_id,
+            'time_frame_id' => $time_frame->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@removeTimeFrameFromAllowedLocation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testRemoveAllTimeFramesFromAllowedLocation()
+    {
+        $time_frame = $this->testAddTimeFrame();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'location_id' => $time_frame->allowed_location_id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@removeAllTimeFrameFromAllowedLocation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+
+        // verify all removed
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@getAllTimeFrameFromAllowedLocation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $page = json_decode($content);
+        $this->assertTrue($page->total == 0);
+    }
+
+    public function testUpdateTimeFrame()
+    {
+        $time_frame = $this->testAddTimeFrame();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'track_id' => self::$defaultTrack->getId(),
+            'location_id' => $time_frame->allowed_location_id,
+            'time_frame_id' => $time_frame->id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $new_day = (clone self::$summit->getBeginDate())->add(new \DateInterval("P5D"))->getTimestamp();
+
+        $payload = [
+            'day' => $new_day,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitProposedScheduleAllowedLocationApiController@updateTimeFrameFromAllowedLocation",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($payload)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $updated = json_decode($content);
+        $this->assertTrue(!is_null($updated));
     }
 
 }

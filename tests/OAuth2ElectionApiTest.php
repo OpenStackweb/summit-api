@@ -29,6 +29,7 @@ class OAuth2ElectionApiTest extends ProtectedApiTestCase
     protected function setUp():void
     {
         parent::setUp();
+        self::$member->signIndividualMembership();
         self::$election = new Election();
         self::$election->setName("TEST ELECTION");
         $now = new \DateTime("now", new \DateTimeZone("UTC"));
@@ -130,6 +131,177 @@ class OAuth2ElectionApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
         $nomination = json_decode($content);
         $this->assertTrue(!is_null($nomination));
+    }
+
+    public function testGetAllElections(){
+        $params = [
+            'page'     => 1,
+            'per_page' => 10,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2ElectionsApiController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $elections = json_decode($content);
+        $this->assertNotNull($elections);
+        $this->assertGreaterThan(0, $elections->total);
+    }
+
+    public function testGetElectionById(){
+        $params = [
+            'election_id' => self::$election->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2ElectionsApiController@getById",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $election = json_decode($content);
+        $this->assertNotNull($election);
+        $this->assertEquals("TEST ELECTION", $election->name);
+    }
+
+    public function testGetCurrentCandidates(){
+        // nominate first so there's at least one candidate
+        $this->testNominateMySelf();
+
+        $params = [
+            'page'     => 1,
+            'per_page' => 10,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2ElectionsApiController@getCurrentCandidates",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $candidates = json_decode($content);
+        $this->assertNotNull($candidates);
+    }
+
+    public function testGetElectionCandidates(){
+        // nominate first so there's at least one candidate
+        $this->testNominateMySelf();
+
+        $params = [
+            'election_id' => self::$election->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2ElectionsApiController@getElectionCandidates",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $candidates = json_decode($content);
+        $this->assertNotNull($candidates);
+    }
+
+    public function testGetCurrentGoldCandidates(){
+        $params = [
+            'page'     => 1,
+            'per_page' => 10,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2ElectionsApiController@getCurrentGoldCandidates",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $candidates = json_decode($content);
+        $this->assertNotNull($candidates);
+    }
+
+    public function testGetElectionGoldCandidates(){
+        $params = [
+            'election_id' => self::$election->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2ElectionsApiController@getElectionGoldCandidates",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $candidates = json_decode($content);
+        $this->assertNotNull($candidates);
     }
 
 }

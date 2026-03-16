@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\SponsoredProject;
 
@@ -20,12 +21,29 @@ use models\main\SponsoredProject;
  */
 class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
 {
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertSummitTestData();
+
+        // Configure assets disk to use local driver for tests (avoids OpenStack/Swift dependency)
+        Config::set('filesystems.disks.assets', [
+            'driver' => 'local',
+            'root' => storage_path('app/testing'),
+        ]);
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
     public function testAddSponsoredProject(){
 
-        $nav_bar_title = str_random(16).'_sponsored project title';
         $should_show_on_nav_bar = false;
-        $learn_more_text = str_random(16).'_sponsored project learn more text';
-        $learn_more_link = 'https://'.str_random(16).'_sponsored_project/learn_more_text.html';
         $site_url = 'https://'.str_random(16).'_sponsored_project/';
 
         $data = [
@@ -62,14 +80,13 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
 
     public function testUpdateSponsoredProject(){
 
-        $nav_bar_title = str_random(16).'_sponsored project title';
+        $project = $this->testAddSponsoredProject();
+
         $should_show_on_nav_bar = true;
-        $learn_more_text = str_random(16).'_sponsored project learn more text';
-        $learn_more_link = 'https://'.str_random(16).'_sponsored_project/learn_more_text.html';
         $site_url = 'https://'.str_random(16).'_sponsored_project/';
 
         $params = [
-            'id' => 1,
+            'id' => $project->id,
         ];
 
         $data = [
@@ -103,6 +120,8 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
     }
 
     public function testGetAll(){
+        $this->testAddSponsoredProject();
+
         $params = [
             //AND FILTER
             'filter' => ['name=@sponsored project'],
@@ -128,35 +147,8 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
 
     public function testAddSponsorshipTypeAndGet(){
 
-        $data = [
-            'name' => str_random(16).'_sponsored project',
-            'description' => str_random(16).'_sponsored project description',
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "POST",
-            "OAuth2SponsoredProjectApiController@add",
-            [],
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $sponsored_projects = json_decode($content);
-        $this->assertTrue(!is_null($sponsored_projects));
-
-        $params = [
-            'id' => $sponsored_projects->id,
-        ];
+        // first create a project
+        $project = $this->testAddSponsoredProject();
 
         $data = [
             'name' => str_random(16).' sponsorship type',
@@ -172,7 +164,7 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
         $response = $this->action(
             "POST",
             "OAuth2SponsoredProjectApiController@addSponsorshipType",
-            $params,
+            ['id' => $project->id],
             [],
             [],
             [],
@@ -185,14 +177,10 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
         $sponsorship_type = json_decode($content);
         $this->assertTrue(!is_null($sponsorship_type));
 
+        // get single sponsorship type
         $params = [
-            'id' => 1,
+            'id' => $project->id,
             'sponsorship_type_id' => $sponsorship_type->id
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
         ];
 
         $response = $this->action(
@@ -202,22 +190,17 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
-            json_encode($data)
+            $headers
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
-        $sponsorship_type = json_decode($content);
-        $this->assertTrue(!is_null($sponsorship_type));
+        $fetched_type = json_decode($content);
+        $this->assertTrue(!is_null($fetched_type));
 
+        // get all sponsorship types for the project
         $params = [
-            'id' => 1,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            'id' => $project->id,
         ];
 
         $response = $this->action(
@@ -227,30 +210,53 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
-            json_encode($data)
+            $headers
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
-        $sponsorship_type = json_decode($content);
-        $this->assertTrue(!is_null($sponsorship_type));
+        $all_types = json_decode($content);
+        $this->assertTrue(!is_null($all_types));
     }
 
     public function testUpdateSponsorshipType(){
 
-        $params = [
-            'id' => 1,
-            'sponsorship_type_id' => 6
-        ];
+        // first create a project and sponsorship type
+        $project = $this->testAddSponsoredProject();
 
-        $data = [
-            'order' => 1
+        $data_type = [
+            'name' => str_random(16).' sponsorship type',
+            'description' => str_random(16).' sponsorship type description',
+            'is_active' => true,
         ];
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsorshipType",
+            ['id' => $project->id],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data_type)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsorship_type = json_decode($content);
+
+        $params = [
+            'id' => $project->id,
+            'sponsorship_type_id' => $sponsorship_type->id
+        ];
+
+        $data = [
+            'order' => 1
         ];
 
         $response = $this->action(
@@ -264,16 +270,39 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
             json_encode($data)
         );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(204);
-        $sponsorship_type = json_decode($content);
-        $this->assertTrue(!is_null($sponsorship_type));
-        return $sponsorship_type;
+        $this->assertResponseStatus(201);
     }
 
     public function testGetAllSponsorshipTypes(){
+        // create a project with a sponsorship type first
+        $project = $this->testAddSponsoredProject();
+
+        $data_type = [
+            'name' => str_random(16).' sponsorship type',
+            'description' => str_random(16).' sponsorship type description',
+            'is_active' => true,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsorshipType",
+            ['id' => $project->id],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data_type)
+        );
+
+        $this->assertResponseStatus(201);
+
         $params = [
-           'id' => 'kata-containers',
+            'id' => $project->id,
             'expand' => 'supporting_companies, supporting_companies.company'
         ];
 
@@ -296,19 +325,50 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
 
     public function testAddSupportingCompany(){
 
+        // create project and sponsorship type
+        $project = $this->testAddSponsoredProject();
+
+        $data_type = [
+            'name' => str_random(16).' sponsorship type',
+            'description' => str_random(16).' sponsorship type description',
+            'is_active' => true,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsorshipType",
+            ['id' => $project->id],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data_type)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsorship_type = json_decode($content);
+
+        // use a company from test data
+        $company = self::$companies[0];
+
         $params = [
-            'id' => 1,
-            'sponsorship_type_id' => 1,
-            'company_id' => 12,
+            'id' => $project->id,
+            'sponsorship_type_id' => $sponsorship_type->id,
         ];
 
         $data = [
-            'order' => 2
+            'company_id' => $company->getId(),
+            'order' => 1
         ];
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
         $response = $this->action(
-            "PUT",
+            "POST",
             "OAuth2SponsoredProjectApiController@addSupportingCompanies",
             $params,
             array(),
@@ -319,20 +379,71 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
         );
 
         $content = $response->getContent();
-        $company = json_decode($content);
-        $this->assertTrue(!is_null($company));
-        $this->assertResponseStatus(200);
+        $this->assertResponseStatus(201);
+        $supporting_company = json_decode($content);
+        $this->assertTrue(!is_null($supporting_company));
     }
 
     public function testGetAllSupportingCompanies(){
 
+        // create project, sponsorship type, and add supporting company
+        $project = $this->testAddSponsoredProject();
+
+        $data_type = [
+            'name' => str_random(16).' sponsorship type',
+            'description' => str_random(16).' sponsorship type description',
+            'is_active' => true,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSponsorshipType",
+            ['id' => $project->id],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data_type)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $sponsorship_type = json_decode($content);
+
+        // add a supporting company
+        $company = self::$companies[0];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SponsoredProjectApiController@addSupportingCompanies",
+            [
+                'id' => $project->id,
+                'sponsorship_type_id' => $sponsorship_type->id,
+            ],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode([
+                'company_id' => $company->getId(),
+                'order' => 1
+            ])
+        );
+
+        $this->assertResponseStatus(201);
+
+        // now get all supporting companies
         $params = [
-            'id' => 'kata-containers',
-            'sponsorship_type_id' => 'platinum-members',
+            'id' => $project->id,
+            'sponsorship_type_id' => $sponsorship_type->id,
             'expand' => 'company'
         ];
 
-        $headers = array("HTTP_Authorization" => " Bearer " . $this->access_token);
         $response = $this->action(
             "GET",
             "OAuth2SponsoredProjectApiController@getSupportingCompanies",
@@ -350,8 +461,10 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
     }
 
     public function testAddSponsoredProjectLogo(){
+        $project = $this->testAddSponsoredProject();
+
         $params = [
-            'id' => 1,
+            'id' => $project->id,
         ];
 
         $headers = [
@@ -378,8 +491,10 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
     }
 
     public function testDeleteSponsoredProjectLogo(){
+        $project = $this->testAddSponsoredProject();
+
         $params = [
-            'id' => 1,
+            'id' => $project->id,
         ];
 
         $headers = [
@@ -471,12 +586,14 @@ class OAuth2SponsoredProjectsApiTest extends ProtectedApiTestCase
         $sponsored_project_repository = EntityManager::getRepository(SponsoredProject::class);
         $subproject = $sponsored_project_repository->find($added_subproject_id);
 
+        $parent_project = $subproject->getParentProject();
+
         $params = [
             'id' => $subproject->getId(),
         ];
 
         $data = [
-            'parent_project_id' => 1,
+            'parent_project_id' => $parent_project->getId(),
             'name'              => str_random(16).'_sponsored subproject updated',
             'description'       => str_random(16).'_sponsored subproject description updated',
         ];

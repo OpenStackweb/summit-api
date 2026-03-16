@@ -18,13 +18,23 @@
  */
 final class OAuth2SummitAccessLevelTypeTest extends ProtectedApiTestCase
 {
-    /**
-     * @param int $summit_id
-     * @return mixed
-     */
-    public function testAddAccessLevel($summit_id = 27){
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
+    public function testAddAccessLevel(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $name        = str_random(16).'_access_level';
@@ -74,11 +84,11 @@ HTML;
         return $access_level;
     }
 
-    public function testUpdateAccessLevel($summit_id = 27){
+    public function testUpdateAccessLevel(){
 
         $access_level_old = $this->testAddAccessLevel();
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             "level_id" => $access_level_old->id
         ];
 
@@ -112,9 +122,9 @@ HTML;
     }
 
 
-    public function testGetAllBySummit($summit_id=27){
+    public function testGetAllBySummit(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
         $headers = [
@@ -139,13 +149,10 @@ HTML;
         return $data;
     }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testDeleteAccessLevel($summit_id=27){
+    public function testDeleteAccessLevel(){
         $access_level_old = $this->testAddAccessLevel();
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             "level_id" => $access_level_old->id
         ];
 

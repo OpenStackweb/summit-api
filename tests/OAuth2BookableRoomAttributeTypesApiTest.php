@@ -18,9 +18,27 @@
  */
 final class OAuth2BookableRoomAttributeTypesApiTest extends ProtectedApiTestCase
 {
-    public function testGetBookableAttributeTypesBySummit($summit_id = 27){
+    use InsertSummitTestData;
+
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::$defaultMember = self::$member;
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
+    public function testGetBookableAttributeTypesBySummit(){
+        // create one first so the list is non-empty
+        $this->testAddAttributeType();
+
         $params  = [
-            'id'  => $summit_id,
+            'id'  => self::$summit->getId(),
             'page'     => 1 ,
             'per_page' => 10,
             'expand' => 'values'
@@ -45,9 +63,9 @@ final class OAuth2BookableRoomAttributeTypesApiTest extends ProtectedApiTestCase
     }
 
 
-    public function testAddAttributeType($summit_id = 27){
+    public function testAddAttributeType(){
         $params = [
-            'id'  => $summit_id,
+            'id'  => self::$summit->getId(),
         ];
 
         $type  = str_random(16).'_attribute_type';
@@ -79,10 +97,10 @@ final class OAuth2BookableRoomAttributeTypesApiTest extends ProtectedApiTestCase
         return $attribute_type;
     }
 
-    public function testAddAttributeValue($summit_id = 27){
-        $type = $this->testAddAttributeType($summit_id);
+    public function testAddAttributeValue(){
+        $type = $this->testAddAttributeType();
         $params = [
-            'id'  => $summit_id,
+            'id'  => self::$summit->getId(),
             'type_id' => $type->id,
         ];
 

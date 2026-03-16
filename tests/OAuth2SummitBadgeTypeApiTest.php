@@ -12,20 +12,35 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
+
 final class OAuth2SummitBadgeTypeApiTest extends ProtectedApiTestCase
 {
+    use InsertSummitTestData;
 
-    /**
-     * @param int $summit_id
-     * @param bool $is_default
-     * @return mixed
-     */
-    public function testAddBadgeType($summit_id = 27, $is_default = false){
+    use InsertOrdersTestData;
+
+    protected function setUp(): void
+    {
+        $this->setCurrentGroup(IGroup::TrackChairs);
+        parent::setUp();
+        self::$defaultMember = self::$member;
+        self::insertSummitTestData();
+        self::InsertOrdersTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
+    public function testAddBadgeType(){
         $params = [
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
         ];
 
-        $name        = str_random(16).'_badge_type';
+        $name = str_random(16).'_badge_type';
         $template = <<<HTML
 <html>
 <body>
@@ -41,12 +56,7 @@ HTML;
             'name'             => $name,
             'description'      => "this is a description",
             'template_content' => $template,
-            'is_default'       => $is_default
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            'is_default'       => false
         ];
 
         $response = $this->action(
@@ -56,65 +66,21 @@ HTML;
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
         $badge_type = json_decode($content);
-        $this->assertTrue(!is_null($badge_type));
-        $this->assertTrue($badge_type->name == $name);
+        $this->assertNotNull($badge_type);
+        $this->assertEquals($name, $badge_type->name);
         return $badge_type;
     }
 
-
-    public function testUpdateBadgeFeatureType($summit_id = 27){
-
-        $badge_type_old = $this->testAddBadgeType($summit_id, false);
+    public function testGetAllBySummit(){
         $params = [
-            'id' => $summit_id,
-            "badge_type_id" => $badge_type_old->id
-        ];
-
-        $data = [
-            'description'      => "this is a description update",
-            'is_default'       => true,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitBadgeTypeApiController@update",
-            $params,
-            [],
-            [],
-            [],
-            $headers,
-            json_encode($data)
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $badge_type = json_decode($content);
-        $this->assertTrue(!is_null($badge_type));
-        $this->assertTrue($badge_type->name == $badge_type_old->name);
-        return $badge_type;
-    }
-
-
-    public function testGetAllBySummit($summit_id=27){
-        $params = [
-            'id' => $summit_id,
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            'id' => self::$summit->getId(),
         ];
 
         $response = $this->action(
@@ -124,29 +90,76 @@ HTML;
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $data = json_decode($content);
-        $this->assertTrue(!is_null($data));
+        $this->assertNotNull($data);
         return $data;
     }
 
-    /**
-     * @param int $summit_id
-     */
-    public function testDeleteBadgeFeatureType($summit_id=27){
-        $badge_type_old = $this->testAddBadgeType();
+    public function testGetBadgeTypeById(){
         $params = [
-            'id' => $summit_id,
-            "feature_id" => $badge_type_old->id
+            'id' => self::$summit->getId(),
+            'badge_type_id' => self::$default_badge_type->getId(),
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitBadgeTypeApiController@get",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $badge_type = json_decode($content);
+        $this->assertNotNull($badge_type);
+        $this->assertEquals(self::$default_badge_type->getId(), $badge_type->id);
+        return $badge_type;
+    }
+
+    public function testUpdateBadgeType(){
+        $new_badge_type = $this->testAddBadgeType();
+        $params = [
+            'id' => self::$summit->getId(),
+            'badge_type_id' => $new_badge_type->id
+        ];
+
+        $data = [
+            'description' => 'this is a description update',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitBadgeTypeApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $badge_type = json_decode($content);
+        $this->assertNotNull($badge_type);
+        $this->assertEquals($new_badge_type->name, $badge_type->name);
+        $this->assertEquals('this is a description update', $badge_type->description);
+        return $badge_type;
+    }
+
+    public function testDeleteBadgeType(){
+        $new_badge_type = $this->testAddBadgeType();
+        $params = [
+            'id' => self::$summit->getId(),
+            'badge_type_id' => $new_badge_type->id
         ];
 
         $response = $this->action(
@@ -156,24 +169,21 @@ HTML;
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(204);
     }
 
-    public function testAssignAccessLevelToBadgeType($summit_id=27){
-        $badge_type_old = $this->testAddBadgeType();
-        $params = [
-            'id' => $summit_id,
-            "feature_id" => $badge_type_old->id,
-            'access_level_id' => 1
-        ];
+    public function testAssignAccessLevelToBadgeType(){
+        $new_badge_type = $this->testAddBadgeType();
+        $access_level = self::$summit->getBadgeAccessLevelTypes()->first();
+        $this->assertNotNull($access_level);
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+        $params = [
+            'id' => self::$summit->getId(),
+            'badge_type_id' => $new_badge_type->id,
+            'access_level_id' => $access_level->getId()
         ];
 
         $response = $this->action(
@@ -183,38 +193,26 @@ HTML;
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();
         $this->assertResponseStatus(201);
+        $badge_type = json_decode($content);
+        $this->assertNotNull($badge_type);
+        return $badge_type;
     }
 
-    public function testRemoveAccessLevelToBadgeType($summit_id=27){
-        $badge_type_old = $this->testAddBadgeType();
+    public function testRemoveAccessLevelFromBadgeType(){
+        $badge_type = $this->testAssignAccessLevelToBadgeType();
+        $access_level = self::$summit->getBadgeAccessLevelTypes()->first();
+        $this->assertNotNull($access_level);
+
         $params = [
-            'id' => $summit_id,
-            "feature_id" => $badge_type_old->id,
-            'access_level_id' => 1
+            'id' => self::$summit->getId(),
+            'badge_type_id' => $badge_type->id,
+            'access_level_id' => $access_level->getId()
         ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
-        $response = $this->action(
-            "PUT",
-            "OAuth2SummitBadgeTypeApiController@addAccessLevelToBadgeType",
-            $params,
-            [],
-            [],
-            [],
-            $headers
-        );
-
-        $content = $response->getContent();
-        $this->assertResponseStatus(201);
 
         $response = $this->action(
             "DELETE",
@@ -223,7 +221,107 @@ HTML;
             [],
             [],
             [],
-            $headers
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+    }
+
+    public function testAddFeatureToBadgeType(){
+        $new_badge_type = $this->testAddBadgeType();
+        $feature = self::$badge_features[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'badge_type_id' => $new_badge_type->id,
+            'feature_id' => $feature->getId()
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitBadgeTypeApiController@addFeatureToBadgeType",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $badge_type = json_decode($content);
+        $this->assertNotNull($badge_type);
+        return $badge_type;
+    }
+
+    public function testRemoveFeatureFromBadgeType(){
+        $badge_type = $this->testAddFeatureToBadgeType();
+        $feature = self::$badge_features[0];
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'badge_type_id' => $badge_type->id,
+            'feature_id' => $feature->getId()
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitBadgeTypeApiController@removeFeatureFromBadgeType",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+    }
+
+    public function testAddViewTypeToBadgeType(){
+        $new_badge_type = $this->testAddBadgeType();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'badge_type_id' => $new_badge_type->id,
+            'badge_view_type_id' => self::$default_badge_view_type->getId()
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitBadgeTypeApiController@addViewTypeToBadgeType",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $badge_type = json_decode($content);
+        $this->assertNotNull($badge_type);
+        return $badge_type;
+    }
+
+    public function testRemoveViewTypeFromBadgeType(){
+        $badge_type = $this->testAddViewTypeToBadgeType();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'badge_type_id' => $badge_type->id,
+            'badge_view_type_id' => self::$default_badge_view_type->getId()
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitBadgeTypeApiController@removeViewTypeFromBadgeType",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
         );
 
         $content = $response->getContent();

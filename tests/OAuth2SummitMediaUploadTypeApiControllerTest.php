@@ -60,6 +60,7 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
             'description' => 'this is a description',
             'max_size' => 2048,
             'is_mandatory' => false,
+            'is_editable' => true,
             'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
             'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
             'presentation_types' => [$event_types[0]->getId()],
@@ -124,6 +125,7 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
             'description' => 'this is a description',
             'max_size' => 2048,
             'is_mandatory' => false,
+            'is_editable' => true,
             'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
             'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
             'presentation_types' => [$event_types[0]->getId()]
@@ -171,6 +173,7 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
             'description' => 'this is a description',
             'max_size' => 2048,
             'is_mandatory' => false,
+            'is_editable' => true,
             'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
             'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
             'presentation_types' => [ $event_types[0]->getId() ]
@@ -203,7 +206,7 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
             "OAuth2SummitMediaUploadTypeApiController@delete",
             [
                 'id' => self::$summit->getId(),
-                'type_id' => intval($response['id'])
+                'media_upload_type_id' => intval($response['id'])
             ],
             [],
             [],
@@ -230,6 +233,7 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
             'description' => 'this is a description',
             'max_size' => 2048,
             'is_mandatory' => false,
+            'is_editable' => true,
             'private_storage_type' => \App\Models\Utils\IStorageTypesConstants::DropBox,
             'public_storage_type' => \App\Models\Utils\IStorageTypesConstants::Swift,
         ];
@@ -260,8 +264,8 @@ final class OAuth2SummitMediaUploadTypeApiControllerTest
             "OAuth2SummitMediaUploadTypeApiController@addToPresentationType",
             [
                 'id' => self::$summit->getId(),
-                'type_id' => intval($response['id']),
-                'presentation_type_id' => $event_types[0]->getId()
+                'media_upload_type_id' => intval($response['id']),
+                'event_type_id' => $event_types[0]->getId()
             ],
             [],
             [],

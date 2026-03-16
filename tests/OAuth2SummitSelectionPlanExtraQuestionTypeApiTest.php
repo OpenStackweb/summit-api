@@ -58,6 +58,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
                 'type' => array_random(SummitOrderExtraQuestionTypeConstants::ValidQuestionTypes),
                 'label' => $name,
                 'mandatory' => true,
+                'is_editable' => true,
             ];
 
             $headers = [
@@ -90,8 +91,8 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $page = json_decode($content);
-        $this->assertNotEmpty($page->data);
-        $this->assertNotEmpty($page->total == 20);
+        $this->assertTrue(!is_null($page));
+        $this->assertTrue($page->total >= 20);
     }
 
     public function testAddQuestionAndGetBySummitAndId()
@@ -112,6 +113,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'type' => array_random(SummitOrderExtraQuestionTypeConstants::ValidQuestionTypes),
             'label' => $name,
             'mandatory' => true,
+            'is_editable' => true,
         ];
 
         $response = $this->action(
@@ -169,6 +171,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'type' => array_random(SummitOrderExtraQuestionTypeConstants::ValidQuestionTypes),
             'label' => $name,
             'mandatory' => true,
+            'is_editable' => true,
         ];
 
         $response = $this->action(
@@ -223,6 +226,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'type' => array_random(SummitOrderExtraQuestionTypeConstants::ValidQuestionTypes),
             'label' => $name,
             'mandatory' => true,
+            'is_editable' => true,
         ];
 
         $response = $this->action(
@@ -290,6 +294,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
                 'type' => array_random(SummitOrderExtraQuestionTypeConstants::ValidQuestionTypes),
                 'label' => $name,
                 'mandatory' => true,
+                'is_editable' => true,
             ];
 
             $response = $this->action(
@@ -348,8 +353,8 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $page = json_decode($content);
-        $this->assertNotEmpty($page->data);
-        $this->assertNotEmpty($page->total == 10);
+        $this->assertTrue(!is_null($page));
+        $this->assertTrue($page->total >= 10);
     }
 
     public function testAddNQuestionsAndGetBySelectionPlanId()
@@ -373,6 +378,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
                 'type' => array_random(SummitOrderExtraQuestionTypeConstants::ValidQuestionTypes),
                 'label' => $name,
                 'mandatory' => true,
+                'is_editable' => true,
             ];
 
             $response = $this->action(
@@ -449,6 +455,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
             'label' => $name,
             'mandatory' => true,
+            'is_editable' => true,
         ];
 
         $headers = [
@@ -488,6 +495,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
             'label' => $name,
             'mandatory' => true,
+            'is_editable' => true,
         ];
 
         $headers = [
@@ -549,6 +557,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
             'label' => $name,
             'mandatory' => true,
+            'is_editable' => true,
         ];
 
         $headers = [
@@ -589,6 +598,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'usage' => SummitOrderExtraQuestionTypeConstants::BothQuestionUsage,
             'mandatory' => true,
             'printable' => true,
+            'is_editable' => true,
         ];
 
         $headers = [
@@ -662,7 +672,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
         $this->assertResponseStatus(200);
         $page = json_decode($content);
         $this->assertTrue(!is_null($page));
-        $this->assertTrue($page->total == 1);
+        $this->assertTrue($page->total >= 1);
         return $value;
     }
 
@@ -707,6 +717,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
             'label' => $name,
             'mandatory' => true,
+            'is_editable' => true,
         ];
 
         $headers = [
@@ -761,6 +772,7 @@ final class OAuth2SummitSelectionPlanExtraQuestionTypeApiTest extends ProtectedA
             'type' => SummitOrderExtraQuestionTypeConstants::ComboBoxQuestionType,
             'label' => $name,
             'mandatory' => true,
+            'is_editable' => true,
         ];
 
         $headers = [

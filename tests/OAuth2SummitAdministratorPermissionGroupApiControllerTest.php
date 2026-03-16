@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Mockery;
+
 class OAuth2SummitAdministratorPermissionGroupApiControllerTest
     extends ProtectedApiTestCase
 {
@@ -26,6 +28,7 @@ class OAuth2SummitAdministratorPermissionGroupApiControllerTest
     {
         self::clearSummitTestData();
         Mockery::close();
+        parent::tearDown();
     }
 
     public function testAddGroupOK(){
@@ -137,7 +140,7 @@ class OAuth2SummitAdministratorPermissionGroupApiControllerTest
         $group = $this->testAddGroupOK();
 
         $params = [
-            'id' => $group->id,
+            'group_id' => $group->id,
             //'expand' => 'summits,members',
         ];
 

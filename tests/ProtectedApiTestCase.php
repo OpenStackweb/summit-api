@@ -27,7 +27,6 @@ use App\Security\MemberScopes;
 use App\Models\Foundation\Main\IGroup;
 use App\Security\CompanyScopes;
 use App\Security\SponsoredProjectScope;
-use App\Security\GroupsScopes;
 use App\Security\TeamScopes;
 use Mockery;
 /**
@@ -225,7 +224,6 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             SummitScopes::DeleteEventData,
             SummitScopes::ReadSummitsConfirmExternalOrders,
             SummitScopes::WriteSummitsConfirmExternalOrders,
-            SummitScopes::WriteVideoData,
             SummitScopes::WriteVideoData,
             SummitScopes::MeRead,
             SummitScopes::ReadNotifications,

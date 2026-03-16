@@ -719,7 +719,10 @@ class AppServiceProvider extends ServiceProvider
     {
 
         if (!defined('SCOPE_BASE_REALM')) {
-            define('SCOPE_BASE_REALM', config('app.scope_base_realm'));
+            $scopeBaseRealm = rtrim((string) config('app.scope_base_realm', ''), '/');
+            if ($scopeBaseRealm === '')
+                throw new \RuntimeException('Missing required config: app.scope_base_realm');
+             define('SCOPE_BASE_REALM', $scopeBaseRealm);
         }
 
         App::singleton(IResourceServerContext::class, ResourceServerContext::class);

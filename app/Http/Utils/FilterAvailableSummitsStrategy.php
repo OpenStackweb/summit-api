@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 use App\Security\SummitScopes;
-use Illuminate\Support\Facades\Config;
 use models\oauth2\IResourceServerContext;
 /**
  * Class FilterAvailableSummitsStrategy

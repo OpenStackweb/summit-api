@@ -3,6 +3,8 @@
 namespace App\Audit;
 
 use App\Audit\Utils\DateFormatter;
+use Doctrine\ORM\PersistentCollection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -32,10 +34,65 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         $this->ctx = $ctx;
     }
 
+    protected function processCollection(
+        object $col,
+        bool $isDeletion = false,
+        ?array $deletedIds = null
+    ): ?array
+    {
+        if (!($col instanceof PersistentCollection)) {
+            return null;
+        }
+
+        $mapping = $col->getMapping();
+        $fieldName = $mapping->fieldName ?? 'unknown';
+        $targetEntity = $mapping->targetEntity ?? 'unknown';
+
+        $addedEntities = $col->getInsertDiff();
+        $removedEntities = $col->getDeleteDiff();
+
+        $addedIds = $this->extractCollectionEntityIds($addedEntities);
+        $removedIds = $this->extractCollectionEntityIds($removedEntities);
+
+        if ($isDeletion && !empty($deletedIds) && empty($removedIds)) {
+            $removedIds = $deletedIds;
+        }
+
+        return [
+            'field'         => $fieldName,
+            'target_entity' => $targetEntity,
+            'is_deletion'   => $isDeletion,
+            'added_ids'     => $addedIds,
+            'removed_ids'   => $removedIds,
+        ];
+    }
+
+
+    /**
+     * Extract IDs from entity objects in collection
+     */
+    protected function extractCollectionEntityIds(array $entities): array
+    {
+        $ids = [];
+        foreach ($entities as $entity) {
+            if (method_exists($entity, 'getId')) {
+                $id = $entity->getId();
+                if ($id !== null) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        $uniqueIds = array_unique($ids);
+        sort($uniqueIds);
+
+        return array_values($uniqueIds);
+    }
+
     protected function getUserInfo(): string
     {
         if (app()->runningInConsole()) {
-            return 'Worker Job';
+                return 'Worker Job';
         }
         if (!$this->ctx) {
             return 'Unknown (unknown)';
@@ -127,6 +184,58 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         $new_display = $this->formatChangeValue($new_value);
 
         return sprintf("Property \"%s\" has changed from \"%s\" to \"%s\"", $prop_name, $old_display, $new_display);
+    }
+
+    /**
+     * Build detailed message for many-to-many collection changes
+     */
+    protected function buildManyToManyDetailedMessage(PersistentCollection $collection, array $insertDiff, array $deleteDiff): array
+    {
+        $fieldName = 'unknown';
+        $targetEntity = 'unknown';
+        
+        try {
+            $mapping = $collection->getMapping();
+            $fieldName = $mapping->fieldName ?? 'unknown';
+            $targetEntity = $mapping->targetEntity ?? 'unknown';
+            if ($targetEntity) {
+                $targetEntity = class_basename($targetEntity);
+            }
+        } catch (\Exception $e) {
+            Log::debug("AbstractAuditLogFormatter::Could not extract collection metadata: " . $e->getMessage());
+        }
+
+        $addedIds = $this->extractCollectionEntityIds($insertDiff);
+        $removedIds = $this->extractCollectionEntityIds($deleteDiff);
+
+        return [
+            'field' => $fieldName,
+            'target_entity' => $targetEntity,
+            'added_ids' => $addedIds,
+            'removed_ids' => $removedIds,
+        ];
+    }
+
+    /**
+     * Format detailed message for many-to-many collection changes
+     */
+    protected static function formatManyToManyDetailedMessage(array $details, int $addCount, int $removeCount, string $action): string
+    {
+        $field = $details['field'] ?? 'unknown';
+        $target = $details['target_entity'] ?? 'unknown';
+        $addedIds = $details['added_ids'] ?? [];
+        $removedIds = $details['removed_ids'] ?? [];
+
+        $parts = [];
+        if (!empty($addedIds)) {
+            $parts[] = sprintf("Added %d %s(s): %s", $addCount, $target, implode(', ', $addedIds));
+        }
+        if (!empty($removedIds)) {
+            $parts[] = sprintf("Removed %d %s(s): %s", $removeCount, $target, implode(', ', $removedIds));
+        }
+
+        $detailStr = implode(' | ', $parts);
+        return sprintf("Many-to-Many collection '%s' %s: %s", $field, $action, $detailStr);
     }
 
     abstract public function format(mixed $subject, array $change_set): ?string;

@@ -5,7 +5,6 @@ namespace App\Audit\ConcreteFormatters;
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -22,9 +21,9 @@ use Illuminate\Support\Facades\Log;
  **/
 
 /**
- * Formatter for Many-to-Many collection updates
+ * Formatter for Many-to-Many collection deletions
  */
-class EntityManyToManyCollectionUpdateAuditLogFormatter extends AbstractAuditLogFormatter
+class DefaultEntityManyToManyCollectionDeleteAuditLogFormatter extends AbstractAuditLogFormatter
 {
     /**
      * @var IChildEntityAuditLogFormatter|null
@@ -33,7 +32,7 @@ class EntityManyToManyCollectionUpdateAuditLogFormatter extends AbstractAuditLog
 
     public function __construct(mixed $child_entity_formatter = null)
     {
-        parent::__construct(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE);
+        parent::__construct(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE);
         $this->child_entity_formatter = $child_entity_formatter;
     }
 
@@ -43,46 +42,43 @@ class EntityManyToManyCollectionUpdateAuditLogFormatter extends AbstractAuditLog
     public function format($subject, array $change_set): ?string
     {
         try {
-          
-            $collection = is_array($change_set) && isset($change_set['collection']) 
-                ? $change_set['collection'] 
-                : null;
-
-            if ($collection === null) {
+            $metadata = $this->handleManyToManyCollection($change_set);
+            if ($metadata === null) {
                 return null;
             }
 
             $changes = [];
-            $insertDiff = $collection->getInsertDiff();
-            $deleteDiff = $collection->getDeleteDiff();
 
-            if ($this->child_entity_formatter != null) {
-                foreach ($insertDiff as $child_changed_entity) {
-                    $changes[] = $this->child_entity_formatter
-                        ->format($child_changed_entity, IChildEntityAuditLogFormatter::CHILD_ENTITY_CREATION);
-                }
-
+            if ($this->child_entity_formatter != null && empty($metadata->preloadedDeletedIds)) {
+                $deleteDiff = $metadata->collection->getDeleteDiff();
                 foreach ($deleteDiff as $child_changed_entity) {
-                    $changes[] = $this->child_entity_formatter
+                    $formatted = $this->child_entity_formatter
                         ->format($child_changed_entity, IChildEntityAuditLogFormatter::CHILD_ENTITY_DELETION);
+                    if ($formatted !== null) {
+                        $changes[] = $formatted;
+                    }
                 }
 
                 if (!empty($changes)) {
                     return implode("|", $changes);
                 }
             } else {
-                $inserted_count = count($insertDiff);
-                $deleted_count = count($deleteDiff);
-
-                if ($inserted_count > 0 || $deleted_count > 0) {
-                    $details = $this->buildManyToManyDetailedMessage($collection, $insertDiff, $deleteDiff);
-                    return self::formatManyToManyDetailedMessage($details, $inserted_count, $deleted_count, 'updated');
+                $collectionData = $this->processCollection($metadata);
+                if ($collectionData === null) {
+                    return null;
                 }
+
+                $deletedCount = count($collectionData['removed_ids']);
+                if ($deletedCount === 0) {
+                    return sprintf("Many-to-Many collection '%s' deleted: Removed IDs: []", $collectionData['field']);
+                }
+
+                return self::formatManyToManyDetailedMessage($collectionData, 0, $deletedCount, 'deleted');
             }
 
             return null;
         } catch (\Throwable $e) {
-            Log::error(get_class($this) . " error: " . $e->getMessage());
+            Log::error(get_class($this) . " error: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return null;
         }
     }

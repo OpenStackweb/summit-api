@@ -18,24 +18,48 @@ namespace Tests\OpenTelemetry\Formatters;
 use App\Audit\ConcreteFormatters\SummitAttendeeAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use Tests\OpenTelemetry\Formatters\Support\AuditContextBuilder;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\UnitOfWork;
+use Tests\OpenTelemetry\Formatters\Support\PersistentCollectionTestHelper;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
+use models\summit\SummitAttendee;
+use models\summit\Summit;
+use models\main\Tag;
 
 class SummitAttendeeAuditLogFormatterManyToManyTest extends TestCase
 {
-    private const ATTENDEE_ID = 456;
-    private const ATTENDEE_FIRST_NAME = 'Juan';
-    private const ATTENDEE_LAST_NAME = 'García';
-
-    private mixed $mockSubject;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->mockSubject = $this->createMockSubject();
-    }
+    private const ATTENDEE_ID = 1;
+    private const ATTENDEE_EMAIL = 'test@example.com';
+    private const ATTENDEE_FIRST_NAME = 'Test';
+    private const ATTENDEE_SURNAME = 'User';
+    private const SUMMIT_ID = 1;
+    private const SUMMIT_TITLE = 'Test Summit';
+    private const TAG_FIELD_NAME = 'tags';
+    private const TAG_TARGET_ENTITY = Tag::class;
+    private const LOG_REMOVED_IDS_EMPTY = 'Removed IDs: []';
+    private const LOG_REMOVED_IDS_PAYLOAD = 'Removed IDs: [10,11,12]';
+    private const LOG_REMOVED_IDS_FALLBACK = 'Removed IDs: [9,10]';
+    private const LOG_ADDED_IDS_DIFF = 'Added IDs: [3]';
+    private const LOG_REMOVED_IDS_DIFF = 'Removed IDs: [1]';
+    private const LOG_ADDED_IDS_ONLY = 'Added IDs: [4,5]';
+    private const LOG_REMOVED_IDS_LABEL = 'Removed IDs:';
+    private const LOG_NO_CHANGES = 'No changes';
+    private const DP_UPDATE_WITHOUT_CONTEXT = 'update without context';
+    private const DP_DELETE_WITHOUT_CONTEXT = 'delete without context';
+    private const DP_UPDATE_WITHOUT_COLLECTION = 'update without collection';
+    private const DP_DELETE_WITHOUT_COLLECTION = 'delete without collection';
+    private const DELETED_IDS_PAYLOAD = [10, 11, 12];
+    private const DELETED_IDS_FALLBACK = [9, 10];
+    private const SNAPSHOT_IDS_EMPTY = [];
+    private const CURRENT_IDS_EMPTY = [];
+    private const SNAPSHOT_IDS_REMOVE_ONE = [1, 2, 3];
+    private const CURRENT_IDS_REMOVE_ONE = [2, 3];
+    private const SNAPSHOT_IDS_UPDATE = [1, 2];
+    private const CURRENT_IDS_UPDATE = [2, 3];
+    private const SNAPSHOT_IDS_ONLY_ADDS = [1];
+    private const CURRENT_IDS_ONLY_ADDS = [1, 4, 5];
+    private const SNAPSHOT_IDS_NO_CHANGES = [1, 2];
+    private const CURRENT_IDS_NO_CHANGES = [1, 2];
 
     protected function tearDown(): void
     {
@@ -43,54 +67,15 @@ class SummitAttendeeAuditLogFormatterManyToManyTest extends TestCase
         parent::tearDown();
     }
 
-    private function createMockSubject(): mixed
-    {
-        $mock = Mockery::mock('models\summit\SummitAttendee');
-        $mock->shouldReceive('getId')->andReturn(self::ATTENDEE_ID);
-        $mock->shouldReceive('getFirstName')->andReturn(self::ATTENDEE_FIRST_NAME);
-        $mock->shouldReceive('getSurname')->andReturn(self::ATTENDEE_LAST_NAME);
-        return $mock;
-    }
+    #[DataProvider('providesNullCasesForManyToMany')]
+    public function testManyToManyReturnsNullWithoutRequiredContextOrCollection(
+        string $eventType,
+        bool $withContext
+    ): void {
+        $formatter = $this->makeFormatter($eventType, $withContext);
+        $attendee = $this->makeAttendee();
 
-    public function testManyToManyUpdateReturnsNullWithoutContext(): void
-    {
-        $formatter = new SummitAttendeeAuditLogFormatter(
-            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE
-        );
-
-        $result = $formatter->format($this->mockSubject, []);
-        $this->assertNull($result);
-    }
-
-    public function testManyToManyDeleteReturnsNullWithoutContext(): void
-    {
-        $formatter = new SummitAttendeeAuditLogFormatter(
-            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
-        );
-
-        $result = $formatter->format($this->mockSubject, []);
-        $this->assertNull($result);
-    }
-
-    public function testManyToManyUpdateReturnsNullWithoutCollection(): void
-    {
-        $formatter = new SummitAttendeeAuditLogFormatter(
-            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE
-        );
-        $formatter->setContext(AuditContextBuilder::default()->build());
-
-        $result = $formatter->format($this->mockSubject, []);
-        $this->assertNull($result);
-    }
-
-    public function testManyToManyDeleteReturnsNullWithoutCollection(): void
-    {
-        $formatter = new SummitAttendeeAuditLogFormatter(
-            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
-        );
-        $formatter->setContext(AuditContextBuilder::default()->build());
-
-        $result = $formatter->format($this->mockSubject, []);
+        $result = $formatter->format($attendee, []);
         $this->assertNull($result);
     }
 
@@ -108,52 +93,160 @@ class SummitAttendeeAuditLogFormatterManyToManyTest extends TestCase
 
     public function testManyToManyDeleteReturnsNullWithoutRemovedIds(): void
     {
-        $formatter = new SummitAttendeeAuditLogFormatter(
-            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
-        );
-        $formatter->setContext(AuditContextBuilder::default()->build());
+        $attendee = $this->makeAttendee();
+        
+        $formatter = $this->makeFormatter(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE);
+        $collection = $this->makeCollection(self::SNAPSHOT_IDS_EMPTY, self::CURRENT_IDS_EMPTY);
 
-        $collection = $this->createMockCollection([], []);
-        $uow = Mockery::mock(UnitOfWork::class);
-
-        $result = $formatter->format($this->mockSubject, [
+        $result = $formatter->format($attendee, [
             'collection' => $collection,
-            'uow' => $uow
         ]);
 
-        $this->assertNull($result);
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::LOG_REMOVED_IDS_EMPTY, $result);
     }
 
-   
-
-    
-
-
-    private function createMockCollection(array $inserted = [], array $deleted = [])
+    public function testManyToManyDeleteUsesDeletedIdsFromPayload(): void
     {
-        return new class($inserted, $deleted) {
-            public function __construct(
-                private array $inserted,
-                private array $deleted
-            ) {}
+        $attendee = $this->makeAttendee();
 
-            public function getInsertDiff(): array
-            {
-                return $this->inserted;
-            }
+        $formatter = $this->makeFormatter(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE);
 
-            public function getDeleteDiff(): array
-            {
-                return $this->deleted;
-            }
+        $deletedIds = self::DELETED_IDS_PAYLOAD;
+        $collection = $this->makeCollection(self::SNAPSHOT_IDS_EMPTY, self::CURRENT_IDS_EMPTY);
 
-            public function getMapping()
-            {
-                $meta = Mockery::mock(ClassMetadata::class);
-                $meta->fieldName = 'testField';
-                $meta->targetEntity = 'TestEntity';
-                return $meta;
-            }
-        };
+        $result = $formatter->format($attendee, [
+            'collection' => $collection,
+            'deleted_ids' => $deletedIds,
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::LOG_REMOVED_IDS_PAYLOAD, $result);
     }
+
+    public function testManyToManyDeleteUsesDeletedIdsWhenSnapshotEmpty(): void
+    {
+        $attendee = $this->makeAttendee();
+
+        $formatter = $this->makeFormatter(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE);
+        $collection = $this->makeCollection(self::SNAPSHOT_IDS_EMPTY, self::CURRENT_IDS_UPDATE);
+
+        $result = $formatter->format($attendee, [
+            'collection' => $collection,
+            'deleted_ids' => self::DELETED_IDS_FALLBACK,
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::LOG_REMOVED_IDS_FALLBACK, $result);
+    }
+
+    public function testManyToManyUpdateUsesAddedAndRemovedIdsFromCollectionDiff(): void
+    {
+        $attendee = $this->makeAttendee();
+
+        $formatter = $this->makeFormatter(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE);
+        $collection = $this->makeCollection(self::SNAPSHOT_IDS_UPDATE, self::CURRENT_IDS_UPDATE);
+
+        $result = $formatter->format($attendee, [
+            'collection' => $collection,
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::LOG_ADDED_IDS_DIFF, $result);
+        $this->assertStringContainsString(self::LOG_REMOVED_IDS_DIFF, $result);
+    }
+
+    public function testManyToManyUpdateUsesAddedIdsWhenOnlyAdds(): void
+    {
+        $attendee = $this->makeAttendee();
+
+        $formatter = $this->makeFormatter(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE);
+        $collection = $this->makeCollection(self::SNAPSHOT_IDS_ONLY_ADDS, self::CURRENT_IDS_ONLY_ADDS);
+
+        $result = $formatter->format($attendee, [
+            'collection' => $collection,
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::LOG_ADDED_IDS_ONLY, $result);
+        $this->assertStringNotContainsString(self::LOG_REMOVED_IDS_LABEL, $result);
+    }
+
+    public function testManyToManyUpdateReturnsNoChangesWhenDiffEmpty(): void
+    {
+        $attendee = $this->makeAttendee();
+        $formatter = $this->makeFormatter(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE);
+        $collection = $this->makeCollection(self::SNAPSHOT_IDS_NO_CHANGES, self::CURRENT_IDS_NO_CHANGES);
+
+        $result = $formatter->format($attendee, [
+            'collection' => $collection,
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::LOG_NO_CHANGES, $result);
+    }
+
+    public function testManyToManyDeleteUsesRemovedIdsFromCollectionDiff(): void
+    {
+        $attendee = $this->makeAttendee();
+        $formatter = $this->makeFormatter(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE);
+        $collection = $this->makeCollection(self::SNAPSHOT_IDS_REMOVE_ONE, self::CURRENT_IDS_REMOVE_ONE);
+
+        $result = $formatter->format($attendee, [
+            'collection' => $collection,
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::LOG_REMOVED_IDS_DIFF, $result);
+    }
+
+    public static function providesNullCasesForManyToMany(): array
+    {
+        return [
+            self::DP_UPDATE_WITHOUT_CONTEXT => [IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE, false],
+            self::DP_DELETE_WITHOUT_CONTEXT => [IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE, false],
+            self::DP_UPDATE_WITHOUT_COLLECTION => [IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE, true],
+            self::DP_DELETE_WITHOUT_COLLECTION => [IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE, true],
+        ];
+    }
+
+    private function makeFormatter(string $eventType, bool $withContext = true): SummitAttendeeAuditLogFormatter
+    {
+        $formatter = new SummitAttendeeAuditLogFormatter($eventType);
+        if ($withContext) {
+            $formatter->setContext(AuditContextBuilder::default()->build());
+        }
+        return $formatter;
+    }
+
+    private function makeCollection(array $snapshotIds, array $currentIds)
+    {
+        return PersistentCollectionTestHelper::buildManyToManyCollection(
+            SummitAttendee::class,
+            self::TAG_FIELD_NAME,
+            self::TAG_TARGET_ENTITY,
+            $snapshotIds,
+            $currentIds
+        );
+    }
+
+    private function makeAttendee(): SummitAttendee
+    {
+        $attendee = Mockery::mock(SummitAttendee::class, [
+            'getId' => self::ATTENDEE_ID,
+            'getEmail' => self::ATTENDEE_EMAIL,
+            'getFirstName' => self::ATTENDEE_FIRST_NAME,
+            'getSurname' => self::ATTENDEE_SURNAME,
+        ])->makePartial();
+
+        $summit = Mockery::mock(Summit::class, [
+            'getId' => self::SUMMIT_ID,
+            'getTitle' => self::SUMMIT_TITLE,
+        ])->makePartial();
+
+        $attendee->shouldReceive('getSummit')->andReturn($summit);
+
+        return $attendee;
+    }
+
 }

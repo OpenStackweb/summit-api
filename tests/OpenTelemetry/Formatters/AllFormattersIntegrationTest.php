@@ -86,8 +86,8 @@ class AllFormattersIntegrationTest extends TestCase
                 'EntityDeletionAuditLogFormatter',
                 'EntityUpdateAuditLogFormatter',
                 'EntityCollectionUpdateAuditLogFormatter',
-                'EntityManyToManyCollectionDeleteAuditLogFormatter',
-                'EntityManyToManyCollectionUpdateAuditLogFormatter',
+                'DefaultEntityManyToManyCollectionDeleteAuditLogFormatter',
+                'DefaultEntityManyToManyCollectionUpdateAuditLogFormatter',
             ];
 
             return !in_array($reflection->getShortName(), $genericFormatters) &&

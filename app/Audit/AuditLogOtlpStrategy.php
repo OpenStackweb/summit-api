@@ -192,9 +192,16 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                     $data['audit.collection_type'] = $this->getCollectionType($collection);
                     if (!empty($change_set['deleted_ids'])) {
                         $data['audit.collection_count'] = count($change_set['deleted_ids']);
-                        $data['audit.collection_current_count'] = 0;
-                        $data['audit.collection_snapshot_count'] = 0;
-                        $data['audit.collection_is_dirty'] = 'true';
+                        if ($collection->isInitialized()) {
+                            $changes = $this->getCollectionChanges($collection, $change_set);
+                            $data['audit.collection_current_count'] = $changes['current_count'];
+                            $data['audit.collection_snapshot_count'] = $changes['snapshot_count'];
+                            $data['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
+                        } else {
+                            $data['audit.collection_current_count'] = 0;
+                            $data['audit.collection_snapshot_count'] = 0;
+                            $data['audit.collection_is_dirty'] = 'true';
+                        }
                     } elseif ($collection->isInitialized()) {
                         $data['audit.collection_count'] = count($collection);
                         $changes = $this->getCollectionChanges($collection, $change_set);

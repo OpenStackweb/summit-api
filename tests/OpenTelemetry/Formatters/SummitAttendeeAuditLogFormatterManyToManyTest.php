@@ -91,7 +91,7 @@ class SummitAttendeeAuditLogFormatterManyToManyTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function testManyToManyDeleteReturnsNullWithoutRemovedIds(): void
+    public function testManyToManyDeleteReturnsMessageWithEmptyRemovedIdsWhenPayloadMissing(): void
     {
         $attendee = $this->makeAttendee();
         

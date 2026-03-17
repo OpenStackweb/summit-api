@@ -177,7 +177,10 @@ class AuditEventListener
         $payload = ['collection' => $subject];
 
         if ($eventType === IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
-            && !$subject->isInitialized() ) {
+            && (
+                !$subject->isInitialized()
+                || ($subject->isInitialized() && count($subject->getDeleteDiff()) === 0)
+            )) {
             if ($this->em instanceof EntityManagerInterface) {
                 $payload['deleted_ids'] = $this->fetchManyToManyIds($subject, $this->em);
             }

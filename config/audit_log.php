@@ -224,6 +224,10 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SummitAttendeeAuditLogFormatter::class,
         ],
+        \models\summit\PresentationCategoryGroup::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationCategoryGroupAuditLogFormatter::class,
+        ],
         \models\summit\PresentationAttendeeVote::class => [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\PresentationAttendeeVoteAuditLogFormatter::class,

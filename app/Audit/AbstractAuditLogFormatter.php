@@ -34,28 +34,42 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         $this->ctx = $ctx;
     }
 
-    protected function processCollection(
-        object $col,
-        bool $isDeletion = false
-    ): ?array
+    protected function handleManyToManyCollection(array $change_set): ?PersistentCollectionMetadata
     {
-        if (!($col instanceof PersistentCollection)) {
+        if (!isset($change_set['collection'])) {
             return null;
         }
 
-        $mapping = $col->getMapping();
+        $collection = $change_set['collection'];
+        if (!($collection instanceof PersistentCollection)) {
+            return null;
+        }
 
-        $addedEntities = $col->getInsertDiff();
-        $removedEntities = $col->getDeleteDiff();
+        $preloadedDeletedIds = $change_set['deleted_ids'] ?? [];
+        if (!is_array($preloadedDeletedIds)) {
+            $preloadedDeletedIds = [];
+        }
 
-        $addedIds = $this->extractCollectionEntityIds($addedEntities);
-        $removedIds = $this->extractCollectionEntityIds($removedEntities);
+        return PersistentCollectionMetadata::fromCollection($collection, $preloadedDeletedIds);
+    }
 
+    protected function processCollection(PersistentCollectionMetadata $metadata): ?array
+    {
+        $addedIds = [];
+        $removedIds = [];
+
+        if (!empty($metadata->preloadedDeletedIds)) {
+            $removedIds = array_values(array_unique(array_map('intval', $metadata->preloadedDeletedIds)));
+            sort($removedIds);
+        } else {
+            $addedIds = $this->extractCollectionEntityIds($metadata->collection->getInsertDiff());
+            $removedIds = $this->extractCollectionEntityIds($metadata->collection->getDeleteDiff());
+        }
 
         return [
-            'field'         => $mapping->fieldName ?? 'unknown',
-            'target_entity' => $mapping->targetEntity ?? 'unknown',
-            'is_deletion'   => $isDeletion,
+            'field'         => $metadata->fieldName,
+            'target_entity' => class_basename($metadata->targetEntity),
+            'is_deletion'   => $this->event_type === Interfaces\IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE,
             'added_ids'     => $addedIds,
             'removed_ids'   => $removedIds,
         ];

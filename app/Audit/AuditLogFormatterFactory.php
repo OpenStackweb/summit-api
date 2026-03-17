@@ -18,8 +18,8 @@ use App\Audit\ConcreteFormatters\ChildEntityFormatters\ChildEntityFormatterFacto
 use App\Audit\ConcreteFormatters\EntityCollectionUpdateAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
-use App\Audit\ConcreteFormatters\EntityManyToManyCollectionUpdateAuditLogFormatter;
-use App\Audit\ConcreteFormatters\EntityManyToManyCollectionDeleteAuditLogFormatter;
+use App\Audit\ConcreteFormatters\DefaultEntityManyToManyCollectionUpdateAuditLogFormatter;
+use App\Audit\ConcreteFormatters\DefaultEntityManyToManyCollectionDeleteAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\PersistentCollection;
@@ -109,13 +109,13 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
             case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
                 $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
                 if (is_null($formatter)) {
-                    $formatter = new EntityManyToManyCollectionUpdateAuditLogFormatter();
+                    $formatter = new DefaultEntityManyToManyCollectionUpdateAuditLogFormatter();
                 }
                 break;
             case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
                 $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
                 if (is_null($formatter)) {
-                    $formatter = new EntityManyToManyCollectionDeleteAuditLogFormatter();
+                    $formatter = new DefaultEntityManyToManyCollectionDeleteAuditLogFormatter();
                 }
                 break;
             case IAuditStrategy::EVENT_ENTITY_CREATION:

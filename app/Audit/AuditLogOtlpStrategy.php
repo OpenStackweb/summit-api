@@ -168,12 +168,18 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             case IAuditStrategy::EVENT_COLLECTION_UPDATE:
                 if ($subject instanceof PersistentCollection) {
                     $data['audit.collection_type'] = $this->getCollectionType($subject);
-                    $data['audit.collection_count'] = count($subject);
-
-                    $changes = $this->getCollectionChanges($subject, $change_set);
-                    $data['audit.collection_current_count'] = $changes['current_count'];
-                    $data['audit.collection_snapshot_count'] = $changes['snapshot_count'];
-                    $data['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
+                    if ($subject->isInitialized()) {
+                        $data['audit.collection_count'] = count($subject);
+                        $changes = $this->getCollectionChanges($subject, $change_set);
+                        $data['audit.collection_current_count'] = $changes['current_count'];
+                        $data['audit.collection_snapshot_count'] = $changes['snapshot_count'];
+                        $data['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
+                    } else {
+                        $data['audit.collection_count'] = 0;
+                        $data['audit.collection_current_count'] = 0;
+                        $data['audit.collection_snapshot_count'] = 0;
+                        $data['audit.collection_is_dirty'] = 'true';
+                    }
                 }
                 break;
             case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
@@ -181,12 +187,23 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 if (isset($change_set['collection']) && $change_set['collection'] instanceof PersistentCollection) {
                     $collection = $change_set['collection'];
                     $data['audit.collection_type'] = $this->getCollectionType($collection);
-                    $data['audit.collection_count'] = count($collection);
-
-                    $changes = $this->getCollectionChanges($collection, $change_set);
-                    $data['audit.collection_current_count'] = $changes['current_count'];
-                    $data['audit.collection_snapshot_count'] = $changes['snapshot_count'];
-                    $data['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
+                    if (!empty($change_set['deleted_ids'])) {
+                        $data['audit.collection_count'] = count($change_set['deleted_ids']);
+                        $data['audit.collection_current_count'] = 0;
+                        $data['audit.collection_snapshot_count'] = 0;
+                        $data['audit.collection_is_dirty'] = 'true';
+                    } elseif ($collection->isInitialized()) {
+                        $data['audit.collection_count'] = count($collection);
+                        $changes = $this->getCollectionChanges($collection, $change_set);
+                        $data['audit.collection_current_count'] = $changes['current_count'];
+                        $data['audit.collection_snapshot_count'] = $changes['snapshot_count'];
+                        $data['audit.collection_is_dirty'] = $changes['is_dirty'] ? 'true' : 'false';
+                    } else {
+                        $data['audit.collection_count'] = 0;
+                        $data['audit.collection_current_count'] = 0;
+                        $data['audit.collection_snapshot_count'] = 0;
+                        $data['audit.collection_is_dirty'] = 'true';
+                    }
                 }
                 break;
         }
@@ -206,7 +223,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             }
             return class_basename($targetEntity);
         } catch (\Exception $ex) {
-            return 'AuditLogOtlpStrategy:: unknown targetEntity';
+            return 'unknown';
         }
     }
 

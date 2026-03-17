@@ -44,10 +44,8 @@ class SummitAttendeeAuditLogFormatter extends AbstractAuditLogFormatter
                     return sprintf("Attendee (%s) '%s' deleted by user %s", $id, $name, $this->getUserInfo());
 
                 case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
-                    return $this->handleManyToManyCollection($subject, $change_set, $id, $name, false);
-
                 case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
-                    return $this->handleManyToManyCollection($subject, $change_set, $id, $name, true);
+                    return $this->handleAttendeeManyToManyCollection($change_set, $id, $name);
             }
         } catch (\Throwable $ex) {
             Log::warning("SummitAttendeeAuditLogFormatter error: " . $ex->getMessage());
@@ -56,20 +54,19 @@ class SummitAttendeeAuditLogFormatter extends AbstractAuditLogFormatter
         return null;
     }
 
-    private function handleManyToManyCollection(SummitAttendee $subject, array $change_set, $id, $name, bool $isDeletion): ?string
+    private function handleAttendeeManyToManyCollection(array $change_set, $id, $name): ?string
     {
-        if (!isset($change_set['collection'])) {
+        $metadata = $this->handleManyToManyCollection($change_set);
+        if ($metadata === null) {
             return null;
         }
-        
-        $col = $change_set['collection'];
-        
-        $collectionData = $this->processCollection($col, $isDeletion);
+
+        $collectionData = $this->processCollection($metadata);
         if (!$collectionData) {
             return null;
         }
-        
-        return $isDeletion
+
+        return $this->event_type === IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
             ? $this->formatManyToManyDelete($collectionData, $id, $name)
             : $this->formatManyToManyUpdate($collectionData, $id, $name);
     }
@@ -98,7 +95,7 @@ class SummitAttendeeAuditLogFormatter extends AbstractAuditLogFormatter
                 $id,
                 $name,
                 $field,
-                class_basename($targetEntity),
+                $targetEntity,
                 $idsPart,
                 $this->getUserInfo()
             );
@@ -126,7 +123,7 @@ class SummitAttendeeAuditLogFormatter extends AbstractAuditLogFormatter
                 $id,
                 $name,
                 $field,
-                class_basename($targetEntity),
+                $targetEntity,
                 json_encode($removed_ids),
                 $this->getUserInfo()
             );

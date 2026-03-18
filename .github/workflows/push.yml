@@ -51,89 +51,17 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
-            max-parallel: 8
             matrix:
                 suite:
-                    - { name: "OAuth2SummitApiTest", filter: "--filter OAuth2SummitApiTest" }
-                    - { name: "OAuth2SummitEventsApiTest", filter: "--filter OAuth2SummitEventsApiTest" }
-                    - { name: "OAuth2PresentationSubmissionTest", filter: "--filter OAuth2PresentationSubmissionTest" }
-                    - { name: "OAuth2EventTypesApiTest", filter: "--filter OAuth2EventTypesApiTest" }
-                    - { name: "OAuth2SummitBadgeScanApiControllerTest", filter: "--filter OAuth2SummitBadgeScanApiControllerTest" }
+                    - { name: "OAuth2ApiTests", filter: "--filter OAuth2" }
                     - { name: "SummitOrderServiceTest", filter: "--filter SummitOrderServiceTest" }
                     - { name: "SummitRSVPServiceTest", filter: "--filter SummitRSVPServiceTest" }
                     - { name: "SummitRSVPInvitationServiceTest", filter: "--filter SummitRSVPInvitationServiceTest" }
-                    - { name: "OAuth2RSVPApiTest", filter: "--filter OAuth2RSVPApiTest" }
-                    - { name: "OAuth2RSVPApiWithMocksTest", filter: "--filter OAuth2RSVPApiWithMocksTest" }
-                    - { name: "OAuth2RSVPInvitationApiTest", filter: "--filter OAuth2RSVPInvitationApiTest" }
                     - { name: "EntityModelUnitTests", filter: "tests/Unit/Entities/" }
                     - { name: "AuditOtlpStrategyTest", filter: "--filter AuditOtlpStrategyTest" }
                     - { name: "AuditEventTypesTest", filter: "--filter AuditEventTypesTest" }
                     - { name: "GuzzleTracingTest", filter: "--filter GuzzleTracingTest" }
-                    - { name: "Repositories", filter: "--filter tests/Repositories/" }
-                    - { name: "OAuth2AttendeesApiTest", filter: "--filter test/OAuth2AttendeesApiTest"}
-                    - { name: "OAuth2SummitSponsorApiTest", filter: "--filter test/OAuth2SummitSponsorApiTest"}
-                    - { name: "OAuth2BookableRoomAttributeTypesApiTest", filter: "--filter test/OAuth2BookableRoomAttributeTypesApiTest"}
-                    - { name: "OAuth2CompaniesApiTest", filter: "--filter test/OAuth2CompaniesApiTest"}
-                    - { name: "OAuth2ElectionsApiController", filter: "--filter test/OAuth2ElectionsApiController"}
-                    - { name: "OAuth2MembersApiTest", filter: "--filter test/OAuth2MembersApiTest"}
-                    - { name: "OAuth2GroupsApiTest", filter: "--filter test/OAuth2GroupsApiTest"}
-                    - { name: "OAuth2OAuth2SponsorshipTypeApiTest", filter: "--filter test/OAuth2OAuth2SponsorshipTypeApiTest"}
-                    - { name: "OAuth2OrganizationsApiTest", filter: "--filter test/OAuth2OrganizationsApiTest"}
-                    - { name: "OAuth2PresentationApiTest", filter: "--filter test/OAuth2PresentationApiTest"}
-                    - { name: "OAuth2PromoCodesApiTest", filter: "--filter test/OAuth2PromoCodesApiTest"}
-                    - { name: "OAuth2SummitPromoCodesApiTest", filter: "--filter test/OAuth2SummitPromoCodesApiTest"}
-                    - { name: "OAuth2SelectionPlansApiTest", filter: "--filter test/OAuth2SelectionPlansApiTest"}
-                    - { name: "OAuth2SummitSpeakersApiTest", filter: "--filter test/OAuth2SummitSpeakersApiTest" }
-                    - { name: "OAuth2SummitBadgesApiTest", filter: "--filter test/OAuth2SummitBadgesApiTest" }
-                    - { name: "OAuth2TracksApiTest", filter: "--filter test/OAuth2TracksApiTest" }
-                    - { name: "OAuth2TrackTagGroupsApiTest", filter: "--filter test/OAuth2TrackTagGroupsApiTest" }
-                    - { name: "OAuth2SummitTracksApiTest", filter: "--filter test/OAuth2SummitTracksApiTest" }
-                    - { name: "OAuth2TagsApiTest", filter: "--filter test/OAuth2TagsApiTest" }
-                    - { name: "OAuth2SummitSponsorshipApiControllerTest", filter: "--filter test/OAuth2SummitSponsorshipApiControllerTest" }
-                    - { name: "OAuth2SummitSponsorshipTypeApiControllerTest", filter: "--filter test/OAuth2SummitSponsorshipTypeApiControllerTest" }
-                    - { name: "OAuth2SummitSubmissionInvitationApiTest", filter: "--filter test/OAuth2SummitSubmissionInvitationApiTest" }
-                    - { name: "OAuth2SummitSubmittersApiTest", filter: "--filter test/OAuth2SummitSubmittersApiTest" }
-                    - { name: "OAuth2SummitTaxTypeApiTest", filter: "--filter test/OAuth2SummitTaxTypeApiTest" }
-                    - { name: "OAuth2SummitTicketTypesApiTest", filter: "--filter tests/OAuth2SummitTicketTypesApiTest" }
-                    - { name: "OAuth2SummitTicketsApiTest", filter: "--filter tests/OAuth2SummitTicketsApiTest" }
-                    - { name: "OAuth2SummitTrackChairsApiTest", filter: "--filter tests/OAuth2SummitTrackChairsApiTest" }
-                    - { name: "OAuth2SummitTrackChairsRankingApiTest", filter: "--filter tests/OAuth2SummitTrackChairsRankingApiTest" }
-                    - { name: "OAuth2TrackGroupsApiTest", filter: "--filter tests/OAuth2TrackGroupsApiTest" }
-                    - { name: "OAuth2TrackQuestionsTemplateTest", filter: "--filter tests/OAuth2TrackQuestionsTemplateTest" }
-                    - { name: "OAuth2SummitBadgeTypeApiTest", filter: "--filter tests/OAuth2SummitBadgeTypeApiTest" }
-                    - { name: "OAuth2SummitBadgeViewTypeApiTest", filter: "--filter tests/OAuth2SummitBadgeViewTypeApiTest" }
-                    - { name: "OAuth2SummitDocumentsApiControllerTest", filter: "--filter tests/OAuth2SummitDocumentsApiControllerTest" }
-                    - { name: "OAuth2SummitEmailEventFlowApiControllerTest", filter: "--filter tests/OAuth2SummitEmailEventFlowApiControllerTest" }
-                    - { name: "OAuth2SummitEventsBulkActionsTest", filter: "--filter tests/OAuth2SummitEventsBulkActionsTest" }
-                    - { name: "OAuth2SummitLocationsApiTest", filter: "--filter tests/OAuth2SummitLocationsApiTest" }
-                    - { name: "OAuth2RSVPSummitEventApiTest", filter: "--filter tests/OAuth2RSVPSummitEventApiTest" }
-                    - { name: "OAuth2SpeakerActiveInvolvementApiTest", filter: "--filter tests/OAuth2SpeakerActiveInvolvementApiTest" }
-                    - { name: "OAuth2SpeakerOrganizationalRoleApiTest", filter: "--filter tests/OAuth2SpeakerOrganizationalRoleApiTest" }
-                    - { name: "OAuth2SpeakersAssistancesApiTest", filter: "--filter tests/OAuth2SpeakersAssistancesApiTest" }
-                    - { name: "OAuth2SponsoredProjectsApiTest", filter: "--filter tests/OAuth2SponsoredProjectsApiTest" }
-                    - { name: "OAuth2SummitAccessLevelTypeTest", filter: "--filter tests/OAuth2SummitAccessLevelTypeTest" }
-                    - { name: "OAuth2SummitAdministratorPermissionGroupApiControllerTest", filter: "--filter tests/OAuth2SummitAdministratorPermissionGroupApiControllerTest" }
-                    - { name: "OAuth2SummitAttendeeBadgePrintApiControllerTest", filter: "--filter tests/OAuth2SummitAttendeeBadgePrintApiControllerTest" }
-                    - { name: "OAuth2SummitAttendeeNotesApiTest", filter: "--filter tests/OAuth2SummitAttendeeNotesApiTest" }
-                    - { name: "OAuth2SummitBadgeFeatureTypeApiTest", filter: "--filter tests/OAuth2SummitBadgeFeatureTypeApiTest" }
-                    - { name: "OAuth2SummitMediaFileTypeApiControllerTest", filter: "--filter tests/OAuth2SummitMediaFileTypeApiControllerTest" }
-                    - { name: "OAuth2SummitMediaUploadTypeApiControllerTest", filter: "--filter tests/OAuth2SummitMediaUploadTypeApiControllerTest" }
-                    - { name: "OAuth2SummitMetricsApiControllerTest", filter: "--filter tests/OAuth2SummitMetricsApiControllerTest" }
-                    - { name: "OAuth2SummitNotificationsApiControllerTest", filter: "--filter tests/OAuth2SummitNotificationsApiControllerTest" }
-                    - { name: "OAuth2SummitOrderExtraQuestionTypeApiTest", filter: "--filter tests/OAuth2SummitOrderExtraQuestionTypeApiTest" }
-                    - { name: "OAuth2SummitOrdersApiTest", filter: "--filter tests/OAuth2SummitOrdersApiTest" }
-                    - { name: "OAuth2SummitPresentationActionApiTest", filter: "--filter tests/OAuth2SummitPresentationActionApiTest" }
-                    - { name: "OAuth2SummitPresentationActionTypeApiTest", filter: "--filter tests/OAuth2SummitPresentationActionTypeApiTest" }
-                    - { name: "OAuth2SummitProposedScheduleApiTest", filter: "--filter tests/OAuth2SummitProposedScheduleApiTest" }
-                    - { name: "OAuth2SummitProposedScheduleAllowedLocationApiControllerTest", filter: "--filter tests/OAuth2SummitProposedScheduleAllowedLocationApiControllerTest" }
-                    - { name: "OAuth2SummitRefundPolicyTypeApiTest", filter: "--filter tests/OAuth2SummitRefundPolicyTypeApiTest" }
-                    - { name: "OAuth2SummitRegistrationCompaniesApiTest", filter: "--filter tests/OAuth2SummitRegistrationCompaniesApiTest" }
-                    - { name: "OAuth2SummitRegistrationInvitationApiControllerTest", filter: "--filter tests/OAuth2SummitRegistrationInvitationApiControllerTest" }
-                    - { name: "OAuth2SummitRSVPTemplateApiTest", filter: "--filter tests/OAuth2SummitRSVPTemplateApiTest" }
-                    - { name: "OAuth2SummitScheduleSettingsApiTest", filter: "--filter tests/OAuth2SummitScheduleSettingsApiTest" }
-                    - { name: "OAuth2SummitSelectedPresentationListApiTest", filter: "--filter tests/OAuth2SummitSelectedPresentationListApiTest" }
-                    - { name: "OAuth2SummitSelectionPlanExtraQuestionTypeApiTest", filter: "--filter tests/OAuth2SummitSelectionPlanExtraQuestionTypeApiTest" }
-                    - { name: "OAuth2SummitSelectionPlansApiTest", filter: "--filter tests/OAuth2SummitSelectionPlansApiTest" }
+                    - { name: "Repositories", filter: "tests/Repositories/" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

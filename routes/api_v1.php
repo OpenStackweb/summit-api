@@ -277,6 +277,17 @@ Route::group(array('prefix' => 'summits'), function () {
             ),
             'uses' => 'OAuth2SummitApiController@getSummit'])->where('id', 'current|[0-9]+');
 
+        // dropbox sync proxy routes
+
+        Route::group(['prefix' => 'dropbox-sync'], function () {
+            Route::post('materialize',                          ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDropboxSyncApiController@materialize']);
+            Route::post('materialize/{location_id}/{room_id}',  ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDropboxSyncApiController@materializeRoom']);
+            Route::post('backfill',                             ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDropboxSyncApiController@backfill']);
+            Route::post('rebuild',                              ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDropboxSyncApiController@rebuild']);
+            Route::get('preflight',                             ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDropboxSyncApiController@preflight']);
+            Route::get('status',                                ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitDropboxSyncApiController@status']);
+        });
+
         // selection plan extra questions ( by summit )
 
         Route::group(['prefix' => 'selection-plan-extra-questions'], function () {

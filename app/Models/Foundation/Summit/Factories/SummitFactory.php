@@ -83,6 +83,10 @@ final class SummitFactory
             $summit->setAllowUpdateAttendeeExtraQuestions(boolval($data['allow_update_attendee_extra_questions']));
         }
 
+        if(isset($data['dropbox_sync_enabled'])){
+            $summit->setDropboxSyncEnabled(boolval($data['dropbox_sync_enabled']));
+        }
+
         if(isset($data['dates_label']) ){
             $summit->setDatesLabel(trim($data['dates_label']));
         }

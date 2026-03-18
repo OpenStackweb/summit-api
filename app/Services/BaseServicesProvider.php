@@ -17,6 +17,8 @@ use App\Services\Apis\ExternalUserApi;
 use App\Services\Apis\GoogleGeoCodingAPI;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Apis\IGeoCodingAPI;
+use App\Services\Apis\DropboxMaterializerApi;
+use App\Services\Apis\IDropboxMaterializerApi;
 use App\Services\Apis\IMailApi;
 use App\Services\Apis\IMUXApi;
 use App\Services\Apis\IPasswordlessAPI;
@@ -138,6 +140,11 @@ final class BaseServicesProvider extends ServiceProvider
         App::singleton(
             IMailApi::class,
             MailApi::class
+        );
+
+        App::singleton(
+            IDropboxMaterializerApi::class,
+            DropboxMaterializerApi::class
         );
 
         App::singleton(

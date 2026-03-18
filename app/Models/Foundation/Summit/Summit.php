@@ -498,6 +498,12 @@ class Summit extends SilverstripeBaseModel
     #[ORM\Column(name: 'RegistrationAllowAutomaticReminderEmails', type: 'boolean')]
     private $registration_allow_automatic_reminder_emails;
 
+    /**
+     * @var bool
+     */
+    #[ORM\Column(name: 'DropboxSyncEnabled', type: 'boolean')]
+    private $dropbox_sync_enabled;
+
     #[ORM\OneToMany(targetEntity: \SummitEvent::class, mappedBy: 'summit', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $events;
 
@@ -1190,6 +1196,7 @@ class Summit extends SilverstripeBaseModel
         $this->registration_allow_automatic_reminder_emails = true;
         $this->registration_send_order_email_automatically = true;
         $this->allow_update_attendee_extra_questions = false;
+        $this->dropbox_sync_enabled = false;
         $this->registration_companies = new ArrayCollection();
         $this->external_registration_feed_last_ingest_date = null;
         $this->speakers_announcement_emails = new ArrayCollection();
@@ -6360,6 +6367,22 @@ SQL;
     public function setAllowUpdateAttendeeExtraQuestions(bool $allow_update_attendee_extra_questions): void
     {
         $this->allow_update_attendee_extra_questions = $allow_update_attendee_extra_questions;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDropboxSyncEnabled(): bool
+    {
+        return $this->dropbox_sync_enabled;
+    }
+
+    /**
+     * @param bool $dropbox_sync_enabled
+     */
+    public function setDropboxSyncEnabled(bool $dropbox_sync_enabled): void
+    {
+        $this->dropbox_sync_enabled = $dropbox_sync_enabled;
     }
 
     /**

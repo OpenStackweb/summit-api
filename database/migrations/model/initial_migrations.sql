@@ -343,3 +343,4 @@ INSERT INTO DoctrineMigration (version, executed_at) VALUES ('Database\\Migratio
 INSERT INTO DoctrineMigration (version, executed_at) VALUES ('Database\\Migrations\\Model\\Version20240326133631', '2024-04-11 16:52:06');
 INSERT INTO DoctrineMigration (version, executed_at) VALUES ('Database\\Migrations\\Model\\Version20240326133636', '2024-04-11 16:52:06');
 INSERT INTO DoctrineMigration (version, executed_at) VALUES ('Database\\Migrations\\Model\\Version20240410135620', '2024-04-11 16:52:06');
+INSERT INTO DoctrineMigration (version, executed_at) VALUES ('Database\\Migrations\\Model\\Version20260318120000', '2026-03-18 12:00:00');

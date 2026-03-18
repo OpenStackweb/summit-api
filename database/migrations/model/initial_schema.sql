@@ -9129,6 +9129,7 @@ create table Summit
     SecondaryLogoID                                    int                                              null,
     SpeakersSupportEmail                               varchar(255)                                     null,
     MarkAsDeleted                                      tinyint unsigned                default '0'      not null,
+    DropboxSyncEnabled                                 tinyint(1)                      default 0        not null,
     constraint QRCodesEncKey
         unique (QRCodesEncKey),
     constraint Summit_RegistrationSlugPrefix

@@ -17,11 +17,25 @@
  */
 class OAuth2PersonalCalendarShareInfoApiTest extends ProtectedApiTestCase
 {
-    public function testCreateShareableLink($summit_id = 27){
+    use InsertSummitTestData;
+
+    protected function setUp():void
+    {
+        parent::setUp();
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown():void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
+    public function testCreateShareableLink(){
 
         $params = array
         (
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'member_id' => 'me',
         );
 
@@ -51,12 +65,12 @@ class OAuth2PersonalCalendarShareInfoApiTest extends ProtectedApiTestCase
         return $link;
     }
 
-    public function testGetICS($summit_id = 27){
+    public function testGetICS(){
 
-        $link = $this->testCreateShareableLink($summit_id);
+        $link = $this->testCreateShareableLink();
         $params = array
         (
-            'id' => $summit_id,
+            'id' => self::$summit->getId(),
             'cid' => $link->cid,
         );
 

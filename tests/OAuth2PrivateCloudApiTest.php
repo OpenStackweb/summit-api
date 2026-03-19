@@ -17,7 +17,11 @@
 */
 class OAuth2PrivateCloudApiTest extends ProtectedApiTestCase
 {
-
+	protected function setUp():void
+	{
+		parent::setUp();
+		$this->markTestSkipped('Private cloud routes have been removed.');
+	}
 
 	public function testGetPrivateClouds()
 	{

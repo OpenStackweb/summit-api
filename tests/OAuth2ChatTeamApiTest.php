@@ -14,6 +14,12 @@
  **/
 final class OAuth2ChatTeamApiTest extends ProtectedApiTestCase
 {
+    protected function setUp():void
+    {
+        parent::setUp();
+        $this->markTestSkipped('Chat team routes have been removed.');
+    }
+
     public function testAddTeam()
     {
 

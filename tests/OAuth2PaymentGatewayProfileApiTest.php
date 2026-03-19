@@ -45,10 +45,10 @@ final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTestCase
     protected function setUp():void
     {
         parent::setUp();
-        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
-        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
-        self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
-        self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
+        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY', 'sk_test_dummy_key');
+        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY', 'pk_test_dummy_key');
+        self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY', 'sk_live_dummy_key');
+        self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY', 'pk_live_dummy_key');
         self::insertSummitTestData();
         // build payment profile and attach to summit
         $profile = PaymentGatewayProfileFactory::build(IPaymentConstants::ProviderStripe, [

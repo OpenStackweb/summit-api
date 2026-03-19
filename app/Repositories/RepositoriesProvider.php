@@ -23,6 +23,7 @@ use App\Models\Foundation\Main\Repositories\ISummitAdministratorPermissionGroupR
 use App\Models\Foundation\Main\Repositories\ISupportingCompanyRepository;
 use App\Models\Foundation\Main\Repositories\IUserStoryRepository;
 use App\Models\Foundation\Marketplace\ICompanyServiceRepository;
+use App\Models\Foundation\Marketplace\IDriverRepository;
 use App\Models\Foundation\Marketplace\IReviewRepository;
 use App\Models\Foundation\Marketplace\ITrainingRepository;
 use App\Models\Foundation\Marketplace\MarketPlaceReview;
@@ -368,6 +369,12 @@ final class RepositoriesProvider extends ServiceProvider
             'App\Models\Foundation\Marketplace\IRemoteCloudServiceRepository',
             function () {
                 return EntityManager::getRepository(\App\Models\Foundation\Marketplace\RemoteCloudService::class);
+            });
+
+        App::singleton(
+            'App\Models\Foundation\Marketplace\IDriverRepository',
+            function () {
+                return EntityManager::getRepository(\App\Models\Foundation\Marketplace\Driver::class);
             });
 
         App::singleton(

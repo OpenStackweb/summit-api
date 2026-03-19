@@ -37,7 +37,9 @@ final class DropboxMaterializerApi implements IDropboxMaterializerApi
     public function __construct()
     {
         $stack = HandlerStack::create();
-        $stack->push(GuzzleRetryMiddleware::factory());
+        $stack->push(GuzzleRetryMiddleware::factory([
+            'retry_on_methods' => ['GET'],
+        ]));
 
         $this->client = new Client([
             'handler'         => $stack,

@@ -199,6 +199,7 @@ final class BaseServicesProvider extends ServiceProvider
             IPushNotificationApi::class,
             IGeoCodingAPI::class,
             IExternalUserApi::class,
+            IDropboxMaterializerApi::class,
             IFolderService::class,
             ILockManagerService::class,
             IPasswordlessAPI::class,

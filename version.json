@@ -1,0 +1,5 @@
+{
+    "service": "summit-api",
+    "git_sha": "dev",
+    "git_tag": "dev"
+}

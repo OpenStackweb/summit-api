@@ -17,6 +17,31 @@ use Illuminate\Support\Facades\Route;
 use libs\utils\CacheRegions;
 // public api ( without AUTHZ [OAUTH2.0])
 
+Route::get('/version', function () {
+    $versionFile = base_path('version.json');
+
+    // Check if file exists
+    if (!file_exists($versionFile)) {
+        return response()->json(['error' => 'Version information not found'], 404);
+    }
+
+    // Read file contents
+    $contents = file_get_contents($versionFile);
+
+    // Decode JSON
+    $versionData = json_decode($contents, true);
+
+    // Check if JSON is valid or empty
+    if ($versionData === null && json_last_error() !== JSON_ERROR_NONE) {
+        return response()->json(['error' => 'Version information malformed'], 412);
+    }
+
+    if (empty($versionData)) {
+        return response()->json(['error' => 'Version information malformed'], 412);
+    }
+
+    return response()->json($versionData, 200);
+});
 
 Route::group(['prefix' => 'sponsored-projects'], function(){
     Route::get('', 'OAuth2SponsoredProjectApiController@getAll');

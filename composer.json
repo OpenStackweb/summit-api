@@ -94,7 +94,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/",
+            "Tests\\": ["tests/", "tests/oauth2/"],
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }

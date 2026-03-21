@@ -160,6 +160,9 @@ final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTestCase
 
 
     public function testAddProfileOK(){
+        if (self::$test_secret_key === 'sk_test_dummy_key') {
+            $this->markTestSkipped('Valid Stripe test credentials required (TEST_STRIPE_SECRET_KEY env var).');
+        }
         $params = [
             'id' => self::$summit->getId(),
         ];
@@ -199,6 +202,9 @@ final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTestCase
     }
 
     public function testUpdateOK(){
+        if (self::$test_secret_key === 'sk_test_dummy_key') {
+            $this->markTestSkipped('Valid Stripe test credentials required (TEST_STRIPE_SECRET_KEY env var).');
+        }
         $params = [
             'id' => self::$summit->getId(),
         ];
@@ -270,6 +276,9 @@ final class OAuth2PaymentGatewayProfileApiTest extends ProtectedApiTestCase
     }
 
     public function testDelete(){
+        if (self::$test_secret_key === 'sk_test_dummy_key') {
+            $this->markTestSkipped('Valid Stripe test credentials required (TEST_STRIPE_SECRET_KEY env var).');
+        }
 
         $params = [
             'id' => self::$summit->getId(),

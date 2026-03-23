@@ -2693,6 +2693,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -2701,7 +2702,8 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     SummitScopes::ReadSummitData,
-                    SummitScopes::ReadAllSummitData
+                    SummitScopes::ReadAllSummitData,
+                    IGroup::Sponsors,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,

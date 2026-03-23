@@ -96,6 +96,7 @@ final class OAuth2SummitSponsorshipsApiController
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
+                IGroup::Sponsors,
             ]
         ],
         parameters: [

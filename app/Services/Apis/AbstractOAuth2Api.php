@@ -132,8 +132,8 @@ abstract class AbstractOAuth2Api
                 Log::debug("AbstractOAuth2Api::getAccessToken - access token is empty, getting new one");
                 $client    = $this->getIDPClient();
                 $appConfig = $this->getAppConfig();
-                $scopes    = $appConfig['scopes'] ?? [];
-                Log::debug(sprintf( "AbstractOAuth2Api::getAccessToken - got scopes %s", implode(' ', $scopes)));
+                $scopes    = $appConfig['scopes'] ?? '';
+                Log::debug(sprintf( "AbstractOAuth2Api::getAccessToken - got scopes %s", $scopes));
                 // Try to get an access token using the client credentials grant.
                 $accessToken = $client->getAccessToken('client_credentials', ['scope' => $scopes]);
                 $token = $accessToken->getToken();

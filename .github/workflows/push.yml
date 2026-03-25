@@ -63,6 +63,7 @@ jobs:
                     - { name: "AuditEventTypesTest", filter: "--filter AuditEventTypesTest" }
                     - { name: "GuzzleTracingTest", filter: "--filter GuzzleTracingTest" }
                     - { name: "Repositories", filter: "--filter tests/Repositories/" }
+                    - { name: "Services", filter: "--filter tests/Unit/Services/" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

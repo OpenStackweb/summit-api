@@ -680,6 +680,28 @@ SQL;
     }
 
     /**
+     * @param int[] $selection_plan_ids
+     * @return Presentation[]
+     */
+    public function getPresentationsBySelectionPlanIds(array $selection_plan_ids): array
+    {
+        if (empty($selection_plan_ids)) return [];
+
+        $query = <<<DQL
+SELECT p
+FROM models\summit\Presentation p
+WHERE p.category = :track
+AND p.selection_plan IN (:selection_plan_ids)
+DQL;
+
+        return $this->getEM()
+            ->createQuery($query)
+            ->setParameter('track', $this)
+            ->setParameter('selection_plan_ids', $selection_plan_ids)
+            ->getResult();
+    }
+
+    /**
      * @return SummitEvent[]
      */
     public function getRelatedPublishedSummitEvents(){

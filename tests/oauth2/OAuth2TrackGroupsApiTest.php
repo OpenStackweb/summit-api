@@ -1,4 +1,8 @@
 <?php namespace Tests;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\summit\Presentation;
+use models\utils\SilverstripeBaseModel;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -341,6 +345,16 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(201);
 
+        // verify presentations of defaultTrack have a selection plan before disassociation
+        $presentations = self::$defaultTrack->getPresentationsBySelectionPlanIds(
+            self::$defaultTrackGroup->getSelectionPlanIds()
+        );
+        $this->assertNotEmpty($presentations);
+        foreach ($presentations as $presentation) {
+            $this->assertTrue($presentation->getSelectionPlanId() > 0);
+        }
+        $presentation_ids = array_map(fn($p) => $p->getId(), $presentations);
+
         // now disassociate
         $response = $this->action(
             "DELETE",
@@ -353,6 +367,14 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
         );
 
         $this->assertResponseStatus(204);
+
+        // reset EM (closed after the API transaction) and re-fetch presentations to verify selection plan was cleared
+        self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        foreach ($presentation_ids as $id) {
+            $presentation = self::$em->find(Presentation::class, $id);
+            $this->assertNotNull($presentation);
+            $this->assertEquals(0, $presentation->getSelectionPlanId());
+        }
     }
 
     public function testAddPrivateTrackGroup(){

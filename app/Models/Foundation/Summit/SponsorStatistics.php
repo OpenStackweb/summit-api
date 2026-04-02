@@ -30,7 +30,7 @@ class SponsorStatistics extends SilverstripeBaseModel
      * @var Sponsor
      */
     #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
-    #[ORM\ManyToOne(targetEntity: Sponsor::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToOne(targetEntity: Sponsor::class, inversedBy: 'sponsorservices_statistics', fetch: 'EXTRA_LAZY')]
     private $sponsor;
 
     /**

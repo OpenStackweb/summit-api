@@ -32,7 +32,7 @@ class SummitLeadReportSetting extends SilverstripeBaseModel
      * @var Sponsor
      */
     #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
-    #[ORM\ManyToOne(targetEntity: \models\summit\Sponsor::class)]
+    #[ORM\OneToOne(targetEntity: \models\summit\Sponsor::class, inversedBy: 'lead_report_setting')]
     private $sponsor;
 
     /**

@@ -67,5 +67,9 @@ trait RequestProcessor
             Log::error($ex);
             return $this->error500($ex);
         }
+        catch (\Throwable $ex) {
+            Log::error($ex);
+            return $this->error500($ex);
+        }
     }
 }

@@ -27,7 +27,7 @@ abstract class JsonController extends Controller
     {
     }
 
-    protected function error500(Exception $ex)
+    protected function error500(\Throwable $ex)
     {
         Log::error($ex);
 

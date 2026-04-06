@@ -53,7 +53,6 @@ class AuditEventListenerTest extends TestCase
         [$subject, $payload, $eventType] = $method->invoke(
             $listener,
             $collection,
-            new \stdClass(),
             IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE
         );
 
@@ -155,7 +154,62 @@ class AuditEventListenerTest extends TestCase
         [$subject, $payload, $eventType] = $method->invoke(
             $listener,
             $collection,
-            new \stdClass(),
+            IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
+        );
+
+        $this->assertSame($owner, $subject);
+        $this->assertSame([10, 11], $payload['deleted_ids']);
+        $this->assertSame(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE, $eventType);
+    }
+
+    public function testAuditCollectionDeleteUninitializedUsesJoinTableQuery(): void
+    {
+        $listener = new AuditEventListener();
+        $owner = new \stdClass();
+
+        $mapping = ManyToManyOwningSideMapping::fromMappingArrayAndNamingStrategy([
+            'fieldName' => 'tags',
+            'sourceEntity' => \stdClass::class,
+            'targetEntity' => \stdClass::class,
+            'isOwningSide' => true,
+            'joinTable' => [
+                'name' => 'owner_tags',
+                'joinColumns' => [['name' => 'owner_id', 'referencedColumnName' => 'id']],
+                'inverseJoinColumns' => [['name' => 'tag_id', 'referencedColumnName' => 'id']],
+            ],
+        ], new DefaultNamingStrategy());
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $meta = new ClassMetadata(\stdClass::class);
+        $collection = new PersistentCollection($em, $meta, new ArrayCollection());
+        $collection->setOwner($owner, $mapping);
+        $collection->setInitialized(false);
+
+        $this->assertFalse($collection->isInitialized());
+
+        $ownerMeta = $this->getMockBuilder(ClassMetadata::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $ownerMeta->method('getIdentifierValues')->with($owner)->willReturn(['id' => 123]);
+
+        $conn = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $conn->method('fetchFirstColumn')->willReturn(['10', '11']);
+
+        $em->method('getConnection')->willReturn($conn);
+        $em->method('getClassMetadata')->with(get_class($owner))->willReturn($ownerMeta);
+
+        $emProp = new \ReflectionProperty(AuditEventListener::class, 'em');
+        $emProp->setAccessible(true);
+        $emProp->setValue($listener, $em);
+
+        $method = new \ReflectionMethod(AuditEventListener::class, 'auditCollection');
+        $method->setAccessible(true);
+
+        [$subject, $payload, $eventType] = $method->invoke(
+            $listener,
+            $collection,
             IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
         );
 

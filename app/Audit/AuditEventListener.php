@@ -56,7 +56,7 @@ class AuditEventListener
                 $strategy->audit($entity, [], IAuditStrategy::EVENT_ENTITY_DELETION, $ctx);
             }   
             foreach ($uow->getScheduledCollectionDeletions() as $col) {
-                [$subject, $payload, $eventType] = $this->auditCollection($col, $uow, IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE);
+                [$subject, $payload, $eventType] = $this->auditCollection($col, IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE);
 
                 if (!is_null($subject)) {
                     $strategy->audit($subject, $payload, $eventType, $ctx);
@@ -64,7 +64,7 @@ class AuditEventListener
             }
 
             foreach ($uow->getScheduledCollectionUpdates() as $col) {
-                [$subject, $payload, $eventType] = $this->auditCollection($col, $uow, IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE);
+                [$subject, $payload, $eventType] = $this->auditCollection($col, IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE);
 
                 if (!is_null($subject)) {
                     $strategy->audit($subject, $payload, $eventType, $ctx);
@@ -148,11 +148,10 @@ class AuditEventListener
      * Subject will be null if collection should not be audited
      * 
      * @param object $subject The collection
-     * @param mixed $uow The UnitOfWork
      * @param string $eventType The event type constant (EVENT_COLLECTION_MANYTOMANY_DELETE or EVENT_COLLECTION_MANYTOMANY_UPDATE)
      * @return array [$subject, $payload, $eventType]
      */
-    private function auditCollection($subject, $uow, string $eventType): array
+    private function auditCollection($subject, string $eventType): array
     {
         if (!$subject instanceof PersistentCollection) {
             return [null, null, null];

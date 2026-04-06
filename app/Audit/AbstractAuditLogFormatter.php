@@ -4,7 +4,6 @@ namespace App\Audit;
 
 use App\Audit\Utils\DateFormatter;
 use Doctrine\ORM\PersistentCollection;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Copyright 2025 OpenStack Foundation
@@ -192,36 +191,6 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         $new_display = $this->formatChangeValue($new_value);
 
         return sprintf("Property \"%s\" has changed from \"%s\" to \"%s\"", $prop_name, $old_display, $new_display);
-    }
-
-    /**
-     * Build detailed message for many-to-many collection changes
-     */
-    protected function buildManyToManyDetailedMessage(PersistentCollection $collection, array $insertDiff, array $deleteDiff): array
-    {
-        $fieldName = 'unknown';
-        $targetEntity = 'unknown';
-        
-        try {
-            $mapping = $collection->getMapping();
-            $fieldName = $mapping->fieldName ?? 'unknown';
-            $targetEntity = $mapping->targetEntity ?? 'unknown';
-            if ($targetEntity) {
-                $targetEntity = class_basename($targetEntity);
-            }
-        } catch (\Exception $e) {
-            Log::debug("AbstractAuditLogFormatter::Could not extract collection metadata: " . $e->getMessage());
-        }
-
-        $addedIds = $this->extractCollectionEntityIds($insertDiff);
-        $removedIds = $this->extractCollectionEntityIds($deleteDiff);
-
-        return [
-            'field' => $fieldName,
-            'target_entity' => $targetEntity,
-            'added_ids' => $addedIds,
-            'removed_ids' => $removedIds,
-        ];
     }
 
     /**

@@ -13,6 +13,7 @@
  **/
 
 use Closure;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -112,11 +113,7 @@ final class CacheMiddleware
 
         if ($encoded !== null) {
             Log::debug("CacheMiddleware: cache HIT", $logCtx);
-
-            $data = $this->decode($encoded);
-            if ($data === null) $data = is_array($encoded) ? $encoded : [];
-
-            $response = new JsonResponse($data, 200, ['Content-Type' => 'application/json']);
+            $response = $this->buildCachedResponse($encoded);
             $wasHit = true;
         } else {
             // Phase 2: cache miss — acquire lock so only one request executes the handler
@@ -125,63 +122,63 @@ final class CacheMiddleware
             $wasHit = false;
 
             try {
-                if ($lock->block(self::LOCK_WAIT)) {
-                    // Won the lock — double-check: another request may have populated the cache
-                    $encoded = $cache->get($key);
+                $lock->block(self::LOCK_WAIT);
 
-                    if ($encoded !== null) {
-                        Log::debug("CacheMiddleware: cache HIT (after lock)", $logCtx);
+                // Won the lock — double-check: another request may have populated the cache
+                $encoded = $cache->get($key);
 
-                        $data = $this->decode($encoded);
-                        if ($data === null) $data = is_array($encoded) ? $encoded : [];
-
-                        $response = new JsonResponse($data, 200, ['Content-Type' => 'application/json']);
-                        $wasHit = true;
-                    } else {
-                        Log::debug("CacheMiddleware: cache MISS (executing handler)", $logCtx);
-
-                        $resp = $next($request);
-
-                        // Only cache 200 JSON responses; let everything else pass through as-is
-                        if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
-                            $cache->put($key, $this->encode($resp->getData(true)), $cache_lifetime);
-                        } else {
-                            return $resp;
-                        }
-
-                        $response = $resp;
-                    }
+                if ($encoded !== null) {
+                    Log::debug("CacheMiddleware: cache HIT (after lock)", $logCtx);
+                    $response = $this->buildCachedResponse($encoded);
+                    $wasHit = true;
                 } else {
-                    // Could not acquire lock within LOCK_WAIT seconds — fall through without lock
-                    Log::warning("CacheMiddleware: lock timeout, executing handler without lock", $logCtx);
-
-                    $resp = $next($request);
-
-                    if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
-                        $cache->put($key, $this->encode($resp->getData(true)), $cache_lifetime);
-                    } else {
-                        return $resp;
-                    }
-
-                    $response = $resp;
+                    Log::debug("CacheMiddleware: cache MISS (executing handler)", $logCtx);
+                    $response = $this->executeAndCache($next, $request, $cache, $key, $cache_lifetime);
                 }
+            } catch (LockTimeoutException $e) {
+                Log::warning("CacheMiddleware: lock timeout, executing handler without lock", $logCtx);
+                $response = $this->executeAndCache($next, $request, $cache, $key, $cache_lifetime);
             } finally {
                 $lock->release();
             }
         }
 
-        // Mark for revalidation so ETag middleware can return 304 when unchanged
-        $response->setPublic();
-        $response->setMaxAge(0);
-        $response->headers->addCacheControlDirective('must-revalidate', true);
-        $response->headers->addCacheControlDirective('proxy-revalidate', true);
-        $response->headers->add([
-            'X-Cache-Result' => $wasHit ? 'HIT' : 'MISS',
-        ]);
+        // Cache headers only for cacheable (200 JSON) responses
+        if ($response instanceof JsonResponse && $response->getStatusCode() === 200) {
+            $response->setPublic();
+            $response->setMaxAge(0);
+            $response->headers->addCacheControlDirective('must-revalidate', true);
+            $response->headers->addCacheControlDirective('proxy-revalidate', true);
+            $response->headers->add([
+                'X-Cache-Result' => $wasHit ? 'HIT' : 'MISS',
+            ]);
+        }
 
         Log::debug("CacheMiddleware: returning response", $logCtx);
 
         return $response;
+    }
+
+    /**
+     * Decode a cached value and wrap it in a JsonResponse.
+     */
+    private function buildCachedResponse($encoded): JsonResponse
+    {
+        $data = $this->decode($encoded);
+        if ($data === null) $data = is_array($encoded) ? $encoded : [];
+        return new JsonResponse($data, 200, ['Content-Type' => 'application/json']);
+    }
+
+    /**
+     * Execute the next handler and cache the response if it is a 200 JSON response.
+     */
+    private function executeAndCache(Closure $next, $request, $cache, string $key, int $cache_lifetime)
+    {
+        $resp = $next($request);
+        if ($resp instanceof JsonResponse && $resp->getStatusCode() === 200) {
+            $cache->put($key, $this->encode($resp->getData(true)), $cache_lifetime);
+        }
+        return $resp;
     }
 
     /**

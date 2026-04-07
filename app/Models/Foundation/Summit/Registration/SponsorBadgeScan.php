@@ -19,6 +19,7 @@ use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\ValidationException;
 use models\main\Member;
 use models\utils\One2ManyPropertyTrait;
 use Doctrine\ORM\Mapping AS ORM;
@@ -82,6 +83,15 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     #[ORM\Column(name: 'Notes', type: 'string')]
     private $notes;
 
+
+    public const Source_QR = 'QRCode';
+    public const Source_Attendee_Email = 'AttendeeEmail';
+
+    public const ValidSources = [self::Source_QR, self::Source_Attendee_Email];
+
+    #[ORM\Column(name: 'Source', type: 'string', options: ['default' => self::Source_QR])]
+    private $source;
+
     /**
      * @var SponsorBadgeScanExtraQuestionAnswer[]
      */
@@ -91,6 +101,7 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     public function __construct()
     {
         parent::__construct();
+        $this->source = self::Source_QR;
         $this->extra_question_answers = new ArrayCollection();
     }
 
@@ -303,5 +314,14 @@ SQL;
     public function getScanByNice():string{
         if(!$this->hasUser()) return "TBD";
         return sprintf("%s (%s)",$this->user->getFullName(), $this->user->getEmail());
+    }
+
+    public function setSource(string $source): void{
+        if(!in_array($source, self::ValidSources)) throw new ValidationException("Invalid source.");
+        $this->source = $source;
+    }
+
+    public function getSource(): string{
+        return $this->source;
     }
 }

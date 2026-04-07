@@ -17,7 +17,11 @@ use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\main\Group;
 use models\summit\Sponsor;
+use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeBadge;
+use models\summit\SummitAttendeeTicket;
 use models\summit\SummitLeadReportSetting;
+use models\summit\SummitOrder;
 /**
  * Class OAuth2SummitBadgeScanApiControllerTest
  */
@@ -143,7 +147,150 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
         $scan = json_decode($content);
         $this->assertTrue(!is_null($scan));
+        $this->assertEquals(\models\summit\SponsorBadgeScan::Source_QR, $scan->source);
         return $scan;
+    }
+
+    public function testAddBadgeScanByAttendeeEmail(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
+        // Build a dedicated single-ticket attendee+order+badge inline to avoid the
+        // shared-badge quirk in InsertSummitTestData (defaultMember has 5 tickets
+        // sharing one badge, so only the last ticket's TicketID FK is persisted).
+        $attendee = new SummitAttendee();
+        $attendee->setEmail('badge-scan-email-target@example.com');
+        $attendee->setFirstName('Badge');
+        $attendee->setSurname('ScanTarget');
+
+        $order = new SummitOrder();
+        $order->setOwner(self::$defaultMember);
+        $order->setSummit(self::$summit);
+
+        $ticket = new SummitAttendeeTicket();
+        $ticket->setTicketType(self::$default_ticket_type);
+        $ticket->activate();
+        $order->addTicket($ticket);
+        $attendee->addTicket($ticket);
+
+        $badge = new SummitAttendeeBadge();
+        $badge->setType(self::$default_badge_type);
+        $ticket->setBadge($badge);
+
+        $order->setPaid();
+        $order->generateNumber();
+        $ticket->generateNumber();
+        $ticket->generateQRCode();
+        $badge->generateQRCode();
+
+        self::$summit->addAttendee($attendee);
+        self::$summit->addOrder($order);
+        self::$em->persist($attendee);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            'attendee_email' => $attendee->getEmail(),
+            'scan_date' => 1572019200,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $scan = json_decode($content);
+        $this->assertTrue(!is_null($scan));
+        $this->assertEquals(self::$member->getId(), $scan->scanned_by_id);
+        $this->assertEquals($badge->getId(), $scan->badge_id);
+        $this->assertEquals(\models\summit\SponsorBadgeScan::Source_Attendee_Email, $scan->source);
+        return $scan;
+    }
+
+    public function testAddBadgeScanMissingQrCodeAndEmailFails(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            'scan_date' => 1572019200,
+        ];
+
+        $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testAddBadgeScanByUnknownAttendeeEmailFails(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            'attendee_email' => 'no-such-attendee@example.com',
+            'scan_date' => 1572019200,
+        ];
+
+        $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(404);
     }
 
     public function testUpdateBadgeScan(){

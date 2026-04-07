@@ -35,6 +35,7 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         'SponsorId' => 'sponsor_id:json_int',
         'UserId' => 'scanned_by_id:json_int',
         'BadgeId' => 'badge_id:json_int',
+        'Source' => 'source:json_string',
         'AttendeeFirstName' => 'attendee_first_name:json_string',
         'AttendeeLastName' => 'attendee_last_name:json_string',
         'AttendeeEmail' => 'attendee_email:json_string',

@@ -62,11 +62,13 @@ final class UpdateSponsorMemberGroupsMQJob implements ShouldQueue
             $data = $payload['data'];
             $user_external_id = intval($data['user_external_id']);
             $group_slug = $data['group_slug'];
+            $sponsor_id = intval($data['sponsor_id']);
+            $summit_id = intval($data['summit_id']);
 
             if ($event_type === EventTypes::AUTH_USER_ADDED_TO_GROUP) {
-                $this->service->addSponsorUserToGroup($user_external_id, $group_slug);
+                $this->service->addSponsorUserToGroup($user_external_id, $group_slug, $sponsor_id, $summit_id);
             } else if ($event_type === EventTypes::AUTH_USER_REMOVED_FROM_GROUP) {
-                $this->service->removeSponsorUserFromGroup($user_external_id, $group_slug);
+                $this->service->removeSponsorUserFromGroup($user_external_id, $group_slug, $sponsor_id, $summit_id);
             }
             $job->delete();
         } catch (\Exception $ex) {

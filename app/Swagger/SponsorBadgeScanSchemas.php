@@ -77,6 +77,7 @@ class SponsorUserInfoGrantSchemas {}
     required: ['qr_code', 'scan_date'],
     properties: [
         new OA\Property(property: 'qr_code', type: 'string', description: 'Attendee QR code'),
+        new OA\Property(property: 'sponsor_id', type: 'integer', description: 'Current Summit Sponsor ID (Multiple sponsors per summit)'),
         new OA\Property(property: 'scan_date', type: 'integer', description: 'Scan date (Unix timestamp)'),
         new OA\Property(property: 'notes', type: 'string', description: 'Optional notes', maxLength: 1024, nullable: true),
         new OA\Property(

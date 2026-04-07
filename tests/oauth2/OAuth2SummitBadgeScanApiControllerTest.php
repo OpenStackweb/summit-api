@@ -76,7 +76,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         self::$em->flush();
 
         $this->assertTrue($sponsor->hasUser(self::$member));
-        $this->assertNotNull(self::$member->getSponsorBySummit(self::$summit));
+        $this->assertGreaterThan(0, self::$member->getSponsorsBySummit(self::$summit)->count());
 
         $badge = $attendee->getFirstTicket()->getBadge();
         $badge_qr_code = $badge->generateQRCode();
@@ -109,7 +109,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertEquals($badge->getId(), $badge_scan->badge_id);
     }
 
-    public function testAddBadgeScan(){
+    public function testAddBadgeScanWithOneSponsorsPerMember(){
         self::$member->clearGroups();
         self::$member->add2Group($this->sponsor_group);
         self::$em->persist(self::$member);
@@ -293,8 +293,105 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertResponseStatus(404);
     }
 
+    public function testAddBadgeScanWithMultipleSponsorsWithoutSponsorId()
+    {
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor1 = self::$sponsors[0];
+        $sponsor1->addUser(self::$member);
+        self::$em->persist($sponsor1);
+
+        $sponsor2 = self::$sponsors[1];
+        $sponsor2->addUser(self::$member);
+        self::$em->persist($sponsor2);
+
+        self::$em->flush();
+
+        $this->assertGreaterThan(1, self::$member->getSponsorsBySummit(self::$summit)->count());
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+
+        $data = [
+            'qr_code'   => $badge->generateQRCode(),
+            'scan_date' => 1572019200,
+        ];
+
+        $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testAddBadgeScanWithMultipleSponsorsWithSponsorId()
+    {
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor1 = self::$sponsors[0];
+        $sponsor1->addUser(self::$member);
+        self::$em->persist($sponsor1);
+
+        $sponsor2 = self::$sponsors[1];
+        $sponsor2->addUser(self::$member);
+        self::$em->persist($sponsor2);
+
+        self::$em->flush();
+
+        $this->assertGreaterThan(1, self::$member->getSponsorsBySummit(self::$summit)->count());
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+
+        $data = [
+            'qr_code'    => $badge->generateQRCode(),
+            'scan_date'  => 1572019200,
+            'sponsor_id' => $sponsor1->getId(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $scan = json_decode($content);
+        $this->assertNotNull($scan);
+        $this->assertEquals(self::$member->getId(), $scan->scanned_by_id);
+        $this->assertEquals($badge->getId(), $scan->badge_id);
+        $this->assertEquals($sponsor1->getId(), $scan->sponsor_id);
+    }
+
     public function testUpdateBadgeScan(){
-        $scan = $this->testAddBadgeScan();
+        $scan = $this->testAddBadgeScanWithOneSponsorsPerMember();
 
         $params = [
             'id' => self::$summit->getId(),
@@ -413,7 +510,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     public function testGetSummitBadgeScan(){
-        $badge_scan = $this->testAddBadgeScan();
+        $badge_scan = $this->testAddBadgeScanWithOneSponsorsPerMember();
 
         $params = [
             'id'      =>  self::$summit->getId(),
@@ -440,7 +537,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     public function testExportSummitBadgeScans(){
 
-        $this->testAddBadgeScan();
+        $this->testAddBadgeScanWithOneSponsorsPerMember();
 
         $params = [
             'id'    =>  self::$summit->getId(),
@@ -464,7 +561,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     public function testExportSummitBadgeScansWithReportSettingsRestriction(){
 
-        $this->testAddBadgeScan();
+        $this->testAddBadgeScanWithOneSponsorsPerMember();
 
         $sponsor = self::$summit->getSummitSponsors()[0];
         if (!$sponsor instanceof Sponsor) self::fail();
@@ -525,7 +622,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     public function testExportSummitBadgeScansWithAllReportSettingsRestriction(){
 
-        $this->testAddBadgeScan();
+        $this->testAddBadgeScanWithOneSponsorsPerMember();
 
         $sponsor = self::$summit->getSummitSponsors()[0];
         if (!$sponsor instanceof Sponsor) self::fail();

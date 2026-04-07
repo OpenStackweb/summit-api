@@ -167,7 +167,7 @@ final class SponsorUserInfoGrantService
 
             /*
             if(!($scan_date >= $begin_date && $scan_date <= $end_date))
-                throw new ValidationException("scan_date is does not belong to summit period.");
+                throw new ValidationException("scan_date does not belong to summit period.");
             */
             if(empty($ticket_number)){
                 throw new ValidationException("Ticket not found.");
@@ -178,10 +178,20 @@ final class SponsorUserInfoGrantService
             if(is_null($badge))
                 throw new EntityNotFoundException("badge not found.");
 
-            $sponsor = $current_member->getSponsorBySummit($summit);
+            $member_sponsors = $current_member->getSponsorsBySummit($summit);
 
-            if(is_null($sponsor))
-                throw new ValidationException("Current member does not belongs to any summit sponsor.");
+            if($member_sponsors->isEmpty())
+                throw new ValidationException("Current member does not belong to any sponsor of this summit.");
+
+            if($member_sponsors->count() === 1) {
+                $sponsor = $member_sponsors->first();
+            } else {
+                if(empty($data['sponsor_id']))
+                    throw new ValidationException("sponsor_id is required when the member belongs to multiple sponsors.");
+                $sponsor = $current_member->getSponsorBySummitAndId($summit, intval($data['sponsor_id']));
+                if(is_null($sponsor))
+                    throw new ValidationException("Current member does not belong to the selected summit sponsor.");
+            }
 
             $scan = new SponsorBadgeScan();
             $scan->setScanDate($scan_date);

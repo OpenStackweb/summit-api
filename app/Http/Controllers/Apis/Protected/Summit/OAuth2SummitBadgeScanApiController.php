@@ -95,6 +95,8 @@ final class OAuth2SummitBadgeScanApiController
         return [
             'qr_code'   => 'required_without:attendee_email|string',
             'attendee_email'   => 'required_without:qr_code|email',
+            'qr_code'   => 'required|string',
+            'sponsor_id' => 'sometimes|integer',
             'scan_date' => 'required|date_format:U|epoch_seconds',
             'notes' => 'sometimes|string|max:1024',
             'extra_questions' => 'sometimes|extra_question_dto_array',
@@ -115,6 +117,9 @@ final class OAuth2SummitBadgeScanApiController
      * @param Summit $summit
      * @param array $payload
      * @return IEntity
+     * @throws EntityNotFoundException
+     * @throws HTTP403ForbiddenException
+     * @throws ValidationException
      */
     protected function addChild(Summit $summit, array $payload): IEntity
     {
@@ -381,7 +386,7 @@ final class OAuth2SummitBadgeScanApiController
                     if (!is_null($current_member)){
                         if ($current_member->isAuthzFor($summit)) return $filter;
                         // add filter for sponsor user
-                        if ($current_member->isSponsorUser()) {
+                        if ($current_member->isSponsorUser() || $current_member->isExternalSponsorUser()) {
                             $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
                             // is allowed sponsors are empty, add dummy value
                             if (!count($sponsor_ids)) $sponsor_ids[] = 0;

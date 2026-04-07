@@ -109,7 +109,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertEquals($badge->getId(), $badge_scan->badge_id);
     }
 
-    public function testAddBadgeScanWithOneSponsorsPerMember(){
+    public function testAddBadgeScanWithOneSponsorPerMember(){
         self::$member->clearGroups();
         self::$member->add2Group($this->sponsor_group);
         self::$em->persist(self::$member);
@@ -391,7 +391,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     public function testUpdateBadgeScan(){
-        $scan = $this->testAddBadgeScanWithOneSponsorsPerMember();
+        $scan = $this->testAddBadgeScanWithOneSponsorPerMember();
 
         $params = [
             'id' => self::$summit->getId(),
@@ -510,7 +510,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     public function testGetSummitBadgeScan(){
-        $badge_scan = $this->testAddBadgeScanWithOneSponsorsPerMember();
+        $badge_scan = $this->testAddBadgeScanWithOneSponsorPerMember();
 
         $params = [
             'id'      =>  self::$summit->getId(),
@@ -537,7 +537,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     public function testExportSummitBadgeScans(){
 
-        $this->testAddBadgeScanWithOneSponsorsPerMember();
+        $this->testAddBadgeScanWithOneSponsorPerMember();
 
         $params = [
             'id'    =>  self::$summit->getId(),
@@ -561,7 +561,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     public function testExportSummitBadgeScansWithReportSettingsRestriction(){
 
-        $this->testAddBadgeScanWithOneSponsorsPerMember();
+        $this->testAddBadgeScanWithOneSponsorPerMember();
 
         $sponsor = self::$summit->getSummitSponsors()[0];
         if (!$sponsor instanceof Sponsor) self::fail();
@@ -622,7 +622,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     public function testExportSummitBadgeScansWithAllReportSettingsRestriction(){
 
-        $this->testAddBadgeScanWithOneSponsorsPerMember();
+        $this->testAddBadgeScanWithOneSponsorPerMember();
 
         $sponsor = self::$summit->getSummitSponsors()[0];
         if (!$sponsor instanceof Sponsor) self::fail();

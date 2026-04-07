@@ -510,7 +510,7 @@ final class OAuth2SummitBadgeScanApiController
                     if (!is_null($current_member)){
                         if ($current_member->isAuthzFor($summit)) return $filter;
                         // add filter for sponsor user
-                        if ($current_member->isSponsorUser()) {
+                        if ($current_member->isSponsorUser() || $current_member->isExternalSponsorUser()) {
                             $sponsor_ids = $current_member->getSponsorMembershipIds($summit);
                             // is allowed sponsors are empty, add dummy value
                             if (!count($sponsor_ids)) $sponsor_ids[] = 0;

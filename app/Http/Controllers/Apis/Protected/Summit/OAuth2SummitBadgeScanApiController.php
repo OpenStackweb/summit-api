@@ -95,7 +95,6 @@ final class OAuth2SummitBadgeScanApiController
         return [
             'qr_code'   => 'required_without:attendee_email|string',
             'attendee_email'   => 'required_without:qr_code|email',
-            'qr_code'   => 'required|string',
             'sponsor_id' => 'sometimes|integer',
             'scan_date' => 'required|date_format:U|epoch_seconds',
             'notes' => 'sometimes|string|max:1024',

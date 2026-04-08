@@ -404,7 +404,7 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - `php artisan clear-compiled && php artisan cache:clear`
 
 **Review Follow-ups:**
-- None
+- [x] **Misleading comment on no-op `addAllowedTicketType` override (NIT):** The override at `DomainAuthorizedSummitRegistrationPromoCode.php:55` only calls `parent::addAllowedTicketType()` and does not change behavior — the base implementation does not enforce any audience gate. The "regardless of audience value" comment implies special logic that isn't there. Confirmed no-op and no correctness risk. Accepted per D7; comment is documentation-intent only.
 
 ---
 

@@ -178,23 +178,21 @@ final class SponsorUserInfoGrantService
             if(is_null($badge))
                 throw new EntityNotFoundException("badge not found.");
 
-            $member_sponsors = $current_member->getSponsorsBySummit($summit);
+            $member_sponsors = $current_member->getAllowedSponsorsBySummit($summit);
 
-            if($member_sponsors->isEmpty())
-                throw new ValidationException("Current member does not belong to any sponsor of this summit.");
+            if ($member_sponsors->isEmpty())
+                throw new ValidationException("Current member does not have badge scan permissions for any sponsor of this summit.");
 
-            if($member_sponsors->count() === 1) {
+            if ($member_sponsors->count() === 1) {
                 $sponsor = $member_sponsors->first();
             } else {
-                if(empty($data['sponsor_id']))
+                if (empty($data['sponsor_id']))
                     throw new ValidationException("sponsor_id is required when the member belongs to multiple sponsors.");
-                $sponsor = $current_member->getSponsorBySummitAndId($summit, intval($data['sponsor_id']));
-                if(is_null($sponsor))
+                $sponsor_id = intval($data['sponsor_id']);
+                $sponsor = $member_sponsors->filter(fn($s) => $s->getId() === $sponsor_id)->first();
+                if ($sponsor === false)
                     throw new ValidationException("Current member does not belong to the selected summit sponsor.");
             }
-
-            if(!$current_member->hasSponsorMembershipsFor($summit, $sponsor))
-                throw new ValidationException("Current member does not have badge scan permissions for the selected sponsor.");
 
             $scan = new SponsorBadgeScan();
             $scan->setScanDate($scan_date);

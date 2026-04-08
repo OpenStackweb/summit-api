@@ -233,7 +233,165 @@ class SponsorPermissionTrackingTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
-    // 6. Sponsor::addUser — multi-sponsor membership
+    // 6. Member::addSponsorPermission — concurrency
+    // -------------------------------------------------------------------------
+
+    /**
+     * Concurrent calls to addSponsorPermission for the same (member, sponsor, slug)
+     * must not introduce duplicate entries in the Permissions JSON array.
+     * The SELECT … FOR UPDATE row lock serialises the writers so that the
+     * second caller reads the committed value and IF(JSON_CONTAINS(…)) is a no-op.
+     */
+    public function testConcurrentAddSponsorPermissionProducesNoDuplicates(): void
+    {
+        if (!function_exists('pcntl_fork')) {
+            $this->markTestSkipped('pcntl_fork() is not available in this environment');
+        }
+
+        $sponsor_id  = self::$sponsors[0]->getId();
+        $member_id   = self::$member->getId();
+        $concurrency = 5;
+
+        // Flush and disconnect the parent before forking so children each
+        // get a clean connection — inherited sockets are not fork-safe.
+        self::$em->flush();
+        self::$em->clear();
+        self::$em->getConnection()->close();
+
+        $pids = [];
+        for ($i = 0; $i < $concurrency; $i++) {
+            $pid = pcntl_fork();
+            if ($pid === -1) {
+                $this->fail('pcntl_fork() failed');
+            }
+            if ($pid === 0) {
+                // Child: DBAL auto-reconnects on the first query after close().
+                try {
+                    $conn = self::$em->getConnection();
+                    $conn->beginTransaction();
+                    $member = self::$member_repository->find($member_id);
+                    $member->addSponsorPermission($sponsor_id, IGroup::Sponsors);
+                    $conn->commit();
+                    exit(0);
+                } catch (\Throwable $e) {
+                    exit(1);
+                }
+            }
+            $pids[] = $pid;
+        }
+
+        // Parent: wait for all children and collect exit codes.
+        $failed = 0;
+        foreach ($pids as $pid) {
+            pcntl_waitpid($pid, $status);
+            if (pcntl_wexitstatus($status) !== 0) {
+                $failed++;
+            }
+        }
+
+        // Reconnect the parent for the assertion query.
+        self::$em->getConnection()->close();
+
+        $raw = self::$em->getConnection()->executeQuery(
+            'SELECT Permissions FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        )->fetchOne();
+
+        $permissions = json_decode($raw, true) ?? [];
+        $occurrences = array_filter($permissions, fn($p) => $p === IGroup::Sponsors);
+
+        $this->assertSame(0, $failed, 'One or more concurrent workers exited with an error.');
+        $this->assertCount(
+            1,
+            $occurrences,
+            'Concurrent addSponsorPermission calls must not produce duplicate slugs in Permissions.'
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. Member::removeSponsorPermission — concurrency
+    // -------------------------------------------------------------------------
+
+    /**
+     * Concurrent calls to removeSponsorPermission for the same (member, sponsor, slug)
+     * must leave the slug completely absent from the Permissions JSON array.
+     * The pre-loaded Permissions intentionally contains duplicate slugs to verify
+     * that the JSON_ARRAYAGG-based remove eliminates all occurrences in one shot
+     * and that concurrent workers do not leave stale entries behind.
+     */
+    public function testConcurrentRemoveSponsorPermissionLeavesNoStaleEntries(): void
+    {
+        if (!function_exists('pcntl_fork')) {
+            $this->markTestSkipped('pcntl_fork() is not available in this environment');
+        }
+
+        $sponsor_id  = self::$sponsors[0]->getId();
+        $member_id   = self::$member->getId();
+        $concurrency = 5;
+
+        // Seed Permissions with duplicate slugs to exercise the remove-all path.
+        self::$em->getConnection()->executeStatement(
+            'UPDATE Sponsor_Users SET Permissions = ? WHERE SponsorID = ? AND MemberID = ?',
+            [
+                json_encode([IGroup::Sponsors, IGroup::Sponsors, IGroup::Sponsors]),
+                $sponsor_id,
+                $member_id,
+            ]
+        );
+
+        self::$em->flush();
+        self::$em->clear();
+        self::$em->getConnection()->close();
+
+        $pids = [];
+        for ($i = 0; $i < $concurrency; $i++) {
+            $pid = pcntl_fork();
+            if ($pid === -1) {
+                $this->fail('pcntl_fork() failed');
+            }
+            if ($pid === 0) {
+                try {
+                    $conn = self::$em->getConnection();
+                    $conn->beginTransaction();
+                    $member = self::$member_repository->find($member_id);
+                    $member->removeSponsorPermission($sponsor_id, IGroup::Sponsors);
+                    $conn->commit();
+                    exit(0);
+                } catch (\Throwable $e) {
+                    exit(1);
+                }
+            }
+            $pids[] = $pid;
+        }
+
+        $failed = 0;
+        foreach ($pids as $pid) {
+            pcntl_waitpid($pid, $status);
+            if (pcntl_wexitstatus($status) !== 0) {
+                $failed++;
+            }
+        }
+
+        self::$em->getConnection()->close();
+
+        $raw = self::$em->getConnection()->executeQuery(
+            'SELECT Permissions FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        )->fetchOne();
+
+        $permissions = json_decode($raw, true) ?? [];
+        $occurrences = array_filter($permissions, fn($p) => $p === IGroup::Sponsors);
+
+        $this->assertSame(0, $failed, 'One or more concurrent workers exited with an error.');
+        $this->assertCount(
+            0,
+            $occurrences,
+            'Concurrent removeSponsorPermission calls must leave no stale slug occurrences in Permissions.'
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. Sponsor::addUser — multi-sponsor membership
     // -------------------------------------------------------------------------
 
     /**

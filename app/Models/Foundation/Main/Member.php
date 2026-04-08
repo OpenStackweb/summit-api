@@ -1994,14 +1994,36 @@ SQL;
     /**
      * @param Summit $summit
      * @return ArrayCollection
+     * @throws Exception
      */
-    public function getSponsorsBySummit(Summit $summit): ArrayCollection
+    public function getAllowedSponsorsBySummit(Summit $summit): ArrayCollection
     {
-        return new ArrayCollection(
-            $this->sponsor_memberships->filter(function ($entity) use ($summit) {
-                return $entity->getSummitId() == $summit->getId();
-            })->toArray()
-        );
+        $sql = <<<SQL
+SELECT su.SponsorID
+FROM Sponsor_Users su
+INNER JOIN Sponsor s ON s.ID = su.SponsorID
+WHERE su.MemberID = :member_id
+    AND s.SummitID = :summit_id
+    AND (
+        JSON_CONTAINS(COALESCE(su.Permissions, '[]'), JSON_QUOTE(:slug_sponsors))
+        OR JSON_CONTAINS(COALESCE(su.Permissions, '[]'), JSON_QUOTE(:slug_external))
+    )
+SQL;
+        $ids = $this->prepareRawSQL($sql, [
+            'member_id'     => $this->getId(),
+            'summit_id'     => $summit->getId(),
+            'slug_sponsors' => IGroup::Sponsors,
+            'slug_external' => IGroup::SponsorExternalUsers,
+        ])->executeQuery()->fetchFirstColumn();
+
+        if (empty($ids)) {
+            return new ArrayCollection();
+        }
+
+        $position = array_flip($ids);
+        $sponsors = $this->getEM()->getRepository(Sponsor::class)->findBy(['id' => $ids]);
+        usort($sponsors, fn($a, $b) => $position[$a->getId()] <=> $position[$b->getId()]);
+        return new ArrayCollection($sponsors);
     }
 
     /**

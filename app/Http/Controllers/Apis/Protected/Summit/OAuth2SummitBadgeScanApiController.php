@@ -126,10 +126,6 @@ final class OAuth2SummitBadgeScanApiController
         if (is_null($current_member))
             throw new HTTP403ForbiddenException();
 
-        if (!$current_member->hasSponsorMembershipsFor($summit)) {
-            throw new HTTP403ForbiddenException('Only sponsor users can add badge scans.');
-        }
-
         return $this->service->addBadgeScan($summit, $current_member, $payload);
     }
 

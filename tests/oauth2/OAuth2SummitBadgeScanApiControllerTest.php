@@ -91,7 +91,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         self::$em->flush();
 
         $this->assertTrue($sponsor->hasUser(self::$member));
-        $this->assertGreaterThan(0, self::$member->getSponsorsBySummit(self::$summit)->count());
+        $this->assertGreaterThan(0, self::$member->getAllowedSponsorsBySummit(self::$summit)->count());
 
         $badge = $attendee->getFirstTicket()->getBadge();
         $badge_qr_code = $badge->generateQRCode();
@@ -371,7 +371,10 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
         self::$em->flush();
 
-        $this->assertGreaterThan(1, self::$member->getSponsorsBySummit(self::$summit)->count());
+        self::$member->addSponsorPermission($sponsor1->getId(), IGroup::Sponsors);
+        self::$member->addSponsorPermission($sponsor2->getId(), IGroup::Sponsors);
+
+        $this->assertGreaterThan(1, self::$member->getAllowedSponsorsBySummit(self::$summit)->count());
 
         $params = [
             'id' => self::$summit->getId(),
@@ -416,7 +419,10 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
         self::$em->flush();
 
-        $this->assertGreaterThan(1, self::$member->getSponsorsBySummit(self::$summit)->count());
+        self::$member->addSponsorPermission($sponsor1->getId(), IGroup::Sponsors);
+        self::$member->addSponsorPermission($sponsor2->getId(), IGroup::Sponsors);
+
+        $this->assertGreaterThan(1, self::$member->getAllowedSponsorsBySummit(self::$summit)->count());
 
         $params = [
             'id' => self::$summit->getId(),

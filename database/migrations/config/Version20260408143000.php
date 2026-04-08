@@ -102,7 +102,7 @@ final class Version20260408143000 extends AbstractMigration
 
         // Reverse order: authz groups → endpoint scopes → api scopes
         $this->addSql($this->deleteEndpointAuthzGroup(self::API_NAME, 'get-sponsor-extra-questions', $externalGroupSlug));
-        $this->addSql($this->deleteScopesEndpoints([$readScope, $writeScope]));
+        $this->addSql($this->deleteScopesEndpoints(self::API_NAME, [$readScope, $writeScope]));
         $this->addSql($this->deleteApiScopes(self::API_NAME, [$readScope, $writeScope]));
     }
 }

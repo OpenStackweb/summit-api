@@ -39,10 +39,10 @@ trait APIEndpointsMigrationHelper
      * @param string $apiName       API identifier (e.g., 'summits')
      * @param string $endpointName  Endpoint identifier (e.g., 'get-sponsor-extra-questions')
      * @param string $route         Route pattern (e.g., '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions')
-     * @param string $httpMethod    HTTP method as serialized PHP array (e.g., 'a:1:{i:0;s:3:"GET";}')
+     * @param string $httpMethod    Plain HTTP method string (e.g., 'GET', 'POST', 'PUT', 'DELETE')
      * @param bool   $active        Whether the endpoint is active (default: true)
-     * @param bool   $allowCors     Whether to allow CORS (default: false)
-     * @param bool   $allowCredentials Whether to allow credentials (default: false)
+     * @param bool   $allowCors     Whether to allow CORS (default: true, matches seedApiEndpoints behavior)
+     * @param bool   $allowCredentials Whether to allow credentials (default: true, matches seedApiEndpoints behavior)
      * @return string SQL INSERT statement
      */
     protected function insertEndpoint(
@@ -51,8 +51,8 @@ trait APIEndpointsMigrationHelper
         string $route,
         string $httpMethod,
         bool $active = true,
-        bool $allowCors = false,
-        bool $allowCredentials = false
+        bool $allowCors = true,
+        bool $allowCredentials = true
     ): string {
         $activeInt = $active ? 1 : 0;
         $corsInt = $allowCors ? 1 : 0;
@@ -195,16 +195,22 @@ SQL;
     /**
      * Generate DELETE for endpoint_api_scopes table (all associations for given scopes).
      *
-     * @param array $scopes List of scope URIs to remove associations for
+     * Constrained by API to prevent removing associations for other APIs that may
+     * reuse the same scope URI (api_scopes.name has no global uniqueness constraint).
+     *
+     * @param string $apiName API identifier (e.g., 'summits')
+     * @param array  $scopes  List of scope URIs to remove associations for
      * @return string SQL DELETE statement
      */
-    protected function deleteScopesEndpoints(array $scopes): string
+    protected function deleteScopesEndpoints(string $apiName, array $scopes): string
     {
         $scopeList = "'" . implode("', '", $scopes) . "'";
         return <<<SQL
 DELETE eas FROM endpoint_api_scopes eas
 INNER JOIN api_scopes s ON s.id = eas.scope_id
-WHERE s.name IN ({$scopeList});
+INNER JOIN apis a ON a.id = s.api_id
+WHERE a.name = '{$apiName}'
+  AND s.name IN ({$scopeList});
 SQL;
     }
 

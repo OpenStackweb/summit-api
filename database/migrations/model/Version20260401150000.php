@@ -51,10 +51,28 @@ final class Version20260401150000 extends AbstractMigration
             CONSTRAINT FK_DomainAuthPromoCode_PromoCode FOREIGN KEY (ID) REFERENCES SummitRegistrationPromoCode (ID) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-        // 3. Add WithPromoCode to SummitTicketType Audience ENUM
+        // 3. Widen the ClassName discriminator ENUM to include the two new subtypes
+        $this->addSql("ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName ENUM(
+            'SummitRegistrationPromoCode',
+            'MemberSummitRegistrationPromoCode',
+            'SponsorSummitRegistrationPromoCode',
+            'SpeakerSummitRegistrationPromoCode',
+            'SummitRegistrationDiscountCode',
+            'MemberSummitRegistrationDiscountCode',
+            'SponsorSummitRegistrationDiscountCode',
+            'SpeakerSummitRegistrationDiscountCode',
+            'SpeakersSummitRegistrationPromoCode',
+            'SpeakersRegistrationDiscountCode',
+            'PrePaidSummitRegistrationPromoCode',
+            'PrePaidSummitRegistrationDiscountCode',
+            'DomainAuthorizedSummitRegistrationDiscountCode',
+            'DomainAuthorizedSummitRegistrationPromoCode'
+        ) DEFAULT 'SummitRegistrationPromoCode'");
+
+        // 4. Add WithPromoCode to SummitTicketType Audience ENUM
         $this->addSql("ALTER TABLE SummitTicketType MODIFY Audience ENUM('All', 'WithInvitation', 'WithoutInvitation', 'WithPromoCode') NOT NULL DEFAULT 'All'");
 
-        // 4. Add AutoApply column to existing email-linked subtype joined tables
+        // 5. Add AutoApply column to existing email-linked subtype joined tables
         $this->addSql("ALTER TABLE MemberSummitRegistrationPromoCode ADD COLUMN AutoApply TINYINT(1) NOT NULL DEFAULT 0");
         $this->addSql("ALTER TABLE MemberSummitRegistrationDiscountCode ADD COLUMN AutoApply TINYINT(1) NOT NULL DEFAULT 0");
         $this->addSql("ALTER TABLE SpeakerSummitRegistrationPromoCode ADD COLUMN AutoApply TINYINT(1) NOT NULL DEFAULT 0");
@@ -72,11 +90,30 @@ final class Version20260401150000 extends AbstractMigration
         $this->addSql("ALTER TABLE MemberSummitRegistrationDiscountCode DROP COLUMN AutoApply");
         $this->addSql("ALTER TABLE MemberSummitRegistrationPromoCode DROP COLUMN AutoApply");
 
-        // 2. Revert SummitTicketType Audience ENUM
+        // 2. Guard against orphaned WithPromoCode values before narrowing the ENUM
+        $this->addSql("UPDATE SummitTicketType SET Audience = 'All' WHERE Audience = 'WithPromoCode'");
+
+        // 3. Revert SummitTicketType Audience ENUM
         $this->addSql("ALTER TABLE SummitTicketType MODIFY Audience ENUM('All', 'WithInvitation', 'WithoutInvitation') NOT NULL DEFAULT 'All'");
 
-        // 3. Drop new joined tables
+        // 4. Drop new joined tables
         $this->addSql("DROP TABLE IF EXISTS DomainAuthorizedSummitRegistrationPromoCode");
         $this->addSql("DROP TABLE IF EXISTS DomainAuthorizedSummitRegistrationDiscountCode");
+
+        // 5. Revert the ClassName discriminator ENUM to the original 12 values
+        $this->addSql("ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName ENUM(
+            'SummitRegistrationPromoCode',
+            'MemberSummitRegistrationPromoCode',
+            'SponsorSummitRegistrationPromoCode',
+            'SpeakerSummitRegistrationPromoCode',
+            'SummitRegistrationDiscountCode',
+            'MemberSummitRegistrationDiscountCode',
+            'SponsorSummitRegistrationDiscountCode',
+            'SpeakerSummitRegistrationDiscountCode',
+            'SpeakersSummitRegistrationPromoCode',
+            'SpeakersRegistrationDiscountCode',
+            'PrePaidSummitRegistrationPromoCode',
+            'PrePaidSummitRegistrationDiscountCode'
+        ) DEFAULT 'SummitRegistrationPromoCode'");
     }
 }

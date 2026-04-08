@@ -69,8 +69,10 @@ class DomainAuthorizedSummitRegistrationDiscountCode extends SummitRegistrationD
     public function addTicketTypeRule(SummitRegistrationDiscountCodeTicketTypeRule $rule){
         $ticketType = $rule->getTicketType();
 
-        // Verify ticket type is already in allowed_ticket_types
-        if (!$this->canBeAppliedTo($ticketType)) {
+        // Verify ticket type is already in allowed_ticket_types (direct membership check).
+        // Cannot use canBeAppliedTo() here — it returns true when allowed_ticket_types is empty,
+        // which would allow rules on types not explicitly added. See Truth #4.
+        if (!$this->allowed_ticket_types->contains($ticketType)) {
             throw new ValidationException(
                 sprintf(
                     'Ticket type %s must be in allowed_ticket_types before adding a discount rule for promo code %s.',
@@ -95,6 +97,18 @@ class DomainAuthorizedSummitRegistrationDiscountCode extends SummitRegistrationD
 
         // Only write to ticket_types_rules — do NOT touch allowed_ticket_types
         $this->getTicketTypesRules()->add($rule);
+    }
+
+    /**
+     * Override: removes from ticket_types_rules only, does NOT re-add to allowed_ticket_types.
+     * Parent re-adds the ticket type to allowed_ticket_types which would corrupt the master list.
+     *
+     * @param SummitRegistrationDiscountCodeTicketTypeRule $rule
+     */
+    public function removeTicketTypeRule(SummitRegistrationDiscountCodeTicketTypeRule $rule){
+        if(!$this->getTicketTypesRules()->contains($rule)) return;
+        $this->getTicketTypesRules()->removeElement($rule);
+        $rule->clearDiscountCode();
     }
 
     /**

@@ -202,20 +202,39 @@ The following diagrams and mockups are from the approved proposal document and p
 
 ## Progress Tracking
 
-- [ ] Task 1: Database migration (two new joined tables + `WithPromoCode` audience value + `AutoApply` on four existing email-linked subtype tables)
-- [ ] Task 2: Traits and interfaces (DomainAuthorizedPromoCodeTrait, AutoApplyPromoCodeTrait, IDomainAuthorizedPromoCode)
-- [ ] Task 3: DomainAuthorizedSummitRegistrationDiscountCode model
-- [ ] Task 4: DomainAuthorizedSummitRegistrationPromoCode model
-- [ ] Task 5: SummitTicketType — add `WithPromoCode` audience value and filtering logic
-- [ ] Task 6: Factory, validation rules, and serializers (both new types + ticket type audience)
-- [ ] Task 7: Modify RegularPromoCodeTicketTypesStrategy for audience-based filtering
-- [ ] Task 8: Repository — discovery query and raw SQL joins (both tables)
-- [ ] Task 9: Auto-discovery endpoint (route, controller, service) — including existing email-linked types
-- [ ] Task 10: QuantityPerAccount checkout enforcement
-- [ ] Task 11: Auto-apply support for existing email-linked promo codes (member/speaker)
-- [ ] Task 12: Unit tests
+- [x] Task 1: Database migration (two new joined tables + `WithPromoCode` audience value + `AutoApply` on four existing email-linked subtype tables)
+- [x] Task 2: Traits and interfaces (DomainAuthorizedPromoCodeTrait, AutoApplyPromoCodeTrait, IDomainAuthorizedPromoCode)
+- [x] Task 3: DomainAuthorizedSummitRegistrationDiscountCode model
+- [x] Task 4: DomainAuthorizedSummitRegistrationPromoCode model
+- [x] Task 5: SummitTicketType — add `WithPromoCode` audience value and filtering logic
+- [x] Task 6: Factory, validation rules, and serializers (both new types + ticket type audience) — see D3
+- [x] Task 7: Modify RegularPromoCodeTicketTypesStrategy for audience-based filtering
+- [x] Task 8: Repository — discovery query and raw SQL joins (both tables)
+- [x] Task 9: Auto-discovery endpoint (route, controller, service) — including existing email-linked types
+- [x] Task 10: QuantityPerAccount checkout enforcement — see D4
+- [x] Task 11: Auto-apply support for existing email-linked promo codes (member/speaker)
+- [x] Task 12: Unit tests
 
-**Total Tasks:** 12 | **Completed:** 0 | **Remaining:** 12
+**Total Tasks:** 12 | **Completed:** 12 | **Remaining:** 0
+
+## Implementation Deviations Log
+
+Deviations from the SDS captured during implementation. Each entry is either **OPEN** (needs fix), **ACCEPTED** (intentional, no fix needed), or **RESOLVED** (fixed post-implementation).
+
+| # | Deviation | Severity | Status | Tasks | Detail |
+|---|-----------|----------|--------|-------|--------|
+| D1 | Trait file locations | NIT | ACCEPTED | 2 | SDS specifies traits in `PromoCodes/` directly. Existing codebase convention puts traits in `PromoCodes/Traits/`. Implementation followed SDS paths. Acceptable — no functional impact, but future cleanup may move them to `Traits/` for consistency. |
+| D2 | `addTicketTypeRule` accesses private parent field via getter | NIT | ACCEPTED | 3 | SDS implies direct `$this->ticket_types_rules->add()` but parent declares `$ticket_types_rules` as `private`. Implementation uses `$this->getTicketTypesRules()->add()` and `canBeAppliedTo()` for the allowed_ticket_types membership check. Functionally equivalent. |
+| D3 | `allowed_email_domains` validation uses `sometimes|json` instead of custom rule | SHOULD-FIX | OPEN | 6 | SDS explicitly states generic `'sometimes|json'` is insufficient — would accept `[123, null, ""]` which silently never matches. Needs a custom validation rule enforcing each entry matches `@domain`, `.tld`, or `user@email` format. |
+| D4 | `quantity_per_account` check lacks pessimistic lock | MUST-FIX | OPEN | 10 | SDS specifies `SELECT ... FOR UPDATE` on the promo code row within the quantity check. Implementation adds the check in `PreProcessReservationTask` which runs before `ApplyPromoCodeTask` (which holds the lock). This creates a TOCTOU window — two concurrent requests could both pass the pre-check. The quantity check needs to move inside the locked transaction boundary, or `PreProcessReservationTask` needs its own pessimistic lock. |
+| D5 | Discovery response uses manual array instead of `PagingResponse` object | NIT | ACCEPTED | 9 | SDS says "uses the standard `PagingResponse` envelope." Implementation constructs an identical JSON shape manually. Acceptable — output is identical, and the endpoint doesn't actually paginate. |
+| D6 | Task 8 implemented before Task 11 (dependency violation) | NIT | ACCEPTED | 8, 11 | SDS declares Task 8 depends on Task 11. Implementation order was reversed. No functional issue — the repository query fetches member/speaker entities by type regardless of whether `AutoApplyPromoCodeTrait` is applied yet. |
+| D7 | `addAllowedTicketType` overrides are no-ops | NIT | ACCEPTED | 3, 4 | SDS specifies overriding `addAllowedTicketType()` on both types. The override just calls `parent::addAllowedTicketType()` which already accepts any ticket type. Present for documentation intent per SDS, but functionally dead code. |
+
+### Resolution Plan
+
+- **D3 (OPEN):** Create a custom Laravel validation rule class (e.g., `AllowedEmailDomainsRule`) that decodes the JSON and validates each entry matches `^@[\w.-]+$`, `^\.\w+$`, or `^[^@]+@[\w.-]+$`. Apply in both `buildForAdd` and `buildForUpdate` for domain-authorized types.
+- **D4 (OPEN):** Move the `quantity_per_account` check into `ApplyPromoCodeTask` (which already holds a pessimistic lock via `getByValueExclusiveLock`), or add a `SELECT ... FOR UPDATE` on the promo code row in `PreProcessReservationTask` by passing the transaction service. The former is cleaner since the lock already exists.
 
 ## Implementation Tasks
 
@@ -251,6 +270,10 @@ The following diagrams and mockups are from the approved proposal document and p
 
 **Verify:**
 - `php artisan doctrine:migrations:migrate --no-interaction`
+
+**Review Follow-ups:**
+- [x] **Missing `ClassName` discriminator ENUM widening (MUST-FIX):** The migration created both new joined tables but never widened the `ClassName` ENUM column on `SummitRegistrationPromoCode` — the Doctrine discriminator column used for JOINED inheritance. Every insert into either new type would have failed or silently corrupted. Fixed by adding `ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName ENUM(...)` in `up()` (appending `DomainAuthorizedSummitRegistrationDiscountCode` and `DomainAuthorizedSummitRegistrationPromoCode` after the existing 12 values) and a corresponding revert in `down()` placed after the joined tables are dropped so no rows reference the removed values.
+- [x] **`down()` narrows `Audience` ENUM without a data guard (SHOULD-FIX):** If any `SummitTicketType` rows carried `Audience = 'WithPromoCode'` at rollback time, MySQL would hard-error in strict mode or silently coerce to an empty string in non-strict mode. Fixed by adding `UPDATE SummitTicketType SET Audience = 'All' WHERE Audience = 'WithPromoCode'` immediately before the `MODIFY Audience` statement in `down()`.
 
 ---
 
@@ -301,6 +324,9 @@ The following diagrams and mockups are from the approved proposal document and p
 **Verify:**
 - Unit test for matching logic
 
+**Review Follow-ups:**
+- [x] **`matchesEmailDomain()` false positive on no-`@` input (SHOULD-FIX):** If called with a string containing no `@` (e.g. `"alice.edu"`), `strpos` returns `false`, `substr` coerces the offset to `0`, and the full string is used as `$emailDomain`. This causes `str_ends_with('alice.edu', '.edu')` to return `true` — a false positive. Fix: add `if (strpos($email, '@') === false) return false;` immediately after the `if (empty($email)) return false;` guard in `matchesEmailDomain()` (`DomainAuthorizedPromoCodeTrait.php`).
+
 ---
 
 ### Task 3: DomainAuthorizedSummitRegistrationDiscountCode Model
@@ -341,6 +367,10 @@ The following diagrams and mockups are from the approved proposal document and p
 **Verify:**
 - `php artisan clear-compiled && php artisan cache:clear`
 
+**Review Follow-ups:**
+- [x] **`addTicketTypeRule()` guard allows rules on empty `allowed_ticket_types` (MUST-FIX):** The guard `if (!$this->canBeAppliedTo($ticketType))` passes when `allowed_ticket_types` is empty because `SummitRegistrationPromoCode::canBeAppliedTo()` returns `true` in that case. Violates Truth #4. Fix: replace with a direct membership check — `if (!$this->allowed_ticket_types->contains($ticketType))` — in `DomainAuthorizedSummitRegistrationDiscountCode::addTicketTypeRule()`.
+- [x] **Inherited `removeTicketTypeRule()` mutates `allowed_ticket_types` (SHOULD-FIX):** `SummitRegistrationDiscountCode::removeTicketTypeRule(SummitRegistrationDiscountCodeTicketTypeRule $rule)` (line 172) calls `$this->allowed_ticket_types->add($rule->getTicketType())`, re-adding the ticket type to the master list. No current call sites, but the method is public. Override it in `DomainAuthorizedSummitRegistrationDiscountCode` to remove from `ticket_types_rules` only (same pattern as `removeTicketTypeRuleForTicketType`).
+
 ---
 
 ### Task 4: DomainAuthorizedSummitRegistrationPromoCode Model
@@ -372,6 +402,9 @@ The following diagrams and mockups are from the approved proposal document and p
 
 **Verify:**
 - `php artisan clear-compiled && php artisan cache:clear`
+
+**Review Follow-ups:**
+- None
 
 ---
 
@@ -405,6 +438,9 @@ The following diagrams and mockups are from the approved proposal document and p
 
 **Verify:**
 - `php artisan clear-compiled && php artisan cache:clear`
+
+**Review Follow-ups:**
+- None
 
 ---
 
@@ -443,6 +479,9 @@ The following diagrams and mockups are from the approved proposal document and p
 
 **Verify:**
 - `php artisan clear-compiled`
+
+**Review Follow-ups:**
+- None
 
 ---
 
@@ -483,6 +522,9 @@ The following diagrams and mockups are from the approved proposal document and p
 - Test: `All` ticket type + no promo code → IS returned (existing behavior)
 - Test: `All` ticket type + promo code → IS returned with promo applied (existing behavior)
 
+**Review Follow-ups:**
+- None
+
 ---
 
 ### Task 8: Repository — Discovery Query and Raw SQL Joins (Both Tables)
@@ -521,6 +563,9 @@ The following diagrams and mockups are from the approved proposal document and p
 
 **Verify:**
 - Unit test for discovery query
+
+**Review Follow-ups:**
+- None
 
 ---
 
@@ -643,6 +688,9 @@ The following diagrams and mockups are from the approved proposal document and p
 **Verify:**
 - Integration test calling the endpoint
 
+**Review Follow-ups:**
+- None
+
 ---
 
 ### Task 10: QuantityPerAccount Checkout Enforcement
@@ -677,6 +725,9 @@ The following diagrams and mockups are from the approved proposal document and p
 - Unit test: order with exhausted quantity_per_account → ValidationException
 - Unit test: order within limit → succeeds
 - Integration test: concurrent checkouts by same member cannot exceed limit
+
+**Review Follow-ups:**
+- None
 
 ---
 
@@ -718,6 +769,9 @@ The following diagrams and mockups are from the approved proposal document and p
 
 **Verify:**
 - API test: verify a speaker promo code is returned in discovery when email matches, with correct `auto_apply` value in response
+
+**Review Follow-ups:**
+- None
 
 ---
 
@@ -778,6 +832,9 @@ The following diagrams and mockups are from the approved proposal document and p
 
 **Verify:**
 - `php artisan test --filter=DomainAuthorizedPromoCodeTest`
+
+**Review Follow-ups:**
+- None
 
 ## Resolved Decisions
 

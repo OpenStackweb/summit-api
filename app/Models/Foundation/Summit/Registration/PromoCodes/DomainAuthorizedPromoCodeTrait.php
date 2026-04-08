@@ -84,7 +84,10 @@ trait DomainAuthorizedPromoCodeTrait
         $email = strtolower(trim($email));
         if (empty($email)) return false;
 
-        $emailDomain = substr($email, strpos($email, '@'));
+        $atPos = strpos($email, '@');
+        if ($atPos === false) return false;
+
+        $emailDomain = substr($email, $atPos);
 
         foreach ($domains as $pattern) {
             $pattern = strtolower(trim($pattern));

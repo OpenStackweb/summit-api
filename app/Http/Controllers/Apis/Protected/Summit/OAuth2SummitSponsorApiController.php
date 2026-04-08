@@ -3205,11 +3205,11 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         });
     }
 
-    // Extra Questions
+    // Sponsor Extra Questions
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions",
-        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors,
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
         summary: 'Read Sponsor Extra Questions',
         operationId: 'getSponsorExtraQuestions',
         tags: ['Sponsors'],
@@ -3219,6 +3219,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
                 IGroup::Sponsors,
+                IGroup::SponsorExternalUsers,
             ]
         ],
         security: [
@@ -3226,6 +3227,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 'summit_sponsor_oauth2' => [
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSponsorExtraQuestions,
                 ]
             ]
         ],
@@ -3365,6 +3367,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 'summit_sponsor_oauth2' => [
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSponsorExtraQuestions,
                 ]
             ]
         ],
@@ -3421,6 +3424,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             [
                 'summit_sponsor_oauth2' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ]
             ]
         ],
@@ -3510,6 +3514,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 'summit_sponsor_oauth2' => [
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSponsorExtraQuestions,
                 ]
             ]
         ],
@@ -3600,6 +3605,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             [
                 'summit_sponsor_oauth2' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ]
             ]
         ],
@@ -3695,6 +3701,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             [
                 'summit_sponsor_oauth2' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ]
             ]
         ],
@@ -3780,6 +3787,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             [
                 'summit_sponsor_oauth2' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ]
             ]
         ],
@@ -3879,6 +3887,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             [
                 'summit_sponsor_oauth2' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ]
             ]
         ],
@@ -3987,6 +3996,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             [
                 'summit_sponsor_oauth2' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ]
             ]
         ],

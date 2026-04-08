@@ -124,5 +124,8 @@ final class SummitScopes
 
     const WriteSummitsConfirmExternalOrders = SCOPE_BASE_REALM.'/summits/confirm-external-orders';
     const ReadSummitsConfirmExternalOrders = SCOPE_BASE_REALM.'/summits/read-external-orders';
+
+    const WriteSponsorExtraQuestions = SCOPE_BASE_REALM.'/summits/sponsors/extra-questions/write';
+    const ReadSponsorExtraQuestions = SCOPE_BASE_REALM.'/summits/sponsors/extra-questions/read';
 }
 

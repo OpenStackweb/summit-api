@@ -1297,7 +1297,7 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
 
-                // extra questions
+                // sponsor extra questions
                 Route::group(['prefix' => 'extra-questions'], function () {
                     Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@getExtraQuestions']);
                     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@addExtraQuestion']);

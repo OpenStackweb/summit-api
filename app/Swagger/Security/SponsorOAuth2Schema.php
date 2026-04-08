@@ -17,6 +17,8 @@ use OpenApi\Attributes as OA;
                     SummitScopes::ReadSummitData => 'Read Summit Sponsor Data',
                     SummitScopes::ReadAllSummitData => 'Read All Summit Sponsor Data',
                     SummitScopes::WriteSummitData => 'Write Summit Sponsor Data',
+                    SummitScopes::ReadSponsorExtraQuestions => 'Read Summit Sponsor Extra Questions Data',
+                    SummitScopes::WriteSponsorExtraQuestions => 'Write Summit Sponsor Extra Questions Data',
                 ],
             ),
         ],

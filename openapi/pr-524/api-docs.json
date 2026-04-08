@@ -55763,7 +55763,7 @@
                     "Sponsors"
                 ],
                 "summary": "Read Sponsor Extra Questions",
-                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors",
+                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
                 "operationId": "getSponsorExtraQuestions",
                 "parameters": [
                     {
@@ -55916,7 +55916,8 @@
                 "security": [
                     {
                         "summit_sponsor_oauth2": [
-                            "http://localhost/summits/write"
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/sponsors/extra-questions/write"
                         ]
                     }
                 ],

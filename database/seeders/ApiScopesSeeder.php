@@ -393,7 +393,18 @@ final class ApiScopesSeeder extends Seeder
                 'name' => SummitScopes::WriteAttendeeNotesData,
                 'short_description' => 'Write Attendee Notes Data',
                 'description' => 'Grants write access for Attendee Notes Data',
+            ],
+            [
+                'name' => SummitScopes::ReadSponsorExtraQuestions,
+                'short_description' => 'Read Summit Sponsor Extra Questions Data',
+                'description' => 'Read Summit Sponsor Extra Questions Data',
+            ],
+            [
+                'name' => SummitScopes::WriteSponsorExtraQuestions,
+                'short_description' => 'Write Summit Sponsor Extra Questions Data',
+                'description' => 'Write Summit Sponsor Extra Questions Data',
             ]
+
         ];
 
         foreach ($scopes as $scope_info) {

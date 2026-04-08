@@ -26,6 +26,7 @@ class SpeakerSummitRegistrationDiscountCode
     implements IOwnablePromoCode
 {
     use SpeakerPromoCodeTrait;
+    use AutoApplyPromoCodeTrait;
 
     const ClassName = 'SPEAKER_DISCOUNT_CODE';
 
@@ -37,9 +38,10 @@ class SpeakerSummitRegistrationDiscountCode
     }
 
     public static $metadata = [
-        'class_name' => self::ClassName,
-        'type'       => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
-        'speaker_id' => 'integer'
+        'class_name'  => self::ClassName,
+        'type'        => PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes,
+        'speaker_id'  => 'integer',
+        'auto_apply'  => 'boolean',
     ];
 
     /**

@@ -505,6 +505,18 @@ final class SerializerRegistry
             self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
         ];
 
+        $this->registry['DomainAuthorizedSummitRegistrationDiscountCode'] = [
+            self::SerializerType_Public => DomainAuthorizedSummitRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_CSV => DomainAuthorizedSummitRegistrationDiscountCodeSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
+        ];
+
+        $this->registry['DomainAuthorizedSummitRegistrationPromoCode'] = [
+            self::SerializerType_Public => DomainAuthorizedSummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_CSV => DomainAuthorizedSummitRegistrationPromoCodeSerializer::class,
+            self::SerializerType_PreValidation => SummitRegistrationPromoCodePreValidationSerializer::class,
+        ];
+
         $this->registry['PresentationSpeakerSummitAssistanceConfirmationRequest'] = PresentationSpeakerSummitAssistanceConfirmationRequestSerializer::class;
         $this->registry['SummitRegistrationDiscountCodeTicketTypeRule'] = SummitRegistrationDiscountCodeTicketTypeRuleSerializer::class;
 

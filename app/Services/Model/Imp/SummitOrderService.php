@@ -59,6 +59,7 @@ use models\summit\factories\SummitAttendeeFactory;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
+use models\summit\IDomainAuthorizedPromoCode;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -278,7 +279,7 @@ final class SagaFactory
         Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
         return Saga::start()
             ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-            ->addTask(new PreProcessReservationTask($summit, $payload))
+            ->addTask(new PreProcessReservationTask($summit, $payload, $owner, $this->promo_code_repository))
             ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
             ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
             ->addTask(new ReserveOrderTask(
@@ -947,17 +948,33 @@ class PreProcessReservationTask extends AbstractTask
     protected $summit;
 
     /**
+     * @var Member|null
+     */
+    protected $owner;
+
+    /**
+     * @var ISummitRegistrationPromoCodeRepository|null
+     */
+    protected $promo_code_repository;
+
+    /**
      * @param Summit $summit
      * @param array $payload
+     * @param Member|null $owner
+     * @param ISummitRegistrationPromoCodeRepository|null $promo_code_repository
      */
     public function __construct
     (
         Summit $summit,
-        array  $payload
+        array  $payload,
+        ?Member $owner = null,
+        ?ISummitRegistrationPromoCodeRepository $promo_code_repository = null
     )
     {
         $this->payload = $payload;
         $this->summit = $summit;
+        $this->owner = $owner;
+        $this->promo_code_repository = $promo_code_repository;
     }
 
     /**
@@ -1021,6 +1038,27 @@ class PreProcessReservationTask extends AbstractTask
                             $promo_code->getMaxUsagePerOrder()
                         )
                     );
+
+                // QuantityPerAccount enforcement for domain-authorized promo codes
+                if ($promo_code instanceof IDomainAuthorizedPromoCode
+                    && !is_null($this->owner)
+                    && !is_null($this->promo_code_repository)
+                ) {
+                    $quantityPerAccount = $promo_code->getQuantityPerAccount();
+                    if ($quantityPerAccount > 0) {
+                        $existingCount = $this->promo_code_repository->getTicketCountByMemberAndPromoCode($this->owner, $promo_code);
+                        $newCount = $info['qty'];
+                        if (($existingCount + $newCount) > $quantityPerAccount) {
+                            throw new ValidationException(
+                                sprintf(
+                                    "Promo code %s has reached the maximum of %s tickets per account.",
+                                    $promo_code_value,
+                                    $quantityPerAccount
+                                )
+                            );
+                        }
+                    }
+                }
 
                 if (!in_array($type_id, $info['types']))
                     $info['types'] = array_merge($info['types'], [$type_id]);

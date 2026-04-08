@@ -46,6 +46,7 @@ use models\summit\SponsorSummitRegistrationDiscountCode;
 use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
+use models\summit\IDomainAuthorizedPromoCode;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use services\model\ISummitPromoCodeService;
@@ -1007,5 +1008,39 @@ final class SummitPromoCodeService
             null,
             $filter
         );
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function discoverPromoCodes(Summit $summit, Member $member): array
+    {
+        $email = $member->getEmail();
+        if (empty($email)) return [];
+
+        $codes = $this->repository->getDiscoverableByEmailForSummit($summit, $email);
+        $results = [];
+
+        foreach ($codes as $code) {
+            // QuantityPerAccount enforcement: exclude exhausted codes
+            if ($code instanceof IDomainAuthorizedPromoCode) {
+                $quantityPerAccount = $code->getQuantityPerAccount();
+                if ($quantityPerAccount > 0) {
+                    $usedCount = $this->repository->getTicketCountByMemberAndPromoCode($member, $code);
+                    if ($usedCount >= $quantityPerAccount) {
+                        continue; // exhausted
+                    }
+                    $code->setRemainingQuantityPerAccount($quantityPerAccount - $usedCount);
+                } else {
+                    $code->setRemainingQuantityPerAccount(null); // unlimited
+                }
+            }
+
+            $results[] = $code;
+        }
+
+        return $results;
     }
 }

@@ -125,6 +125,28 @@ class RegularPromoCodeTicketTypesStrategy implements IPromoCodeAllowedTicketType
             $all_ticket_types[] = $this->applyPromo2TicketType($ticket_type);
         }
 
+        // WithPromoCode ticket types: only visible when a qualifying promo code is live
+        // and includes them in allowed_ticket_types. Any promo code type can unlock them.
+        $promo_code_ticket_types = [];
+        if (!is_null($this->promo_code) && $this->promo_code->isLive()) {
+            $tracked_ids = [];
+            foreach ($this->promo_code->getAllowedTicketTypes() as $ticket_type) {
+                if (!$ticket_type->isPromoCodeOnly()) continue;
+                if (in_array($ticket_type->getId(), $tracked_ids)) continue;
+                if ($ticket_type->isSoldOut()) {
+                    Log::debug(
+                        sprintf(
+                            "RegularPromoCodeTicketTypesStrategy::getTicketTypes WithPromoCode ticket type %s sold out.",
+                            $ticket_type->getId()
+                        )
+                    );
+                    continue;
+                }
+                $tracked_ids[] = $ticket_type->getId();
+                $promo_code_ticket_types[] = $this->applyPromo2TicketType($ticket_type);
+            }
+        }
+
         $invitation = $this->summit->getSummitRegistrationInvitationByEmail($this->member->getEmail());
 
         if (!is_null($invitation)) {
@@ -149,8 +171,8 @@ class RegularPromoCodeTicketTypesStrategy implements IPromoCodeAllowedTicketType
                         $this->member->getId()
                     )
                 );
-                // only all
-                return $all_ticket_types;
+                // only all + promo code ticket types
+                return array_merge($all_ticket_types, $promo_code_ticket_types);
             }
 
             $invitation_ticket_types = array_map(
@@ -158,7 +180,7 @@ class RegularPromoCodeTicketTypesStrategy implements IPromoCodeAllowedTicketType
                 $invitation->getRemainingAllowedTicketTypes()
             );
 
-            return array_merge($all_ticket_types, $invitation_ticket_types);
+            return array_merge($all_ticket_types, $invitation_ticket_types, $promo_code_ticket_types);
         }
 
         Log::debug
@@ -187,6 +209,6 @@ class RegularPromoCodeTicketTypesStrategy implements IPromoCodeAllowedTicketType
             $without_invitation_tickets_types[] = $this->applyPromo2TicketType($ticket_type);
         }
         // we do not have invitation
-        return array_merge($all_ticket_types, $without_invitation_tickets_types);
+        return array_merge($all_ticket_types, $without_invitation_tickets_types, $promo_code_ticket_types);
     }
 }

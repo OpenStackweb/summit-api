@@ -24,6 +24,7 @@ class SpeakerSummitRegistrationDiscountCodeSerializer
     protected static $array_mappings = [
         'Type'      => 'type:json_string',
         'SpeakerId' => 'speaker_id:json_int',
+        'AutoApply' => 'auto_apply:json_boolean',
     ];
 
     /**

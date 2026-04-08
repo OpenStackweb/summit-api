@@ -28,6 +28,7 @@ class MemberSummitRegistrationDiscountCodeSerializer
         'Email'       => 'email:json_string',
         'Type'        => 'type:json_string',
         'OwnerId'     => 'owner_id:json_int',
+        'AutoApply'   => 'auto_apply:json_boolean',
     ];
 
     /**

@@ -1950,6 +1950,9 @@ Route::group(array('prefix' => 'summits'), function () {
 
         // promo codes
         Route::group(['prefix' => 'promo-codes'], function () {
+            Route::group(['prefix' => 'all'], function () {
+                Route::get('discover', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@discover']);
+            });
             Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getAllBySummit']);
             Route::group(['prefix' => 'csv'], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@getAllBySummitCSV']);

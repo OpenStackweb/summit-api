@@ -49,6 +49,18 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->sponsor_group->setCode(IGroup::Sponsors);
         $this->sponsor_group->setTitle(IGroup::Sponsors);
         self::$em->persist($this->sponsor_group);
+
+        // Pre-wire self::$member as a permissioned sponsor user for sponsors[0] so that
+        // tests which exercise the happy path do not need per-test boilerplate.
+        self::$member->add2Group($this->sponsor_group);
+        $sponsor0 = self::$sponsors[0];
+        $sponsor0->addUser(self::$member);
+        self::$em->persist(self::$member);
+        self::$em->persist($sponsor0);
+        self::$em->flush();
+
+        // Write IGroup::Sponsors into Sponsor_Users.Permissions so hasSponsorMembershipsFor passes.
+        self::$member->addSponsorPermission($sponsor0->getId(), IGroup::Sponsors);
     }
 
     protected function tearDown():void
@@ -60,6 +72,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     public function testAddEncryptedBadgeScan(){
         // set test data
         self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
         self::$member->add2Group($this->external_sponsor_group);
         self::$em->persist(self::$member);
         self::$em->flush();
@@ -68,6 +81,8 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $sponsor->addUser(self::$member);
         self::$em->persist($sponsor);
         self::$em->flush();
+
+        self::$member->addSponsorPermission($sponsor->getId(), IGroup::SponsorExternalUsers);
 
         $attendee =  self::$summit->getAttendees()[0];
 
@@ -242,6 +257,52 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         ];
 
         $data = [
+            'scan_date' => 1572019200,
+        ];
+
+        $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testAddBadgeScanFailsWhenSponsorHasNoPermissionSlug()
+    {
+        // member2 is in the global sponsors group so hasSponsorMembershipsFor doesn't
+        // short-circuit, but the Sponsor_Users row has no permission slug
+        // (simulates the MQ group event never arriving).
+        self::$member2->add2Group($this->sponsor_group);
+        $sponsor = self::$sponsors[0];
+        $sponsor->addUser(self::$member2);
+        self::$em->persist(self::$member2);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+        // Sponsor_Users row was created with Permissions = NULL — deliberately no addSponsorPermission call.
+
+        // Impersonate member2 for this request.
+        self::$service->setUserId(self::$member2->getUserExternalId());
+        self::$service->setUserExternalId(self::$member2->getUserExternalId());
+        self::$service->setUserEmail(self::$member2->getEmail());
+        self::$service->setUserFirstName(self::$member2->getFirstName());
+        self::$service->setUserLastName(self::$member2->getLastName());
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+
+        $data = [
+            'qr_code'   => $badge->generateQRCode(),
             'scan_date' => 1572019200,
         ];
 

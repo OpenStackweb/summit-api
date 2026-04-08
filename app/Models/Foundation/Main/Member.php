@@ -19,6 +19,7 @@ use App\Models\Foundation\Elections\Nomination;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Main\Strategies\MemberSummitStrategyFactory;
 use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Config;
 use Doctrine\DBAL\ParameterType;
@@ -1860,21 +1861,20 @@ SQL;
             return [];
         }
 
-        // Step 2 — load each Sponsor by PK. find() uses a different code path that avoids
-        // the ORM 3 assertion failure triggered by the OneToOne inverse associations on Sponsor
-        // (lead_report_setting, sponsorservices_statistics) when using DQL/native query hydration.
-        $sponsors = [];
-        foreach ($ids as $id) {
-            $sponsor = $this->getEM()->find(\models\summit\Sponsor::class, $id);
-            if ($sponsor !== null) {
-                $sponsors[] = $sponsor;
-            }
-        }
+        // Step 2 — load all sponsors in a single IN query. findBy() uses PK-based hydration
+        // which avoids the ORM 3 assertion failure triggered by the OneToOne inverse associations
+        // on Sponsor (lead_report_setting, sponsorservices_statistics) that DQL/native-query
+        // hydration hits. The result set is then re-sorted to match the SQL ORDER BY.
+        $position = array_flip($ids);
+        $sponsors = EntityManager::getRepository(Sponsor::class)->findBy(['id' => $ids]);
+        usort($sponsors, fn($a, $b) => $position[$a->getId()] <=> $position[$b->getId()]);
         return $sponsors;
     }
 
     /**
+     * @param Summit $summit
      * @return array
+     * @throws Exception
      */
     public function getSponsorMembershipIds(Summit $summit): array
     {
@@ -1902,8 +1902,9 @@ SQL;
     public function hasSponsorMembershipsFor(Summit $summit, Sponsor $sponsor = null): bool
     {
         try {
-           $canHaveSponsorMemberships = $this->isSponsorUser() || $this->isExternalSponsorUser();
-           if(!$canHaveSponsorMemberships) return false;
+            $canHaveSponsorMemberships = $this->isSponsorUser() || $this->isExternalSponsorUser();
+            if(!$canHaveSponsorMemberships) return false;
+
         $sql = <<<SQL
 SELECT COUNT(Sponsor_Users.SponsorID)
 FROM Sponsor_Users
@@ -3466,9 +3467,23 @@ SQL;
      * Appends $group_slug to the Permissions JSON array on the Sponsor_Users row
      * for this member and the given sponsor. Idempotent: the slug is only added
      * when it is not already present.
+     *
+     * An exclusive row lock (SELECT … FOR UPDATE) is acquired first so that
+     * concurrent jobs for the same (member, sponsor, slug) serialize here and
+     * the second job always reads the post-first-job value, preventing duplicates.
+     *
+     * Returns the number of rows matched by the WHERE clause (0 when the
+     * Sponsor_Users row does not yet exist, 1 when it does).
      */
-    public function addSponsorPermission(int $sponsor_id, string $group_slug): void
+    public function addSponsorPermission(int $sponsor_id, string $group_slug): int
     {
+        // Lock the row before the read-modify-write so concurrent transactions
+        // serialize and the IF(JSON_CONTAINS) in the UPDATE sees the committed state.
+        $this->prepareRawSQL(
+            'SELECT Permissions FROM Sponsor_Users WHERE SponsorID = :sponsor_id AND MemberID = :member_id FOR UPDATE',
+            ['sponsor_id' => $sponsor_id, 'member_id' => $this->getId()]
+        )->executeQuery();
+
         $sql = <<<SQL
 UPDATE Sponsor_Users
 SET Permissions = IF(
@@ -3478,12 +3493,11 @@ SET Permissions = IF(
 )
 WHERE SponsorID = :sponsor_id AND MemberID = :member_id
 SQL;
-        $stmt = $this->prepareRawSQL($sql, [
+        return $this->prepareRawSQL($sql, [
             'group_slug' => $group_slug,
             'sponsor_id' => $sponsor_id,
             'member_id'  => $this->getId(),
-        ]);
-        $stmt->executeStatement();
+        ])->executeStatement();
     }
 
     /**
@@ -3491,32 +3505,53 @@ SQL;
      * for this member and the given sponsor, then returns how many other Sponsor_Users
      * rows for this member still carry that slug. The caller uses the count to decide
      * whether to also revoke the global group membership.
+     *
+     * An exclusive row lock is acquired first so the remove UPDATE and the
+     * remaining-count SELECT are not interleaved with concurrent operations.
+     * All occurrences of the slug are removed (via JSON_ARRAYAGG filter) to
+     * prevent stale entries if a prior race introduced duplicates.
      */
     public function removeSponsorPermission(int $sponsor_id, string $group_slug): int
     {
+        // Serialize concurrent removals for the same row.
+        $this->prepareRawSQL(
+            'SELECT Permissions FROM Sponsor_Users WHERE SponsorID = :sponsor_id AND MemberID = :member_id FOR UPDATE',
+            ['sponsor_id' => $sponsor_id, 'member_id' => $this->getId()]
+        )->executeQuery();
+
+        // Remove ALL occurrences (not just the first) so duplicate slugs
+        // introduced by any prior race cannot leave stale entries behind.
         $removeSQL = <<<SQL
 UPDATE Sponsor_Users
-SET Permissions = JSON_REMOVE(Permissions, JSON_UNQUOTE(JSON_SEARCH(Permissions, 'one', :group_slug)))
+SET Permissions = COALESCE(
+    (
+        SELECT JSON_ARRAYAGG(element)
+        FROM JSON_TABLE(
+            COALESCE(Permissions, '[]'), '$[*]'
+            COLUMNS(element VARCHAR(255) PATH '$')
+        ) AS jt
+        WHERE element != :group_slug
+    ),
+    '[]'
+)
 WHERE SponsorID = :sponsor_id AND MemberID = :member_id
 AND JSON_CONTAINS(COALESCE(Permissions, '[]'), JSON_QUOTE(:group_slug))
 SQL;
-        $stmt = $this->prepareRawSQL($removeSQL, [
+        $this->prepareRawSQL($removeSQL, [
             'group_slug' => $group_slug,
             'sponsor_id' => $sponsor_id,
             'member_id'  => $this->getId(),
-        ]);
-        $stmt->executeStatement();
+        ])->executeStatement();
 
         $countSQL = <<<SQL
 SELECT COUNT(*) FROM Sponsor_Users
 WHERE MemberID = :member_id
 AND JSON_CONTAINS(COALESCE(Permissions, '[]'), JSON_QUOTE(:group_slug))
 SQL;
-        $stmt = $this->prepareRawSQL($countSQL, [
+        return intval($this->prepareRawSQL($countSQL, [
             'member_id'  => $this->getId(),
             'group_slug' => $group_slug,
-        ]);
-        return intval($stmt->executeQuery()->fetchOne());
+        ])->executeQuery()->fetchOne());
     }
 
     public function addSponsorMembership(Sponsor $sponsor):void

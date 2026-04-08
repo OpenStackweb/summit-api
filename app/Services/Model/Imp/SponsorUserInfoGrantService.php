@@ -193,6 +193,9 @@ final class SponsorUserInfoGrantService
                     throw new ValidationException("Current member does not belong to the selected summit sponsor.");
             }
 
+            if(!$current_member->hasSponsorMembershipsFor($summit, $sponsor))
+                throw new ValidationException("Current member does not have badge scan permissions for the selected sponsor.");
+
             $scan = new SponsorBadgeScan();
             $scan->setScanDate($scan_date);
             $scan->setQRCode($qr_code);

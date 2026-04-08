@@ -154,7 +154,23 @@ final class SponsorUserSyncService
             }
 
             // Add permission entry to the Sponsor_Users JSON column for this sponsor-member pair.
-            $member->addSponsorPermission($sponsor_id, $group_slug);
+            // If the row does not exist yet (MQ ordering race: group event arrived before membership
+            // event), create it eagerly so the permission is never silently dropped.
+            if ($member->addSponsorPermission($sponsor_id, $group_slug) === 0) {
+                Log::warning(
+                    "SponsorUserSyncService::addSponsorUserToGroup no Sponsor_Users row found for " .
+                    "member {$member->getId()} / sponsor {$sponsor_id} — creating it eagerly");
+
+                $summit = $this->summit_repository->getById($summit_id);
+                if (!$summit instanceof Summit) {
+                    throw new EntityNotFoundException("Summit {$summit_id} not found");
+                }
+
+                $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
+
+                // Retry now that the row exists.
+                $member->addSponsorPermission($sponsor_id, $group_slug);
+            }
 
             // Add to global group only if not already a member.
             if (!$member->belongsToGroup($group_slug)) {

@@ -77,6 +77,19 @@ class SpeakerSummitRegistrationDiscountCodeSerializer
             }
         }
 
+        // Re-add allowed_ticket_types (parent discount serializer unsets it).
+        $needs_allowed_ticket_types = in_array('allowed_ticket_types', $relations)
+            || (!empty($expand) && str_contains($expand, 'allowed_ticket_types'));
+        if ($needs_allowed_ticket_types && !isset($values['allowed_ticket_types'])) {
+            $ticket_types = [];
+            foreach ($code->getAllowedTicketTypes() as $ticket_type) {
+                $ticket_types[] = $ticket_type->getId();
+            }
+            $values['allowed_ticket_types'] = $ticket_types;
+        }
+
+        $values['remaining_quantity_per_account'] = null;
+
         return $values;
     }
 }

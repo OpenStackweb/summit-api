@@ -36,4 +36,15 @@ interface IDomainAuthorizedPromoCode
      * @return bool
      */
     public function matchesEmailDomain(string $email): bool;
+
+    /**
+     * @param int|null $remaining
+     * @return void
+     */
+    public function setRemainingQuantityPerAccount(?int $remaining): void;
+
+    /**
+     * @return int|null
+     */
+    public function getRemainingQuantityPerAccount(): ?int;
 }

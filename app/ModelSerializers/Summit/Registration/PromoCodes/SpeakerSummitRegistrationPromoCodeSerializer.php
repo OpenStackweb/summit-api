@@ -78,6 +78,8 @@ class SpeakerSummitRegistrationPromoCodeSerializer
             }
         }
 
+        $values['remaining_quantity_per_account'] = null;
+
         return $values;
     }
 }

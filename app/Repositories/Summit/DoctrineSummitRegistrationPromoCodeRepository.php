@@ -684,7 +684,7 @@ SQL;
             ->from($this->getBaseEntity(), 'e')
             ->leftJoin('e.summit', 's')
             ->where('s.id = :summit_id')
-            ->andWhere("e INSTANCE OF {$daDiscountClass} OR e INSTANCE OF {$daPromoClass} OR e INSTANCE OF {$memberPromoClass} OR e INSTANCE OF {$memberDiscountClass} OR e INSTANCE OF {$speakerPromoClass} OR e INSTANCE OF {$speakerDiscountClass}")
+            ->andWhere("(e INSTANCE OF {$daDiscountClass} OR e INSTANCE OF {$daPromoClass} OR e INSTANCE OF {$memberPromoClass} OR e INSTANCE OF {$memberDiscountClass} OR e INSTANCE OF {$speakerPromoClass} OR e INSTANCE OF {$speakerDiscountClass})")
             ->setParameter('summit_id', $summit->getId());
 
         $candidates = $qb->getQuery()->getResult();
@@ -709,12 +709,9 @@ SQL;
             }
 
             if ($code instanceof SpeakerSummitRegistrationPromoCode || $code instanceof SpeakerSummitRegistrationDiscountCode) {
-                $speaker = $code->getSpeaker();
-                if (!is_null($speaker) && $speaker->hasMember()) {
-                    $member = $speaker->getMember();
-                    if (!is_null($member) && strtolower($member->getEmail()) === $email && $code->isLive()) {
-                        $results[] = $code;
-                    }
+                $ownerEmail = $code->getOwnerEmail();
+                if (!empty($ownerEmail) && strtolower($ownerEmail) === $email && $code->isLive()) {
+                    $results[] = $code;
                 }
                 continue;
             }
@@ -739,6 +736,7 @@ INNER JOIN SummitOrder o ON t.OrderID = o.ID
 WHERE t.PromoCodeID = :promo_code_id
 AND o.OwnerID = :member_id
 AND o.Status IN ('Paid', 'Confirmed')
+AND t.Status != 'Cancelled'
 SQL;
         $stm = $this->getEntityManager()->getConnection()->executeQuery($sql, [
             'promo_code_id' => $code->getId(),

@@ -95,4 +95,82 @@ class PreProcessReservationTaskTest extends TestCase
         $this->assertEquals([], $state['promo_codes_usage']);
         $this->assertEquals([7], $state['ticket_types_ids']);
     }
+
+    /**
+     * Mixed payload: a promo-only ticket (no promo_code) alongside an Audience_All
+     * ticket. The per-ticket guard must fire on the promo-only entry even when
+     * it is the first item in the payload (no prior aggregation).
+     */
+    public function testRejectsMixedPayloadWithPromoCodeOnlyFirst(): void
+    {
+        $promo_only = Mockery::mock(SummitTicketType::class);
+        $promo_only->shouldReceive('getId')->andReturn(42);
+        $promo_only->shouldReceive('getName')->andReturn('VIP_PROMO_ONLY');
+        $promo_only->shouldReceive('isLive')->andReturn(true);
+        $promo_only->shouldReceive('isPromoCodeOnly')->andReturn(true);
+
+        $general = Mockery::mock(SummitTicketType::class);
+        $general->shouldReceive('getId')->andReturn(7);
+        $general->shouldReceive('getName')->andReturn('GENERAL_ADMISSION');
+        $general->shouldReceive('isLive')->andReturn(true);
+        $general->shouldReceive('isPromoCodeOnly')->andReturn(false);
+
+        $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getTicketTypeById')->with(42)->andReturn($promo_only);
+        $summit->shouldReceive('getTicketTypeById')->with(7)->andReturn($general);
+
+        $payload = [
+            'tickets' => [
+                ['type_id' => 42], // promo-only, no promo_code → must throw
+                ['type_id' => 7],  // general admission (would be allowed on its own)
+            ],
+        ];
+
+        $task = new PreProcessReservationTask($summit, $payload);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Ticket type VIP_PROMO_ONLY requires a promo code.');
+
+        $task->run([]);
+    }
+
+    /**
+     * Mixed payload, reverse order: general-admission ticket aggregated first,
+     * then a promo-only ticket without a promo_code. The guard must still fire
+     * even though prior iterations have already populated `reservations` and
+     * `ticket_types_ids` — the exception short-circuits without partial state
+     * being returned.
+     */
+    public function testRejectsMixedPayloadWithPromoCodeOnlySecond(): void
+    {
+        $general = Mockery::mock(SummitTicketType::class);
+        $general->shouldReceive('getId')->andReturn(7);
+        $general->shouldReceive('getName')->andReturn('GENERAL_ADMISSION');
+        $general->shouldReceive('isLive')->andReturn(true);
+        $general->shouldReceive('isPromoCodeOnly')->andReturn(false);
+
+        $promo_only = Mockery::mock(SummitTicketType::class);
+        $promo_only->shouldReceive('getId')->andReturn(42);
+        $promo_only->shouldReceive('getName')->andReturn('VIP_PROMO_ONLY');
+        $promo_only->shouldReceive('isLive')->andReturn(true);
+        $promo_only->shouldReceive('isPromoCodeOnly')->andReturn(true);
+
+        $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getTicketTypeById')->with(7)->andReturn($general);
+        $summit->shouldReceive('getTicketTypeById')->with(42)->andReturn($promo_only);
+
+        $payload = [
+            'tickets' => [
+                ['type_id' => 7],  // aggregated successfully
+                ['type_id' => 42], // promo-only, no promo_code → must throw
+            ],
+        ];
+
+        $task = new PreProcessReservationTask($summit, $payload);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Ticket type VIP_PROMO_ONLY requires a promo code.');
+
+        $task->run([]);
+    }
 }

@@ -128,6 +128,37 @@ class SummitPromoCodeServiceDiscoveryTest extends TestCase
     }
 
     /**
+     * Infinite code (quantity_available == 0) must always pass through the
+     * global-exhaustion guard. Pins the `hasQuantityAvailable()` semantics
+     * that infinite codes short-circuit to true regardless of quantity_used.
+     */
+    public function testDiscoverReturnsInfiniteDomainAuthorizedCode(): void
+    {
+        $infinite = Mockery::mock(DomainAuthorizedSummitRegistrationPromoCode::class);
+        $infinite->shouldReceive('getCode')->andReturn('INFINITE');
+        // quantity_available == 0 means "unlimited"; hasQuantityAvailable() must return true.
+        $infinite->shouldReceive('hasQuantityAvailable')->andReturn(true);
+        $infinite->shouldReceive('getQuantityPerAccount')->andReturn(0);
+        $infinite->shouldReceive('setRemainingQuantityPerAccount')->with(null)->once();
+
+        $summit = Mockery::mock(Summit::class);
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getEmail')->andReturn('buyer@acme.com');
+        $member->shouldReceive('getId')->andReturn(11);
+
+        $repository = Mockery::mock(ISummitRegistrationPromoCodeRepository::class);
+        $repository->shouldReceive('getDiscoverableByEmailForSummit')
+            ->with($summit, 'buyer@acme.com')
+            ->andReturn([$infinite]);
+
+        $service = $this->buildService($repository);
+        $result = $service->discoverPromoCodes($summit, $member);
+
+        $this->assertCount(1, $result);
+        $this->assertSame('INFINITE', $result[0]->getCode());
+    }
+
+    /**
      * Mixed case: exhausted code is dropped while a healthy sibling survives.
      * This proves the guard uses per-code `continue`, not a scalar short-circuit.
      */

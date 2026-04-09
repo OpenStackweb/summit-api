@@ -7591,6 +7591,15 @@ class ApiEndpointsSeeder extends Seeder
                     SummitScopes::ReadAllSummitData
                 ]
             ],
+            [
+                'name' => 'discover-promo-codes',
+                'route' => '/api/v1/summits/{id}/promo-codes/all/discover',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
             // speakers promo codes
             [
                 'name' => 'get-promo-code-speakers',

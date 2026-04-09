@@ -22,7 +22,7 @@ class DomainAuthorizedSummitRegistrationPromoCodeSerializer
     extends SummitRegistrationPromoCodeSerializer
 {
     protected static $array_mappings = [
-        'AllowedEmailDomains'  => 'allowed_email_domains:json_array',
+        'AllowedEmailDomains'  => 'allowed_email_domains:json_string_array',
         'QuantityPerAccount'   => 'quantity_per_account:json_int',
         'AutoApply'            => 'auto_apply:json_boolean',
     ];

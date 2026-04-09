@@ -22,6 +22,7 @@ use models\summit\SpeakerSummitRegistrationDiscountCode;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\DomainAuthorizedSummitRegistrationDiscountCode;
 use models\summit\DomainAuthorizedSummitRegistrationPromoCode;
+use App\Rules\AllowedEmailDomainsArray;
 use models\summit\SponsorSummitRegistrationDiscountCode;
 use models\summit\SponsorSummitRegistrationPromoCode;
 /**
@@ -147,7 +148,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             case DomainAuthorizedSummitRegistrationDiscountCode::ClassName:
                 {
                     $specific_rules = array_merge([
-                        'allowed_email_domains' => 'sometimes|json',
+                        'allowed_email_domains' => ['sometimes', new AllowedEmailDomainsArray()],
                         'quantity_per_account'  => 'sometimes|integer|min:0',
                         'auto_apply'            => 'sometimes|boolean',
                     ], $discount_code_rules);
@@ -156,7 +157,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             case DomainAuthorizedSummitRegistrationPromoCode::ClassName:
                 {
                     $specific_rules = [
-                        'allowed_email_domains' => 'sometimes|json',
+                        'allowed_email_domains' => ['sometimes', new AllowedEmailDomainsArray()],
                         'quantity_per_account'  => 'sometimes|integer|min:0',
                         'auto_apply'            => 'sometimes|boolean',
                     ];
@@ -285,7 +286,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             case DomainAuthorizedSummitRegistrationDiscountCode::ClassName:
                 {
                     $specific_rules = array_merge([
-                        'allowed_email_domains' => 'sometimes|json',
+                        'allowed_email_domains' => ['sometimes', new AllowedEmailDomainsArray()],
                         'quantity_per_account'  => 'sometimes|integer|min:0',
                         'auto_apply'            => 'sometimes|boolean',
                     ], $discount_code_rules);
@@ -294,7 +295,7 @@ final class PromoCodesValidationRulesFactory extends AbstractValidationRulesFact
             case DomainAuthorizedSummitRegistrationPromoCode::ClassName:
                 {
                     $specific_rules = [
-                        'allowed_email_domains' => 'sometimes|json',
+                        'allowed_email_domains' => ['sometimes', new AllowedEmailDomainsArray()],
                         'quantity_per_account'  => 'sometimes|integer|min:0',
                         'auto_apply'            => 'sometimes|boolean',
                     ];

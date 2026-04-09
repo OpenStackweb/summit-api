@@ -293,7 +293,7 @@ final class SummitPromoCodeFactory
             break;
             case DomainAuthorizedSummitRegistrationDiscountCode::ClassName:{
                 if(isset($data['allowed_email_domains']))
-                    $promo_code->setAllowedEmailDomains(json_decode($data['allowed_email_domains'], true));
+                    $promo_code->setAllowedEmailDomains($data['allowed_email_domains']);
                 if(isset($data['quantity_per_account']))
                     $promo_code->setQuantityPerAccount(intval($data['quantity_per_account']));
                 if(isset($data['auto_apply']))
@@ -308,7 +308,7 @@ final class SummitPromoCodeFactory
             break;
             case DomainAuthorizedSummitRegistrationPromoCode::ClassName:{
                 if(isset($data['allowed_email_domains']))
-                    $promo_code->setAllowedEmailDomains(json_decode($data['allowed_email_domains'], true));
+                    $promo_code->setAllowedEmailDomains($data['allowed_email_domains']);
                 if(isset($data['quantity_per_account']))
                     $promo_code->setQuantityPerAccount(intval($data['quantity_per_account']));
                 if(isset($data['auto_apply']))

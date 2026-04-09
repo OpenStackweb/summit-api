@@ -22,7 +22,7 @@ class DomainAuthorizedSummitRegistrationDiscountCodeSerializer
     extends SummitRegistrationDiscountCodeSerializer
 {
     protected static $array_mappings = [
-        'AllowedEmailDomains'  => 'allowed_email_domains:json_array',
+        'AllowedEmailDomains'  => 'allowed_email_domains:json_string_array',
         'QuantityPerAccount'   => 'quantity_per_account:json_int',
         'AutoApply'            => 'auto_apply:json_boolean',
     ];
@@ -44,8 +44,11 @@ class DomainAuthorizedSummitRegistrationDiscountCodeSerializer
         if (!$code instanceof DomainAuthorizedSummitRegistrationDiscountCode) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        // RE-ADD allowed_ticket_types (parent discount serializer unsets it)
-        if (in_array('allowed_ticket_types', $relations) && !isset($values['allowed_ticket_types'])) {
+        // RE-ADD allowed_ticket_types (parent discount serializer unsets it).
+        // Check both relations (default serialization) and expand (explicit ?expand= request).
+        $needs_allowed_ticket_types = in_array('allowed_ticket_types', $relations)
+            || (!empty($expand) && str_contains($expand, 'allowed_ticket_types'));
+        if ($needs_allowed_ticket_types && !isset($values['allowed_ticket_types'])) {
             $ticket_types = [];
             foreach ($code->getAllowedTicketTypes() as $ticket_type) {
                 $ticket_types[] = $ticket_type->getId();

@@ -18,6 +18,8 @@ use App\Audit\ConcreteFormatters\ChildEntityFormatters\ChildEntityFormatterFacto
 use App\Audit\ConcreteFormatters\EntityCollectionUpdateAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityCreationAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityDeletionAuditLogFormatter;
+use App\Audit\ConcreteFormatters\DefaultEntityManyToManyCollectionUpdateAuditLogFormatter;
+use App\Audit\ConcreteFormatters\DefaultEntityManyToManyCollectionDeleteAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\ORM\PersistentCollection;
@@ -57,9 +59,7 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
                     );
                     if (method_exists($subject, 'getTypeClass')) {
                         $type = $subject->getTypeClass();
-                        // Your log shows this is ClassMetadata
                         if ($type instanceof ClassMetadata) {
-                            // Doctrine supports either getName() or public $name
                             $targetEntity = method_exists($type, 'getName') ? $type->getName() : ($type->name ?? null);
                         } elseif (is_string($type)) {
                             $targetEntity = $type;
@@ -71,7 +71,6 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
                         $targetEntity = $mapping['targetEntity'] ?? null;
                         Log::debug("AuditLogFormatterFactory::make getMapping targetEntity {$targetEntity}");
                     } else {
-                        // last-resort: read private association metadata (still no hydration)
                         $ref = new \ReflectionObject($subject);
                         foreach (['association', 'mapping', 'associationMapping'] as $propName) {
                             if ($ref->hasProperty($propName)) {
@@ -106,6 +105,18 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
                 }
 
                 $formatter = new EntityCollectionUpdateAuditLogFormatter($child_entity_formatter);
+                break;
+            case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
+                if (is_null($formatter)) {
+                    $formatter = new DefaultEntityManyToManyCollectionUpdateAuditLogFormatter();
+                }
+                break;
+            case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);
+                if (is_null($formatter)) {
+                    $formatter = new DefaultEntityManyToManyCollectionDeleteAuditLogFormatter();
+                }
                 break;
             case IAuditStrategy::EVENT_ENTITY_CREATION:
                 $formatter = $this->getFormatterByContext($subject, $event_type, $ctx);

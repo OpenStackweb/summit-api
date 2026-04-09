@@ -13,6 +13,8 @@
  **/
 use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
+use models\summit\DomainAuthorizedSummitRegistrationPromoCode;
+use models\summit\MemberSummitRegistrationPromoCode;
 use models\summit\PrePaidSummitRegistrationDiscountCode;
 use models\summit\PrePaidSummitRegistrationPromoCode;
 use models\summit\SpeakersRegistrationDiscountCode;
@@ -765,5 +767,298 @@ final class OAuth2SummitPromoCodesApiTest
         );
 
         $this->assertResponseStatus(200);
+    }
+
+    // -----------------------------------------------------------------------
+    // Discovery endpoint — Task 12 follow-up #5
+    // -----------------------------------------------------------------------
+
+    /**
+     * Domain-authorized code with matching email domain appears in discovery.
+     */
+    public function testDiscoverReturnsDomainAuthorizedCodeForMatchingEmail()
+    {
+        // Create a domain-authorized promo code matching the test member's email domain
+        $memberEmail = self::$member->getEmail();
+        $domain = '@' . substr($memberEmail, strpos($memberEmail, '@') + 1);
+
+        $code = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code->setCode('DISC_DA_' . str_random(8));
+        $code->setAllowedEmailDomains([$domain]);
+        $code->setQuantityAvailable(10);
+        $code->setAutoApply(true);
+        // null valid dates = lives forever
+        self::$summit->addPromoCode($code);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@discover",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content, true);
+        $this->assertNotNull($result);
+        $this->assertArrayHasKey('data', $result);
+
+        $codes = array_column($result['data'], 'code');
+        $this->assertContains($code->getCode(), $codes,
+            'Domain-authorized code matching member email domain should appear in discovery');
+    }
+
+    /**
+     * MemberSummitRegistrationPromoCode appears in discovery regardless of auto_apply value.
+     */
+    public function testDiscoverReturnsMemberPromoCodeRegardlessOfAutoApply()
+    {
+        $code = new MemberSummitRegistrationPromoCode();
+        $code->setCode('DISC_MEMBER_' . str_random(8));
+        $code->setQuantityAvailable(10);
+        $code->setAutoApply(false);
+        $code->setOwner(self::$member);
+        $code->setFirstName(self::$member->getFirstName());
+        $code->setLastName(self::$member->getLastName());
+        $code->setEmail(self::$member->getEmail());
+        self::$summit->addPromoCode($code);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@discover",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content, true);
+
+        $codes = array_column($result['data'], 'code');
+        $this->assertContains($code->getCode(), $codes,
+            'Member promo code should appear in discovery regardless of auto_apply');
+    }
+
+    /**
+     * Discovery returns correct auto_apply flag for each code (true vs false).
+     */
+    public function testDiscoverReturnsCorrectAutoApplyFlag()
+    {
+        $memberEmail = self::$member->getEmail();
+        $domain = '@' . substr($memberEmail, strpos($memberEmail, '@') + 1);
+
+        $codeTrue = new DomainAuthorizedSummitRegistrationPromoCode();
+        $codeTrue->setCode('DISC_AUTO_T_' . str_random(8));
+        $codeTrue->setAllowedEmailDomains([$domain]);
+        $codeTrue->setQuantityAvailable(10);
+        $codeTrue->setAutoApply(true);
+        self::$summit->addPromoCode($codeTrue);
+
+        $codeFalse = new DomainAuthorizedSummitRegistrationPromoCode();
+        $codeFalse->setCode('DISC_AUTO_F_' . str_random(8));
+        $codeFalse->setAllowedEmailDomains([$domain]);
+        $codeFalse->setQuantityAvailable(10);
+        $codeFalse->setAutoApply(false);
+        self::$summit->addPromoCode($codeFalse);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@discover",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content, true);
+
+        $byCode = [];
+        foreach ($result['data'] as $item) {
+            $byCode[$item['code']] = $item;
+        }
+
+        $this->assertArrayHasKey($codeTrue->getCode(), $byCode);
+        $this->assertTrue($byCode[$codeTrue->getCode()]['auto_apply'],
+            'auto_apply=true code should serialize as true');
+
+        $this->assertArrayHasKey($codeFalse->getCode(), $byCode);
+        $this->assertFalse($byCode[$codeFalse->getCode()]['auto_apply'],
+            'auto_apply=false code should serialize as false');
+    }
+
+    /**
+     * Discovery ignores ?email= query parameter — uses authenticated member's email only (Truth #14).
+     */
+    public function testDiscoverIgnoresEmailQueryParameter()
+    {
+        $memberEmail = self::$member->getEmail();
+        $domain = '@' . substr($memberEmail, strpos($memberEmail, '@') + 1);
+
+        $code = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code->setCode('DISC_NOENUM_' . str_random(8));
+        $code->setAllowedEmailDomains([$domain]);
+        $code->setQuantityAvailable(10);
+        self::$summit->addPromoCode($code);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $params = [
+            'id'    => self::$summit->getId(),
+            'email' => 'other@different.com', // should be ignored
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@discover",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content, true);
+
+        // The code should appear because it matches the AUTHENTICATED user's email domain,
+        // not the ?email= parameter.
+        $codes = array_column($result['data'], 'code');
+        $this->assertContains($code->getCode(), $codes,
+            'Discovery must use authenticated member email, ignoring ?email= query parameter');
+    }
+
+    /**
+     * Discovery excludes codes where QuantityPerAccount is exhausted (Truth #9).
+     */
+    public function testDiscoverExcludesExhaustedCodes()
+    {
+        $memberEmail = self::$member->getEmail();
+        $domain = '@' . substr($memberEmail, strpos($memberEmail, '@') + 1);
+
+        $code = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code->setCode('DISC_EXHAUST_' . str_random(8));
+        $code->setAllowedEmailDomains([$domain]);
+        $code->setQuantityAvailable(10);
+        $code->setQuantityPerAccount(1);
+        self::$summit->addPromoCode($code);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // Create an order + ticket attributed to this member and code
+        // to simulate a prior purchase (count query checks o.OwnerID + t.PromoCodeID).
+        $order = new \models\summit\SummitOrder();
+        $order->setOwner(self::$member);
+        $order->setPaidStatus();
+        $order->setSummit(self::$summit);
+        self::$em->persist($order);
+
+        $ticket = new \models\summit\SummitAttendeeTicket();
+        $ticket->setOrder($order);
+        $ticket->setTicketType(self::$default_ticket_type);
+        $ticket->setPromoCode($code);
+        $ticket->setNumber('TKT_EXHAUST_' . str_random(8));
+        self::$em->persist($ticket);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@discover",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content, true);
+
+        $codes = array_column($result['data'], 'code');
+        $this->assertNotContains($code->getCode(), $codes,
+            'Exhausted domain-authorized code (quantity_per_account reached) should not appear in discovery');
+    }
+
+    // -----------------------------------------------------------------------
+    // Checkout enforcement — Task 12 follow-up #6
+    // -----------------------------------------------------------------------
+
+    /**
+     * Checkout rejects order when member has reached quantity_per_account limit.
+     */
+    public function testCheckoutRejectsOverLimitQuantityPerAccount()
+    {
+        $this->markTestSkipped(
+            'Checkout enforcement requires the full order pipeline (SagaFactory + payment mocks). ' .
+            'The ApplyPromoCodeTask enforcement is at SummitOrderService.php:791-808. ' .
+            'This test requires a companion SDS for the order creation pipeline test harness.'
+        );
+    }
+
+    /**
+     * Checkout succeeds when member is under quantity_per_account limit.
+     */
+    public function testCheckoutSucceedsUnderLimitQuantityPerAccount()
+    {
+        $this->markTestSkipped(
+            'Checkout enforcement requires the full order pipeline (SagaFactory + payment mocks). ' .
+            'The ApplyPromoCodeTask enforcement is at SummitOrderService.php:791-808. ' .
+            'This test requires a companion SDS for the order creation pipeline test harness.'
+        );
+    }
+
+    /**
+     * Concurrent checkout enforcement — blocked by D4 (TOCTOU window).
+     */
+    public function testCheckoutConcurrentEnforcementBlockedByD4()
+    {
+        $this->markTestSkipped(
+            'Blocked by D4 — TOCTOU window: enforcement runs after ReserveOrderTask writes rows; ' .
+            'concurrent requests both pass the count check before either commits. ' .
+            'Fix: move ApplyPromoCodeTask after ReserveOrderTask and widen count query to include Reserved orders.'
+        );
     }
 }

@@ -17,11 +17,17 @@ use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
 use models\summit\DomainAuthorizedSummitRegistrationDiscountCode;
 use models\summit\DomainAuthorizedSummitRegistrationPromoCode;
+use models\summit\MemberSummitRegistrationDiscountCode;
+use models\summit\MemberSummitRegistrationPromoCode;
+use models\summit\SpeakerSummitRegistrationDiscountCode;
+use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Summit;
+use models\summit\SummitRegistrationDiscountCodeTicketTypeRule;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
 use models\main\Member;
-use PHPUnit\Framework\TestCase;
+use ModelSerializers\SerializerRegistry;
+use Tests\TestCase;
 
 /**
  * Class DomainAuthorizedPromoCodeTest
@@ -279,30 +285,29 @@ class DomainAuthorizedPromoCodeTest extends TestCase
     }
 
     /**
-     * WithPromoCode ticket type + no promo code → NOT returned
+     * WithPromoCode ticket type + no promo code → NOT returned;
+     * Audience_All type IS returned (proves strategy returns results, but filters WithPromoCode).
      */
     public function testWithPromoCodeAudienceNoPromoCodeNotReturned(): void
     {
-        $summit = $this->buildMockSummit();
+        $allTT = $this->buildMockTicketType(30, SummitTicketType::Audience_All);
+        $summit = $this->buildMockSummit([$allTT]);
         $member = $this->buildMockMember();
 
         $strategy = new RegularPromoCodeTicketTypesStrategy($summit, $member, null);
         $result = $strategy->getTicketTypes();
 
-        // No WithPromoCode types should appear (none were in Audience_All or Audience_Without_Invitation)
-        foreach ($result as $tt) {
-            $this->assertNotEquals(
-                SummitTicketType::Audience_With_Promo_Code,
-                $tt->getAudience(),
-                'WithPromoCode ticket types should not be returned without a promo code'
-            );
-        }
+        $ids = array_map(fn($tt) => $tt->getId(), $result);
+        // Audience_All type IS returned (non-vacuous: proves the strategy produces results)
+        $this->assertContains(30, $ids, 'Audience_All ticket type should be returned without a promo code');
+        // WithPromoCode type (id 99) is NOT returned — it only lives in promo_code->getAllowedTicketTypes()
+        $this->assertNotContains(99, $ids, 'WithPromoCode ticket types should not be returned without a promo code');
     }
 
     /**
-     * WithPromoCode ticket type + live domain-authorized promo code → IS returned
+     * WithPromoCode ticket type + live promo code → IS returned
      */
-    public function testWithPromoCodeAudienceLiveDomainAuthorizedPromoCodeReturned(): void
+    public function testWithPromoCodeAudienceLivePromoCodeReturned(): void
     {
         $promoCodeTicket = $this->buildMockTicketType(10, SummitTicketType::Audience_With_Promo_Code);
 
@@ -385,5 +390,215 @@ class DomainAuthorizedPromoCodeTest extends TestCase
 
         $ids = array_map(fn($tt) => $tt->getId(), $result);
         $this->assertContains(40, $ids, 'Audience_All ticket type should be returned with a promo code');
+    }
+
+    // -----------------------------------------------------------------------
+    // Collision avoidance — DomainAuthorizedSummitRegistrationDiscountCode
+    // -----------------------------------------------------------------------
+
+    /**
+     * addTicketTypeRule rejects rules for types not in allowed_ticket_types (Truth #4).
+     */
+    public function testAddTicketTypeRuleRejectsWhenTypeNotInAllowedTicketTypes(): void
+    {
+        $code = new DomainAuthorizedSummitRegistrationDiscountCode();
+
+        $ticketType = $this->createMock(SummitTicketType::class);
+        $ticketType->method('getId')->willReturn(1);
+
+        $rule = new SummitRegistrationDiscountCodeTicketTypeRule();
+        $rule->setTicketType($ticketType);
+
+        $this->expectException(ValidationException::class);
+        $code->addTicketTypeRule($rule);
+    }
+
+    /**
+     * addTicketTypeRule does NOT mutate allowed_ticket_types — override skips parent's add().
+     */
+    public function testAddTicketTypeRuleDoesNotMutateAllowedTicketTypes(): void
+    {
+        $code = new DomainAuthorizedSummitRegistrationDiscountCode();
+
+        $ticketType = $this->createMock(SummitTicketType::class);
+        $ticketType->method('getId')->willReturn(1);
+
+        // First add to allowed_ticket_types
+        $code->addAllowedTicketType($ticketType);
+        $this->assertEquals(1, $code->getAllowedTicketTypes()->count());
+
+        // Now add a discount rule — should NOT add a second entry to allowed_ticket_types
+        $rule = new SummitRegistrationDiscountCodeTicketTypeRule();
+        $rule->setTicketType($ticketType);
+        $code->addTicketTypeRule($rule);
+
+        $this->assertEquals(1, $code->getAllowedTicketTypes()->count(),
+            'addTicketTypeRule must not mutate allowed_ticket_types');
+    }
+
+    /**
+     * removeTicketTypeRule does NOT mutate allowed_ticket_types.
+     */
+    public function testRemoveTicketTypeRuleDoesNotMutateAllowedTicketTypes(): void
+    {
+        $code = new DomainAuthorizedSummitRegistrationDiscountCode();
+
+        $ticketType = $this->createMock(SummitTicketType::class);
+        $ticketType->method('getId')->willReturn(1);
+
+        $code->addAllowedTicketType($ticketType);
+
+        $rule = new SummitRegistrationDiscountCodeTicketTypeRule();
+        $rule->setTicketType($ticketType);
+        $code->addTicketTypeRule($rule);
+
+        // Remove the rule — allowed_ticket_types must remain intact
+        $code->removeTicketTypeRule($rule);
+
+        $this->assertEquals(1, $code->getAllowedTicketTypes()->count(),
+            'removeTicketTypeRule must not mutate allowed_ticket_types');
+    }
+
+    // -----------------------------------------------------------------------
+    // canBeAppliedTo override — DomainAuthorizedSummitRegistrationDiscountCode
+    // -----------------------------------------------------------------------
+
+    /**
+     * Free WithPromoCode ticket type accepted — override skips free-ticket guard (Truth #15).
+     */
+    public function testCanBeAppliedToFreeWithPromoCodeTicketType(): void
+    {
+        $code = new DomainAuthorizedSummitRegistrationDiscountCode();
+
+        $ticketType = $this->createMock(SummitTicketType::class);
+        $ticketType->method('getId')->willReturn(100);
+        $ticketType->method('isFree')->willReturn(true);
+
+        $code->addAllowedTicketType($ticketType);
+
+        // Parent SummitRegistrationDiscountCode::canBeAppliedTo would return false
+        // because of the free-ticket guard. The override bypasses it.
+        $this->assertTrue($code->canBeAppliedTo($ticketType),
+            'Domain-authorized discount code should be applicable to free WithPromoCode ticket types');
+    }
+
+    /**
+     * Paid ticket type accepted — normal discount behavior preserved.
+     */
+    public function testCanBeAppliedToPaidTicketType(): void
+    {
+        $code = new DomainAuthorizedSummitRegistrationDiscountCode();
+
+        $ticketType = $this->createMock(SummitTicketType::class);
+        $ticketType->method('getId')->willReturn(200);
+        $ticketType->method('isFree')->willReturn(false);
+
+        $code->addAllowedTicketType($ticketType);
+
+        $this->assertTrue($code->canBeAppliedTo($ticketType),
+            'Domain-authorized discount code should be applicable to paid ticket types');
+    }
+
+    // -----------------------------------------------------------------------
+    // AutoApplyPromoCodeTrait — existing email-linked types
+    // -----------------------------------------------------------------------
+
+    public function testAutoApplyMemberPromoCode(): void
+    {
+        $code = new MemberSummitRegistrationPromoCode();
+        $this->assertFalse($code->getAutoApply(), 'auto_apply should default to false');
+        $code->setAutoApply(true);
+        $this->assertTrue($code->getAutoApply(), 'auto_apply should round-trip to true');
+    }
+
+    public function testAutoApplyMemberDiscountCode(): void
+    {
+        $code = new MemberSummitRegistrationDiscountCode();
+        $this->assertFalse($code->getAutoApply(), 'auto_apply should default to false');
+        $code->setAutoApply(true);
+        $this->assertTrue($code->getAutoApply(), 'auto_apply should round-trip to true');
+    }
+
+    public function testAutoApplySpeakerPromoCode(): void
+    {
+        $code = new SpeakerSummitRegistrationPromoCode();
+        $this->assertFalse($code->getAutoApply(), 'auto_apply should default to false');
+        $code->setAutoApply(true);
+        $this->assertTrue($code->getAutoApply(), 'auto_apply should round-trip to true');
+    }
+
+    public function testAutoApplySpeakerDiscountCode(): void
+    {
+        $code = new SpeakerSummitRegistrationDiscountCode();
+        $this->assertFalse($code->getAutoApply(), 'auto_apply should default to false');
+        $code->setAutoApply(true);
+        $this->assertTrue($code->getAutoApply(), 'auto_apply should round-trip to true');
+    }
+
+    // -----------------------------------------------------------------------
+    // Serializer tests
+    // -----------------------------------------------------------------------
+
+    /**
+     * auto_apply field serialization for domain-authorized promo code.
+     */
+    public function testSerializerAutoApplyField(): void
+    {
+        $code = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code->setAutoApply(true);
+
+        $serializer = SerializerRegistry::getInstance()->getSerializer($code);
+        $data = $serializer->serialize(null, [], [], []);
+
+        $this->assertArrayHasKey('auto_apply', $data);
+        $this->assertTrue($data['auto_apply'], 'auto_apply should serialize as true');
+
+        // Also test false
+        $code2 = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code2->setAutoApply(false);
+
+        $serializer2 = SerializerRegistry::getInstance()->getSerializer($code2);
+        $data2 = $serializer2->serialize(null, [], [], []);
+
+        $this->assertArrayHasKey('auto_apply', $data2);
+        $this->assertFalse($data2['auto_apply'], 'auto_apply should serialize as false');
+    }
+
+    /**
+     * remaining_quantity_per_account transient field serialization.
+     */
+    public function testSerializerRemainingQuantityPerAccount(): void
+    {
+        $code = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code->setRemainingQuantityPerAccount(3);
+
+        $serializer = SerializerRegistry::getInstance()->getSerializer($code);
+        $data = $serializer->serialize(null, [], [], []);
+
+        $this->assertArrayHasKey('remaining_quantity_per_account', $data);
+        $this->assertEquals(3, $data['remaining_quantity_per_account']);
+
+        // Test null (unlimited)
+        $code2 = new DomainAuthorizedSummitRegistrationPromoCode();
+        $serializer2 = SerializerRegistry::getInstance()->getSerializer($code2);
+        $data2 = $serializer2->serialize(null, [], [], []);
+
+        $this->assertArrayHasKey('remaining_quantity_per_account', $data2);
+        $this->assertNull($data2['remaining_quantity_per_account']);
+    }
+
+    /**
+     * auto_apply field serialization for existing email-linked type (MemberSummitRegistrationPromoCode).
+     */
+    public function testSerializerAutoApplyEmailLinkedType(): void
+    {
+        $code = new MemberSummitRegistrationPromoCode();
+        $code->setAutoApply(true);
+
+        $serializer = SerializerRegistry::getInstance()->getSerializer($code);
+        $data = $serializer->serialize(null, [], [], []);
+
+        $this->assertArrayHasKey('auto_apply', $data);
+        $this->assertTrue($data['auto_apply'], 'auto_apply should serialize as true for member promo code');
     }
 }

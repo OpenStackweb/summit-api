@@ -133,10 +133,10 @@ class RegularPromoCodeTicketTypesStrategy implements IPromoCodeAllowedTicketType
             foreach ($this->promo_code->getAllowedTicketTypes() as $ticket_type) {
                 if (!$ticket_type->isPromoCodeOnly()) continue;
                 if (in_array($ticket_type->getId(), $tracked_ids)) continue;
-                if ($ticket_type->isSoldOut()) {
+                if (!$ticket_type->canSell()) {
                     Log::debug(
                         sprintf(
-                            "RegularPromoCodeTicketTypesStrategy::getTicketTypes WithPromoCode ticket type %s sold out.",
+                            "RegularPromoCodeTicketTypesStrategy::getTicketTypes WithPromoCode ticket type %s can not be sold.",
                             $ticket_type->getId()
                         )
                     );

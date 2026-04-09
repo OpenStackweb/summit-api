@@ -12,10 +12,15 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Registration\PromoCodes\Strategies\RegularPromoCodeTicketTypesStrategy;
+use Doctrine\Common\Collections\ArrayCollection;
 use models\exceptions\ValidationException;
 use models\summit\DomainAuthorizedSummitRegistrationDiscountCode;
 use models\summit\DomainAuthorizedSummitRegistrationPromoCode;
+use models\summit\Summit;
+use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
+use models\main\Member;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -226,5 +231,159 @@ class DomainAuthorizedPromoCodeTest extends TestCase
         $this->assertTrue($code->matchesEmailDomain('user@partner.com'));
         $this->assertTrue($code->matchesEmailDomain('student@university.edu'));
         $this->assertFalse($code->matchesEmailDomain('user@random.org'));
+    }
+
+    // -----------------------------------------------------------------------
+    // RegularPromoCodeTicketTypesStrategy — audience filtering
+    // -----------------------------------------------------------------------
+
+    private function buildMockSummit(array $audienceAllTypes = [], array $audienceWithoutInvitationTypes = []): Summit
+    {
+        $summit = $this->createMock(Summit::class);
+        $summit->method('getId')->willReturn(1);
+        $summit->method('getSummitRegistrationInvitationByEmail')->willReturn(null);
+
+        $summit->method('getTicketTypesByAudience')->willReturnCallback(
+            function (string $audience) use ($audienceAllTypes, $audienceWithoutInvitationTypes) {
+                if ($audience === SummitTicketType::Audience_All) {
+                    return new ArrayCollection($audienceAllTypes);
+                }
+                if ($audience === SummitTicketType::Audience_Without_Invitation) {
+                    return new ArrayCollection($audienceWithoutInvitationTypes);
+                }
+                return new ArrayCollection();
+            }
+        );
+
+        return $summit;
+    }
+
+    private function buildMockMember(string $email = 'user@test.com'): Member
+    {
+        $member = $this->createMock(Member::class);
+        $member->method('getId')->willReturn(1);
+        $member->method('getEmail')->willReturn($email);
+        $member->method('getCompany')->willReturn(null);
+        return $member;
+    }
+
+    private function buildMockTicketType(int $id, string $audience, bool $canSell = true): SummitTicketType
+    {
+        $tt = $this->createMock(SummitTicketType::class);
+        $tt->method('getId')->willReturn($id);
+        $tt->method('getAudience')->willReturn($audience);
+        $tt->method('canSell')->willReturn($canSell);
+        $tt->method('isSoldOut')->willReturn(!$canSell);
+        $tt->method('isPromoCodeOnly')->willReturn($audience === SummitTicketType::Audience_With_Promo_Code);
+        return $tt;
+    }
+
+    /**
+     * WithPromoCode ticket type + no promo code → NOT returned
+     */
+    public function testWithPromoCodeAudienceNoPromoCodeNotReturned(): void
+    {
+        $summit = $this->buildMockSummit();
+        $member = $this->buildMockMember();
+
+        $strategy = new RegularPromoCodeTicketTypesStrategy($summit, $member, null);
+        $result = $strategy->getTicketTypes();
+
+        // No WithPromoCode types should appear (none were in Audience_All or Audience_Without_Invitation)
+        foreach ($result as $tt) {
+            $this->assertNotEquals(
+                SummitTicketType::Audience_With_Promo_Code,
+                $tt->getAudience(),
+                'WithPromoCode ticket types should not be returned without a promo code'
+            );
+        }
+    }
+
+    /**
+     * WithPromoCode ticket type + live domain-authorized promo code → IS returned
+     */
+    public function testWithPromoCodeAudienceLiveDomainAuthorizedPromoCodeReturned(): void
+    {
+        $promoCodeTicket = $this->buildMockTicketType(10, SummitTicketType::Audience_With_Promo_Code);
+
+        $promoCode = $this->createMock(SummitRegistrationPromoCode::class);
+        $promoCode->method('getCode')->willReturn('DOMAIN-CODE');
+        $promoCode->method('isLive')->willReturn(true);
+        $promoCode->method('getAllowedTicketTypes')->willReturn(new ArrayCollection([$promoCodeTicket]));
+        $promoCode->method('canBeAppliedTo')->willReturn(true);
+        $promoCode->method('validate')->willReturn(true);
+
+        $summit = $this->buildMockSummit();
+        $member = $this->buildMockMember();
+
+        $strategy = new RegularPromoCodeTicketTypesStrategy($summit, $member, $promoCode);
+        $result = $strategy->getTicketTypes();
+
+        $ids = array_map(fn($tt) => $tt->getId(), $result);
+        $this->assertContains(10, $ids, 'WithPromoCode ticket type should be returned with a live promo code');
+    }
+
+    /**
+     * WithPromoCode ticket type + live generic promo code → IS returned (any type unlocks)
+     */
+    public function testWithPromoCodeAudienceLiveGenericPromoCodeReturned(): void
+    {
+        $promoCodeTicket = $this->buildMockTicketType(20, SummitTicketType::Audience_With_Promo_Code);
+
+        $promoCode = $this->createMock(SummitRegistrationPromoCode::class);
+        $promoCode->method('getCode')->willReturn('GENERIC-CODE');
+        $promoCode->method('isLive')->willReturn(true);
+        $promoCode->method('getAllowedTicketTypes')->willReturn(new ArrayCollection([$promoCodeTicket]));
+        $promoCode->method('canBeAppliedTo')->willReturn(true);
+        $promoCode->method('validate')->willReturn(true);
+
+        $summit = $this->buildMockSummit();
+        $member = $this->buildMockMember();
+
+        $strategy = new RegularPromoCodeTicketTypesStrategy($summit, $member, $promoCode);
+        $result = $strategy->getTicketTypes();
+
+        $ids = array_map(fn($tt) => $tt->getId(), $result);
+        $this->assertContains(20, $ids, 'WithPromoCode ticket type should be returned with any live promo code');
+    }
+
+    /**
+     * Audience_All ticket type + no promo code → IS returned (existing behavior regression test)
+     */
+    public function testAudienceAllNoPromoCodeReturned(): void
+    {
+        $allTicket = $this->buildMockTicketType(30, SummitTicketType::Audience_All);
+        $summit = $this->buildMockSummit([$allTicket]);
+        $member = $this->buildMockMember();
+
+        $strategy = new RegularPromoCodeTicketTypesStrategy($summit, $member, null);
+        $result = $strategy->getTicketTypes();
+
+        $ids = array_map(fn($tt) => $tt->getId(), $result);
+        $this->assertContains(30, $ids, 'Audience_All ticket type should be returned without a promo code');
+    }
+
+    /**
+     * Audience_All ticket type + promo code → IS returned with promo applied (existing behavior regression test)
+     */
+    public function testAudienceAllWithPromoCodeReturnedWithPromo(): void
+    {
+        $allTicket = $this->buildMockTicketType(40, SummitTicketType::Audience_All);
+
+        $promoCode = $this->createMock(SummitRegistrationPromoCode::class);
+        $promoCode->method('getCode')->willReturn('PROMO-ALL');
+        $promoCode->method('isLive')->willReturn(true);
+        $promoCode->method('getAllowedTicketTypes')->willReturn(new ArrayCollection());
+        $promoCode->method('canBeAppliedTo')->willReturn(true);
+        $promoCode->method('validate')->willReturn(true);
+
+        $summit = $this->buildMockSummit([$allTicket]);
+        $member = $this->buildMockMember();
+
+        $strategy = new RegularPromoCodeTicketTypesStrategy($summit, $member, $promoCode);
+        $result = $strategy->getTicketTypes();
+
+        $ids = array_map(fn($tt) => $tt->getId(), $result);
+        $this->assertContains(40, $ids, 'Audience_All ticket type should be returned with a promo code');
     }
 }

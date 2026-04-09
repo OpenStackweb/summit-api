@@ -735,7 +735,7 @@ FROM SummitAttendeeTicket t
 INNER JOIN SummitOrder o ON t.OrderID = o.ID
 WHERE t.PromoCodeID = :promo_code_id
 AND o.OwnerID = :member_id
-AND o.Status IN ('Paid', 'Confirmed')
+AND o.Status IN ('Reserved', 'Paid', 'Confirmed')
 AND t.Status != 'Cancelled'
 SQL;
         $stm = $this->getEntityManager()->getConnection()->executeQuery($sql, [

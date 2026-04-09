@@ -281,7 +281,6 @@ final class SagaFactory
             ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
             ->addTask(new PreProcessReservationTask($summit, $payload, $owner, $this->promo_code_repository))
             ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
-            ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
             ->addTask(new ReserveOrderTask(
                 $owner,
                 $summit,
@@ -293,7 +292,8 @@ final class SagaFactory
                 $this->company_repository,
                 $this->company_service,
                 $this->tx_service
-            ));
+            ))
+            ->addTask(new ApplyPromoCodeTask($summit, $payload, $owner, $this->promo_code_repository, $this->tx_service, $this->lock_service));
     }
 }
 
@@ -712,9 +712,15 @@ final class ApplyPromoCodeTask extends AbstractTask
     private $lock_service;
 
     /**
+     * @var Member|null
+     */
+    private $owner;
+
+    /**
      * ApplyPromoCodeTask constructor.
      * @param Summit $summit
      * @param array $payload
+     * @param Member|null $owner
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
@@ -723,6 +729,7 @@ final class ApplyPromoCodeTask extends AbstractTask
     (
         Summit                                 $summit,
         array                                  $payload,
+        ?Member                                $owner,
         ISummitRegistrationPromoCodeRepository $promo_code_repository,
         ITransactionService                    $tx_service,
         ILockManagerService                    $lock_service
@@ -731,6 +738,7 @@ final class ApplyPromoCodeTask extends AbstractTask
         $this->tx_service = $tx_service;
         $this->summit = $summit;
         $this->payload = $payload;
+        $this->owner = $owner;
         $this->promo_code_repository = $promo_code_repository;
         $this->lock_service = $lock_service;
     }
@@ -777,6 +785,26 @@ final class ApplyPromoCodeTask extends AbstractTask
                     if (!$promo_code->canBeAppliedTo($ticket_type)) {
                         Log::debug(sprintf("Promo code %s can not be applied to Ticket Type %s", $promo_code->getCode(), $ticket_type->getName()));
                         throw new ValidationException(sprintf("Promo code %s can not be applied to Ticket Type %s.", $promo_code->getCode(), $ticket_type->getName()));
+                    }
+                }
+
+                // QuantityPerAccount enforcement for domain-authorized promo codes
+                // Runs inside the locked transaction, after ReserveOrderTask has created ticket rows
+                if ($promo_code instanceof IDomainAuthorizedPromoCode
+                    && !is_null($this->owner)
+                ) {
+                    $quantityPerAccount = $promo_code->getQuantityPerAccount();
+                    if ($quantityPerAccount > 0) {
+                        $existingCount = $this->promo_code_repository->getTicketCountByMemberAndPromoCode($this->owner, $promo_code);
+                        if ($existingCount > $quantityPerAccount) {
+                            throw new ValidationException(
+                                sprintf(
+                                    "Promo code %s has reached the maximum of %s tickets per account.",
+                                    $promo_code_value,
+                                    $quantityPerAccount
+                                )
+                            );
+                        }
                     }
                 }
 
@@ -1038,27 +1066,6 @@ class PreProcessReservationTask extends AbstractTask
                             $promo_code->getMaxUsagePerOrder()
                         )
                     );
-
-                // QuantityPerAccount enforcement for domain-authorized promo codes
-                if ($promo_code instanceof IDomainAuthorizedPromoCode
-                    && !is_null($this->owner)
-                    && !is_null($this->promo_code_repository)
-                ) {
-                    $quantityPerAccount = $promo_code->getQuantityPerAccount();
-                    if ($quantityPerAccount > 0) {
-                        $existingCount = $this->promo_code_repository->getTicketCountByMemberAndPromoCode($this->owner, $promo_code);
-                        $newCount = $info['qty'];
-                        if (($existingCount + $newCount) > $quantityPerAccount) {
-                            throw new ValidationException(
-                                sprintf(
-                                    "Promo code %s has reached the maximum of %s tickets per account.",
-                                    $promo_code_value,
-                                    $quantityPerAccount
-                                )
-                            );
-                        }
-                    }
-                }
 
                 if (!in_array($type_id, $info['types']))
                     $info['types'] = array_merge($info['types'], [$type_id]);

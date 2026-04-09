@@ -799,7 +799,8 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - API test: verify a speaker promo code is returned in discovery when email matches, with correct `auto_apply` value in response
 
 **Review Follow-ups:**
-- None
+- **NIT 1 (pre-existing, tech debt):** Missing `break` after `case 'speaker':` in both `SpeakerSummitRegistrationPromoCodeSerializer.php` and `SpeakerSummitRegistrationDiscountCodeSerializer.php`. When `?expand=speaker` is requested, control falls through to `case 'owner_name':`, adding `owner_name` to the response as an unintended side effect. Not introduced by Task 11 — pre-existing in original code. Fix opportunistically before merge.
+- **NIT 2 (out of scope, non-blocking):** All four member/speaker serializers unconditionally set `$values['remaining_quantity_per_account'] = null` (last line before `return`). Not in Task 11 DoD — added during Task 9 discovery work to normalize the response shape across all discovery result types. Semantically correct (null = no per-account limit for these types). No action required.
 
 ---
 

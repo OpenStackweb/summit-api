@@ -1032,6 +1032,14 @@ class PreProcessReservationTask extends AbstractTask
 
             $promo_code_value = isset($ticket_dto['promo_code']) ? strtoupper(trim($ticket_dto['promo_code'])) : null;
 
+            // WithPromoCode audience ticket types are never purchasable without a qualifying promo code.
+            // canBeAppliedTo (below) rejects wrong codes; this guards the no-code case.
+            if ($ticket_type->isPromoCodeOnly() && empty($promo_code_value)) {
+                throw new ValidationException(
+                    sprintf("Ticket type %s requires a promo code.", $ticket_type->getName())
+                );
+            }
+
             if (!isset($reservations[$type_id]))
                 $reservations[$type_id] = 0;
 

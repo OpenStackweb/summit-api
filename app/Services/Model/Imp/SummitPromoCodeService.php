@@ -1024,6 +1024,13 @@ final class SummitPromoCodeService
         $results = [];
 
         foreach ($codes as $code) {
+            // Global exhaustion: finite code with quantity_used >= quantity_available.
+            // The repository filter uses isLive() (dates only), so exhausted codes leak through.
+            // Skip them here so discovery matches checkout's validate() behavior.
+            if (!$code->hasQuantityAvailable()) {
+                continue;
+            }
+
             // QuantityPerAccount enforcement: exclude exhausted codes
             if ($code instanceof IDomainAuthorizedPromoCode) {
                 $quantityPerAccount = $code->getQuantityPerAccount();

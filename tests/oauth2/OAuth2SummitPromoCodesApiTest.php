@@ -1022,6 +1022,59 @@ final class OAuth2SummitPromoCodesApiTest
             'Exhausted domain-authorized code (quantity_per_account reached) should not appear in discovery');
     }
 
+    /**
+     * Discovery excludes codes where global quantity_available is exhausted
+     * (quantity_used >= quantity_available), independent of quantity_per_account.
+     * Regression: isLive() is dates-only, so the repository filter does not
+     * catch globally-exhausted-but-still-in-date codes.
+     */
+    public function testDiscoverExcludesGloballyExhaustedCodes()
+    {
+        $memberEmail = self::$member->getEmail();
+        $domain = '@' . substr($memberEmail, strpos($memberEmail, '@') + 1);
+
+        $code = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code->setCode('DISC_GLOBAL_EXHAUST_' . str_random(8));
+        $code->setAllowedEmailDomains([$domain]);
+        $code->setQuantityAvailable(1);
+        // quantity_per_account = 0 (unlimited) isolates the global exhaustion path
+        $code->setQuantityPerAccount(0);
+        self::$summit->addPromoCode($code);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // Globally exhaust: quantity_used becomes 1, matches quantity_available=1.
+        // isLive() is dates-only and will still return true, so without the
+        // service-layer guard this code would leak into the discovery results.
+        $code->addUsage('someone-else@example.com', 1);
+        self::$em->persist($code);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitPromoCodesApiController@discover",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $result = json_decode($content, true);
+
+        $codes = array_column($result['data'], 'code');
+        $this->assertNotContains($code->getCode(), $codes,
+            'Globally exhausted domain-authorized code (quantity_used >= quantity_available) should not appear in discovery');
+    }
+
     // -----------------------------------------------------------------------
     // Checkout enforcement — Task 12 follow-up #6
     // -----------------------------------------------------------------------

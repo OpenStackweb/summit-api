@@ -440,7 +440,10 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - `php artisan clear-compiled && php artisan cache:clear`
 
 **Review Follow-ups:**
-- None
+- [x] **Constant naming deviates from SDS spec (NIT — accepted):** SDS specifies `AUDIENCE_WITH_PROMO_CODE`; implementation uses `Audience_With_Promo_Code`. Follows existing codebase convention (`Audience_All`, `Audience_With_Invitation`, `Audience_Without_Invitation`). All consumers reference the constant rather than the string literal. No correctness risk.
+- [x] **`isPromoCodeOnly()` not declared in `ISummitTicketType` interface (NIT):** Method is only called on concrete `SummitTicketType` objects (via `getAllowedTicketTypes()` in the strategy), so no runtime failure. Future code working through the `ISummitTicketType` abstraction would need a cast. No current impact; worth adding to the interface in a follow-on cleanup.
+- [x] **`isInviteOnlyRegistration()` ignores `WithPromoCode` types (NIT — out of scope):** A summit with only `WithPromoCode` ticket types returns `false`. Pre-existing method not changed by this task; edge case is unlikely in practice. No action required here.
+- [x] **`getTicketTypeBySummit` by-ID endpoint exposes `WithPromoCode` metadata to any OAuth user (NIT — pre-existing pattern):** Requires `ReadSummitData` scope (the same scope the registration frontend uses), so any authenticated user who knows a ticket type ID can fetch its metadata. Identical behavior exists today for `WithInvitation` types. Primary public listing (`getAllBySummit`) correctly enforces `audience=All`. Not a new risk introduced by this task.
 
 ---
 
@@ -523,7 +526,7 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - Test: `All` ticket type + promo code → IS returned with promo applied (existing behavior)
 
 **Review Follow-ups:**
-- None
+- [ ] **`canBuyRegistrationTicketByType()` missing `WithPromoCode` branch (MUST-FIX):** `Summit::canBuyRegistrationTicketByType()` (`Summit.php:5523`) has no branch for `audience = WithPromoCode`. When a user without an invitation attempts to purchase a `WithPromoCode` ticket type at checkout, `PreProcessReservationTask` (`SummitOrderService.php:1224`) calls this method and receives `false`, throwing `ValidationException` — the order is rejected even with a valid qualifying promo code. Fix: add `if ($audience === SummitTicketType::Audience_With_Promo_Code) return true;` immediately after the `Audience_All` branch. Access control is already handled by the promo code's own `checkSubject()` / `canBeAppliedTo()` — the `audience` field governs visibility only, not purchase authorization.
 
 ---
 

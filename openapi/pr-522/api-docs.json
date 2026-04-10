@@ -55763,7 +55763,7 @@
                     "Sponsors"
                 ],
                 "summary": "Read Sponsor Extra Questions",
-                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors",
+                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
                 "operationId": "getSponsorExtraQuestions",
                 "parameters": [
                     {
@@ -55839,7 +55839,8 @@
                     {
                         "summit_sponsor_oauth2": [
                             "http://localhost/summits/read",
-                            "http://localhost/summits/read/all"
+                            "http://localhost/summits/read/all",
+                            "http://localhost/summits/sponsors/extra-questions/read"
                         ]
                     }
                 ],
@@ -55847,7 +55848,8 @@
                     "super-admins",
                     "administrators",
                     "summit-front-end-administrators",
-                    "sponsors"
+                    "sponsors",
+                    "sponsors-external-users"
                 ]
             },
             "post": {
@@ -55914,7 +55916,8 @@
                 "security": [
                     {
                         "summit_sponsor_oauth2": [
-                            "http://localhost/summits/write"
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/sponsors/extra-questions/write"
                         ]
                     }
                 ],
@@ -55964,7 +55967,8 @@
                     {
                         "summit_sponsor_oauth2": [
                             "http://localhost/summits/read",
-                            "http://localhost/summits/read/all"
+                            "http://localhost/summits/read/all",
+                            "http://localhost/summits/sponsors/extra-questions/read"
                         ]
                     }
                 ],
@@ -56032,7 +56036,8 @@
                     {
                         "summit_sponsor_oauth2": [
                             "http://localhost/summits/read",
-                            "http://localhost/summits/read/all"
+                            "http://localhost/summits/read/all",
+                            "http://localhost/summits/sponsors/extra-questions/read"
                         ]
                     }
                 ],
@@ -56110,7 +56115,8 @@
                 "security": [
                     {
                         "summit_sponsor_oauth2": [
-                            "http://localhost/summits/write"
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/sponsors/extra-questions/write"
                         ]
                     }
                 ],
@@ -56175,7 +56181,8 @@
                 "security": [
                     {
                         "summit_sponsor_oauth2": [
-                            "http://localhost/summits/write"
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/sponsors/extra-questions/write"
                         ]
                     }
                 ],
@@ -56262,7 +56269,8 @@
                 "security": [
                     {
                         "summit_sponsor_oauth2": [
-                            "http://localhost/summits/write"
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/sponsors/extra-questions/write"
                         ]
                     }
                 ],
@@ -56351,7 +56359,8 @@
                 "security": [
                     {
                         "summit_sponsor_oauth2": [
-                            "http://localhost/summits/write"
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/sponsors/extra-questions/write"
                         ]
                     }
                 ],
@@ -56425,7 +56434,8 @@
                 "security": [
                     {
                         "summit_sponsor_oauth2": [
-                            "http://localhost/summits/write"
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/sponsors/extra-questions/write"
                         ]
                     }
                 ],
@@ -78752,6 +78762,10 @@
                         "description": "Attendee QR code",
                         "type": "string"
                     },
+                    "sponsor_id": {
+                        "description": "Current Summit Sponsor ID (Multiple sponsors per summit)",
+                        "type": "integer"
+                    },
                     "scan_date": {
                         "description": "Scan date (Unix timestamp)",
                         "type": "integer"
@@ -88943,7 +88957,9 @@
                         "scopes": {
                             "http://localhost/summits/read": "Read Summit Sponsor Data",
                             "http://localhost/summits/read/all": "Read All Summit Sponsor Data",
-                            "http://localhost/summits/write": "Write Summit Sponsor Data"
+                            "http://localhost/summits/write": "Write Summit Sponsor Data",
+                            "http://localhost/summits/sponsors/extra-questions/read": "Read Summit Sponsor Extra Questions Data",
+                            "http://localhost/summits/sponsors/extra-questions/write": "Write Summit Sponsor Extra Questions Data"
                         }
                     }
                 }

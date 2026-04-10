@@ -15,12 +15,14 @@
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISponsorUserSyncService;
 use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\utils\SilverstripeBaseModel;
 use services\model\ISummitSponsorService;
 
 /**
@@ -168,8 +170,18 @@ final class SponsorUserSyncService
 
                 $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
 
+                // Flush the UoW so the INSERT is visible to the raw SQL retry
+                // on the same connection within the active transaction.
+                Registry::getManager(SilverstripeBaseModel::EntityManager)->flush();
+
                 // Retry now that the row exists.
-                $member->addSponsorPermission($sponsor_id, $group_slug);
+                $retryResult = $member->addSponsorPermission($sponsor_id, $group_slug);
+                if ($retryResult === 0) {
+                      throw new \RuntimeException(
+                          "Failed to write permission after eager Sponsor_Users creation " .
+                          "for member {$member->getId()} / sponsor {$sponsor_id}"
+                      );
+                  }
             }
 
             // Add to global group only if not already a member.

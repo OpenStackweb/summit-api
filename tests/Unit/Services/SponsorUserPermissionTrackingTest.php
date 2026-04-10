@@ -94,6 +94,36 @@ class SponsorUserPermissionTrackingTest extends TestCase
     // -------------------------------------------------------------------------
 
     /**
+     * MQ race: the group event arrives before the membership event, so there is
+     * no Sponsor_Users row yet when addSponsorUserToGroup is called.
+     * The service must create the row eagerly, flush the UoW so the INSERT is
+     * visible to the raw SQL retry, and then successfully write the permission.
+     */
+    public function testAddSponsorUserToGroupEagerlyCreatesRowAndWritesPermissionOnRetry(): void
+    {
+        // sponsors[1] has no Sponsor_Users row — the member is not yet a user
+        // of this sponsor, simulating the race condition.
+        $sponsor_id  = self::$sponsors[1]->getId();
+        $member_id   = self::$member->getId();
+        $external_id = self::$member->getUserExternalId();
+        $summit_id   = self::$summit->getId();
+
+        $conn = self::$em->getConnection();
+
+        // Confirm no row exists before the call.
+        $exists = $conn->executeQuery(
+            'SELECT COUNT(*) FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        )->fetchOne();
+        $this->assertEquals(0, (int)$exists, 'Pre-condition: no Sponsor_Users row should exist');
+
+        $this->getService()->addSponsorUserToGroup($external_id, IGroup::Sponsors, $sponsor_id, $summit_id);
+
+        // The row must have been created and the permission written.
+        $this->assertContains(IGroup::Sponsors, $this->getPermissions($sponsor_id, $member_id));
+    }
+
+    /**
      * The group slug must be written into the Sponsor_Users.Permissions JSON
      * column for the correct (SponsorID, MemberID) row.
      */

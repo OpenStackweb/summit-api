@@ -2015,20 +2015,6 @@ SQL;
     }
 
     /**
-     * @param Summit $summit
-     * @param int $sponsor_id
-     * @return Sponsor|null
-     */
-    public function getSponsorBySummitAndId(Summit $summit, int $sponsor_id): ?Sponsor
-    {
-        $sponsor = $this->sponsor_memberships->filter(function ($entity) use ($summit, $sponsor_id) {
-            return $entity->getSummitId() == $summit->getId() && $entity->getId() == $sponsor_id;
-        })->first();
-
-        return $sponsor === false ? null : $sponsor;
-    }
-
-    /**
      * @return string|null
      */
     public function getMembershipType(): ?string

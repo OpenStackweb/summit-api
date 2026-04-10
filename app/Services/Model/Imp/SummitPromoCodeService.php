@@ -642,6 +642,10 @@ final class SummitPromoCodeService
                     $row['tags'] = explode('|', $row['tags']);
                 }
 
+                if(isset($row['allowed_email_domains'])){
+                    $row['allowed_email_domains'] = explode('|', $row['allowed_email_domains']);
+                }
+
                 if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){
 
                     $row['ticket_types_rules'] = explode('|', $row['ticket_types_rules']);
@@ -743,6 +747,10 @@ final class SummitPromoCodeService
 
                 if(isset($row['tags'])){
                     $row['tags'] = explode('|', $row['tags']);
+                }
+
+                if(isset($row['allowed_email_domains'])){
+                    $row['allowed_email_domains'] = explode('|', $row['allowed_email_domains']);
                 }
 
                 if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){

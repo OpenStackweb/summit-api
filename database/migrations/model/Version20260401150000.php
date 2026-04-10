@@ -100,6 +100,12 @@ final class Version20260401150000 extends AbstractMigration
         $this->addSql("DROP TABLE IF EXISTS DomainAuthorizedSummitRegistrationPromoCode");
         $this->addSql("DROP TABLE IF EXISTS DomainAuthorizedSummitRegistrationDiscountCode");
 
+        // 4b. Delete orphaned base-table rows before narrowing the ENUM
+        $this->addSql("DELETE FROM SummitRegistrationPromoCode WHERE ClassName IN (
+            'DomainAuthorizedSummitRegistrationDiscountCode',
+            'DomainAuthorizedSummitRegistrationPromoCode'
+        )");
+
         // 5. Revert the ClassName discriminator ENUM to the original 12 values
         $this->addSql("ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName ENUM(
             'SummitRegistrationPromoCode',

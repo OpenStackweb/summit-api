@@ -501,6 +501,50 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         return $this->addAffiliation('me');
     }
 
+    #[OA\Get(
+        path: '/api/v1/members/external/{external_id}',
+        operationId: 'getMemberByIdExternalId',
+        summary: 'Get member by external Id',
+        description: 'Returns a member profile by External Id',
+        tags: ['Members'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [['members_oauth2' => [
+            MemberScopes::ReadMemberData,
+        ]]],
+        parameters: [
+            new OA\Parameter(name: 'external_id', in: 'path', required: true, description: 'Member External ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Successful operation',
+                content: new OA\JsonContent(ref: '#/components/schemas/Member')
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Member not found'),
+        ]
+    )]
+    public function getMemberByIdExternalId($external_id){
+        return $this->processRequest(function() use($external_id){
+           $member = $this->repository->getByExternalId($external_id);
+           if(is_null($member))
+               throw new EntityNotFoundException("Member not found by external Id.");
+            return $this->ok(SerializerRegistry::getInstance()->getSerializer($member, SerializerRegistry::SerializerType_Private)->serialize
+            (
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
     #[OA\Post(
         path: '/api/v1/members/{member_id}/affiliations',
         operationId: 'addMemberAffiliation',

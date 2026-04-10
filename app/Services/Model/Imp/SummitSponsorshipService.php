@@ -38,7 +38,8 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
      */
     public function addSponsorships(Summit $summit, int $sponsor_id, array $summit_sponsorship_type_ids): array
     {
-        $sponsorships = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $summit_sponsorship_type_ids) {
+        $summit_sponsor = null;
+        $sponsorships = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $summit_sponsorship_type_ids, &$summit_sponsor) {
             $res = [];
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
@@ -52,12 +53,13 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
                 $summit_sponsor->addSponsorship($sponsorship);
                 $res[] = $sponsorship;
             }
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
-                SponsorDomainEvents::SponsorUpdated);
 
             return $res;
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+            SponsorDomainEvents::SponsorUpdated);
 
         foreach ($sponsorships as $sponsorship) {
             PublishSponsorServiceDomainEventsJob::dispatch(
@@ -73,7 +75,9 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
      */
     public function removeSponsorship(Summit $summit, int $sponsor_id, int $sponsorship_id): void
     {
-        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id) {
+        $summit_sponsor = null;
+        $sponsorship    = null;
+        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, &$summit_sponsor, &$sponsorship) {
 
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
@@ -84,15 +88,15 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
                 throw new EntityNotFoundException("Sponsorship {$sponsorship_id} not found in sponsor {$sponsor_id}.");
 
             $summit_sponsor->removeSponsorship($sponsorship);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
-                SponsorDomainEvents::SponsorUpdated);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                DeletedEventDTO::fromEntity($sponsorship)->serialize(),
-                SponsorDomainEvents::SponsorshipRemoved);
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+            SponsorDomainEvents::SponsorUpdated);
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            DeletedEventDTO::fromEntity($sponsorship)->serialize(),
+            SponsorDomainEvents::SponsorshipRemoved);
     }
 
     /**
@@ -101,7 +105,9 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
      */
     public function addNewAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, array $payload): SummitSponsorshipAddOn
     {
-        $add_on = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $payload) {
+        $summit_sponsor = null;
+        $sponsorship    = null;
+        $add_on = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $payload, &$summit_sponsor, &$sponsorship) {
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");
@@ -113,18 +119,16 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
             $add_on = SummitSponsorshipAddOnFactory::build($payload);
             $sponsorship->addAddOn($add_on);
 
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
-                SponsorDomainEvents::SponsorUpdated);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
-                SponsorDomainEvents::SponsorshipUpdated);
-
             return $add_on;
         });
 
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+            SponsorDomainEvents::SponsorUpdated);
 
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+            SponsorDomainEvents::SponsorshipUpdated);
 
         PublishSponsorServiceDomainEventsJob::dispatch(
             SummitSponsorshipAddOnCreatedEventDTO::fromSponsorshipAddOn($add_on)->serialize(),
@@ -139,7 +143,10 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
      */
     public function updateAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, int $add_on_id, array $payload): SummitSponsorshipAddOn
     {
-        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $add_on_id, $payload) {
+        $summit_sponsor = null;
+        $sponsorship    = null;
+        $add_on = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $add_on_id, $payload,
+            &$summit_sponsor, &$sponsorship) {
             Log::debug
             (
                 sprintf
@@ -165,22 +172,22 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
             if (is_null($add_on))
                 throw new EntityNotFoundException("AddOn {$add_on_id} not found for sponsorship {$sponsorship_id}.");
 
-            $res = SummitSponsorshipAddOnFactory::populate($add_on, $payload);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
-                SponsorDomainEvents::SponsorUpdated);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
-                SponsorDomainEvents::SponsorshipUpdated);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorshipAddOnCreatedEventDTO::fromSponsorshipAddOn($res)->serialize(),
-                SponsorDomainEvents::SponsorshipAddOnUpdated);
-
-            return $res;
+            return SummitSponsorshipAddOnFactory::populate($add_on, $payload);
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+            SponsorDomainEvents::SponsorUpdated);
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+            SponsorDomainEvents::SponsorshipUpdated);
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorshipAddOnCreatedEventDTO::fromSponsorshipAddOn($add_on)->serialize(),
+            SponsorDomainEvents::SponsorshipAddOnUpdated);
+
+        return $add_on;
     }
 
     /**
@@ -189,7 +196,11 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
      */
     public function removeAddOn(Summit $summit, int $sponsor_id, int $sponsorship_id, int $add_on_id): void
     {
-        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $add_on_id) {
+        $summit_sponsor = null;
+        $sponsorship    = null;
+        $add_on         = null;
+        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $sponsorship_id, $add_on_id,
+            &$summit_sponsor, &$sponsorship, &$add_on) {
 
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
@@ -204,18 +215,18 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
                 throw new EntityNotFoundException("AddOn {$add_on_id} not found for sponsorship {$sponsorship_id}.");
 
             $sponsorship->removeAddOn($add_on);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
-                SponsorDomainEvents::SponsorUpdated);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
-                SponsorDomainEvents::SponsorshipUpdated);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                DeletedEventDTO::fromEntity($add_on)->serialize(),
-                SponsorDomainEvents::SponsorshipAddOnRemoved);
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorCreatedEventDTO::fromSummitSponsor($summit_sponsor)->serialize(),
+            SponsorDomainEvents::SponsorUpdated);
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+            SponsorDomainEvents::SponsorshipUpdated);
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            DeletedEventDTO::fromEntity($add_on)->serialize(),
+            SponsorDomainEvents::SponsorshipAddOnRemoved);
     }
 }

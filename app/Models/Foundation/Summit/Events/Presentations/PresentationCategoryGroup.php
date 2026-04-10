@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\ScheduleEntity;
+use App\Models\Foundation\Summit\SelectionPlan;
 use Doctrine\Common\Collections\Criteria;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -70,6 +71,13 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
     protected $max_attendee_votes;
 
 
+    /**
+     * inverse side
+     * @var SelectionPlan[]
+     */
+    #[ORM\ManyToMany(targetEntity: \App\Models\Foundation\Summit\SelectionPlan::class, mappedBy: 'category_groups', fetch: 'EXTRA_LAZY')]
+    protected $selection_plans;
+
     public function __construct()
     {
         parent::__construct();
@@ -77,6 +85,29 @@ class PresentationCategoryGroup extends SilverstripeBaseModel
         $this->end_attendee_voting_period_date = null;
         $this->max_attendee_votes = 0;
         $this->categories = new ArrayCollection;
+        $this->selection_plans = new ArrayCollection;
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getSelectionPlanIds(): array
+    {
+        return $this->selection_plans->map(function ($sp) {
+            return $sp->getId();
+        })->toArray();
+    }
+
+    public function addSelectionPlan(SelectionPlan $selection_plan): void
+    {
+        if ($this->selection_plans->contains($selection_plan)) return;
+        $this->selection_plans->add($selection_plan);
+    }
+
+    public function removeSelectionPlan(SelectionPlan $selection_plan): void
+    {
+        if (!$this->selection_plans->contains($selection_plan)) return;
+        $this->selection_plans->removeElement($selection_plan);
     }
 
 

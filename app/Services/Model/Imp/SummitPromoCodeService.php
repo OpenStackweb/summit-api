@@ -643,7 +643,10 @@ final class SummitPromoCodeService
                 }
 
                 if(isset($row['allowed_email_domains'])){
-                    $row['allowed_email_domains'] = explode('|', $row['allowed_email_domains']);
+                    $domains = array_map('trim', explode('|', $row['allowed_email_domains']));
+                    $domains = array_values(array_filter($domains, fn($d) => $d !== ''));
+                    $row['allowed_email_domains'] = !empty($domains) ? $domains : null;
+                    if(is_null($row['allowed_email_domains'])) unset($row['allowed_email_domains']);
                 }
 
                 if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){
@@ -750,7 +753,10 @@ final class SummitPromoCodeService
                 }
 
                 if(isset($row['allowed_email_domains'])){
-                    $row['allowed_email_domains'] = explode('|', $row['allowed_email_domains']);
+                    $domains = array_map('trim', explode('|', $row['allowed_email_domains']));
+                    $domains = array_values(array_filter($domains, fn($d) => $d !== ''));
+                    $row['allowed_email_domains'] = !empty($domains) ? $domains : null;
+                    if(is_null($row['allowed_email_domains'])) unset($row['allowed_email_domains']);
                 }
 
                 if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){

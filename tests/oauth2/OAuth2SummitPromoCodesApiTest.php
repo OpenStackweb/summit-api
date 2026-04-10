@@ -1104,14 +1104,14 @@ final class OAuth2SummitPromoCodesApiTest
     }
 
     /**
-     * Concurrent checkout enforcement — blocked by D4 (TOCTOU window).
+     * Concurrent checkout enforcement — requires full saga pipeline test harness.
      */
-    public function testCheckoutConcurrentEnforcementBlockedByD4()
+    public function testCheckoutConcurrentEnforcement()
     {
         $this->markTestSkipped(
-            'Blocked by D4 — TOCTOU window: enforcement runs after ReserveOrderTask writes rows; ' .
-            'concurrent requests both pass the count check before either commits. ' .
-            'Fix: move ApplyPromoCodeTask after ReserveOrderTask and widen count query to include Reserved orders.'
+            'D4 fix applied (ApplyPromoCodeTask now runs after ReserveOrderTask with pessimistic lock ' .
+            'and count query includes Reserved orders). Concurrency test requires a full saga pipeline ' .
+            'test harness with concurrent request simulation — out of scope for this SDS.'
         );
     }
 }

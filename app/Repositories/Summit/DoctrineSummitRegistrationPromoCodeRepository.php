@@ -701,8 +701,8 @@ SQL;
 
             // Email-linked types: match by associated member/speaker email
             if ($code instanceof MemberSummitRegistrationPromoCode || $code instanceof MemberSummitRegistrationDiscountCode) {
-                $owner = $code->getOwner();
-                if (!is_null($owner) && strtolower($owner->getEmail()) === $email && $code->isLive()) {
+                $ownerEmail = $code->getOwnerEmail();
+                if (!empty($ownerEmail) && strtolower($ownerEmail) === $email && $code->isLive()) {
                     $results[] = $code;
                 }
                 continue;

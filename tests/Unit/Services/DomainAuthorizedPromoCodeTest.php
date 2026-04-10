@@ -539,12 +539,22 @@ class DomainAuthorizedPromoCodeTest extends TestCase
     // Serializer tests
     // -----------------------------------------------------------------------
 
+    private function buildMockSummitForSerializer(): Summit
+    {
+        $summit = $this->createMock(Summit::class);
+        $summit->method('getId')->willReturn(1);
+        return $summit;
+    }
+
     /**
      * auto_apply field serialization for domain-authorized promo code.
      */
     public function testSerializerAutoApplyField(): void
     {
+        $summit = $this->buildMockSummitForSerializer();
+
         $code = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code->setSummit($summit);
         $code->setAutoApply(true);
 
         $serializer = SerializerRegistry::getInstance()->getSerializer($code);
@@ -555,6 +565,7 @@ class DomainAuthorizedPromoCodeTest extends TestCase
 
         // Also test false
         $code2 = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code2->setSummit($summit);
         $code2->setAutoApply(false);
 
         $serializer2 = SerializerRegistry::getInstance()->getSerializer($code2);
@@ -569,7 +580,10 @@ class DomainAuthorizedPromoCodeTest extends TestCase
      */
     public function testSerializerRemainingQuantityPerAccount(): void
     {
+        $summit = $this->buildMockSummitForSerializer();
+
         $code = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code->setSummit($summit);
         $code->setRemainingQuantityPerAccount(3);
 
         $serializer = SerializerRegistry::getInstance()->getSerializer($code);
@@ -580,6 +594,7 @@ class DomainAuthorizedPromoCodeTest extends TestCase
 
         // Test null (unlimited)
         $code2 = new DomainAuthorizedSummitRegistrationPromoCode();
+        $code2->setSummit($summit);
         $serializer2 = SerializerRegistry::getInstance()->getSerializer($code2);
         $data2 = $serializer2->serialize(null, [], [], []);
 
@@ -592,7 +607,10 @@ class DomainAuthorizedPromoCodeTest extends TestCase
      */
     public function testSerializerAutoApplyEmailLinkedType(): void
     {
+        $summit = $this->buildMockSummitForSerializer();
+
         $code = new MemberSummitRegistrationPromoCode();
+        $code->setSummit($summit);
         $code->setAutoApply(true);
 
         $serializer = SerializerRegistry::getInstance()->getSerializer($code);

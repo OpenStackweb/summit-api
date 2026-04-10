@@ -225,16 +225,18 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 |---|-----------|----------|--------|-------|--------|
 | D1 | Trait file locations | NIT | ACCEPTED | 2 | SDS specifies traits in `PromoCodes/` directly. Existing codebase convention puts traits in `PromoCodes/Traits/`. Implementation followed SDS paths. Acceptable — no functional impact, but future cleanup may move them to `Traits/` for consistency. |
 | D2 | `addTicketTypeRule` accesses private parent field via getter | NIT | ACCEPTED | 3 | SDS implies direct `$this->ticket_types_rules->add()` but parent declares `$ticket_types_rules` as `private`. Implementation uses `$this->getTicketTypesRules()->add()` and `canBeAppliedTo()` for the allowed_ticket_types membership check. Functionally equivalent. |
-| D3 | `allowed_email_domains` validation uses `sometimes|json` instead of custom rule | SHOULD-FIX | OPEN | 6 | SDS explicitly states generic `'sometimes|json'` is insufficient — would accept `[123, null, ""]` which silently never matches. Needs a custom validation rule enforcing each entry matches `@domain`, `.tld`, or `user@email` format. |
-| D4 | `quantity_per_account` check lacks pessimistic lock AND count query is too narrow | MUST-FIX | OPEN | 10 | SDS specifies `SELECT ... FOR UPDATE` on the promo code row within the quantity check. Implementation adds the check in `PreProcessReservationTask` which runs before `ApplyPromoCodeTask` (which holds the lock). This creates a TOCTOU window. Additionally, even moving the check inside `ApplyPromoCodeTask`'s lock is insufficient: the count query (`getTicketCountByMemberAndPromoCode`) only counts 'Paid'/'Confirmed' orders, but ticket rows for the current request aren't created until `ReserveOrderTask` (the next saga step), so concurrent fresh checkouts both see count=0 inside the lock and both pass. Full fix requires task reorder + broader count — see Task 10 Review Follow-ups #1 and #3 for the complete fix specification. |
+| D3 | `allowed_email_domains` validation uses `sometimes|json` instead of custom rule | SHOULD-FIX | RESOLVED | 6 | Fixed: `AllowedEmailDomainsArray` custom rule created at `app/Rules/AllowedEmailDomainsArray.php`. Validates each entry matches `@domain`, `.tld`, or `user@email` format. Applied in `PromoCodesValidationRulesFactory.php` for both `buildForAdd` and `buildForUpdate` on both domain-authorized types. |
+| D4 | `quantity_per_account` check lacks pessimistic lock AND count query is too narrow | MUST-FIX | RESOLVED | 10 | Fixed: check relocated from `PreProcessReservationTask` to `ApplyPromoCodeTask` inside the `tx_service->transaction()` + `getByValueExclusiveLock()` boundary. Saga reordered so `ApplyPromoCodeTask` runs after `ReserveOrderTask`. Count query widened to include `'Reserved'` status orders. All three review follow-ups addressed. |
 | D5 | Discovery response uses manual array instead of `PagingResponse` object | NIT | ACCEPTED | 9 | SDS says "uses the standard `PagingResponse` envelope." Implementation constructs an identical JSON shape manually. Acceptable — output is identical, and the endpoint doesn't actually paginate. |
 | D6 | Task 8 implemented before Task 11 (dependency violation) | NIT | ACCEPTED | 8, 11 | SDS declares Task 8 depends on Task 11. Implementation order was reversed. No functional issue — the repository query fetches member/speaker entities by type regardless of whether `AutoApplyPromoCodeTrait` is applied yet. |
 | D7 | `addAllowedTicketType` overrides are no-ops | NIT | ACCEPTED | 3, 4 | SDS specifies overriding `addAllowedTicketType()` on both types. The override just calls `parent::addAllowedTicketType()` which already accepts any ticket type. Present for documentation intent per SDS, but functionally dead code. |
+| D8 | `AutoApply` included in new joined-table CREATE statements | NIT | ACCEPTED | 1 | Task 1 Key Decisions enumerates only `ID`, `AllowedEmailDomains`, `QuantityPerAccount` as columns on `DomainAuthorizedSummitRegistrationDiscountCode` and `DomainAuthorizedSummitRegistrationPromoCode`. Migration additionally creates `AutoApply TINYINT(1) NOT NULL DEFAULT 0` on both new tables. Required by Task 2's `AutoApplyPromoCodeTrait` being mixed into the domain-authorized types; folding it into CREATE is cleaner than a follow-up ALTER. Acceptable — consistent with SDS intent (per-subtype joined-table storage, not base class). |
+| D9 | `AllowedEmailDomains` column is `JSON DEFAULT NULL` | NIT | ACCEPTED | 1 | SDS (Task 2) specifies trait default `[]`. MySQL 5.7/8.0 JSON columns cannot take a non-NULL literal default, so `DEFAULT NULL` is the only workable column-level default. The trait getter coerces NULL → `[]` at the application layer, preserving the documented default. |
 
 ### Resolution Plan
 
-- **D3 (OPEN):** Create a custom Laravel validation rule class (e.g., `AllowedEmailDomainsRule`) that decodes the JSON and validates each entry matches `^@[\w.-]+$`, `^\.\w+$`, or `^[^@]+@[\w.-]+$`. Apply in both `buildForAdd` and `buildForUpdate` for domain-authorized types.
-- **D4 (OPEN):** Moving the check into `ApplyPromoCodeTask` alone is insufficient. The count query only covers 'Paid'/'Confirmed' orders, but the current request's tickets don't exist until `ReserveOrderTask` (the next saga step). See Task 10 Review Follow-ups #1 and #3 for the full fix specification — the preferred approach is to move `ApplyPromoCodeTask` after `ReserveOrderTask` in the saga chain AND widen the count query to include 'Reserved' status orders.
+- **D3 (RESOLVED):** `AllowedEmailDomainsArray` custom rule created at `app/Rules/AllowedEmailDomainsArray.php` and wired into `PromoCodesValidationRulesFactory.php` for both add and update paths on both domain-authorized types.
+- **D4 (RESOLVED):** All three review follow-ups applied: check relocated to `ApplyPromoCodeTask` inside the locked transaction, saga reordered (`ApplyPromoCodeTask` after `ReserveOrderTask`), count query widened to include `'Reserved'` status orders.
 
 ## Implementation Tasks
 
@@ -261,12 +263,12 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - NO new M2M join tables — both types reuse the existing `SummitRegistrationPromoCode_AllowedTicketTypes` M2M from the base class
 
 **Definition of Done:**
-- [ ] Migration runs without errors (`up` and `down`)
-- [ ] Both new tables exist with correct schema
-- [ ] `SummitTicketType.Audience` ENUM now includes `WithPromoCode` alongside existing values (`All`, `WithInvitation`, `WithoutInvitation`)
-- [ ] `AutoApply` column exists on all four existing email-linked subtype tables with default `0`
-- [ ] All existing data is unchanged (defaults applied)
-- [ ] No diagnostics errors
+- [x] Migration runs without errors (`up` and `down`)
+- [x] Both new tables exist with correct schema
+- [x] `SummitTicketType.Audience` ENUM now includes `WithPromoCode` alongside existing values (`All`, `WithInvitation`, `WithoutInvitation`)
+- [x] `AutoApply` column exists on all four existing email-linked subtype tables with default `0`
+- [x] All existing data is unchanged (defaults applied)
+- [x] No diagnostics errors
 
 **Verify:**
 - `php artisan doctrine:migrations:migrate --no-interaction`
@@ -313,13 +315,13 @@ Deviations from the SDS captured during implementation. Each entry is either **O
   - Keeping this as a separate trait (rather than bundling it into `DomainAuthorizedPromoCodeTrait`) allows existing email-linked types to opt in to auto-apply without also pulling in domain-matching logic they don't need.
 
 **Definition of Done:**
-- [ ] `DomainAuthorizedPromoCodeTrait` compiles without errors
-- [ ] `AutoApplyPromoCodeTrait` compiles without errors
-- [ ] Interface defines required method signatures
-- [ ] Domain matching handles all pattern types: `@domain`, `.tld`, `exact@email`
-- [ ] Matching is case-insensitive
-- [ ] `matchesEmailDomain` returns bool, `checkSubject` throws on failure
-- [ ] No diagnostics errors
+- [x] `DomainAuthorizedPromoCodeTrait` compiles without errors
+- [x] `AutoApplyPromoCodeTrait` compiles without errors
+- [x] Interface defines required method signatures
+- [x] Domain matching handles all pattern types: `@domain`, `.tld`, `exact@email`
+- [x] Matching is case-insensitive
+- [x] `matchesEmailDomain` returns bool, `checkSubject` throws on failure
+- [x] No diagnostics errors
 
 **Verify:**
 - Unit test for matching logic
@@ -354,15 +356,15 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - Add `DOMAIN_AUTHORIZED_DISCOUNT_CODE` to `PromoCodesConstants::$valid_class_names`
 
 **Definition of Done:**
-- [ ] Model class compiles without errors
-- [ ] Discriminator map includes `DomainAuthorizedSummitRegistrationDiscountCode`
-- [ ] `PromoCodesConstants::$valid_class_names` includes the new ClassName
-- [ ] `addTicketTypeRule()` rejects rules for types not in `allowed_ticket_types`
-- [ ] `addTicketTypeRule()` does NOT write to `allowed_ticket_types`
-- [ ] `removeTicketTypeRuleForTicketType()` does NOT touch `allowed_ticket_types`
-- [ ] `canBeAppliedTo()` allows free ticket types in `allowed_ticket_types` (does not reject on cost = 0)
-- [ ] Domain-authorized discount codes interact correctly with `WithPromoCode` ticket types at every layer: admin create → discovery → auto-apply → apply-time validation → checkout
-- [ ] No diagnostics errors
+- [x] Model class compiles without errors
+- [x] Discriminator map includes `DomainAuthorizedSummitRegistrationDiscountCode`
+- [x] `PromoCodesConstants::$valid_class_names` includes the new ClassName
+- [x] `addTicketTypeRule()` rejects rules for types not in `allowed_ticket_types`
+- [x] `addTicketTypeRule()` does NOT write to `allowed_ticket_types`
+- [x] `removeTicketTypeRuleForTicketType()` does NOT touch `allowed_ticket_types`
+- [x] `canBeAppliedTo()` allows free ticket types in `allowed_ticket_types` (does not reject on cost = 0)
+- [x] Domain-authorized discount codes interact correctly with `WithPromoCode` ticket types at every layer: admin create → discovery → auto-apply → apply-time validation → checkout
+- [x] No diagnostics errors
 
 **Verify:**
 - `php artisan clear-compiled && php artisan cache:clear`
@@ -395,10 +397,10 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - Add `DOMAIN_AUTHORIZED_PROMO_CODE` to `PromoCodesConstants::$valid_class_names`
 
 **Definition of Done:**
-- [ ] Model class compiles without errors
-- [ ] Discriminator map includes `DomainAuthorizedSummitRegistrationPromoCode`
-- [ ] `PromoCodesConstants::$valid_class_names` includes the new ClassName
-- [ ] No diagnostics errors
+- [x] Model class compiles without errors
+- [x] Discriminator map includes `DomainAuthorizedSummitRegistrationPromoCode`
+- [x] `PromoCodesConstants::$valid_class_names` includes the new ClassName
+- [x] No diagnostics errors
 
 **Verify:**
 - `php artisan clear-compiled && php artisan cache:clear`
@@ -430,11 +432,11 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - **No restriction on which promo codes can reference which audience:** Any promo code of any type (domain-authorized, email-linked, or plain generic) can have `WithPromoCode` ticket types in its `allowed_ticket_types`. The `audience` field controls ticket type visibility; the promo code type controls its own access validation. These are independent concerns.
 
 **Definition of Done:**
-- [ ] `SummitTicketType` has `AUDIENCE_WITH_PROMO_CODE` constant and `isPromoCodeOnly()` helper
-- [ ] Validation accepts `All`, `WithInvitation`, `WithoutInvitation`, and `WithPromoCode`
-- [ ] Factory supports setting `audience` to `WithPromoCode` on create/update
-- [ ] Existing ticket types with `All`, `WithInvitation`, `WithoutInvitation` continue to work unchanged
-- [ ] No diagnostics errors
+- [x] `SummitTicketType` has `AUDIENCE_WITH_PROMO_CODE` constant and `isPromoCodeOnly()` helper
+- [x] Validation accepts `All`, `WithInvitation`, `WithoutInvitation`, and `WithPromoCode`
+- [x] Factory supports setting `audience` to `WithPromoCode` on create/update
+- [x] Existing ticket types with `All`, `WithInvitation`, `WithoutInvitation` continue to work unchanged
+- [x] No diagnostics errors
 
 **Verify:**
 - `php artisan clear-compiled && php artisan cache:clear`
@@ -474,11 +476,11 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - Register both in `SerializerRegistry` with Public + CSV + PreValidation entries
 
 **Definition of Done:**
-- [ ] Can create both types via API payload with correct `class_name`
-- [ ] Serializers return `allowed_email_domains`, `quantity_per_account`, `auto_apply`, `remaining_quantity_per_account`, and `allowed_ticket_types` in response
-- [ ] Discount serializer also returns `ticket_types_rules`
-- [ ] Validation rejects invalid payloads
-- [ ] No diagnostics errors
+- [x] Can create both types via API payload with correct `class_name`
+- [x] Serializers return `allowed_email_domains`, `quantity_per_account`, `auto_apply`, `remaining_quantity_per_account`, and `allowed_ticket_types` in response
+- [x] Discount serializer also returns `ticket_types_rules`
+- [x] Validation rejects invalid payloads
+- [x] No diagnostics errors
 
 **Verify:**
 - `php artisan clear-compiled`
@@ -512,12 +514,12 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - **Key distinction from prior pre-sale approach:** Instead of bypassing `canSell()` date checks, we're filtering by `audience`. `WithPromoCode` ticket types are never visible without a promo code, regardless of dates. The promo code's `valid_since_date`/`valid_until_date` still controls when the promo code is live (and therefore when its `allowed_ticket_types` are accessible).
 
 **Definition of Done:**
-- [ ] Ticket types with `audience = WithPromoCode` are NOT returned in public queries (no promo code)
-- [ ] Ticket types with `audience = WithPromoCode` ARE returned when a qualifying promo code is live and includes them in `allowed_ticket_types`
-- [ ] Ticket types with `audience = All` continue to work exactly as before
-- [ ] Quantity limits still respected (sold-out types not shown)
-- [ ] Any promo code type (including plain generic) that includes a `WithPromoCode` ticket type in `allowed_ticket_types` and is live → ticket type IS returned
-- [ ] No diagnostics errors
+- [x] Ticket types with `audience = WithPromoCode` are NOT returned in public queries (no promo code)
+- [x] Ticket types with `audience = WithPromoCode` ARE returned when a qualifying promo code is live and includes them in `allowed_ticket_types`
+- [x] Ticket types with `audience = All` continue to work exactly as before
+- [x] Quantity limits still respected (sold-out types not shown)
+- [x] Any promo code type (including plain generic) that includes a `WithPromoCode` ticket type in `allowed_ticket_types` and is live → ticket type IS returned
+- [x] No diagnostics errors
 
 **Verify:**
 - Unit test for strategy with audience filtering
@@ -562,12 +564,12 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - Add BOTH types to `DoctrineInstanceOfFilterMapping` in `getFilterMappings()` (lines 143-158)
 
 **Definition of Done:**
-- [ ] `getDiscoverableByEmailForSummit` returns matching codes of both domain-authorized types AND all email-linked types (regardless of `auto_apply` value)
-- [ ] Returns empty array for null/empty email
-- [ ] Raw SQL `$query_from` includes LEFT JOINs for both new tables
-- [ ] Both ClassNames added to `SQLInstanceOfFilterMapping` and `DoctrineInstanceOfFilterMapping`
-- [ ] `class_name` filter works for both new types
-- [ ] No diagnostics errors
+- [x] `getDiscoverableByEmailForSummit` returns matching codes of both domain-authorized types AND all email-linked types (regardless of `auto_apply` value)
+- [x] Returns empty array for null/empty email
+- [x] Raw SQL `$query_from` includes LEFT JOINs for both new tables
+- [x] Both ClassNames added to `SQLInstanceOfFilterMapping` and `DoctrineInstanceOfFilterMapping`
+- [x] `class_name` filter works for both new types
+- [x] No diagnostics errors
 
 **Verify:**
 - Unit test for discovery query
@@ -685,15 +687,15 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - Security: requires authentication (current user's email is used for matching)
 
 **Definition of Done:**
-- [ ] Endpoint returns ALL email-matching promo codes (domain-authorized types + all email-linked types regardless of `auto_apply`) for authenticated user — no ordering/prioritization
-- [ ] Each result includes `class_name`, `auto_apply`, `remaining_quantity_per_account`, and `allowed_ticket_types`
-- [ ] `remaining_quantity_per_account` is correctly calculated per member
-- [ ] Returns empty array if no codes match
-- [ ] Returns empty array if user's email is null/empty (no error)
-- [ ] Codes with exhausted `quantity_per_account` are excluded from results
-- [ ] Returns 403 if not authenticated
-- [ ] Controller does not read email from request input; email is always derived from `resource_server_context`
-- [ ] No diagnostics errors
+- [x] Endpoint returns ALL email-matching promo codes (domain-authorized types + all email-linked types regardless of `auto_apply`) for authenticated user — no ordering/prioritization
+- [x] Each result includes `class_name`, `auto_apply`, `remaining_quantity_per_account`, and `allowed_ticket_types`
+- [x] `remaining_quantity_per_account` is correctly calculated per member
+- [x] Returns empty array if no codes match
+- [x] Returns empty array if user's email is null/empty (no error)
+- [x] Codes with exhausted `quantity_per_account` are excluded from results
+- [x] Returns 403 if not authenticated
+- [x] Controller does not read email from request input; email is always derived from `resource_server_context`
+- [x] No diagnostics errors
 
 **Verify:**
 - Integration test calling the endpoint
@@ -735,12 +737,12 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - This is the second enforcement point (after discovery filtering in Task 9). Both are needed — discovery is advisory (UX), checkout is authoritative (prevents abuse if frontend is bypassed).
 
 **Definition of Done:**
-- [ ] Order with domain-authorized promo code is rejected when existing tickets + new order tickets would exceed `quantity_per_account` (i.e., total > limit, not >=)
-- [ ] Order is allowed when member is still under the limit
-- [ ] `quantity_per_account = 0` means unlimited (no enforcement)
-- [ ] Non-domain-authorized promo codes are not affected
-- [ ] Concurrent checkouts by the same member cannot exceed `quantity_per_account` (pessimistic lock via `SELECT ... FOR UPDATE` within `ITransactionService::transaction()`)
-- [ ] No diagnostics errors
+- [x] Order with domain-authorized promo code is rejected when existing tickets + new order tickets would exceed `quantity_per_account` (i.e., total > limit, not >=)
+- [x] Order is allowed when member is still under the limit
+- [x] `quantity_per_account = 0` means unlimited (no enforcement)
+- [x] Non-domain-authorized promo codes are not affected
+- [x] Concurrent checkouts by the same member cannot exceed `quantity_per_account` (pessimistic lock via `SELECT ... FOR UPDATE` within `ITransactionService::transaction()`)
+- [x] No diagnostics errors
 
 **Verify:**
 - Unit test: order with exhausted quantity_per_account → ValidationException
@@ -782,25 +784,26 @@ Deviations from the SDS captured during implementation. Each entry is either **O
   - `MemberSummitRegistrationDiscountCode` — associated with a `Member` via `$owner` relationship
   - `SpeakerSummitRegistrationPromoCode` — associated with a `PresentationSpeaker` which has a `Member`
   - `SpeakerSummitRegistrationDiscountCode` — associated with a `PresentationSpeaker` which has a `Member`
-- The discovery endpoint (Task 9) matches these types by checking `$code->getOwner()->getEmail() === $currentUserEmail` (for member types) or `$code->getSpeaker()->getMember()->getEmail() === $currentUserEmail` (for speaker types).
+- The discovery endpoint (Task 9) matches these types by checking `$code->getOwnerEmail() === $currentUserEmail` (for member types) or `$code->getOwnerEmail() === $currentUserEmail` (for speaker types). Both branches use the null-safe `getOwnerEmail()` accessor to handle codes with only an `email` field and no linked owner entity.
 - **Factory `populate`:** Add `auto_apply` handling for `MEMBER_PROMO_CODE`, `MEMBER_DISCOUNT_CODE`, `SPEAKER_PROMO_CODE`, `SPEAKER_DISCOUNT_CODE` class names in the factory's populate method.
 - **Validation rules:** Add `'auto_apply' => 'sometimes|boolean'` to validation rules for all four existing email-linked types.
 
 **Definition of Done:**
-- [ ] All four existing types use `AutoApplyPromoCodeTrait`
-- [ ] `AutoApply` column on each subtype's joined table is mapped via the trait's ORM annotations
-- [ ] Existing member/speaker promo codes can have `auto_apply` set via API
-- [ ] Serializers for member/speaker types expose `auto_apply`
-- [ ] All existing promo codes default to `auto_apply = false` (no behavioral change)
-- [ ] Base `SummitRegistrationPromoCode` class is NOT modified
-- [ ] No diagnostics errors
+- [x] All four existing types use `AutoApplyPromoCodeTrait`
+- [x] `AutoApply` column on each subtype's joined table is mapped via the trait's ORM annotations
+- [x] Existing member/speaker promo codes can have `auto_apply` set via API
+- [x] Serializers for member/speaker types expose `auto_apply`
+- [x] All existing promo codes default to `auto_apply = false` (no behavioral change)
+- [x] Base `SummitRegistrationPromoCode` class is NOT modified
+- [x] No diagnostics errors
 
 **Verify:**
 - API test: verify a speaker promo code is returned in discovery when email matches, with correct `auto_apply` value in response
 
 **Review Follow-ups:**
-- **NIT 1 (pre-existing, tech debt):** Missing `break` after `case 'speaker':` in both `SpeakerSummitRegistrationPromoCodeSerializer.php` and `SpeakerSummitRegistrationDiscountCodeSerializer.php`. When `?expand=speaker` is requested, control falls through to `case 'owner_name':`, adding `owner_name` to the response as an unintended side effect. Not introduced by Task 11 — pre-existing in original code. Fix opportunistically before merge.
+- [x] **NIT 1 (pre-existing, tech debt):** Missing `break` after `case 'speaker':` in both `SpeakerSummitRegistrationPromoCodeSerializer.php` and `SpeakerSummitRegistrationDiscountCodeSerializer.php`. When `?expand=speaker` is requested, control falls through to `case 'owner_name':`, adding `owner_name` to the response as an unintended side effect. Not introduced by Task 11 — pre-existing in original code. **RESOLVED:** Added missing `break` statements in both serializers.
 - **NIT 2 (out of scope, non-blocking):** All four member/speaker serializers unconditionally set `$values['remaining_quantity_per_account'] = null` (last line before `return`). Not in Task 11 DoD — added during Task 9 discovery work to normalize the response shape across all discovery result types. Semantically correct (null = no per-account limit for these types). No action required.
+- [x] **Member branch in discovery has the same "no-owner" bug pattern that was fixed for speakers in Task 8 (SHOULD-FIX):** `getDiscoverableByEmailForSummit()` at `app/Repositories/Summit/DoctrineSummitRegistrationPromoCodeRepository.php` lines 703-708 currently calls `$code->getOwner()` then `$owner->getEmail()` for `MemberSummitRegistrationPromoCode`/`MemberSummitRegistrationDiscountCode`. This matches the SDS Task 11 Key Decisions wording, but a member code created with only an `email` field set and no linked Member owner is silently skipped by discovery — `$code->getOwner()` returns null and the branch short-circuits. Meanwhile `MemberPromoCodeTrait::getEmail()` (`Traits/MemberPromoCodeTrait.php:91-96`) explicitly falls through `$this->email` first, `MemberSummitRegistrationPromoCode::getOwnerEmail()` (`MemberSummitRegistrationPromoCode.php:60-63`) delegates to it, and `MemberPromoCodeTrait::checkSubject()` only enforces when `hasOwner()` — so such a code passes checkout validation but is never returned by discovery. This is the exact parity issue fixed in Task 8 Review Follow-up #2 for the speaker branch. **Fix:** replace the `getOwner()->getEmail()` path with the same pattern used for speakers: `$ownerEmail = $code->getOwnerEmail(); if (!empty($ownerEmail) && strtolower($ownerEmail) === $email && $code->isLive()) { $results[] = $code; }`. Also update the Task 11 Key Decisions note on line 787 so the documented discovery matching for member types uses `getOwnerEmail()` instead of `getOwner()->getEmail()`, keeping the SDS consistent with the resolved speaker behavior.
 
 ---
 
@@ -850,14 +853,15 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - Test `QuantityPerAccount` concurrent checkout enforcement (two simultaneous checkouts by same member cannot both succeed when only one slot remains)
 
 **Definition of Done:**
-- [ ] All tests pass
-- [ ] Domain matching edge cases covered
-- [ ] Audience-based ticket type filtering tested
-- [ ] Collision avoidance tested (discount variant only)
-- [ ] Auto-apply field tested for domain-authorized and existing email-linked types
-- [ ] Discovery includes both domain-authorized and email-linked types
-- [ ] Checkout enforcement tested
-- [ ] No diagnostics errors
+- [x] All tests pass
+- [x] Domain matching edge cases covered
+- [x] Audience-based ticket type filtering tested
+- [x] Collision avoidance tested (discount variant only)
+- [x] Auto-apply field tested for domain-authorized and existing email-linked types
+- [x] Discovery includes both domain-authorized and email-linked types
+- [?] Checkout enforcement tested
+  > Three test methods exist (`testCheckoutRejectsOverLimitQuantityPerAccount`, `testCheckoutSucceedsUnderLimitQuantityPerAccount`, `testCheckoutConcurrentEnforcement`) in `OAuth2SummitPromoCodesApiTest` but all are `markTestSkipped`. The enforcement code is verified to exist at `SummitOrderService.php:791-808` inside the locked transaction (D4 resolved), and the skip messages document the dependency: exercising the checkout path end-to-end requires a full saga pipeline test harness (SagaFactory + payment mocks) that does not yet exist. No test currently *executes* the checkout enforcement path. Whether this satisfies "tested" is a judgment call — the tests are written against the intended contract, but they do not run.
+- [x] No diagnostics errors
 
 **Verify:**
 - `php artisan test --filter=DomainAuthorizedPromoCodeTest`
@@ -872,6 +876,7 @@ Deviations from the SDS captured during implementation. Each entry is either **O
 - [x] **`testWithPromoCodeAudienceNoPromoCodeNotReturned` is vacuous (SHOULD-FIX):** `buildMockSummit()` is called with no arguments — both `audienceAllTypes` and `audienceWithoutInvitationTypes` default to empty arrays, strategy returns `[]`, and the `foreach` assertion loop never executes. Fix: pass a `WithPromoCode` mock ticket type into the summit's `getTicketTypesByAudience` response for `Audience_All`, then assert it is absent from the result when `promo_code = null`. The filtering branch to reach is `isPromoCodeOnly()` at `RegularPromoCodeTicketTypesStrategy.php:134`.
 - [x] **Serializer tests absent (SHOULD-FIX):** Key Decisions require: (a) `auto_apply` field serialization tested for domain-authorized and existing email-linked types — instantiate `DomainAuthorizedSummitRegistrationPromoCodeSerializer`, set `auto_apply = true` on the model, call `serialize()`, assert `auto_apply = true` in output; repeat for `false` and for a Member/Speaker serializer; (b) `remaining_quantity_per_account` calculated attribute — set `$code->setRemainingQuantityPerAccount(3)`, serialize, assert `remaining_quantity_per_account = 3`; set `null`, assert `null`. Serializer tests require `Tests\TestCase` (Laravel boot for serializer registry).
 - [x] **Test name misleading for "domain-authorized" strategy test (NIT):** `testWithPromoCodeAudienceLiveDomainAuthorizedPromoCodeReturned` (line 305) mocks `SummitRegistrationPromoCode::class` (base class), not `DomainAuthorizedSummitRegistrationPromoCode`. The strategy performs no `instanceof` check — the test correctly verifies strategy behavior for any live promo code but the name implies domain-specific logic is being tested. Rename to `testWithPromoCodeAudienceLivePromoCodeReturned`, or swap the mock to `DomainAuthorizedSummitRegistrationPromoCode::class` (no other changes needed).
+- [x] **Serializer tests error — missing Summit association (MUST-FIX):** `testSerializerAutoApplyField`, `testSerializerRemainingQuantityPerAccount`, and `testSerializerAutoApplyEmailLinkedType` all throw `Error: Call to a member function getId() on null` at `SummitRegistrationPromoCode.php:193`. Root cause: the parent serializer mapping includes `'SummitId' => 'summit_id:json_int'`, which calls `getSummitId()` → `$this->summit->getId()`. The test creates bare model instances without a Summit. PHP 8's `Error` (not `\Exception`) escapes the existing try/catch. Fix: create a mock Summit with `getId()` returning an int, call `$code->setSummit($mockSummit)` before serializing in all three test methods.
 
 ## Resolved Decisions
 

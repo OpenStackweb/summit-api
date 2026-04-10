@@ -178,7 +178,7 @@ final class SponsorUserInfoGrantService
             if(is_null($badge))
                 throw new EntityNotFoundException("badge not found.");
 
-            $member_sponsors = $current_member->getAllowedSponsorsBySummit($summit);
+            $member_sponsors = $current_member->getAccessibleSponsorsBySummit($summit);
 
             if ($member_sponsors->isEmpty())
                 throw new ValidationException("Current member does not have badge scan permissions for any sponsor of this summit.");

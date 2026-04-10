@@ -43,7 +43,7 @@ SET su.Permissions = (
     SELECT JSON_ARRAYAGG(g.Code)
     FROM Group_Members gm
     INNER JOIN `Group` g ON g.ID = gm.GroupID
-    WHERE gm.MemberID = su.MemberID
+    WHERE gm.MemberID = su.MemberID AND g.Code IN ('sponsors', 'sponsor-external-users')
 )
 WHERE su.Permissions IS NULL
 SQL

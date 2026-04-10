@@ -22,7 +22,6 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Illuminate\Support\Facades\Config;
-use Doctrine\DBAL\ParameterType;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Presentation;
 use models\summit\SummitMetric;
@@ -1861,14 +1860,38 @@ SQL;
             return [];
         }
 
-        // Step 2 — load all sponsors in a single IN query. findBy() uses PK-based hydration
-        // which avoids the ORM 3 assertion failure triggered by the OneToOne inverse associations
-        // on Sponsor (lead_report_setting, sponsorservices_statistics) that DQL/native-query
-        // hydration hits. The result set is then re-sorted to match the SQL ORDER BY.
-        $position = array_flip($ids);
-        $sponsors = EntityManager::getRepository(Sponsor::class)->findBy(['id' => $ids]);
-        usort($sponsors, fn($a, $b) => $position[$a->getId()] <=> $position[$b->getId()]);
-        return $sponsors;
+        return $this->loadSponsorsByIds($ids);
+    }
+
+    /**
+     * @param Summit $summit
+     * @return ArrayCollection
+     * @throws Exception
+     */
+    public function getAccessibleSponsorsBySummit(Summit $summit): ArrayCollection
+    {
+        $ids = $this->getSponsorMembershipIds($summit);
+
+        return new ArrayCollection($this->loadSponsorsByIds($ids));
+    }
+
+    /**
+     * Loads Sponsor entities by PK using DQL rather than native-query hydration.
+     * findBy()-style PK hydration avoids the ORM 3 assertion failure triggered by
+     * the OneToOne inverse associations on Sponsor (lead_report_setting,
+     * sponsorservices_statistics) that DQL/native-query hydration hits.
+     *
+     * @param int[] $ids
+     * @return Sponsor[]
+     */
+    private function loadSponsorsByIds(array $ids): array
+    {
+        if (empty($ids)) return [];
+
+        return $this->getEM()
+            ->createQuery('SELECT s FROM ' . Sponsor::class . ' s WHERE s.id IN (:ids) ORDER BY s.id ASC')
+            ->setParameter('ids', $ids)
+            ->getResult();
     }
 
     /**
@@ -1989,41 +2012,6 @@ SQL;
         if ($this->summit_registration_orders->contains($summit_order)) return;
         $this->summit_registration_orders->add($summit_order);
         $summit_order->setOwner($this);
-    }
-
-    /**
-     * @param Summit $summit
-     * @return ArrayCollection
-     * @throws Exception
-     */
-    public function getAllowedSponsorsBySummit(Summit $summit): ArrayCollection
-    {
-        $sql = <<<SQL
-SELECT su.SponsorID
-FROM Sponsor_Users su
-INNER JOIN Sponsor s ON s.ID = su.SponsorID
-WHERE su.MemberID = :member_id
-    AND s.SummitID = :summit_id
-    AND (
-        JSON_CONTAINS(COALESCE(su.Permissions, '[]'), JSON_QUOTE(:slug_sponsors))
-        OR JSON_CONTAINS(COALESCE(su.Permissions, '[]'), JSON_QUOTE(:slug_external))
-    )
-SQL;
-        $ids = $this->prepareRawSQL($sql, [
-            'member_id'     => $this->getId(),
-            'summit_id'     => $summit->getId(),
-            'slug_sponsors' => IGroup::Sponsors,
-            'slug_external' => IGroup::SponsorExternalUsers,
-        ])->executeQuery()->fetchFirstColumn();
-
-        if (empty($ids)) {
-            return new ArrayCollection();
-        }
-
-        $position = array_flip($ids);
-        $sponsors = $this->getEM()->getRepository(Sponsor::class)->findBy(['id' => $ids]);
-        usort($sponsors, fn($a, $b) => $position[$a->getId()] <=> $position[$b->getId()]);
-        return new ArrayCollection($sponsors);
     }
 
     /**

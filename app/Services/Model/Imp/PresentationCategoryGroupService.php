@@ -262,6 +262,7 @@ final class PresentationCategoryGroupService
             // been called yet at this point.
             foreach ($presentations as $presentation) {
                 $selection_plan = $presentation->getSelectionPlan();
+                if (is_null($selection_plan)) continue;
                 $track_reachable_via_another_group = $selection_plan->getCategoryGroups()->exists(
                     function ($key, $group) use ($track, $track_group) {
                         return $group->getId() !== $track_group->getId()

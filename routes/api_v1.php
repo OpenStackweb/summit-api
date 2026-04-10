@@ -24,7 +24,11 @@ Route::group(['prefix' => 'audit-logs'], function () {
 // members
 Route::group(['prefix' => 'members'], function () {
     Route::get('', 'OAuth2MembersApiController@getAll');
-
+    Route::group(['prefix' => 'external'], function () {
+        Route::group(['prefix' => '{external_id}'], function () {
+            Route::get('',  ['middleware' => 'auth.user', 'uses' => 'OAuth2MembersApiController@getMemberByIdExternalId']);
+        });
+    });
     Route::group(['prefix' => 'me'], function () {
         // get my member info
         Route::get('', 'OAuth2MembersApiController@getMyMember');

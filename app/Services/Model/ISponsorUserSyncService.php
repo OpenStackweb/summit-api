@@ -47,20 +47,24 @@ interface ISponsorUserSyncService
     /**
      * @param int $user_id
      * @param string $group_slug
+     * @param int $sponsor_id
+     * @param int $summit_id
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      * @throws Exception
      */
-    public function addSponsorUserToGroup(int $user_id, string $group_slug): void;
+    public function addSponsorUserToGroup(int $user_id, string $group_slug, int $sponsor_id, int $summit_id): void;
 
     /**
      * @param int $user_id
      * @param string $group_slug
+     * @param int $sponsor_id
+     * @param int $summit_id
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      * @throws Exception
      */
-    public function removeSponsorUserFromGroup(int $user_id, string $group_slug): void;
+    public function removeSponsorUserFromGroup(int $user_id, string $group_slug, int $sponsor_id, int $summit_id): void;
 }

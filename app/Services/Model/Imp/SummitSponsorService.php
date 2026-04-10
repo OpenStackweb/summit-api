@@ -394,7 +394,9 @@ final class SummitSponsorService
                 // due a member could be on 2 diff places at same time ...
                 // (StartA <= EndB)  and  (EndA >= StartB)
 
-                if ($current_summit_begin_date <= $former_summit_end_date && $current_summit_end_date >= $former_summit_begin_date) {
+                if ($summit->getId() != $former_summit->getId() &&
+                    $current_summit_begin_date <= $former_summit_end_date &&
+                    $current_summit_end_date >= $former_summit_begin_date) {
                     throw new ValidationException
                     (
                         sprintf

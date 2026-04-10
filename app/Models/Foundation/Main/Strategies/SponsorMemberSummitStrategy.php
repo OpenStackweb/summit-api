@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\Main\IGroup;
 use LaravelDoctrine\ORM\Facades\Registry;
 use Libs\Utils\Doctrine\DoctrineStatementValueBinder;
 use models\summit\Summit;
@@ -41,13 +42,19 @@ class SponsorMemberSummitStrategy implements IMemberSummitStrategy
         $sql = <<<SQL
 SELECT DISTINCT(Sponsor.SummitID)
 FROM Sponsor_Users INNER JOIN Sponsor ON Sponsor_Users.SponsorID = Sponsor.ID
-WHERE Sponsor_Users.MemberID = :member_id;
+WHERE Sponsor_Users.MemberID = :member_id
+    AND (
+        JSON_CONTAINS(COALESCE(Sponsor_Users.Permissions, '[]'), JSON_QUOTE(:slug_sponsors))
+        OR JSON_CONTAINS(COALESCE(Sponsor_Users.Permissions, '[]'), JSON_QUOTE(:slug_external))
+    );
 SQL;
 
         $stmt = DoctrineStatementValueBinder::bind(
             $em->getConnection()->prepare($sql),
             [
-                'member_id' => $this->member_id,
+                'member_id'     => $this->member_id,
+                'slug_sponsors' => IGroup::Sponsors,
+                'slug_external' => IGroup::SponsorExternalUsers,
             ]
         );
         $res = $stmt->executeQuery();
@@ -67,14 +74,20 @@ SQL;
 SELECT COUNT(Sponsor.SummitID)
 FROM Sponsor_Users INNER JOIN Sponsor ON Sponsor_Users.SponsorID = Sponsor.ID
 WHERE Sponsor_Users.MemberID = :member_id
-        AND Sponsor.SummitID = :summit_id
+    AND Sponsor.SummitID = :summit_id
+    AND (
+        JSON_CONTAINS(COALESCE(Sponsor_Users.Permissions, '[]'), JSON_QUOTE(:slug_sponsors))
+        OR JSON_CONTAINS(COALESCE(Sponsor_Users.Permissions, '[]'), JSON_QUOTE(:slug_external))
+    )
 SQL;
 
             $stmt = DoctrineStatementValueBinder::bind(
                 $em->getConnection()->prepare($sql),
                 [
-                    'member_id' => $this->member_id,
-                    'summit_id' => $summit->getId(),
+                    'member_id'     => $this->member_id,
+                    'summit_id'     => $summit->getId(),
+                    'slug_sponsors' => IGroup::Sponsors,
+                    'slug_external' => IGroup::SponsorExternalUsers,
                 ]
             );
             $res = $stmt->executeQuery();

@@ -60,13 +60,23 @@ final class UpdateSponsorMemberGroupsMQJob implements ShouldQueue
             Log::debug("UpdateSponsorMemberGroupsMQJob::handle payload {$json}");
 
             $data = $payload['data'];
+            if (!isset($data['user_external_id'], $data['group_slug'], $data['sponsor_id'], $data['summit_id'])) {
+                throw new ValidationException('Invalid payload: user_external_id, group_slug, sponsor_id and summit_id are required.');
+            }
+
             $user_external_id = intval($data['user_external_id']);
             $group_slug = $data['group_slug'];
+            $sponsor_id = intval($data['sponsor_id']);
+            $summit_id = intval($data['summit_id']);
+
+            if ($user_external_id <= 0 || $sponsor_id <= 0 || $summit_id <= 0 || trim((string)$group_slug) === '') {
+                throw new ValidationException('Invalid payload: identifiers must be positive and group_slug must be non-empty.');
+            }
 
             if ($event_type === EventTypes::AUTH_USER_ADDED_TO_GROUP) {
-                $this->service->addSponsorUserToGroup($user_external_id, $group_slug);
+                $this->service->addSponsorUserToGroup($user_external_id, $group_slug, $sponsor_id, $summit_id);
             } else if ($event_type === EventTypes::AUTH_USER_REMOVED_FROM_GROUP) {
-                $this->service->removeSponsorUserFromGroup($user_external_id, $group_slug);
+                $this->service->removeSponsorUserFromGroup($user_external_id, $group_slug, $sponsor_id, $summit_id);
             }
             $job->delete();
         } catch (\Exception $ex) {

@@ -50,6 +50,7 @@ extends AbstractModelService
 
     /**
      * @inheritDoc
+     * @throws \Exception
      */
     public function add(array $payload): SummitMediaFileType
     {
@@ -71,10 +72,11 @@ extends AbstractModelService
 
     /**
      * @inheritDoc
+     * @throws \Exception
      */
     public function update(int $id, array $payload): SummitMediaFileType
     {
-        return $this->tx_service->transaction(function() use($id, $payload){
+        $media_file_type = $this->tx_service->transaction(function() use($id, $payload){
             $type = $this->repository->getById($id);
             if(is_null($type))
                 throw new EntityNotFoundException();
@@ -86,23 +88,23 @@ extends AbstractModelService
                 if(!is_null($type) && $type->getId() != $id)
                     throw new ValidationException(sprintf("Name %s already exists.", $payload['name']));
             }
-
-            $media_file_type = SummitMediaFileTypeFactory::populate($type, $payload);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitMediaFileTypeCreatedEventDTO::fromSummitMediaFileType($media_file_type)->serialize(),
-                SummitMediaFileTypeDomainEvents::SummitMediaFileTypeUpdated);
-
-            return $media_file_type;
+            return SummitMediaFileTypeFactory::populate($type, $payload);
         });
+
+       PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitMediaFileTypeCreatedEventDTO::fromSummitMediaFileType($media_file_type)->serialize(),
+            SummitMediaFileTypeDomainEvents::SummitMediaFileTypeUpdated);
+
+       return $media_file_type;
     }
 
     /**
      * @inheritDoc
+     * @throws \Exception
      */
     public function delete(int $id): void
     {
-        $this->tx_service->transaction(function() use($id){
+        $type = $this->tx_service->transaction(function() use($id){
             $type = $this->repository->getById($id);
             if(is_null($type))
                 throw new EntityNotFoundException();
@@ -111,9 +113,11 @@ extends AbstractModelService
 
             $this->repository->delete($type);
 
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                DeletedEventDTO::fromEntity($type)->serialize(),
-                SummitMediaFileTypeDomainEvents::SummitMediaFileTypeDeleted);
+            return $type;
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            DeletedEventDTO::fromEntity($type)->serialize(),
+            SummitMediaFileTypeDomainEvents::SummitMediaFileTypeDeleted);
     }
 }

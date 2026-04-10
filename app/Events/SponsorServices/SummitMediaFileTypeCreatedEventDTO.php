@@ -17,14 +17,14 @@ class SummitMediaFileTypeCreatedEventDTO
 {
     private int $id;
     private string $name;
-    private string $description;
-    private string $allowed_extensions;
+    private ?string $description;
+    private ?string $allowed_extensions;
 
     public function __construct(
-        int    $id,
-        string $name,
-        string $description,
-        string $allowed_extensions
+        int     $id,
+        string  $name,
+        ?string $description,
+        ?string $allowed_extensions
     )
     {
         $this->id = $id;
@@ -45,11 +45,17 @@ class SummitMediaFileTypeCreatedEventDTO
 
     public function serialize(): array
     {
-        return [
-            'id' => $this->id,
+        $res = [
+            'id'   => $this->id,
             'name' => $this->name,
-            'description' => $this->description,
-            'allowed_extensions' => $this->allowed_extensions
         ];
+
+        if (!is_null($this->description))
+            $res['description'] = $this->description;
+
+        if (!is_null($this->allowed_extensions))
+            $res['allowed_extensions'] = $this->allowed_extensions;
+
+        return $res;
     }
 }

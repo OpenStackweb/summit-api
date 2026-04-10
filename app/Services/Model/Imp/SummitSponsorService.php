@@ -184,10 +184,11 @@ final class SummitSponsorService
      * @return Sponsor
      * @throws EntityNotFoundException
      * @throws ValidationException
+     * @throws \Exception
      */
     public function updateSponsor(Summit $summit, int $sponsor_id, array $payload): Sponsor
     {
-        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
+        $sponsor = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
             Log::debug
             (
                 sprintf
@@ -332,12 +333,14 @@ final class SummitSponsorService
                 $summit->recalculateSummitSponsorOrder($sponsor, $payload['order']);
             }
 
-            PublishSponsorServiceDomainEventsJob::dispatch(
-             SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
-                SponsorDomainEvents::SponsorUpdated);
-
             return $sponsor;
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
+            SponsorDomainEvents::SponsorUpdated);
+
+        return $sponsor;
     }
 
     /**
@@ -348,17 +351,18 @@ final class SummitSponsorService
      */
     public function deleteSponsor(Summit $summit, int $sponsor_id): void
     {
-        $this->tx_service->transaction(function () use ($summit, $sponsor_id) {
+        $sponsor = $this->tx_service->transaction(function () use ($summit, $sponsor_id) {
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");
 
             $summit->removeSummitSponsor($summit_sponsor);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-             DeletedEventDTO::fromEntity($summit_sponsor)->serialize(),
-                SponsorDomainEvents::SponsorDeleted);
+            return $summit_sponsor;
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            DeletedEventDTO::fromEntity($sponsor)->serialize(),
+            SponsorDomainEvents::SponsorDeleted);
     }
 
     /**

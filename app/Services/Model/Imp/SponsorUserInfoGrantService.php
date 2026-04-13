@@ -22,6 +22,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\ISponsorUserInfoGrantRepository;
+use models\summit\ISummitAttendeeRepository;
 use models\summit\SponsorBadgeScan;
 use models\summit\SponsorUserInfoGrant;
 use models\summit\Summit;
@@ -46,20 +47,28 @@ final class SponsorUserInfoGrantService
     private $badge_repository;
 
     /**
+     * @var ISummitAttendeeRepository
+     */
+    private $attendee_repository;
+
+    /**
      * SponsorBadgeScanService constructor.
      * @param ISponsorUserInfoGrantRepository $repository
+     * @param ISummitAttendeeRepository $attendee_repository
      * @param ISummitAttendeeBadgeRepository $badge_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
     (
         ISponsorUserInfoGrantRepository $repository,
+        ISummitAttendeeRepository $attendee_repository,
         ISummitAttendeeBadgeRepository $badge_repository,
         ITransactionService $tx_service
     )
     {
         parent::__construct($tx_service);
         $this->repository = $repository;
+        $this->attendee_repository = $attendee_repository;
         $this->badge_repository = $badge_repository;
     }
 
@@ -104,10 +113,53 @@ final class SponsorUserInfoGrantService
     public function addBadgeScan(Summit $summit, Member $current_member, array $data): SponsorBadgeScan
     {
         return $this->tx_service->transaction(function() use($summit, $current_member, $data){
+            $raw_qr_code = $data['qr_code'] ?? null;
+            $raw_attendee_email = $data['attendee_email'] ?? null;
+            if(empty($raw_qr_code) && empty($raw_attendee_email))
+                throw new ValidationException("Missing required parameters (qr_code or attendee_email).");
+            $ticket_number = null;
+            $qr_code = null;
+            $source = null;
+            if(!empty($raw_qr_code)) {
+                $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $raw_qr_code);
+                $fields = SummitAttendeeBadge::parseQRCode($qr_code);
+                $prefix = $fields['prefix'];
+                if($summit->getBadgeQRPrefix() != $prefix)
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "%s qr code is not valid for summit %s.",
+                            $qr_code,
+                            $summit->getId()
+                        )
+                    );
+                $ticket_number = $fields['ticket_number'];
+                $source = SponsorBadgeScan::Source_QR;
+            }
+            else if(!empty($raw_attendee_email)) {
+                if(!$current_member->isAdmin())
+                    throw new ValidationException("User should have admin rights.");
 
-            $qr_code         = SummitAttendeeBadge::decodeQRCodeFor($summit, $data['qr_code']);
-            $fields          = SummitAttendeeBadge::parseQRCode($qr_code);
-            $prefix          = $fields['prefix'];
+                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($raw_attendee_email));
+                if(is_null($attendee)){
+                    throw new EntityNotFoundException("Attendee not found.");
+                }
+                $ticket = null;
+                foreach ($attendee->getTickets() as $t) {
+                    if ($t->isActive() && $t->hasBadge()) { $ticket = $t; break; }
+                }
+
+                if(is_null($ticket)){
+                    throw new EntityNotFoundException("Ticket not found.");
+                }
+                $ticket_number = $ticket->getNumber();
+                $badge = $ticket->getBadge();
+                // normalize qr code
+                $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $badge->getQRCode());
+                $source = SponsorBadgeScan::Source_Attendee_Email;
+            }
+
             $scan_date_epoch = intval($data['scan_date']);
             $scan_date       = new \DateTime("@$scan_date_epoch");
             $begin_date      = $summit->getBeginDate();
@@ -115,37 +167,39 @@ final class SponsorUserInfoGrantService
 
             /*
             if(!($scan_date >= $begin_date && $scan_date <= $end_date))
-                throw new ValidationException("scan_date is does not belong to summit period.");
+                throw new ValidationException("scan_date does not belong to summit period.");
             */
-
-            if($summit->getBadgeQRPrefix() != $prefix)
-                throw new ValidationException
-                (
-                    sprintf
-                    (
-                        "%s qr code is not valid for summit %s",
-                        $qr_code,
-                        $summit->getId()
-                    )
-                );
-
-            $ticket_number = $fields['ticket_number'];
+            if(empty($ticket_number)){
+                throw new ValidationException("Ticket not found.");
+            }
 
             $badge = $this->badge_repository->getBadgeByTicketNumber($ticket_number);
 
             if(is_null($badge))
-                throw new EntityNotFoundException("badge not found");
+                throw new EntityNotFoundException("badge not found.");
 
-            $sponsor = $current_member->getSponsorBySummit($summit);
+            $member_sponsors = $current_member->getAccessibleSponsorsBySummit($summit);
 
-            if(is_null($sponsor))
-                throw new ValidationException("Current member does not belongs to any summit sponsor.");
+            if ($member_sponsors->isEmpty())
+                throw new ValidationException("Current member does not have badge scan permissions for any sponsor of this summit.");
+
+            if ($member_sponsors->count() === 1) {
+                $sponsor = $member_sponsors->first();
+            } else {
+                if (empty($data['sponsor_id']))
+                    throw new ValidationException("sponsor_id is required when the member belongs to multiple sponsors.");
+                $sponsor_id = intval($data['sponsor_id']);
+                $sponsor = $member_sponsors->filter(fn($s) => $s->getId() === $sponsor_id)->first();
+                if ($sponsor === false)
+                    throw new ValidationException("Current member does not belong to the selected summit sponsor.");
+            }
 
             $scan = new SponsorBadgeScan();
             $scan->setScanDate($scan_date);
             $scan->setQRCode($qr_code);
             $scan->setUser($current_member);
             $scan->setBadge($badge);
+            $scan->setSource($source);
             $scan->setNotes(isset($data['notes'])? trim($data['notes']): "");
 
             $sponsor->addUserInfoGrant($scan);

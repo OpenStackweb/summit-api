@@ -392,16 +392,6 @@ class Sponsor extends SilverstripeBaseModel implements IOrderable
             );
         }
 
-        if($user->hasSponsorMembershipsFor($this->getSummit()))
-            throw new ValidationException
-            (
-                sprintf
-                (
-                    "Member %s already belongs to an sponsor for summit %s",
-                    $user->getId(),
-                    $this->getSummit()->getId()
-                )
-            );
         // see https://www.doctrine-project.org/projects/doctrine-orm/en/3.5/reference/working-with-associations.html#synchronizing-bidirectional-collections
         $this->members->add($user);
         $user->addSponsorMembership($this);

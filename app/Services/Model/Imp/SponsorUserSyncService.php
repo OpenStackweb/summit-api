@@ -15,12 +15,14 @@
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISponsorUserSyncService;
 use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
+use models\utils\SilverstripeBaseModel;
 use services\model\ISummitSponsorService;
 
 /**
@@ -142,13 +144,47 @@ final class SponsorUserSyncService
     /**
      * @inheritDoc
      */
-    public function addSponsorUserToGroup(int $user_id, string $group_slug): void
+    public function addSponsorUserToGroup(int $user_id, string $group_slug, int $sponsor_id, int $summit_id): void
     {
-        $this->tx_service->transaction(function () use ($user_id, $group_slug) {
+        $this->tx_service->transaction(function () use ($user_id, $group_slug, $sponsor_id, $summit_id) {
+            Log::debug(
+                "SponsorUserSyncService::addSponsorUserToGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
+
             $member = $this->member_repository->getByExternalId($user_id);
             if (is_null($member)) {
                 throw new EntityNotFoundException("Member with id {$user_id} not found");
             }
+
+            // Add permission entry to the Sponsor_Users JSON column for this sponsor-member pair.
+            // If the row does not exist yet (MQ ordering race: group event arrived before membership
+            // event), create it eagerly so the permission is never silently dropped.
+            if ($member->addSponsorPermission($sponsor_id, $group_slug) === 0) {
+                Log::warning(
+                    "SponsorUserSyncService::addSponsorUserToGroup no Sponsor_Users row found for " .
+                    "member {$member->getId()} / sponsor {$sponsor_id} — creating it eagerly");
+
+                $summit = $this->summit_repository->getById($summit_id);
+                if (!$summit instanceof Summit) {
+                    throw new EntityNotFoundException("Summit {$summit_id} not found");
+                }
+
+                $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
+
+                // Flush the UoW so the INSERT is visible to the raw SQL retry
+                // on the same connection within the active transaction.
+                Registry::getManager(SilverstripeBaseModel::EntityManager)->flush();
+
+                // Retry now that the row exists.
+                $retryResult = $member->addSponsorPermission($sponsor_id, $group_slug);
+                if ($retryResult === 0) {
+                      throw new \RuntimeException(
+                          "Failed to write permission after eager Sponsor_Users creation " .
+                          "for member {$member->getId()} / sponsor {$sponsor_id}"
+                      );
+                  }
+            }
+
+            // Add to global group only if not already a member.
             if (!$member->belongsToGroup($group_slug)) {
                 $group = $this->group_repository->getBySlug($group_slug);
                 if (is_null($group)) {
@@ -156,25 +192,40 @@ final class SponsorUserSyncService
                 }
                 $member->add2Group($group);
             }
+
+            Log::info(
+                "SponsorUserSyncService::addSponsorUserToGroup member {$member->getId()} added to group {$group_slug} via sponsor {$sponsor_id}");
         });
     }
 
     /**
      * @inheritDoc
      */
-    public function removeSponsorUserFromGroup(int $user_id, string $group_slug): void
+    public function removeSponsorUserFromGroup(int $user_id, string $group_slug, int $sponsor_id, int $summit_id): void
     {
-         $this->tx_service->transaction(function () use ($user_id, $group_slug) {
+        $this->tx_service->transaction(function () use ($user_id, $group_slug, $sponsor_id, $summit_id) {
+            Log::debug(
+                "SponsorUserSyncService::removeSponsorUserFromGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
+
             $member = $this->member_repository->getByExternalId($user_id);
             if (is_null($member)) {
                 throw new EntityNotFoundException("Member with id {$user_id} not found");
             }
-            if ($member->belongsToGroup($group_slug)) {
+
+            // Remove permission entry from JSON and get remaining sponsor count.
+            $remaining = $member->removeSponsorPermission($sponsor_id, $group_slug);
+
+            if ($remaining === 0 && $member->belongsToGroup($group_slug)) {
                 $group = $this->group_repository->getBySlug($group_slug);
                 if (is_null($group)) {
                     throw new EntityNotFoundException("Group {$group_slug} not found");
                 }
                 $member->removeFromGroup($group);
+                Log::info(
+                    "SponsorUserSyncService::removeSponsorUserFromGroup member {$member->getId()} removed from global group {$group_slug}");
+            } else {
+                Log::info(
+                    "SponsorUserSyncService::removeSponsorUserFromGroup member {$member->getId()} retains group {$group_slug} via {$remaining} other sponsor(s)");
             }
         });
     }

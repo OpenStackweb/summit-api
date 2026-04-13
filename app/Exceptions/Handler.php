@@ -66,6 +66,12 @@ class Handler extends ExceptionHandler
         if (config('app.debug')) {
             return parent::render($request, $e);
         }
-        return response()->view('errors.404', [], 200);
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            $status = $this->isHttpException($e) ? $e->getStatusCode() : 500;
+            return response()->json(['message' => 'server error'], $status);
+        }
+
+        return response()->view('errors.404', [], 404);
     }
 }

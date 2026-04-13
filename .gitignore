@@ -37,3 +37,6 @@ package.xml
 rector.php
 public/apc.php
 .claude/
+.nvmrc
+.codegraph
+docs/

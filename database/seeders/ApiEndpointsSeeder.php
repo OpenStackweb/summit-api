@@ -2506,13 +2506,15 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     SummitScopes::ReadSummitData,
-                    SummitScopes::ReadAllSummitData
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2521,6 +2523,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'POST',
                 'scopes' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2536,7 +2539,8 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     SummitScopes::ReadSummitData,
-                    SummitScopes::ReadAllSummitData
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2552,6 +2556,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'PUT',
                 'scopes' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2567,6 +2572,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'DELETE',
                 'scopes' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2582,7 +2588,8 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     SummitScopes::ReadSummitData,
-                    SummitScopes::ReadAllSummitData
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2598,6 +2605,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'POST',
                 'scopes' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2613,6 +2621,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'PUT',
                 'scopes' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
@@ -2628,6 +2637,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'DELETE',
                 'scopes' => [
                     SummitScopes::WriteSummitData,
+                    SummitScopes::WriteSponsorExtraQuestions,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,

@@ -49,8 +49,9 @@ class SagaCompensationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Minimal container so the Log/App facades the code under test touches
-        // resolve to no-ops. No DB, no full Laravel bootstrap.
+        // Other tests in the suite may have resolved Log/App facades against a
+        // full Laravel container; clear that cache so our minimal stub is used.
+        \Illuminate\Support\Facades\Facade::clearResolvedInstances();
         $container = new \Illuminate\Container\Container();
         $container->instance('app', $container);
         $container->instance('log', new class {

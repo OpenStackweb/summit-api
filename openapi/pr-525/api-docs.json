@@ -40478,7 +40478,8 @@
                 "security": [
                     {
                         "summit_promo_codes_oauth2": [
-                            "http://localhost/summits/read"
+                            "http://localhost/summits/read",
+                            "http://localhost/summits/read/all"
                         ]
                     }
                 ]

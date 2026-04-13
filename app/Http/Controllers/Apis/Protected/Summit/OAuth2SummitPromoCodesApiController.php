@@ -1614,12 +1614,9 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
 
             $codes = $this->promo_code_service->discoverPromoCodes($summit, $current_member);
 
-            $expand = Request::input('expand', '');
-            $fields = Request::input('fields', '');
-            $relations = Request::input('relations', '');
-
-            $relations = !empty($relations) ? explode(',', $relations) : ['allowed_ticket_types', 'badge_features', 'tags', 'ticket_types_rules'];
-            $fields = !empty($fields) ? explode(',', $fields) : [];
+            $expand    = SerializerUtils::getExpand();
+            $fields    = SerializerUtils::getFields();
+            $relations = SerializerUtils::getRelations();
 
             $data = [];
             foreach ($codes as $code) {

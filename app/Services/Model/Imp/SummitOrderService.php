@@ -663,14 +663,36 @@ final class ReserveOrderTask extends AbstractTask
                 );
                 $invitation->addOrder($order);
             }
-            Event::dispatch(new CreatedSummitRegistrationOrder($order->getId()));
+            $this->formerState['order'] = $order;
             return ['order' => $order];
         });
     }
 
     public function undo()
     {
-        // TODO: Implement undo() method.
+        $order = $this->formerState['order'] ?? null;
+        if (is_null($order)) {
+            Log::warning("ReserveOrderTask::undo: no order in formerState, nothing to compensate");
+            return;
+        }
+
+        $this->tx_service->transaction(function () use ($order) {
+            Log::info(sprintf("ReserveOrderTask::undo: removing reserved order id %s number %s",
+                $order->getId(), $order->getNumber()));
+
+            // Detach tickets from their attendee owners so stale references don't survive.
+            // The OneToMany(SummitAttendeeTicket, cascade: ['remove'], orphanRemoval: true) on
+            // SummitOrder::$tickets then cascades ticket deletion when the order is removed.
+            foreach ($order->getTickets() as $ticket) {
+                $attendee = $ticket->getOwner();
+                if (!is_null($attendee)) {
+                    $attendee->removeTicket($ticket);
+                }
+            }
+
+            $this->summit->removeOrder($order);
+            App::make(ISummitOrderRepository::class)->delete($order);
+        });
     }
 }
 
@@ -1758,6 +1780,10 @@ final class SummitOrderService
             );
 
             $state = $saga_factory->build($owner, $summit, $payload)->run();
+
+            // Dispatch only after the full saga (including ApplyPromoCodeTask validation) succeeds,
+            // so listeners never observe orders that were rolled back by compensation.
+            Event::dispatch(new CreatedSummitRegistrationOrder($state['order']->getId()));
 
             return $state['order'];
         } catch (ValidationException $ex) {

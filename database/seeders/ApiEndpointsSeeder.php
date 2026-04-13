@@ -2703,12 +2703,12 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData,
-                    IGroup::Sponsors,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [

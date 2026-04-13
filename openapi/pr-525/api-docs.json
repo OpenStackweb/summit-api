@@ -78811,6 +78811,10 @@
                         "description": "Attendee QR code",
                         "type": "string"
                     },
+                    "sponsor_id": {
+                        "description": "Current Summit Sponsor ID (Multiple sponsors per summit)",
+                        "type": "integer"
+                    },
                     "scan_date": {
                         "description": "Scan date (Unix timestamp)",
                         "type": "integer"

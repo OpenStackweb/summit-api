@@ -1588,7 +1588,7 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
         description: "Returns domain-authorized promo codes (matched by email domain) and existing email-linked promo codes (member/speaker, matched by associated email) for the current user",
         operationId: "discoverPromoCodesBySummit",
         tags: ["Promo Codes"],
-        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadSummitData]]],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
         parameters: [
             new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "expand", in: "query", required: false, schema: new OA\Schema(type: "string")),

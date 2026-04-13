@@ -664,7 +664,10 @@ final class ReserveOrderTask extends AbstractTask
                 $invitation->addOrder($order);
             }
             $this->formerState['order'] = $order;
-            return ['order' => $order];
+            // Preserve accumulated state (promo_codes_usage, reservations, etc.) so
+            // ApplyPromoCodeTask — which now runs after ReserveOrderTask — can read
+            // the state populated by PreProcessReservationTask.
+            return $this->formerState;
         });
     }
 

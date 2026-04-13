@@ -59,6 +59,7 @@ use models\summit\factories\SummitAttendeeFactory;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
+use models\summit\IDomainAuthorizedPromoCode;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -278,9 +279,8 @@ final class SagaFactory
         Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
         return Saga::start()
             ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-            ->addTask(new PreProcessReservationTask($summit, $payload))
+            ->addTask(new PreProcessReservationTask($summit, $payload, $owner, $this->promo_code_repository))
             ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
-            ->addTask(new ApplyPromoCodeTask($summit, $payload, $this->promo_code_repository, $this->tx_service, $this->lock_service))
             ->addTask(new ReserveOrderTask(
                 $owner,
                 $summit,
@@ -292,7 +292,8 @@ final class SagaFactory
                 $this->company_repository,
                 $this->company_service,
                 $this->tx_service
-            ));
+            ))
+            ->addTask(new ApplyPromoCodeTask($summit, $payload, $owner, $this->promo_code_repository, $this->tx_service, $this->lock_service));
     }
 }
 
@@ -662,14 +663,39 @@ final class ReserveOrderTask extends AbstractTask
                 );
                 $invitation->addOrder($order);
             }
-            Event::dispatch(new CreatedSummitRegistrationOrder($order->getId()));
-            return ['order' => $order];
+            $this->formerState['order'] = $order;
+            // Preserve accumulated state (promo_codes_usage, reservations, etc.) so
+            // ApplyPromoCodeTask — which now runs after ReserveOrderTask — can read
+            // the state populated by PreProcessReservationTask.
+            return $this->formerState;
         });
     }
 
     public function undo()
     {
-        // TODO: Implement undo() method.
+        $order = $this->formerState['order'] ?? null;
+        if (is_null($order)) {
+            Log::warning("ReserveOrderTask::undo: no order in formerState, nothing to compensate");
+            return;
+        }
+
+        $this->tx_service->transaction(function () use ($order) {
+            Log::info(sprintf("ReserveOrderTask::undo: removing reserved order id %s number %s",
+                $order->getId(), $order->getNumber()));
+
+            // Detach tickets from their attendee owners so stale references don't survive.
+            // The OneToMany(SummitAttendeeTicket, cascade: ['remove'], orphanRemoval: true) on
+            // SummitOrder::$tickets then cascades ticket deletion when the order is removed.
+            foreach ($order->getTickets() as $ticket) {
+                $attendee = $ticket->getOwner();
+                if (!is_null($attendee)) {
+                    $attendee->removeTicket($ticket);
+                }
+            }
+
+            $this->summit->removeOrder($order);
+            App::make(ISummitOrderRepository::class)->delete($order);
+        });
     }
 }
 
@@ -711,9 +737,15 @@ final class ApplyPromoCodeTask extends AbstractTask
     private $lock_service;
 
     /**
+     * @var Member|null
+     */
+    private $owner;
+
+    /**
      * ApplyPromoCodeTask constructor.
      * @param Summit $summit
      * @param array $payload
+     * @param Member|null $owner
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
@@ -722,6 +754,7 @@ final class ApplyPromoCodeTask extends AbstractTask
     (
         Summit                                 $summit,
         array                                  $payload,
+        ?Member                                $owner,
         ISummitRegistrationPromoCodeRepository $promo_code_repository,
         ITransactionService                    $tx_service,
         ILockManagerService                    $lock_service
@@ -730,6 +763,7 @@ final class ApplyPromoCodeTask extends AbstractTask
         $this->tx_service = $tx_service;
         $this->summit = $summit;
         $this->payload = $payload;
+        $this->owner = $owner;
         $this->promo_code_repository = $promo_code_repository;
         $this->lock_service = $lock_service;
     }
@@ -776,6 +810,26 @@ final class ApplyPromoCodeTask extends AbstractTask
                     if (!$promo_code->canBeAppliedTo($ticket_type)) {
                         Log::debug(sprintf("Promo code %s can not be applied to Ticket Type %s", $promo_code->getCode(), $ticket_type->getName()));
                         throw new ValidationException(sprintf("Promo code %s can not be applied to Ticket Type %s.", $promo_code->getCode(), $ticket_type->getName()));
+                    }
+                }
+
+                // QuantityPerAccount enforcement for domain-authorized promo codes
+                // Runs inside the locked transaction, after ReserveOrderTask has created ticket rows
+                if ($promo_code instanceof IDomainAuthorizedPromoCode
+                    && !is_null($this->owner)
+                ) {
+                    $quantityPerAccount = $promo_code->getQuantityPerAccount();
+                    if ($quantityPerAccount > 0) {
+                        $existingCount = $this->promo_code_repository->getTicketCountByMemberAndPromoCode($this->owner, $promo_code);
+                        if ($existingCount > $quantityPerAccount) {
+                            throw new ValidationException(
+                                sprintf(
+                                    "Promo code %s has reached the maximum of %s tickets per account.",
+                                    $promo_code_value,
+                                    $quantityPerAccount
+                                )
+                            );
+                        }
                     }
                 }
 
@@ -947,17 +1001,33 @@ class PreProcessReservationTask extends AbstractTask
     protected $summit;
 
     /**
+     * @var Member|null
+     */
+    protected $owner;
+
+    /**
+     * @var ISummitRegistrationPromoCodeRepository|null
+     */
+    protected $promo_code_repository;
+
+    /**
      * @param Summit $summit
      * @param array $payload
+     * @param Member|null $owner
+     * @param ISummitRegistrationPromoCodeRepository|null $promo_code_repository
      */
     public function __construct
     (
         Summit $summit,
-        array  $payload
+        array  $payload,
+        ?Member $owner = null,
+        ?ISummitRegistrationPromoCodeRepository $promo_code_repository = null
     )
     {
         $this->payload = $payload;
         $this->summit = $summit;
+        $this->owner = $owner;
+        $this->promo_code_repository = $promo_code_repository;
     }
 
     /**
@@ -986,6 +1056,14 @@ class PreProcessReservationTask extends AbstractTask
                 $ticket_types_ids[] = $type_id;
 
             $promo_code_value = isset($ticket_dto['promo_code']) ? strtoupper(trim($ticket_dto['promo_code'])) : null;
+
+            // WithPromoCode audience ticket types are never purchasable without a qualifying promo code.
+            // canBeAppliedTo (below) rejects wrong codes; this guards the no-code case.
+            if ($ticket_type->isPromoCodeOnly() && empty($promo_code_value)) {
+                throw new ValidationException(
+                    sprintf("Ticket type %s requires a promo code.", $ticket_type->getName())
+                );
+            }
 
             if (!isset($reservations[$type_id]))
                 $reservations[$type_id] = 0;
@@ -1705,6 +1783,10 @@ final class SummitOrderService
             );
 
             $state = $saga_factory->build($owner, $summit, $payload)->run();
+
+            // Dispatch only after the full saga (including ApplyPromoCodeTask validation) succeeds,
+            // so listeners never observe orders that were rolled back by compensation.
+            Event::dispatch(new CreatedSummitRegistrationOrder($state['order']->getId()));
 
             return $state['order'];
         } catch (ValidationException $ex) {

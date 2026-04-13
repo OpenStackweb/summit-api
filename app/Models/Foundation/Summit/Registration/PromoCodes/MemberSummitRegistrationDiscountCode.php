@@ -26,16 +26,18 @@ class MemberSummitRegistrationDiscountCode
     implements IOwnablePromoCode
 {
     use MemberPromoCodeTrait;
+    use AutoApplyPromoCodeTrait;
 
     const ClassName = 'MEMBER_DISCOUNT_CODE';
 
     public static $metadata = [
-        'class_name' => self::ClassName,
-        'first_name' => 'string',
-        'last_name'  => 'string',
-        'email'      => 'string',
-        'type'       => PromoCodesConstants::MemberSummitRegistrationPromoCodeTypes,
-        'owner_id'   => 'integer'
+        'class_name'  => self::ClassName,
+        'first_name'  => 'string',
+        'last_name'   => 'string',
+        'email'       => 'string',
+        'type'        => PromoCodesConstants::MemberSummitRegistrationPromoCodeTypes,
+        'owner_id'    => 'integer',
+        'auto_apply'  => 'boolean',
     ];
 
     /**

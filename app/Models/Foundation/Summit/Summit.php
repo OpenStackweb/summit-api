@@ -5552,6 +5552,21 @@ SQL;
             return true;
         }
 
+        if ($audience === SummitTicketType::Audience_With_Promo_Code) {
+            // WithPromoCode ticket types are gated by promo code validity (checkSubject/canBeAppliedTo),
+            // not by purchase authorization. The audience field governs visibility only.
+            Log::debug
+            (
+                sprintf
+                (
+                    "Summit::canBuyRegistrationTicketByType ticket type %s summit %s audience WithPromoCode.",
+                    $ticketType->getId(),
+                    $this->id
+                )
+            );
+            return true;
+        }
+
         $invitation = $this->getSummitRegistrationInvitationByEmail($email);
 
         if (is_null($invitation)) {

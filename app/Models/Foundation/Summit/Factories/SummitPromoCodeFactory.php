@@ -24,6 +24,8 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SponsorSummitRegistrationDiscountCode;
 use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
+use models\summit\DomainAuthorizedSummitRegistrationDiscountCode;
+use models\summit\DomainAuthorizedSummitRegistrationPromoCode;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 /**
@@ -87,6 +89,14 @@ final class SummitPromoCodeFactory
             break;
             case PrePaidSummitRegistrationDiscountCode::ClassName:{
                 $promo_code = new PrePaidSummitRegistrationDiscountCode();
+            }
+            break;
+            case DomainAuthorizedSummitRegistrationDiscountCode::ClassName:{
+                $promo_code = new DomainAuthorizedSummitRegistrationDiscountCode();
+            }
+            break;
+            case DomainAuthorizedSummitRegistrationPromoCode::ClassName:{
+                $promo_code = new DomainAuthorizedSummitRegistrationPromoCode();
             }
             break;
         }
@@ -188,6 +198,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setEmail(trim($data['email']));
                 if(isset($data['quantity_available']))
                     $promo_code->setQuantityAvailable(intval($data['quantity_available']));
+                if(isset($data['auto_apply']))
+                    $promo_code->setAutoApply(boolval($data['auto_apply']));
             }
             break;
             case SpeakerSummitRegistrationPromoCode::ClassName:{
@@ -197,6 +209,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setSpeaker($params['speaker']);
                 if(isset($data['quantity_available']))
                     $promo_code->setQuantityAvailable(intval($data['quantity_available']));
+                if(isset($data['auto_apply']))
+                    $promo_code->setAutoApply(boolval($data['auto_apply']));
             }
             break;
             case SpeakersSummitRegistrationPromoCode::ClassName:{
@@ -232,6 +246,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setRate(floatval($data['rate']));
                 if(isset($data['quantity_available']))
                     $promo_code->setQuantityAvailable(intval($data['quantity_available']));
+                if(isset($data['auto_apply']))
+                    $promo_code->setAutoApply(boolval($data['auto_apply']));
             }
             break;
             case SpeakerSummitRegistrationDiscountCode::ClassName:{
@@ -245,6 +261,8 @@ final class SummitPromoCodeFactory
                     $promo_code->setRate(floatval($data['rate']));
                 if(isset($data['quantity_available']))
                     $promo_code->setQuantityAvailable(intval($data['quantity_available']));
+                if(isset($data['auto_apply']))
+                    $promo_code->setAutoApply(boolval($data['auto_apply']));
             }
             break;
             case SpeakersRegistrationDiscountCode::ClassName: {
@@ -269,6 +287,32 @@ final class SummitPromoCodeFactory
                     $promo_code->setAmount(floatval($data['amount']));
                 if(isset($data['rate']))
                     $promo_code->setRate(floatval($data['rate']));
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
+            }
+            break;
+            case DomainAuthorizedSummitRegistrationDiscountCode::ClassName:{
+                if(isset($data['allowed_email_domains']))
+                    $promo_code->setAllowedEmailDomains($data['allowed_email_domains']);
+                if(isset($data['quantity_per_account']))
+                    $promo_code->setQuantityPerAccount(intval($data['quantity_per_account']));
+                if(isset($data['auto_apply']))
+                    $promo_code->setAutoApply(boolval($data['auto_apply']));
+                if(isset($data['amount']))
+                    $promo_code->setAmount(floatval($data['amount']));
+                if(isset($data['rate']))
+                    $promo_code->setRate(floatval($data['rate']));
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
+            }
+            break;
+            case DomainAuthorizedSummitRegistrationPromoCode::ClassName:{
+                if(isset($data['allowed_email_domains']))
+                    $promo_code->setAllowedEmailDomains($data['allowed_email_domains']);
+                if(isset($data['quantity_per_account']))
+                    $promo_code->setQuantityPerAccount(intval($data['quantity_per_account']));
+                if(isset($data['auto_apply']))
+                    $promo_code->setAutoApply(boolval($data['auto_apply']));
                 if(isset($data['quantity_available']))
                     $promo_code->setQuantityAvailable(intval($data['quantity_available']));
             }

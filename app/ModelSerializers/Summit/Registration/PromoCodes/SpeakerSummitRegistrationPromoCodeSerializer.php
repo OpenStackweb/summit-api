@@ -24,6 +24,7 @@ class SpeakerSummitRegistrationPromoCodeSerializer
     protected static $array_mappings = [
         'Type'      => 'type:json_string',
         'SpeakerId' => 'speaker_id:json_int',
+        'AutoApply' => 'auto_apply:json_boolean',
     ];
 
     /**
@@ -60,6 +61,7 @@ class SpeakerSummitRegistrationPromoCodeSerializer
                             );
                         }
                     }
+                        break;
                     case 'owner_name': {
                         if($code->hasSpeaker()){
                             $values['owner_name'] = $code->getSpeaker()->getFullName();
@@ -76,6 +78,8 @@ class SpeakerSummitRegistrationPromoCodeSerializer
                 }
             }
         }
+
+        $values['remaining_quantity_per_account'] = null;
 
         return $values;
     }

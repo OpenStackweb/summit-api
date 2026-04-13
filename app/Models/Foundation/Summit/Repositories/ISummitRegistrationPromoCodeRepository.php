@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Repositories\ISummitOwnedEntityRepository;
+use models\main\Member;
 use utils\Filter;
 use utils\Order;
 use utils\PagingInfo;
@@ -71,5 +72,19 @@ interface ISummitRegistrationPromoCodeRepository extends ISummitOwnedEntityRepos
      * @return SummitRegistrationPromoCode|null
      */
     public function getBySummitAndCode(Summit $summit, string $code):?SummitRegistrationPromoCode;
+
+    /**
+     * @param Summit $summit
+     * @param string $email
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function getDiscoverableByEmailForSummit(Summit $summit, string $email): array;
+
+    /**
+     * @param Member $member
+     * @param SummitRegistrationPromoCode $code
+     * @return int
+     */
+    public function getTicketCountByMemberAndPromoCode(Member $member, SummitRegistrationPromoCode $code): int;
 
 }

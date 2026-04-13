@@ -46,6 +46,7 @@ use models\summit\SponsorSummitRegistrationDiscountCode;
 use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
+use models\summit\IDomainAuthorizedPromoCode;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use services\model\ISummitPromoCodeService;
@@ -641,6 +642,13 @@ final class SummitPromoCodeService
                     $row['tags'] = explode('|', $row['tags']);
                 }
 
+                if(isset($row['allowed_email_domains'])){
+                    $domains = array_map('trim', explode('|', $row['allowed_email_domains']));
+                    $domains = array_values(array_filter($domains, fn($d) => $d !== ''));
+                    $row['allowed_email_domains'] = !empty($domains) ? $domains : null;
+                    if(is_null($row['allowed_email_domains'])) unset($row['allowed_email_domains']);
+                }
+
                 if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){
 
                     $row['ticket_types_rules'] = explode('|', $row['ticket_types_rules']);
@@ -742,6 +750,13 @@ final class SummitPromoCodeService
 
                 if(isset($row['tags'])){
                     $row['tags'] = explode('|', $row['tags']);
+                }
+
+                if(isset($row['allowed_email_domains'])){
+                    $domains = array_map('trim', explode('|', $row['allowed_email_domains']));
+                    $domains = array_values(array_filter($domains, fn($d) => $d !== ''));
+                    $row['allowed_email_domains'] = !empty($domains) ? $domains : null;
+                    if(is_null($row['allowed_email_domains'])) unset($row['allowed_email_domains']);
                 }
 
                 if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){
@@ -1007,5 +1022,46 @@ final class SummitPromoCodeService
             null,
             $filter
         );
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function discoverPromoCodes(Summit $summit, Member $member): array
+    {
+        $email = $member->getEmail();
+        if (empty($email)) return [];
+
+        $codes = $this->repository->getDiscoverableByEmailForSummit($summit, $email);
+        $results = [];
+
+        foreach ($codes as $code) {
+            // Global exhaustion: finite code with quantity_used >= quantity_available.
+            // The repository filter uses isLive() (dates only), so exhausted codes leak through.
+            // Skip them here so discovery matches checkout's validate() behavior.
+            if (!$code->hasQuantityAvailable()) {
+                continue;
+            }
+
+            // QuantityPerAccount enforcement: exclude exhausted codes
+            if ($code instanceof IDomainAuthorizedPromoCode) {
+                $quantityPerAccount = $code->getQuantityPerAccount();
+                if ($quantityPerAccount > 0) {
+                    $usedCount = $this->repository->getTicketCountByMemberAndPromoCode($member, $code);
+                    if ($usedCount >= $quantityPerAccount) {
+                        continue; // exhausted
+                    }
+                    $code->setRemainingQuantityPerAccount($quantityPerAccount - $usedCount);
+                } else {
+                    $code->setRemainingQuantityPerAccount(null); // unlimited
+                }
+            }
+
+            $results[] = $code;
+        }
+
+        return $results;
     }
 }

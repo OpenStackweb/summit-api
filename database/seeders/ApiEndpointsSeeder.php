@@ -9411,6 +9411,17 @@ class ApiEndpointsSeeder extends Seeder
                     'scopes' => [MemberScopes::ReadMemberData],
                 ],
                 [
+                    'name' => 'get-member-by-external-id',
+                    'route' => '/api/v1/members/external/{external_id}',
+                    'http_method' => 'GET',
+                    'scopes' => [MemberScopes::ReadMemberData],
+                    'authz_groups' => [
+                        IGroup::SuperAdmins,
+                        IGroup::Administrators,
+                        IGroup::SummitAdministrators,
+                    ]
+                ],
+                [
                     'name' => 'get-my-member',
                     'route' => '/api/v1/members/me',
                     'http_method' => 'GET',

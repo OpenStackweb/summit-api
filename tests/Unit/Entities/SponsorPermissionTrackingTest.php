@@ -413,4 +413,88 @@ class SponsorPermissionTrackingTest extends TestCase
         $memberIds = array_map(fn($m) => $m->getId(), $sponsor1->getMembers()->toArray());
         $this->assertContains(self::$member->getId(), $memberIds);
     }
+
+    // -------------------------------------------------------------------------
+    // 9. Member::addSponsorPermission — retry after eager row creation
+    // -------------------------------------------------------------------------
+
+    public function testAddSponsorPermissionReturnsOneWhenPermissionAlreadyPresent(): void
+    {
+        $sponsor_id = self::$sponsors[0]->getId();
+        $member_id  = self::$member->getId();
+
+        // Seed Permissions with the slug that will be re-added — this produces the
+        // "no rows changed" MySQL response that previously caused the false 0 return.
+        $this->setPermissions($sponsor_id, $member_id, IGroup::Sponsors);
+        self::$em->clear();
+
+        $member = self::$member_repository->find($member_id);
+        $result = $member->addSponsorPermission($sponsor_id, IGroup::Sponsors);
+
+        $this->assertSame(
+            1,
+            $result,
+            'addSponsorPermission must return 1 when the row exists, even if the slug was already present ' .
+            '(old code returned 0 here, triggering eager creation and ultimately a RuntimeException).'
+        );
+    }
+
+    /**
+     * End-to-end simulation of the eager-creation retry path in
+     * SponsorUserSyncService::addSponsorUserToGroup.
+     *
+     * Sequence:
+     *   1. No Sponsor_Users row → addSponsorPermission returns 0.
+     *   2. The service creates the row via Sponsor::addUser (eager creation).
+     *   3. Retry → addSponsorPermission returns 1 and writes the permission.
+     *
+     * Before the fix, step 3 returned 0 when the initial call also returned 0 because
+     * the row already existed with the permission set, causing a RuntimeException.
+     * This test ensures the retry succeeds whenever the row is present after creation.
+     */
+    public function testAddSponsorPermissionRetrySucceedsAfterEagerRowCreation(): void
+    {
+        $sponsor_id = self::$sponsors[0]->getId();
+        $member_id  = self::$member->getId();
+
+        // Remove the existing Sponsor_Users entry to simulate the race-condition scenario
+        // where the group event arrives before the membership event.
+        self::$em->getConnection()->executeStatement(
+            'DELETE FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        );
+        self::$em->clear();
+
+        $member = self::$member_repository->find($member_id);
+
+        // Step 1 — first call: row does not exist → must return 0.
+        $firstResult = $member->addSponsorPermission($sponsor_id, IGroup::Sponsors);
+        $this->assertSame(0, $firstResult, 'First call must return 0 when no Sponsor_Users row exists.');
+
+        // Step 2 — eager creation: SponsorUserSyncService calls Sponsor::addUser to
+        // insert the row, then flushes so the INSERT is visible within the transaction.
+        self::$em->clear();
+        $sponsor = self::$em->find(Sponsor::class, $sponsor_id);
+        $member  = self::$member_repository->find($member_id);
+        $sponsor->addUser($member);
+        self::$em->flush();
+        self::$em->clear();
+
+        // Step 3 — retry: row now exists → must return 1 and write the permission.
+        $member      = self::$member_repository->find($member_id);
+        $retryResult = $member->addSponsorPermission($sponsor_id, IGroup::Sponsors);
+        $this->assertSame(1, $retryResult, 'Retry must return 1 after the Sponsor_Users row has been created.');
+
+        $raw = self::$em->getConnection()->executeQuery(
+            'SELECT Permissions FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        )->fetchOne();
+
+        $permissions = json_decode($raw, true) ?? [];
+        $this->assertContains(
+            IGroup::Sponsors,
+            $permissions,
+            'The Sponsors slug must be present in Permissions after a successful retry.'
+        );
+    }
 }

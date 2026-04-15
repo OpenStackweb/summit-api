@@ -3468,18 +3468,25 @@ SQL;
      * concurrent jobs for the same (member, sponsor, slug) serialize here and
      * the second job always reads the post-first-job value, preventing duplicates.
      *
-     * Returns the number of rows matched by the WHERE clause (0 when the
-     * Sponsor_Users row does not yet exist, 1 when it does).
+     * Returns 0 when the Sponsor_Users row does not exist, 1 when it does
+     * (regardless of whether the slug was newly added or was already present).
      */
     public function addSponsorPermission(int $sponsor_id, string $group_slug): int
     {
-        // Lock the row before the read-modify-write so concurrent transactions
-        // serialize and the IF(JSON_CONTAINS) in the UPDATE sees the committed state.
-        $this->prepareRawSQL(
-            'SELECT Permissions FROM Sponsor_Users WHERE SponsorID = :sponsor_id AND MemberID = :member_id FOR UPDATE',
+        // Lock the row and detect whether it exists in a single query.
+        // Using the SELECT result (not the UPDATE's affected-row count) to determine
+        // existence avoids the false-0 that MySQL returns when the UPDATE is a no-op
+        // because the slug was already in Permissions (IF branch returns same value).
+        $res = $this->prepareRawSQL(
+            'SELECT 1 FROM Sponsor_Users WHERE SponsorID = :sponsor_id AND MemberID = :member_id FOR UPDATE',
             ['sponsor_id' => $sponsor_id, 'member_id' => $this->getId()]
         )->executeQuery();
 
+        if ($res->fetchOne() === false) {
+            return 0; // Row does not exist; caller must create it first.
+        }
+
+        // Row exists: ensure the permission is present (idempotent).
         $sql = <<<SQL
 UPDATE Sponsor_Users
 SET Permissions = IF(
@@ -3489,11 +3496,13 @@ SET Permissions = IF(
 )
 WHERE SponsorID = :sponsor_id AND MemberID = :member_id
 SQL;
-        return $this->prepareRawSQL($sql, [
+        $this->prepareRawSQL($sql, [
             'group_slug' => $group_slug,
             'sponsor_id' => $sponsor_id,
             'member_id'  => $this->getId(),
         ])->executeStatement();
+
+        return 1; // Row existed; permission is now guaranteed to be present.
     }
 
     /**

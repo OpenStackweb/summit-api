@@ -14,6 +14,8 @@
 
 use Doctrine\Migrations\AbstractMigration;
 use Doctrine\DBAL\Schema\Schema as Schema;
+use LaravelDoctrine\Migrations\Schema\Builder;
+use LaravelDoctrine\Migrations\Schema\Table;
 
 /**
  * Class Version20260401150000
@@ -26,57 +28,91 @@ use Doctrine\DBAL\Schema\Schema as Schema;
  */
 final class Version20260401150000 extends AbstractMigration
 {
+    private const AutoApplyTables = [
+        'MemberSummitRegistrationPromoCode',
+        'MemberSummitRegistrationDiscountCode',
+        'SpeakerSummitRegistrationPromoCode',
+        'SpeakerSummitRegistrationDiscountCode',
+    ];
+
     /**
      * @param Schema $schema
      */
     public function up(Schema $schema): void
     {
+        $builder = new Builder($schema);
+
         // 1. Create DomainAuthorizedSummitRegistrationDiscountCode joined table
-        $this->addSql("CREATE TABLE DomainAuthorizedSummitRegistrationDiscountCode (
-            ID INT NOT NULL,
-            AllowedEmailDomains JSON DEFAULT NULL,
-            QuantityPerAccount INT NOT NULL DEFAULT 0,
-            AutoApply TINYINT(1) NOT NULL DEFAULT 0,
-            PRIMARY KEY (ID),
-            CONSTRAINT FK_DomainAuthDiscountCode_PromoCode FOREIGN KEY (ID) REFERENCES SummitRegistrationPromoCode (ID) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if (!$builder->hasTable('DomainAuthorizedSummitRegistrationDiscountCode')) {
+            $builder->create('DomainAuthorizedSummitRegistrationDiscountCode', function (Table $table) {
+                $table->integer('ID', false, false)->setNotnull(true);
+                $table->primary('ID');
+                $table->json('AllowedEmailDomains')->setNotnull(false)->setDefault(null);
+                $table->integer('QuantityPerAccount')->setNotnull(true)->setDefault(0);
+                $table->boolean('AutoApply')->setNotnull(true)->setDefault(false);
+                $table->foreign(
+                    'SummitRegistrationPromoCode',
+                    'ID',
+                    'ID',
+                    ['onDelete' => 'CASCADE'],
+                    'FK_DomainAuthDiscountCode_PromoCode'
+                );
+            });
+        }
 
         // 2. Create DomainAuthorizedSummitRegistrationPromoCode joined table
-        $this->addSql("CREATE TABLE DomainAuthorizedSummitRegistrationPromoCode (
-            ID INT NOT NULL,
-            AllowedEmailDomains JSON DEFAULT NULL,
-            QuantityPerAccount INT NOT NULL DEFAULT 0,
-            AutoApply TINYINT(1) NOT NULL DEFAULT 0,
-            PRIMARY KEY (ID),
-            CONSTRAINT FK_DomainAuthPromoCode_PromoCode FOREIGN KEY (ID) REFERENCES SummitRegistrationPromoCode (ID) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if (!$builder->hasTable('DomainAuthorizedSummitRegistrationPromoCode')) {
+            $builder->create('DomainAuthorizedSummitRegistrationPromoCode', function (Table $table) {
+                $table->integer('ID', false, false)->setNotnull(true);
+                $table->primary('ID');
+                $table->json('AllowedEmailDomains')->setNotnull(false)->setDefault(null);
+                $table->integer('QuantityPerAccount')->setNotnull(true)->setDefault(0);
+                $table->boolean('AutoApply')->setNotnull(true)->setDefault(false);
+                $table->foreign(
+                    'SummitRegistrationPromoCode',
+                    'ID',
+                    'ID',
+                    ['onDelete' => 'CASCADE'],
+                    'FK_DomainAuthPromoCode_PromoCode'
+                );
+            });
+        }
 
         // 3. Widen the ClassName discriminator ENUM to include the two new subtypes
-        $this->addSql("ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName ENUM(
-            'SummitRegistrationPromoCode',
-            'MemberSummitRegistrationPromoCode',
-            'SponsorSummitRegistrationPromoCode',
-            'SpeakerSummitRegistrationPromoCode',
-            'SummitRegistrationDiscountCode',
-            'MemberSummitRegistrationDiscountCode',
-            'SponsorSummitRegistrationDiscountCode',
-            'SpeakerSummitRegistrationDiscountCode',
-            'SpeakersSummitRegistrationPromoCode',
-            'SpeakersRegistrationDiscountCode',
-            'PrePaidSummitRegistrationPromoCode',
-            'PrePaidSummitRegistrationDiscountCode',
-            'DomainAuthorizedSummitRegistrationDiscountCode',
-            'DomainAuthorizedSummitRegistrationPromoCode'
-        ) DEFAULT 'SummitRegistrationPromoCode'");
+        //    (Doctrine Schema does not support MySQL ENUM — raw SQL is the established pattern;
+        //    see Version20231208172204.)
+        if ($builder->hasTable('SummitRegistrationPromoCode')) {
+            $this->addSql("ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName ENUM(
+                'SummitRegistrationPromoCode',
+                'MemberSummitRegistrationPromoCode',
+                'SponsorSummitRegistrationPromoCode',
+                'SpeakerSummitRegistrationPromoCode',
+                'SummitRegistrationDiscountCode',
+                'MemberSummitRegistrationDiscountCode',
+                'SponsorSummitRegistrationDiscountCode',
+                'SpeakerSummitRegistrationDiscountCode',
+                'SpeakersSummitRegistrationPromoCode',
+                'SpeakersRegistrationDiscountCode',
+                'PrePaidSummitRegistrationPromoCode',
+                'PrePaidSummitRegistrationDiscountCode',
+                'DomainAuthorizedSummitRegistrationDiscountCode',
+                'DomainAuthorizedSummitRegistrationPromoCode'
+            ) DEFAULT 'SummitRegistrationPromoCode'");
+        }
 
         // 4. Add WithPromoCode to SummitTicketType Audience ENUM
-        $this->addSql("ALTER TABLE SummitTicketType MODIFY Audience ENUM('All', 'WithInvitation', 'WithoutInvitation', 'WithPromoCode') NOT NULL DEFAULT 'All'");
+        if ($builder->hasTable('SummitTicketType')) {
+            $this->addSql("ALTER TABLE SummitTicketType MODIFY Audience ENUM('All', 'WithInvitation', 'WithoutInvitation', 'WithPromoCode') NOT NULL DEFAULT 'All'");
+        }
 
         // 5. Add AutoApply column to existing email-linked subtype joined tables
-        $this->addSql("ALTER TABLE MemberSummitRegistrationPromoCode ADD COLUMN AutoApply TINYINT(1) NOT NULL DEFAULT 0");
-        $this->addSql("ALTER TABLE MemberSummitRegistrationDiscountCode ADD COLUMN AutoApply TINYINT(1) NOT NULL DEFAULT 0");
-        $this->addSql("ALTER TABLE SpeakerSummitRegistrationPromoCode ADD COLUMN AutoApply TINYINT(1) NOT NULL DEFAULT 0");
-        $this->addSql("ALTER TABLE SpeakerSummitRegistrationDiscountCode ADD COLUMN AutoApply TINYINT(1) NOT NULL DEFAULT 0");
+        foreach (self::AutoApplyTables as $tableName) {
+            if ($builder->hasTable($tableName) && !$builder->hasColumn($tableName, 'AutoApply')) {
+                $builder->table($tableName, function (Table $table) {
+                    $table->boolean('AutoApply')->setNotnull(true)->setDefault(false);
+                });
+            }
+        }
     }
 
     /**
@@ -84,48 +120,65 @@ final class Version20260401150000 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
+        $builder = new Builder($schema);
+
         // 1. Drop AutoApply columns from existing email-linked subtype tables
-        $this->addSql("ALTER TABLE SpeakerSummitRegistrationDiscountCode DROP COLUMN AutoApply");
-        $this->addSql("ALTER TABLE SpeakerSummitRegistrationPromoCode DROP COLUMN AutoApply");
-        $this->addSql("ALTER TABLE MemberSummitRegistrationDiscountCode DROP COLUMN AutoApply");
-        $this->addSql("ALTER TABLE MemberSummitRegistrationPromoCode DROP COLUMN AutoApply");
+        foreach (self::AutoApplyTables as $tableName) {
+            if ($builder->hasTable($tableName) && $builder->hasColumn($tableName, 'AutoApply')) {
+                $builder->table($tableName, function (Table $table) {
+                    $table->dropColumn('AutoApply');
+                });
+            }
+        }
 
         // 2. Guard against orphaned WithPromoCode values before narrowing the ENUM
-        $this->addSql("UPDATE SummitTicketType SET Audience = 'All' WHERE Audience = 'WithPromoCode'");
+        if ($builder->hasTable('SummitTicketType')) {
+            $this->addSql("UPDATE SummitTicketType SET Audience = 'All' WHERE Audience = 'WithPromoCode'");
 
-        // 3. Revert SummitTicketType Audience ENUM
-        $this->addSql("ALTER TABLE SummitTicketType MODIFY Audience ENUM('All', 'WithInvitation', 'WithoutInvitation') NOT NULL DEFAULT 'All'");
+            // 3. Revert SummitTicketType Audience ENUM
+            $this->addSql("ALTER TABLE SummitTicketType MODIFY Audience ENUM('All', 'WithInvitation', 'WithoutInvitation') NOT NULL DEFAULT 'All'");
+        }
 
-        // 4. Drop new joined tables
-        $this->addSql("DROP TABLE IF EXISTS DomainAuthorizedSummitRegistrationPromoCode");
-        $this->addSql("DROP TABLE IF EXISTS DomainAuthorizedSummitRegistrationDiscountCode");
+        // 4. Remap domain-authorized rows to base types BEFORE dropping joined tables.
+        //    (SummitAttendeeTicket.PromoCodeID cascades on delete, so DELETE would destroy
+        //    ticket history. Remap must happen before DROP TABLE because DROP TABLE causes
+        //    an implicit commit in MySQL — if a later step fails, the discriminator would
+        //    still point at non-existent joined tables and every promo-code query would
+        //    crash with a join error.)
+        if ($builder->hasTable('SummitRegistrationPromoCode')) {
+            $this->addSql("UPDATE SummitRegistrationPromoCode
+                SET ClassName = CASE ClassName
+                    WHEN 'DomainAuthorizedSummitRegistrationDiscountCode' THEN 'SummitRegistrationDiscountCode'
+                    WHEN 'DomainAuthorizedSummitRegistrationPromoCode' THEN 'SummitRegistrationPromoCode'
+                END
+                WHERE ClassName IN (
+                    'DomainAuthorizedSummitRegistrationDiscountCode',
+                    'DomainAuthorizedSummitRegistrationPromoCode'
+                )");
 
-        // 4b. Remap domain-authorized rows to base types to preserve FK references
-        //      (SummitAttendeeTicket.PromoCodeID cascades on delete, so DELETE would destroy ticket history)
-        $this->addSql("UPDATE SummitRegistrationPromoCode
-            SET ClassName = CASE ClassName
-                WHEN 'DomainAuthorizedSummitRegistrationDiscountCode' THEN 'SummitRegistrationDiscountCode'
-                WHEN 'DomainAuthorizedSummitRegistrationPromoCode' THEN 'SummitRegistrationPromoCode'
-            END
-            WHERE ClassName IN (
-                'DomainAuthorizedSummitRegistrationDiscountCode',
-                'DomainAuthorizedSummitRegistrationPromoCode'
-            )");
+            // 5. Revert the ClassName discriminator ENUM to the original 12 values
+            $this->addSql("ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName ENUM(
+                'SummitRegistrationPromoCode',
+                'MemberSummitRegistrationPromoCode',
+                'SponsorSummitRegistrationPromoCode',
+                'SpeakerSummitRegistrationPromoCode',
+                'SummitRegistrationDiscountCode',
+                'MemberSummitRegistrationDiscountCode',
+                'SponsorSummitRegistrationDiscountCode',
+                'SpeakerSummitRegistrationDiscountCode',
+                'SpeakersSummitRegistrationPromoCode',
+                'SpeakersRegistrationDiscountCode',
+                'PrePaidSummitRegistrationPromoCode',
+                'PrePaidSummitRegistrationDiscountCode'
+            ) DEFAULT 'SummitRegistrationPromoCode'");
+        }
 
-        // 5. Revert the ClassName discriminator ENUM to the original 12 values
-        $this->addSql("ALTER TABLE SummitRegistrationPromoCode MODIFY ClassName ENUM(
-            'SummitRegistrationPromoCode',
-            'MemberSummitRegistrationPromoCode',
-            'SponsorSummitRegistrationPromoCode',
-            'SpeakerSummitRegistrationPromoCode',
-            'SummitRegistrationDiscountCode',
-            'MemberSummitRegistrationDiscountCode',
-            'SponsorSummitRegistrationDiscountCode',
-            'SpeakerSummitRegistrationDiscountCode',
-            'SpeakersSummitRegistrationPromoCode',
-            'SpeakersRegistrationDiscountCode',
-            'PrePaidSummitRegistrationPromoCode',
-            'PrePaidSummitRegistrationDiscountCode'
-        ) DEFAULT 'SummitRegistrationPromoCode'");
+        // 6. Drop the new joined tables LAST
+        if ($builder->hasTable('DomainAuthorizedSummitRegistrationPromoCode')) {
+            $builder->dropIfExists('DomainAuthorizedSummitRegistrationPromoCode');
+        }
+        if ($builder->hasTable('DomainAuthorizedSummitRegistrationDiscountCode')) {
+            $builder->dropIfExists('DomainAuthorizedSummitRegistrationDiscountCode');
+        }
     }
 }

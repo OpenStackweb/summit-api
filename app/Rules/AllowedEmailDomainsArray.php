@@ -47,9 +47,10 @@ final class AllowedEmailDomainsArray implements Rule
                 if (!preg_match('/^@[\w][\w.-]+$/', $element))
                     return false;
             }
-            // .tld — must have at least one char after .
+            // .tld — one or more dot-prefixed alphanumeric labels
+            // (accepts .edu, .co.uk, .com.au, .ac.uk; rejects ., ..com, .com., .co..uk)
             elseif (str_starts_with($element, '.')) {
-                if (!preg_match('/^\.\w+$/', $element))
+                if (!preg_match('/^\.[a-z0-9]+(?:\.[a-z0-9]+)*$/i', $element))
                     return false;
             }
             // user@example.com — standard email-like pattern

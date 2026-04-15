@@ -642,12 +642,7 @@ final class SummitPromoCodeService
                     $row['tags'] = explode('|', $row['tags']);
                 }
 
-                if(isset($row['allowed_email_domains'])){
-                    $domains = array_map('trim', explode('|', $row['allowed_email_domains']));
-                    $domains = array_values(array_filter($domains, fn($d) => $d !== ''));
-                    $row['allowed_email_domains'] = !empty($domains) ? $domains : null;
-                    if(is_null($row['allowed_email_domains'])) unset($row['allowed_email_domains']);
-                }
+                $this->parseDelimitedDomains($row);
 
                 if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){
 
@@ -752,12 +747,7 @@ final class SummitPromoCodeService
                     $row['tags'] = explode('|', $row['tags']);
                 }
 
-                if(isset($row['allowed_email_domains'])){
-                    $domains = array_map('trim', explode('|', $row['allowed_email_domains']));
-                    $domains = array_values(array_filter($domains, fn($d) => $d !== ''));
-                    $row['allowed_email_domains'] = !empty($domains) ? $domains : null;
-                    if(is_null($row['allowed_email_domains'])) unset($row['allowed_email_domains']);
-                }
+                $this->parseDelimitedDomains($row);
 
                 if(isset($row['ticket_types_rules']) && (isset($row['amount']) || isset($row['rate']))){
 
@@ -1063,5 +1053,18 @@ final class SummitPromoCodeService
         }
 
         return $results;
+    }
+
+    /**
+     * Parses a pipe-delimited `allowed_email_domains` value from a CSV import row
+     * into a trimmed, non-empty array — or removes the key when no valid domains remain.
+     */
+    private function parseDelimitedDomains(array &$row): void
+    {
+        if (!isset($row['allowed_email_domains'])) return;
+        $domains = array_map('trim', explode('|', $row['allowed_email_domains']));
+        $domains = array_values(array_filter($domains, fn($d) => $d !== ''));
+        $row['allowed_email_domains'] = !empty($domains) ? $domains : null;
+        if (is_null($row['allowed_email_domains'])) unset($row['allowed_email_domains']);
     }
 }

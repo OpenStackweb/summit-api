@@ -44,17 +44,8 @@ class DomainAuthorizedSummitRegistrationDiscountCodeSerializer
         if (!$code instanceof DomainAuthorizedSummitRegistrationDiscountCode) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        // RE-ADD allowed_ticket_types (parent discount serializer unsets it).
-        // Check both relations (default serialization) and expand (explicit ?expand= request).
-        $needs_allowed_ticket_types = in_array('allowed_ticket_types', $relations)
-            || (!empty($expand) && str_contains($expand, 'allowed_ticket_types'));
-        if ($needs_allowed_ticket_types && !isset($values['allowed_ticket_types'])) {
-            $ticket_types = [];
-            foreach ($code->getAllowedTicketTypes() as $ticket_type) {
-                $ticket_types[] = $ticket_type->getId();
-            }
-            $values['allowed_ticket_types'] = $ticket_types;
-        }
+        // See parent::restoreAllowedTicketTypes() docblock for why this call is needed.
+        $this->restoreAllowedTicketTypes($values, $expand, $relations);
 
         // Transient remaining_quantity_per_account (set by service layer)
         $values['remaining_quantity_per_account'] = $code->getRemainingQuantityPerAccount();

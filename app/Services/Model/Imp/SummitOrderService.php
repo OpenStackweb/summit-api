@@ -813,8 +813,26 @@ final class ApplyPromoCodeTask extends AbstractTask
                     }
                 }
 
-                // QuantityPerAccount enforcement for domain-authorized promo codes
-                // Runs inside the locked transaction, after ReserveOrderTask has created ticket rows
+                // QuantityPerAccount enforcement for domain-authorized promo codes.
+                //
+                // IMPORTANT — the condition below is `>`, NOT `>=`, and we do NOT add $qty.
+                // That is because $existingCount ALREADY INCLUDES the current order's
+                // tickets. The saga runs ReserveOrderTask before ApplyPromoCodeTask;
+                // ReserveOrderTask calls $promo_code->applyTo($ticket), which sets
+                // PromoCodeID on each new ticket, and its transaction commits before
+                // this task's transaction opens. getTicketCountByMemberAndPromoCode
+                // is a raw SQL count over SummitAttendeeTicket joined to SummitOrder
+                // with status IN ('Reserved','Paid','Confirmed'), so the in-flight
+                // order's freshly-reserved tickets are already counted.
+                //
+                // Examples (limit = 2, prior tickets = 0):
+                //   buying 2 -> existingCount=2 -> 2 > 2 false -> allowed (exactly at cap)
+                //   buying 3 -> existingCount=3 -> 3 > 2 true  -> rejected
+                // Examples (limit = 2, prior tickets = 2):
+                //   buying 1 -> existingCount=3 -> 3 > 2 true  -> rejected
+                //
+                // If the saga order changes, or PromoCodeID assignment moves out of
+                // ReserveOrderTask, the semantics here break — revisit this check.
                 if ($promo_code instanceof IDomainAuthorizedPromoCode
                     && !is_null($this->owner)
                 ) {

@@ -258,6 +258,7 @@ final class OAuth2SummitBadgeScanApiController
                     'attendee_email'             => ['=@', '=='],
                     'ticket_number'              => ['=@', '=='],
                     'order_number'               => ['=@', '=='],
+                    'sponsor_id'                 => ['=='],
                 ];
             },
             function(){
@@ -268,6 +269,7 @@ final class OAuth2SummitBadgeScanApiController
                     'attendee_email'           => 'sometimes|string',
                     'ticket_number'            => 'sometimes|string',
                     'order_number'             => 'sometimes|string',
+                    'sponsor_id'               => 'sometimes|integer',
                 ];
             },
             function()

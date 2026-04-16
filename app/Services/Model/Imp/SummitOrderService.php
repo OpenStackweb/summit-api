@@ -1236,7 +1236,6 @@ class PreProcessReservationTask extends AbstractTask
     public function undo()
     {
         if ($this->undone) return;
-        $this->undone = true;
 
         if (empty($this->reserved)
             || is_null($this->owner)
@@ -1244,8 +1243,11 @@ class PreProcessReservationTask extends AbstractTask
             || is_null($this->member_reservation_repository)
             || is_null($this->tx_service)
         ) {
+            $this->undone = true;
             return;
         }
+
+        $remaining = [];
 
         foreach ($this->reserved as $entry) {
             $code_value = $entry['code'];
@@ -1263,16 +1265,16 @@ class PreProcessReservationTask extends AbstractTask
                     $reservation->decrement($qty);
                 });
             } catch (\Throwable $ex) {
-                // Undo is best-effort; log and continue so the remaining
-                // reservations for other codes in this saga still get released.
                 Log::warning(sprintf(
                     "PreProcessReservationTask::undo failed to release %s × %s: %s",
                     $code_value, $qty, $ex->getMessage()
                 ));
+                $remaining[] = $entry;
             }
         }
 
-        $this->reserved = [];
+        $this->reserved = $remaining;
+        $this->undone = empty($remaining);
     }
 }
 
@@ -2772,7 +2774,7 @@ final class SummitOrderService
 
             list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
 
-            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return, $order->getOwner());
 
             $order->setCancelled();
 
@@ -2782,11 +2784,12 @@ final class SummitOrderService
 
     /**
      * @param Summit $summit
-     * @param $tickets_to_return
-     * @param $promo_codes_to_return
+     * @param array $tickets_to_return
+     * @param array $promo_codes_to_return
+     * @param Member|null $owner
      * @return void
      */
-    private function restoreTicketsPromoCodes(Summit $summit, $tickets_to_return, $promo_codes_to_return): void
+    private function restoreTicketsPromoCodes(Summit $summit, array $tickets_to_return, array $promo_codes_to_return, ?Member $owner): void
     {
 
         // restore tickets and promo-codes
@@ -2822,6 +2825,14 @@ final class SummitOrderService
             Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating promo code %s on %s usages", $code, $qty));
             try {
                 $promo_code->removeUsage($qty, $value["owner_email"]);
+
+                if (!is_null($owner)) {
+                    $reservation = $this->member_reservation_repository
+                        ->getByPromoCodeAndMember($promo_code, $owner);
+                    if (!is_null($reservation)) {
+                        $reservation->decrement($qty);
+                    }
+                }
             } catch (ValidationException $ex) {
                 Log::warning($ex);
             }
@@ -2945,7 +2956,7 @@ final class SummitOrderService
 
                                 list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
 
-                                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+                                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return, $order->getOwner());
 
                                 $order->setCancelled();
                             }
@@ -3066,7 +3077,7 @@ final class SummitOrderService
 
                 list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
 
-                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return, $order->getOwner());
 
                 $order->setCancelled();
 
@@ -3266,7 +3277,7 @@ final class SummitOrderService
                 $ticket->setCancelled();
             }
 
-            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return);
+            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return, $order->getOwner());
 
             $summit->removeOrder($order);
 

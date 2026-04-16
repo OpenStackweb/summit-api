@@ -665,7 +665,10 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
             'venue_id' => self::$mainVenue->getId()
         ];
 
-        $number = rand(0,1000);
+        // Collision-free floor number: start above the seed floor (number=1 in InsertSummitTestData)
+        // and monotonically increment to guarantee uniqueness across calls in the same process.
+        static $floor_number_seq = 1000;
+        $number = ++$floor_number_seq;
         $name = str_random(16).'_floor';
         $data = [
            'name'        => $name,

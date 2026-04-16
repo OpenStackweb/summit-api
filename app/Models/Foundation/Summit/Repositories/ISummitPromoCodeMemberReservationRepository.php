@@ -24,11 +24,12 @@ interface ISummitPromoCodeMemberReservationRepository extends IBaseRepository
     /**
      * Look up the per-member reservation row for a given promo code.
      *
-     * Callers invoking this from the reservation path must already hold an
-     * exclusive row lock on the parent SummitRegistrationPromoCode (via
-     * ISummitRegistrationPromoCodeRepository::getByValueExclusiveLock). That
-     * outer lock is what serializes concurrent access to this row — no
-     * separate PESSIMISTIC_WRITE is taken here.
+     * CALLER PRECONDITION (not enforced here): when invoked from the order
+     * reservation write path, the caller must already hold an exclusive row
+     * lock on the parent SummitRegistrationPromoCode via
+     * ISummitRegistrationPromoCodeRepository::getByValueExclusiveLock. That
+     * outer lock is what serializes concurrent writes; this method does not
+     * (and cannot) take or verify the lock itself.
      *
      * @param SummitRegistrationPromoCode $code
      * @param Member $member

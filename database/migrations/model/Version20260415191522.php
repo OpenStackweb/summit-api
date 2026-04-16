@@ -56,16 +56,19 @@ WHERE t.PromoCodeID IS NOT NULL
   AND o.Status IN ('Reserved', 'Paid', 'Confirmed')
   AND t.Status != 'Cancelled'
 GROUP BY t.PromoCodeID, o.OwnerID
-ON DUPLICATE KEY UPDATE QtyUsed = VALUES(QtyUsed), LastEdited = NOW()
+ON DUPLICATE KEY UPDATE
+    QtyUsed    = GREATEST(QtyUsed, VALUES(QtyUsed)),
+    LastEdited = NOW()
 SQL
         );
     }
 
     public function down(Schema $schema): void
     {
-        $builder = new Builder($schema);
-        if ($builder->hasTable('SummitPromoCodeMemberReservation')) {
-            $this->addSql('TRUNCATE TABLE SummitPromoCodeMemberReservation');
-        }
+        // No-op: re-running the backfill is safe (GREATEST preserves live
+        // counter values), but truncating the table on rollback would silently
+        // zero live reservations after the saga starts writing. The safer
+        // inverse is simply "nothing"; roll back Version20260415191521 to drop
+        // the table entirely if you need a clean slate.
     }
 }

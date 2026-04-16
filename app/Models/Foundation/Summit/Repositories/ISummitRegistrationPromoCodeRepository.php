@@ -81,6 +81,20 @@ interface ISummitRegistrationPromoCodeRepository extends ISummitOwnedEntityRepos
     public function getDiscoverableByEmailForSummit(Summit $summit, string $email): array;
 
     /**
+     * @param Summit $summit
+     * @param string $email
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function getDomainAuthorizedDiscoverableForSummit(Summit $summit, string $email): array;
+
+    /**
+     * @param Summit $summit
+     * @param string $email already lowercased and trimmed
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function getEmailLinkedDiscoverableForSummit(Summit $summit, string $email): array;
+
+    /**
      * @param Member $member
      * @param SummitRegistrationPromoCode $code
      * @return int

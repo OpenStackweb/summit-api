@@ -133,6 +133,7 @@ use models\summit\ISummitBadgeViewTypeRepository;
 use models\summit\ISummitProposedScheduleEventRepository;
 use models\summit\ISummitProposedScheduleLockRepository;
 use models\summit\ISummitProposedScheduleRepository;
+use models\summit\ISummitPromoCodeMemberReservationRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\PaymentGatewayProfile;
@@ -176,6 +177,7 @@ use models\summit\SummitPresentationComment;
 use models\summit\SummitRefundPolicyType;
 use models\summit\SummitRefundRequest;
 use models\summit\SummitRegistrationInvitation;
+use models\summit\SummitPromoCodeMemberReservation;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRoomReservation;
 use models\summit\SummitScheduleConfig;
@@ -421,6 +423,13 @@ final class RepositoriesProvider extends ServiceProvider
             ISummitRegistrationPromoCodeRepository::class,
             function () {
                 return EntityManager::getRepository(SummitRegistrationPromoCode::class);
+            }
+        );
+
+        App::singleton(
+            ISummitPromoCodeMemberReservationRepository::class,
+            function () {
+                return EntityManager::getRepository(SummitPromoCodeMemberReservation::class);
             }
         );
 

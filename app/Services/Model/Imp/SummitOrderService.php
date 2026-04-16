@@ -815,43 +815,13 @@ final class ApplyPromoCodeTask extends AbstractTask
                     }
                 }
 
-                // QuantityPerAccount enforcement for domain-authorized promo codes.
-                //
-                // IMPORTANT — the condition below is `>`, NOT `>=`, and we do NOT add $qty.
-                // That is because $existingCount ALREADY INCLUDES the current order's
-                // tickets. The saga runs ReserveOrderTask before ApplyPromoCodeTask;
-                // ReserveOrderTask calls $promo_code->applyTo($ticket), which sets
-                // PromoCodeID on each new ticket, and its transaction commits before
-                // this task's transaction opens. getTicketCountByMemberAndPromoCode
-                // is a raw SQL count over SummitAttendeeTicket joined to SummitOrder
-                // with status IN ('Reserved','Paid','Confirmed'), so the in-flight
-                // order's freshly-reserved tickets are already counted.
-                //
-                // Examples (limit = 2, prior tickets = 0):
-                //   buying 2 -> existingCount=2 -> 2 > 2 false -> allowed (exactly at cap)
-                //   buying 3 -> existingCount=3 -> 3 > 2 true  -> rejected
-                // Examples (limit = 2, prior tickets = 2):
-                //   buying 1 -> existingCount=3 -> 3 > 2 true  -> rejected
-                //
-                // If the saga order changes, or PromoCodeID assignment moves out of
-                // ReserveOrderTask, the semantics here break — revisit this check.
-                if ($promo_code instanceof IDomainAuthorizedPromoCode
-                    && !is_null($this->owner)
-                ) {
-                    $quantityPerAccount = $promo_code->getQuantityPerAccount();
-                    if ($quantityPerAccount > 0) {
-                        $existingCount = $this->promo_code_repository->getTicketCountByMemberAndPromoCode($this->owner, $promo_code);
-                        if ($existingCount > $quantityPerAccount) {
-                            throw new ValidationException(
-                                sprintf(
-                                    "Promo code %s has reached the maximum of %s tickets per account.",
-                                    $promo_code_value,
-                                    $quantityPerAccount
-                                )
-                            );
-                        }
-                    }
-                }
+                // QuantityPerAccount enforcement lives in PreProcessReservationTask.
+                // That's where the check-and-increment runs atomically under the
+                // PESSIMISTIC_WRITE row lock on the promo code, BEFORE ReserveOrderTask
+                // commits tickets. A post-facto count here (as this task did prior to
+                // the TOCTOU fix) cannot distinguish the current order's freshly-
+                // committed tickets from a concurrent order's — see smarcet's
+                // reproduction in tests/Unit/Services/ApplyPromoCodeTaskConcurrencyTest.
 
                 Log::debug(sprintf("adding %s usage to promo code %s", $qty, $promo_code->getId()));
 

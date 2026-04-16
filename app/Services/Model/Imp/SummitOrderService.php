@@ -60,6 +60,7 @@ use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\IDomainAuthorizedPromoCode;
+use models\summit\ISummitPromoCodeMemberReservationRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
@@ -173,6 +174,10 @@ final class SagaFactory
      */
     private $promo_code_repository;
     /**
+     * @var ISummitPromoCodeMemberReservationRepository
+     */
+    private $member_reservation_repository;
+    /**
      * @var ISummitAttendeeRepository
      */
     private $attendee_repository;
@@ -197,33 +202,23 @@ final class SagaFactory
      */
     private $company_repository;
 
-    /**
-     * @param IMemberRepository $member_repository
-     * @param ISummitTicketTypeRepository $ticket_type_repository
-     * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
-     * @param ISummitAttendeeRepository $attendee_repository
-     * @param ISummitAttendeeTicketRepository $ticket_repository
-     * @param IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy
-     * @param ILockManagerService $lock_service
-     * @param ICompanyService $company_service
-     * @param ICompanyRepository $company_repository
-     * @param ITransactionService $tx_service
-     */
     public function __construct(
-        IMemberRepository                          $member_repository,
-        ISummitTicketTypeRepository                $ticket_type_repository,
-        ISummitRegistrationPromoCodeRepository     $promo_code_repository,
-        ISummitAttendeeRepository                  $attendee_repository,
-        ISummitAttendeeTicketRepository            $ticket_repository,
-        IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
-        ILockManagerService                        $lock_service,
-        ICompanyService                            $company_service,
-        ICompanyRepository                         $company_repository,
-        ITransactionService                        $tx_service)
+        IMemberRepository                             $member_repository,
+        ISummitTicketTypeRepository                   $ticket_type_repository,
+        ISummitRegistrationPromoCodeRepository        $promo_code_repository,
+        ISummitPromoCodeMemberReservationRepository   $member_reservation_repository,
+        ISummitAttendeeRepository                     $attendee_repository,
+        ISummitAttendeeTicketRepository               $ticket_repository,
+        IBuildDefaultPaymentGatewayProfileStrategy    $default_payment_gateway_strategy,
+        ILockManagerService                           $lock_service,
+        ICompanyService                               $company_service,
+        ICompanyRepository                            $company_repository,
+        ITransactionService                           $tx_service)
     {
         $this->member_repository = $member_repository;
         $this->ticket_type_repository = $ticket_type_repository;
         $this->promo_code_repository = $promo_code_repository;
+        $this->member_reservation_repository = $member_reservation_repository;
         $this->attendee_repository = $attendee_repository;
         $this->ticket_repository = $ticket_repository;
         $this->default_payment_gateway_strategy = $default_payment_gateway_strategy;
@@ -279,7 +274,14 @@ final class SagaFactory
         Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
         return Saga::start()
             ->addTask(new PreOrderValidationTask($summit, $payload, $this->ticket_type_repository, $this->tx_service))
-            ->addTask(new PreProcessReservationTask($summit, $payload, $owner, $this->promo_code_repository))
+            ->addTask(new PreProcessReservationTask(
+                $summit,
+                $payload,
+                $owner,
+                $this->promo_code_repository,
+                $this->member_reservation_repository,
+                $this->tx_service
+            ))
             ->addTask(new ReserveTicketsTask($summit, $this->ticket_type_repository, $this->tx_service, $this->lock_service))
             ->addTask(new ReserveOrderTask(
                 $owner,
@@ -1029,23 +1031,47 @@ class PreProcessReservationTask extends AbstractTask
     protected $promo_code_repository;
 
     /**
-     * @param Summit $summit
-     * @param array $payload
-     * @param Member|null $owner
-     * @param ISummitRegistrationPromoCodeRepository|null $promo_code_repository
+     * @var ISummitPromoCodeMemberReservationRepository|null
      */
+    protected $member_reservation_repository;
+
+    /**
+     * @var ITransactionService|null
+     */
+    protected $tx_service;
+
+    /**
+     * Per-code list of (promo_code_value, qty) pairs that this task has
+     * successfully reserved against the per-member counter. Populated by
+     * run() and consumed by undo() to release each reservation.
+     *
+     * @var array<int, array{code: string, qty: int}>
+     */
+    protected $reserved = [];
+
+    /**
+     * Guards against double-invocation of undo() by the saga machinery.
+     *
+     * @var bool
+     */
+    protected $undone = false;
+
     public function __construct
     (
-        Summit $summit,
-        array  $payload,
-        ?Member $owner = null,
-        ?ISummitRegistrationPromoCodeRepository $promo_code_repository = null
+        Summit                                       $summit,
+        array                                        $payload,
+        ?Member                                      $owner = null,
+        ?ISummitRegistrationPromoCodeRepository      $promo_code_repository = null,
+        ?ISummitPromoCodeMemberReservationRepository $member_reservation_repository = null,
+        ?ITransactionService                         $tx_service = null
     )
     {
         $this->payload = $payload;
         $this->summit = $summit;
         $this->owner = $owner;
         $this->promo_code_repository = $promo_code_repository;
+        $this->member_reservation_repository = $member_reservation_repository;
+        $this->tx_service = $tx_service;
     }
 
     /**
@@ -1125,11 +1151,91 @@ class PreProcessReservationTask extends AbstractTask
             }
         }
 
+        $this->reserveMemberQuotas($promo_codes_usage);
+
         return [
             "reservations" => $reservations,
             "promo_codes_usage" => $promo_codes_usage,
             "ticket_types_ids" => $ticket_types_ids,
         ];
+    }
+
+    /**
+     * Atomically reserve per-member QuantityPerAccount slots for any
+     * IDomainAuthorizedPromoCode entries in $promo_codes_usage.
+     *
+     * Each reservation opens a short transaction that acquires
+     * PESSIMISTIC_WRITE on the parent promo code row (via
+     * getByValueExclusiveLock) and then upserts the member's counter in
+     * SummitPromoCodeMemberReservation. The outer lock is what serializes
+     * two concurrent order-reserve sagas — the second one blocks until the
+     * first commits, then observes the first's increment and rejects if
+     * it would push QtyUsed over QuantityPerAccount.
+     *
+     * Rationale: the post-facto check in ApplyPromoCodeTask runs after
+     * ReserveOrderTask has already committed tickets with PromoCodeID set,
+     * so two concurrent orders can both see the inflated count and
+     * double-reject. Counting durable reservations BEFORE ticket commit,
+     * under a row lock, is the only correct serialization point.
+     *
+     * No-ops when the caller didn't inject the required collaborators
+     * (legacy construction paths, PrePaid subclass). No-ops for non-
+     * domain-authorized codes and for codes with QuantityPerAccount = 0.
+     *
+     * @param array $promo_codes_usage
+     * @throws ValidationException when the per-member limit would be exceeded.
+     */
+    protected function reserveMemberQuotas(array $promo_codes_usage): void
+    {
+        if (is_null($this->owner)
+            || is_null($this->promo_code_repository)
+            || is_null($this->member_reservation_repository)
+            || is_null($this->tx_service)
+        ) {
+            return;
+        }
+
+        foreach ($promo_codes_usage as $promo_code_value => $info) {
+            $qty = intval($info['qty'] ?? 0);
+            if ($qty <= 0) continue;
+
+            $this->tx_service->transaction(function () use ($promo_code_value, $qty) {
+                $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $promo_code_value);
+                if (!$promo_code instanceof IDomainAuthorizedPromoCode) return;
+
+                $limit = $promo_code->getQuantityPerAccount();
+                if ($limit <= 0) return; // 0 means unlimited for this account
+
+                $reservation = $this->member_reservation_repository
+                    ->getByPromoCodeAndMember($promo_code, $this->owner);
+
+                $prior_qty = is_null($reservation) ? 0 : $reservation->getQtyUsed();
+                $new_qty   = $prior_qty + $qty;
+
+                if ($new_qty > $limit) {
+                    throw new ValidationException(
+                        sprintf(
+                            "Promo code %s has reached the maximum of %s tickets per account.",
+                            $promo_code_value,
+                            $limit
+                        )
+                    );
+                }
+
+                if (is_null($reservation)) {
+                    $reservation = new \models\summit\SummitPromoCodeMemberReservation(
+                        $promo_code,
+                        $this->owner,
+                        $new_qty
+                    );
+                    $this->member_reservation_repository->add($reservation);
+                } else {
+                    $reservation->increment($qty);
+                }
+
+                $this->reserved[] = ['code' => $promo_code_value, 'qty' => $qty];
+            });
+        }
     }
 
     /**
@@ -1149,7 +1255,44 @@ class PreProcessReservationTask extends AbstractTask
 
     public function undo()
     {
-        // TODO: Implement undo() method.
+        if ($this->undone) return;
+        $this->undone = true;
+
+        if (empty($this->reserved)
+            || is_null($this->owner)
+            || is_null($this->promo_code_repository)
+            || is_null($this->member_reservation_repository)
+            || is_null($this->tx_service)
+        ) {
+            return;
+        }
+
+        foreach ($this->reserved as $entry) {
+            $code_value = $entry['code'];
+            $qty        = intval($entry['qty']);
+
+            try {
+                $this->tx_service->transaction(function () use ($code_value, $qty) {
+                    $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $code_value);
+                    if (is_null($promo_code)) return;
+
+                    $reservation = $this->member_reservation_repository
+                        ->getByPromoCodeAndMember($promo_code, $this->owner);
+                    if (is_null($reservation)) return;
+
+                    $reservation->decrement($qty);
+                });
+            } catch (\Throwable $ex) {
+                // Undo is best-effort; log and continue so the remaining
+                // reservations for other codes in this saga still get released.
+                Log::warning(sprintf(
+                    "PreProcessReservationTask::undo failed to release %s × %s: %s",
+                    $code_value, $qty, $ex->getMessage()
+                ));
+            }
+        }
+
+        $this->reserved = [];
     }
 }
 
@@ -1566,6 +1709,11 @@ final class SummitOrderService
     private $promo_code_repository;
 
     /**
+     * @var ISummitPromoCodeMemberReservationRepository
+     */
+    private $member_reservation_repository;
+
+    /**
      * @var ISummitAttendeeRepository
      */
     private $attendee_repository;
@@ -1674,32 +1822,34 @@ final class SummitOrderService
      */
     public function __construct
     (
-        ISummitTicketTypeRepository                $ticket_type_repository,
-        IMemberRepository                          $member_repository,
-        ISummitRegistrationPromoCodeRepository     $promo_code_repository,
-        ISummitAttendeeRepository                  $attendee_repository,
-        ISummitOrderRepository                     $order_repository,
-        ISummitAttendeeTicketRepository            $ticket_repository,
-        ISummitAttendeeBadgeRepository             $badge_repository,
-        ISummitRepository                          $summit_repository,
-        ISummitAttendeeBadgePrintRuleRepository    $print_rules_repository,
-        IMemberService                             $member_service,
-        IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
-        IFileUploadStrategy                        $upload_strategy,
-        IFileDownloadStrategy                      $download_strategy,
-        ICompanyRepository                         $company_repository,
-        ITagRepository                             $tags_repository,
-        ISummitRefundRequestRepository             $refund_request_repository,
-        ICompanyService                            $company_service,
-        ITicketFinderStrategyFactory               $ticket_finder_strategy_factory,
-        ITransactionService                        $tx_service,
-        ILockManagerService                        $lock_service
+        ISummitTicketTypeRepository                 $ticket_type_repository,
+        IMemberRepository                           $member_repository,
+        ISummitRegistrationPromoCodeRepository      $promo_code_repository,
+        ISummitPromoCodeMemberReservationRepository $member_reservation_repository,
+        ISummitAttendeeRepository                   $attendee_repository,
+        ISummitOrderRepository                      $order_repository,
+        ISummitAttendeeTicketRepository             $ticket_repository,
+        ISummitAttendeeBadgeRepository              $badge_repository,
+        ISummitRepository                           $summit_repository,
+        ISummitAttendeeBadgePrintRuleRepository     $print_rules_repository,
+        IMemberService                              $member_service,
+        IBuildDefaultPaymentGatewayProfileStrategy  $default_payment_gateway_strategy,
+        IFileUploadStrategy                         $upload_strategy,
+        IFileDownloadStrategy                       $download_strategy,
+        ICompanyRepository                          $company_repository,
+        ITagRepository                              $tags_repository,
+        ISummitRefundRequestRepository              $refund_request_repository,
+        ICompanyService                             $company_service,
+        ITicketFinderStrategyFactory                $ticket_finder_strategy_factory,
+        ITransactionService                         $tx_service,
+        ILockManagerService                         $lock_service
     )
     {
         parent::__construct($tx_service);
         $this->member_repository = $member_repository;
         $this->ticket_type_repository = $ticket_type_repository;
         $this->promo_code_repository = $promo_code_repository;
+        $this->member_reservation_repository = $member_reservation_repository;
         $this->attendee_repository = $attendee_repository;
         $this->order_repository = $order_repository;
         $this->ticket_repository = $ticket_repository;
@@ -1791,6 +1941,7 @@ final class SummitOrderService
                 $this->member_repository,
                 $this->ticket_type_repository,
                 $this->promo_code_repository,
+                $this->member_reservation_repository,
                 $this->attendee_repository,
                 $this->ticket_repository,
                 $this->default_payment_gateway_strategy,

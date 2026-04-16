@@ -132,6 +132,29 @@ class PreProcessReservationTaskConcurrencyTest extends TestCase
     }
 
     /**
+     * A single first-time request with qty > limit must be rejected
+     * even when there is no prior reservation row. Limit=1, qty=2,
+     * check: 0 + 2 > 1 true → reject. The repo's `add` must NOT be
+     * called since we never reach the persist branch.
+     */
+    public function testSingleOrderExceedingLimitRejects(): void
+    {
+        [$promoCode, $owner, $promoRepo, $reservationRepo, $tx] =
+            $this->buildCollaborators(limit: 1, priorReservation: null);
+
+        $reservationRepo->shouldReceive('add')->never();
+
+        $task = $this->buildTask(owner: $owner, promoRepo: $promoRepo, reservationRepo: $reservationRepo, tx: $tx);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessageMatches('/reached the maximum of 1/');
+
+        $this->invokeReserve($task, [
+            'DOMAIN-CODE-1' => ['qty' => 2, 'types' => [42]],
+        ]);
+    }
+
+    /**
      * Limit=2, prior qty_used=1 (from a previous Task A), this
      * request qty=1. Check: 1 + 1 > 2 false → pass, increment by 1.
      * Mirrors smarcet's "both allowed within limit" scenario.

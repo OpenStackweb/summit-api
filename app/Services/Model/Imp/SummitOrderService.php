@@ -820,8 +820,8 @@ final class ApplyPromoCodeTask extends AbstractTask
                 // PESSIMISTIC_WRITE row lock on the promo code, BEFORE ReserveOrderTask
                 // commits tickets. A post-facto count here (as this task did prior to
                 // the TOCTOU fix) cannot distinguish the current order's freshly-
-                // committed tickets from a concurrent order's — see smarcet's
-                // reproduction in tests/Unit/Services/ApplyPromoCodeTaskConcurrencyTest.
+                // committed tickets from a concurrent order's — see the reproduced
+                // scenario now covered in tests/Unit/Services/PreProcessReservationTaskConcurrencyTest.
 
                 Log::debug(sprintf("adding %s usage to promo code %s", $qty, $promo_code->getId()));
 

@@ -686,22 +686,20 @@ SQL;
     {
         $em = $this->getEntityManager();
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $daPromoClass = DomainAuthorizedSummitRegistrationPromoCode::class;
+        $daDiscountClass = DomainAuthorizedSummitRegistrationDiscountCode::class;
 
         $qb = $em->createQueryBuilder();
         $qb->select('e')
             ->from($this->getBaseEntity(), 'e')
             ->join('e.summit', 's')
             ->where('s.id = :summit_id')
+            ->andWhere("(e INSTANCE OF {$daPromoClass} OR e INSTANCE OF {$daDiscountClass})")
             ->andWhere(
-                '(e INSTANCE OF :da_promo OR e INSTANCE OF :da_discount)'
-            )
-            ->andWhere(
-                'e.valid_since_date IS NULL OR e.valid_until_date IS NULL '
-                . 'OR (:now >= e.valid_since_date AND :now <= e.valid_until_date)'
+                '(e.valid_since_date IS NULL OR e.valid_until_date IS NULL '
+                . 'OR (:now >= e.valid_since_date AND :now <= e.valid_until_date))'
             )
             ->setParameter('summit_id', $summit->getId())
-            ->setParameter('da_promo', DomainAuthorizedSummitRegistrationPromoCode::class)
-            ->setParameter('da_discount', DomainAuthorizedSummitRegistrationDiscountCode::class)
             ->setParameter('now', $now);
 
         $candidates = $qb->getQuery()->getResult();
@@ -737,10 +735,11 @@ SQL;
             ->join('e.summit', 's')
             ->leftJoin('e.owner', 'o')
             ->where('s.id = :summit_id')
-            ->andWhere('LOWER(e.email) = :email OR (e.email IS NULL AND LOWER(o.email) = :email)')
+            ->andWhere('LOWER(e.email) = :email OR ((e.email IS NULL OR e.email = :empty) AND LOWER(o.email) = :email)')
             ->andWhere($isLiveDql)
             ->setParameter('summit_id', $summitId)
             ->setParameter('email', $email)
+            ->setParameter('empty', '')
             ->setParameter('now', $now)
             ->getQuery()->getResult();
 
@@ -751,10 +750,11 @@ SQL;
             ->join('e.summit', 's')
             ->leftJoin('e.owner', 'o')
             ->where('s.id = :summit_id')
-            ->andWhere('LOWER(e.email) = :email OR (e.email IS NULL AND LOWER(o.email) = :email)')
+            ->andWhere('LOWER(e.email) = :email OR ((e.email IS NULL OR e.email = :empty) AND LOWER(o.email) = :email)')
             ->andWhere($isLiveDql)
             ->setParameter('summit_id', $summitId)
             ->setParameter('email', $email)
+            ->setParameter('empty', '')
             ->setParameter('now', $now)
             ->getQuery()->getResult();
 

@@ -71,9 +71,9 @@ trait SponsorPromoCodeTrait
     }
 
     /**
-     * @return Sponsor
+     * @return Sponsor|null
      */
-    public function getSponsor():Sponsor
+    public function getSponsor(): ?Sponsor
     {
         return $this->sponsor;
     }

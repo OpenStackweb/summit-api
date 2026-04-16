@@ -35,7 +35,7 @@ class SummitSponsorExtraQuestionType extends ExtraQuestionType
     ];
 
     /**
-     * @var Sponsor
+     * @var Sponsor|null
      */
     #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
     #[ORM\ManyToOne(targetEntity: \models\summit\Sponsor::class, inversedBy: 'extra_questions')]

@@ -65,6 +65,10 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         if (!$scan instanceof SponsorBadgeScan) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
         $sponsor = $scan->getSponsor();
+
+        //There are no sponsor questions to process without a sponsor
+        if (is_null($sponsor)) return $values;
+
         $sponsor_questions = $sponsor->getExtraQuestions();
         $setting = $sponsor->getSummit()->getLeadReportSettingFor($sponsor);
         $setting_columns = $setting->getColumns();

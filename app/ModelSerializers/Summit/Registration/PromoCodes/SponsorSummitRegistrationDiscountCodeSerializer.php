@@ -62,7 +62,9 @@ class SponsorSummitRegistrationDiscountCodeSerializer
                     }
                         break;
                     case 'sponsor_name':{
-                        $values['sponsor_name'] = $code->getSponsor()->getCompany()->getName();
+                        if($code->hasSponsor()) {
+                            $values['sponsor_name'] = $code->getSponsor()->getCompany()->getName();
+                        }
                     }
                         break;
                 }

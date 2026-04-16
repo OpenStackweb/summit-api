@@ -29,7 +29,7 @@ class SponsorUserInfoGrant extends SilverstripeBaseModel
 
     const ClassName = 'SponsorUserInfoGrant';
     /**
-     * @var Sponsor
+     * @var Sponsor|null
      */
     #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID')]
     #[ORM\ManyToOne(targetEntity: \models\summit\Sponsor::class, inversedBy: 'user_info_grants')]
@@ -53,9 +53,9 @@ class SponsorUserInfoGrant extends SilverstripeBaseModel
     ];
 
     /**
-     * @return Sponsor
+     * @return Sponsor|null
      */
-    public function getSponsor(): Sponsor
+    public function getSponsor(): ?Sponsor
     {
         return $this->sponsor;
     }

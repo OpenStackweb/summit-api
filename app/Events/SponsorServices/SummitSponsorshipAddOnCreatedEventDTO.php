@@ -58,6 +58,7 @@ class SummitSponsorshipAddOnCreatedEventDTO
         $sponsorship = $add_on->getSponsorship();
         $summit_sponsorship_type = $sponsorship->getType();
         $sponsorship_type = $summit_sponsorship_type->getType();
+        $sponsor = $sponsorship->getSponsor();
 
         return new self(
             $add_on->getId(),
@@ -67,8 +68,8 @@ class SummitSponsorshipAddOnCreatedEventDTO
             $sponsorship_type->getName(),
             $add_on->getType(),
             $add_on->getName(),
-            $add_on->getSponsorship()->getSponsor()->getId(),
-            $add_on->getSponsorship()->getSponsor()->getSummitId(),
+            $sponsor?->getId() ?? 0,
+            $sponsor?->getSummitId() ?? 0,
         );
     }
 

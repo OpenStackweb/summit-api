@@ -50,11 +50,11 @@ class SummitSponsorshipCreatedEventDTO
 
         return new self(
             $sponsorship->getId(),
-            $sponsor->getId(),
+            $sponsor?->getId() ?? 0,
             $summit_sponsorship_type->getId(),
             $sponsorship_type->getId(),
             $sponsorship_type->getName(),
-            $sponsor->getSummitId()
+            $sponsor?->getSummitId() ?? 0
         );
     }
 

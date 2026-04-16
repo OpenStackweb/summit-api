@@ -59,6 +59,7 @@ jobs:
                     - { name: "SummitRSVPServiceTest", filter: "--filter SummitRSVPServiceTest" }
                     - { name: "SummitRSVPInvitationServiceTest", filter: "--filter SummitRSVPInvitationServiceTest" }
                     - { name: "EntityModelUnitTests", filter: "tests/Unit/Entities/" }
+                    - { name: "AuditUnitTests", filter: "tests/Unit/Audit/" }
                     - { name: "AuditOtlpStrategyTest", filter: "--filter AuditOtlpStrategyTest" }
                     - { name: "AuditEventTypesTest", filter: "--filter AuditEventTypesTest" }
                     - { name: "GuzzleTracingTest", filter: "--filter GuzzleTracingTest" }

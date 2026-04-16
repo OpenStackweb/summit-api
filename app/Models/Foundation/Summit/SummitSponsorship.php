@@ -39,7 +39,7 @@ class SummitSponsorship extends SilverstripeBaseModel
     ];
 
     /**
-     * @var Sponsor
+     * @var Sponsor|null
      */
     #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID')]
     #[ORM\ManyToOne(targetEntity: Sponsor::class)]
@@ -64,7 +64,7 @@ class SummitSponsorship extends SilverstripeBaseModel
         $this->add_ons = new ArrayCollection();
     }
 
-    public function getSponsor(): Sponsor
+    public function getSponsor(): ?Sponsor
     {
         return $this->sponsor;
     }

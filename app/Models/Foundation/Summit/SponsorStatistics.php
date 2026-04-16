@@ -27,7 +27,7 @@ class SponsorStatistics extends SilverstripeBaseModel
     use One2ManyPropertyTrait;
 
     /**
-     * @var Sponsor
+     * @var Sponsor|null
      */
     #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
     #[ORM\OneToOne(targetEntity: Sponsor::class, inversedBy: 'sponsorservices_statistics', fetch: 'EXTRA_LAZY')]
@@ -66,7 +66,7 @@ class SponsorStatistics extends SilverstripeBaseModel
         $this->documentsQty = 0;
     }
 
-    public function getSponsor(): Sponsor
+    public function getSponsor(): ?Sponsor
     {
         return $this->sponsor;
     }

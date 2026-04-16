@@ -53,7 +53,7 @@ class SponsorMaterial extends SilverstripeBaseModel
     private $order;
 
     /**
-     * @var Sponsor
+     * @var Sponsor|null
      */
     #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'CASCADE')]
     #[ORM\ManyToOne(targetEntity: \Sponsor::class, inversedBy: 'materials', fetch: 'EXTRA_LAZY')]
@@ -144,9 +144,9 @@ class SponsorMaterial extends SilverstripeBaseModel
     }
 
     /**
-     * @return Sponsor
+     * @return Sponsor|null
      */
-    public function getSponsor(): Sponsor
+    public function getSponsor(): ?Sponsor
     {
         return $this->sponsor;
     }

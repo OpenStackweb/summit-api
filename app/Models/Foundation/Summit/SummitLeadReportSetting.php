@@ -29,7 +29,7 @@ class SummitLeadReportSetting extends SilverstripeBaseModel
     const SponsorExtraQuestionsKey = 'extra_questions';
 
     /**
-     * @var Sponsor
+     * @var Sponsor|null
      */
     #[ORM\JoinColumn(name: 'SponsorID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
     #[ORM\OneToOne(targetEntity: \models\summit\Sponsor::class, inversedBy: 'lead_report_setting')]
@@ -51,9 +51,9 @@ class SummitLeadReportSetting extends SilverstripeBaseModel
     }
 
     /**
-     * @return Sponsor
+     * @return Sponsor|null
      */
-    public function getSponsor(): Sponsor
+    public function getSponsor(): ?Sponsor
     {
         return $this->sponsor;
     }

@@ -51,10 +51,13 @@ class SponsorUserInfoGrantCSVSerializer extends SponsorUserInfoGrantSerializer
         $values['notes'] = 'VIRTUAL';
 
         $sponsor = $grant->getSponsor();
+
+        //There are no sponsor questions to process without a sponsor
+        if (is_null($sponsor)) return $values;
+
         $sponsor_questions = $sponsor->getExtraQuestions();
         $setting = $sponsor->getSummit()->getLeadReportSettingFor($sponsor);
         $setting_columns = $setting->getColumns();
-
 
         // remove not allowed string columns and sort them by setting columns order
         $new_values = [];

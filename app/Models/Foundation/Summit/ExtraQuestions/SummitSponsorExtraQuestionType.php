@@ -42,9 +42,9 @@ class SummitSponsorExtraQuestionType extends ExtraQuestionType
     private $sponsor;
 
     /**
-     * @return Sponsor
+     * @return Sponsor|null
      */
-    public function getSponsor(): Sponsor
+    public function getSponsor(): ?Sponsor
     {
         return $this->sponsor;
     }

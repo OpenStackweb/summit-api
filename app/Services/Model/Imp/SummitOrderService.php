@@ -1151,7 +1151,17 @@ class PreProcessReservationTask extends AbstractTask
             }
         }
 
-        $this->reserveMemberQuotas($promo_codes_usage);
+        // Saga::run() only marks a task as "ran" AFTER run() returns. If
+        // reserveMemberQuotas() succeeds for code A then throws on code B,
+        // the exception propagates before markAsRan(), so saga abort()
+        // never calls this task's undo() — leaking code A's reservation.
+        // Guard by running our own undo locally before rethrowing.
+        try {
+            $this->reserveMemberQuotas($promo_codes_usage);
+        } catch (\Exception $ex) {
+            $this->undo();
+            throw $ex;
+        }
 
         return [
             "reservations" => $reservations,

@@ -2713,12 +2713,12 @@ class ApiEndpointsSeeder extends Seeder
                 'scopes' => [
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData,
-                    IGroup::Sponsors,
                 ],
                 'authz_groups' => [
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::Sponsors,
                 ]
             ],
             [
@@ -7595,6 +7595,15 @@ class ApiEndpointsSeeder extends Seeder
             [
                 'name' => 'pre-validate-promo-code',
                 'route' => '/api/v1/summits/{id}/promo-codes/{promo_code_val}/apply',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData
+                ]
+            ],
+            [
+                'name' => 'discover-promo-codes',
+                'route' => '/api/v1/summits/{id}/promo-codes/all/discover',
                 'http_method' => 'GET',
                 'scopes' => [
                     SummitScopes::ReadSummitData,

@@ -43,6 +43,12 @@ class SummitRegistrationDiscountCodeSerializer extends SummitRegistrationPromoCo
         if (!$code instanceof SummitRegistrationDiscountCode) return [];
         $values = parent::serialize($expand, $fields, $relations, $params);
 
+        // Discount codes express ticket-type coverage via `ticket_types_rules`
+        // (which carries rate/amount per type), so the grandparent's flat
+        // `allowed_ticket_types` is redundant and ambiguous for a generic
+        // discount code. Subclasses that DO need the flat list (e.g., admin
+        // widgets that gate on ticket-type selection without rate semantics)
+        // must call self::restoreAllowedTicketTypes() after parent::serialize().
         unset($values['allowed_ticket_types']);
 
         if (in_array('ticket_types_rules', $relations)) {
@@ -79,5 +85,27 @@ class SummitRegistrationDiscountCodeSerializer extends SummitRegistrationPromoCo
         }
 
         return $values;
+    }
+
+    /**
+     * Re-adds the flat `allowed_ticket_types` field (unset by this class on
+     * purpose) for subclasses that need it in addition to `ticket_types_rules`.
+     * Call after parent::serialize() in the subclass.
+     */
+    protected function restoreAllowedTicketTypes(array &$values, $expand, array $relations): void
+    {
+        $code = $this->object;
+        if (!$code instanceof SummitRegistrationDiscountCode) return;
+
+        $needs = in_array('allowed_ticket_types', $relations)
+            || (!empty($expand) && str_contains($expand, 'allowed_ticket_types'));
+
+        if ($needs && !isset($values['allowed_ticket_types'])) {
+            $ticket_types = [];
+            foreach ($code->getAllowedTicketTypes() as $ticket_type) {
+                $ticket_types[] = $ticket_type->getId();
+            }
+            $values['allowed_ticket_types'] = $ticket_types;
+        }
     }
 }

@@ -24,6 +24,7 @@ class SpeakerSummitRegistrationDiscountCodeSerializer
     protected static $array_mappings = [
         'Type'      => 'type:json_string',
         'SpeakerId' => 'speaker_id:json_int',
+        'AutoApply' => 'auto_apply:json_boolean',
     ];
 
     /**
@@ -60,6 +61,7 @@ class SpeakerSummitRegistrationDiscountCodeSerializer
                             );
                         }
                     }
+                        break;
                     case 'owner_name': {
                         if($code->hasSpeaker()){
                             $values['owner_name'] = $code->getSpeaker()->getFullName();
@@ -75,6 +77,11 @@ class SpeakerSummitRegistrationDiscountCodeSerializer
                 }
             }
         }
+
+        // See parent::restoreAllowedTicketTypes() docblock for why this call is needed.
+        $this->restoreAllowedTicketTypes($values, $expand, $relations);
+
+        $values['remaining_quantity_per_account'] = null;
 
         return $values;
     }

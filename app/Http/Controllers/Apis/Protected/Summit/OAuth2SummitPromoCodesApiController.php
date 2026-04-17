@@ -1575,4 +1575,63 @@ final class OAuth2SummitPromoCodesApiController extends OAuth2ProtectedControlle
             return $this->ok();
         });
     }
+
+    /**
+     * Discover qualifying promo codes for the current user.
+     * Returns domain-authorized codes (matched by email domain) and existing email-linked
+     * codes (member/speaker, matched by associated email) with auto_apply flag.
+     * Email is always derived from the authenticated principal — no email query parameter accepted.
+     */
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/promo-codes/all/discover",
+        summary: "Discover qualifying promo codes for the current user",
+        description: "Returns domain-authorized promo codes (matched by email domain) and existing email-linked promo codes (member/speaker, matched by associated email) for the current user",
+        operationId: "discoverPromoCodesBySummit",
+        tags: ["Promo Codes"],
+        security: [['summit_promo_codes_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "expand", in: "query", required: false, schema: new OA\Schema(type: "string")),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+        ]
+    )]
+    public function discover($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find(intval($summit_id));
+            if (is_null($summit))
+                return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member))
+                return $this->error403();
+
+            $codes = $this->promo_code_service->discoverPromoCodes($summit, $current_member);
+
+            $expand    = SerializerUtils::getExpand();
+            $fields    = SerializerUtils::getFields();
+            $relations = SerializerUtils::getRelations();
+
+            $data = [];
+            foreach ($codes as $code) {
+                $serializer = SerializerRegistry::getInstance()->getSerializer($code);
+                $data[] = $serializer->serialize($expand, $fields, $relations);
+            }
+
+            $total = count($data);
+            return $this->ok([
+                'total'        => $total,
+                'per_page'     => $total,
+                'current_page' => 1,
+                'last_page'    => 1,
+                'data'         => $data,
+            ]);
+        });
+    }
 }

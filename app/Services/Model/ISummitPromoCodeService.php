@@ -170,4 +170,11 @@ interface ISummitPromoCodeService
      * @throws ValidationException
      */
     public function sendSponsorPromoCodes(int $summit_id, array $payload, Filter $filter = null): void;
+
+    /**
+     * @param Summit $summit
+     * @param Member $member
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function discoverPromoCodes(Summit $summit, Member $member): array;
 }

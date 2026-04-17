@@ -30,8 +30,12 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\SponsorSummitRegistrationDiscountCode;
 use models\summit\SponsorSummitRegistrationPromoCode;
 use models\summit\Summit;
+use models\summit\DomainAuthorizedSummitRegistrationDiscountCode;
+use models\summit\DomainAuthorizedSummitRegistrationPromoCode;
+use models\summit\IDomainAuthorizedPromoCode;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
+use models\main\Member;
 use utils\DoctrineFilterMapping;
 use utils\DoctrineInstanceOfFilterMapping;
 use utils\DoctrineLeftJoinFilterMapping;
@@ -154,7 +158,9 @@ class DoctrineSummitRegistrationPromoCodeRepository
                     SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
                     SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class,
                     PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
-                    PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
+                    PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class,
+                    DomainAuthorizedSummitRegistrationDiscountCode::ClassName => DomainAuthorizedSummitRegistrationDiscountCode::class,
+                    DomainAuthorizedSummitRegistrationPromoCode::ClassName    => DomainAuthorizedSummitRegistrationPromoCode::class
                 ]
             ),
             'allows_to_delegate'  => 'pc.allows_to_delegate:json_boolean',
@@ -316,7 +322,9 @@ class DoctrineSummitRegistrationPromoCodeRepository
                             SpeakersSummitRegistrationPromoCode::ClassName   => SpeakersSummitRegistrationPromoCode::class,
                             SpeakersRegistrationDiscountCode::ClassName      => SpeakersRegistrationDiscountCode::class,
                             PrePaidSummitRegistrationPromoCode::ClassName    => PrePaidSummitRegistrationPromoCode::class,
-                            PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class
+                            PrePaidSummitRegistrationDiscountCode::ClassName => PrePaidSummitRegistrationDiscountCode::class,
+                            DomainAuthorizedSummitRegistrationDiscountCode::ClassName => DomainAuthorizedSummitRegistrationDiscountCode::class,
+                            DomainAuthorizedSummitRegistrationPromoCode::ClassName    => DomainAuthorizedSummitRegistrationPromoCode::class
                         ]
                     ),
                 'type' => [
@@ -430,6 +438,8 @@ LEFT JOIN SpeakersSummitRegistrationPromoCode spkspc ON pc.ID = spkspc.ID
 LEFT JOIN SpeakersRegistrationDiscountCode spksdc ON pc.ID = spksdc.ID
 LEFT JOIN PrePaidSummitRegistrationPromoCode pppc ON pc.ID = pppc.ID
 LEFT JOIN PrePaidSummitRegistrationDiscountCode ppdc ON pc.ID = ppdc.ID
+LEFT JOIN DomainAuthorizedSummitRegistrationDiscountCode dadc ON pc.ID = dadc.ID
+LEFT JOIN DomainAuthorizedSummitRegistrationPromoCode dapc ON pc.ID = dapc.ID
 LEFT JOIN AssignedPromoCodeSpeaker aspkrdc ON spksdc.ID = aspkrdc.RegistrationPromoCodeID
 LEFT JOIN AssignedPromoCodeSpeaker aspkrpc ON spkspc.ID = aspkrpc.RegistrationPromoCodeID
 LEFT JOIN PresentationSpeaker ps1 ON aspkrdc.SpeakerID = ps1.ID
@@ -568,7 +578,9 @@ SQL;
             SpeakersSummitRegistrationPromoCode::getMetadata(),
             SpeakersRegistrationDiscountCode::getMetadata(),
             PrePaidSummitRegistrationPromoCode::getMetadata(),
-            PrePaidSummitRegistrationDiscountCode::getMetadata()
+            PrePaidSummitRegistrationDiscountCode::getMetadata(),
+            DomainAuthorizedSummitRegistrationDiscountCode::getMetadata(),
+            DomainAuthorizedSummitRegistrationPromoCode::getMetadata()
         ];
     }
 
@@ -642,5 +654,168 @@ SQL;
         return $query->getQuery()
             ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Find discoverable promo codes for a summit matching the given email.
+     * Returns domain-authorized types (matched by email domain) and
+     * existing email-linked types (member/speaker, matched by associated email).
+     *
+     * @param Summit $summit
+     * @param string $email
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function getDiscoverableByEmailForSummit(Summit $summit, string $email): array
+    {
+        if (empty($email)) return [];
+
+        $email = strtolower(trim($email));
+
+        return array_merge(
+            $this->getDomainAuthorizedDiscoverableForSummit($summit, $email),
+            $this->getEmailLinkedDiscoverableForSummit($summit, $email)
+        );
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $email
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function getDomainAuthorizedDiscoverableForSummit(Summit $summit, string $email): array
+    {
+        $em = $this->getEntityManager();
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $daPromoClass = DomainAuthorizedSummitRegistrationPromoCode::class;
+        $daDiscountClass = DomainAuthorizedSummitRegistrationDiscountCode::class;
+
+        $qb = $em->createQueryBuilder();
+        $qb->select('e')
+            ->from($this->getBaseEntity(), 'e')
+            ->join('e.summit', 's')
+            ->where('s.id = :summit_id')
+            ->andWhere("(e INSTANCE OF {$daPromoClass} OR e INSTANCE OF {$daDiscountClass})")
+            ->andWhere(
+                '(e.valid_since_date IS NULL OR e.valid_until_date IS NULL '
+                . 'OR (:now >= e.valid_since_date AND :now <= e.valid_until_date))'
+            )
+            ->setParameter('summit_id', $summit->getId())
+            ->setParameter('now', $now);
+
+        $candidates = $qb->getQuery()->getResult();
+        $results = [];
+
+        foreach ($candidates as $code) {
+            if ($code instanceof IDomainAuthorizedPromoCode && $code->matchesEmailDomain($email)) {
+                $results[] = $code;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param string $email already lowercased and trimmed
+     * @return SummitRegistrationPromoCode[]
+     */
+    public function getEmailLinkedDiscoverableForSummit(Summit $summit, string $email): array
+    {
+        $em = $this->getEntityManager();
+        $summitId = $summit->getId();
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+
+        $isLiveDql = '(e.valid_since_date IS NULL OR e.valid_until_date IS NULL '
+            . 'OR (:now >= e.valid_since_date AND :now <= e.valid_until_date))';
+
+        // Member promo codes: email on subtype table or fallback to owner Member.Email
+        $memberPromo = $em->createQueryBuilder()
+            ->select('e')
+            ->from(MemberSummitRegistrationPromoCode::class, 'e')
+            ->join('e.summit', 's')
+            ->leftJoin('e.owner', 'o')
+            ->where('s.id = :summit_id')
+            ->andWhere('LOWER(e.email) = :email OR ((e.email IS NULL OR e.email = :empty) AND LOWER(o.email) = :email)')
+            ->andWhere($isLiveDql)
+            ->setParameter('summit_id', $summitId)
+            ->setParameter('email', $email)
+            ->setParameter('empty', '')
+            ->setParameter('now', $now)
+            ->getQuery()->getResult();
+
+        // Member discount codes
+        $memberDiscount = $em->createQueryBuilder()
+            ->select('e')
+            ->from(MemberSummitRegistrationDiscountCode::class, 'e')
+            ->join('e.summit', 's')
+            ->leftJoin('e.owner', 'o')
+            ->where('s.id = :summit_id')
+            ->andWhere('LOWER(e.email) = :email OR ((e.email IS NULL OR e.email = :empty) AND LOWER(o.email) = :email)')
+            ->andWhere($isLiveDql)
+            ->setParameter('summit_id', $summitId)
+            ->setParameter('email', $email)
+            ->setParameter('empty', '')
+            ->setParameter('now', $now)
+            ->getQuery()->getResult();
+
+        // Speaker promo codes: email via speaker -> member or speaker -> registration_request
+        $speakerPromo = $em->createQueryBuilder()
+            ->select('e')
+            ->from(SpeakerSummitRegistrationPromoCode::class, 'e')
+            ->join('e.summit', 's')
+            ->leftJoin('e.speaker', 'sp')
+            ->leftJoin('sp.member', 'm')
+            ->leftJoin('sp.registration_request', 'rr')
+            ->where('s.id = :summit_id')
+            ->andWhere('LOWER(m.email) = :email OR LOWER(rr.email) = :email')
+            ->andWhere($isLiveDql)
+            ->setParameter('summit_id', $summitId)
+            ->setParameter('email', $email)
+            ->setParameter('now', $now)
+            ->getQuery()->getResult();
+
+        // Speaker discount codes
+        $speakerDiscount = $em->createQueryBuilder()
+            ->select('e')
+            ->from(SpeakerSummitRegistrationDiscountCode::class, 'e')
+            ->join('e.summit', 's')
+            ->leftJoin('e.speaker', 'sp')
+            ->leftJoin('sp.member', 'm')
+            ->leftJoin('sp.registration_request', 'rr')
+            ->where('s.id = :summit_id')
+            ->andWhere('LOWER(m.email) = :email OR LOWER(rr.email) = :email')
+            ->andWhere($isLiveDql)
+            ->setParameter('summit_id', $summitId)
+            ->setParameter('email', $email)
+            ->setParameter('now', $now)
+            ->getQuery()->getResult();
+
+        return array_merge($memberPromo, $memberDiscount, $speakerPromo, $speakerDiscount);
+    }
+
+    /**
+     * Count confirmed/paid tickets purchased by a member using a specific promo code.
+     *
+     * @param Member $member
+     * @param SummitRegistrationPromoCode $code
+     * @return int
+     */
+    public function getTicketCountByMemberAndPromoCode(Member $member, SummitRegistrationPromoCode $code): int
+    {
+        $sql = <<<SQL
+SELECT COUNT(t.ID) AS cnt
+FROM SummitAttendeeTicket t
+INNER JOIN SummitOrder o ON t.OrderID = o.ID
+WHERE t.PromoCodeID = :promo_code_id
+AND o.OwnerID = :member_id
+AND o.Status IN ('Reserved', 'Paid', 'Confirmed')
+AND t.Status != 'Cancelled'
+SQL;
+        $stm = $this->getEntityManager()->getConnection()->executeQuery($sql, [
+            'promo_code_id' => $code->getId(),
+            'member_id' => $member->getId(),
+        ]);
+
+        return intval($stm->fetchOne());
     }
 }

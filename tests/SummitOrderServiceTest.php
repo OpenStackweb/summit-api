@@ -120,6 +120,7 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         $refund_request_repository = Mockery::mock(ISummitRefundRequestRepository::class)->makePartial();
         $company_service = Mockery::mock(ICompanyService::class);
         $ticket_finder_strategy_factory = Mockery::mock(ITicketFinderStrategyFactory::class);
+        $member_reservation_repository = Mockery::mock(\models\summit\ISummitPromoCodeMemberReservationRepository::class);
         $tx_service = Mockery::mock(ITransactionService::class);
         $lock_service = Mockery::mock(ILockManagerService::class);
 
@@ -219,6 +220,7 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             $ticket_type_repository,
             $member_repository,
             $promo_code_repository,
+            $member_reservation_repository,
             $attendee_repository,
             $order_repository,
             $ticket_repository,

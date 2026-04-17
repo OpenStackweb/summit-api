@@ -58,11 +58,13 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
     const Audience_All = 'All';
     const Audience_With_Invitation = 'WithInvitation';
     const Audience_Without_Invitation = 'WithoutInvitation';
+    const Audience_With_Promo_Code = 'WithPromoCode';
 
     const AllowedAudience = [
         self::Audience_All,
         self::Audience_With_Invitation,
         self::Audience_Without_Invitation,
+        self::Audience_With_Promo_Code,
     ];
 
     const Subtype_Regular = 'Regular';
@@ -673,6 +675,14 @@ class SummitTicketType extends SilverstripeBaseModel implements ISummitTicketTyp
             throw new ValidationException(sprintf("audience %s is not allowed", $audience));
 
         $this->audience = $audience;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPromoCodeOnly(): bool
+    {
+        return $this->audience === self::Audience_With_Promo_Code;
     }
 
     /**

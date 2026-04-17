@@ -412,11 +412,12 @@ SQL;
     public static function decodeQRCodeFor(Summit $summit, string $qr_code): string
     {
         $val = trim($qr_code);
-        $val = str_replace(' ', '+', $val);
         $val = rawurldecode($val);
 
         if (Base64::looksLikeBase64($val)) {
             // if qr_code is base64 encoded, decode it
+            // Restore + characters that may have been replaced with spaces during HTTP form encoding
+            $val = str_replace(' ', '+', $val);
             Log::debug(sprintf("SummitAttendeeBadge::decodeQRCodeFor summit %s qr_code %s with base64 decode", $summit->getId(), $val));
 
             $val = Base64::tryBase64Decode($val);

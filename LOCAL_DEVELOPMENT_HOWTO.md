@@ -53,9 +53,12 @@ BOOKABLE_ROOMS_DEFAULT_TEST_STRIPE_PUBLISHABLE_KEY=
 BOOKABLE_ROOMS_DEFAULT_TEST_WEBHOOK_SECRET=
 
 ```
+
 2.( optional ) Drop here  [docker-compose/mysql/model](docker-compose/mysql/model) the database dump *.sql file
+
 3.Install docker and docker compose see
    [https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-22-04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-22-04) and [https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04)
+   
 4.Run script ./start_local_server.sh (http://localhost:8002/)
 
 Redump the database

@@ -1585,10 +1585,11 @@ final class SummitService
      * @return Summit
      * @throws EntityNotFoundException
      * @throws ValidationException
+     * @throws Exception
      */
     public function updateSummit($summit_id, array $data)
     {
-        return $this->tx_service->transaction(function () use ($summit_id, $data) {
+        $summit = $this->tx_service->transaction(function () use ($summit_id, $data) {
 
             if (isset($data['name'])) {
 
@@ -1656,14 +1657,13 @@ final class SummitService
                     )
                 );
             }
-
-            $summit = SummitFactory::populate($summit, $data);
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitCreatedEventDTO::fromSummit($summit)->serialize(), SummitDomainEvents::SummitUpdated);
-
-            return $summit;
+            return SummitFactory::populate($summit, $data);
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            SummitCreatedEventDTO::fromSummit($summit)->serialize(), SummitDomainEvents::SummitUpdated);
+
+        return $summit;
     }
 
     /**
@@ -1674,7 +1674,7 @@ final class SummitService
      */
     public function deleteSummit($summit_id)
     {
-        return $this->tx_service->transaction(function () use ($summit_id) {
+        $summit = $this->tx_service->transaction(function () use ($summit_id) {
 
             $summit = $this->summit_repository->getById($summit_id);
 
@@ -1691,11 +1691,11 @@ final class SummitService
 
             Log::debug(sprintf("SummitService::deleteSummit summit_id %s", $summit_id));
             $summit->markAsDeleted();
-
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                DeletedEventDTO::fromEntity($summit)->serialize(), SummitDomainEvents::SummitDeleted);
-
+            return $summit;
         });
+
+        PublishSponsorServiceDomainEventsJob::dispatch(
+            DeletedEventDTO::fromEntity($summit)->serialize(), SummitDomainEvents::SummitDeleted);
     }
 
     /**

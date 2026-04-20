@@ -2695,7 +2695,6 @@ SQL;
     public function removePromoCode(SummitRegistrationPromoCode $promo_code)
     {
         $this->promo_codes->removeElement($promo_code);
-        $promo_code->clearSummit();
         return $this;
     }
 

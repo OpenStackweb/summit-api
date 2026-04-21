@@ -1657,21 +1657,6 @@ final class PresentationService
 
 
             $localPath = self::getFileFromRemoteStorageOnTempStorage($file_name, $path);
-            try{
-                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-                if (!is_null($strategy)) {
-                    Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to private storage", $file_name));
-                    $strategy->saveFromPath(
-                        $localPath,
-                        $private_path,
-                        $file_name
-                    );
-                }
-            }
-            catch (\Throwable $ex){
-                Log::error(sprintf("PresentationService::processMediaUpload saving file %s to private storage error %s", $file_name, $ex->getMessage()));
-                Log::error($ex);
-            }
 
             try {
                 $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
@@ -1692,7 +1677,24 @@ final class PresentationService
                 Log::error($ex);
             }
 
+            try{
+                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+                if (!is_null($strategy)) {
+                    Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to private storage", $file_name));
+                    $strategy->saveFromPath(
+                        $localPath,
+                        $private_path,
+                        $file_name
+                    );
+                }
+            }
+            catch (\Throwable $ex){
+                Log::error(sprintf("PresentationService::processMediaUpload saving file %s to private storage error %s", $file_name, $ex->getMessage()));
+                Log::error($ex);
+            }
+
             self::cleanLocalAndRemoteFile($localPath, $path);
+            Log::debug(sprintf("PresentationService::processMediaUpload  file %s processed.", $file_name));
         });
     }
 

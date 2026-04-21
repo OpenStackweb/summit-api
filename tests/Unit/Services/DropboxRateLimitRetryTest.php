@@ -30,10 +30,9 @@ class DropboxRateLimitRetryTest extends TestCase
             new Response(200, [], 'success'),
         ]);
 
-        // Build handler stack matching production setup
-        $stack = new HandlerStack($mock);
-        $stack->push(Middleware::httpErrors(new BodySummarizer(250)), 'http_errors');
-        $stack->push(DropboxServiceProvider::createRateLimitRetryMiddleware(3, 300), 'dropbox_rate_limit');
+        // Build handler stack matching production setup (GuzzleFactory with retries disabled)
+        $stack = GuzzleFactory::innerHandler($mock);
+        $stack->after('http_errors', DropboxServiceProvider::createRateLimitRetryMiddleware(3, 30), 'dropbox_rate_limit');
 
         $client = new Client(['handler' => $stack]);
 
@@ -66,10 +65,9 @@ class DropboxRateLimitRetryTest extends TestCase
             new Response(429, ['Retry-After' => '0']),
         ]);
 
-        // Build handler stack matching production setup
-        $stack = new HandlerStack($mock);
-        $stack->push(Middleware::httpErrors(new BodySummarizer(250)), 'http_errors');
-        $stack->push(DropboxServiceProvider::createRateLimitRetryMiddleware(3, 300), 'dropbox_rate_limit');
+        // Build handler stack matching production setup (GuzzleFactory with retries disabled)
+        $stack = GuzzleFactory::innerHandler($mock);
+        $stack->after('http_errors', DropboxServiceProvider::createRateLimitRetryMiddleware(3, 30), 'dropbox_rate_limit');
 
         $client = new Client(['handler' => $stack]);
 
@@ -91,10 +89,9 @@ class DropboxRateLimitRetryTest extends TestCase
             new Response(200, [], 'success'),
         ]);
 
-        // Build handler stack matching production setup
-        $stack = new HandlerStack($mock);
-        $stack->push(Middleware::httpErrors(new BodySummarizer(250)), 'http_errors');
-        $stack->push(DropboxServiceProvider::createRateLimitRetryMiddleware(3, 5), 'dropbox_rate_limit');
+        // Build handler stack matching production setup (GuzzleFactory with retries disabled)
+        $stack = GuzzleFactory::innerHandler($mock);
+        $stack->after('http_errors', DropboxServiceProvider::createRateLimitRetryMiddleware(3, 5), 'dropbox_rate_limit');
 
         $client = new Client(['handler' => $stack]);
 
@@ -119,10 +116,9 @@ class DropboxRateLimitRetryTest extends TestCase
             new Response(500, [], 'server error'),
         ]);
 
-        // Build handler stack matching production setup
-        $stack = new HandlerStack($mock);
-        $stack->push(Middleware::httpErrors(new BodySummarizer(250)), 'http_errors');
-        $stack->push(DropboxServiceProvider::createRateLimitRetryMiddleware(3, 300), 'dropbox_rate_limit');
+        // Build handler stack matching production setup (GuzzleFactory with retries disabled)
+        $stack = GuzzleFactory::innerHandler($mock);
+        $stack->after('http_errors', DropboxServiceProvider::createRateLimitRetryMiddleware(3, 30), 'dropbox_rate_limit');
 
         $client = new Client(['handler' => $stack]);
 

@@ -50,11 +50,17 @@ class DropboxServiceProvider extends ServiceProvider
     {
         Storage::extend('dropbox', function ($app, $config) {
             // Build handler stack with rate-limit retry middleware
-            $stack = GuzzleFactory::handler();
-            $stack->before('http_errors', static::createRateLimitRetryMiddleware(), 'dropbox_rate_limit');
+            // Disable GuzzleFactory's built-in retry (retries: 0) to avoid double-retry
+            $stack = GuzzleFactory::handler(retries: 0);
+            // Position retry AFTER http_errors so it sees raw 429 responses before they're converted to exceptions
+            $stack->after('http_errors', static::createRateLimitRetryMiddleware(3, 30), 'dropbox_rate_limit');
 
-            // Create Guzzle client with custom handler
-            $guzzleClient = new GuzzleClient(['handler' => $stack]);
+            // Create Guzzle client with custom handler and timeouts
+            $guzzleClient = new GuzzleClient([
+                'handler' => $stack,
+                'timeout' => 60,          // 60s request timeout (for large chunk uploads)
+                'connect_timeout' => 10,  // 10s connection timeout
+            ]);
 
             // use our custom dropbox adapter to override getUrl method
             // do not remove !

@@ -57,6 +57,7 @@ use models\summit\PresentationVideo;
 use models\summit\Summit;
 use models\summit\SummitEvent;
 use models\summit\SummitPresentationComment;
+use function Laravel\Prompts\error;
 
 /**
  * Class PresentationService
@@ -1656,28 +1657,39 @@ final class PresentationService
 
 
             $localPath = self::getFileFromRemoteStorageOnTempStorage($file_name, $path);
-
-            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-            if (!is_null($strategy)) {
-                Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to private storage", $file_name));
-                $strategy->saveFromPath(
-                    $localPath,
-                    $private_path,
-                    $file_name
-                );
+            try{
+                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+                if (!is_null($strategy)) {
+                    Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to private storage", $file_name));
+                    $strategy->saveFromPath(
+                        $localPath,
+                        $private_path,
+                        $file_name
+                    );
+                }
+            }
+            catch (\Throwable $ex){
+                Log::error(sprintf("PresentationService::processMediaUpload saving file %s to private storage error %s", $file_name, $ex->getMessage()));
+                Log::error($ex);
             }
 
-            $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-            if (!is_null($strategy)) {
-                Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to public storage", $file_name));
-                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
-                $strategy->saveFromPath
-                (
-                    $localPath,
-                    $public_path,
-                    $file_name,
-                    $options
-                );
+            try {
+                $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+                if (!is_null($strategy)) {
+                    Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to public storage", $file_name));
+                    $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
+                    $strategy->saveFromPath
+                    (
+                        $localPath,
+                        $public_path,
+                        $file_name,
+                        $options
+                    );
+                }
+            }
+            catch (\Throwable $ex){
+                Log::error(sprintf("PresentationService::processMediaUpload saving file %s to public storage error %s", $file_name, $ex->getMessage()));
+                Log::error($ex);
             }
 
             self::cleanLocalAndRemoteFile($localPath, $path);

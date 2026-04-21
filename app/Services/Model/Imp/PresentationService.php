@@ -17,7 +17,6 @@ use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
-use App\Jobs\ProcessMediaUpload;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
@@ -27,6 +26,7 @@ use App\Models\Foundation\Summit\Factories\PresentationMediaUploadFactory;
 use App\Models\Foundation\Summit\Factories\PresentationSlideFactory;
 use App\Models\Foundation\Summit\Factories\PresentationVideoFactory;
 use App\Models\Foundation\Summit\Factories\SummitPresentationCommentFactory;
+use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairScoreTypeRepository;
 use App\Models\Foundation\Summit\SelectionPlan;
 use App\Models\Utils\IStorageTypesConstants;
@@ -46,6 +46,7 @@ use models\main\Member;
 use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
+use models\summit\PendingMediaUpload;
 use models\summit\Presentation;
 use models\summit\PresentationAttendeeVote;
 use models\summit\PresentationLink;
@@ -102,6 +103,11 @@ final class PresentationService
     private $summit_repository;
 
     /**
+     * @var IPendingMediaUploadRepository
+     */
+    private $pending_media_upload_repository;
+
+    /**
      * PresentationService constructor.
      * @param ISummitEventRepository $presentation_repository
      * @param ISpeakerRepository $speaker_repository
@@ -122,6 +128,7 @@ final class PresentationService
         IFolderRepository                          $folder_repository,
         ISummitRepository                          $summit_repository,
         IPresentationTrackChairScoreTypeRepository $presentation_track_chair_score_type_repository,
+        IPendingMediaUploadRepository              $pending_media_upload_repository,
         ITransactionService                        $tx_service
     )
     {
@@ -134,6 +141,7 @@ final class PresentationService
         $this->folder_repository = $folder_repository;
         $this->presentation_track_chair_score_type_repository = $presentation_track_chair_score_type_repository;
         $this->summit_repository = $summit_repository;
+        $this->pending_media_upload_repository = $pending_media_upload_repository;
     }
 
     /**
@@ -1139,18 +1147,19 @@ final class PresentationService
                 ]
             ));
 
-            ProcessMediaUpload::dispatch
-            (
-                $summit->getId(),
-                $mediaUploadType->getId(),
-                $mediaUpload->getPath(IStorageTypesConstants::PublicType),
-                $mediaUpload->getPath(IStorageTypesConstants::PrivateType),
-                $fileInfo->getFileName(),
-                $fileInfo->getFilePath()
-            );
-
             $mediaUpload->setFilename($fileInfo->getFileName());
             $presentation->addMediaUpload($mediaUpload);
+
+            // Create pending upload row for cron processing
+            $pendingUpload = new PendingMediaUpload();
+            $pendingUpload->setSummitId($summit->getId());
+            $pendingUpload->setMediaUploadTypeId($mediaUploadType->getId());
+            $pendingUpload->setPublicPath($mediaUpload->getPath(IStorageTypesConstants::PublicType));
+            $pendingUpload->setPrivatePath($mediaUpload->getPath(IStorageTypesConstants::PrivateType));
+            $pendingUpload->setFileName($fileInfo->getFileName());
+            $pendingUpload->setTempFilePath($fileInfo->getFilePath());
+            $pendingUpload->setStatus(PendingMediaUpload::STATUS_PENDING);
+            $this->pending_media_upload_repository->add($pendingUpload);
 
             if (!$presentation->isCompleted()) {
                 Log::debug(sprintf("PresentationService::addMediaUploadTo presentation %s is not complete", $presentation_id));
@@ -1263,17 +1272,18 @@ final class PresentationService
                     throw new ValidationException(sprintf("File Extension %s is not valid (%s).", $fileInfo->getFileExt(), $mediaUploadType->getValidExtensions()));
                 }
 
-                ProcessMediaUpload::dispatch
-                (
-                    $summit->getId(),
-                    $mediaUploadType->getId(),
-                    $mediaUpload->getPath(IStorageTypesConstants::PublicType),
-                    $mediaUpload->getPath(IStorageTypesConstants::PrivateType),
-                    $fileInfo->getFileName(),
-                    $fileInfo->getFilePath()
-                );
-
                 $payload['file_name'] = $fileInfo->getFileName();
+
+                // Create pending upload row for cron processing
+                $pendingUpload = new PendingMediaUpload();
+                $pendingUpload->setSummitId($summit->getId());
+                $pendingUpload->setMediaUploadTypeId($mediaUploadType->getId());
+                $pendingUpload->setPublicPath($mediaUpload->getPath(IStorageTypesConstants::PublicType));
+                $pendingUpload->setPrivatePath($mediaUpload->getPath(IStorageTypesConstants::PrivateType));
+                $pendingUpload->setFileName($fileInfo->getFileName());
+                $pendingUpload->setTempFilePath($fileInfo->getFilePath());
+                $pendingUpload->setStatus(PendingMediaUpload::STATUS_PENDING);
+                $this->pending_media_upload_repository->add($pendingUpload);
 
             }
 

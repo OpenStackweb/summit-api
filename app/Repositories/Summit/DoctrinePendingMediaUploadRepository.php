@@ -15,6 +15,7 @@
 use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
 use models\summit\PendingMediaUpload;
+use models\summit\PresentationMediaUpload;
 
 /**
  * Class DoctrinePendingMediaUploadRepository
@@ -96,6 +97,21 @@ final class DoctrinePendingMediaUploadRepository
         $query->setParameter('status', PendingMediaUpload::STATUS_COMPLETED);
         $query->setParameter('cutoff_date', $cutoff_date);
         $query->setMaxResults($limit);
+
+        return $query->execute();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteByMediaUpload(PresentationMediaUpload $mediaUpload): int
+    {
+        $query = $this->getEntityManager()
+            ->createQuery(
+                "DELETE FROM models\\summit\\PendingMediaUpload p WHERE p.media_upload = :mediaUpload AND p.status IN (:statuses)"
+            );
+        $query->setParameter('mediaUpload', $mediaUpload);
+        $query->setParameter('statuses', [PendingMediaUpload::STATUS_PENDING, PendingMediaUpload::STATUS_PROCESSING]);
 
         return $query->execute();
     }

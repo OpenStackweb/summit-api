@@ -13,6 +13,7 @@
  **/
 
 use models\summit\PendingMediaUpload;
+use models\summit\PresentationMediaUpload;
 use models\utils\IBaseRepository;
 
 /**
@@ -41,4 +42,12 @@ interface IPendingMediaUploadRepository extends IBaseRepository
      * @return int Number of rows deleted
      */
     public function deleteCompletedOlderThan(int $days = 7, int $limit = 1000): int;
+
+    /**
+     * Delete pending/processing rows for a given PresentationMediaUpload
+     * Used when a media upload is deleted before the cron has processed it
+     * @param PresentationMediaUpload $mediaUpload
+     * @return int Number of rows deleted
+     */
+    public function deleteByMediaUpload(PresentationMediaUpload $mediaUpload): int;
 }

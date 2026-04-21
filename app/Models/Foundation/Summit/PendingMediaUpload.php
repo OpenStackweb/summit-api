@@ -42,6 +42,13 @@ class PendingMediaUpload extends SilverstripeBaseModel
     private $media_upload_type_id;
 
     /**
+     * @var PresentationMediaUpload
+     */
+    #[ORM\ManyToOne(targetEntity: \models\summit\PresentationMediaUpload::class)]
+    #[ORM\JoinColumn(name: 'PresentationMediaUploadID', referencedColumnName: 'ID', nullable: false, onDelete: 'CASCADE')]
+    private $media_upload;
+
+    /**
      * @var string|null
      */
     #[ORM\Column(name: 'PublicPath', type: 'string', length: 500, nullable: true)]
@@ -126,6 +133,22 @@ class PendingMediaUpload extends SilverstripeBaseModel
     public function setMediaUploadTypeId(int $media_upload_type_id): void
     {
         $this->media_upload_type_id = $media_upload_type_id;
+    }
+
+    /**
+     * @return PresentationMediaUpload
+     */
+    public function getMediaUpload(): PresentationMediaUpload
+    {
+        return $this->media_upload;
+    }
+
+    /**
+     * @param PresentationMediaUpload $media_upload
+     */
+    public function setMediaUpload(PresentationMediaUpload $media_upload): void
+    {
+        $this->media_upload = $media_upload;
     }
 
     /**

@@ -1154,6 +1154,7 @@ final class PresentationService
             $pendingUpload = new PendingMediaUpload();
             $pendingUpload->setSummitId($summit->getId());
             $pendingUpload->setMediaUploadTypeId($mediaUploadType->getId());
+            $pendingUpload->setMediaUpload($mediaUpload);
             $pendingUpload->setPublicPath($mediaUpload->getPath(IStorageTypesConstants::PublicType));
             $pendingUpload->setPrivatePath($mediaUpload->getPath(IStorageTypesConstants::PrivateType));
             $pendingUpload->setFileName($fileInfo->getFileName());
@@ -1278,6 +1279,7 @@ final class PresentationService
                 $pendingUpload = new PendingMediaUpload();
                 $pendingUpload->setSummitId($summit->getId());
                 $pendingUpload->setMediaUploadTypeId($mediaUploadType->getId());
+                $pendingUpload->setMediaUpload($mediaUpload);
                 $pendingUpload->setPublicPath($mediaUpload->getPath(IStorageTypesConstants::PublicType));
                 $pendingUpload->setPrivatePath($mediaUpload->getPath(IStorageTypesConstants::PrivateType));
                 $pendingUpload->setFileName($fileInfo->getFileName());
@@ -1337,6 +1339,9 @@ final class PresentationService
             if (!is_null($strategy)) {
                 $strategy->markAsDeleted($mediaUpload->getPath(IStorageTypesConstants::PublicType), $mediaUpload->getFilename());
             }
+
+            // Remove any pending/processing rows for this media upload before deleting it
+            $this->pending_media_upload_repository->deleteByMediaUpload($mediaUpload);
 
             $presentation->removeMediaUpload($mediaUpload);
         });

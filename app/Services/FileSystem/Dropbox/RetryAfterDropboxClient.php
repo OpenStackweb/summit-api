@@ -62,7 +62,7 @@ final class RetryAfterDropboxClient extends BaseDropboxClient
         tryUpload:
         try {
             $tries++;
-
+            Log::debug(sprintf("RetryAfterDropboxClient::uploadChunk type %s tries %s", $type, $tries));
             $chunkStream = new Psr7\LimitStream($stream, $chunkSize, $stream->tell());
 
             if ($type === self::UPLOAD_SESSION_START) {
@@ -73,8 +73,9 @@ final class RetryAfterDropboxClient extends BaseDropboxClient
                 return $this->uploadSessionAppend($chunkStream, $cursor);
             }
 
-            throw new \Exception('Invalid type');
+            throw new \Exception('Invalid type.');
         } catch (RequestException $exception) {
+            Log::error($exception->getMessage());
             if ($tries < $maximumTries) {
                 // If this is a 429 rate-limit, sleep for Retry-After + jitter before retrying
                 if ($exception instanceof ClientException

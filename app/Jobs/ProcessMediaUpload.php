@@ -28,11 +28,8 @@ class ProcessMediaUpload implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    // Increased from 2 to 5 for large file uploads that may face rate-limiting
-    public $tries = 5;
+    public $tries = 2;
 
-    // Exponential backoff: 10s, 30s, 60s, 120s between retries
-    public $backoff = [10, 30, 60, 120];
 
     // no timeout
     public $timeout = 0;

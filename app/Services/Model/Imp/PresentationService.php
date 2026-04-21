@@ -1661,7 +1661,7 @@ final class PresentationService
             try {
                 $strategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
                 if (!is_null($strategy)) {
-                    Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to public storage", $file_name));
+                            Log::debug(sprintf("PresentationService::processMediaUpload saving file %s to public storage", $file_name));
                     $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
                     $strategy->saveFromPath
                     (
@@ -1694,7 +1694,7 @@ final class PresentationService
             }
 
             self::cleanLocalAndRemoteFile($localPath, $path);
-            Log::debug(sprintf("PresentationService::processMediaUpload  file %s processed.", $file_name));
+            Log::debug(sprintf("still file %s processed.", $file_name));
         });
     }
 

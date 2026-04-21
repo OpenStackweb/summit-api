@@ -53,7 +53,7 @@ class DropboxServiceProvider extends ServiceProvider
             // Disable GuzzleFactory's built-in retry (retries: 0) to avoid double-retry
             $stack = GuzzleFactory::handler(retries: 0);
             // Position retry AFTER http_errors so it sees raw 429 responses before they're converted to exceptions
-            $stack->after('http_errors', static::createRateLimitRetryMiddleware(3, 30), 'dropbox_rate_limit');
+            $stack->after('http_errors', static::createRateLimitRetryMiddleware(5, 300), 'dropbox_rate_limit');
 
             // Create Guzzle client with custom handler and timeouts
             $guzzleClient = new GuzzleClient([
@@ -68,7 +68,8 @@ class DropboxServiceProvider extends ServiceProvider
                 new DropboxClient(
                     $config['authorization_token'] ?? '',
                     $guzzleClient,
-                    maxUploadChunkRetries: 3
+                    maxChunkSize: 1024 * 1024 * 50,  // 50 MiB
+                    maxUploadChunkRetries: 3,
                 )
             );
 
@@ -114,7 +115,7 @@ class DropboxServiceProvider extends ServiceProvider
             if (class_exists(Log::class)) {
                 try {
                     Log::warning(sprintf(
-                        'Dropbox rate limited (429), retrying in %ds (attempt %d/%d)',
+                        'DropboxServiceProvider::createRateLimitRetryMiddleware Dropbox rate limited (429), retrying in %ds (attempt %d/%d)',
                         $delay,
                         $retries + 1,
                         $maxRetries

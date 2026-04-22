@@ -28,6 +28,8 @@ class PendingMediaUpload extends SilverstripeBaseModel
     const STATUS_PROCESSING = 'Processing';
     const STATUS_COMPLETED = 'Completed';
     const STATUS_ERROR = 'Error';
+    const STATUS_PUBLIC_STORAGE_UPLOADED = 'PublicStorageUploaded';
+    const STATUS_PRIVATE_STORAGE_UPLOADED = 'PrivateStorageUploaded';
 
     /**
      * @var int
@@ -75,7 +77,7 @@ class PendingMediaUpload extends SilverstripeBaseModel
     /**
      * @var string
      */
-    #[ORM\Column(name: 'Status', type: 'string', length: 20, nullable: false, options: ['default' => 'Pending'])]
+    #[ORM\Column(name: 'Status', type: 'string', length: 30, nullable: false, options: ['default' => 'Pending'])]
     private $status;
 
     /**
@@ -285,5 +287,21 @@ class PendingMediaUpload extends SilverstripeBaseModel
     public function setProcessedDate(?\DateTime $processed_date): void
     {
         $this->processed_date = $processed_date;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPublicStorageUploaded(): bool
+    {
+        return $this->status === self::STATUS_PUBLIC_STORAGE_UPLOADED;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPrivateStorageUploaded(): bool
+    {
+        return $this->status === self::STATUS_PRIVATE_STORAGE_UPLOADED;
     }
 }

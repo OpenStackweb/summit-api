@@ -169,7 +169,7 @@ class SelectionPlan extends SilverstripeBaseModel
     #[ORM\JoinTable(name: 'SelectionPlan_CategoryGroups')]
     #[ORM\JoinColumn(name: 'SelectionPlanID', referencedColumnName: 'ID')]
     #[ORM\InverseJoinColumn(name: 'PresentationCategoryGroupID', referencedColumnName: 'ID')]
-    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategoryGroup::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\ManyToMany(targetEntity: \models\summit\PresentationCategoryGroup::class, inversedBy: 'selection_plans', fetch: 'EXTRA_LAZY')]
     private $category_groups;
 
     /**
@@ -596,6 +596,7 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         if ($this->category_groups->contains($track_group)) return;
         $this->category_groups->add($track_group);
+        $track_group->addSelectionPlan($this);
     }
 
     /**
@@ -605,6 +606,7 @@ class SelectionPlan extends SilverstripeBaseModel
     {
         if (!$this->category_groups->contains($track_group)) return;
         $this->category_groups->removeElement($track_group);
+        $track_group->removeSelectionPlan($this);
     }
 
     public function addEventType(SummitEventType $eventType)

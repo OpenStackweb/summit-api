@@ -252,6 +252,28 @@ final class PresentationCategoryGroupService
                 );
             }
 
+            $presentations = $track->getPresentationsBySelectionPlanIds($track_group->getSelectionPlanIds());
+
+            // Only clear the selection plan if no other category group in that plan
+            // still contains $track. A selection plan can span multiple groups, so
+            // removing $track from $track_group does not necessarily invalidate the
+            // plan for presentations under $track — another group may still cover it.
+            // We exclude $track_group from the check because removeCategory has not
+            // been called yet at this point.
+            foreach ($presentations as $presentation) {
+                $selection_plan = $presentation->getSelectionPlan();
+                if (is_null($selection_plan)) continue;
+                $track_reachable_via_another_group = $selection_plan->getCategoryGroups()->exists(
+                    function ($key, $group) use ($track, $track_group) {
+                        return $group->getId() !== $track_group->getId()
+                            && $group->hasCategory($track->getId());
+                    }
+                );
+                if (!$track_reachable_via_another_group) {
+                    $presentation->clearSelectionPlan();
+                }
+            }
+
             $track_group->removeCategory($track);
 
         });

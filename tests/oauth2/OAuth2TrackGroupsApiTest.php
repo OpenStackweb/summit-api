@@ -1,4 +1,8 @@
 <?php namespace Tests;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\summit\Presentation;
+use models\utils\SilverstripeBaseModel;
+
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -341,6 +345,16 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(201);
 
+        // verify presentations of defaultTrack have a selection plan before disassociation
+        $presentations = self::$defaultTrack->getPresentationsBySelectionPlanIds(
+            self::$defaultTrackGroup->getSelectionPlanIds()
+        );
+        $this->assertNotEmpty($presentations);
+        foreach ($presentations as $presentation) {
+            $this->assertTrue($presentation->getSelectionPlanId() > 0);
+        }
+        $presentation_ids = array_map(fn($p) => $p->getId(), $presentations);
+
         // now disassociate
         $response = $this->action(
             "DELETE",
@@ -353,6 +367,75 @@ final class OAuth2TrackGroupsApiTest extends ProtectedApiTestCase
         );
 
         $this->assertResponseStatus(204);
+
+        // reset EM (closed after the API transaction) and re-fetch presentations to verify selection plan was cleared
+        self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        foreach ($presentation_ids as $id) {
+            $presentation = self::$em->find(Presentation::class, $id);
+            $this->assertNotNull($presentation);
+            $this->assertEquals(0, $presentation->getSelectionPlanId());
+        }
+    }
+
+    public function testDisassociateTrackFromTrackGroupPreservesSelectionPlanWhenTrackReachableViaAnotherGroup()
+    {
+        // Set up a second category group (TrackGroupB) that also contains $defaultTrack
+        // and belongs to the same $default_selection_plan as $defaultTrackGroup (TrackGroupA).
+        // Removing $defaultTrack from TrackGroupA should NOT clear the selection plan on
+        // presentations because TrackGroupB still covers the track within the same plan.
+        $track_group_b = new \models\summit\PresentationCategoryGroup();
+        $track_group_b->setName("TRACK GROUP B");
+        $track_group_b->addCategory(self::$defaultTrack);
+        self::$summit->addCategoryGroup($track_group_b);
+        self::$default_selection_plan->addTrackGroup($track_group_b);
+        self::$em->persist($track_group_b);
+        self::$em->flush();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+
+        $params = [
+            'id'             => self::$summit->getId(),
+            'track_group_id' => self::$defaultTrackGroup->getId(),
+            'track_id'       => self::$defaultTrack->getId()
+        ];
+
+        // Only collect presentations that belong to $default_selection_plan — the plan
+        // that has TrackGroupB as a second group covering $defaultTrack.
+        // Presentations of $default_selection_plan2 are intentionally excluded: that plan
+        // only has $defaultTrackGroup, so their selection plan will be correctly cleared.
+        $presentations = self::$defaultTrack->getPresentationsBySelectionPlanIds(
+            [self::$default_selection_plan->getId()]
+        );
+        $this->assertNotEmpty($presentations);
+        foreach ($presentations as $presentation) {
+            $this->assertTrue($presentation->getSelectionPlanId() > 0);
+        }
+        $presentation_ids = array_map(fn($p) => $p->getId(), $presentations);
+
+        // disassociate $defaultTrack from TrackGroupA
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationCategoryGroupController@disassociateTrack2TrackGroup",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+
+        // reset EM and re-fetch presentations — selection plan must be preserved
+        // because TrackGroupB still contains $defaultTrack within the same plan
+        self::$em = \LaravelDoctrine\ORM\Facades\Registry::resetManager(\models\utils\SilverstripeBaseModel::EntityManager);
+        foreach ($presentation_ids as $id) {
+            $presentation = self::$em->find(\models\summit\Presentation::class, $id);
+            $this->assertNotNull($presentation);
+            $this->assertGreaterThan(0, $presentation->getSelectionPlanId());
+        }
     }
 
     public function testAddPrivateTrackGroup(){

@@ -1275,6 +1275,9 @@ final class PresentationService
 
                 $payload['file_name'] = $fileInfo->getFileName();
 
+                // Remove any existing pending rows for this media upload before creating a new one
+                $this->pending_media_upload_repository->deleteByMediaUpload($mediaUpload);
+
                 // Create pending upload row for cron processing
                 $pendingUpload = new PendingMediaUpload();
                 $pendingUpload->setSummitId($summit->getId());

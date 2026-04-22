@@ -39,8 +39,11 @@ final class AutoRefreshingDropBoxTokenService implements RefreshableTokenProvide
         private readonly string $appSecret,
         private readonly string $refreshToken,
     ) {
-        // Eagerly fetch the first access token so getToken() is ready immediately
-        $this->refreshAccessToken();
+        // Eagerly fetch the first access token so getToken() is ready immediately.
+        // Fail fast if credentials are invalid — avoids churning through uploads with a dead token.
+        if (!$this->refreshAccessToken()) {
+            throw new \RuntimeException('AutoRefreshingDropBoxTokenService: failed to obtain initial Dropbox access token. Check DROPBOX_APP_KEY, DROPBOX_APP_SECRET, and DROPBOX_REFRESH_TOKEN.');
+        }
     }
 
     public function getToken(): string
@@ -73,7 +76,7 @@ final class AutoRefreshingDropBoxTokenService implements RefreshableTokenProvide
     private function refreshAccessToken(): bool
     {
         try {
-            $client = new GuzzleClient();
+            $client = new GuzzleClient(['timeout' => 30, 'connect_timeout' => 10]);
             $response = $client->request('POST', self::TOKEN_ENDPOINT, [
                 'form_params' => [
                     'grant_type'    => 'refresh_token',

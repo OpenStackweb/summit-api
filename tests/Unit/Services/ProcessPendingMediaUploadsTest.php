@@ -12,9 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Services\Model\Imp\SummitService;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\AbstractQuery;
 use libs\utils\ITransactionService;
 use Mockery;
 use models\summit\ISummitRepository;
@@ -28,7 +27,9 @@ use PHPUnit\Framework\TestCase;
  *
  * Unit tests for {@see SummitService::processPendingMediaUploads()}
  * covering retry logic, cleanup, and error handling.
- * 429 rate-limit handling is now tested in RetryAfterDropboxClientTest.
+ *
+ * These tests mock IPendingMediaUploadRepository (the actual dependency)
+ * rather than EntityManager, which the service does not call directly.
  *
  * @package Tests\Unit\Services
  */
@@ -41,131 +42,68 @@ class ProcessPendingMediaUploadsTest extends TestCase
     }
 
     /**
-     * Test successful upload processing flow
+     * Helper to create a SummitService partial mock with injected dependencies.
+     * Uses reflection to set private properties since the constructor has many parameters.
      */
-    public function testProcessPendingMediaUploadsSuccessfulFlow(): void
+    private function createServiceWithDeps(
+        IPendingMediaUploadRepository $pendingRepo,
+        ITransactionService $txService,
+        ?ISummitRepository $summitRepository = null
+    ): SummitService {
+        $service = Mockery::mock(SummitService::class)->makePartial();
+        $service->shouldAllowMockingProtectedMethods();
+
+        // Inject private dependencies via reflection
+        $ref = new \ReflectionClass(SummitService::class);
+
+        $prop = $ref->getProperty('pending_media_upload_repository');
+        $prop->setAccessible(true);
+        $prop->setValue($service, $pendingRepo);
+
+        if ($summitRepository) {
+            $prop = $ref->getProperty('summit_repository');
+            $prop->setAccessible(true);
+            $prop->setValue($service, $summitRepository);
+        }
+
+        // tx_service is protected in AbstractService (grandparent)
+        $parentRef = $ref;
+        while ($parentRef && !$parentRef->hasProperty('tx_service')) {
+            $parentRef = $parentRef->getParentClass();
+        }
+        if ($parentRef) {
+            $prop = $parentRef->getProperty('tx_service');
+            $prop->setAccessible(true);
+            $prop->setValue($service, $txService);
+        }
+
+        return $service;
+    }
+
+    /**
+     * Test max retries exceeded marks upload as Error.
+     * When attempts >= max_retries, the upload should be permanently marked as Error.
+     */
+    public function testMaxRetriesExceededMarksUploadAsError(): void
     {
-        $em = Mockery::mock(EntityManager::class);
-        $query = Mockery::mock(AbstractQuery::class);
-        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
-        $summit = Mockery::mock(Summit::class);
-        $mediaUploadType = Mockery::mock(SummitMediaUploadType::class);
-        $summitRepository = Mockery::mock(ISummitRepository::class);
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
         $txService = Mockery::mock(ITransactionService::class);
 
-        // Setup reset query for stuck Processing rows
-        $resetQuery = Mockery::mock(AbstractQuery::class);
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/UPDATE.*Processing/'))
-            ->andReturn($resetQuery);
-        $resetQuery->shouldReceive('setParameter')->andReturnSelf();
-        $resetQuery->shouldReceive('execute')->andReturn(0);
-
-        // Setup main query for pending uploads
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/SELECT.*Pending/'))
-            ->andReturn($query);
-        $query->shouldReceive('setParameter')->with('status', PendingMediaUpload::STATUS_PENDING)->andReturnSelf();
-        $query->shouldReceive('getResult')->andReturn([$pendingUpload]);
-
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
         $pendingUpload->shouldReceive('getId')->andReturn(1);
-        $pendingUpload->shouldReceive('getAttempts')->andReturn(0);
-        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PROCESSING);
-        $pendingUpload->shouldReceive('incrementAttempts');
-        $pendingUpload->shouldReceive('getSummitId')->andReturn(1);
-        $pendingUpload->shouldReceive('getMediaUploadTypeId')->andReturn(1);
-        $pendingUpload->shouldReceive('getFileName')->andReturn('test.pdf');
-        $pendingUpload->shouldReceive('getTempFilePath')->andReturn('/tmp/test.pdf');
-        $pendingUpload->shouldReceive('getPrivatePath')->andReturn('private/test.pdf');
-        $pendingUpload->shouldReceive('getPublicPath')->andReturn('public/test.pdf');
-        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_COMPLETED);
-        $pendingUpload->shouldReceive('setProcessedDate');
+        $pendingUpload->shouldReceive('getAttempts')->andReturn(3); // Already at max
+        $pendingUpload->shouldReceive('setStatus')->once()->with(PendingMediaUpload::STATUS_ERROR);
+        $pendingUpload->shouldReceive('setErrorMessage')->once()->with('Max retries exceeded');
 
-        $summitRepository->shouldReceive('getById')->with(1)->andReturn($summit);
-        $summit->shouldReceive('getId')->andReturn(1);
-        $summit->shouldReceive('getMediaUploadTypeById')->with(1)->andReturn($mediaUploadType);
-
-        $mediaUploadType->shouldReceive('getPrivateStorageType')->andReturn(null);
-        $mediaUploadType->shouldReceive('getPublicStorageType')->andReturn(null);
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
 
         $txService->shouldReceive('transaction')->times(3)->andReturnUsing(function ($callback) {
             return $callback();
         });
 
-        // Cleanup query
-        $cleanupQuery = Mockery::mock(AbstractQuery::class);
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/DELETE.*PendingMediaUpload/'))
-            ->andReturn($cleanupQuery);
-        $cleanupQuery->shouldReceive('setParameter')->andReturnSelf();
-        $cleanupQuery->shouldReceive('setMaxResults')->with(1000)->andReturnSelf();
-        $cleanupQuery->shouldReceive('execute')->andReturn(0);
-
-        // Create service with minimal mocked dependencies
-        $service = Mockery::mock(SummitService::class)->makePartial();
-        $service->shouldReceive('getEM')->andReturn($em);
-        $service->shouldAllowMockingProtectedMethods();
-        $service->tx_service = $txService;
-        $service->summit_repository = $summitRepository;
-
-        $stats = $service->processPendingMediaUploads();
-
-        $this->assertEquals(1, $stats['processed']);
-        $this->assertEquals(0, $stats['errors']);
-    }
-
-    /**
-     * Test max retries exceeded marking upload as error
-     */
-    public function testProcessPendingMediaUploadsMaxRetriesExceeded(): void
-    {
-        $em = Mockery::mock(EntityManager::class);
-        $query = Mockery::mock(AbstractQuery::class);
-        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
-        $txService = Mockery::mock(ITransactionService::class);
-
-        // Setup reset query
-        $resetQuery = Mockery::mock(AbstractQuery::class);
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/UPDATE.*Processing/'))
-            ->andReturn($resetQuery);
-        $resetQuery->shouldReceive('setParameter')->andReturnSelf();
-        $resetQuery->shouldReceive('execute')->andReturn(0);
-
-        // Setup main query
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/SELECT.*Pending/'))
-            ->andReturn($query);
-        $query->shouldReceive('setParameter')->with('status', PendingMediaUpload::STATUS_PENDING)->andReturnSelf();
-        $query->shouldReceive('getResult')->andReturn([$pendingUpload]);
-
-        $pendingUpload->shouldReceive('getId')->andReturn(1);
-        $pendingUpload->shouldReceive('getAttempts')->andReturn(3); // Already at max
-        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_ERROR);
-        $pendingUpload->shouldReceive('setErrorMessage')->with('Max retries exceeded');
-
-        $txService->shouldReceive('transaction')->twice()->andReturnUsing(function ($callback) {
-            return $callback();
-        });
-
-        // Setup cleanup query
-        $cleanupQuery = Mockery::mock(AbstractQuery::class);
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/DELETE.*PendingMediaUpload/'))
-            ->andReturn($cleanupQuery);
-        $cleanupQuery->shouldReceive('setParameter')->andReturnSelf();
-        $cleanupQuery->shouldReceive('setMaxResults')->with(1000)->andReturnSelf();
-        $cleanupQuery->shouldReceive('execute')->andReturn(0);
-
-        $service = Mockery::mock(SummitService::class)->makePartial();
-        $service->shouldReceive('getEM')->andReturn($em);
-        $service->tx_service = $txService;
+        $service = $this->createServiceWithDeps($pendingRepo, $txService);
 
         $stats = $service->processPendingMediaUploads(3);
 
@@ -174,111 +112,115 @@ class ProcessPendingMediaUploadsTest extends TestCase
     }
 
     /**
-     * Test entity not found error handling
+     * Test that transient failure keeps upload as Pending for retry (not Error).
+     * When attempts < max_retries, the status should revert to Pending so the next
+     * cron run picks it up again.
      */
-    public function testProcessPendingMediaUploadsSummitNotFound(): void
+    public function testTransientFailureKeepsUploadPendingForRetry(): void
     {
-        $em = Mockery::mock(EntityManager::class);
-        $query = Mockery::mock(AbstractQuery::class);
-        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
-        $summitRepository = Mockery::mock(ISummitRepository::class);
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
         $txService = Mockery::mock(ITransactionService::class);
+        $summitRepository = Mockery::mock(ISummitRepository::class);
 
-        // Setup reset query
-        $resetQuery = Mockery::mock(AbstractQuery::class);
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/UPDATE.*Processing/'))
-            ->andReturn($resetQuery);
-        $resetQuery->shouldReceive('setParameter')->andReturnSelf();
-        $resetQuery->shouldReceive('execute')->andReturn(0);
-
-        // Setup main query
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/SELECT.*Pending/'))
-            ->andReturn($query);
-        $query->shouldReceive('setParameter')->with('status', PendingMediaUpload::STATUS_PENDING)->andReturnSelf();
-        $query->shouldReceive('getResult')->andReturn([$pendingUpload]);
-
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
         $pendingUpload->shouldReceive('getId')->andReturn(1);
-        $pendingUpload->shouldReceive('getAttempts')->andReturn(0);
-        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PROCESSING);
-        $pendingUpload->shouldReceive('incrementAttempts');
+        // First getAttempts() call: retry guard check (0 < 3, passes)
+        // Second getAttempts() call: in catch block (1 < 3, stays Pending)
+        $pendingUpload->shouldReceive('getAttempts')->andReturnValues([0, 1]);
+        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PROCESSING)->once();
+        $pendingUpload->shouldReceive('incrementAttempts')->once();
         $pendingUpload->shouldReceive('getSummitId')->andReturn(999);
-        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_ERROR);
-        $pendingUpload->shouldReceive('setErrorMessage')->with(Mockery::pattern('/Summit 999 not found/'));
-
+        // Summit not found → EntityNotFoundException → caught in inner catch
         $summitRepository->shouldReceive('getById')->with(999)->andReturn(null);
 
-        $txService->shouldReceive('transaction')->times(3)->andReturnUsing(function ($callback) {
+        // Verify it stays Pending (not Error) since attempts(1) < max_retries(3)
+        $pendingUpload->shouldReceive('setErrorMessage')->once()->with(Mockery::pattern('/Summit 999 not found/'));
+        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PENDING)->once();
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        $txService->shouldReceive('transaction')->times(4)->andReturnUsing(function ($callback) {
             return $callback();
         });
 
-        // Setup cleanup query
-        $cleanupQuery = Mockery::mock(AbstractQuery::class);
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/DELETE.*PendingMediaUpload/'))
-            ->andReturn($cleanupQuery);
-        $cleanupQuery->shouldReceive('setParameter')->andReturnSelf();
-        $cleanupQuery->shouldReceive('setMaxResults')->with(1000)->andReturnSelf();
-        $cleanupQuery->shouldReceive('execute')->andReturn(0);
+        $service = $this->createServiceWithDeps($pendingRepo, $txService, $summitRepository);
 
-        $service = Mockery::mock(SummitService::class)->makePartial();
-        $service->shouldReceive('getEM')->andReturn($em);
-        $service->tx_service = $txService;
-        $service->summit_repository = $summitRepository;
-
-        $stats = $service->processPendingMediaUploads();
+        $stats = $service->processPendingMediaUploads(3);
 
         $this->assertEquals(0, $stats['processed']);
         $this->assertEquals(1, $stats['errors']);
     }
 
     /**
-     * Test cleanup of completed rows older than 7 days
+     * Test cleanup of completed rows older than 7 days.
+     * With no pending uploads, the method should still run cleanup.
      */
-    public function testProcessPendingMediaUploadsCleanupOldCompletedRows(): void
+    public function testCleanupOldCompletedRows(): void
     {
-        $em = Mockery::mock(EntityManager::class);
-        $query = Mockery::mock(AbstractQuery::class);
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
         $txService = Mockery::mock(ITransactionService::class);
 
-        // Setup reset query
-        $resetQuery = Mockery::mock(AbstractQuery::class);
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/UPDATE.*Processing/'))
-            ->andReturn($resetQuery);
-        $resetQuery->shouldReceive('setParameter')->andReturnSelf();
-        $resetQuery->shouldReceive('execute')->andReturn(0);
-
-        // Setup main query - no pending uploads
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/SELECT.*Pending/'))
-            ->andReturn($query);
-        $query->shouldReceive('setParameter')->with('status', PendingMediaUpload::STATUS_PENDING)->andReturnSelf();
-        $query->shouldReceive('getResult')->andReturn([]);
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(50);
 
         $txService->shouldReceive('transaction')->twice()->andReturnUsing(function ($callback) {
             return $callback();
         });
 
-        // Setup cleanup query - simulate deleting 50 old rows
-        $cleanupQuery = Mockery::mock(AbstractQuery::class);
-        $em->shouldReceive('createQuery')
-            ->once()
-            ->with(Mockery::pattern('/DELETE.*PendingMediaUpload/'))
-            ->andReturn($cleanupQuery);
-        $cleanupQuery->shouldReceive('setParameter')->andReturnSelf();
-        $cleanupQuery->shouldReceive('setMaxResults')->with(1000)->andReturnSelf();
-        $cleanupQuery->shouldReceive('execute')->andReturn(50);
+        $service = $this->createServiceWithDeps($pendingRepo, $txService);
 
-        $service = Mockery::mock(SummitService::class)->makePartial();
-        $service->shouldReceive('getEM')->andReturn($em);
-        $service->tx_service = $txService;
+        $stats = $service->processPendingMediaUploads();
+
+        $this->assertEquals(0, $stats['processed']);
+        $this->assertEquals(0, $stats['errors']);
+    }
+
+    /**
+     * Test that stuck Processing rows are reset back to Pending.
+     */
+    public function testResetStuckProcessingRows(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+
+        // 3 stuck rows get reset
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(3);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        $txService->shouldReceive('transaction')->twice()->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService);
+
+        $stats = $service->processPendingMediaUploads();
+
+        $this->assertEquals(0, $stats['processed']);
+        $this->assertEquals(0, $stats['errors']);
+    }
+
+    /**
+     * Test that non-PendingMediaUpload instances in the result are skipped.
+     */
+    public function testNonPendingMediaUploadInstancesAreSkipped(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        // Return a non-PendingMediaUpload object
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([new \stdClass()]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        $txService->shouldReceive('transaction')->twice()->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService);
 
         $stats = $service->processPendingMediaUploads();
 

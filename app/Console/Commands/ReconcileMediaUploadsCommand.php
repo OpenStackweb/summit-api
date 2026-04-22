@@ -60,9 +60,9 @@ class ReconcileMediaUploadsCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         try {
 
@@ -97,9 +97,12 @@ class ReconcileMediaUploadsCommand extends Command
                 $result['errors']
             ));
 
+            return self::SUCCESS;
+
         } catch (Exception $ex) {
             Log::warning($ex);
             $this->error($ex->getMessage());
+            return self::FAILURE;
         }
     }
 }

@@ -15,18 +15,25 @@
 use App\Services\FileSystem\Dropbox\RetryAfterDropboxClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Support\Facades\Sleep;
 use Mockery;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
+use Spatie\Dropbox\Client as BaseDropboxClient;
 use Spatie\Dropbox\TokenProvider;
 
 /**
  * Class RetryAfterDropboxClientTest
  *
- * Unit tests for {@see RetryAfterDropboxClient::contentEndpointRequest()}
+ * Unit tests for {@see RetryAfterDropboxClient::uploadChunk()}
  * covering Retry-After aware 429 handling with jitter, max retries, and passthrough.
+ *
+ * The previous version of this test exercised contentEndpointRequest() which is
+ * inherited from the parent Spatie Client and contains NO custom retry logic.
+ * The actual retry-with-sleep logic lives in the overridden uploadChunk() method.
  *
  * @package Tests\Unit\Services
  */
@@ -39,70 +46,115 @@ class RetryAfterDropboxClientTest extends TestCase
     }
 
     /**
-     * Test successful request passthrough (no 429)
-     * Verifies parent behavior works when no rate limit is hit
+     * Create a RetryAfterDropboxClient with a mocked HTTP client and token provider.
      */
-    public function testContentEndpointRequestSuccessfulPassthrough(): void
+    private function createClient(ClientInterface $httpClient, int $maxRetries = 5): RetryAfterDropboxClient
+    {
+        $tokenProvider = Mockery::mock(TokenProvider::class);
+        $tokenProvider->shouldReceive('getToken')->andReturn('test-token');
+
+        return new RetryAfterDropboxClient(
+            $tokenProvider,
+            $httpClient,
+            BaseDropboxClient::MAX_CHUNK_SIZE,
+            $maxRetries
+        );
+    }
+
+    /**
+     * Call the protected uploadChunk method via Closure::bind.
+     * RetryAfterDropboxClient is final, so we cannot subclass it.
+     * uploadChunk takes $stream by reference, so we use a closure to preserve that.
+     */
+    private function callUploadChunk(RetryAfterDropboxClient $client, StreamInterface &$stream, int $chunkSize = 1024)
+    {
+        $fn = \Closure::bind(function () use (&$stream, $chunkSize) {
+            return $this->uploadChunk(
+                BaseDropboxClient::UPLOAD_SESSION_START,
+                $stream,
+                $chunkSize
+            );
+        }, $client, RetryAfterDropboxClient::class);
+
+        return $fn();
+    }
+
+    /**
+     * Build a success response for upload_session/start.
+     * Spatie's uploadSessionStart parses JSON with session_id from the response body.
+     */
+    private function makeSuccessResponse(): Response
+    {
+        return new Response(200, [], json_encode(['session_id' => 'test-session-123']));
+    }
+
+    /**
+     * Build a 429 ClientException with an optional Retry-After header.
+     */
+    private function make429Exception(string $retryAfter = '2'): ClientException
+    {
+        $request = new Request('POST', 'https://content.dropboxapi.com/2/files/upload_session/start');
+        $headers = $retryAfter !== '' ? ['Retry-After' => $retryAfter] : [];
+        $response = new Response(429, $headers);
+        return new ClientException('Rate limited', $request, $response);
+    }
+
+    /**
+     * Build a non-429 ClientException (e.g. 403 Forbidden).
+     */
+    private function make403Exception(): ClientException
+    {
+        $request = new Request('POST', 'https://content.dropboxapi.com/2/files/upload_session/start');
+        $response = new Response(403, [], 'Forbidden');
+        return new ClientException('Forbidden', $request, $response);
+    }
+
+    /**
+     * Test successful upload chunk without any errors.
+     * Verifies no sleep is called and a cursor is returned.
+     */
+    public function testUploadChunkSuccessfulPassthrough(): void
     {
         Sleep::fake();
 
         $httpClient = Mockery::mock(ClientInterface::class);
-        $tokenProvider = Mockery::mock(TokenProvider::class);
-        $response = Mockery::mock(ResponseInterface::class);
-
-        $tokenProvider->shouldReceive('getToken')->andReturn('test-token');
-        $tokenProvider->shouldReceive('isRefreshable')->andReturn(false);
-
         $httpClient->shouldReceive('request')
             ->once()
-            ->andReturn($response);
+            ->andReturn($this->makeSuccessResponse());
 
-        $client = new RetryAfterDropboxClient($httpClient, $tokenProvider);
-        $result = $client->contentEndpointRequest('/test/endpoint', ['arg' => 'value'], 'body');
+        $client = $this->createClient($httpClient);
+        $stream = Utils::streamFor('test-content');
 
-        $this->assertSame($response, $result);
+        $cursor = $this->callUploadChunk($client, $stream);
+
+        $this->assertNotNull($cursor);
         Sleep::assertNeverSlept();
     }
 
     /**
-     * Test 429 with Retry-After header
-     * Verifies sleep duration includes Retry-After value + jitter range (100-500ms)
+     * Test 429 with Retry-After header triggers sleep and successful retry.
+     * Verifies sleep duration: Retry-After seconds * 1000 + jitter (100-500ms).
      */
-    public function testContentEndpointRequest429WithRetryAfter(): void
+    public function testUploadChunk429WithRetryAfterSleepsAndRetries(): void
     {
         Sleep::fake();
 
         $httpClient = Mockery::mock(ClientInterface::class);
-        $tokenProvider = Mockery::mock(TokenProvider::class);
-        $request = Mockery::mock(RequestInterface::class);
-        $response429 = Mockery::mock(ResponseInterface::class);
-        $responseSuccess = Mockery::mock(ResponseInterface::class);
-
-        $tokenProvider->shouldReceive('getToken')->andReturn('test-token');
-        $tokenProvider->shouldReceive('isRefreshable')->andReturn(false);
-
-        $response429->shouldReceive('getStatusCode')->andReturn(429);
-        $response429->shouldReceive('getHeaderLine')->with('Retry-After')->andReturn('2');
-
-        $exception = Mockery::mock(ClientException::class);
-        $exception->shouldReceive('getResponse')->andReturn($response429);
-        $exception->shouldReceive('getRequest')->andReturn($request);
-
         $httpClient->shouldReceive('request')
-            ->once()
-            ->andThrow($exception);
-
+            ->once()->ordered()
+            ->andThrow($this->make429Exception('2'));
         $httpClient->shouldReceive('request')
-            ->once()
-            ->andReturn($responseSuccess);
+            ->once()->ordered()
+            ->andReturn($this->makeSuccessResponse());
 
-        $client = new RetryAfterDropboxClient($httpClient, $tokenProvider);
-        $result = $client->contentEndpointRequest('/test/endpoint', ['arg' => 'value'], 'body');
+        $client = $this->createClient($httpClient);
+        $stream = Utils::streamFor('test-content');
 
-        $this->assertSame($responseSuccess, $result);
+        $cursor = $this->callUploadChunk($client, $stream);
 
-        // Verify sleep was called with 2 seconds (2000ms) + jitter (100-500ms)
-        // Total range: 2100ms to 2500ms
+        $this->assertNotNull($cursor);
+
+        // Verify sleep: 2 seconds (2000ms) + jitter (100-500ms) = 2100-2500ms
         Sleep::assertSlept(function ($duration) {
             $millis = $duration->totalMilliseconds;
             return $millis >= 2100 && $millis <= 2500;
@@ -110,119 +162,88 @@ class RetryAfterDropboxClientTest extends TestCase
     }
 
     /**
-     * Test 429 max retries exceeded (5 attempts)
-     * Verifies exception is rethrown after exhausting all retry attempts
+     * Test 429 without Retry-After header falls back to DEFAULT_RETRY_AFTER_SECONDS (300).
      */
-    public function testContentEndpointRequest429MaxRetriesExceeded(): void
+    public function testUploadChunk429WithoutRetryAfterUsesDefault(): void
     {
         Sleep::fake();
 
         $httpClient = Mockery::mock(ClientInterface::class);
-        $tokenProvider = Mockery::mock(TokenProvider::class);
-        $request = Mockery::mock(RequestInterface::class);
-        $response429 = Mockery::mock(ResponseInterface::class);
+        $httpClient->shouldReceive('request')
+            ->once()->ordered()
+            ->andThrow($this->make429Exception(''));
+        $httpClient->shouldReceive('request')
+            ->once()->ordered()
+            ->andReturn($this->makeSuccessResponse());
 
-        $tokenProvider->shouldReceive('getToken')->andReturn('test-token');
-        $tokenProvider->shouldReceive('isRefreshable')->andReturn(false);
+        $client = $this->createClient($httpClient);
+        $stream = Utils::streamFor('test-content');
 
-        $response429->shouldReceive('getStatusCode')->andReturn(429);
-        $response429->shouldReceive('getHeaderLine')->with('Retry-After')->andReturn('1');
+        $cursor = $this->callUploadChunk($client, $stream);
 
-        $exception = Mockery::mock(ClientException::class);
-        $exception->shouldReceive('getResponse')->andReturn($response429);
-        $exception->shouldReceive('getRequest')->andReturn($request);
+        $this->assertNotNull($cursor);
 
+        // Default is 300 seconds (300000ms) + jitter (100-500ms) = 300100-300500ms
+        Sleep::assertSlept(function ($duration) {
+            $millis = $duration->totalMilliseconds;
+            return $millis >= 300100 && $millis <= 300500;
+        }, 1);
+    }
+
+    /**
+     * Test 429 max retries exceeded throws exception after all retry attempts.
+     * With maxUploadChunkRetries=5, it should attempt 5 times then throw.
+     * Sleep should be called 4 times (not on the final throw).
+     */
+    public function testUploadChunk429MaxRetriesExceededThrowsException(): void
+    {
+        Sleep::fake();
+
+        $httpClient = Mockery::mock(ClientInterface::class);
         // All 5 attempts fail with 429
         $httpClient->shouldReceive('request')
             ->times(5)
-            ->andThrow($exception);
+            ->andThrow($this->make429Exception('1'));
 
-        $client = new RetryAfterDropboxClient($httpClient, $tokenProvider);
+        $client = $this->createClient($httpClient, 5);
+        $stream = Utils::streamFor('test-content');
 
-        $this->expectException(ClientException::class);
-        $client->contentEndpointRequest('/test/endpoint', ['arg' => 'value'], 'body');
+        $thrown = false;
+        try {
+            $this->callUploadChunk($client, $stream);
+        } catch (\Exception $e) {
+            $thrown = true;
+        }
 
-        // Verify sleep was called 4 times (not on the 5th/final attempt before throwing)
+        $this->assertTrue($thrown, 'Expected exception to be thrown after max retries');
+
+        // Sleep called 4 times: attempts 1-4 sleep before retry, attempt 5 throws immediately
         Sleep::assertSleptTimes(4);
     }
 
     /**
-     * Test non-429 ClientException passthrough
-     * Verifies non-429 errors pass through to parent behavior without retry
+     * Test non-429 error retries without sleep.
+     * A 403 should still be retried (up to max retries) but without any sleep.
      */
-    public function testContentEndpointRequestNon429Exception(): void
+    public function testUploadChunkNon429RetriesWithoutSleep(): void
     {
         Sleep::fake();
 
         $httpClient = Mockery::mock(ClientInterface::class);
-        $tokenProvider = Mockery::mock(TokenProvider::class);
-        $request = Mockery::mock(RequestInterface::class);
-        $response500 = Mockery::mock(ResponseInterface::class);
-
-        $tokenProvider->shouldReceive('getToken')->andReturn('test-token');
-        $tokenProvider->shouldReceive('isRefreshable')->andReturn(false);
-
-        $response500->shouldReceive('getStatusCode')->andReturn(500);
-
-        $exception = Mockery::mock(ClientException::class);
-        $exception->shouldReceive('getResponse')->andReturn($response500);
-        $exception->shouldReceive('getRequest')->andReturn($request);
-
         $httpClient->shouldReceive('request')
-            ->once()
-            ->andThrow($exception);
+            ->once()->ordered()
+            ->andThrow($this->make403Exception());
+        $httpClient->shouldReceive('request')
+            ->once()->ordered()
+            ->andReturn($this->makeSuccessResponse());
 
-        $client = new RetryAfterDropboxClient($httpClient, $tokenProvider);
+        $client = $this->createClient($httpClient);
+        $stream = Utils::streamFor('test-content');
 
-        $this->expectException(ClientException::class);
-        $client->contentEndpointRequest('/test/endpoint', ['arg' => 'value'], 'body');
+        $cursor = $this->callUploadChunk($client, $stream);
 
-        // Verify no sleep was called (no retry for non-429)
+        $this->assertNotNull($cursor);
+        // No sleep for non-429 errors
         Sleep::assertNeverSlept();
-    }
-
-    /**
-     * Test 429 without Retry-After header
-     * Verifies default 1 second sleep when Retry-After header is absent
-     */
-    public function testContentEndpointRequest429WithoutRetryAfter(): void
-    {
-        Sleep::fake();
-
-        $httpClient = Mockery::mock(ClientInterface::class);
-        $tokenProvider = Mockery::mock(TokenProvider::class);
-        $request = Mockery::mock(RequestInterface::class);
-        $response429 = Mockery::mock(ResponseInterface::class);
-        $responseSuccess = Mockery::mock(ResponseInterface::class);
-
-        $tokenProvider->shouldReceive('getToken')->andReturn('test-token');
-        $tokenProvider->shouldReceive('isRefreshable')->andReturn(false);
-
-        $response429->shouldReceive('getStatusCode')->andReturn(429);
-        $response429->shouldReceive('getHeaderLine')->with('Retry-After')->andReturn(''); // No header
-
-        $exception = Mockery::mock(ClientException::class);
-        $exception->shouldReceive('getResponse')->andReturn($response429);
-        $exception->shouldReceive('getRequest')->andReturn($request);
-
-        $httpClient->shouldReceive('request')
-            ->once()
-            ->andThrow($exception);
-
-        $httpClient->shouldReceive('request')
-            ->once()
-            ->andReturn($responseSuccess);
-
-        $client = new RetryAfterDropboxClient($httpClient, $tokenProvider);
-        $result = $client->contentEndpointRequest('/test/endpoint', ['arg' => 'value'], 'body');
-
-        $this->assertSame($responseSuccess, $result);
-
-        // Verify sleep was called with default 1 second (1000ms) + jitter (100-500ms)
-        // Total range: 1100ms to 1500ms
-        Sleep::assertSlept(function ($duration) {
-            $millis = $duration->totalMilliseconds;
-            return $millis >= 1100 && $millis <= 1500;
-        }, 1);
     }
 }

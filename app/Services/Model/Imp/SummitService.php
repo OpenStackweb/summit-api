@@ -4288,29 +4288,35 @@ final class SummitService
                         );
                     }
 
-                    // Mark as completed and clean up temp files
-                    $this->tx_service->transaction(function () use ($pending_upload, $localPath) {
+                    // Mark as completed
+                    $this->tx_service->transaction(function () use ($pending_upload) {
                         $pending_upload->setStatus(PendingMediaUpload::STATUS_COMPLETED);
                         $pending_upload->setProcessedDate(new \DateTime('now', new \DateTimeZone(\models\utils\SilverstripeBaseModel::DefaultTimeZone)));
-
-                        // Clean up temp files only after transaction commits
-                        \Libs\Utils\FileUtils::cleanLocalAndRemoteFile($localPath, $pending_upload->getTempFilePath());
                     });
+
+                    // Clean up temp files after transaction commits successfully
+                    self::cleanLocalAndRemoteFile($localPath, $pending_upload->getTempFilePath());
 
                     $stats['processed']++;
                     Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s completed successfully", $upload_id));
 
                 } catch (\Exception $ex) {
-                    // Mark as error and continue to next upload
-                    $this->tx_service->transaction(function () use ($pending_upload, $ex) {
-                        $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
+                    // Keep as Pending for retry unless max retries exhausted
+                    $this->tx_service->transaction(function () use ($pending_upload, $ex, $max_retries) {
                         $pending_upload->setErrorMessage($ex->getMessage());
+                        if ($pending_upload->getAttempts() >= $max_retries) {
+                            $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
+                        } else {
+                            $pending_upload->setStatus(PendingMediaUpload::STATUS_PENDING);
+                        }
                     });
 
                     $stats['errors']++;
                     Log::warning(sprintf(
-                        "SummitService::processPendingMediaUploads upload ID %s failed: %s",
+                        "SummitService::processPendingMediaUploads upload ID %s failed (attempt %s/%s): %s",
                         $upload_id,
+                        $pending_upload->getAttempts(),
+                        $max_retries,
                         $ex->getMessage()
                     ));
                 }

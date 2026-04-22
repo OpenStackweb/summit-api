@@ -83,6 +83,8 @@ final class RetryAfterDropboxClient extends BaseDropboxClient
                 ) {
                     $retryAfter = (int) ($exception->getResponse()->getHeaderLine('Retry-After')
                         ?: self::DEFAULT_RETRY_AFTER_SECONDS);
+                    if($retryAfter == 0)
+                        $retryAfter = self::DEFAULT_RETRY_AFTER_SECONDS;
                     $jitterMs = random_int(self::MIN_JITTER_MS, self::MAX_JITTER_MS);
 
                     Log::warning(sprintf(

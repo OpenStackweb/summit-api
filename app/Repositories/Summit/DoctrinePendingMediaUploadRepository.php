@@ -49,7 +49,10 @@ final class DoctrinePendingMediaUploadRepository
      */
     protected function getOrderMappings()
     {
-        return ['id', 'created'];
+        return [
+            'id' => 'e.id',
+            'created' => 'e.created',
+        ];
     }
 
     /**
@@ -90,15 +93,29 @@ final class DoctrinePendingMediaUploadRepository
         $cutoff_date = new \DateTime('now', new \DateTimeZone(\models\utils\SilverstripeBaseModel::DefaultTimeZone));
         $cutoff_date->modify(sprintf('-%d days', $days));
 
-        $query = $this->getEntityManager()
+        // Step 1: SELECT IDs with limit (setMaxResults works on SELECT)
+        $selectQuery = $this->getEntityManager()
             ->createQuery(
-                "DELETE FROM models\summit\PendingMediaUpload p WHERE p.status = :status AND p.processed_date < :cutoff_date"
+                "SELECT p.id FROM models\summit\PendingMediaUpload p WHERE p.status = :status AND p.processed_date < :cutoff_date ORDER BY p.processed_date ASC"
             );
-        $query->setParameter('status', PendingMediaUpload::STATUS_COMPLETED);
-        $query->setParameter('cutoff_date', $cutoff_date);
-        $query->setMaxResults($limit);
+        $selectQuery->setParameter('status', PendingMediaUpload::STATUS_COMPLETED);
+        $selectQuery->setParameter('cutoff_date', $cutoff_date);
+        $selectQuery->setMaxResults($limit);
 
-        return $query->execute();
+        $ids = array_column($selectQuery->getArrayResult(), 'id');
+
+        if (empty($ids)) {
+            return 0;
+        }
+
+        // Step 2: DELETE by those IDs
+        $deleteQuery = $this->getEntityManager()
+            ->createQuery(
+                "DELETE FROM models\summit\PendingMediaUpload p WHERE p.id IN (:ids)"
+            );
+        $deleteQuery->setParameter('ids', $ids);
+
+        return $deleteQuery->execute();
     }
 
     /**
@@ -110,7 +127,7 @@ final class DoctrinePendingMediaUploadRepository
             ->createQuery(
                 "DELETE FROM models\\summit\\PendingMediaUpload p WHERE p.media_upload = :mediaUpload AND p.status IN (:statuses)"
             );
-        $query->setParameter('mediaUpload', $mediaUpload);
+        $query->setParameter('mediaUpload', $mediaUpload->getId());
         $query->setParameter('statuses', [PendingMediaUpload::STATUS_PENDING, PendingMediaUpload::STATUS_PROCESSING]);
 
         return $query->execute();

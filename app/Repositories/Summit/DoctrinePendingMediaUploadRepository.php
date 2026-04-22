@@ -61,8 +61,12 @@ final class DoctrinePendingMediaUploadRepository
     public function getPendingUploads(): array
     {
         $query = $this->getEntityManager()
-            ->createQuery("SELECT p FROM models\summit\PendingMediaUpload p WHERE p.status = :status ORDER BY p.created ASC");
-        $query->setParameter('status', PendingMediaUpload::STATUS_PENDING);
+            ->createQuery("SELECT p FROM models\summit\PendingMediaUpload p WHERE p.status IN (:statuses) ORDER BY p.created ASC");
+        $query->setParameter('statuses', [
+            PendingMediaUpload::STATUS_PENDING,
+            PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED,
+            PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED
+        ]);
         return $query->getResult();
     }
 
@@ -128,7 +132,12 @@ final class DoctrinePendingMediaUploadRepository
                 "DELETE FROM models\\summit\\PendingMediaUpload p WHERE p.media_upload = :mediaUpload AND p.status IN (:statuses)"
             );
         $query->setParameter('mediaUpload', $mediaUpload->getId());
-        $query->setParameter('statuses', [PendingMediaUpload::STATUS_PENDING, PendingMediaUpload::STATUS_PROCESSING]);
+        $query->setParameter('statuses', [
+            PendingMediaUpload::STATUS_PENDING,
+            PendingMediaUpload::STATUS_PROCESSING,
+            PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED,
+            PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED
+        ]);
 
         return $query->execute();
     }

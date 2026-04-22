@@ -23,7 +23,8 @@ use models\utils\IBaseRepository;
 interface IPendingMediaUploadRepository extends IBaseRepository
 {
     /**
-     * Get all pending uploads ordered by creation date
+     * Get all resumable uploads ordered by creation date
+     * Returns rows with Pending, PublicStorageUploaded, or PrivateStorageUploaded status
      * @return PendingMediaUpload[]
      */
     public function getPendingUploads(): array;
@@ -44,8 +45,9 @@ interface IPendingMediaUploadRepository extends IBaseRepository
     public function deleteCompletedOlderThan(int $days = 7, int $limit = 1000): int;
 
     /**
-     * Delete pending/processing rows for a given PresentationMediaUpload
+     * Delete pending/processing/partial-status rows for a given PresentationMediaUpload
      * Used when a media upload is deleted before the cron has processed it
+     * Deletes rows with Pending, Processing, PublicStorageUploaded, or PrivateStorageUploaded status
      * @param PresentationMediaUpload $mediaUpload
      * @return int Number of rows deleted
      */

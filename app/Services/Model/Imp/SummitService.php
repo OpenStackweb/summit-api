@@ -4242,6 +4242,7 @@ final class SummitService
                 }
 
                 try {
+                    // Mark as Processing and increment attempts
                     $this->tx_service->transaction(function () use ($pending_upload) {
                         $pending_upload->setStatus(PendingMediaUpload::STATUS_PROCESSING);
                         $pending_upload->incrementAttempts();
@@ -4258,37 +4259,70 @@ final class SummitService
                         throw new EntityNotFoundException(sprintf("Media Upload Type %s not found", $pending_upload->getMediaUploadTypeId()));
                     }
 
-                    // Copy file from upload storage to local temp
+                    // Always re-download temp file from upload storage (even on retry from partial status)
                     $localPath = self::getFileFromRemoteStorageOnTempStorage(
                         $pending_upload->getFileName(),
                         $pending_upload->getTempFilePath()
                     );
 
-                    // Try public storage first
-                    $publicStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-                    if (!is_null($publicStrategy)) {
-                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to public storage", $upload_id));
-                        $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
-                        $publicStrategy->saveFromPath(
-                            $localPath,
-                            $pending_upload->getPublicPath(),
-                            $pending_upload->getFileName(),
-                            $options
-                        );
+                    $currentStatus = $pending_upload->getStatus();
+
+                    // Phase 1: Public storage (skip if already done)
+                    if ($currentStatus !== PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED) {
+
+                        $publicStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+                        if (!is_null($publicStrategy)) {
+                            Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to public storage", $upload_id));
+                            try {
+                                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
+                                $publicStrategy->saveFromPath(
+                                    $localPath,
+                                    $pending_upload->getPublicPath(),
+                                    $pending_upload->getFileName(),
+                                    $options
+                                );
+                            } catch (\Exception $public_ex) {
+                                // Public storage failed - re-throw to outer catch
+                                throw $public_ex;
+                            }
+                        }
+                        // Public done (or skipped because None) — commit partial status
+                        $this->tx_service->transaction(function () use ($pending_upload) {
+                            $pending_upload->setStatus(PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED);
+                        });
+                        $currentStatus = PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED;
+                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s public storage completed", $upload_id));
+                    } else {
+                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s skipping public storage (current status: %s)", $upload_id, $currentStatus));
                     }
 
-                    // Try private storage
-                    $privateStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-                    if (!is_null($privateStrategy)) {
-                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to private storage", $upload_id));
-                        $privateStrategy->saveFromPath(
-                            $localPath,
-                            $pending_upload->getPrivatePath(),
-                            $pending_upload->getFileName()
-                        );
+                    // Phase 2: Private storage (skip if already done)
+                    if ($currentStatus !== PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED) {
+                        $privateStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+                        if (!is_null($privateStrategy)) {
+                            Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to private storage", $upload_id));
+                            try {
+                                $privateStrategy->saveFromPath(
+                                    $localPath,
+                                    $pending_upload->getPrivatePath(),
+                                    $pending_upload->getFileName()
+                                );
+                            } catch (\Exception $private_ex) {
+                                // Private storage failed - status stays at PublicStorageUploaded for retry
+                                throw $private_ex;
+                            }
+                        }
+                        // Private done (or skipped because None) — commit partial status
+                        $this->tx_service->transaction(function () use ($pending_upload) {
+                            $pending_upload->setStatus(PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED);
+                        });
+                        $currentStatus = PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED;
+                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s private storage completed", $upload_id));
+                    } else {
+                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s skipping private storage (current status: %s)", $upload_id, $currentStatus));
                     }
 
-                    // Mark as completed
+                    // Both phases done — mark Completed
                     $this->tx_service->transaction(function () use ($pending_upload) {
                         $pending_upload->setStatus(PendingMediaUpload::STATUS_COMPLETED);
                         $pending_upload->setProcessedDate(new \DateTime('now', new \DateTimeZone(\models\utils\SilverstripeBaseModel::DefaultTimeZone)));
@@ -4301,14 +4335,14 @@ final class SummitService
                     Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s completed successfully", $upload_id));
 
                 } catch (\Exception $ex) {
-                    // Keep as Pending for retry unless max retries exhausted
+                    // On failure, status remains at whatever partial state was reached
+                    // Set error message and mark as ERROR only if max retries exhausted
                     $this->tx_service->transaction(function () use ($pending_upload, $ex, $max_retries) {
                         $pending_upload->setErrorMessage($ex->getMessage());
                         if ($pending_upload->getAttempts() >= $max_retries) {
                             $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
-                        } else {
-                            $pending_upload->setStatus(PendingMediaUpload::STATUS_PENDING);
                         }
+                        // else: leave at current status (Pending, PublicStorageUploaded, or PrivateStorageUploaded) for retry
                     });
 
                     $stats['errors']++;

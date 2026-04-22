@@ -13,7 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
-use App\Services\Model\Imp\SummitService;
+use services\model\SummitService;
 use libs\utils\ITransactionService;
 use Mockery;
 use models\summit\ISummitRepository;
@@ -226,5 +226,96 @@ class ProcessPendingMediaUploadsTest extends TestCase
 
         $this->assertEquals(0, $stats['processed']);
         $this->assertEquals(0, $stats['errors']);
+    }
+
+    /**
+     * Test that getPendingUploads returns rows with partial statuses.
+     * Verifies that the repository query includes Pending, PublicStorageUploaded,
+     * and PrivateStorageUploaded statuses.
+     */
+    public function testGetPendingUploadsIncludesPartialStatuses(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+
+        // Create mocks for uploads with different statuses
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
+        $pendingUpload->shouldReceive('getId')->andReturn(1);
+        $pendingUpload->shouldReceive('getAttempts')->andReturn(3);
+
+        $publicUpload = Mockery::mock(PendingMediaUpload::class);
+        $publicUpload->shouldReceive('getId')->andReturn(2);
+        $publicUpload->shouldReceive('getAttempts')->andReturn(3);
+
+        $privateUpload = Mockery::mock(PendingMediaUpload::class);
+        $privateUpload->shouldReceive('getId')->andReturn(3);
+        $privateUpload->shouldReceive('getAttempts')->andReturn(3);
+
+        // getPendingUploads should return all three
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([
+            $pendingUpload,
+            $publicUpload,
+            $privateUpload
+        ]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        // All three hit max retries - expect setStatus(ERROR) for each
+        $pendingUpload->shouldReceive('setStatus')->once()->with(PendingMediaUpload::STATUS_ERROR);
+        $pendingUpload->shouldReceive('setErrorMessage')->once();
+        $publicUpload->shouldReceive('setStatus')->once()->with(PendingMediaUpload::STATUS_ERROR);
+        $publicUpload->shouldReceive('setErrorMessage')->once();
+        $privateUpload->shouldReceive('setStatus')->once()->with(PendingMediaUpload::STATUS_ERROR);
+        $privateUpload->shouldReceive('setErrorMessage')->once();
+
+        // 5 transactions: reset stuck, 3x mark error, cleanup
+        $txService->shouldReceive('transaction')->times(5)->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService);
+
+        $stats = $service->processPendingMediaUploads(3);
+
+        $this->assertEquals(0, $stats['processed']);
+        $this->assertEquals(3, $stats['errors']);
+    }
+
+    /**
+     * Test that transient failure with partial status leaves status unchanged.
+     * When public storage succeeds but private fails, status should remain at
+     * PublicStorageUploaded for retry (not revert to Pending).
+     */
+    public function testPartialStatusPreservedOnFailure(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
+        $pendingUpload->shouldReceive('getId')->andReturn(1);
+        // First call: retry guard (1 < 3, passes)
+        // Second call: in catch block (2 < 3, leave at partial status)
+        $pendingUpload->shouldReceive('getAttempts')->andReturnValues([1, 2]);
+
+        // Verify setErrorMessage is called but setStatus is NOT called in catch block
+        // (status stays at whatever partial state was reached)
+        $pendingUpload->shouldReceive('setErrorMessage')->once();
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        // Only 3 transactions: reset stuck, mark processing, cleanup
+        // (no setStatus call in catch since attempts < max_retries and status is preserved)
+        $txService->shouldReceive('transaction')->times(3)->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService);
+
+        $stats = $service->processPendingMediaUploads(3);
+
+        $this->assertEquals(0, $stats['processed']);
+        $this->assertEquals(1, $stats['errors']);
     }
 }

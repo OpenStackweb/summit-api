@@ -38,6 +38,7 @@ use App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSelectionPlanExtraQuestionType;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Locations\Banners\SummitLocationBanner;
+use models\summit\PendingMediaUpload;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedSchedule;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedDay;
 use App\Models\Foundation\Summit\ProposedSchedule\SummitProposedScheduleAllowedLocation;
@@ -49,6 +50,7 @@ use App\Models\Foundation\Summit\Repositories\IDefaultTrackTagGroupRepository;
 use App\Models\Foundation\Summit\Repositories\IPaymentGatewayProfileRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationActionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationCategoryGroupRepository;
+use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationTrackChairRatingTypeRepository;
@@ -811,6 +813,13 @@ final class RepositoriesProvider extends ServiceProvider
         );
 
         App::singleton(
+            IPendingMediaUploadRepository::class,
+            function () {
+                return EntityManager::getRepository(PendingMediaUpload::class);
+            }
+        );
+
+        App::singleton(
             IOpenStackReleaseRepository::class,
             function () {
                 return EntityManager::getRepository(OpenStackRelease::class);
@@ -908,7 +917,7 @@ final class RepositoriesProvider extends ServiceProvider
                 return EntityManager::getRepository(SummitProposedScheduleLock::class);
             }
         );
-      
+
         App::singleton(
             ISummitSubmissionInvitationRepository::class,
             function(){

@@ -1,0 +1,135 @@
+<?php namespace App\Repositories\Summit;
+/*
+ * Copyright 2026 OpenStack Foundation
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
+
+use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
+use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\PendingMediaUpload;
+use models\summit\PresentationMediaUpload;
+
+/**
+ * Class DoctrinePendingMediaUploadRepository
+ * @package App\Repositories\Summit
+ */
+final class DoctrinePendingMediaUploadRepository
+    extends SilverStripeDoctrineRepository
+    implements IPendingMediaUploadRepository
+{
+    /**
+     * @return string
+     */
+    protected function getBaseEntity()
+    {
+        return PendingMediaUpload::class;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getFilterMappings()
+    {
+        return [
+            'status' => 'e.status',
+            'summit_id' => 'e.summit_id'
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOrderMappings()
+    {
+        return [
+            'id' => 'e.id',
+            'created' => 'e.created',
+        ];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getPendingUploads(): array
+    {
+        $query = $this->getEntityManager()
+            ->createQuery("SELECT p FROM models\summit\PendingMediaUpload p WHERE p.status = :status ORDER BY p.created ASC");
+        $query->setParameter('status', PendingMediaUpload::STATUS_PENDING);
+        return $query->getResult();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function resetStuckProcessingRows(int $stale_minutes = 10): int
+    {
+        $stale_threshold = new \DateTime('now', new \DateTimeZone(\models\utils\SilverstripeBaseModel::DefaultTimeZone));
+        $stale_threshold->modify(sprintf('-%d minutes', $stale_minutes));
+
+        $query = $this->getEntityManager()
+            ->createQuery(
+                "UPDATE models\summit\PendingMediaUpload p SET p.status = :pending_status WHERE p.status = :processing_status AND p.last_edited < :threshold"
+            );
+        $query->setParameter('pending_status', PendingMediaUpload::STATUS_PENDING);
+        $query->setParameter('processing_status', PendingMediaUpload::STATUS_PROCESSING);
+        $query->setParameter('threshold', $stale_threshold);
+
+        return $query->execute();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteCompletedOlderThan(int $days = 7, int $limit = 1000): int
+    {
+        $cutoff_date = new \DateTime('now', new \DateTimeZone(\models\utils\SilverstripeBaseModel::DefaultTimeZone));
+        $cutoff_date->modify(sprintf('-%d days', $days));
+
+        // Step 1: SELECT IDs with limit (setMaxResults works on SELECT)
+        $selectQuery = $this->getEntityManager()
+            ->createQuery(
+                "SELECT p.id FROM models\summit\PendingMediaUpload p WHERE p.status = :status AND p.processed_date < :cutoff_date ORDER BY p.processed_date ASC"
+            );
+        $selectQuery->setParameter('status', PendingMediaUpload::STATUS_COMPLETED);
+        $selectQuery->setParameter('cutoff_date', $cutoff_date);
+        $selectQuery->setMaxResults($limit);
+
+        $ids = array_column($selectQuery->getArrayResult(), 'id');
+
+        if (empty($ids)) {
+            return 0;
+        }
+
+        // Step 2: DELETE by those IDs
+        $deleteQuery = $this->getEntityManager()
+            ->createQuery(
+                "DELETE FROM models\summit\PendingMediaUpload p WHERE p.id IN (:ids)"
+            );
+        $deleteQuery->setParameter('ids', $ids);
+
+        return $deleteQuery->execute();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function deleteByMediaUpload(PresentationMediaUpload $mediaUpload): int
+    {
+        $query = $this->getEntityManager()
+            ->createQuery(
+                "DELETE FROM models\\summit\\PendingMediaUpload p WHERE p.media_upload = :mediaUpload AND p.status IN (:statuses)"
+            );
+        $query->setParameter('mediaUpload', $mediaUpload->getId());
+        $query->setParameter('statuses', [PendingMediaUpload::STATUS_PENDING, PendingMediaUpload::STATUS_PROCESSING]);
+
+        return $query->execute();
+    }
+}

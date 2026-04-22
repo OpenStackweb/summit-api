@@ -548,6 +548,15 @@ interface ISummitService
     public function regenerateTemporalUrlsForMediaUploads(int $summit_id):void;
 
     /**
+     * Process pending media uploads from the PendingMediaUpload table.
+     * 429 rate-limit handling is now transparently handled by RetryAfterDropboxClient.
+     *
+     * @param int $max_retries Maximum retry attempts per upload across cron runs (default 3)
+     * @return array Stats array: ['processed' => int, 'errors' => int]
+     */
+    public function processPendingMediaUploads(int $max_retries = 3): array;
+
+    /**
      * @param Summit $summit
      * @param UploadedFile $csv_file
      * @throws ValidationException

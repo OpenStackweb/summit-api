@@ -23,6 +23,10 @@ use services\model\IPresentationService;
 /**
  * Class ProcessMediaUpload
  * @package App\Jobs
+ *
+ * @deprecated Replaced by PendingMediaUpload table + cron-based processing.
+ *             This job may still be referenced by in-flight queue jobs during deployment.
+ *             Can be removed in a future cleanup after all queued jobs are processed.
  */
 class ProcessMediaUpload implements ShouldQueue
 {

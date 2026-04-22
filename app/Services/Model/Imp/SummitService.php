@@ -37,6 +37,7 @@ use App\Models\Foundation\Summit\Factories\SummitEventFeedbackFactory;
 use App\Models\Foundation\Summit\Factories\SummitFactory;
 use App\Models\Foundation\Summit\Registration\SummitRegistrationFeedMetadata;
 use App\Models\Foundation\Summit\Repositories\IDefaultSummitEventTypeRepository;
+use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Speakers\FeaturedSpeaker;
@@ -62,6 +63,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use League\Csv\Reader;
+use libs\utils\FileUtils;
 use libs\utils\ICacheService;
 use libs\utils\ICalTimeZoneBuilder;
 use libs\utils\ITransactionService;
@@ -87,6 +89,7 @@ use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitEntityEventRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
+use models\summit\PendingMediaUpload;
 use models\summit\Presentation;
 use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSpeaker;
@@ -214,6 +217,11 @@ final class SummitService
     private $presentation_media_upload_repository;
 
     /**
+     * @var IPendingMediaUploadRepository
+     */
+    private $pending_media_upload_repository;
+
+    /**
      * @var ISummitAttendeeBadgeRepository
      */
     private $summit_attendee_badge_repository;
@@ -259,6 +267,7 @@ final class SummitService
      * @param IGroupRepository $group_repository
      * @param IDefaultSummitEventTypeRepository $default_event_types_repository
      * @param IPresentationMediaUploadRepository $presentation_media_upload_repository
+     * @param IPendingMediaUploadRepository $pending_media_upload_repository
      * @param ISummitAttendeeBadgeRepository $summit_attendee_badge_repository
      * @param IPermissionsManager $permissions_manager
      * @param IFileUploader $file_uploader
@@ -288,6 +297,7 @@ final class SummitService
         IGroupRepository                           $group_repository,
         IDefaultSummitEventTypeRepository          $default_event_types_repository,
         IPresentationMediaUploadRepository         $presentation_media_upload_repository,
+        IPendingMediaUploadRepository              $pending_media_upload_repository,
         ISummitAttendeeBadgeRepository             $summit_attendee_badge_repository,
         IPermissionsManager                        $permissions_manager,
         IFileUploader                              $file_uploader,
@@ -321,6 +331,7 @@ final class SummitService
         $this->speaker_service = $speaker_service;
         $this->member_service = $member_service;
         $this->presentation_media_upload_repository = $presentation_media_upload_repository;
+        $this->pending_media_upload_repository = $pending_media_upload_repository;
         $this->summit_attendee_badge_repository = $summit_attendee_badge_repository;
         $this->upload_strategy = $upload_strategy;
         $this->encryption_key_generator = $encryption_key_generator;
@@ -4179,5 +4190,161 @@ final class SummitService
             throw new ValidationException(sprintf("Badge for ticket number %s does not exists.", $ticket_number));
 
         return $badge;
+    }
+
+    use FileUtils;
+    /**
+     * @param int $max_retries
+     * @return array
+     */
+    public function processPendingMediaUploads(int $max_retries = 3): array
+    {
+        Log::debug(sprintf(
+            "SummitService::processPendingMediaUploads max_retries %s",
+            $max_retries
+        ));
+
+        $stats = [
+            'processed' => 0,
+            'errors' => 0
+        ];
+
+        try {
+            // Reset stuck Processing rows (indicates crashed cron run)
+            $this->tx_service->transaction(function () {
+                $reset_count = $this->pending_media_upload_repository->resetStuckProcessingRows(10);
+
+                if ($reset_count > 0) {
+                    Log::warning(sprintf("SummitService::processPendingMediaUploads reset %s stuck Processing rows", $reset_count));
+                }
+            });
+
+            // Query pending uploads
+            $pending_uploads = $this->pending_media_upload_repository->getPendingUploads();
+
+            Log::debug(sprintf("SummitService::processPendingMediaUploads found %s pending uploads", count($pending_uploads)));
+
+            foreach ($pending_uploads as $pending_upload) {
+                if (!$pending_upload instanceof PendingMediaUpload) continue;
+
+                $upload_id = $pending_upload->getId();
+                Log::debug(sprintf("SummitService::processPendingMediaUploads processing upload ID %s", $upload_id));
+
+                // Check retry limit
+                if ($pending_upload->getAttempts() >= $max_retries) {
+                    $this->tx_service->transaction(function () use ($pending_upload) {
+                        $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
+                        $pending_upload->setErrorMessage('Max retries exceeded');
+                    });
+                    $stats['errors']++;
+                    Log::warning(sprintf("SummitService::processPendingMediaUploads upload ID %s exceeded max retries", $upload_id));
+                    continue;
+                }
+
+                try {
+                    $this->tx_service->transaction(function () use ($pending_upload) {
+                        $pending_upload->setStatus(PendingMediaUpload::STATUS_PROCESSING);
+                        $pending_upload->incrementAttempts();
+                    });
+
+                    // Get summit and media upload type
+                    $summit = $this->summit_repository->getById($pending_upload->getSummitId());
+                    if (is_null($summit)) {
+                        throw new EntityNotFoundException(sprintf("Summit %s not found", $pending_upload->getSummitId()));
+                    }
+
+                    $mediaUploadType = $summit->getMediaUploadTypeById($pending_upload->getMediaUploadTypeId());
+                    if (is_null($mediaUploadType)) {
+                        throw new EntityNotFoundException(sprintf("Media Upload Type %s not found", $pending_upload->getMediaUploadTypeId()));
+                    }
+
+                    // Copy file from upload storage to local temp
+                    $localPath = self::getFileFromRemoteStorageOnTempStorage(
+                        $pending_upload->getFileName(),
+                        $pending_upload->getTempFilePath()
+                    );
+
+                    // Try public storage first
+                    $publicStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+                    if (!is_null($publicStrategy)) {
+                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to public storage", $upload_id));
+                        $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
+                        $publicStrategy->saveFromPath(
+                            $localPath,
+                            $pending_upload->getPublicPath(),
+                            $pending_upload->getFileName(),
+                            $options
+                        );
+                    }
+
+                    // Try private storage
+                    $privateStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+                    if (!is_null($privateStrategy)) {
+                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to private storage", $upload_id));
+                        $privateStrategy->saveFromPath(
+                            $localPath,
+                            $pending_upload->getPrivatePath(),
+                            $pending_upload->getFileName()
+                        );
+                    }
+
+                    // Mark as completed
+                    $this->tx_service->transaction(function () use ($pending_upload) {
+                        $pending_upload->setStatus(PendingMediaUpload::STATUS_COMPLETED);
+                        $pending_upload->setProcessedDate(new \DateTime('now', new \DateTimeZone(\models\utils\SilverstripeBaseModel::DefaultTimeZone)));
+                    });
+
+                    // Clean up temp files after transaction commits successfully
+                    self::cleanLocalAndRemoteFile($localPath, $pending_upload->getTempFilePath());
+
+                    $stats['processed']++;
+                    Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s completed successfully", $upload_id));
+
+                } catch (\Exception $ex) {
+                    // Keep as Pending for retry unless max retries exhausted
+                    $this->tx_service->transaction(function () use ($pending_upload, $ex, $max_retries) {
+                        $pending_upload->setErrorMessage($ex->getMessage());
+                        if ($pending_upload->getAttempts() >= $max_retries) {
+                            $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
+                        } else {
+                            $pending_upload->setStatus(PendingMediaUpload::STATUS_PENDING);
+                        }
+                    });
+
+                    $stats['errors']++;
+                    Log::warning(sprintf(
+                        "SummitService::processPendingMediaUploads upload ID %s failed (attempt %s/%s): %s",
+                        $upload_id,
+                        $pending_upload->getAttempts(),
+                        $max_retries,
+                        $ex->getMessage()
+                    ));
+                }
+            }
+
+            // Cleanup completed uploads older than 7 days
+            try {
+                $this->tx_service->transaction(function () {
+                    $deleted = $this->pending_media_upload_repository->deleteCompletedOlderThan(7, 1000);
+
+                    if ($deleted > 0) {
+                        Log::debug(sprintf("SummitService::processPendingMediaUploads cleaned up %s completed uploads", $deleted));
+                    }
+                });
+            } catch (\Exception $cleanup_ex) {
+                Log::warning(sprintf("SummitService::processPendingMediaUploads cleanup of completed uploads failed: %s", $cleanup_ex->getMessage()));
+            }
+
+        } catch (\Exception $ex) {
+            Log::error($ex);
+        }
+
+        Log::debug(sprintf(
+            "SummitService::processPendingMediaUploads completed - processed: %s, errors: %s",
+            $stats['processed'],
+            $stats['errors']
+        ));
+
+        return $stats;
     }
 }

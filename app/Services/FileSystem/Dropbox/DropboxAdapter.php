@@ -35,7 +35,17 @@ final class DropboxAdapter extends BaseDropboxAdapter
             return $res['url'];
         }
         catch (BadRequestException $ex){
-            Log::warning(sprintf("DropboxAdapter::getUrl %s code %s", $ex->getMessage(), $ex->dropboxCode));
+            // Rewind response stream to read the raw body (constructor already consumed it)
+            $ex->response->getBody()->rewind();
+            $rawBody = $ex->response->getBody()->getContents();
+            Log::warning(sprintf(
+                "DropboxAdapter::getUrl path %s message [%s] code [%s] status [%s] body [%s]",
+                $path,
+                $ex->getMessage(),
+                $ex->dropboxCode ?? 'null',
+                $ex->response->getStatusCode(),
+                $rawBody
+            ));
             if($ex->dropboxCode === 'shared_link_already_exists')
             {
                 try {

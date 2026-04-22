@@ -55,6 +55,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SetupSponsorServiceMessageBrokerCommand::class,
         \App\Console\Commands\SetupPaymentServiceMessageBrokerCommand::class,
         \App\Console\Commands\SetupSponsorUsersServiceMessageBrokerCommand::class,
+        \App\Console\Commands\ProcessPendingMediaUploadsCommand::class,
+        \App\Console\Commands\TestDropboxTokenCommand::class,
     ];
 
     /**
@@ -104,6 +106,8 @@ class Kernel extends ConsoleKernel
         }
 
         $schedule->command('summit:presentations-regenerate-media-uploads-temporal-public-urls')->everyMinute()->withoutOverlapping()->onOneServer();
+
+        $schedule->command('summit:process-pending-media-uploads')->everyMinute()->withoutOverlapping()->onOneServer();
 
         //$schedule->command('summit:publish-stream-updates')->everyMinute()->withoutOverlapping()->onOneServer();
 

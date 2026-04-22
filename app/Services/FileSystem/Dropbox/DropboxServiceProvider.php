@@ -16,7 +16,7 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
-use Spatie\Dropbox\Client as DropboxClient;
+use App\Services\FileSystem\Dropbox\RetryAfterDropboxClient as DropboxClient;
 use App\Services\FileSystem\Dropbox\DropboxAdapter as CustomDropboxAdapter;
 
 /**
@@ -45,8 +45,26 @@ class DropboxServiceProvider extends ServiceProvider
         Storage::extend('dropbox', function ($app, $config) {
             // use our custom dropbox adapter to override getUrl method
             // do not remove !
+
+            $refreshToken = $config['refresh_token'] ?? '';
+            $accessToken  = $config['authorization_token'] ?? '';
+            $appKey       = $config['app_key'] ?? '';
+            $appSecret    = $config['app_secret'] ?? '';
+
+            // If a refresh token is provided, use AutoRefreshingDropBoxTokenService
+            // which implements RefreshableTokenProvider — the Spatie Client will
+            // automatically call refresh() on 401 and retry the request.
+            // Otherwise, fall back to a static access token (string).
+            $tokenOrProvider = !empty($refreshToken)
+                ? new AutoRefreshingDropBoxTokenService($appKey, $appSecret, $refreshToken)
+                : $accessToken;
+
             $adapter = new CustomDropboxAdapter(
-                new DropboxClient($config['authorization_token'] ?? '')
+                new DropboxClient
+                (
+                    $tokenOrProvider,
+                    maxUploadChunkRetries:5
+                )
             );
 
             return new FilesystemAdapter(

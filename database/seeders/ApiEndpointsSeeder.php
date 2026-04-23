@@ -3375,6 +3375,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
+                    IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -3390,6 +3392,8 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins,
+                    IGroup::Sponsors,
+                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [

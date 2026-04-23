@@ -138,9 +138,6 @@ final class SponsorUserInfoGrantService
                 $source = SponsorBadgeScan::Source_QR;
             }
             else if(!empty($raw_attendee_email)) {
-                if(!$current_member->isAdmin())
-                    throw new ValidationException("User should have admin rights.");
-
                 $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($raw_attendee_email));
                 if(is_null($attendee)){
                     throw new EntityNotFoundException("Attendee not found.");

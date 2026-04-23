@@ -556,7 +556,19 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
 
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if(!is_null($current_member)){
+            // check summit authz access
+            if(!$current_member->isSummitAllowed($summit)){
+                if(!$current_member->hasSponsorMembershipsFor($summit)){
+                    return $this->error403();
+                }
+            }
+        }
+
         $filter = null;
+
+        // check current user authz
 
         $filterRules =  [
             'id' => ['=='],
@@ -738,6 +750,16 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
         $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
         if (is_null($summit)) return $this->error404();
+
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if(!is_null($current_member)){
+            // check summit authz access
+            if(!$current_member->isSummitAllowed($summit)){
+                if(!$current_member->hasSponsorMembershipsFor($summit)){
+                    return $this->error403();
+                }
+            }
+        }
 
         return $this->_getAllCSV(
             function () {

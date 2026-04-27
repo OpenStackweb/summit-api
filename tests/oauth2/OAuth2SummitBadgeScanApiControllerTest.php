@@ -241,6 +241,79 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         return $scan;
     }
 
+    public function testAddBadgeScanByAttendeeEmailWithNoQRCode(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
+        // Build a dedicated single-ticket attendee+order+badge inline, but
+        // DO NOT generate the badge QR code to reproduce the null QR code bug.
+        $attendee = new SummitAttendee();
+        $attendee->setEmail('badge-scan-no-qr@example.com');
+        $attendee->setFirstName('NoQR');
+        $attendee->setSurname('Badge');
+
+        $order = new SummitOrder();
+        $order->setOwner(self::$defaultMember);
+        $order->setSummit(self::$summit);
+
+        $ticket = new SummitAttendeeTicket();
+        $ticket->setTicketType(self::$default_ticket_type);
+        $ticket->activate();
+        $order->addTicket($ticket);
+        $attendee->addTicket($ticket);
+
+        $badge = new SummitAttendeeBadge();
+        $badge->setType(self::$default_badge_type);
+        $ticket->setBadge($badge);
+
+        $order->setPaid();
+        $order->generateNumber();
+        $ticket->generateNumber();
+        $ticket->generateQRCode();
+        // OMIT: $badge->generateQRCode(); — this is the bug trigger
+
+        self::$summit->addAttendee($attendee);
+        self::$summit->addOrder($order);
+        self::$em->persist($attendee);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            'attendee_email' => $attendee->getEmail(),
+            'scan_date' => 1572019200,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $scan = json_decode($content);
+        $this->assertTrue(!is_null($scan));
+        $this->assertEquals(self::$member->getId(), $scan->scanned_by_id);
+        $this->assertEquals($badge->getId(), $scan->badge_id);
+        $this->assertEquals(\models\summit\SponsorBadgeScan::Source_Attendee_Email, $scan->source);
+    }
+
     public function testAddBadgeScanMissingQrCodeAndEmailFails(){
         self::$member->clearGroups();
         self::$member->add2Group($this->sponsor_group);

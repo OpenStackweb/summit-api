@@ -152,6 +152,10 @@ final class SponsorUserInfoGrantService
                 }
                 $ticket_number = $ticket->getNumber();
                 $badge = $ticket->getBadge();
+                // generate QR code on-demand if missing
+                if (empty($badge->getQRCode())) {
+                    $badge->generateQRCode();
+                }
                 // normalize qr code
                 $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $badge->getQRCode());
                 $source = SponsorBadgeScan::Source_Attendee_Email;

@@ -91,7 +91,7 @@ class SummitRoomReservationSerializer extends SilverStripeSerializer
         $serializer_type = SerializerRegistry::SerializerType_Public;
         $current_member  = $this->resource_server_context->getCurrentUser();
         if(!is_null($current_member)){
-            if($current_member->isAdmin()){
+            if($current_member->isAdmin() || $current_member->isSummitAdmin()){
                 $serializer_type = SerializerRegistry::SerializerType_Private;
             }
         }

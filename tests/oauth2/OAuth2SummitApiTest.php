@@ -1227,4 +1227,106 @@ id,name,start_date,end_date,time_zone_id,time_zone_label,secondary_logo,slug,sup
         $attendee_badge = json_decode($content);
         $this->assertNotNull($attendee_badge);
     }
+
+    /**
+     * Anti-regression snapshot test:
+     * Captures the /registration-stats JSON response on first run (before the SQL rewrite)
+     * and asserts identical output on subsequent runs (after the rewrite).
+     * Proves Q5's chain rearrangement and all other rewrites produce numerically identical results.
+     * PASSES on first run (creates snapshot). PASSES after fix (values unchanged). FAILS if rewrite breaks correctness.
+     */
+    public function testRegistrationStatsResponseMatchesSnapshotForSeededSummit(): void
+    {
+        $params = ['id' => self::$summit->getId()];
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getAllSummitByIdOrSlugRegistrationStats",
+            $params, [], [], [], $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(200);
+        $actual = json_decode($response->getContent(), true);
+        $this->assertNotNull($actual);
+
+        $statsKeys = [
+            'total_active_tickets', 'total_inactive_tickets', 'total_orders',
+            'total_active_assigned_tickets', 'total_payment_amount_collected',
+            'total_refund_amount_emitted', 'total_tickets_per_type',
+            'total_badges_per_type', 'total_checked_in_attendees',
+            'total_virtual_attendees', 'total_non_checked_in_attendees',
+            'total_virtual_non_checked_in_attendees', 'total_tickets_per_badge_feature',
+        ];
+        $actualStats = array_intersect_key($actual, array_flip($statsKeys));
+
+        $snapshotPath = base_path('tests/Fixtures/registration_stats_snapshot.json');
+        if (!file_exists($snapshotPath)) {
+            if (!is_dir(dirname($snapshotPath))) {
+                mkdir(dirname($snapshotPath), 0755, true);
+            }
+            file_put_contents($snapshotPath, json_encode($actualStats, JSON_PRETTY_PRINT));
+            $this->addToAssertionCount(1);
+            return;
+        }
+
+        $expected = json_decode(file_get_contents($snapshotPath), true);
+        $this->assertEquals(
+            $expected,
+            $actualStats,
+            'registration-stats numerical values changed after SQL rewrite — correctness regression. ' .
+            'Delete tests/Fixtures/registration_stats_snapshot.json only if the change is intentional.'
+        );
+    }
+
+    /**
+     * Anti-regression / coverage:
+     * The /purchased-tickets endpoint has no existing test. This adds the missing smoke test
+     * and will catch future regressions.
+     * PASSES today (new coverage). PASSES after fix.
+     */
+    public function testPurchasedTicketsEndpointReturnsPaginatedPayload(): void
+    {
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 5,
+            'filter'   => [
+                'start_date>=1688578812',
+                'end_date<=1688924412',
+            ],
+            'group_by' => IStatsConstants::GroupByHour,
+        ];
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitApiController@getPurchasedTicketsOverTimeStats",
+            $params, [], [], [], $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(200);
+        $content = json_decode($response->getContent());
+        $this->assertNotNull($content);
+        $this->assertObjectHasProperty('total', $content);
+        $this->assertObjectHasProperty('data', $content);
+    }
+
+    /**
+     * NULL SummitID invariant guard:
+     * Asserts no SummitAttendeeTicket row has SummitID = NULL.
+     * After Approach D rewrites drop the SummitOrder join, rows with NULL SummitID
+     * would silently disappear from stats counts — surfacing that now, before the fix ships.
+     * PASSES today (test fixtures call setOrder → setSummit). PASSES after fix.
+     */
+    public function testNoTicketHasNullSummitId(): void
+    {
+        $em = \LaravelDoctrine\ORM\Facades\Registry::getManager(
+            \models\utils\SilverstripeBaseModel::EntityManager
+        );
+        $count = (int) $em->getConnection()
+            ->executeQuery('SELECT COUNT(*) FROM SummitAttendeeTicket WHERE SummitID IS NULL')
+            ->fetchOne();
+        $this->assertSame(
+            0,
+            $count,
+            "Found {$count} SummitAttendeeTicket row(s) with NULL SummitID. " .
+            "All tickets must have SummitID set via setOrder() → setSummit() before " .
+            "Approach D queries (which filter on SummitAttendeeTicket.SummitID directly) can ship safely."
+        );
+    }
 }

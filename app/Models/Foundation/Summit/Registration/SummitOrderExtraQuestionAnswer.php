@@ -103,6 +103,12 @@ class SummitOrderExtraQuestionAnswer extends ExtraQuestionAnswer
 
     public function __toString():string
     {
-        return sprintf("SummitOrderExtraQuestionAnswer attendee %s question %s value %s", $this->attendee->getId(), $this->question->getId(), $this->value);
+        return sprintf(
+            "SummitOrderExtraQuestionAnswer #%s attendee %s question %s value %s",
+            $this->getId() ?? 'new',
+            $this->attendee?->getId() ?? 'null',
+            $this->question?->getId() ?? 'null',
+            $this->value
+        );
     }
 }

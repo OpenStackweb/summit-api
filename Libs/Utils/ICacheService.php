@@ -97,6 +97,16 @@ interface ICacheService
 	public function addSingleValue($key, $value, $ttl = 0);
 
 	/**
+	 * Atomically compare-and-delete: DEL the key only when its current value
+	 * equals $expectedValue. Implementations MUST use an atomic operation
+	 * (Lua EVAL or equivalent) — never a separate GET + conditional DEL.
+	 * @param string $key
+	 * @param string $expectedValue
+	 * @return bool  true iff the key existed, matched, and was deleted
+	 */
+	public function deleteIfValueMatches(string $key, string $expectedValue): bool;
+
+	/**
 	* Set time to live to a given key
 	* @param $key
 	* @param $ttl

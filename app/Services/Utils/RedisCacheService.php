@@ -239,7 +239,7 @@ class RedisCacheService implements ICacheService
     public function incCounter($counter_name, $ttl = 0)
     {
         return $this->retryOnConnectionError(function ($conn) use ($counter_name, $ttl) {
-            if ($conn->setnx($counter_name, 1)) {
+            if ($conn->set($counter_name, 1, ['NX' => true]) !== null) {
                 if ($ttl > 0) $conn->expire($counter_name, (int)$ttl);
                 return 1;
             }
@@ -306,12 +306,11 @@ class RedisCacheService implements ICacheService
     public function addSingleValue($key, $value, $ttl = 0)
     {
         return $this->retryOnConnectionError(function ($conn) use ($key, $value, $ttl) {
-            $res = $conn->setnx($key, $value);
-            if ($res && $ttl > 0) {
-                $conn->expire($key, $ttl);
+            if ($ttl > 0) {
+                return $conn->set($key, $value, 'EX', (int)$ttl, 'NX') !== null;
             }
-            return $res;
-        });
+            return $conn->set($key, $value, 'NX') !== null;
+        }, false);
     }
 
     public function setKeyExpiration($key, $ttl)
@@ -331,7 +330,21 @@ class RedisCacheService implements ICacheService
             return (int)$conn->ttl($key);
         }, 0);
     }
-  
+
+    public function deleteIfValueMatches(string $key, string $expectedValue): bool
+    {
+        $lua = <<<'LUA'
+if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('del', KEYS[1])
+else
+    return 0
+end
+LUA;
+        return $this->retryOnConnectionError(function ($conn) use ($lua, $key, $expectedValue) {
+            return (int)$conn->eval($lua, 1, $key, $expectedValue) === 1;
+        }, false);
+    }
+
     /**
      * @param string $cache_region_key
      * @return void

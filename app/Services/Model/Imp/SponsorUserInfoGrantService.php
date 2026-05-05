@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Summit\Factories\SponsorUserInfoGrantFactory;
+use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISponsorUserInfoGrantService;
@@ -23,6 +24,7 @@ use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitAttendeeRepository;
+use models\summit\Sponsor;
 use models\summit\SponsorBadgeScan;
 use models\summit\SponsorUserInfoGrant;
 use models\summit\Summit;
@@ -52,10 +54,15 @@ final class SponsorUserInfoGrantService
     private $attendee_repository;
 
     /**
-     * SponsorBadgeScanService constructor.
+     * @var ISponsorRepository
+     */
+    private $sponsor_repository;
+
+    /**
      * @param ISponsorUserInfoGrantRepository $repository
      * @param ISummitAttendeeRepository $attendee_repository
      * @param ISummitAttendeeBadgeRepository $badge_repository
+     * @param ISponsorRepository $sponsor_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -63,6 +70,7 @@ final class SponsorUserInfoGrantService
         ISponsorUserInfoGrantRepository $repository,
         ISummitAttendeeRepository $attendee_repository,
         ISummitAttendeeBadgeRepository $badge_repository,
+        ISponsorRepository $sponsor_repository,
         ITransactionService $tx_service
     )
     {
@@ -70,6 +78,7 @@ final class SponsorUserInfoGrantService
         $this->repository = $repository;
         $this->attendee_repository = $attendee_repository;
         $this->badge_repository = $badge_repository;
+        $this->sponsor_repository =  $sponsor_repository;
     }
 
     /**
@@ -178,20 +187,47 @@ final class SponsorUserInfoGrantService
             if(is_null($badge))
                 throw new EntityNotFoundException("badge not found.");
 
-            $member_sponsors = $current_member->getAccessibleSponsorsBySummit($summit);
+            // if we are and admin / show admin , then we need to provide the sponsor id
+            if($current_member->isAuthzFor($summit)){
 
-            if ($member_sponsors->isEmpty())
-                throw new ValidationException("Current member does not have badge scan permissions for any sponsor of this summit.");
+                Log::debug("SponsorUserInfoGrantService::addBadgeScan current member is an admin");
 
-            if ($member_sponsors->count() === 1) {
-                $sponsor = $member_sponsors->first();
-            } else {
                 if (empty($data['sponsor_id']))
-                    throw new ValidationException("sponsor_id is required when the member belongs to multiple sponsors.");
+                    throw new ValidationException("sponsor_id is required when current member is an admin.");
                 $sponsor_id = intval($data['sponsor_id']);
-                $sponsor = $member_sponsors->filter(fn($s) => $s->getId() === $sponsor_id)->first();
-                if ($sponsor === false)
-                    throw new ValidationException("Current member does not belong to the selected summit sponsor.");
+                $sponsor = $this->sponsor_repository->getById($sponsor_id);
+                if(!$sponsor instanceof Sponsor){
+                    throw new EntityNotFoundException("Sponsor not found.");
+                }
+                if($sponsor->getSummitId() !== $summit->getId()){
+                    throw new ValidationException("Sponsor does not belong to this summit.");
+                }
+                Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (admin provided).", $sponsor->getId()));
+            }
+            else {
+                $member_sponsors = $current_member->getAccessibleSponsorsBySummit($summit);
+
+                if ($member_sponsors->isEmpty())
+                    throw new ValidationException("Current member does not have badge scan permissions for any sponsor of this summit.");
+
+                if ($member_sponsors->count() === 1) {
+                    $sponsor = $member_sponsors->first();
+                    Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (first).", $sponsor->getId()));
+                } else {
+                    Log::debug("SponsorUserInfoGrantService::addBadgeScan current member is associated to multiple sponsors.");
+
+                    if (empty($data['sponsor_id']))
+                        throw new ValidationException("sponsor_id is required when the member belongs to multiple sponsors.");
+
+                    $sponsor_id = intval($data['sponsor_id']);
+                    $sponsor = $member_sponsors->filter(fn($s) => $s->getId() === $sponsor_id)->first();
+
+                    if ($sponsor === false)
+                        throw new ValidationException("Current member does not belong to the selected summit sponsor.");
+
+                    Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (multiple).", $sponsor->getId()));
+
+                }
             }
 
             $scan = new SponsorBadgeScan();

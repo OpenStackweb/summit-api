@@ -89,6 +89,15 @@ final class RetryAfterDropboxClient extends BaseDropboxClient
 
         $cursor = $this->uploadChunk(self::UPLOAD_SESSION_START, $stream, $chunkSize, null);
 
+        // Early-exit: entire file uploaded in the START chunk (streamSize == chunkSize).
+        if ($streamSize !== null && $cursor->offset >= $streamSize) {
+            Log::debug(sprintf(
+                "RetryAfterDropboxClient::uploadChunked complete after start — cursor.offset=%d >= streamSize=%d path=%s",
+                $cursor->offset, $streamSize, $path
+            ));
+            return $this->uploadSessionFinish('', $cursor, $path, $mode);
+        }
+
         $iteration = 0;
         $noProgressCount = 0;
         $lastCursorOffset = $cursor->offset;
@@ -125,6 +134,18 @@ final class RetryAfterDropboxClient extends BaseDropboxClient
             }
 
             $lastCursorOffset = $cursor->offset;
+
+            // Early-exit: all bytes uploaded — cursor reached streamSize.
+            // Handles PHP feof() boundary edge case where feof flag is not set
+            // after reading exactly the remaining bytes (LimitStream returns ''
+            // without calling source.read(), so source feof stays false).
+            if ($streamSize !== null && $cursor->offset >= $streamSize) {
+                Log::debug(sprintf(
+                    "RetryAfterDropboxClient::uploadChunked complete at iteration=%d — cursor.offset=%d >= streamSize=%d path=%s",
+                    $iteration, $cursor->offset, $streamSize, $path
+                ));
+                break;
+            }
 
             if ($iteration > $iterationCap) {
                 throw new \RuntimeException(sprintf(

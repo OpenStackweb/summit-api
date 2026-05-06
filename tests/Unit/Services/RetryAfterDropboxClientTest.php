@@ -18,29 +18,50 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
-use Illuminate\Support\Facades\Sleep;
+use Illuminate\Container\Container;
+use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\Sleep;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\NullLogger;
 use Spatie\Dropbox\Client as BaseDropboxClient;
 use Spatie\Dropbox\TokenProvider;
 
 /**
  * Class RetryAfterDropboxClientTest
  *
- * Unit tests for {@see RetryAfterDropboxClient::uploadChunk()}
- * covering Retry-After aware 429 handling with jitter, max retries, and passthrough.
+ * Unit tests for {@see RetryAfterDropboxClient::uploadChunk()} and
+ * {@see RetryAfterDropboxClient::uploadChunked()}.
  *
- * The previous version of this test exercised contentEndpointRequest() which is
- * inherited from the parent Spatie Client and contains NO custom retry logic.
- * The actual retry-with-sleep logic lives in the overridden uploadChunk() method.
+ * Covers:
+ * - Retry-After aware 429 handling with jitter, max retries, and passthrough (uploadChunk)
+ * - Stuck-cursor detection in the chunked upload loop (uploadChunked)
  *
  * @package Tests\Unit\Services
  */
 class RetryAfterDropboxClientTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Provide a minimal facade application so Log::debug() calls in the SUT
+        // resolve via the facade without requiring a full Laravel app or database.
+        // clearResolvedInstances() FIRST to drop any cached LogManager from a
+        // prior test that booted a full Laravel app (e.g., AbstractOAuth2ApiScopesTest).
+        Facade::clearResolvedInstances();
+        $app = new Container();
+        $app->singleton('log', fn() => new NullLogger());
+        Container::setInstance($app);
+        Facade::setFacadeApplication($app);
+    }
+
     protected function tearDown(): void
     {
+        Facade::setFacadeApplication(null);
+        Facade::clearResolvedInstances();
+        Container::setInstance(null);
+        Sleep::fake(false); // reset Sleep fake state between tests
         Mockery::close();
         parent::tearDown();
     }
@@ -245,5 +266,54 @@ class RetryAfterDropboxClientTest extends TestCase
         $this->assertNotNull($cursor);
         // No sleep for non-429 errors
         Sleep::assertNeverSlept();
+    }
+
+    /**
+     * Reproducing test for the stuck Dropbox chunk loop bug.
+     *
+     * uploadChunked's while (!$stream->eof()) loop iterates indefinitely when the mock
+     * Guzzle client never reads the request body — LimitStream.tell() stays 0, so
+     * cursor->offset += 0 on every append call (cursor never advances).
+     *
+     * RED state (no uploadChunked override): the parent's unbounded loop hits 20 mock
+     * calls; the mock then throws with a message that does NOT match /stuck|cursor/i,
+     * causing PHPUnit's expectExceptionMessageMatches assertion to fail → test FAILS.
+     *
+     * GREEN state (uploadChunked override with stuck-cursor detection): the override
+     * throws \RuntimeException containing "stuck" and "cursor.offset" after the 3rd
+     * consecutive non-advancing iteration — test PASSES.
+     */
+    public function test_upload_chunked_aborts_when_cursor_does_not_advance_for_three_iterations(): void
+    {
+        $callCount = 0;
+        $httpClient = Mockery::mock(ClientInterface::class);
+        $httpClient->shouldReceive('request')
+            ->andReturnUsing(function ($method, $url, $options) use (&$callCount) {
+                $callCount++;
+                if ($callCount > 20) {
+                    // Bound test runtime — message does NOT contain "safeguard" or "advance"
+                    // so PHPUnit's expectExceptionMessageMatches fails → RED confirmed.
+                    throw new \RuntimeException('test-hit-call-limit: loop ran too many iterations without terminating');
+                }
+                if (strpos($url, 'upload_session/start') !== false) {
+                    return new Response(200, [], json_encode(['session_id' => 'sess-stuck-test']));
+                }
+                // append_v2: 200 OK without reading body → LimitStream.tell() stays 0
+                // → cursor->offset += 0 per iteration (stuck state).
+                return new Response(200, [], '');
+            });
+
+        $client = $this->createClient($httpClient);
+
+        // 200 KB in-memory resource; chunkSize=64KB forces ~3 expected chunks.
+        // Call uploadChunked directly (bypasses shouldUploadChunked size check).
+        $resource = fopen('php://memory', 'r+');
+        fwrite($resource, str_repeat('X', 200 * 1024));
+        rewind($resource);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/did not advance/i');
+
+        $client->uploadChunked('/test/stuck.pptx', $resource, 'overwrite', 64 * 1024);
     }
 }

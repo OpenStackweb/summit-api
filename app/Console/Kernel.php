@@ -15,7 +15,7 @@
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\App;
-
+use Illuminate\Console\Scheduling\Event;
 /**
  * Class Kernel
  * @package App\Console
@@ -59,6 +59,15 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\TestDropboxTokenCommand::class,
     ];
 
+    private function sendSchedulerOutputToStdoutIfEnabled(Event $event): Event
+    {
+        if (config('app.scheduler_output_to_stdout', false)) {
+            $event->sendOutputTo('/proc/1/fd/1', true);
+        }
+
+        return $event;
+    }
+
     /**
      * Define the application's command schedule.
      *
@@ -72,10 +81,11 @@ class Kernel extends ConsoleKernel
         $env = App::environment();
 
         // summit json cache
-        $schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer());
+
 
         // list of available summits
-        $schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit-list:json-generator')->everyFiveMinutes()->withoutOverlapping()->onOneServer());
 
         // redeem code processor
 
@@ -83,39 +93,38 @@ class Kernel extends ConsoleKernel
 
         // bookable rooms
 
-        $schedule->command('summit:room-reservation-revocation')->everyMinute()->withoutOverlapping()->onOneServer();
-        // external schedule ingestion task
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit:room-reservation-revocation')->everyMinute()->withoutOverlapping()->onOneServer());
 
-        $schedule->command("summit:external-schedule-feed-ingestion-process")->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
+        // external schedule ingestion task
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command("summit:external-schedule-feed-ingestion-process")->everyFifteenMinutes()->withoutOverlapping()->onOneServer());
 
         // AVG schedule feedback rate
-        $schedule->command("summit:feedback-avg-rate-processor")->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
-        // registration orders
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command("summit:feedback-avg-rate-processor")->everyFifteenMinutes()->withoutOverlapping()->onOneServer());
 
-        $schedule->command('summit:order-reservation-revocation')->everyMinute()->withoutOverlapping()->onOneServer();
+        // registration orders
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit:order-reservation-revocation')->everyMinute()->withoutOverlapping()->onOneServer());
 
         // reminder emails
-
-        $schedule->command('summit:registration-order-reminder-action-email')->dailyAt("04:00")->timezone(new \DateTimeZone('UTC'))->withoutOverlapping()->onOneServer();
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit:registration-order-reminder-action-email')->dailyAt("04:00")->timezone(new \DateTimeZone('UTC'))->withoutOverlapping()->onOneServer());
 
         if ($env == 'production') {
             // FNTECH production YOCO (13) advance AT 0700 AM ( 12:00 AM PST)
-            $schedule->command("summit:forward-x-days", ["FNTECH", 13, 2, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer();
+            $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command("summit:forward-x-days", ["FNTECH", 13, 2, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer());
             // FNTECH production Hybrid Alive (30) advance AT 0700 AM ( 12:00 AM PST)
-            $schedule->command("summit:forward-x-days", ["FNTECH", 30, 3, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer();
+            $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command("summit:forward-x-days", ["FNTECH", 30, 3, '--check-ended'])->dailyAt("07:00")->timezone('UTC')->withoutOverlapping()->onOneServer());
         }
 
-        $schedule->command('summit:presentations-regenerate-media-uploads-temporal-public-urls')->everyMinute()->withoutOverlapping()->onOneServer();
-
-        $schedule->command('summit:process-pending-media-uploads')->everyMinute()->withoutOverlapping(5)->onOneServer();
+        // regenerate temporal uris for media uploads
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit:presentations-regenerate-media-uploads-temporal-public-urls')->everyMinute()->withoutOverlapping()->onOneServer());
+        // process media uploads
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit:process-pending-media-uploads')->everyMinute()->withoutOverlapping(5)->onOneServer());
 
         //$schedule->command('summit:publish-stream-updates')->everyMinute()->withoutOverlapping()->onOneServer();
-
-        $schedule->command('summit:purge-mark-as-deleted')->everyTwoHours()->withoutOverlapping()->onOneServer();
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit:purge-mark-as-deleted')->everyTwoHours()->withoutOverlapping()->onOneServer());
 
         // ingest missing payment info
 
-        $schedule->command('summit:registration-orders-payment-info-ingest')->everySixHours()->withoutOverlapping()->onOneServer();
+        $this->sendSchedulerOutputToStdoutIfEnabled($schedule->command('summit:registration-orders-payment-info-ingest')->everySixHours()->withoutOverlapping()->onOneServer());
 
     }
 }

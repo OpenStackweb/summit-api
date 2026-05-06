@@ -229,4 +229,5 @@ return [
     'app_name'    => env('APP_NAME', 'Open Infrastructure Summit'),
     'tenant_name' => env('TENANT_NAME', 'OpenStack'),
     "default_profile_image" => env('DEFAULT_PROFILE_IMAGE', null),
+    'scheduler_output_to_stdout' => env('SCHEDULER_OUTPUT_TO_STDOUT', false),
 ];

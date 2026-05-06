@@ -17,6 +17,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\StreamDecoratorTrait;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
@@ -315,5 +316,78 @@ class RetryAfterDropboxClientTest extends TestCase
         $this->expectExceptionMessageMatches('/did not advance/i');
 
         $client->uploadChunked('/test/stuck.pptx', $resource, 'overwrite', 64 * 1024);
+    }
+
+    /**
+     * Reproducing test for the PHP feof() boundary edge case causing premature abort.
+     *
+     * After iteration 1 uploads the last partial chunk, cursor.offset reaches streamSize.
+     * But $stream->eof() returns false (PHP feof boundary: not set when fread returns
+     * exactly remaining bytes). The loop continues with empty appends; the stuck-cursor
+     * safeguard fires after 3 zero-progress iterations and throws RuntimeException —
+     * but the upload was DONE; uploadSessionFinish should have been called instead.
+     *
+     * RED state (no early-exit check): stuck-cursor safeguard trips after 3 empty
+     * iterations → throws \RuntimeException("...did not advance...") before finish.
+     * GREEN state (cursor >= streamSize early-exit): loop breaks cleanly when cursor
+     * reaches streamSize; uploadSessionFinish is called and method returns metadata.
+     */
+    public function test_upload_chunked_finishes_when_cursor_reaches_streamsize_despite_eof_false(): void
+    {
+        $finishCalled = false;
+        $httpClient = Mockery::mock(ClientInterface::class);
+        $httpClient->shouldReceive('request')
+            ->andReturnUsing(function ($method, $url, $options) use (&$finishCalled) {
+                // Consume the request body so LimitStream advances and cursor updates correctly
+                if (isset($options['body']) && $options['body'] instanceof \Psr\Http\Message\StreamInterface) {
+                    $options['body']->getContents();
+                }
+                if (strpos($url, 'upload_session/start') !== false) {
+                    return new Response(200, [], json_encode(['session_id' => 'sess-eof-boundary']));
+                }
+                if (strpos($url, 'upload_session/finish') !== false) {
+                    $finishCalled = true;
+                    return new Response(200, [], json_encode([
+                        '.tag' => 'file',
+                        'name' => 'eof-boundary.pptx',
+                        'size' => 200 * 1024,
+                    ]));
+                }
+                // append_v2: body consumed above → cursor advances correctly
+                return new Response(200, [], '');
+            });
+
+        $client = $this->createClient($httpClient);
+
+        // 200 KB content wrapped in NeverEofTestStream (eof() always returns false)
+        // to deterministically simulate the PHP feof() boundary edge case.
+        $inner = Utils::streamFor(str_repeat('Y', 200 * 1024));
+        $stream = new NeverEofTestStream($inner);
+
+        // Without the early-exit fix: stuck-cursor detection fires after 3 empty
+        // iterations and throws \RuntimeException('/did not advance/').
+        // With the fix: loop breaks when cursor reaches streamSize, finish is called.
+        $result = $client->uploadChunked('/test/eof-boundary.pptx', $stream, 'overwrite', 64 * 1024);
+
+        $this->assertTrue($finishCalled, 'uploadSessionFinish must be called when cursor.offset reaches streamSize');
+        $this->assertArrayHasKey('name', $result);
+        $this->assertEquals('eof-boundary.pptx', $result['name']);
+    }
+}
+
+/**
+ * Stream decorator that always reports eof() = false.
+ * Simulates the PHP feof() boundary edge case deterministically:
+ * when fread() returns exactly the remaining bytes, PHP does not set feof.
+ * The NeverEofTestStream forces the uploadChunked while-loop to iterate past
+ * the natural EOF, exposing the missing cursor->=streamSize early-exit check.
+ */
+class NeverEofTestStream implements \Psr\Http\Message\StreamInterface
+{
+    use StreamDecoratorTrait;
+
+    public function eof(): bool
+    {
+        return false;
     }
 }

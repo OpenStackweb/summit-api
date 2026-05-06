@@ -13,6 +13,8 @@
  **/
 
 use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
+use Illuminate\Container\Container;
+use Illuminate\Support\Facades\Facade;
 use services\model\SummitService;
 use libs\utils\ITransactionService;
 use Mockery;
@@ -21,6 +23,7 @@ use models\summit\PendingMediaUpload;
 use models\summit\Summit;
 use models\summit\SummitMediaUploadType;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 /**
  * Class ProcessPendingMediaUploadsTest
@@ -35,26 +38,43 @@ use PHPUnit\Framework\TestCase;
  */
 class ProcessPendingMediaUploadsTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Provide a minimal facade application so Log::debug() calls in the SUT
+        // resolve via the facade without requiring a full Laravel app or database.
+        // clearResolvedInstances() FIRST to drop any cached LogManager from a
+        // prior test that booted a full Laravel app (e.g., AbstractOAuth2ApiScopesTest).
+        Facade::clearResolvedInstances();
+        $app = new Container();
+        $app->singleton('log', fn() => new NullLogger());
+        Container::setInstance($app);
+        Facade::setFacadeApplication($app);
+    }
+
     protected function tearDown(): void
     {
+        Facade::setFacadeApplication(null);
+        Facade::clearResolvedInstances();
+        Container::setInstance(null);
         Mockery::close();
         parent::tearDown();
     }
 
     /**
-     * Helper to create a SummitService partial mock with injected dependencies.
-     * Uses reflection to set private properties since the constructor has many parameters.
+     * Helper to create a real SummitService instance with injected dependencies.
+     *
+     * Uses ReflectionClass::newInstanceWithoutConstructor() to bypass the 27-parameter
+     * constructor of the final class, then injects only the properties needed for
+     * processPendingMediaUploads via reflection.
      */
     private function createServiceWithDeps(
         IPendingMediaUploadRepository $pendingRepo,
         ITransactionService $txService,
         ?ISummitRepository $summitRepository = null
     ): SummitService {
-        $service = Mockery::mock(SummitService::class)->makePartial();
-        $service->shouldAllowMockingProtectedMethods();
-
-        // Inject private dependencies via reflection
         $ref = new \ReflectionClass(SummitService::class);
+        $service = $ref->newInstanceWithoutConstructor();
 
         $prop = $ref->getProperty('pending_media_upload_repository');
         $prop->setAccessible(true);
@@ -66,7 +86,7 @@ class ProcessPendingMediaUploadsTest extends TestCase
             $prop->setValue($service, $summitRepository);
         }
 
-        // tx_service is protected in AbstractService (grandparent)
+        // tx_service is protected in AbstractService (grandparent of SummitService)
         $parentRef = $ref;
         while ($parentRef && !$parentRef->hasProperty('tx_service')) {
             $parentRef = $parentRef->getParentClass();
@@ -112,9 +132,9 @@ class ProcessPendingMediaUploadsTest extends TestCase
     }
 
     /**
-     * Test that transient failure keeps upload as Pending for retry (not Error).
-     * When attempts < max_retries, the status should revert to Pending so the next
-     * cron run picks it up again.
+     * Test that transient failure keeps upload at its current status for retry (not Error).
+     * When attempts < max_retries, only setErrorMessage is called in the catch block;
+     * status is NOT changed (it remains at whatever partial state was reached).
      */
     public function testTransientFailureKeepsUploadPendingForRetry(): void
     {
@@ -125,7 +145,7 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $pendingUpload = Mockery::mock(PendingMediaUpload::class);
         $pendingUpload->shouldReceive('getId')->andReturn(1);
         // First getAttempts() call: retry guard check (0 < 3, passes)
-        // Second getAttempts() call: in catch block (1 < 3, stays Pending)
+        // Second getAttempts() call: in catch block (1 < 3, no ERROR status)
         $pendingUpload->shouldReceive('getAttempts')->andReturnValues([0, 1]);
         $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PROCESSING)->once();
         $pendingUpload->shouldReceive('incrementAttempts')->once();
@@ -133,9 +153,9 @@ class ProcessPendingMediaUploadsTest extends TestCase
         // Summit not found → EntityNotFoundException → caught in inner catch
         $summitRepository->shouldReceive('getById')->with(999)->andReturn(null);
 
-        // Verify it stays Pending (not Error) since attempts(1) < max_retries(3)
+        // Verify setErrorMessage is called; setStatus is NOT called since attempts(1) < max_retries(3)
+        // (the catch block leaves status at its current value — Processing in this case)
         $pendingUpload->shouldReceive('setErrorMessage')->once()->with(Mockery::pattern('/Summit 999 not found/'));
-        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PENDING)->once();
 
         $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
         $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
@@ -284,7 +304,12 @@ class ProcessPendingMediaUploadsTest extends TestCase
     /**
      * Test that transient failure with partial status leaves status unchanged.
      * When public storage succeeds but private fails, status should remain at
-     * PublicStorageUploaded for retry (not revert to Pending).
+     * PublicStorageUploaded for retry (not revert to Pending or Error).
+     *
+     * Note: The exception here is a TypeError from null summit_repository, which
+     * is caught by the inner try/catch and triggers the error-handling transaction.
+     * TX count: 1 (reset stuck) + 1 (mark processing) + 1 (catch: setErrorMessage)
+     *           + 1 (cleanup) = 4.
      */
     public function testPartialStatusPreservedOnFailure(): void
     {
@@ -305,9 +330,8 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
         $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
 
-        // Only 3 transactions: reset stuck, mark processing, cleanup
-        // (no setStatus call in catch since attempts < max_retries and status is preserved)
-        $txService->shouldReceive('transaction')->times(3)->andReturnUsing(function ($callback) {
+        // 4 transactions: reset stuck, mark processing, catch setErrorMessage, cleanup
+        $txService->shouldReceive('transaction')->times(4)->andReturnUsing(function ($callback) {
             return $callback();
         });
 

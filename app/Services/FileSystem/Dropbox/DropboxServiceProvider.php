@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use GrahamCampbell\GuzzleFactory\GuzzleFactory;
+use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
@@ -59,11 +61,20 @@ class DropboxServiceProvider extends ServiceProvider
                 ? new AutoRefreshingDropBoxTokenService($appKey, $appSecret, $refreshToken)
                 : $accessToken;
 
+            // Explicit Guzzle client with request-level timeouts so individual chunk
+            // HTTP calls cannot hang indefinitely (defense-in-depth layer 1).
+            // See docs/plans/2026-05-06-process-pending-media-uploads-dropbox-chunk-loop.md
+            $guzzleClient = new GuzzleClient([
+                'handler'         => GuzzleFactory::handler(),
+                'timeout'         => 120,  // 120s per chunk request (covers 150MB at low bandwidth)
+                'connect_timeout' => 10,
+            ]);
+
             $adapter = new CustomDropboxAdapter(
-                new DropboxClient
-                (
+                new DropboxClient(
                     $tokenOrProvider,
-                    maxUploadChunkRetries:5
+                    $guzzleClient,
+                    maxUploadChunkRetries: 5
                 )
             );
 

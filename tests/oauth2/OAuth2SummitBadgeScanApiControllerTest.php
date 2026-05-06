@@ -101,8 +101,9 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         ];
 
         $data = [
-            'qr_code' => base64_encode($badge_qr_code),
-            'scan_date' => 1572019200,
+            'qr_code'    => base64_encode($badge_qr_code),
+            'scan_date'  => 1572019200,
+            'sponsor_id' => $sponsor->getId(),
         ];
 
         $response = $this->action(
@@ -122,6 +123,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertNotNull($badge_scan);
         $this->assertEquals(self::$member->getId(), $badge_scan->scanned_by_id);
         $this->assertEquals($badge->getId(), $badge_scan->badge_id);
+        $this->assertEquals($sponsor->getId(), $badge_scan->sponsor_id);
     }
 
     public function testAddBadgeScanWithOneSponsorPerMember(){
@@ -143,8 +145,9 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $badge = $attendee->getFirstTicket()->getBadge();
 
         $data = [
-            'qr_code' => $badge->generateQRCode(),
-            'scan_date' => 1572019200,
+            'qr_code'    => $badge->generateQRCode(),
+            'scan_date'  => 1572019200,
+            'sponsor_id' => $sponsor->getId(),
         ];
 
         $response = $this->action(
@@ -163,6 +166,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $scan = json_decode($content);
         $this->assertTrue(!is_null($scan));
         $this->assertEquals(\models\summit\SponsorBadgeScan::Source_QR, $scan->source);
+        $this->assertEquals($sponsor->getId(), $scan->sponsor_id);
         return $scan;
     }
 
@@ -217,7 +221,8 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
         $data = [
             'attendee_email' => $attendee->getEmail(),
-            'scan_date' => 1572019200,
+            'scan_date'      => 1572019200,
+            'sponsor_id'     => $sponsor->getId(),
         ];
 
         $response = $this->action(
@@ -238,6 +243,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertEquals(self::$member->getId(), $scan->scanned_by_id);
         $this->assertEquals($badge->getId(), $scan->badge_id);
         $this->assertEquals(\models\summit\SponsorBadgeScan::Source_Attendee_Email, $scan->source);
+        $this->assertEquals($sponsor->getId(), $scan->sponsor_id);
         return $scan;
     }
 
@@ -291,7 +297,8 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
         $data = [
             'attendee_email' => $attendee->getEmail(),
-            'scan_date' => 1572019200,
+            'scan_date'      => 1572019200,
+            'sponsor_id'     => $sponsor->getId(),
         ];
 
         $response = $this->action(
@@ -312,6 +319,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertEquals(self::$member->getId(), $scan->scanned_by_id);
         $this->assertEquals($badge->getId(), $scan->badge_id);
         $this->assertEquals(\models\summit\SponsorBadgeScan::Source_Attendee_Email, $scan->source);
+        $this->assertEquals($sponsor->getId(), $scan->sponsor_id);
     }
 
     public function testAddBadgeScanMissingQrCodeAndEmailFails(){
@@ -527,6 +535,47 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertNotNull($scan);
         $this->assertEquals(self::$member->getId(), $scan->scanned_by_id);
         $this->assertEquals($badge->getId(), $scan->badge_id);
+        $this->assertEquals($sponsor1->getId(), $scan->sponsor_id);
+    }
+
+    /** Admin path: admin can attribute a scan to any summit sponsor, not just one they belong to. */
+    public function testAddBadgeScanAsAdminForNonMemberSponsor()
+    {
+        // Keep the default admin posture (no clearGroups) — isAuthzFor() returns true via token external groups.
+        $sponsor0 = self::$sponsors[0];
+        $sponsor0->addUser(self::$member);
+        self::$em->persist($sponsor0);
+        self::$em->flush();
+        self::$member->addSponsorPermission($sponsor0->getId(), IGroup::Sponsors);
+
+        // sponsor1 is the target: self::$member is NOT a user of it.
+        $sponsor1 = self::$sponsors[1];
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge    = $attendee->getFirstTicket()->getBadge();
+
+        $params = ['id' => self::$summit->getId()];
+        $data   = [
+            'qr_code'    => $badge->generateQRCode(),
+            'scan_date'  => 1572019200,
+            'sponsor_id' => $sponsor1->getId(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $scan = json_decode($content);
+        $this->assertNotNull($scan);
         $this->assertEquals($sponsor1->getId(), $scan->sponsor_id);
     }
 

@@ -1770,6 +1770,12 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
         if (!$this->type->isAllowsPublishingDates()) {
             throw new ValidationException("Type does not allows Publishing Period.");
         }
+        // Once an event is published, only summit admins may change its duration.
+        // The published path silently shifts end_date via _setDuration when start_date
+        // is set, which would move a live schedule slot for any non-admin caller.
+        if ($this->isPublished() && !is_null($member) && !$member->isSummitAllowed($this->getSummit())) {
+            throw new ValidationException("Cannot modify duration of a published event.");
+        }
         $this->_setDuration($this->getSummit(), $duration_in_seconds, $skipDatesSetting, $member);
     }
 

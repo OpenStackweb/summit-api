@@ -70,7 +70,7 @@ class PresentationTypeAuditLogFormatterTest extends TestCase
         $formatter = new PresentationTypeAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
         $formatter->setContext(AuditContextBuilder::default()->build());
         $changeSet = [
-            'name' => ['Keynote', 'Opening Keynote']
+            'type' => ['Keynote', 'Opening Keynote']
         ];
         
         $result = $formatter->format($this->mockSubject, $changeSet);

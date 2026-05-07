@@ -31,6 +31,16 @@ final class ConfigSeeder extends Seeder
             // clear all
             $em = Registry::getManager(ResourceServerEntity::EntityManager);
             $em->clear();
+
+            // evict the L2 (second-level) cache for all resource-server entities so that
+            // stale cached IDs from previous seeder runs don't cause FK violations after
+            // the raw SQL DELETEs below reset the auto-increment sequence.
+            $l2Cache = $em->getCache();
+            if ($l2Cache !== null) {
+                $l2Cache->evictEntityRegions();
+                $l2Cache->evictQueryRegions();
+            }
+
             $connection = $em->getConnection();
             $connection->beginTransaction();
             $statements = [

@@ -699,6 +699,66 @@ SQL,
 
     /**
      * @param Summit $summit
+     * @param Filter|null $filter
+     * @return int
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
+    {
+        // Step 1: collect distinct speaker IDs matching the summit + filter using the
+        // same base query / filter mappings as getSpeakersBySummit.
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->distinct(true)
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e")
+            ->leftJoin("e.registration_request", "rr")
+            ->leftJoin("e.member", "m")
+            ->where("
+                     EXISTS (
+                        SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.speaker = e.id
+                        WHERE __p.summit = :summit
+                     ) OR
+                     EXISTS (
+                        SELECT __p1.id FROM models\summit\Presentation __p1 JOIN __p1.moderator __md WITH __md.id = e.id
+                        WHERE __p1.summit = :summit
+                      )")
+            ->setParameter("summit", $summit);
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($qb, $this->getFilterMappings($filter));
+        }
+
+        $speakerIds = array_column($qb->getQuery()->getArrayResult(), 'id');
+
+        if (empty($speakerIds)) return 0;
+
+        // Step 2: count distinct presentations linked to those speakers (as speaker or moderator).
+        $sql = <<<SQL
+SELECT COUNT(DISTINCT p.ID) AS cnt
+FROM Presentation p
+INNER JOIN SummitEvent se ON se.ID = p.ID
+WHERE se.SummitID = :summit_id
+AND (
+    p.ModeratorID IN (:speaker_ids)
+    OR EXISTS (
+        SELECT 1 FROM Presentation_Speakers ps
+        WHERE ps.PresentationID = p.ID
+        AND ps.PresentationSpeakerID IN (:speaker_ids)
+    )
+)
+SQL;
+
+        $stm = $this->getEntityManager()->getConnection()->executeQuery(
+            $sql,
+            ['summit_id' => $summit->getId(), 'speaker_ids' => $speakerIds],
+            ['summit_id' => \Doctrine\DBAL\ParameterType::INTEGER, 'speaker_ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER]
+        );
+
+        return intval($stm->fetchOne());
+    }
+
+    /**
+     * @param Summit $summit
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order

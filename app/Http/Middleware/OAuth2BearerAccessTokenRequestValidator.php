@@ -173,7 +173,7 @@ class OAuth2BearerAccessTokenRequestValidator
             }
             if (
                 $token_info->getApplicationType() === 'JS_CLIENT'
-                && (is_null($origin) || empty($origin)|| str_contains($token_info->getAllowedOrigins(), $origin) === false )
+                && (is_null($origin) || empty($origin)|| str_contains($token_info->getAllowedOrigins(), rtrim($origin, '/')) === false )
             ) {
                 //check origins
                 throw new OAuth2ResourceServerException(

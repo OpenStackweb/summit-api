@@ -58,7 +58,7 @@ final class DoctrineMemberRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null): QueryBuilder
     {
-        if($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id")){
+        if(!is_null($filter) && ($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id"))){
             $query
                 ->leftJoin("e.schedule","sch")
                 ->leftJoin("sch.event", "evt")
@@ -636,6 +636,56 @@ SQL,
                 //default order
                 return $query->addOrderBy("e.id", 'ASC');
             });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return int
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
+    {
+        // Step 1: collect distinct member IDs matching the summit + filter using the
+        // same base query / filter mappings as getSubmittersBySummit.
+        $qb = $this->getEntityManager()->createQueryBuilder()
+            ->distinct(true)
+            ->select("e.id")
+            ->from($this->getBaseEntity(), "e")
+            ->where("
+                     EXISTS (
+                        SELECT __p.id FROM models\summit\Presentation __p
+                        JOIN __p.created_by __cb93 WITH __cb93 = e.id
+                        WHERE __p.summit = :summit
+                     )")
+            ->setParameter("summit", $summit);
+
+        $qb = $this->applyExtraJoins($qb, $filter);
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($qb, $this->getFilterMappings($filter));
+        }
+
+        $memberIds = array_column($qb->getQuery()->getArrayResult(), 'id');
+
+        if (empty($memberIds)) return 0;
+
+        // Step 2: count distinct presentations submitted by those members.
+        $sql = <<<SQL
+SELECT COUNT(DISTINCT p.ID) AS cnt
+FROM Presentation p
+INNER JOIN SummitEvent se ON se.ID = p.ID
+WHERE se.SummitID = :summit_id
+AND p.CreatedByID IN (:member_ids)
+SQL;
+
+        $stm = $this->getEntityManager()->getConnection()->executeQuery(
+            $sql,
+            ['summit_id' => $summit->getId(), 'member_ids' => $memberIds],
+            ['summit_id' => \Doctrine\DBAL\ParameterType::INTEGER, 'member_ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER]
+        );
+
+        return intval($stm->fetchOne());
     }
 
     /**

@@ -239,4 +239,65 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $submitters = json_decode($content);
         $this->assertTrue(!is_null($submitters));
     }
+
+    public function testGetCurrentSummitSubmittersActivitiesCount()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSubmittersApiController@getSubmittersActivitiesCount",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $data = json_decode($content);
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertGreaterThanOrEqual(0, $data->count);
+    }
+
+    public function testGetCurrentSummitSubmittersActivitiesCountWithAcceptedPresentations()
+    {
+        $params = [
+            'id'     => self::$summit->getId(),
+            'filter' => [
+                'has_accepted_presentations==true',
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSubmittersApiController@getSubmittersActivitiesCount",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $data = json_decode($content);
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertGreaterThanOrEqual(0, $data->count);
+    }
 }

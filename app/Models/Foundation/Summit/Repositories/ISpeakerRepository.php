@@ -93,4 +93,12 @@ interface ISpeakerRepository extends IBaseRepository
      * @return PagingResponse
      */
     public function getAllCompaniesByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return int
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int;
 }

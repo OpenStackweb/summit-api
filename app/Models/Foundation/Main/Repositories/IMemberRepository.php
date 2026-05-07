@@ -90,4 +90,12 @@ interface IMemberRepository extends IBaseRepository
      * @throws \Doctrine\DBAL\Exception
      */
     public function getSubmittersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return int
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int;
 }

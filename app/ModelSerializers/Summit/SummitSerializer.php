@@ -320,24 +320,26 @@ class SummitSerializer extends SilverStripeSerializer
             if (!$has_registration_profile &&
                 !is_null($build_default_payment_gateway_profile_strategy)
             ) {
-
-                $values['payment_profiles'][] =
-                    SerializerRegistry::getInstance()->getSerializer
-                    (
-                        $build_default_payment_gateway_profile_strategy->build(IPaymentConstants::ApplicationTypeRegistration),
-                        $this->getSerializerType()
-                    )->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'payment_profiles'));
-
+                try {
+                    $profile = $build_default_payment_gateway_profile_strategy->build(IPaymentConstants::ApplicationTypeRegistration);
+                    $serializer = SerializerRegistry::getInstance()->getSerializer($profile, $this->getSerializerType());
+                    if (!is_null($serializer))
+                        $values['payment_profiles'][] = $serializer->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'payment_profiles'));
+                } catch (\Exception $ex) {
+                    Log::warning($ex->getMessage());
+                }
             }
 
             if (!$has_bookable_rooms_profile &&
                 !is_null($build_default_payment_gateway_profile_strategy)) {
-                $values['payment_profiles'][] =
-                    SerializerRegistry::getInstance()->getSerializer
-                    (
-                        $build_default_payment_gateway_profile_strategy->build(IPaymentConstants::ApplicationTypeBookableRooms),
-                        $this->getSerializerType()
-                    )->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'payment_profiles'));
+                try {
+                    $profile = $build_default_payment_gateway_profile_strategy->build(IPaymentConstants::ApplicationTypeBookableRooms);
+                    $serializer = SerializerRegistry::getInstance()->getSerializer($profile, $this->getSerializerType());
+                    if (!is_null($serializer))
+                        $values['payment_profiles'][] = $serializer->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'payment_profiles'));
+                } catch (\Exception $ex) {
+                    Log::warning($ex->getMessage());
+                }
             }
         }
 

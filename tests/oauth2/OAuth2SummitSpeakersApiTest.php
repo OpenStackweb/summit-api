@@ -1871,4 +1871,100 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertEquals(200, $response->getStatusCode());
     }
 
+    public function testGetCurrentSummitSpeakersActivitiesCount()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $data = json_decode($content);
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertGreaterThan(0, $data->count);
+    }
+
+    public function testGetCurrentSummitSpeakersActivitiesCountFilteredBySelPlan()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $unfilteredResponse = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            ['id' => self::$summit->getId()],
+            [], [], [], $headers
+        );
+        $this->assertResponseStatus(200);
+        $unfilteredData = json_decode($unfilteredResponse->getContent());
+        $this->assertGreaterThan(0, $unfilteredData->count);
+
+        $filteredResponse = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            [
+                'id'     => self::$summit->getId(),
+                'filter' => [
+                    sprintf('presentations_selection_plan_id==%s', self::$default_selection_plan->getId()),
+                ],
+            ],
+            [], [], [], $headers
+        );
+        $this->assertResponseStatus(200);
+        $filteredData = json_decode($filteredResponse->getContent());
+        $this->assertNotNull($filteredData);
+        $this->assertTrue(isset($filteredData->count));
+        $this->assertLessThanOrEqual($unfilteredData->count, $filteredData->count);
+    }
+
+    public function testGetCurrentSummitSpeakersActivitiesCountWithAcceptedPresentations()
+    {
+        $params = [
+            'id'     => self::$summit->getId(),
+            'filter' => [
+                'has_accepted_presentations==true',
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $data = json_decode($content);
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertGreaterThan(0, $data->count);
+    }
+
 }

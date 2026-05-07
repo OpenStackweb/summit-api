@@ -33,6 +33,7 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
         $summit_repository = EntityManager::getRepository(Summit::class);
 
         $summit = $summit_repository->find(3401);
+        if (is_null($summit)) $this->markTestSkipped('Summit 3401 not in test DB');
 
         $filter = FilterParser::parse(
             ["filter" => "is_speaker==false"],
@@ -62,6 +63,7 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
         $summit_repository = EntityManager::getRepository(Summit::class);
 
         $summit = $summit_repository->find(3363);
+        if (is_null($summit)) $this->markTestSkipped('Summit 3363 not in test DB');
 
         $filter = FilterParser::parse(
             ["filter" => "has_rejected_presentations==false"],
@@ -75,5 +77,27 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
         $submitterIds = $submitter_repository->getSubmittersIdsBySummit($summit, new PagingInfo(1, 5), $filter, $order);
 
         self::assertNotEmpty($submitterIds);
+    }
+
+    public function testGetUniqueActivitiesCountBySummit(){
+        $submitter_repository = EntityManager::getRepository(Member::class);
+        $summit_repository = EntityManager::getRepository(Summit::class);
+
+        $summit = $summit_repository->find(3401);
+        if (is_null($summit)) $this->markTestSkipped('Summit 3401 not in test DB');
+
+        $totalCount = $submitter_repository->getUniqueActivitiesCountBySummit($summit, null);
+        self::assertIsInt($totalCount);
+        self::assertGreaterThan(0, $totalCount);
+
+        $filter = FilterParser::parse(
+            ["filter" => "is_speaker==false"],
+            ["is_speaker" => ['==']]
+        );
+
+        $filteredCount = $submitter_repository->getUniqueActivitiesCountBySummit($summit, $filter);
+
+        self::assertIsInt($filteredCount);
+        self::assertLessThanOrEqual($totalCount, $filteredCount);
     }
 }

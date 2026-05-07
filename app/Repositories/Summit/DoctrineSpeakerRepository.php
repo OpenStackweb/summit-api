@@ -699,6 +699,39 @@ SQL,
 
     /**
      * @param Summit $summit
+     * @param Filter|null $filter
+     * @return int
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
+    {
+        // Single query: cross-join Presentation × PresentationSpeaker, then filter to
+        // rows where the speaker is either an assigned speaker OR the moderator.
+        // COUNT(DISTINCT p.id) deduplicates in SQL — no PHP-side array_unique needed.
+        // All aliases (e, m, rr) are top-level, so getFilterMappings() applies unchanged.
+        $countQb = $this->getEntityManager()->createQueryBuilder()
+            ->select('COUNT(DISTINCT p.id)')
+            ->from('models\summit\Presentation', 'p')
+            ->from('models\summit\PresentationSpeaker', 'e')
+            ->leftJoin('e.registration_request', 'rr')
+            ->leftJoin('e.member', 'm')
+            ->where('p.summit = :summit')
+            ->andWhere(
+                'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __cnt'
+                . ' WHERE __cnt.presentation = p AND __cnt.speaker = e)'
+                . ' OR p.moderator = e'
+            )
+            ->setParameter('summit', $summit);
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($countQb, $this->getFilterMappings($filter));
+        }
+
+        return intval($countQb->getQuery()->getSingleScalarResult());
+    }
+
+    /**
+     * @param Summit $summit
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order

@@ -591,6 +591,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmittersApiController@getAllBySummitCSV']);
             Route::group(['prefix' => 'all'], function () {
                 Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmittersApiController@send']);
+                Route::get('events/count', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSubmittersApiController@getSubmittersActivitiesCount']);
             });
         });
 
@@ -604,6 +605,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::get('me', 'OAuth2SummitSpeakersApiController@getMySummitSpeaker');
             Route::group(['prefix' => 'all'], function () {
                 Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersApiController@send']);
+                Route::get('events/count', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount']);
             });
             Route::group(['prefix' => '{speaker_id}'], function () {
                 Route::get('', ['middleware' =>

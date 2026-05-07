@@ -320,14 +320,13 @@ class SummitSerializer extends SilverStripeSerializer
             if (!$has_registration_profile &&
                 !is_null($build_default_payment_gateway_profile_strategy)
             ) {
-
+                
                 $values['payment_profiles'][] =
                     SerializerRegistry::getInstance()->getSerializer
                     (
                         $build_default_payment_gateway_profile_strategy->build(IPaymentConstants::ApplicationTypeRegistration),
                         $this->getSerializerType()
                     )->serialize(AbstractSerializer::filterExpandByPrefix($expand, 'payment_profiles'));
-
             }
 
             if (!$has_bookable_rooms_profile &&

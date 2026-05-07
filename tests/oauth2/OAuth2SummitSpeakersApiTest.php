@@ -16,6 +16,9 @@ use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\Presentation;
+use models\summit\PresentationSpeaker;
 use models\summit\SpeakersSummitRegistrationPromoCode;
 
 final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
@@ -1869,6 +1872,121 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         );
 
         $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    public function testGetCurrentSummitSpeakersActivitiesCount()
+    {
+        $baseline = EntityManager::getRepository(PresentationSpeaker::class)
+            ->getUniqueActivitiesCountBySummit(self::$summit, null);
+
+        // Add a presentation where speaker_a is both an assigned speaker AND the
+        // moderator, and speaker_b is a second assigned speaker. Without array_unique
+        // this presentation is counted 3 times in the raw join results (speaker_a
+        // assigned, speaker_b assigned, speaker_a moderator). Correct dedup must
+        // add exactly 1 to the baseline, not 2 or 3.
+        $speaker_a = new PresentationSpeaker();
+        $speaker_a->setFirstName("Alice");
+        $speaker_a->setLastName("Test");
+        self::$em->persist($speaker_a);
+
+        $speaker_b = new PresentationSpeaker();
+        $speaker_b->setFirstName("Bob");
+        $speaker_b->setLastName("Test");
+        self::$em->persist($speaker_b);
+
+        $extra = new Presentation();
+        self::$summit->addEvent($extra);
+        $extra->setTitle("Dedup Test Presentation");
+        $extra->setAbstract("Dedup Test Abstract");
+        $extra->setCategory(self::$defaultTrack);
+        $extra->setType(self::$defaultPresentationType);
+        $extra->setProgress(Presentation::PHASE_COMPLETE);
+        $extra->setStatus(Presentation::STATUS_RECEIVED);
+        $extra->addSpeaker($speaker_a);
+        $extra->addSpeaker($speaker_b);
+        $extra->setModerator($speaker_a);
+        self::$em->flush();
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            ['id' => self::$summit->getId()],
+            [], [], [],
+            ["HTTP_Authorization" => " Bearer " . $this->access_token, "CONTENT_TYPE" => "application/json"]
+        );
+
+        $this->assertResponseStatus(200);
+        $data = json_decode($response->getContent());
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertEquals($baseline + 1, $data->count);
+    }
+
+    public function testGetCurrentSummitSpeakersActivitiesCountFilteredBySelPlan()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $unfilteredResponse = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            ['id' => self::$summit->getId()],
+            [], [], [], $headers
+        );
+        $this->assertResponseStatus(200);
+        $unfilteredData = json_decode($unfilteredResponse->getContent());
+        $this->assertGreaterThan(0, $unfilteredData->count);
+
+        $filteredResponse = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            [
+                'id'     => self::$summit->getId(),
+                'filter' => [
+                    sprintf('presentations_selection_plan_id==%s', self::$default_selection_plan->getId()),
+                ],
+            ],
+            [], [], [], $headers
+        );
+        $this->assertResponseStatus(200);
+        $filteredData = json_decode($filteredResponse->getContent());
+        $this->assertNotNull($filteredData);
+        $this->assertTrue(isset($filteredData->count));
+        $this->assertLessThanOrEqual($unfilteredData->count, $filteredData->count);
+    }
+
+    public function testGetCurrentSummitSpeakersActivitiesCountWithAcceptedPresentations()
+    {
+        $params = [
+            'id'     => self::$summit->getId(),
+            'filter' => [
+                'has_accepted_presentations==true',
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $data = json_decode($content);
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertGreaterThan(0, $data->count);
     }
 
 }

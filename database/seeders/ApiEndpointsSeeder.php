@@ -3733,6 +3733,20 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins
                 ]
             ],
+            [
+                'name' => 'get-submitters-activities-count',
+                'route' => '/api/v1/summits/{id}/submitters/all/events/count',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             // speakers
             [
                 'name' => 'get-speakers',
@@ -4083,6 +4097,20 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
                     IGroup::SummitRegistrationAdmins
+                ]
+            ],
+            [
+                'name' => 'get-speakers-activities-count',
+                'route' => '/api/v1/summits/{id}/speakers/all/events/count',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
                 ]
             ],
             // events

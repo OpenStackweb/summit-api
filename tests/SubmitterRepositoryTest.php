@@ -2,7 +2,6 @@
 use App\ModelSerializers\IMemberSerializerTypes;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\Member;
-use models\summit\Summit;
 use ModelSerializers\SerializerRegistry;
 use utils\FilterParser;
 use utils\Order;
@@ -23,16 +22,28 @@ use utils\PagingInfo;
  **/
 
 /**
- * Class AuditModelTest
+ * Class SubmitterRepositoryTest
  */
 class SubmitterRepositoryTest extends ProtectedApiTestCase
 {
+    use InsertSummitTestData;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::$defaultMember = self::$member;
+        self::insertSummitTestData();
+    }
+
+    protected function tearDown(): void
+    {
+        self::clearSummitTestData();
+        parent::tearDown();
+    }
+
     public function testGetSubmittersBySummit(){
 
         $submitter_repository = EntityManager::getRepository(Member::class);
-        $summit_repository = EntityManager::getRepository(Summit::class);
-
-        $summit = $summit_repository->find(3401);
 
         $filter = FilterParser::parse(
             ["filter" => "is_speaker==false"],
@@ -43,10 +54,10 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
             OrderElement::buildDescFor("id"),
         ]);
 
-        $page = $submitter_repository->getSubmittersBySummit($summit, new PagingInfo(1, 5), $filter, $order);
+        $page = $submitter_repository->getSubmittersBySummit(self::$summit, new PagingInfo(1, 5), $filter, $order);
 
         $params = [
-            "summit" => $summit
+            "summit" => self::$summit
         ];
 
         foreach ($page->getItems() as $submitter) {
@@ -59,9 +70,6 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
 
     public function testGetSubmittersIdsBySummit(){
         $submitter_repository = EntityManager::getRepository(Member::class);
-        $summit_repository = EntityManager::getRepository(Summit::class);
-
-        $summit = $summit_repository->find(3363);
 
         $filter = FilterParser::parse(
             ["filter" => "has_rejected_presentations==false"],
@@ -72,8 +80,26 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
             OrderElement::buildDescFor("id"),
         ]);
 
-        $submitterIds = $submitter_repository->getSubmittersIdsBySummit($summit, new PagingInfo(1, 5), $filter, $order);
+        $submitterIds = $submitter_repository->getSubmittersIdsBySummit(self::$summit, new PagingInfo(1, 5), $filter, $order);
 
-        self::assertNotEmpty($submitterIds);
+        self::assertIsArray($submitterIds);
+    }
+
+    public function testGetUniqueActivitiesCountBySummit(){
+        $submitter_repository = EntityManager::getRepository(Member::class);
+
+        $totalCount = $submitter_repository->getUniqueActivitiesCountBySummit(self::$summit, null);
+        self::assertIsInt($totalCount);
+        self::assertGreaterThanOrEqual(0, $totalCount);
+
+        $filter = FilterParser::parse(
+            ["filter" => "is_speaker==false"],
+            ["is_speaker" => ['==']]
+        );
+
+        $filteredCount = $submitter_repository->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+
+        self::assertIsInt($filteredCount);
+        self::assertLessThanOrEqual($totalCount, $filteredCount);
     }
 }

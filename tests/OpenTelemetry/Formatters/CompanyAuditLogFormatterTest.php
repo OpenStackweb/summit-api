@@ -88,6 +88,16 @@ class CompanyAuditLogFormatterTest extends TestCase
         $this->assertStringContainsString('deleted', $result);
     }
 
+    public function testFormatterHandlesEmptyChangeSet(): void
+    {
+        $formatter = new CompanyAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $result = $formatter->format($this->mockSubject, []);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
+    }
+
     public function testFormatterReturnsNullForInvalidSubject(): void
     {
         $formatter = new CompanyAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_CREATION);

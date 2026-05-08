@@ -46,6 +46,7 @@ class PresentationCategoryGroupAuditLogFormatterManyToManyTest extends TestCase
     private const LOG_REMOVED_IDS_PAYLOAD = 'Removed IDs: [10,11,12]';
     private const LOG_REMOVED_IDS_DIFF = 'Removed IDs: [1]';
     private const LOG_ADDED_IDS_DIFF = 'Added IDs: [3]';
+    private const LOG_NO_CHANGES = 'Added IDs: [], Removed IDs: []';
     private const DELETED_IDS_PAYLOAD = [10, 11, 12];
     private const SNAPSHOT_IDS_EMPTY = [];
     private const CURRENT_IDS_EMPTY = [];
@@ -53,6 +54,8 @@ class PresentationCategoryGroupAuditLogFormatterManyToManyTest extends TestCase
     private const CURRENT_IDS_REMOVE_ONE = [2, 3];
     private const SNAPSHOT_IDS_UPDATE = [1, 2];
     private const CURRENT_IDS_UPDATE = [2, 3];
+    private const SNAPSHOT_IDS_NO_CHANGES = [1, 2];
+    private const CURRENT_IDS_NO_CHANGES = [1, 2];
 
     protected function tearDown(): void
     {
@@ -142,6 +145,21 @@ class PresentationCategoryGroupAuditLogFormatterManyToManyTest extends TestCase
         $this->assertStringContainsString(self::LOG_UPDATED_M2M, $result);
         $this->assertStringContainsString(self::LOG_ADDED_IDS_DIFF, $result);
         $this->assertStringContainsString(self::LOG_REMOVED_IDS_DIFF, $result);
+    }
+
+    public function testManyToManyUpdateReturnsNoChangesWhenDiffEmpty(): void
+    {
+        $group = $this->makeGroup();
+        $formatter = $this->makeFormatter(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE);
+        $collection = $this->makeCollection(self::SNAPSHOT_IDS_NO_CHANGES, self::CURRENT_IDS_NO_CHANGES);
+
+        $result = $formatter->format($group, [
+            'collection' => $collection,
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString(self::LOG_UPDATED_M2M, $result);
+        $this->assertStringContainsString(self::LOG_NO_CHANGES, $result);
     }
 
     public static function providesNullCasesForManyToMany(): array

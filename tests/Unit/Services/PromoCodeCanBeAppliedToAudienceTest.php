@@ -122,17 +122,18 @@ class PromoCodeCanBeAppliedToAudienceTest extends TestCase
         ];
     }
 
-    public function testNonEmptyAllowedTicketTypesNotContainingTicketReturnsFalse(): void
+    #[DataProvider('audienceProvider')]
+    public function testNonEmptyAllowedTicketTypesNotContainingTicketReturnsFalse(string $audience): void
     {
         $code = new SummitRegistrationPromoCode();
         $included = $this->buildMockTicketType(20, SummitTicketType::Audience_All);
         $code->addAllowedTicketType($included);
 
-        $excluded = $this->buildMockTicketType(21, SummitTicketType::Audience_All);
+        $excluded = $this->buildMockTicketType(21, $audience);
 
         $this->assertFalse(
             $code->canBeAppliedTo($excluded),
-            'A ticket type not in a non-empty allowed_ticket_types collection must not be matched, even when its audience is All.'
+            "A ticket type not in a non-empty allowed_ticket_types collection must not be matched (audience under test: $audience)."
         );
     }
 

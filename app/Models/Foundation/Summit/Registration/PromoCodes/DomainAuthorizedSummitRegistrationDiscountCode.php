@@ -70,8 +70,9 @@ class DomainAuthorizedSummitRegistrationDiscountCode extends SummitRegistrationD
         $ticketType = $rule->getTicketType();
 
         // Verify ticket type is already in allowed_ticket_types (direct membership check).
-        // Cannot use canBeAppliedTo() here — it returns true when allowed_ticket_types is empty,
-        // which would allow rules on types not explicitly added. See Truth #4.
+        // Cannot use canBeAppliedTo() here — when allowed_ticket_types is empty it returns
+        // true for Audience=All ticket types, which would allow rules on types not explicitly
+        // added. See Truth #4.
         if (!$this->allowed_ticket_types->contains($ticketType)) {
             throw new ValidationException(
                 sprintf(

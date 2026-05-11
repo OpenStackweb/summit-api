@@ -20,7 +20,7 @@ Parent SDS: `doc/promo-codes-for-early-registration-access.md`
 
 ### In Scope
 
-- Tighten `SummitRegistrationPromoCode::canBeAppliedTo()` (`app/Models/Foundation/Summit/Registration/PromoCodes/SummitRegistrationPromoCode.php:483-492`) so the empty-collection branch additionally requires `Audience = All`.
+- Tighten `SummitRegistrationPromoCode::canBeAppliedTo()` (`app/Models/Foundation/Summit/Registration/PromoCodes/SummitRegistrationPromoCode.php:483-495`) so the empty-collection branch additionally requires `Audience = All`.
 - New PHPUnit test cases extending the existing audience-filtering test suite (`tests/Unit/Services/DomainAuthorizedPromoCodeTest.php` or a new dedicated file) covering the audience × allowed_ticket_types matrix.
 - Audit of all direct callers of `canBeAppliedTo()` and any code paths that independently treat empty `allowed_ticket_types` as "applies to all" — confirm the centralized fix is sufficient.
 
@@ -66,7 +66,7 @@ Parent SDS: `doc/promo-codes-for-early-registration-access.md`
 
 ## Context for Implementer
 
-- **Entry point:** `app/Models/Foundation/Summit/Registration/PromoCodes/SummitRegistrationPromoCode.php:483-492` is the only production file that changes. Test file is `tests/Unit/Services/DomainAuthorizedPromoCodeTest.php` (extend) or a new file in the same folder.
+- **Entry point:** `app/Models/Foundation/Summit/Registration/PromoCodes/SummitRegistrationPromoCode.php:483-495` is the only production file that changes. Test file is `tests/Unit/Services/DomainAuthorizedPromoCodeTest.php` (extend) or a new file in the same folder.
 - **Audience constants:** `app/Models/Foundation/Summit/Registration/SummitTicketType.php:58-67`. Reference by constant (`SummitTicketType::Audience_All`), not the string literal `'All'`.
 - **Existing test pattern:** `tests/Unit/Services/DomainAuthorizedPromoCodeTest.php` already uses PHPUnit mocks for `SummitTicketType` via `buildMockTicketType(int $id, string $audience, bool $canSell = true)` (line 276) — the new tests should follow the same shape (pure unit tests, no DB).
 - **Subclass interaction:** `SummitRegistrationDiscountCode::canBeAppliedTo()` (line 232) adds a free-ticket guard then `return parent::canBeAppliedTo($ticketType)`. `DomainAuthorizedSummitRegistrationDiscountCode::canBeAppliedTo()` (line 145) bypasses the free-ticket guard and calls `SummitRegistrationPromoCode::canBeAppliedTo()` directly. Both flow through the patched base.
@@ -78,7 +78,7 @@ Parent SDS: `doc/promo-codes-for-early-registration-access.md`
 
 **File:** `app/Models/Foundation/Summit/Registration/PromoCodes/SummitRegistrationPromoCode.php`
 
-**Change:** Replace the unconditional `return true;` at line 491 with `return $ticketType->getAudience() === SummitTicketType::Audience_All;`. Keep the existing membership-check branch unchanged.
+**Change:** Replace the unconditional `return true;` in the empty-collection branch with `return $ticketType->getAudience() === SummitTicketType::Audience_All;`. Keep the existing membership-check branch unchanged. (After the edit the return lands at line 494 with a short comment block above it.)
 
 **Required `use` statement check:** `SummitTicketType` is already imported via the type-hint on the method signature (PHP imports it). Verify no additional `use` statement is required.
 
@@ -157,4 +157,4 @@ None. All semantic decisions are settled by the parent feature SDS Resolved Deci
 - ClickUp change request: 86b9vrpxp
 - Companion admin spec: `summit-admin/docs/superpowers/specs/2026-05-11-promo-code-apply-to-all-audience-restriction.md`
 - Audience enum: `app/Models/Foundation/Summit/Registration/SummitTicketType.php:58-67`
-- Method under change: `app/Models/Foundation/Summit/Registration/PromoCodes/SummitRegistrationPromoCode.php:483-492`
+- Method under change: `app/Models/Foundation/Summit/Registration/PromoCodes/SummitRegistrationPromoCode.php:483-495`

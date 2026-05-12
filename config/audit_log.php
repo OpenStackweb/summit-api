@@ -97,7 +97,7 @@ return [
             'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationActionTypeAuditLogFormatter::class,
         ],
         \models\summit\SummitEventAttendanceMetric::class => [
-            'enabled' => true,
+            'enabled' => false,
             'strategy' => \App\Audit\ConcreteFormatters\SummitEventAttendanceMetricAuditLogFormatter::class,
         ],
         \models\summit\SummitMediaUploadType::class => [
@@ -149,7 +149,7 @@ return [
             'strategy' => \App\Audit\ConcreteFormatters\SummitVenueRoomAuditLogFormatter::class,
         ],
         \models\summit\SummitMetric::class => [
-            'enabled' => true,
+            'enabled' => false,
             'strategy' => \App\Audit\ConcreteFormatters\SummitMetricAuditLogFormatter::class,
         ],
         \models\summit\SummitSponsorship::class => [

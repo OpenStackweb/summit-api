@@ -42,6 +42,10 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
 
     public function make(AuditContext $ctx, $subject, string $event_type): ?IAuditLogFormatter
     {
+        if ($this->isAuditDisabledForSubject($subject)) {
+            return null;
+        }
+
         $formatter = null;
         switch ($event_type) {
             case IAuditStrategy::EVENT_COLLECTION_UPDATE:
@@ -189,5 +193,19 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
     private function routeMatches(string $route, string $actual_route): bool
     {
         return strcmp($actual_route, $route) === 0;
+    }
+
+    private function isAuditDisabledForSubject(mixed $subject): bool
+    {
+        if (!is_object($subject)) {
+            return false;
+        }
+
+        $entities = $this->config['entities'] ?? [];
+        $entity_config = $entities[get_class($subject)] ?? null;
+
+        return is_array($entity_config)
+            && array_key_exists('enabled', $entity_config)
+            && $entity_config['enabled'] === false;
     }
 }

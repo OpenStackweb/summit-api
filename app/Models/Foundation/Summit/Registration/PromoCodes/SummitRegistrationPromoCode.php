@@ -488,7 +488,10 @@ class SummitRegistrationPromoCode extends SilverstripeBaseModel
             $criteria->where(Criteria::expr()->eq('id', intval($ticketType->getId())));
             return $this->allowed_ticket_types->matching($criteria)->count() > 0;
         }
-        return true;
+        // Implicit "apply to all" branch (empty allowed_ticket_types): only matches
+        // Audience = All. Other audiences (WithInvitation, WithoutInvitation,
+        // WithPromoCode) require explicit membership in allowed_ticket_types.
+        return $ticketType->getAudience() === SummitTicketType::Audience_All;
     }
 
     public function setSourceAdmin()

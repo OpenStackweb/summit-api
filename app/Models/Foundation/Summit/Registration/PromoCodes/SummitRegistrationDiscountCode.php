@@ -109,13 +109,15 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
      * @throws ValidationException
      */
     public function addTicketTypeRule(SummitRegistrationDiscountCodeTicketTypeRule $rule){
-        $rule->setDiscountCode($this);
+
         if($this->ticket_types_rules->contains($rule)) return;
         if ($this->isOnRules($rule->getTicketType()))
             throw new ValidationException
             (
-                sprintf('ticket type %s already belongs to discount code %s rules.', $rule->getTicketType()->getId(), $this->getId())
+                sprintf('Ticket type %s already belongs to discount code %s rules.', $rule->getTicketType()->getId(), $this->getId())
             );
+
+        $rule->setDiscountCode($this);
         $this->ticket_types_rules->add($rule);
         $this->allowed_ticket_types->add($rule->getTicketType());
     }
@@ -126,9 +128,9 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
      */
     public function getRuleByTicketType(SummitTicketType $ticket_type){
         try {
-            $query = $this->createQuery("SELECT r from models\summit\SummitRegistrationDiscountCodeTicketTypeRule r 
+            $query = $this->createQuery("SELECT r from models\summit\SummitRegistrationDiscountCodeTicketTypeRule r
         JOIN r.discount_code d
-        JOIN r.ticket_type t    
+        JOIN r.ticket_type t
         WHERE d.id = :discount_code_id and t.id = :ticket_type_id
         ");
             return $query

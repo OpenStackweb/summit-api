@@ -14,7 +14,6 @@
 
 use Doctrine\ORM\Mapping AS ORM;
 use Illuminate\Support\Facades\Log;
-use models\exceptions\ValidationException;
 
 /**
  * @package models\summit
@@ -48,89 +47,6 @@ class DomainAuthorizedSummitRegistrationDiscountCode extends SummitRegistrationD
      */
     public static function getMetadata(){
         return array_merge(SummitRegistrationDiscountCode::getMetadata(), self::$metadata);
-    }
-
-    /**
-     * Override: any ticket type can be added regardless of audience value.
-     * @param SummitTicketType $ticket_type
-     */
-    public function addAllowedTicketType(SummitTicketType $ticket_type)
-    {
-        parent::addAllowedTicketType($ticket_type);
-    }
-
-    /**
-     * Override: only writes to ticket_types_rules, NOT to allowed_ticket_types.
-     * Requires the ticket type to already be in allowed_ticket_types.
-     *
-     * @param SummitRegistrationDiscountCodeTicketTypeRule $rule
-     * @throws ValidationException
-     */
-    public function addTicketTypeRule(SummitRegistrationDiscountCodeTicketTypeRule $rule){
-        $ticketType = $rule->getTicketType();
-
-        // Verify ticket type is already in allowed_ticket_types (direct membership check).
-        // Cannot use canBeAppliedTo() here — it returns true when allowed_ticket_types is empty,
-        // which would allow rules on types not explicitly added. See Truth #4.
-        if (!$this->allowed_ticket_types->contains($ticketType)) {
-            throw new ValidationException(
-                sprintf(
-                    'Ticket type %s must be in allowed_ticket_types before adding a discount rule for promo code %s.',
-                    $ticketType->getId(),
-                    $this->getId()
-                )
-            );
-        }
-
-        if ($this->isOnRules($ticketType)) {
-            throw new ValidationException(
-                sprintf(
-                    'Ticket type %s already belongs to discount code %s rules.',
-                    $ticketType->getId(),
-                    $this->getId()
-                )
-            );
-        }
-
-        $rule->setDiscountCode($this);
-        if ($this->getTicketTypesRules()->contains($rule)) return;
-
-        // Only write to ticket_types_rules — do NOT touch allowed_ticket_types
-        $this->getTicketTypesRules()->add($rule);
-    }
-
-    /**
-     * Override: removes from ticket_types_rules only, does NOT re-add to allowed_ticket_types.
-     * Parent re-adds the ticket type to allowed_ticket_types which would corrupt the master list.
-     *
-     * @param SummitRegistrationDiscountCodeTicketTypeRule $rule
-     */
-    public function removeTicketTypeRule(SummitRegistrationDiscountCodeTicketTypeRule $rule){
-        if(!$this->getTicketTypesRules()->contains($rule)) return;
-        $this->getTicketTypesRules()->removeElement($rule);
-        $rule->clearDiscountCode();
-    }
-
-    /**
-     * Override: removes from ticket_types_rules only, does NOT touch allowed_ticket_types.
-     *
-     * @param SummitTicketType $ticketType
-     * @throws ValidationException
-     */
-    public function removeTicketTypeRuleForTicketType(SummitTicketType $ticketType){
-        $rule = $this->getRuleByTicketType($ticketType);
-        if (is_null($rule)) {
-            throw new ValidationException(
-                sprintf(
-                    'Ticket type %s does not belong to discount code %s rules.',
-                    $ticketType->getId(),
-                    $this->getId()
-                )
-            );
-        }
-        // Only remove from ticket_types_rules — do NOT touch allowed_ticket_types
-        $this->getTicketTypesRules()->removeElement($rule);
-        $rule->clearDiscountCode();
     }
 
     /**

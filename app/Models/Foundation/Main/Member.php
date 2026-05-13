@@ -1834,18 +1834,35 @@ SQL;
     public function getActiveSummitsSponsorMemberships()
     {
         // Step 1 — use native SQL (needed for JSON_CONTAINS) to collect IDs only.
+        // Also includes sponsors from the last finished summit where this member had
+        // sponsor permissions, so access is retained immediately after a summit ends.
         $idSql = <<<SQL
 SELECT sp.ID
 FROM Sponsor sp
 INNER JOIN Sponsor_Users su ON su.SponsorID = sp.ID
 INNER JOIN Summit s ON s.ID = sp.SummitID
 WHERE su.MemberID = :member_id
-    AND s.SummitEndDate >= :now
+    AND (
+        s.SummitEndDate >= :now
+        OR s.ID = (
+            SELECT s2.ID
+            FROM Summit s2
+            INNER JOIN Sponsor sp2 ON sp2.SummitID = s2.ID
+            INNER JOIN Sponsor_Users su2 ON su2.SponsorID = sp2.ID
+            WHERE su2.MemberID = :member_id
+                AND s2.SummitEndDate < :now
+                AND (
+                    JSON_CONTAINS(COALESCE(su2.Permissions, '[]'), JSON_QUOTE(:slug_sponsors))
+                    OR JSON_CONTAINS(COALESCE(su2.Permissions, '[]'), JSON_QUOTE(:slug_external))
+                )
+            ORDER BY s2.SummitEndDate DESC
+            LIMIT 1
+        )
+    )
     AND (
         JSON_CONTAINS(COALESCE(su.Permissions, '[]'), JSON_QUOTE(:slug_sponsors))
         OR JSON_CONTAINS(COALESCE(su.Permissions, '[]'), JSON_QUOTE(:slug_external))
     )
-ORDER BY s.SummitBeginDate ASC
 SQL;
 
         $stmt = $this->prepareRawSQL($idSql, [

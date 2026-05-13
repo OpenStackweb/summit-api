@@ -11,11 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use models\main\Member;
 use models\summit\SummitEvent;
 use models\summit\Presentation;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use Doctrine\Persistence\ObjectRepository;
 use Illuminate\Support\Facades\DB;
+use models\exceptions\ValidationException;
 use DateTimeZone;
 use DateTime;
 use DateInterval;
@@ -76,5 +78,29 @@ class SummitEventModelTest extends ProtectedApiTestCase
         $presentation->setEndDate($end_date);
         $new_duration = $presentation->getDuration();
         $this->assertTrue($old_duration < $new_duration);
+    }
+
+    public function testNonAdminMemberCannotChangeDurationOnPublishedEvent(){
+        $presentation = self::$presentations[0];
+        $this->assertTrue($presentation->isPublished());
+
+        $member = Mockery::mock(Member::class)->makePartial();
+        $member->shouldReceive('isSummitAllowed')->andReturn(false);
+
+        $this->expectException(ValidationException::class);
+        $presentation->setDuration(864000, false, $member);
+    }
+
+    public function testAdminMemberCanChangeDurationOnPublishedEvent(){
+        $presentation = self::$presentations[0];
+        $this->assertTrue($presentation->isPublished());
+
+        $member = Mockery::mock(Member::class)->makePartial();
+        $member->shouldReceive('isSummitAllowed')->andReturn(true);
+
+        $old_end_date = $presentation->getEndDate();
+        $presentation->setDuration(864000, false, $member);
+        $new_end_date = $presentation->getEndDate();
+        $this->assertTrue($old_end_date < $new_end_date);
     }
 }

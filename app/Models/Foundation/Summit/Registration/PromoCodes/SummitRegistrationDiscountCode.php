@@ -58,8 +58,9 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
     public function setRate(float $rate): void
     {
         if($this->amount > 0.0 && $rate > 0.0)
-            throw new ValidationException("discount amount already set");
+            throw new ValidationException("Discount amount already set.");
         $this->rate = $rate;
+        $this->ticket_types_rules->clear();
     }
 
     /**
@@ -69,8 +70,9 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
     public function setAmount(float $amount): void
     {
         if($this->rate > 0.0 && $amount > 0.0)
-            throw new ValidationException("discount rate already set");
+            throw new ValidationException("Discount rate already set.");
         $this->amount = $amount;
+        $this->ticket_types_rules->clear();
     }
 
     /**
@@ -118,6 +120,9 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
             );
 
         $rule->setDiscountCode($this);
+        // amount and rate should be cleared
+        $this->amount = 0.0;
+        $this->rate = 0.0;
         $this->ticket_types_rules->add($rule);
         $this->allowed_ticket_types->add($rule->getTicketType());
     }
@@ -206,12 +211,12 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
      */
     public function getDiscountAmount(SummitTicketType $ticket_type, float $original_amount): float
     {
-        if ($this->amount > 0.0) return $this->amount;
-        if ($this->rate > 0.0) return ($original_amount * $this->rate) / 100.00;
-
         $rule = $this->getRuleByTicketType($ticket_type);
         if (!is_null($rule) && $rule->getAmount() > 0.0) return $rule->getAmount();
         if (!is_null($rule) && $rule->getRate() > 0.0) return ($original_amount * $rule->getRate()) / 100.00;
+
+        if ($this->amount > 0.0) return $this->amount;
+        if ($this->rate > 0.0) return ($original_amount * $this->rate) / 100.00;
 
         return 0.0;
     }

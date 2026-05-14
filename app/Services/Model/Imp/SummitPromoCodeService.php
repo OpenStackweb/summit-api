@@ -481,16 +481,16 @@ final class SummitPromoCodeService
         return $this->tx_service->transaction(function () use ($summit, $promo_code_id, $ticket_type_id, $data) {
             $promo_code = $summit->getPromoCodeById($promo_code_id);
             if (is_null($promo_code))
-                throw new EntityNotFoundException("promo code not found");
+                throw new EntityNotFoundException("Promo Code not found.");
 
             $ticket_type = $summit->getTicketTypeById($ticket_type_id);
             if (is_null($ticket_type))
-                throw new EntityNotFoundException("ticket type not found");
+                throw new EntityNotFoundException("Ticket Type not found.");
 
             if ($promo_code instanceof SummitRegistrationDiscountCode) {
                 $data['ticket_type'] = $ticket_type;
                 if($ticket_type->isFree())
-                    throw new ValidationException(sprintf("Ticket Type %s (Free) can not be added on added on Discount Code.", $ticket_type_id ));
+                    throw new ValidationException(sprintf("Free Ticket Type %s cannot be added to a Discount Code.", $ticket_type_id ));
 
                 $rule = SummitRegistrationDiscountCodeTicketTypeRuleFactory::build($data);
                 $promo_code->addTicketTypeRule($rule);

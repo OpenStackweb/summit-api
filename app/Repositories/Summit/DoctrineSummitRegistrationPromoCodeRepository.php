@@ -669,24 +669,29 @@ SQL;
     {
         if (empty($email)) return [];
 
-        $email = strtolower(trim($email));
+        $normalized = strtolower(trim($email));
+        $daCandidates = $this->getDomainAuthorizedDiscoverableForSummit($summit);
 
-        return array_merge(
-            $this->getDomainAuthorizedDiscoverableForSummit($summit, $email),
-            $this->getEmailLinkedDiscoverableForSummit($summit, $email)
-        );
+        $daMatched = [];
+        foreach ($daCandidates as $code) {
+            if ($code instanceof IDomainAuthorizedPromoCode && $code->matchesEmailDomain($email)) {
+                $daMatched[] = $code;
+            }
+        }
+
+        $emailLinked = $this->getEmailLinkedDiscoverableForSummit($summit, $normalized);
+        return array_merge($daMatched, $emailLinked);
     }
 
     /**
      * @param Summit $summit
-     * @param string $email
      * @return SummitRegistrationPromoCode[]
      */
-    public function getDomainAuthorizedDiscoverableForSummit(Summit $summit, string $email): array
+    public function getDomainAuthorizedDiscoverableForSummit(Summit $summit): array
     {
-        $em = $this->getEntityManager();
+        $em  = $this->getEntityManager();
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        $daPromoClass = DomainAuthorizedSummitRegistrationPromoCode::class;
+        $daPromoClass    = DomainAuthorizedSummitRegistrationPromoCode::class;
         $daDiscountClass = DomainAuthorizedSummitRegistrationDiscountCode::class;
 
         $qb = $em->createQueryBuilder();
@@ -702,16 +707,7 @@ SQL;
             ->setParameter('summit_id', $summit->getId())
             ->setParameter('now', $now);
 
-        $candidates = $qb->getQuery()->getResult();
-        $results = [];
-
-        foreach ($candidates as $code) {
-            if ($code instanceof IDomainAuthorizedPromoCode && $code->matchesEmailDomain($email)) {
-                $results[] = $code;
-            }
-        }
-
-        return $results;
+        return $qb->getQuery()->getResult();
     }
 
     /**

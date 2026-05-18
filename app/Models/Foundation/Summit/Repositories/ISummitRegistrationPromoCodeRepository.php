@@ -81,11 +81,14 @@ interface ISummitRegistrationPromoCodeRepository extends ISummitOwnedEntityRepos
     public function getDiscoverableByEmailForSummit(Summit $summit, string $email): array;
 
     /**
+     * Returns date-windowed DOMAIN_AUTHORIZED_* candidates for the summit.
+     * Filtering by email moved to SummitPromoCodeService::discoverPromoCodes
+     * under option (b) of the Track-1 repository-decouple (SDS Task T1-Service).
+     *
      * @param Summit $summit
-     * @param string $email
      * @return SummitRegistrationPromoCode[]
      */
-    public function getDomainAuthorizedDiscoverableForSummit(Summit $summit, string $email): array;
+    public function getDomainAuthorizedDiscoverableForSummit(Summit $summit): array;
 
     /**
      * @param Summit $summit

@@ -23,6 +23,7 @@ use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
 use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
 use App\Services\ISummitRSVPInvitationService;
+use App\Services\Model\AllowedEmailDomainsLookupBuilder;
 use App\Services\Model\AttendeeService;
 use App\Services\Model\IAttendeeService;
 use App\Services\Model\IBadgeViewTypeService;
@@ -201,6 +202,12 @@ final class ModelServicesProvider extends ServiceProvider
         App::singleton(
             IMemberService::class,
             MemberService::class
+        );
+
+        App::singleton
+        (
+            AllowedEmailDomainsLookupBuilder::class,
+            AllowedEmailDomainsLookupBuilder::class
         );
 
         App::singleton

@@ -18,6 +18,7 @@ use App\Jobs\Emails\Registration\PromoCodes\SponsorPromoCodeEmail;
 use App\Jobs\ReApplyPromoCodeRetroActively;
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use App\Models\Foundation\Summit\Factories\SummitRegistrationDiscountCodeTicketTypeRuleFactory;
+use App\Services\Model\AllowedEmailDomainsLookupBuilder;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\PromoCodes\PromoCodeValidationStrategyFactory;
 use App\Services\Utils\CSVReader;
@@ -103,6 +104,11 @@ final class SummitPromoCodeService
     private $lock_service;
 
     /**
+     * @var AllowedEmailDomainsLookupBuilder
+     */
+    private $lookup_builder;
+
+    /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISpeakerRepository $speaker_repository
@@ -112,6 +118,7 @@ final class SummitPromoCodeService
      * @param ISummitRegistrationPromoCodeRepository $repository
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
+     * @param AllowedEmailDomainsLookupBuilder $lookup_builder
      */
     public function __construct
     (
@@ -123,18 +130,20 @@ final class SummitPromoCodeService
         ITagRepository      $tag_repository,
         ISummitRegistrationPromoCodeRepository $repository,
         ITransactionService $tx_service,
-        ILockManagerService $lock_service
+        ILockManagerService $lock_service,
+        AllowedEmailDomainsLookupBuilder $lookup_builder
     )
     {
         parent::__construct($tx_service);
-        $this->member_repository = $member_repository;
+        $this->member_repository  = $member_repository;
         $this->company_repository = $company_repository;
         $this->speaker_repository = $speaker_repository;
-        $this->summit_repository = $summit_repository;
-        $this->ticket_repository = $ticket_repository;
-        $this->tag_repository = $tag_repository;
-        $this->repository = $repository;
-        $this->lock_service = $lock_service;
+        $this->summit_repository  = $summit_repository;
+        $this->ticket_repository  = $ticket_repository;
+        $this->tag_repository     = $tag_repository;
+        $this->repository         = $repository;
+        $this->lock_service       = $lock_service;
+        $this->lookup_builder     = $lookup_builder;
     }
 
     /**
@@ -1024,33 +1033,68 @@ final class SummitPromoCodeService
         $email = $member->getEmail();
         if (empty($email)) return [];
 
-        $codes = $this->repository->getDiscoverableByEmailForSummit($summit, $email);
-        $results = [];
+        $started         = microtime(true);
+        $normalizedEmail = strtolower(trim($email));
 
-        foreach ($codes as $code) {
-            // Global exhaustion: finite code with quantity_used >= quantity_available.
-            // The repository filter uses isLive() (dates only), so exhausted codes leak through.
-            // Skip them here so discovery matches checkout's validate() behavior.
-            if (!$code->hasQuantityAvailable()) {
-                continue;
+        // 1. Date-windowed DA candidates (raw, unfiltered by email).
+        $candidates = $this->repository->getDomainAuthorizedDiscoverableForSummit($summit);
+
+        // 2. Build per-code lookup once; filter via O(1) set membership + small suffix scan.
+        $matched = [];
+        foreach ($candidates as $code) {
+            if (!$code instanceof IDomainAuthorizedPromoCode) continue;
+            $lookup = $this->lookup_builder->build($code->getAllowedEmailDomains());
+            if ($code->matchesEmailDomainViaLookup($normalizedEmail, $lookup)) {
+                $matched[] = $code;
             }
+        }
 
-            // QuantityPerAccount enforcement: exclude exhausted codes
+        // 3. Merge with email-linked codes (repo SQL binds against LOWER(e.email);
+        //    interface docblock requires the param to be pre-lowercased).
+        $emailLinked = $this->repository->getEmailLinkedDiscoverableForSummit($summit, $normalizedEmail);
+        $matched     = array_merge($matched, $emailLinked);
+
+        // 4. Per-code quantity loop (unchanged from prior behavior; N+1 stays at Track 1).
+        $results = [];
+        foreach ($matched as $code) {
+            if (!$code->hasQuantityAvailable()) continue;
+
             if ($code instanceof IDomainAuthorizedPromoCode) {
                 $quantityPerAccount = $code->getQuantityPerAccount();
                 if ($quantityPerAccount > 0) {
                     $usedCount = $this->repository->getTicketCountByMemberAndPromoCode($member, $code);
-                    if ($usedCount >= $quantityPerAccount) {
-                        continue; // exhausted
-                    }
+                    if ($usedCount >= $quantityPerAccount) continue;
                     $code->setRemainingQuantityPerAccount($quantityPerAccount - $usedCount);
                 } else {
-                    $code->setRemainingQuantityPerAccount(null); // unlimited
+                    $code->setRemainingQuantityPerAccount(null);
                 }
             }
 
             $results[] = $code;
         }
+
+        // 5. Track-1 metric emit. $candidates is the pre-filter date-windowed set;
+        //    valid_until_date_passed signals indexed-SQL self-termination per the
+        //    SDS Verified Ops Precondition.
+        $duration_ms = (microtime(true) - $started) * 1000;
+        $now = new \DateTime();
+        $valid_until_date_passed = empty($candidates)
+            ? true
+            : array_reduce(
+                $candidates,
+                fn($acc, $c) => $acc
+                    && method_exists($c, 'getValidUntilDate')
+                    && $c->getValidUntilDate() !== null
+                    && $c->getValidUntilDate() < $now,
+                true
+              );
+
+        Log::info('promo_code.discover.track1', [
+            'summit_id'               => $summit->getId(),
+            'code_count'              => count($candidates),
+            'duration_ms'             => $duration_ms,
+            'valid_until_date_passed' => $valid_until_date_passed,
+        ]);
 
         return $results;
     }

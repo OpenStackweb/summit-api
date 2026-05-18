@@ -12,8 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Services\Model\AllowedEmailDomainsLookupBuilder;
 use App\Services\Model\SummitPromoCodeService;
 use App\Services\Utils\ILockManagerService;
+use Illuminate\Container\Container;
+use Illuminate\Support\Facades\Facade;
 use libs\utils\ITransactionService;
 use Mockery;
 use models\main\ICompanyRepository;
@@ -27,6 +30,7 @@ use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 /**
  * Class SummitPromoCodeServiceDiscoveryTest
@@ -39,8 +43,24 @@ use PHPUnit\Framework\TestCase;
  */
 class SummitPromoCodeServiceDiscoveryTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Provide a minimal facade application so Log::info() calls in the SUT
+        // (Track-1 metric emit) resolve via the facade without requiring a full
+        // Laravel app or database.
+        Facade::clearResolvedInstances();
+        $app = new Container();
+        $app->singleton('log', fn() => new NullLogger());
+        Container::setInstance($app);
+        Facade::setFacadeApplication($app);
+    }
+
     protected function tearDown(): void
     {
+        Facade::setFacadeApplication(null);
+        Facade::clearResolvedInstances();
+        Container::setInstance(null);
         Mockery::close();
         parent::tearDown();
     }
@@ -56,7 +76,8 @@ class SummitPromoCodeServiceDiscoveryTest extends TestCase
             Mockery::mock(ITagRepository::class),
             $repository,
             Mockery::mock(ITransactionService::class),
-            Mockery::mock(ILockManagerService::class)
+            Mockery::mock(ILockManagerService::class),
+            new AllowedEmailDomainsLookupBuilder()
         );
     }
 
@@ -77,8 +98,12 @@ class SummitPromoCodeServiceDiscoveryTest extends TestCase
         // surface as a quota check, not an uncaught Mockery error.
         $exhausted->shouldReceive('getQuantityPerAccount')->andReturn(0);
         $exhausted->shouldReceive('setRemainingQuantityPerAccount')->andReturn(null);
+        $exhausted->shouldReceive('getAllowedEmailDomains')->andReturn(['@acme.com']);
+        $exhausted->shouldReceive('matchesEmailDomainViaLookup')->andReturn(true);
+        $exhausted->shouldReceive('getValidUntilDate')->andReturn(null);
 
         $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getId')->andReturn(1);
         $member = Mockery::mock(Member::class);
         $member->shouldReceive('getEmail')->andReturn('new-buyer@acme.com');
         $member->shouldReceive('getId')->andReturn(99);
@@ -86,9 +111,12 @@ class SummitPromoCodeServiceDiscoveryTest extends TestCase
         $repository = Mockery::mock(ISummitRegistrationPromoCodeRepository::class);
         // Repository filter is isLive()-only, so it would pass the exhausted
         // code through — simulate that by returning it.
-        $repository->shouldReceive('getDiscoverableByEmailForSummit')
-            ->with($summit, 'new-buyer@acme.com')
+        $repository->shouldReceive('getDomainAuthorizedDiscoverableForSummit')
+            ->with($summit)
             ->andReturn([$exhausted]);
+        $repository->shouldReceive('getEmailLinkedDiscoverableForSummit')
+            ->with($summit, 'new-buyer@acme.com')
+            ->andReturn([]);
 
         $service = $this->buildService($repository);
         $result = $service->discoverPromoCodes($summit, $member);
@@ -109,16 +137,23 @@ class SummitPromoCodeServiceDiscoveryTest extends TestCase
         $healthy->shouldReceive('hasQuantityAvailable')->andReturn(true);
         $healthy->shouldReceive('getQuantityPerAccount')->andReturn(0);
         $healthy->shouldReceive('setRemainingQuantityPerAccount')->with(null)->once();
+        $healthy->shouldReceive('getAllowedEmailDomains')->andReturn(['@acme.com']);
+        $healthy->shouldReceive('matchesEmailDomainViaLookup')->andReturn(true);
+        $healthy->shouldReceive('getValidUntilDate')->andReturn(null);
 
         $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getId')->andReturn(1);
         $member = Mockery::mock(Member::class);
         $member->shouldReceive('getEmail')->andReturn('buyer@acme.com');
         $member->shouldReceive('getId')->andReturn(42);
 
         $repository = Mockery::mock(ISummitRegistrationPromoCodeRepository::class);
-        $repository->shouldReceive('getDiscoverableByEmailForSummit')
-            ->with($summit, 'buyer@acme.com')
+        $repository->shouldReceive('getDomainAuthorizedDiscoverableForSummit')
+            ->with($summit)
             ->andReturn([$healthy]);
+        $repository->shouldReceive('getEmailLinkedDiscoverableForSummit')
+            ->with($summit, 'buyer@acme.com')
+            ->andReturn([]);
 
         $service = $this->buildService($repository);
         $result = $service->discoverPromoCodes($summit, $member);
@@ -140,16 +175,23 @@ class SummitPromoCodeServiceDiscoveryTest extends TestCase
         $infinite->shouldReceive('hasQuantityAvailable')->andReturn(true);
         $infinite->shouldReceive('getQuantityPerAccount')->andReturn(0);
         $infinite->shouldReceive('setRemainingQuantityPerAccount')->with(null)->once();
+        $infinite->shouldReceive('getAllowedEmailDomains')->andReturn(['@acme.com']);
+        $infinite->shouldReceive('matchesEmailDomainViaLookup')->andReturn(true);
+        $infinite->shouldReceive('getValidUntilDate')->andReturn(null);
 
         $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getId')->andReturn(1);
         $member = Mockery::mock(Member::class);
         $member->shouldReceive('getEmail')->andReturn('buyer@acme.com');
         $member->shouldReceive('getId')->andReturn(11);
 
         $repository = Mockery::mock(ISummitRegistrationPromoCodeRepository::class);
-        $repository->shouldReceive('getDiscoverableByEmailForSummit')
-            ->with($summit, 'buyer@acme.com')
+        $repository->shouldReceive('getDomainAuthorizedDiscoverableForSummit')
+            ->with($summit)
             ->andReturn([$infinite]);
+        $repository->shouldReceive('getEmailLinkedDiscoverableForSummit')
+            ->with($summit, 'buyer@acme.com')
+            ->andReturn([]);
 
         $service = $this->buildService($repository);
         $result = $service->discoverPromoCodes($summit, $member);
@@ -169,22 +211,32 @@ class SummitPromoCodeServiceDiscoveryTest extends TestCase
         $exhausted->shouldReceive('hasQuantityAvailable')->andReturn(false);
         $exhausted->shouldReceive('getQuantityPerAccount')->andReturn(0);
         $exhausted->shouldReceive('setRemainingQuantityPerAccount')->andReturn(null);
+        $exhausted->shouldReceive('getAllowedEmailDomains')->andReturn(['@acme.com']);
+        $exhausted->shouldReceive('matchesEmailDomainViaLookup')->andReturn(true);
+        $exhausted->shouldReceive('getValidUntilDate')->andReturn(null);
 
         $healthy = Mockery::mock(DomainAuthorizedSummitRegistrationPromoCode::class);
         $healthy->shouldReceive('getCode')->andReturn('HEALTHY');
         $healthy->shouldReceive('hasQuantityAvailable')->andReturn(true);
         $healthy->shouldReceive('getQuantityPerAccount')->andReturn(0);
         $healthy->shouldReceive('setRemainingQuantityPerAccount')->with(null)->once();
+        $healthy->shouldReceive('getAllowedEmailDomains')->andReturn(['@acme.com']);
+        $healthy->shouldReceive('matchesEmailDomainViaLookup')->andReturn(true);
+        $healthy->shouldReceive('getValidUntilDate')->andReturn(null);
 
         $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getId')->andReturn(1);
         $member = Mockery::mock(Member::class);
         $member->shouldReceive('getEmail')->andReturn('buyer@acme.com');
         $member->shouldReceive('getId')->andReturn(7);
 
         $repository = Mockery::mock(ISummitRegistrationPromoCodeRepository::class);
-        $repository->shouldReceive('getDiscoverableByEmailForSummit')
-            ->with($summit, 'buyer@acme.com')
+        $repository->shouldReceive('getDomainAuthorizedDiscoverableForSummit')
+            ->with($summit)
             ->andReturn([$exhausted, $healthy]);
+        $repository->shouldReceive('getEmailLinkedDiscoverableForSummit')
+            ->with($summit, 'buyer@acme.com')
+            ->andReturn([]);
 
         $service = $this->buildService($repository);
         $result = $service->discoverPromoCodes($summit, $member);

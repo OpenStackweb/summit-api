@@ -1,4 +1,4 @@
-<?php namespace Tests\Unit\Models\Foundation\Summit\Registration\PromoCodes;
+<?php namespace Tests\Unit\Services;
 
 use App\Services\Model\AllowedEmailDomainsLookupBuilder;
 use models\summit\AllowedEmailDomainsLookup;
@@ -78,6 +78,16 @@ class AllowedEmailDomainsLookupBuilderTest extends TestCase
         $lookup = $this->builder->build([]);
         $this->assertSame([], $lookup->exactSet);
         $this->assertSame([], $lookup->suffixList);
-        $this->assertNotEmpty($lookup->patternsHash);
+        // sha1('') is the well-defined hash for the empty pattern set.
+        $this->assertSame(sha1(''), $lookup->patternsHash);
+    }
+
+    public function testMalformedPatternsDroppedSilently(): void
+    {
+        // No leading '@', no leading '.', no embedded '@' → silently dropped per spec.
+        $lookup = $this->builder->build(['acme.com', 'plainword', '@valid.com']);
+
+        $this->assertSame(['@valid.com' => true], $lookup->exactSet);
+        $this->assertSame([], $lookup->suffixList);
     }
 }

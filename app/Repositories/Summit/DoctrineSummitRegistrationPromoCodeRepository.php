@@ -673,14 +673,14 @@ SQL;
      */
     public function getDiscoverableByEmailForSummit(Summit $summit, string $email): array
     {
-        if (empty($email)) return [];
-
         $normalized = strtolower(trim($email));
+        if ($normalized === '') return [];
+
         $daCandidates = $this->getDomainAuthorizedDiscoverableForSummit($summit);
 
         $daMatched = [];
         foreach ($daCandidates as $code) {
-            if ($code instanceof IDomainAuthorizedPromoCode && $code->matchesEmailDomain($email)) {
+            if ($code instanceof IDomainAuthorizedPromoCode && $code->matchesEmailDomain($normalized)) {
                 $daMatched[] = $code;
             }
         }

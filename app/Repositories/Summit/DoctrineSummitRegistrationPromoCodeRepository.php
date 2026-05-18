@@ -661,6 +661,12 @@ SQL;
      * Returns domain-authorized types (matched by email domain) and
      * existing email-linked types (member/speaker, matched by associated email).
      *
+     * @deprecated Track 1 (SDS task T1-Service) moved the discover hot path to
+     * SummitPromoCodeService::discoverPromoCodes calling the two leaf methods
+     * directly. This aggregator is retained only to preserve its public
+     * by-email contract for any non-grepped caller. Remove once Track 2 ships
+     * and a `grep -rn getDiscoverableByEmailForSummit` confirms zero callers.
+     *
      * @param Summit $summit
      * @param string $email
      * @return SummitRegistrationPromoCode[]

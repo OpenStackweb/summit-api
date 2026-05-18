@@ -38,6 +38,20 @@ interface IDomainAuthorizedPromoCode
     public function matchesEmailDomain(string $email): bool;
 
     /**
+     * Lookup-driven sibling of matchesEmailDomain().
+     *
+     * Consumes a precomputed AllowedEmailDomainsLookup (normalized + partitioned
+     * exactSet / suffixList) so callers iterating many candidate codes against
+     * the same pattern set avoid re-normalizing patterns per code. Must return
+     * the SAME boolean as matchesEmailDomain() for any (patterns, email) pair.
+     *
+     * @param string $email
+     * @param AllowedEmailDomainsLookup $lookup
+     * @return bool
+     */
+    public function matchesEmailDomainViaLookup(string $email, AllowedEmailDomainsLookup $lookup): bool;
+
+    /**
      * @param int|null $remaining
      * @return void
      */

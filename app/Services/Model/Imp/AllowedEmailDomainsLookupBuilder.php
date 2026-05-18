@@ -33,12 +33,18 @@ use models\summit\AllowedEmailDomainsLookup;
  *   - otherwise                     -> dropped silently
  *
  * patternsHash = sha1(implode('|', $sortedNormalizedPatterns)) — stable
- * regardless of input order, so callers can use it for cache keys / equality.
+ * regardless of input order, so callers can use it for change detection / equality.
  */
 final class AllowedEmailDomainsLookupBuilder
 {
     public function build(array $patterns): AllowedEmailDomainsLookup
     {
+        // Capture "no patterns configured" from the RAW input BEFORE any
+        // normalization or partitioning. Required for legacy parity: a
+        // non-empty input whose patterns all drop as malformed must NOT
+        // be treated as unrestricted.
+        $unrestricted = count($patterns) === 0;
+
         $exactSet   = [];
         $suffixList = [];
         $seen       = [];
@@ -76,6 +82,6 @@ final class AllowedEmailDomainsLookupBuilder
         sort($normalized);
         $patternsHash = sha1(implode('|', $normalized));
 
-        return new AllowedEmailDomainsLookup($exactSet, $suffixList, $patternsHash);
+        return new AllowedEmailDomainsLookup($exactSet, $suffixList, $patternsHash, $unrestricted);
     }
 }

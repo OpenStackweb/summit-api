@@ -122,8 +122,10 @@ trait DomainAuthorizedPromoCodeTrait
      */
     public function matchesEmailDomainViaLookup(string $email, AllowedEmailDomainsLookup $lookup): bool
     {
-        // No restriction when neither exact nor suffix patterns exist.
-        if (empty($lookup->exactSet) && empty($lookup->suffixList)) return true;
+        // Parity with legacy matchesEmailDomain(): only return "match anything"
+        // when the stored pattern array was actually empty. A non-empty array
+        // whose patterns all dropped as malformed must still return false here.
+        if ($lookup->unrestricted) return true;
 
         $email = strtolower(trim($email));
         if ($email === '') return false;

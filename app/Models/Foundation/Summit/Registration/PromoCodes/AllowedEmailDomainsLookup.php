@@ -23,14 +23,20 @@
  *  - $exactSet:    O(1) lookup map for "@domain.tld" and "user@domain.tld" patterns
  *  - $suffixList:  array of ".tld"-style suffixes for endsWith / str_ends_with checks
  *  - $patternsHash: stable sha1 over the sorted normalized pattern set; identifies
- *                   the pattern set for cache keys / change detection.
+ *                   the pattern set for change detection / equality comparisons.
+ *  - $unrestricted: true iff the input pattern array was empty. Distinguishes
+ *                   "no patterns configured" (legacy "no restriction") from
+ *                   "patterns configured but all malformed" (which the legacy
+ *                   matcher treats as no match — see
+ *                   DomainAuthorizedPromoCodeTrait::matchesEmailDomain parity contract).
  */
 final class AllowedEmailDomainsLookup
 {
     public function __construct(
         public readonly array $exactSet,
         public readonly array $suffixList,
-        public readonly string $patternsHash
+        public readonly string $patternsHash,
+        public readonly bool $unrestricted
     ) {
     }
 }

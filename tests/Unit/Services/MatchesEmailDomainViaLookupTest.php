@@ -103,4 +103,21 @@ class MatchesEmailDomainViaLookupTest extends TestCase
         $this->assertFalse($code->matchesEmailDomainViaLookup('', $lookup));
         $this->assertFalse($code->matchesEmailDomainViaLookup('no-at-sign', $lookup));
     }
+
+    public function testParityOnAllMalformedPatterns(): void
+    {
+        // Codex B1 regression: builder drops 'acme.com' as malformed, leaving an
+        // empty lookup. Legacy matchesEmailDomain returns false (non-empty array,
+        // no pattern matches). New matcher must agree via $unrestricted flag.
+        $this->assertParity(['acme.com'], 'user@acme.com');
+    }
+
+    public function testParityOnSuffixLookalikePattern(): void
+    {
+        // Bonus case: '@.edu' is a literal exact-domain pattern, NOT a TLD suffix.
+        // Legacy iterates and routes '@.edu' through the @-branch ($emailDomain
+        // must literally equal '@.edu', not '@foo.edu'). Builder routes '@.edu'
+        // to exactSet. Neither matches 'user@foo.edu'. Both return false.
+        $this->assertParity(['@.edu'], 'user@foo.edu');
+    }
 }

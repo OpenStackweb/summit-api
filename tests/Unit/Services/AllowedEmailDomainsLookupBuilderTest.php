@@ -90,4 +90,27 @@ class AllowedEmailDomainsLookupBuilderTest extends TestCase
         $this->assertSame(['@valid.com' => true], $lookup->exactSet);
         $this->assertSame([], $lookup->suffixList);
     }
+
+    public function testUnrestrictedTrueOnEmptyInput(): void
+    {
+        $lookup = $this->builder->build([]);
+        $this->assertTrue($lookup->unrestricted);
+    }
+
+    public function testUnrestrictedFalseOnNonEmptyInputEvenIfAllMalformed(): void
+    {
+        // Input is non-empty but every pattern is malformed (no @, no leading .).
+        // The DTO's exactSet/suffixList end up empty, but unrestricted must be false
+        // to preserve parity with legacy matchesEmailDomain (which returns false here).
+        $lookup = $this->builder->build(['acme.com', 'plainword']);
+        $this->assertSame([], $lookup->exactSet);
+        $this->assertSame([], $lookup->suffixList);
+        $this->assertFalse($lookup->unrestricted);
+    }
+
+    public function testUnrestrictedFalseOnAnyValidInput(): void
+    {
+        $lookup = $this->builder->build(['@acme.com']);
+        $this->assertFalse($lookup->unrestricted);
+    }
 }

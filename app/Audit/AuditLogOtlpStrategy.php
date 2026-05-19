@@ -50,7 +50,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             return;
         }
             Log::debug("AuditLogOtlpStrategy::audit", ['subject' => $subject, 'change_set' => $change_set, 'event_type' => $event_type]);
-        try {
+            try {
             $entity = $this->resolveAuditableEntity($subject);
             if (is_null($entity)) {
                 Log::warning("AuditLogOtlpStrategy::audit subject not found");
@@ -60,6 +60,13 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             $formatter = $this->formatterFactory->make($ctx, $subject, $event_type);
             if(is_null($formatter)) {
                 Log::warning("AuditLogOtlpStrategy::audit formatter not found");
+                return;
+            }
+            if ($event_type === IAuditStrategy::EVENT_ENTITY_UPDATE
+                && !$formatter->hasMeaningfulChanges($change_set)) {
+                Log::debug("AuditLogOtlpStrategy::audit skipping no-op entity update", [
+                    'subject_class' => is_object($subject) ? get_class($subject) : gettype($subject),
+                ]);
                 return;
             }
             $description = $formatter->format($subject, $change_set);
@@ -76,7 +83,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 job: $job,
             );
             Log::debug("AuditLogOtlpStrategy::audit entry sent to OTEL", ["user_id" => $ctx->userId, "user_email" => $ctx->userEmail]);
-
+         
         } catch (\Exception $ex) {
             Log::error('OTEL audit logging error: ' . $ex->getMessage(), [
                 'exception' => $ex,

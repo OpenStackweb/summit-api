@@ -22,6 +22,7 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
 {
     protected ?AuditContext $ctx = null;
     protected string $event_type;
+    public const NO_CHANGES_REGISTERED_MESSAGE = 'properties without changes registered';
 
     public function __construct(string $event_type)
     {
@@ -178,19 +179,69 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         }
 
         if (empty($changed_fields)) {
-            return 'properties without changes registered';
+            return self::NO_CHANGES_REGISTERED_MESSAGE;
         }
 
         $fields_summary = count($changed_fields) . ' field(s) modified: ';
         return $fields_summary . implode(' | ', $changed_fields);
     }
 
+
+    final public function hasMeaningfulChanges(array $change_set): bool
+    {
+        $ignored_fields = $this->getIgnoredFields();
+
+        foreach ($change_set as $prop_name => $change_values) {
+            if (in_array($prop_name, $ignored_fields)) {
+                continue;
+            }
+
+            $old_value = $change_values[0] ?? null;
+            $new_value = $change_values[1] ?? null;
+
+            if ($this->formatFieldChange($prop_name, $old_value, $new_value) !== null) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     protected function formatFieldChange(string $prop_name, $old_value, $new_value): ?string
     {
+        if ($this->valuesAreEffectivelyEqual($old_value, $new_value)) {
+            return null;
+        }
+
         $old_display = $this->formatChangeValue($old_value);
         $new_display = $this->formatChangeValue($new_value);
 
         return sprintf("Property \"%s\" has changed from \"%s\" to \"%s\"", $prop_name, $old_display, $new_display);
+    }
+
+    protected function valuesAreEffectivelyEqual($old_value, $new_value): bool
+    {
+        if ($old_value === $new_value) {
+            return true;
+        }
+
+        if ($old_value instanceof \DateTimeInterface && $new_value instanceof \DateTimeInterface) {
+            if ($old_value->getTimestamp() === $new_value->getTimestamp()) {
+                return true;
+            }
+
+            try {
+                return $old_value->format('U.u') === $new_value->format('U.u');
+            } catch (\Throwable $e) {
+                return false;
+            }
+        }
+
+        if ((is_scalar($old_value) || is_null($old_value)) && (is_scalar($new_value) || is_null($new_value))) {
+            return $this->formatChangeValue($old_value) === $this->formatChangeValue($new_value);
+        }
+
+        return false;
     }
 
     /**

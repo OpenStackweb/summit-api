@@ -180,6 +180,12 @@ final class SummitSponsorService
             SponsorDomainEvents::SponsorCreated);
 
         foreach ($new_sponsorships as $sponsorship) {
+            Log::debug(sprintf(
+                "SummitSponsorService::addSponsor dispatching SponsorshipCreated for sponsorship %s type %s sponsor %s",
+                $sponsorship->getId(),
+                $sponsorship->getType()->getId(),
+                $sponsor->getId()
+            ));
             PublishSponsorServiceDomainEventsJob::dispatch(
                 SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
                 SponsorDomainEvents::SponsorshipCreated);
@@ -356,16 +362,28 @@ final class SummitSponsorService
             return $sponsor;
         });
 
-        foreach ($added_sponsorships as $sponsorship) {
-            PublishSponsorServiceDomainEventsJob::dispatch(
-                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
-                SponsorDomainEvents::SponsorshipCreated);
-        }
-
         foreach ($removed_sponsorships as $sponsorship) {
+            Log::debug(sprintf(
+                "SummitSponsorService::updateSponsor dispatching SponsorshipRemoved for sponsorship %s type %s sponsor %s",
+                $sponsorship->getId(),
+                $sponsorship->getType()->getId(),
+                $sponsor_id
+            ));
             PublishSponsorServiceDomainEventsJob::dispatch(
                 DeletedEventDTO::fromEntity($sponsorship)->serialize(),
                 SponsorDomainEvents::SponsorshipRemoved);
+        }
+
+        foreach ($added_sponsorships as $sponsorship) {
+            Log::debug(sprintf(
+                "SummitSponsorService::updateSponsor dispatching SponsorshipCreated for sponsorship %s type %s sponsor %s",
+                $sponsorship->getId(),
+                $sponsorship->getType()->getId(),
+                $sponsor_id
+            ));
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+                SponsorDomainEvents::SponsorshipCreated);
         }
 
         return $sponsor;

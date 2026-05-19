@@ -22,6 +22,7 @@ use App\Audit\ConcreteFormatters\DefaultEntityManyToManyCollectionUpdateAuditLog
 use App\Audit\ConcreteFormatters\DefaultEntityManyToManyCollectionDeleteAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
+use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -148,9 +149,17 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
         return $formatter;
     }
 
+    public function isAuditDisabled(mixed $subject): bool
+    {
+        return $this->isAuditDisabledForSubject($subject);
+    }
+
     private function getFormatterByContext(object $subject, string $event_type, AuditContext $ctx): ?IAuditLogFormatter
     {
-        $class = get_class($subject);
+        $class = $this->getSubjectClass($subject);
+        if ($class === null) {
+            return null;
+        }
         $entity_config = $this->config['entities'][$class] ?? null;
 
         if (!$entity_config) {
@@ -197,15 +206,29 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
 
     private function isAuditDisabledForSubject(mixed $subject): bool
     {
-        if (!is_object($subject)) {
+        $class = $this->getSubjectClass($subject);
+        if ($class === null) {
             return false;
         }
 
         $entities = $this->config['entities'] ?? [];
-        $entity_config = $entities[get_class($subject)] ?? null;
+        $entity_config = $entities[$class] ?? null;
 
         return is_array($entity_config)
             && array_key_exists('enabled', $entity_config)
             && $entity_config['enabled'] === false;
+    }
+
+    private function getSubjectClass(mixed $subject): ?string
+    {
+        if (!is_object($subject)) {
+            return null;
+        }
+
+        if (class_exists(ClassUtils::class)) {
+            return ClassUtils::getClass($subject);
+        }
+
+        return get_class($subject);
     }
 }

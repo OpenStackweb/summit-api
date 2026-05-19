@@ -208,6 +208,20 @@ class AuditLogFormatterFactoryTest extends TestCase
         $this->assertNull($formatter);
     }
 
+    public function testIsAuditDisabledPublicMethodReturnsFalseForNonObjectSubject(): void
+    {
+        $this->setFactoryConfig([
+            'entities' => [
+                FakeAuditEntity::class => [
+                    'enabled' => false,
+                    'strategy' => FakeAuditFormatter::class,
+                ],
+            ],
+        ]);
+
+        $this->assertFalse($this->factory->isAuditDisabled('not-an-object'));
+    }
+
     private function setFactoryConfig(array $config): void
     {
         $prop = (new \ReflectionClass($this->factory))->getProperty('config');

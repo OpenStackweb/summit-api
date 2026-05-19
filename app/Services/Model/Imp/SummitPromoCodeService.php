@@ -1031,7 +1031,7 @@ final class SummitPromoCodeService
     public function discoverPromoCodes(Summit $summit, Member $member): array
     {
         $email = $member->getEmail();
-        if (empty($email)) return [];
+        if (empty(trim($email))) return [];
 
         $started         = microtime(true);
         $normalizedEmail = strtolower(trim($email));
@@ -1039,11 +1039,16 @@ final class SummitPromoCodeService
         // 1. Date-windowed DA candidates (raw, unfiltered by email).
         $candidates = $this->repository->getDomainAuthorizedDiscoverableForSummit($summit);
 
-        // 2. Build per-code lookup once; filter via O(1) set membership + small suffix scan.
-        $matched = [];
+        // 2. Filter DA candidates via O(1) set membership + small suffix scan.
+        //    Lookups are memoized by pattern-array hash so sibling codes that share
+        //    an identical pattern set reuse a single normalized lookup structure.
+        $matched     = [];
+        $lookupCache = [];
         foreach ($candidates as $code) {
             if (!$code instanceof IDomainAuthorizedPromoCode) continue;
-            $lookup = $this->lookup_builder->build($code->getAllowedEmailDomains());
+            $patterns = $code->getAllowedEmailDomains();
+            $hash     = sha1(implode("\0", $patterns)); // stable pre-hash; order- and case-sensitive
+            $lookup   = $lookupCache[$hash] ?? ($lookupCache[$hash] = $this->lookup_builder->build($patterns));
             if ($code->matchesEmailDomainViaLookup($normalizedEmail, $lookup)) {
                 $matched[] = $code;
             }
@@ -1077,15 +1082,16 @@ final class SummitPromoCodeService
         //    valid_until_date_passed signals indexed-SQL self-termination per the
         //    SDS Verified Ops Precondition.
         $duration_ms = (microtime(true) - $started) * 1000;
-        $now = new \DateTime();
-        $valid_until_date_passed = empty($candidates)
-            ? true
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $finiteCandidates = array_filter(
+            $candidates,
+            fn($c) => method_exists($c, 'getValidUntilDate') && $c->getValidUntilDate() !== null
+        );
+        $valid_until_date_passed = empty($finiteCandidates)
+            ? false
             : array_reduce(
-                $candidates,
-                fn($acc, $c) => $acc
-                    && method_exists($c, 'getValidUntilDate')
-                    && $c->getValidUntilDate() !== null
-                    && $c->getValidUntilDate() < $now,
+                $finiteCandidates,
+                fn($acc, $c) => $acc && $c->getValidUntilDate() < $now,
                 true
               );
 

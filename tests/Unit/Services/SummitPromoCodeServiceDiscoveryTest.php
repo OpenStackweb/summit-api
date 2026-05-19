@@ -244,4 +244,86 @@ class SummitPromoCodeServiceDiscoveryTest extends TestCase
         $this->assertCount(1, $result);
         $this->assertSame('HEALTHY', $result[0]->getCode());
     }
+
+    /**
+     * Regression: a DA code returned by the repository but NOT matching the
+     * member's email domain (via the real AllowedEmailDomainsLookupBuilder +
+     * matchesEmailDomainViaLookup trait method) must be excluded from results.
+     *
+     * Existing tests all mock matchesEmailDomainViaLookup -> true; a regression
+     * making the matcher return true regardless of input would silently expose
+     * all in-date DA codes to every member. This pins the negative path by
+     * exercising the real trait method against a real lookup structure
+     * (allowed_email_domains=['@acme.com'] vs email user@other.com).
+     */
+    public function testDomainNonMatchingDACodeIsExcluded(): void
+    {
+        // makePartial(): leave matchesEmailDomainViaLookup unmocked so the real
+        // trait method runs against the real AllowedEmailDomainsLookup built by
+        // buildService()'s injected AllowedEmailDomainsLookupBuilder.
+        $nonMatching = Mockery::mock(DomainAuthorizedSummitRegistrationPromoCode::class)->makePartial();
+        $nonMatching->shouldReceive('getCode')->andReturn('OTHER_DOMAIN');
+        $nonMatching->shouldReceive('hasQuantityAvailable')->andReturn(true);
+        $nonMatching->shouldReceive('getQuantityPerAccount')->andReturn(0);
+        // setRemainingQuantityPerAccount must NEVER be called — the code is
+        // filtered out at the email-match step before reaching the quantity loop.
+        $nonMatching->shouldNotReceive('setRemainingQuantityPerAccount');
+        $nonMatching->shouldReceive('getAllowedEmailDomains')->andReturn(['@acme.com']);
+        // Intentionally NOT mocking matchesEmailDomainViaLookup — real trait
+        // method runs and returns false for user@other.com vs @acme.com.
+        $nonMatching->shouldReceive('getValidUntilDate')->andReturn(null);
+
+        $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getId')->andReturn(1);
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getEmail')->andReturn('user@other.com');
+        $member->shouldReceive('getId')->andReturn(123);
+
+        $repository = Mockery::mock(ISummitRegistrationPromoCodeRepository::class);
+        $repository->shouldReceive('getDomainAuthorizedDiscoverableForSummit')
+            ->with($summit)
+            ->andReturn([$nonMatching]);
+        // Email-linked lookup must return [] so the only candidate flows through
+        // the DA email-domain match path and gets excluded there.
+        $repository->shouldReceive('getEmailLinkedDiscoverableForSummit')
+            ->with($summit, 'user@other.com')
+            ->andReturn([]);
+
+        $service = $this->buildService($repository);
+        $result = $service->discoverPromoCodes($summit, $member);
+
+        $this->assertSame([], $result,
+            'DA code whose allowed_email_domains do not match the member email must be excluded');
+    }
+
+    /**
+     * Regression: a Member whose getEmail() returns whitespace-only must not
+     * trigger any repository call and must return an empty result.
+     *
+     * empty("   ") returns false in PHP, so the early-return guard must trim
+     * before testing emptiness. See @smarcet review finding 1 on PR #546.
+     * Guard lives at SummitPromoCodeService::discoverPromoCodes L1034:
+     *   if (empty(trim($email))) return [];
+     */
+    public function testDiscoverReturnsEmptyForWhitespaceOnlyEmail(): void
+    {
+        $summit = Mockery::mock(Summit::class);
+        // Guard returns before any Summit method is touched; do not stub getId().
+
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getEmail')->andReturn("   \t\n  ");
+
+        $repository = Mockery::mock(ISummitRegistrationPromoCodeRepository::class);
+        // Neither repo lookup may be called — the early-return guard at L1034
+        // must short-circuit before any I/O. shouldNotReceive turns any call
+        // into an assertion failure.
+        $repository->shouldNotReceive('getDomainAuthorizedDiscoverableForSummit');
+        $repository->shouldNotReceive('getEmailLinkedDiscoverableForSummit');
+
+        $service = $this->buildService($repository);
+        $result = $service->discoverPromoCodes($summit, $member);
+
+        $this->assertSame([], $result,
+            'Whitespace-only email must early-return [] without any repository call');
+    }
 }

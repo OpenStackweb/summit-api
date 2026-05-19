@@ -111,6 +111,41 @@ trait DomainAuthorizedPromoCodeTrait
     }
 
     /**
+     * Lookup-driven sibling of matchesEmailDomain().
+     * Consumes a precomputed AllowedEmailDomainsLookup so the caller does not
+     * pay strtolower/trim per pattern when matching many codes against the
+     * same pattern set. Must return parity with matchesEmailDomain().
+     *
+     * @param string $email
+     * @param AllowedEmailDomainsLookup $lookup
+     * @return bool
+     */
+    public function matchesEmailDomainViaLookup(string $email, AllowedEmailDomainsLookup $lookup): bool
+    {
+        // Parity with legacy matchesEmailDomain(): only return "match anything"
+        // when the stored pattern array was actually empty. A non-empty array
+        // whose patterns all dropped as malformed must still return false here.
+        if ($lookup->unrestricted) return true;
+
+        $email = strtolower(trim($email));
+        if ($email === '') return false;
+
+        $atPos = strpos($email, '@');
+        if ($atPos === false) return false;
+
+        $emailDomain = substr($email, $atPos);
+
+        if (isset($lookup->exactSet[$emailDomain])) return true;
+        if (isset($lookup->exactSet[$email])) return true;
+
+        foreach ($lookup->suffixList as $suffix) {
+            if (str_ends_with($emailDomain, $suffix)) return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Validates email against allowed_email_domains.
      * Throws ValidationException if no match.
      *

@@ -661,32 +661,43 @@ SQL;
      * Returns domain-authorized types (matched by email domain) and
      * existing email-linked types (member/speaker, matched by associated email).
      *
+     * @deprecated Track 1 (SDS task T1-Service) moved the discover hot path to
+     * SummitPromoCodeService::discoverPromoCodes calling the two leaf methods
+     * directly. This aggregator is retained only to preserve its public
+     * by-email contract for any non-grepped caller. Remove once Track 2 ships
+     * and a `grep -rn getDiscoverableByEmailForSummit` confirms zero callers.
+     *
      * @param Summit $summit
      * @param string $email
      * @return SummitRegistrationPromoCode[]
      */
     public function getDiscoverableByEmailForSummit(Summit $summit, string $email): array
     {
-        if (empty($email)) return [];
+        $normalized = strtolower(trim($email));
+        if ($normalized === '') return [];
 
-        $email = strtolower(trim($email));
+        $daCandidates = $this->getDomainAuthorizedDiscoverableForSummit($summit);
 
-        return array_merge(
-            $this->getDomainAuthorizedDiscoverableForSummit($summit, $email),
-            $this->getEmailLinkedDiscoverableForSummit($summit, $email)
-        );
+        $daMatched = [];
+        foreach ($daCandidates as $code) {
+            if ($code instanceof IDomainAuthorizedPromoCode && $code->matchesEmailDomain($normalized)) {
+                $daMatched[] = $code;
+            }
+        }
+
+        $emailLinked = $this->getEmailLinkedDiscoverableForSummit($summit, $normalized);
+        return array_merge($daMatched, $emailLinked);
     }
 
     /**
      * @param Summit $summit
-     * @param string $email
      * @return SummitRegistrationPromoCode[]
      */
-    public function getDomainAuthorizedDiscoverableForSummit(Summit $summit, string $email): array
+    public function getDomainAuthorizedDiscoverableForSummit(Summit $summit): array
     {
-        $em = $this->getEntityManager();
+        $em  = $this->getEntityManager();
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        $daPromoClass = DomainAuthorizedSummitRegistrationPromoCode::class;
+        $daPromoClass    = DomainAuthorizedSummitRegistrationPromoCode::class;
         $daDiscountClass = DomainAuthorizedSummitRegistrationDiscountCode::class;
 
         $qb = $em->createQueryBuilder();
@@ -702,16 +713,7 @@ SQL;
             ->setParameter('summit_id', $summit->getId())
             ->setParameter('now', $now);
 
-        $candidates = $qb->getQuery()->getResult();
-        $results = [];
-
-        foreach ($candidates as $code) {
-            if ($code instanceof IDomainAuthorizedPromoCode && $code->matchesEmailDomain($email)) {
-                $results[] = $code;
-            }
-        }
-
-        return $results;
+        return $qb->getQuery()->getResult();
     }
 
     /**

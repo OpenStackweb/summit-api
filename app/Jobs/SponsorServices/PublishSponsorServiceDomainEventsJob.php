@@ -35,9 +35,19 @@ final class PublishSponsorServiceDomainEventsJob implements ShouldQueue
     private $event_type;
 
     public function __construct(array $payload, string $event_type){
-        $this->payload = $payload;
+        $this->payload    = $payload;
         $this->event_type = $event_type;
         Log::debug(sprintf("PublishSponsorServiceDomainEventsJob::__construct payload %s event_type %s ", json_encode($payload), $event_type));
+    }
+
+    public function getEventType(): string
+    {
+        return $this->event_type;
+    }
+
+    public function getPayload(): array
+    {
+        return $this->payload;
     }
 
     public function handle(): void

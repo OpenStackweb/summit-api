@@ -14,6 +14,7 @@
 
 use App\Events\SponsorServices\SponsorDomainEvents;
 use App\Events\SponsorServices\SummitSponsorCreatedEventDTO;
+use App\Events\SponsorServices\SummitSponsorshipCreatedEventDTO;
 use App\Events\SponsorServices\DeletedEventDTO;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
@@ -114,7 +115,7 @@ final class SummitSponsorService
      */
     public function addSponsor(Summit $summit, array $payload): Sponsor
     {
-        $sponsor = $this->tx_service->transaction(function () use ($summit, $payload) {
+        [$sponsor, $new_sponsorships] = $this->tx_service->transaction(function () use ($summit, $payload) {
             $company_id = intval($payload['company_id']);
             $featured_event_id = isset($payload['featured_event_id']) ? intval($payload['featured_event_id']) : 0;
 
@@ -140,6 +141,7 @@ final class SummitSponsorService
             }
 
             $sponsor = SponsorFactory::build($payload);
+            $new_sponsorships = [];
 
             if(isset($payload['sponsorship_id'])) {
                 $type_id = intval($payload['sponsorship_id']);
@@ -150,6 +152,7 @@ final class SummitSponsorService
                 $sponsorship = new SummitSponsorship();
                 $sponsorship->setType($summit_sponsorship_type);
                 $sponsor->addSponsorship($sponsorship);
+                $new_sponsorships[] = $sponsorship;
             } else if(isset($payload['sponsorships'])) {
                 foreach ($payload['sponsorships'] as $sponsorship_payload) {
                     $type_id = isset($sponsorship_payload['type_id']) ?
@@ -162,17 +165,38 @@ final class SummitSponsorService
                     $sponsorship = new SummitSponsorship();
                     $sponsorship->setType($summit_sponsorship_type);
                     $sponsor->addSponsorship($sponsorship);
+                    $new_sponsorships[] = $sponsorship;
                 }
             }
 
             $summit->addSummitSponsor($sponsor);
 
-            return $sponsor;
+            return [$sponsor, $new_sponsorships];
         });
 
-        PublishSponsorServiceDomainEventsJob::dispatch(
-             SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
-            SponsorDomainEvents::SponsorCreated);
+        try {
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
+                SponsorDomainEvents::SponsorCreated);
+        } catch (\Exception $e) {
+            Log::error(sprintf("SummitSponsorService::addSponsor failed to dispatch SponsorCreated for sponsor %s: %s", $sponsor->getId(), $e->getMessage()));
+        }
+
+        foreach ($new_sponsorships as $sponsorship) {
+            Log::debug(sprintf(
+                "SummitSponsorService::addSponsor dispatching SponsorshipCreated for sponsorship %s type %s sponsor %s",
+                $sponsorship->getId(),
+                $sponsorship->getType()->getId(),
+                $sponsor->getId()
+            ));
+            try {
+                PublishSponsorServiceDomainEventsJob::dispatch(
+                    SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+                    SponsorDomainEvents::SponsorshipCreated);
+            } catch (\Exception $e) {
+                Log::error(sprintf("SummitSponsorService::addSponsor failed to dispatch SponsorshipCreated for sponsorship %s: %s", $sponsorship->getId(), $e->getMessage()));
+            }
+        }
 
         return $sponsor;
     }
@@ -187,7 +211,7 @@ final class SummitSponsorService
      */
     public function updateSponsor(Summit $summit, int $sponsor_id, array $payload): Sponsor
     {
-        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
+        [$sponsor, $added_sponsorships, $removed_sponsorship_ids, $updated_sponsorships] = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
             Log::debug
             (
                 sprintf
@@ -233,6 +257,10 @@ final class SummitSponsorService
                 }
             }
 
+            $added_sponsorships = [];
+            $removed_sponsorship_ids = [];
+            $updated_sponsorships = [];
+
             if(isset($payload['sponsorship_id'])) {
                 $type_id = intval($payload['sponsorship_id']);
 
@@ -253,7 +281,9 @@ final class SummitSponsorService
                         )
                     );
                     // update the first
-                    $summit_sponsor->getSponsorships()->first()->setType($summit_sponsorship_type);
+                    $sponsorship = $summit_sponsor->getSponsorships()->first();
+                    $sponsorship->setType($summit_sponsorship_type);
+                    $updated_sponsorships[] = $sponsorship;
                 }
                 else {
                     Log::debug
@@ -270,6 +300,7 @@ final class SummitSponsorService
                     $sponsorship = new SummitSponsorship();
                     $sponsorship->setType($summit_sponsorship_type);
                     $summit_sponsor->addSponsorship($sponsorship);
+                    $added_sponsorships[] = $sponsorship;
                 }
 
             } else if(isset($payload['sponsorships'])) {
@@ -307,6 +338,7 @@ final class SummitSponsorService
                 // Remove types not in the new list
                 foreach ($current_sponsorships as $type_id => $sponsorship) {
                     if (!$new_sponsorship_types->contains($sponsorship->getType())) {
+                        $removed_sponsorship_ids[] = $sponsorship->getId(); // capture id before Doctrine clears it on DELETE
                         $summit_sponsor->removeSponsorship($sponsorship);
                     }
                 }
@@ -317,6 +349,7 @@ final class SummitSponsorService
                         $sponsorship = new SummitSponsorship();
                         $sponsorship->setType($type);
                         $summit_sponsor->addSponsorship($sponsorship);
+                        $added_sponsorships[] = $sponsorship;
                     }
                 }
 
@@ -332,12 +365,65 @@ final class SummitSponsorService
                 $summit->recalculateSummitSponsorOrder($sponsor, $payload['order']);
             }
 
-            PublishSponsorServiceDomainEventsJob::dispatch(
-             SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
-                SponsorDomainEvents::SponsorUpdated);
-
-            return $sponsor;
+            return [$sponsor, $added_sponsorships, $removed_sponsorship_ids, $updated_sponsorships];
         });
+
+        try {
+            PublishSponsorServiceDomainEventsJob::dispatch(
+                SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
+                SponsorDomainEvents::SponsorUpdated);
+        } catch (\Exception $e) {
+            Log::error(sprintf("SummitSponsorService::updateSponsor failed to dispatch SponsorUpdated for sponsor %s: %s", $sponsor_id, $e->getMessage()));
+        }
+
+        foreach ($removed_sponsorship_ids as $sponsorship_id) {
+            Log::debug(sprintf(
+                "SummitSponsorService::updateSponsor dispatching SponsorshipRemoved for sponsorship %s sponsor %s",
+                $sponsorship_id,
+                $sponsor_id
+            ));
+            try {
+                PublishSponsorServiceDomainEventsJob::dispatch(
+                    ['id' => $sponsorship_id],
+                    SponsorDomainEvents::SponsorshipRemoved);
+            } catch (\Exception $e) {
+                Log::error(sprintf("SummitSponsorService::updateSponsor failed to dispatch SponsorshipRemoved for sponsorship %s: %s", $sponsorship_id, $e->getMessage()));
+            }
+        }
+
+        foreach ($added_sponsorships as $sponsorship) {
+            Log::debug(sprintf(
+                "SummitSponsorService::updateSponsor dispatching SponsorshipCreated for sponsorship %s type %s sponsor %s",
+                $sponsorship->getId(),
+                $sponsorship->getType()->getId(),
+                $sponsor_id
+            ));
+            try {
+                PublishSponsorServiceDomainEventsJob::dispatch(
+                    SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+                    SponsorDomainEvents::SponsorshipCreated);
+            } catch (\Exception $e) {
+                Log::error(sprintf("SummitSponsorService::updateSponsor failed to dispatch SponsorshipCreated for sponsorship %s: %s", $sponsorship->getId(), $e->getMessage()));
+            }
+        }
+
+        foreach ($updated_sponsorships as $sponsorship) {
+            Log::debug(sprintf(
+                "SummitSponsorService::updateSponsor dispatching SponsorshipUpdated for sponsorship %s type %s sponsor %s",
+                $sponsorship->getId(),
+                $sponsorship->getType()->getId(),
+                $sponsor_id
+            ));
+            try {
+                PublishSponsorServiceDomainEventsJob::dispatch(
+                    SummitSponsorshipCreatedEventDTO::fromSponsorship($sponsorship)->serialize(),
+                    SponsorDomainEvents::SponsorshipUpdated);
+            } catch (\Exception $e) {
+                Log::error(sprintf("SummitSponsorService::updateSponsor failed to dispatch SponsorshipUpdated for sponsorship %s: %s", $sponsorship->getId(), $e->getMessage()));
+            }
+        }
+
+        return $sponsor;
     }
 
     /**

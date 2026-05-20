@@ -115,9 +115,7 @@ final class SummitSponsorService
      */
     public function addSponsor(Summit $summit, array $payload): Sponsor
     {
-        $new_sponsorships = [];
-
-        $sponsor = $this->tx_service->transaction(function () use ($summit, $payload, &$new_sponsorships) {
+        [$sponsor, $new_sponsorships] = $this->tx_service->transaction(function () use ($summit, $payload) {
             $company_id = intval($payload['company_id']);
             $featured_event_id = isset($payload['featured_event_id']) ? intval($payload['featured_event_id']) : 0;
 
@@ -143,6 +141,7 @@ final class SummitSponsorService
             }
 
             $sponsor = SponsorFactory::build($payload);
+            $new_sponsorships = [];
 
             if(isset($payload['sponsorship_id'])) {
                 $type_id = intval($payload['sponsorship_id']);
@@ -172,7 +171,7 @@ final class SummitSponsorService
 
             $summit->addSummitSponsor($sponsor);
 
-            return $sponsor;
+            return [$sponsor, $new_sponsorships];
         });
 
         PublishSponsorServiceDomainEventsJob::dispatch(
@@ -204,10 +203,7 @@ final class SummitSponsorService
      */
     public function updateSponsor(Summit $summit, int $sponsor_id, array $payload): Sponsor
     {
-        $added_sponsorships = [];
-        $removed_sponsorships = [];
-
-        $sponsor = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload, &$added_sponsorships, &$removed_sponsorships) {
+        [$sponsor, $added_sponsorships, $removed_sponsorships] = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $payload) {
             Log::debug
             (
                 sprintf
@@ -252,6 +248,9 @@ final class SummitSponsorService
                     $payload['featured_event'] = $featured_event;
                 }
             }
+
+            $added_sponsorships = [];
+            $removed_sponsorships = [];
 
             if(isset($payload['sponsorship_id'])) {
                 $type_id = intval($payload['sponsorship_id']);
@@ -359,7 +358,7 @@ final class SummitSponsorService
              SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
                 SponsorDomainEvents::SponsorUpdated);
 
-            return $sponsor;
+            return [$sponsor, $added_sponsorships, $removed_sponsorships];
         });
 
         foreach ($removed_sponsorships as $sponsorship) {

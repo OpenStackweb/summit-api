@@ -675,16 +675,8 @@ SQL,
 
         $query = $this->applyExtraFilters($query);
 
-        if(!is_null($order)){
-            $order->apply2Query($query, $this->getOrderMappings($filter));
-        }
-
-        $shouldPerformRandomOrderingByPage = false;
         if (!is_null($order)) {
-            if ($order->hasOrder("page_random")) {
-                $shouldPerformRandomOrderingByPage = true;
-                $order->removeOrder("page_random");
-            }
+            $order->removeOrder("page_random");
             $order->apply2Query($query, $this->getOrderMappings());
             if (!$order->hasOrder('id')) {
                 $query = $query->addOrderBy("e.id", 'ASC');
@@ -714,6 +706,8 @@ SQL,
 
         $start = time();
         Log::debug("DoctrineSummitEventRepository::getAllByPage");
+        $shuffleResults = !is_null($order) && $order->hasOrder("page_random");
+        if ($shuffleResults) $order->removeOrder("page_random");
         $total = $this->getFastCount($filter, $order);
         $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
         Log::debug("DoctrineSummitEventRepository::getAllByPage ids", ['ids' => $ids]);
@@ -749,6 +743,8 @@ SQL,
         foreach ($ids as $id) {
             if (isset($byId[$id])) $data[] = $byId[$id];
         }
+
+        if ($shuffleResults) shuffle($data);
 
         $end = time() - $start;
         Log::debug("DoctrineSummitEventRepository::getAllByPage", ['seconds'=>$end]);

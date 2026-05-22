@@ -2957,6 +2957,66 @@
                 ]
             }
         },
+        "/api/v1/members/external/{external_id}": {
+            "get": {
+                "tags": [
+                    "Members"
+                ],
+                "summary": "Get member by external Id",
+                "description": "Returns a member profile by External Id",
+                "operationId": "getMemberByIdExternalId",
+                "parameters": [
+                    {
+                        "name": "external_id",
+                        "in": "path",
+                        "description": "Member External ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "expand",
+                        "in": "query",
+                        "description": "Expand relationships",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Member"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Member not found"
+                    }
+                },
+                "security": [
+                    {
+                        "members_oauth2": [
+                            "http://localhost/members/read"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators"
+                ]
+            }
+        },
         "/api/v1/members/me/affiliations/{affiliation_id}": {
             "put": {
                 "tags": [
@@ -40432,6 +40492,56 @@
                     "super-admins",
                     "administrators",
                     "summit-front-end-administrators"
+                ]
+            }
+        },
+        "/api/v1/summits/{id}/promo-codes/all/discover": {
+            "get": {
+                "tags": [
+                    "Promo Codes"
+                ],
+                "summary": "Discover qualifying promo codes for the current user",
+                "description": "Returns domain-authorized promo codes (matched by email domain) and existing email-linked promo codes (member/speaker, matched by associated email) for the current user",
+                "operationId": "discoverPromoCodesBySummit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "expand",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Summit not found"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_promo_codes_oauth2": [
+                            "http://localhost/summits/read",
+                            "http://localhost/summits/read/all"
+                        ]
+                    }
                 ]
             }
         },
@@ -78762,6 +78872,10 @@
                         "description": "Attendee QR code",
                         "type": "string"
                     },
+                    "sponsor_id": {
+                        "description": "Current Summit Sponsor ID (Multiple sponsors per summit)",
+                        "type": "integer"
+                    },
                     "scan_date": {
                         "description": "Scan date (Unix timestamp)",
                         "type": "integer"
@@ -83055,7 +83169,8 @@
                         "enum": [
                             "All",
                             "WithInvitation",
-                            "WithoutInvitation"
+                            "WithoutInvitation",
+                            "WithPromoCode"
                         ],
                         "example": "All"
                     },
@@ -83127,7 +83242,8 @@
                         "enum": [
                             "All",
                             "WithInvitation",
-                            "WithoutInvitation"
+                            "WithoutInvitation",
+                            "WithPromoCode"
                         ],
                         "example": "All"
                     },

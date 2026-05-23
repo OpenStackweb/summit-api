@@ -73,13 +73,22 @@ class QueryTimingStatement extends AbstractStatementMiddleware
         $this->sql = $sql;
     }
 
+    private array $boundParams = [];
+
+    public function bindValue($param, $value, $type = \Doctrine\DBAL\ParameterType::STRING): bool
+    {
+        $this->boundParams[$param] = $value;
+        return parent::bindValue($param, $value, $type);
+    }
+
     public function execute($params = null): DBALResult
     {
         $start = microtime(true);
         try {
             return parent::execute($params);
         } finally {
-            QueryTimingCollector::record($start, $this->sql);
+            $effective = $params ?? $this->boundParams;
+            QueryTimingCollector::record($start, $this->sql, is_array($effective) ? $effective : null);
         }
     }
 }

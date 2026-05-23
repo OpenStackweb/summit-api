@@ -66,6 +66,12 @@ class ServerTimingDoctrine
                     'sample'  => mb_substr($row['sample'], 0, 240),
                 ]);
             }
+            // Dump Member query params so we can see which IDs are being loaded
+            // and correlate to the code path (created_by, updated_by, speaker.member, ...).
+            $memberQueries = \App\Http\Middleware\Doctrine\QueryTimingCollector::$memberQueries;
+            if (!empty($memberQueries)) {
+                Log::warning('member queries', ['count' => count($memberQueries), 'params' => $memberQueries]);
+            }
         }
 
         return $response;

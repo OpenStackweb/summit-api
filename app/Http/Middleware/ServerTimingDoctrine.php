@@ -88,15 +88,32 @@ class ServerTimingDoctrine
             $response = $next($request);
         }
 
-        $totalMs = (microtime(true) - $start) * 1000.0;
+        $end = microtime(true);
+        $totalMs = ($end - $start) * 1000.0;
         $bootMs  = defined('LARAVEL_START') ? max(($start - LARAVEL_START) * 1000.0, 0.0) : 0.0;
         $appMs   = max($totalMs - $dbMs, 0.0);
-        $dbMs = Session::has("db_time") ? (float) Session::get("db_time") : $dbMs;
-        $transformMs = Session::has("transform_time") ? (float) Session::get("transform_time") : 0.0;
-        $encodeMs = Session::has("encode_time") ? (float) Session::get("encode_time") : 0.0;
+
+        // Read controller-level timing markers (set by the controller method).
+        // If the controller didn't set them, these phases are reported as 0.
+        $cStart     = Session::has("timing.controller_start")  ? (float) Session::get("timing.controller_start")  : null;
+        $cEnd       = Session::has("timing.controller_end")    ? (float) Session::get("timing.controller_end")    : null;
+        $sStart     = Session::has("timing.serializer_start")  ? (float) Session::get("timing.serializer_start")  : null;
+        $sEnd       = Session::has("timing.serializer_end")    ? (float) Session::get("timing.serializer_end")    : null;
+
+        $preMs        = ($cStart !== null) ? max(($cStart - $start) * 1000.0, 0.0) : 0.0;
+        $controllerMs = ($cStart !== null && $cEnd !== null) ? max(($cEnd - $cStart) * 1000.0, 0.0) : 0.0;
+        $serializerMs = ($sStart !== null && $sEnd !== null) ? max(($sEnd - $sStart) * 1000.0, 0.0) : 0.0;
+        $postMs       = ($cEnd !== null) ? max(($end - $cEnd) * 1000.0, 0.0) : 0.0;
+
+        // Clear so they don't leak into a recycled worker's next request.
+        Session::forget(['timing.controller_start','timing.controller_end','timing.serializer_start','timing.serializer_end']);
+
         $response->headers->set('Server-Timing',
-            sprintf('boot;dur=%.1f,db;dur=%.1f,transform;dur=%.1f,encode;dur=%.1f,app;dur=%.1f,total;dur=%.1f',
-                $bootMs,$dbMs,$transformMs,$encodeMs,$appMs,$totalMs));
+            sprintf(
+                'boot;dur=%.1f,pre;dur=%.1f,controller;dur=%.1f,db;dur=%.1f,serializer;dur=%.1f,post;dur=%.1f,app;dur=%.1f,total;dur=%.1f',
+                $bootMs, $preMs, $controllerMs, $dbMs, $serializerMs, $postMs, $appMs, $totalMs
+            )
+        );
         $response->headers->set('Timing-Allow-Origin', '*');
 
         return $response;

@@ -104,11 +104,14 @@ class PresentationSerializer extends SummitEventSerializer
         $presentation = $this->object;
         if(!$presentation instanceof Presentation) return [];
 
+        // Include last_edited timestamp so a presentation update naturally busts the cache
+        // without needing an explicit Cache::forget — the old key just ages out via TTL.
         $key =
             sprintf
             (
-                "public_presentation_%s_%s_%s_%s",
+                "public_presentation_%s_%s_%s_%s_%s",
                 $presentation->getId(),
+                $presentation->getLastEditedUTC()?->getTimestamp() ?? 0,
                 $expand ?? "",
                 implode(",",$fields),
                 implode(",", $relations)

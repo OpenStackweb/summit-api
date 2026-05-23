@@ -268,9 +268,11 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null){
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null, array $expands = []){
 
-        $query  = $this->getEntityManager()
+        $em = $this->getEntityManager();
+
+        $query  = $em
             ->createQueryBuilder()
             ->select("e")
             ->from($this->getBaseEntity(), "e");
@@ -289,6 +291,18 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             $order->apply2Query($query, $this->getOrderMappings($filter));
         }
 
+        // Fetch-join requested toOne associations into the hydration query
+        if (!empty($expands)) {
+            $query = $this->addExpandFetchJoins(
+                $em,
+                $query,
+                $expands,
+                'e',
+                $this->getBaseEntity(),
+                static::getExpandFieldMap()
+            );
+        }
+
         $query= $query
             ->setFirstResult($paging_info->getOffset())
             ->setMaxResults($paging_info->getPerPage());
@@ -300,6 +314,17 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
         foreach($paginator as $entity)
             array_push($data, $entity);
 
+        // Batch-load toMany collections (level 1) and nested relations (level 2+)
+        if (!empty($expands) && !empty($data)) {
+            $this->batchLoadExpandedRelations(
+                $em,
+                $data,
+                $expands,
+                $this->getBaseEntity(),
+                static::getExpandFieldMap()
+            );
+        }
+
         return new PagingResponse
         (
             $total,
@@ -308,6 +333,11 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
             $paging_info->getLastPage($total),
             $data
         );
+    }
+
+    protected static function getExpandFieldMap(): array
+    {
+        return [];
     }
 
     /**

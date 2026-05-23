@@ -63,7 +63,7 @@ interface IBaseRepository
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null, array $expands = []);
 
     /**
      * @param PagingInfo $paging_info

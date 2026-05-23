@@ -22,7 +22,6 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Illuminate\Support\Facades\Log;
 use models\main\Tag;
-use models\summit\IOrderConstants;
 use models\summit\ISummitCategoryChangeStatus;
 use models\summit\ISummitEventRepository;
 use models\summit\Presentation;

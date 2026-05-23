@@ -750,7 +750,7 @@ SQL,
      * @return mixed|PagingResponse
      * @throws \Doctrine\DBAL\Exception
      */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null, array $expands = [])
     {
 
         $start = time();

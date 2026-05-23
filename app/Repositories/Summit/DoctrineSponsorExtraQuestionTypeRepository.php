@@ -87,7 +87,7 @@ final class DoctrineSponsorExtraQuestionTypeRepository
      * @param Order|null $order
      * @return PagingResponse
      */
-    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): PagingResponse
+    public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null, array $expands = []): PagingResponse
     {
         return $this->getParametrizedAllByPage(function () {
             return $this->getEntityManager()->createQueryBuilder()

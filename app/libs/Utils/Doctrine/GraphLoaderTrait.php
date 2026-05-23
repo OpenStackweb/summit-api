@@ -330,13 +330,17 @@ trait GraphLoaderTrait
             // but does not always mark them as initialized, so subsequent iteration still
             // fires a per-entity SELECT. Force-initialize each collection now that we know
             // all its elements for these root IDs have been loaded into the UnitOfWork.
-            // Use $em->find() — if the entity is already in the identity map (it will be,
-            // since the main hydration query ran first) this costs zero DB queries.
+            // tryGetById() reads the UnitOfWork identity map with zero DB queries.
+            // Key details: second arg must be the root entity class name string (not
+            // ClassMetadata), and the id must be a scalar — Doctrine hashes it with
+            // implode(' ', (array)$id), so passing the scalar directly is correct.
             $meta = $em->getClassMetadata($entityClass);
             $reflField = $meta->reflFields[$collection] ?? null;
             if ($reflField) {
+                $uow = $em->getUnitOfWork();
+                $rootEntityName = $meta->rootEntityName;
                 foreach ($rootIds as $id) {
-                    $entity = $em->find($entityClass, $id);
+                    $entity = $uow->tryGetById($id, $rootEntityName);
                     if (!$entity) continue;
                     $coll = $reflField->getValue($entity);
                     if ($coll instanceof \Doctrine\ORM\PersistentCollection && !$coll->isInitialized()) {

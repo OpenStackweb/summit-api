@@ -633,7 +633,7 @@ Route::group(array('prefix' => 'summits'), function () {
         // events
         Route::group(array('prefix' => 'events'), function () {
 
-            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEvents']);
+            Route::get('', ['middleware' => ['auth.user', 'server.timing.doctrine'], 'uses' => 'OAuth2SummitEventsApiController@getEvents']);
 
             Route::group(['prefix' => 'csv'], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEventsCSV']);

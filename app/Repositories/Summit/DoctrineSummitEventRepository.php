@@ -793,8 +793,16 @@ SQL,
             // that Presentation::getSpeakers() → getSpeaker() returns an initialized entity
             // instead of triggering one lazy load per speaker.
             $batchExpands = $expands;
-            if (in_array('speakers', $batchExpands) && !in_array('speakers.speaker', $batchExpands)) {
-                $batchExpands[] = 'speakers.speaker';
+            if (in_array('speakers', $batchExpands)) {
+                // Pre-load the speaker entity on each assignment so getSpeaker() hits
+                // the identity map instead of lazy-loading per assignment.
+                if (!in_array('speakers.speaker', $batchExpands))
+                    $batchExpands[] = 'speakers.speaker';
+                // Pre-load the Member on each PresentationSpeaker so that
+                // getFirstName()/getLastName() fallback to member->getXxx() doesn't
+                // trigger one lazy-load per speaker when the speaker's own field is empty.
+                if (!in_array('speakers.speaker.member', $batchExpands))
+                    $batchExpands[] = 'speakers.speaker.member';
             }
             $this->batchLoadExpandedRelations(
                 $em,

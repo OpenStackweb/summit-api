@@ -325,6 +325,24 @@ trait GraphLoaderTrait
             $em->createQuery($dql)
                 ->setParameter('ids', $rootIds)
                 ->getResult();
+
+            // Doctrine's ObjectHydrator populates EXTRA_LAZY collections during hydration
+            // but does not always mark them as initialized, so subsequent iteration still
+            // fires a per-entity SELECT. Force-initialize each collection now that we know
+            // all its elements for these root IDs have been loaded into the UnitOfWork.
+            $meta = $em->getClassMetadata($entityClass);
+            $reflField = $meta->reflFields[$collection] ?? null;
+            if ($reflField) {
+                $uow = $em->getUnitOfWork();
+                foreach ($rootIds as $id) {
+                    $entity = $uow->tryGetById([$meta->getSingleIdentifierFieldName() => $id], $meta);
+                    if (!$entity) continue;
+                    $coll = $reflField->getValue($entity);
+                    if ($coll instanceof \Doctrine\ORM\PersistentCollection && !$coll->isInitialized()) {
+                        $coll->setInitialized(true);
+                    }
+                }
+            }
         } catch (\Exception $ex) {
             Log::warning("GraphLoaderTrait::batchHydrateCollections failed for {$entityClass}::{$collection}", [
                 'error' => $ex->getMessage(),

@@ -176,20 +176,20 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 $strategy = new RetrieveAllSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
                 $expand = SerializerUtils::getExpand();
                 $response = $strategy->getEvents(['summit_id' => $summit_id, 'expand' => $expand]);
-                return $this->ok
+                $t0 = microtime(true);
+                $data = $response->toArray
                 (
-                    $response->toArray
-                    (
-                        $expand,
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations(),
-                        [
-                            'current_user' => $current_user,
-                            'use_cache'    => true,
-                        ],
-                        $this->getSerializerType()
-                    )
+                    $expand,
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    [
+                        'current_user' => $current_user,
+                        'use_cache'    => true,
+                    ],
+                    $this->getSerializerType()
                 );
+                Log::debug('OAuth2SummitEventsApiController::getEvents serializer', ['ms' => round((microtime(true) - $t0) * 1000)]);
+                return $this->ok($data);
             });
 
         });

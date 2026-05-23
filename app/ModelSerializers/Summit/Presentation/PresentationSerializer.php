@@ -106,12 +106,17 @@ class PresentationSerializer extends SummitEventSerializer
 
         // Include last_edited timestamp so a presentation update naturally busts the cache
         // without needing an explicit Cache::forget — the old key just ages out via TTL.
+        // Include media_uploads serializer type so different user roles (Public/Admin) get
+        // their own cache entry — this lets us cache the full serialized media_uploads array
+        // and skip per-cache-hit re-serialization, which was the dominant cost on the cache-hit
+        // path for presentations with many media uploads.
         $key =
             sprintf
             (
-                "public_presentation_%s_%s_%s_%s_%s",
+                "public_presentation_%s_%s_%s_%s_%s_%s",
                 $presentation->getId(),
                 $presentation->getLastEditedUTC()?->getTimestamp() ?? 0,
+                $this->getMediaUploadsSerializerType(),
                 $expand ?? "",
                 implode(",",$fields),
                 implode(",", $relations)
@@ -122,31 +127,6 @@ class PresentationSerializer extends SummitEventSerializer
         if($use_cache && Cache::has($key)){
             $values = json_decode(Cache::get($key), true);
             Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
-            if (!empty($expand)) {
-                foreach (explode(',', $expand) as $relation) {
-                    $relation = trim($relation);
-                    switch ($relation) {
-                        case 'media_uploads':
-                        {
-                            $media_uploads = [];
-
-                            foreach ($presentation->getMediaUploads() as $mediaUpload) {
-                                $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
-                                (
-                                    $mediaUpload, $this->getMediaUploadsSerializerType()
-                                )->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                );
-                            }
-
-                            $values['media_uploads'] = $media_uploads;
-                        }
-                    }
-                }
-            }
             return $values;
         }
 

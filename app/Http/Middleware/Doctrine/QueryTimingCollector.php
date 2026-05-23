@@ -42,9 +42,13 @@ class QueryTimingCollector
 
             // Capture FROM-Member SELECT queries so we can see exactly which
             // Member IDs are being loaded and from which code path.
-            if (count(self::$memberQueries) < 100 && stripos($sql, 'FROM Member') !== false) {
-                $paramsStr = $params ? '[' . implode(',', array_map(fn($v) => is_scalar($v) ? (string)$v : gettype($v), $params)) . ']' : '';
-                self::$memberQueries[] = $paramsStr ?: 'no-params';
+            // Doctrine wraps identifiers in backticks, so strip them before matching.
+            if (count(self::$memberQueries) < 100) {
+                $stripped = str_replace('`', '', $sql);
+                if (stripos($stripped, 'FROM Member') !== false) {
+                    $paramsStr = $params ? '[' . implode(',', array_map(fn($v) => is_scalar($v) ? (string)$v : gettype($v), $params)) . ']' : '';
+                    self::$memberQueries[] = $paramsStr ?: 'no-params';
+                }
             }
         }
     }

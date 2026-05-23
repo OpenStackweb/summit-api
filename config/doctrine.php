@@ -84,6 +84,7 @@ return [
              */
             'middlewares' => array_filter([
                 env('DOCTRINE_LOGGING', false) ? Doctrine\DBAL\Logging\Middleware::class : null,
+                \App\Http\Middleware\Doctrine\QueryTimingMiddleware::class,
             ]),
         ],
         'model' => [
@@ -150,6 +151,7 @@ return [
              */
             'middlewares' => array_filter([
                 env('DOCTRINE_LOGGING', false) ? Doctrine\DBAL\Logging\Middleware::class : null,
+                \App\Http\Middleware\Doctrine\QueryTimingMiddleware::class,
             ]),
         ],
         'model_write' => [
@@ -216,6 +218,7 @@ return [
              */
             'middlewares' => array_filter([
                 env('DOCTRINE_LOGGING', false) ? Doctrine\DBAL\Logging\Middleware::class : null,
+                \App\Http\Middleware\Doctrine\QueryTimingMiddleware::class,
             ]),
         ]
     ],

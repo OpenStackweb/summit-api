@@ -789,25 +789,10 @@ SQL,
         // Batch-load toMany collections (level 1) and nested relations (level 2+)
         if (!empty($expands) && !empty($data)) {
             $t0 = microtime(true);
-            // When speakers are requested, also pre-load the speaker FK on each assignment so
-            // that Presentation::getSpeakers() → getSpeaker() returns an initialized entity
-            // instead of triggering one lazy load per speaker.
-            $batchExpands = $expands;
-            if (in_array('speakers', $batchExpands)) {
-                // Pre-load the speaker entity on each assignment so getSpeaker() hits
-                // the identity map instead of lazy-loading per assignment.
-                if (!in_array('speakers.speaker', $batchExpands))
-                    $batchExpands[] = 'speakers.speaker';
-                // Pre-load the Member on each PresentationSpeaker so that
-                // getFirstName()/getLastName() fallback to member->getXxx() doesn't
-                // trigger one lazy-load per speaker when the speaker's own field is empty.
-                if (!in_array('speakers.speaker.member', $batchExpands))
-                    $batchExpands[] = 'speakers.speaker.member';
-            }
             $this->batchLoadExpandedRelations(
                 $em,
                 $data,
-                $batchExpands,
+                $expands,
                 SummitEvent::class,
                 self::$expandFieldMap,
                 [
@@ -819,6 +804,35 @@ SQL,
                 ]
             );
             Log::debug("DoctrineSummitEventRepository::getAllByPage batchLoad", ['ms' => round((microtime(true) - $t0) * 1000)]);
+
+            // Pre-load PresentationSpeaker + Member in a single DQL query when speakers
+            // are requested. The generic nested-expand recursion can't do this for the
+            // speakers path because its resolver ($assignment->getSpeaker()) short-circuits
+            // before the toOne batch-load step. Without this, $assignment->getSpeaker()
+            // fires one lazy-load per assignment (EXTRA_LAZY ManyToOne), and the speaker
+            // serializer's getFirstName()/getLastName() falls back to $this->member->getX()
+            // for another lazy-load per speaker. Loading all three (assignment.speaker
+            // + speaker.member) in one query collapses those N+1 chains into one query.
+            if (in_array('speakers', $expands)) {
+                $t1 = microtime(true);
+                $presIds = [];
+                foreach ($data as $event) {
+                    if ($event instanceof Presentation) $presIds[] = $event->getId();
+                }
+                if (!empty($presIds)) {
+                    try {
+                        $em->createQuery(
+                            'SELECT s, m FROM ' . \App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment::class . ' a ' .
+                            'JOIN a.speaker s ' .
+                            'LEFT JOIN s.member m ' .
+                            'WHERE a.presentation IN (:ids)'
+                        )->setParameter('ids', $presIds)->getResult();
+                    } catch (\Exception $ex) {
+                        Log::warning("DoctrineSummitEventRepository::getAllByPage speakers+members preload failed", ['error' => $ex->getMessage()]);
+                    }
+                }
+                Log::debug("DoctrineSummitEventRepository::getAllByPage speakerMemberPreload", ['ms' => round((microtime(true) - $t1) * 1000)]);
+            }
         }
 
         if ($shuffleResults) shuffle($data);

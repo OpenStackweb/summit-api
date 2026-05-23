@@ -18,7 +18,15 @@ class QueryTimingCollector
     /** @var array<string, array{count:int, totalMs:float, sample:string}> */
     public static array $patterns = [];
 
-    public static function record(float $startedAt, ?string $sql = null): void
+    /**
+     * Sample of full SQL strings (with their bound values where possible).
+     * Capped at a reasonable size to avoid memory issues.
+     *
+     * @var array<int, string>
+     */
+    public static array $memberQueries = [];
+
+    public static function record(float $startedAt, ?string $sql = null, ?array $params = null): void
     {
         $ms = (microtime(true) - $startedAt) * 1000.0;
         self::$totalMs += $ms;
@@ -31,6 +39,13 @@ class QueryTimingCollector
             }
             self::$patterns[$pattern]['count']++;
             self::$patterns[$pattern]['totalMs'] += $ms;
+
+            // Capture FROM-Member SELECT queries so we can see exactly which
+            // Member IDs are being loaded and from which code path.
+            if (count(self::$memberQueries) < 100 && stripos($sql, 'FROM Member') !== false) {
+                $paramsStr = $params ? '[' . implode(',', array_map(fn($v) => is_scalar($v) ? (string)$v : gettype($v), $params)) . ']' : '';
+                self::$memberQueries[] = $paramsStr ?: 'no-params';
+            }
         }
     }
 
@@ -39,6 +54,7 @@ class QueryTimingCollector
         self::$totalMs = 0.0;
         self::$count = 0;
         self::$patterns = [];
+        self::$memberQueries = [];
     }
 
     /**

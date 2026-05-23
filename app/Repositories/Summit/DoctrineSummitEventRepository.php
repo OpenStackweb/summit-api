@@ -740,10 +740,9 @@ SQL,
         $em = $this->getEntityManager();
 
         $query = $em->createQueryBuilder()
-            ->select('e, p , et, et2')
+            ->select('e, p, et')
             ->from($this->getBaseEntity(), "e")
             ->innerJoin("e.type", "et")->addSelect("et")
-            ->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id')->addSelect("et2")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')->addSelect("p")
             ->where('e.id IN (:ids)')
             ->setParameter('ids', $ids);

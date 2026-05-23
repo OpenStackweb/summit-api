@@ -758,6 +758,44 @@ SQL,
         if (!empty($presentationIds)) {
             try {
                 $em = $this->getEntityManager();
+
+                // Batch-preload SummitSelectedPresentation rows for all presentations
+                // on this page. getSelectionStatus() on each Presentation then uses the
+                // preloaded data instead of firing its own DQL per presentation.
+                // Filters match getSelectionStatus()'s constants exactly.
+                try {
+                    $selections = $em->createQuery(
+                        'SELECT sp, p FROM ' . SummitSelectedPresentation::class . ' sp ' .
+                        'JOIN sp.list l ' .
+                        'JOIN sp.presentation p ' .
+                        'WHERE p.id IN (:ids) ' .
+                        'AND sp.collection = :collection ' .
+                        'AND l.list_type = :list_type ' .
+                        'AND l.list_class = :list_class'
+                    )
+                    ->setParameter('ids', $presentationIds)
+                    ->setParameter('collection', SummitSelectedPresentation::CollectionSelected)
+                    ->setParameter('list_type', SummitSelectedPresentationList::Group)
+                    ->setParameter('list_class', SummitSelectedPresentationList::Session)
+                    ->getResult();
+
+                    // Group by presentation id and feed each Presentation entity.
+                    $byPresentation = [];
+                    foreach ($selections as $sp) {
+                        $pid = $sp->getPresentation()->getId();
+                        $byPresentation[$pid][] = $sp;
+                    }
+                    foreach ($data as $event) {
+                        if ($event instanceof Presentation && method_exists($event, 'setPreloadedSessionSelections')) {
+                            $event->setPreloadedSessionSelections($byPresentation[$event->getId()] ?? []);
+                        }
+                    }
+                } catch (\Exception $ex) {
+                    Log::warning('DoctrineSummitEventRepository::getAllByPage selection-status preload failed', [
+                        'error' => $ex->getMessage(),
+                    ]);
+                }
+
                 $assignments = $em->createQuery(
                     'SELECT a, s, m FROM ' . \App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment::class . ' a ' .
                     'JOIN a.speaker s ' .

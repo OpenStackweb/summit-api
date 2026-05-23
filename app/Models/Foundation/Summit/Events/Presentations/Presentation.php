@@ -950,20 +950,50 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      * @return string
      * @throws ValidationException
      */
+    /**
+     * Request-scoped preload cache populated by DoctrineSummitEventRepository::getAllByPage
+     * via setPreloadedSessionSelections(). When set, getSelectionStatus() uses these
+     * pre-fetched rows instead of firing its own DQL — eliminates one query per
+     * Presentation on /events listings. Doctrine ignores the unannotated property.
+     *
+     * @var SummitSelectedPresentation[]|null
+     */
+    private ?array $preloadedSessionSelections = null;
+
+    /** @var string|null memoized result of getSelectionStatus() within a request */
+    private ?string $memoizedSelectionStatus = null;
+
+    /**
+     * @param SummitSelectedPresentation[] $selections rows already filtered for
+     *        (collection=Selected, list_type=Group, list_class=Session)
+     */
+    public function setPreloadedSessionSelections(array $selections): void
+    {
+        $this->preloadedSessionSelections = $selections;
+        $this->memoizedSelectionStatus = null;
+    }
+
     public function getSelectionStatus()
     {
+        if ($this->memoizedSelectionStatus !== null) {
+            return $this->memoizedSelectionStatus;
+        }
 
-        $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp
-            JOIN sp.list l
-            JOIN sp.presentation p
-            WHERE p.id = :presentation_id
-            AND sp.collection = :collection
-            AND l.list_type = :list_type
-            AND l.list_class = :list_class")
-            ->setParameter('presentation_id', $this->id)
-            ->setParameter('collection', SummitSelectedPresentation::CollectionSelected)
-            ->setParameter('list_type', SummitSelectedPresentationList::Group)
-            ->setParameter('list_class', SummitSelectedPresentationList::Session)->getResult();
+        if ($this->preloadedSessionSelections !== null) {
+            $session_sel = $this->preloadedSessionSelections;
+        } else {
+            $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp
+                JOIN sp.list l
+                JOIN sp.presentation p
+                WHERE p.id = :presentation_id
+                AND sp.collection = :collection
+                AND l.list_type = :list_type
+                AND l.list_class = :list_class")
+                ->setParameter('presentation_id', $this->id)
+                ->setParameter('collection', SummitSelectedPresentation::CollectionSelected)
+                ->setParameter('list_type', SummitSelectedPresentationList::Group)
+                ->setParameter('list_class', SummitSelectedPresentationList::Session)->getResult();
+        }
 
         // Error out if a talk has more than one selection
         if (count($session_sel) > 1) {
@@ -971,20 +1001,20 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         }
 
         if ($this->isPublished()) {
-            return Presentation::SelectionStatus_Accepted;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Accepted;
         }
 
         // from here we need to be sure that the selection period is going on or it is over
 
         $selection_plan = $this->getSelectionPlan();
         if (is_null($selection_plan)) {
-            return Presentation::SelectionStatus_Pending;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Pending;
         }
         if (!$selection_plan->hasSelectionPeriodDefined()) {
-            return Presentation::SelectionStatus_Pending;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Pending;
         }
         if ($selection_plan->isSelectionNotYetStarted()) {
-            return Presentation::SelectionStatus_Pending;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Pending;
         }
 
         $selection = null;
@@ -993,14 +1023,14 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         }
 
         if (!$selection) {
-            return Presentation::SelectionStatus_Unaccepted;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Unaccepted;
         }
 
         if ($selection->getOrder() <= $this->getCategory()->getSessionCount()) {
-            return Presentation::SelectionStatus_Accepted;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Accepted;
         }
 
-        return Presentation::SelectionStatus_Alternate;
+        return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Alternate;
     }
 
     public function getRank(): ?int

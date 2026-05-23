@@ -789,10 +789,17 @@ SQL,
         // Batch-load toMany collections (level 1) and nested relations (level 2+)
         if (!empty($expands) && !empty($data)) {
             $t0 = microtime(true);
+            // When speakers are requested, also pre-load the speaker FK on each assignment so
+            // that Presentation::getSpeakers() → getSpeaker() returns an initialized entity
+            // instead of triggering one lazy load per speaker.
+            $batchExpands = $expands;
+            if (in_array('speakers', $batchExpands) && !in_array('speakers.speaker', $batchExpands)) {
+                $batchExpands[] = 'speakers.speaker';
+            }
             $this->batchLoadExpandedRelations(
                 $em,
                 $data,
-                $expands,
+                $batchExpands,
                 SummitEvent::class,
                 self::$expandFieldMap,
                 [

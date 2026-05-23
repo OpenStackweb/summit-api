@@ -412,12 +412,12 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function getSpeakers()
     {
-        $criteria = Criteria::create();
-        $criteria->orderBy(['order' => 'ASC']);
-        $res = $this->speakers->matching($criteria);
-        return $res->map(function ($entity) {
-            return $entity->getSpeaker();
-        });
+        // toArray() uses in-memory data when the collection is already initialized (e.g. by
+        // batchLoadExpandedRelations), avoiding the per-call DB round-trip that EXTRA_LAZY
+        // + matching() always issues regardless of collection state.
+        $items = $this->speakers->toArray();
+        usort($items, fn($a, $b) => $a->getOrder() <=> $b->getOrder());
+        return new ArrayCollection(array_map(fn($e) => $e->getSpeaker(), $items));
     }
 
     /**

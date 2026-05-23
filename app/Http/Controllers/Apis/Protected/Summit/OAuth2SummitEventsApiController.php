@@ -184,8 +184,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                         SerializerUtils::getFields(),
                         SerializerUtils::getRelations(),
                         [
-                            'current_user' => $current_user
-                    ],
+                            'current_user' => $current_user,
+                            'use_cache'    => true,
+                        ],
                         $this->getSerializerType()
                     )
                 );

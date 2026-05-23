@@ -725,17 +725,11 @@ SQL,
     {
 
         $start = microtime(true);
-        Log::debug("DoctrineSummitEventRepository::getAllByPage");
         $shuffleResults = !is_null($order) && $order->hasOrder("page_random");
         if ($shuffleResults) $order->removeOrder("page_random");
 
-        $t0 = microtime(true);
         $total = $this->getFastCount($filter, $order);
-        Log::debug("DoctrineSummitEventRepository::getAllByPage count", ['ms' => round((microtime(true) - $t0) * 1000), 'total' => $total]);
-
-        $t0 = microtime(true);
         $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
-        Log::debug("DoctrineSummitEventRepository::getAllByPage ids", ['ms' => round((microtime(true) - $t0) * 1000), 'ids' => $ids]);
 
         $em = $this->getEntityManager();
 
@@ -761,9 +755,7 @@ SQL,
             );
         }
 
-        $t0 = microtime(true);
         $rows = $query->getQuery()->getResult();
-        Log::debug("DoctrineSummitEventRepository::getAllByPage hydration", ['ms' => round((microtime(true) - $t0) * 1000)]);
 
         $byId = [];
         foreach ($rows as $row) {
@@ -788,7 +780,6 @@ SQL,
 
         // Batch-load toMany collections (level 1) and nested relations (level 2+)
         if (!empty($expands) && !empty($data)) {
-            $t0 = microtime(true);
             $this->batchLoadExpandedRelations(
                 $em,
                 $data,
@@ -803,7 +794,6 @@ SQL,
                         : $assignment,
                 ]
             );
-            Log::debug("DoctrineSummitEventRepository::getAllByPage batchLoad", ['ms' => round((microtime(true) - $t0) * 1000)]);
 
             // Pre-load PresentationSpeaker + Member in a single DQL query when speakers
             // are requested. The generic nested-expand recursion can't do this for the
@@ -814,7 +804,6 @@ SQL,
             // for another lazy-load per speaker. Loading all three (assignment.speaker
             // + speaker.member) in one query collapses those N+1 chains into one query.
             if (in_array('speakers', $expands)) {
-                $t1 = microtime(true);
                 $presIds = [];
                 foreach ($data as $event) {
                     if ($event instanceof Presentation) $presIds[] = $event->getId();
@@ -831,14 +820,13 @@ SQL,
                         Log::warning("DoctrineSummitEventRepository::getAllByPage speakers+members preload failed", ['error' => $ex->getMessage()]);
                     }
                 }
-                Log::debug("DoctrineSummitEventRepository::getAllByPage speakerMemberPreload", ['ms' => round((microtime(true) - $t1) * 1000)]);
             }
         }
 
         if ($shuffleResults) shuffle($data);
 
         $end = round((microtime(true) - $start) * 1000);
-        Log::debug("DoctrineSummitEventRepository::getAllByPage total", ['ms' => $end]);
+        Log::debug("DoctrineSummitEventRepository::getAllByPage", ['ms' => $end]);
 
         return new PagingResponse
         (

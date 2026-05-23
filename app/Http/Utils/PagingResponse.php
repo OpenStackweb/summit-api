@@ -111,10 +111,7 @@ final class PagingResponse
         {
             if($i instanceof IEntity)
             {
-                $t0 = microtime(true);
-                $id = method_exists($i, 'getId') ? $i->getId() : null;
                 $i = SerializerRegistry::getInstance()->getSerializer($i, $serializer_type)->serialize($expand, $fields, $relations, $params);
-                \Illuminate\Support\Facades\Log::debug('PagingResponse::toArray item', ['id' => $id, 'ms' => round((microtime(true) - $t0) * 1000)]);
             }
             $items[] = $i;
         }

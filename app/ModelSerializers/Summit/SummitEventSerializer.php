@@ -159,7 +159,6 @@ class SummitEventSerializer extends SilverStripeSerializer
                 implode(",", $relations)
             );
             if (Cache::has($cache_key)) {
-                Log::debug(sprintf("SummitEventSerializer::serialize cache hit for event %s", $event->getId()));
                 return json_decode(Cache::get($cache_key), true);
             }
         }

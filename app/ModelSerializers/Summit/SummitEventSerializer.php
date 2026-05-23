@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SummitEvent;
 
@@ -21,6 +23,8 @@ use models\summit\SummitEvent;
  */
 class SummitEventSerializer extends SilverStripeSerializer
 {
+    const CacheTTL = 1200;
+
 
     protected static $array_mappings = [
         'Title' => 'title:json_string',
@@ -135,6 +139,30 @@ class SummitEventSerializer extends SilverStripeSerializer
     {
         $event = $this->object;
         if (!$event instanceof SummitEvent) return [];
+
+        // Cache opt-in via params. Skipped for PresentationSerializer (and its
+        // subclasses) because PresentationSerializer has its own, more specific
+        // cache at the presentation level. static::class is included in the key
+        // so each SummitEvent subclass (SummitGroupEventSerializer, ...) caches
+        // independently and doesn't collide with siblings.
+        $use_cache = ($params['use_cache'] ?? false)
+            && !($this instanceof PresentationSerializer);
+        $cache_key = null;
+        if ($use_cache) {
+            $cache_key = sprintf(
+                "public_summit_event_%s_%s_%s_%s_%s_%s",
+                static::class,
+                $event->getId(),
+                $event->getLastEditedUTC()?->getTimestamp() ?? 0,
+                $expand ?? "",
+                implode(",", $fields),
+                implode(",", $relations)
+            );
+            if (Cache::has($cache_key)) {
+                Log::debug(sprintf("SummitEventSerializer::serialize cache hit for event %s", $event->getId()));
+                return json_decode(Cache::get($cache_key), true);
+            }
+        }
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
@@ -335,6 +363,10 @@ class SummitEventSerializer extends SilverStripeSerializer
                         break;
                 }
             }
+        }
+
+        if ($use_cache && $cache_key !== null) {
+            Cache::put($cache_key, json_encode($values), self::CacheTTL);
         }
 
         return $values;

@@ -757,12 +757,47 @@ SQL,
         }
         if (!empty($presentationIds)) {
             try {
-                $this->getEntityManager()->createQuery(
+                $em = $this->getEntityManager();
+                $assignments = $em->createQuery(
                     'SELECT a, s, m FROM ' . \App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment::class . ' a ' .
                     'JOIN a.speaker s ' .
                     'LEFT JOIN s.member m ' .
                     'WHERE a.presentation IN (:ids)'
                 )->setParameter('ids', $presentationIds)->getResult();
+
+                // Diagnostic: confirm what was actually loaded.
+                $speakerIds = [];
+                $memberIds  = [];
+                $speakerInitialized = 0;
+                $memberInitialized  = 0;
+                foreach ($assignments as $a) {
+                    if (method_exists($a, 'getSpeaker')) {
+                        $s = $a->getSpeaker();
+                        if ($s) {
+                            $speakerIds[$s->getId()] = true;
+                            if (!($s instanceof \Doctrine\Persistence\Proxy) || $s->__isInitialized()) {
+                                $speakerInitialized++;
+                            }
+                            if (method_exists($s, 'getMember')) {
+                                $m = $s->getMember();
+                                if ($m) {
+                                    $memberIds[$m->getId()] = true;
+                                    if (!($m instanceof \Doctrine\Persistence\Proxy) || $m->__isInitialized()) {
+                                        $memberInitialized++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Log::warning('preload diagnostic', [
+                    'presentationIds'    => count($presentationIds),
+                    'assignmentsLoaded'  => count($assignments),
+                    'uniqueSpeakers'     => count($speakerIds),
+                    'speakersInitialized'=> $speakerInitialized,
+                    'uniqueMembers'      => count($memberIds),
+                    'membersInitialized' => $memberInitialized,
+                ]);
             } catch (\Exception $ex) {
                 Log::warning('DoctrineSummitEventRepository::getAllByPage speaker+member preload failed', [
                     'error' => $ex->getMessage(),

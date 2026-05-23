@@ -1042,11 +1042,28 @@ class Member extends SilverstripeBaseModel
     }
 
     /**
+     * Request-scoped cache for group membership lookups. The current-user
+     * Member instance is shared across the whole request, and the same group
+     * codes are checked many times by serializers (isAdmin, memberCanEdit,
+     * etc.) — typical /events request fires this ~80 times for ~8 unique codes.
+     * Property is unannotated so Doctrine ignores it; resets naturally when
+     * the entity is re-hydrated on a new request.
+     *
+     * @var array<string, bool>
+     */
+    private array $groupMembershipCache = [];
+
+    /**
      * @param string $code
      * @return bool
      */
     public function belongsToGroup(string $code): bool
     {
+        $code = trim($code);
+        if (array_key_exists($code, $this->groupMembershipCache)) {
+            return $this->groupMembershipCache[$code];
+        }
+
         try {
             $sql = <<<SQL
 SELECT COUNT(MemberID)
@@ -1057,15 +1074,15 @@ SQL;
 
             $stmt = $this->prepareRawSQL($sql, [
                 'member_id' => $this->getId(),
-                'code' => trim($code),
+                'code' => $code,
             ]);
             $res = $stmt->executeQuery();
             $res = $res->fetchFirstColumn();
-            return intval($res[0]) > 0;
+            return $this->groupMembershipCache[$code] = (intval($res[0]) > 0);
         } catch (\Exception $ex) {
 
         }
-        return false;
+        return $this->groupMembershipCache[$code] = false;
 
     }
 

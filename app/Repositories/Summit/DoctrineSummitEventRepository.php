@@ -724,14 +724,22 @@ SQL,
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null, array $expands = [])
     {
 
-        $start = time();
+        $start = microtime(true);
         Log::debug("DoctrineSummitEventRepository::getAllByPage");
         $shuffleResults = !is_null($order) && $order->hasOrder("page_random");
         if ($shuffleResults) $order->removeOrder("page_random");
+
+        $t0 = microtime(true);
         $total = $this->getFastCount($filter, $order);
+        Log::debug("DoctrineSummitEventRepository::getAllByPage count", ['ms' => round((microtime(true) - $t0) * 1000), 'total' => $total]);
+
+        $t0 = microtime(true);
         $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
-        Log::debug("DoctrineSummitEventRepository::getAllByPage ids", ['ids' => $ids]);
-        $query = $this->getEntityManager()->createQueryBuilder()
+        Log::debug("DoctrineSummitEventRepository::getAllByPage ids", ['ms' => round((microtime(true) - $t0) * 1000), 'ids' => $ids]);
+
+        $em = $this->getEntityManager();
+
+        $query = $em->createQueryBuilder()
             ->select('e, p , et, et2')
             ->from($this->getBaseEntity(), "e")
             ->innerJoin("e.type", "et")->addSelect("et")
@@ -739,8 +747,6 @@ SQL,
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')->addSelect("p")
             ->where('e.id IN (:ids)')
             ->setParameter('ids', $ids);
-
-        $em = $this->getEntityManager();
 
         // Fetch-join requested toOne associations into the hydration query
         if (!empty($expands)) {
@@ -756,7 +762,10 @@ SQL,
             );
         }
 
+        $t0 = microtime(true);
         $rows = $query->getQuery()->getResult();
+        Log::debug("DoctrineSummitEventRepository::getAllByPage hydration", ['ms' => round((microtime(true) - $t0) * 1000)]);
+
         $byId = [];
         foreach ($rows as $row) {
             $event = $row instanceof SummitEvent
@@ -780,6 +789,7 @@ SQL,
 
         // Batch-load toMany collections (level 1) and nested relations (level 2+)
         if (!empty($expands) && !empty($data)) {
+            $t0 = microtime(true);
             $this->batchLoadExpandedRelations(
                 $em,
                 $data,
@@ -794,12 +804,13 @@ SQL,
                         : $assignment,
                 ]
             );
+            Log::debug("DoctrineSummitEventRepository::getAllByPage batchLoad", ['ms' => round((microtime(true) - $t0) * 1000)]);
         }
 
         if ($shuffleResults) shuffle($data);
 
-        $end = time() - $start;
-        Log::debug("DoctrineSummitEventRepository::getAllByPage", ['seconds'=>$end]);
+        $end = round((microtime(true) - $start) * 1000);
+        Log::debug("DoctrineSummitEventRepository::getAllByPage total", ['ms' => $end]);
 
         return new PagingResponse
         (

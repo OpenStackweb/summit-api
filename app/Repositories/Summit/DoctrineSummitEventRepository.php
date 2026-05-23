@@ -758,7 +758,7 @@ SQL,
         if (!empty($presentationIds)) {
             try {
                 $this->getEntityManager()->createQuery(
-                    'SELECT s, m FROM ' . \App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment::class . ' a ' .
+                    'SELECT a, s, m FROM ' . \App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment::class . ' a ' .
                     'JOIN a.speaker s ' .
                     'LEFT JOIN s.member m ' .
                     'WHERE a.presentation IN (:ids)'

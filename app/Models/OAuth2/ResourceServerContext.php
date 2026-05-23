@@ -160,6 +160,20 @@ final class ResourceServerContext implements IResourceServerContext
     }
 
     /**
+     * Request-scoped cache. The current authenticated user does not change
+     * within a single request, and getCurrentUser() is called many times by
+     * serializers (per-event, per-sub-serializer permission checks). Without
+     * this cache, profiling /events showed the same Member SELECT firing 98+
+     * times via getByExternalId().
+     *
+     * Caches the resolved Member regardless of \$synch_groups / \$update_member_fields
+     * arguments — the side-effects (group sync, event dispatch, field updates)
+     * are idempotent per request and only need to run once.
+     */
+    private ?Member $cachedCurrentUser = null;
+    private bool $cachedCurrentUserResolved = false;
+
+    /**
      * @param bool $synch_groups
      * @param bool $update_member_fields
      * @return Member|null
@@ -167,6 +181,10 @@ final class ResourceServerContext implements IResourceServerContext
      */
     public function getCurrentUser(bool $synch_groups = true, bool $update_member_fields = true): ?Member
     {
+        if ($this->cachedCurrentUserResolved) {
+            return $this->cachedCurrentUser;
+        }
+
         $member = null;
         // try to get by external id
         $user_external_id = $this->getAuthContextVar(IResourceServerContext::UserId);
@@ -176,7 +194,8 @@ final class ResourceServerContext implements IResourceServerContext
         $user_email_verified = boolval($this->getAuthContextVar(IResourceServerContext::UserEmailVerified));
 
         if (is_null($user_external_id)) {
-            return null;
+            $this->cachedCurrentUserResolved = true;
+            return $this->cachedCurrentUser = null;
         }
         // first we check by external id
         $member = $this->tx_service->transaction(function () use ($user_external_id) {
@@ -231,10 +250,11 @@ final class ResourceServerContext implements IResourceServerContext
 
         if (is_null($member)) {
             Log::warning(sprintf("ResourceServerContext::getCurrentUser user not found %s (%s).", $user_external_id, $user_email));
-            return null;
+            $this->cachedCurrentUserResolved = true;
+            return $this->cachedCurrentUser = null;
         }
 
-        return $this->tx_service->transaction(function () use
+        $resolved = $this->tx_service->transaction(function () use
         (
             $member,
             $user_email,
@@ -268,6 +288,9 @@ final class ResourceServerContext implements IResourceServerContext
             MemberAssocSummitOrders::dispatch($member->getId());
             return $synch_groups ? $this->checkGroups($member) : $member;
         });
+
+        $this->cachedCurrentUserResolved = true;
+        return $this->cachedCurrentUser = $resolved;
     }
 
     /**

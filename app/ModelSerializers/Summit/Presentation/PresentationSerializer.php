@@ -124,8 +124,11 @@ class PresentationSerializer extends SummitEventSerializer
 
         $use_cache = $params['use_cache'] ?? false;
 
-        if($use_cache && Cache::has($key)){
-            return json_decode(Cache::get($key), true);
+        if($use_cache){
+            $cached = Cache::get($key);
+            if ($cached !== null) {
+                return json_decode($cached, true);
+            }
         }
 
         $values = parent::serialize($expand, $fields, $relations, $params);

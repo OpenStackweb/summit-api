@@ -170,24 +170,27 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
      */
     public function getEvents($summit_id)
     {
+        \Illuminate\Support\Facades\Session::put('timing.controller_start', microtime(true));
         return $this->processRequest(function () use ($summit_id) {
             $current_user = $this->resource_server_context->getCurrentUser(true);
             return $this->withReplica(function() use ($summit_id, $current_user) {
                 $strategy = new RetrieveAllSummitEventsBySummitStrategy($this->repository, $this->event_repository, $this->resource_server_context);
                 $response = $strategy->getEvents(['summit_id' => $summit_id]);
-                return $this->ok
+                \Illuminate\Support\Facades\Session::put('timing.serializer_start', microtime(true));
+                $data = $response->toArray
                 (
-                    $response->toArray
-                    (
-                        SerializerUtils::getExpand(),
-                        SerializerUtils::getFields(),
-                        SerializerUtils::getRelations(),
-                        [
-                            'current_user' => $current_user
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    [
+                        'current_user' => $current_user
                     ],
-                        $this->getSerializerType()
-                    )
+                    $this->getSerializerType()
                 );
+                \Illuminate\Support\Facades\Session::put('timing.serializer_end', microtime(true));
+                $result = $this->ok($data);
+                \Illuminate\Support\Facades\Session::put('timing.controller_end', microtime(true));
+                return $result;
             });
 
         });

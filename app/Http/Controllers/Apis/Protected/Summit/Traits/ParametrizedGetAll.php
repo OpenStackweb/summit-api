@@ -85,6 +85,7 @@ trait ParametrizedGetAll
         array    $serializerParams = []
     )
     {
+        Session::put('timing.controller_start', microtime(true));
         return $this->processRequest(function () use (
             $getFilterRules,
             $getFilterValidatorRules,
@@ -140,6 +141,7 @@ trait ParametrizedGetAll
                 );
             $dbEnd = (microtime(true)-$dbStart)*1000;
             $transformStart = microtime(true);
+            Session::put('timing.serializer_start', microtime(true));
             $serializerParams['filter'] = $filter;
             $res = $data->toArray
             (
@@ -149,6 +151,7 @@ trait ParametrizedGetAll
                 $serializerParams,
                 $serializerType  && is_callable($serializerType) ? call_user_func($serializerType) : SerializerRegistry::SerializerType_Public
             );
+            Session::put('timing.serializer_end', microtime(true));
             $transformEnd = (microtime(true)-$transformStart)*1000;
             $encodeStart = microtime(true);
             $json_response = $this->ok($res);
@@ -156,6 +159,7 @@ trait ParametrizedGetAll
             Session::put("db_time", $dbEnd );
             Session::put("transform_time", $transformEnd );
             Session::put("encode_time", $encodeEnd );
+            Session::put('timing.controller_end', microtime(true));
             Session::save();
             return $json_response;
         });

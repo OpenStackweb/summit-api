@@ -1606,7 +1606,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@send']);
             });
 
-            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummit']);
+            Route::get('', ['middleware' => ['server.timing.doctrine', 'auth.user'], 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummit']);
             Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeesApiController@getAttendeesBySummitCSV']);
             Route::group(['prefix' => 'me'], function () {
                 Route::get('', 'OAuth2SummitAttendeesApiController@getOwnAttendee');

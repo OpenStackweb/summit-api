@@ -785,11 +785,23 @@ SQL,
                         $pid = $sp->getPresentation()->getId();
                         $byPresentation[$pid][] = $sp;
                     }
+                    $fed = 0;
+                    $skipped = 0;
                     foreach ($data as $event) {
                         if ($event instanceof Presentation && method_exists($event, 'setPreloadedSessionSelections')) {
                             $event->setPreloadedSessionSelections($byPresentation[$event->getId()] ?? []);
+                            $fed++;
+                        } else {
+                            $skipped++;
                         }
                     }
+                    Log::warning('selection-status preload diagnostic', [
+                        'presentationIds'  => count($presentationIds),
+                        'selectionsLoaded' => count($selections),
+                        'fed'              => $fed,
+                        'skipped'          => $skipped,
+                        'eventClasses'     => array_map(fn($e) => get_class($e), array_slice($data, 0, 3)),
+                    ]);
                 } catch (\Exception $ex) {
                     Log::warning('DoctrineSummitEventRepository::getAllByPage selection-status preload failed', [
                         'error' => $ex->getMessage(),

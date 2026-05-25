@@ -801,9 +801,9 @@ SQL,
                 // Filters match getSelectionStatus()'s constants exactly.
                 try {
                     $selections = $em->createQuery(
-                        'SELECT sp, p FROM ' . SummitSelectedPresentation::class . ' sp ' .
+                        'SELECT sp FROM ' . SummitSelectedPresentation::class . ' sp ' .
+                        'JOIN FETCH sp.presentation p ' .
                         'JOIN sp.list l ' .
-                        'JOIN sp.presentation p ' .
                         'WHERE p.id IN (:ids) ' .
                         'AND sp.collection = :collection ' .
                         'AND l.list_type = :list_type ' .

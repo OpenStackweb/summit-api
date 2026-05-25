@@ -82,7 +82,8 @@ trait ParametrizedGetAll
         callable $defaultOrderRules = null,
         callable $defaultPageSize = null,
         callable $queryCallable = null,
-        array    $serializerParams = []
+        array    $serializerParams = [],
+        callable $afterQuery = null
     )
     {
         Session::put('timing.controller_start', microtime(true));
@@ -95,7 +96,8 @@ trait ParametrizedGetAll
             $defaultOrderRules,
             $defaultPageSize,
             $queryCallable,
-            $serializerParams
+            $serializerParams,
+            $afterQuery
         ) {
             $values = Request::all();
 
@@ -140,6 +142,14 @@ trait ParametrizedGetAll
                     $applyExtraFilters
                 );
             $dbEnd = (microtime(true)-$dbStart)*1000;
+
+            // Optional post-load hook so callers can pre-populate caches /
+            // batch-load related entities before serialization runs. Receives
+            // the PagingResponse so it can inspect items.
+            if (is_callable($afterQuery)) {
+                $afterQuery($data);
+            }
+
             $transformStart = microtime(true);
             Session::put('timing.serializer_start', microtime(true));
             $serializerParams['filter'] = $filter;

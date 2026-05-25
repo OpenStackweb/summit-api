@@ -2147,6 +2147,15 @@ class Summit extends SilverstripeBaseModel
     }
 
     /**
+     * Request-scoped cache for getSpeakerByMemberId().
+     * Keyed by "{member_id}:{filter_published_events:0|1}".
+     * Unannotated so Doctrine ignores it; reset naturally per request.
+     *
+     * @var array<string, PresentationSpeaker|null>
+     */
+    private array $speakerByMemberIdCache = [];
+
+    /**
      * @param Member $member
      * @return PresentationSpeaker|null
      */
@@ -2162,6 +2171,11 @@ class Summit extends SilverstripeBaseModel
      */
     public function getSpeakerByMemberId($member_id, $filter_published_events = true)
     {
+        $cacheKey = $member_id . ':' . ($filter_published_events ? '1' : '0');
+        if (array_key_exists($cacheKey, $this->speakerByMemberIdCache)) {
+            return $this->speakerByMemberIdCache[$cacheKey];
+        }
+
         // moderators
         $moderator = $this->buildModeratorsQuery($filter_published_events)
             ->join('ps.member', 'mb')
@@ -2169,7 +2183,7 @@ class Summit extends SilverstripeBaseModel
             ->setParameter('member_id', $member_id)
             ->getQuery()->getOneOrNullResult();
 
-        if (!is_null($moderator)) return $moderator;
+        if (!is_null($moderator)) return $this->speakerByMemberIdCache[$cacheKey] = $moderator;
 
         // speakers
         $speaker = $this->buildSpeakersQuery($filter_published_events)
@@ -2178,7 +2192,7 @@ class Summit extends SilverstripeBaseModel
             ->setParameter('member_id', $member_id)
             ->getQuery()->getOneOrNullResult();
 
-        if (!is_null($speaker)) return $speaker;
+        if (!is_null($speaker)) return $this->speakerByMemberIdCache[$cacheKey] = $speaker;
 
         // assistance
         $speaker = $this->buildSpeakerSummitAttendanceQuery()
@@ -2187,9 +2201,81 @@ class Summit extends SilverstripeBaseModel
             ->setParameter('member_id', $member_id)
             ->getQuery()->getOneOrNullResult();
 
-        if (!is_null($speaker)) return $speaker;
+        if (!is_null($speaker)) return $this->speakerByMemberIdCache[$cacheKey] = $speaker;
 
-        return null;
+        return $this->speakerByMemberIdCache[$cacheKey] = null;
+    }
+
+    /**
+     * Batch pre-populate the getSpeakerByMemberId() cache for many members in
+     * 3 queries instead of 3 per member. Each subsequent
+     * getSpeakerByMemberId($mid) call then returns from the cache with no DB.
+     *
+     * Same lookup order as the per-member method: moderator → speaker →
+     * assistance. Members not found in any are cached as null so callers
+     * don't re-query them either.
+     *
+     * @param int[] $member_ids
+     */
+    public function preloadSpeakersByMemberIds(array $member_ids, bool $filter_published_events = true): void
+    {
+        $member_ids = array_values(array_unique(array_filter($member_ids, fn($v) => $v > 0)));
+        if (empty($member_ids)) return;
+
+        $remaining = array_flip($member_ids);
+        $found = [];
+
+        // Moderators first.
+        $moderators = $this->buildModeratorsQuery($filter_published_events)
+            ->join('ps.member', 'mb')
+            ->andWhere('mb.id IN (:ids)')
+            ->setParameter('ids', array_keys($remaining))
+            ->getQuery()->getResult();
+        foreach ($moderators as $m) {
+            $mb = method_exists($m, 'getMember') ? $m->getMember() : null;
+            if ($mb !== null) {
+                $found[$mb->getId()] = $m;
+                unset($remaining[$mb->getId()]);
+            }
+        }
+
+        // Speakers for whoever wasn't already found as moderator.
+        if (!empty($remaining)) {
+            $speakers = $this->buildSpeakersQuery($filter_published_events)
+                ->join('ps.member', 'mb')
+                ->andWhere('mb.id IN (:ids)')
+                ->setParameter('ids', array_keys($remaining))
+                ->getQuery()->getResult();
+            foreach ($speakers as $s) {
+                $mb = method_exists($s, 'getMember') ? $s->getMember() : null;
+                if ($mb !== null) {
+                    $found[$mb->getId()] = $s;
+                    unset($remaining[$mb->getId()]);
+                }
+            }
+        }
+
+        // Assistance for the still-remaining.
+        if (!empty($remaining)) {
+            $speakers = $this->buildSpeakerSummitAttendanceQuery()
+                ->join('ps.member', 'mb')
+                ->andWhere('mb.id IN (:ids)')
+                ->setParameter('ids', array_keys($remaining))
+                ->getQuery()->getResult();
+            foreach ($speakers as $s) {
+                $mb = method_exists($s, 'getMember') ? $s->getMember() : null;
+                if ($mb !== null) {
+                    $found[$mb->getId()] = $s;
+                    unset($remaining[$mb->getId()]);
+                }
+            }
+        }
+
+        // Populate cache: hits for found ones, null for the rest.
+        $flag = $filter_published_events ? '1' : '0';
+        foreach ($member_ids as $mid) {
+            $this->speakerByMemberIdCache[$mid . ':' . $flag] = $found[$mid] ?? null;
+        }
     }
 
     /**

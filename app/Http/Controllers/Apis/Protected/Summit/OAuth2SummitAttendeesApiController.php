@@ -701,7 +701,25 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             null,
             null,
             null,
-            $params
+            $params,
+            // afterQuery hook: batch-preload Summit::getSpeakerByMemberId() cache
+            // for every attendee's member on this page. Collapses the per-attendee
+            // 3-query speaker lookup (moderator/speaker/assistance) into 3 batch
+            // queries total — biggest /attendees N+1 (~24 queries on a 10-row page).
+            function ($data) use ($summit) {
+                $memberIds = [];
+                foreach ($data->getItems() as $attendee) {
+                    if (method_exists($attendee, 'getMember')) {
+                        $m = $attendee->getMember();
+                        if ($m !== null && method_exists($m, 'getId') && $m->getId()) {
+                            $memberIds[] = $m->getId();
+                        }
+                    }
+                }
+                if (!empty($memberIds)) {
+                    $summit->preloadSpeakersByMemberIds($memberIds);
+                }
+            }
         );
     }
 

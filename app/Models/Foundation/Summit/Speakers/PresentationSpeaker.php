@@ -1660,11 +1660,31 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
+     * Request-scoped cache of (presentation_id => order) populated by
+     * DoctrineSummitEventRepository::getAllByPage when assignments are batch-loaded.
+     * When set, getPresentationAssignmentOrder() reads from here instead of
+     * firing a per-call DB query via EXTRA_LAZY matching(). Unannotated so
+     * Doctrine ignores it.
+     *
+     * @var array<int, int|null>
+     */
+    private array $preloadedAssignmentOrders = [];
+
+    public function setPreloadedAssignmentOrder(int $presentationId, ?int $order): void
+    {
+        $this->preloadedAssignmentOrders[$presentationId] = $order;
+    }
+
+    /**
      * @param Presentation $presentation
      * @return int|null
      */
     public function getPresentationAssignmentOrder(Presentation $presentation): ?int
     {
+        $pid = $presentation->getId();
+        if (array_key_exists($pid, $this->preloadedAssignmentOrders)) {
+            return $this->preloadedAssignmentOrders[$pid];
+        }
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('presentation', $presentation));
         $res = $this->presentations->matching($criteria)->first();

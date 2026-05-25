@@ -126,6 +126,8 @@ final class ResourceServerContext implements IResourceServerContext
     public function setAuthorizationContext(array $auth_context)
     {
         $this->auth_context = $auth_context;
+        $this->cachedCurrentUser = null;
+        $this->cachedCurrentUserResolved = false;
     }
 
     /**
@@ -156,6 +158,8 @@ final class ResourceServerContext implements IResourceServerContext
     public function updateAuthContextVar(string $varName, $value):void {
         if(isset($this->auth_context[$varName])){
             $this->auth_context[$varName] = $value;
+            $this->cachedCurrentUser = null;
+            $this->cachedCurrentUserResolved = false;
         }
     }
 

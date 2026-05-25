@@ -1675,6 +1675,16 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $this->preloadedAssignmentOrders[$presentationId] = $order;
     }
 
+    public function clearPreloadedAssignmentOrder(int $presentationId): void
+    {
+        unset($this->preloadedAssignmentOrders[$presentationId]);
+    }
+
+    public function clearAllPreloadedAssignmentOrders(): void
+    {
+        $this->preloadedAssignmentOrders = [];
+    }
+
     /**
      * @param Presentation $presentation
      * @return int|null

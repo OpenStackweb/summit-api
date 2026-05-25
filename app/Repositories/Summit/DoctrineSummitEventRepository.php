@@ -815,6 +815,18 @@ SQL,
                     'WHERE a.presentation IN (:ids)'
                 )->setParameter('ids', $presentationIds)->getResult();
 
+                // Stuff each speaker's preloaded assignment-order cache so that
+                // PresentationSpeaker::getPresentationAssignmentOrder() does not
+                // fall back to an EXTRA_LAZY matching() query per (speaker,presentation)
+                // pair. The serializer calls this once per speaker per presentation.
+                foreach ($assignments as $a) {
+                    $speaker = method_exists($a, 'getSpeaker') ? $a->getSpeaker() : null;
+                    $presentation = method_exists($a, 'getPresentation') ? $a->getPresentation() : null;
+                    if ($speaker && $presentation && method_exists($speaker, 'setPreloadedAssignmentOrder')) {
+                        $speaker->setPreloadedAssignmentOrder($presentation->getId(), $a->getOrder());
+                    }
+                }
+
                 // Diagnostic: confirm what was actually loaded.
                 $speakerIds = [];
                 $memberIds  = [];

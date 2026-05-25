@@ -2227,7 +2227,7 @@ class Summit extends SilverstripeBaseModel
 
         // Moderators first.
         $moderators = $this->buildModeratorsQuery($filter_published_events)
-            ->join('ps.member', 'mb')
+            ->join('ps.member', 'mb')->addSelect('mb')
             ->andWhere('mb.id IN (:ids)')
             ->setParameter('ids', array_keys($remaining))
             ->getQuery()->getResult();
@@ -2242,7 +2242,7 @@ class Summit extends SilverstripeBaseModel
         // Speakers for whoever wasn't already found as moderator.
         if (!empty($remaining)) {
             $speakers = $this->buildSpeakersQuery($filter_published_events)
-                ->join('ps.member', 'mb')
+                ->join('ps.member', 'mb')->addSelect('mb')
                 ->andWhere('mb.id IN (:ids)')
                 ->setParameter('ids', array_keys($remaining))
                 ->getQuery()->getResult();
@@ -2258,7 +2258,7 @@ class Summit extends SilverstripeBaseModel
         // Assistance for the still-remaining.
         if (!empty($remaining)) {
             $speakers = $this->buildSpeakerSummitAttendanceQuery()
-                ->join('ps.member', 'mb')
+                ->join('ps.member', 'mb')->addSelect('mb')
                 ->andWhere('mb.id IN (:ids)')
                 ->setParameter('ids', array_keys($remaining))
                 ->getQuery()->getResult();

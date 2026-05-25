@@ -741,11 +741,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                         \Illuminate\Support\Facades\Log::warning('attendees notes preload failed', ['error' => $ex->getMessage()]);
                     }
 
-                    // Tickets — fetch-join collection.
+                    // Tickets — fetch-join collection AND the badge on each ticket
+                    // (badges fire one query per ticket otherwise — was 12 per request).
                     try {
                         $em->createQuery(
-                            'SELECT a, t FROM ' . \models\summit\SummitAttendee::class . ' a ' .
-                            'LEFT JOIN a.tickets t WHERE a.id IN (:ids)'
+                            'SELECT a, t, b FROM ' . \models\summit\SummitAttendee::class . ' a ' .
+                            'LEFT JOIN a.tickets t ' .
+                            'LEFT JOIN t.badge b ' .
+                            'WHERE a.id IN (:ids)'
                         )->setParameter('ids', $attendeeIds)->getResult();
                     } catch (\Exception $ex) {
                         \Illuminate\Support\Facades\Log::warning('attendees tickets preload failed', ['error' => $ex->getMessage()]);

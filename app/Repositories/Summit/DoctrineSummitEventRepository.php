@@ -821,23 +821,11 @@ SQL,
                         $pid = $sp->getPresentation()->getId();
                         $byPresentation[$pid][] = $sp;
                     }
-                    $fed = 0;
-                    $skipped = 0;
                     foreach ($data as $event) {
                         if ($event instanceof Presentation && method_exists($event, 'setPreloadedSessionSelections')) {
                             $event->setPreloadedSessionSelections($byPresentation[$event->getId()] ?? []);
-                            $fed++;
-                        } else {
-                            $skipped++;
                         }
                     }
-                    Log::warning('selection-status preload diagnostic', [
-                        'presentationIds'  => count($presentationIds),
-                        'selectionsLoaded' => count($selections),
-                        'fed'              => $fed,
-                        'skipped'          => $skipped,
-                        'eventClasses'     => array_map(fn($e) => get_class($e), array_slice($data, 0, 3)),
-                    ]);
                 } catch (\Exception $ex) {
                     Log::warning('DoctrineSummitEventRepository::getAllByPage selection-status preload failed', [
                         'error' => $ex->getMessage(),
@@ -879,39 +867,6 @@ SQL,
                     ]);
                 }
 
-                // Diagnostic: confirm what was actually loaded.
-                $speakerIds = [];
-                $memberIds  = [];
-                $speakerInitialized = 0;
-                $memberInitialized  = 0;
-                foreach ($assignments as $a) {
-                    if (method_exists($a, 'getSpeaker')) {
-                        $s = $a->getSpeaker();
-                        if ($s) {
-                            $speakerIds[$s->getId()] = true;
-                            if (!($s instanceof \Doctrine\Persistence\Proxy) || $s->__isInitialized()) {
-                                $speakerInitialized++;
-                            }
-                            if (method_exists($s, 'getMember')) {
-                                $m = $s->getMember();
-                                if ($m) {
-                                    $memberIds[$m->getId()] = true;
-                                    if (!($m instanceof \Doctrine\Persistence\Proxy) || $m->__isInitialized()) {
-                                        $memberInitialized++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Log::warning('preload diagnostic', [
-                    'presentationIds'    => count($presentationIds),
-                    'assignmentsLoaded'  => count($assignments),
-                    'uniqueSpeakers'     => count($speakerIds),
-                    'speakersInitialized'=> $speakerInitialized,
-                    'uniqueMembers'      => count($memberIds),
-                    'membersInitialized' => $memberInitialized,
-                ]);
             } catch (\Exception $ex) {
                 Log::warning('DoctrineSummitEventRepository::getAllByPage speaker+member preload failed', [
                     'error' => $ex->getMessage(),

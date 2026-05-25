@@ -43,7 +43,7 @@ class QueryTimingConnection extends AbstractConnectionMiddleware
         try {
             return parent::query($sql);
         } finally {
-            QueryTimingCollector::record($start, $sql);
+            QueryTimingCollector::record($start);
         }
     }
 
@@ -53,42 +53,25 @@ class QueryTimingConnection extends AbstractConnectionMiddleware
         try {
             return parent::exec($sql);
         } finally {
-            QueryTimingCollector::record($start, $sql);
+            QueryTimingCollector::record($start);
         }
     }
 
     public function prepare(string $sql): DBALStatement
     {
-        return new QueryTimingStatement(parent::prepare($sql), $sql);
+        return new QueryTimingStatement(parent::prepare($sql));
     }
 }
 
 class QueryTimingStatement extends AbstractStatementMiddleware
 {
-    private string $sql;
-
-    public function __construct($wrapped, string $sql)
-    {
-        parent::__construct($wrapped);
-        $this->sql = $sql;
-    }
-
-    private array $boundParams = [];
-
-    public function bindValue($param, $value, $type = \Doctrine\DBAL\ParameterType::STRING): bool
-    {
-        $this->boundParams[$param] = $value;
-        return parent::bindValue($param, $value, $type);
-    }
-
     public function execute($params = null): DBALResult
     {
         $start = microtime(true);
         try {
             return parent::execute($params);
         } finally {
-            $effective = $params ?? $this->boundParams;
-            QueryTimingCollector::record($start, $this->sql, is_array($effective) ? $effective : null);
+            QueryTimingCollector::record($start);
         }
     }
 }

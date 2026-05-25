@@ -712,11 +712,15 @@ SQL,
         $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
         Log::debug("DoctrineSummitEventRepository::getAllByPage ids", ['ids' => $ids]);
         $query = $this->getEntityManager()->createQueryBuilder()
-            ->select('e, p , et, et2')
+            ->select('e, p , et, et2, loc')
             ->from($this->getBaseEntity(), "e")
             ->innerJoin("e.type", "et")->addSelect("et")
             ->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id')->addSelect("et2")
             ->leftJoin(Presentation::class, 'p', 'WITH', 'e.id = p.id')->addSelect("p")
+            // Fetch-join location so the serializer's $event->getLocation() does not
+            // lazy-load per event (one query saved per event on /events listings).
+            // Doctrine's JOINED inheritance handles SummitVenueRoom etc. subclasses.
+            ->leftJoin('e.location', 'loc')->addSelect('loc')
             ->where('e.id IN (:ids)')
             ->setParameter('ids', $ids);
 
@@ -742,6 +746,23 @@ SQL,
         $data = [];
         foreach ($ids as $id) {
             if (isset($byId[$id])) $data[] = $byId[$id];
+        }
+
+        // Batch-preload Tag rows for every event on the page so the serializer's
+        // foreach (\$event->getTags()) does not lazy-load the collection per event.
+        // SELECT e, t fetch-joins tags onto each SummitEvent.
+        if (!empty($ids)) {
+            try {
+                $this->getEntityManager()->createQuery(
+                    'SELECT e, t FROM ' . SummitEvent::class . ' e ' .
+                    'LEFT JOIN e.tags t ' .
+                    'WHERE e.id IN (:ids)'
+                )->setParameter('ids', $ids)->getResult();
+            } catch (\Exception $ex) {
+                Log::warning('DoctrineSummitEventRepository::getAllByPage tags preload failed', [
+                    'error' => $ex->getMessage(),
+                ]);
+            }
         }
 
         // Targeted N+1 preload for Presentation rows on this page:
@@ -825,6 +846,22 @@ SQL,
                     if ($speaker && $presentation && method_exists($speaker, 'setPreloadedAssignmentOrder')) {
                         $speaker->setPreloadedAssignmentOrder($presentation->getId(), $a->getOrder());
                     }
+                }
+
+                // Batch-preload PresentationMaterial rows so the serializer's
+                // getMediaUploads/getSlides/getLinks/etc. iterates from memory instead
+                // of firing one query per presentation. Selecting both p and m makes
+                // this a fetch-join that populates p.materials with the rows.
+                try {
+                    $em->createQuery(
+                        'SELECT p, m FROM ' . Presentation::class . ' p ' .
+                        'LEFT JOIN p.materials m ' .
+                        'WHERE p.id IN (:ids)'
+                    )->setParameter('ids', $presentationIds)->getResult();
+                } catch (\Exception $ex) {
+                    Log::warning('DoctrineSummitEventRepository::getAllByPage materials preload failed', [
+                        'error' => $ex->getMessage(),
+                    ]);
                 }
 
                 // Diagnostic: confirm what was actually loaded.

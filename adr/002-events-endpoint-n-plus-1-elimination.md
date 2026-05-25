@@ -1,4 +1,4 @@
-# ADR-0001: Eliminate N+1 Queries in `/events` Endpoint
+# ADR-0002: Eliminate N+1 Queries in `/events` Endpoint
 
 - **Status:** Accepted
 - **Date:** 2026-05-25

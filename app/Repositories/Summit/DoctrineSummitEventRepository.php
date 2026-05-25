@@ -712,7 +712,7 @@ SQL,
         $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
         Log::debug("DoctrineSummitEventRepository::getAllByPage ids", ['ids' => $ids]);
         $query = $this->getEntityManager()->createQueryBuilder()
-            ->select('e, p , et, et2, loc')
+            ->select('e, p , et, et2, loc, cat')
             ->from($this->getBaseEntity(), "e")
             ->innerJoin("e.type", "et")->addSelect("et")
             ->leftJoin(PresentationType::class, 'et2', 'WITH', 'et.id = et2.id')->addSelect("et2")
@@ -721,6 +721,8 @@ SQL,
             // lazy-load per event (one query saved per event on /events listings).
             // Doctrine's JOINED inheritance handles SummitVenueRoom etc. subclasses.
             ->leftJoin('e.location', 'loc')->addSelect('loc')
+            // Fetch-join PresentationCategory (track) — was 5 queries per request.
+            ->leftJoin('p.category', 'cat')->addSelect('cat')
             ->where('e.id IN (:ids)')
             ->setParameter('ids', $ids);
 
@@ -760,6 +762,19 @@ SQL,
                 )->setParameter('ids', $ids)->getResult();
             } catch (\Exception $ex) {
                 Log::warning('DoctrineSummitEventRepository::getAllByPage tags preload failed', [
+                    'error' => $ex->getMessage(),
+                ]);
+            }
+
+            // Same pattern for Sponsors (ManyToMany Company on SummitEvent).
+            try {
+                $this->getEntityManager()->createQuery(
+                    'SELECT e, s FROM ' . SummitEvent::class . ' e ' .
+                    'LEFT JOIN e.sponsors s ' .
+                    'WHERE e.id IN (:ids)'
+                )->setParameter('ids', $ids)->getResult();
+            } catch (\Exception $ex) {
+                Log::warning('DoctrineSummitEventRepository::getAllByPage sponsors preload failed', [
                     'error' => $ex->getMessage(),
                 ]);
             }

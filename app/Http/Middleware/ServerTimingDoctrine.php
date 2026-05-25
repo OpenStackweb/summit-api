@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -52,6 +53,17 @@ class ServerTimingDoctrine
             )
         );
         $response->headers->set('Timing-Allow-Origin', '*');
+
+        // Temporary N+1 candidate logger (profiling-only — remove on cleanup).
+        if ($dbCount >= 20) {
+            foreach (\App\Http\Middleware\Doctrine\QueryTimingCollector::topPatterns(10) as $row) {
+                Log::warning('N+1 candidate', [
+                    'count'   => $row['count'],
+                    'totalMs' => $row['totalMs'],
+                    'sample'  => mb_substr($row['sample'], 0, 240),
+                ]);
+            }
+        }
 
         return $response;
     }

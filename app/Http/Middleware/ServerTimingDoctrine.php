@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -53,26 +52,6 @@ class ServerTimingDoctrine
             )
         );
         $response->headers->set('Timing-Allow-Origin', '*');
-
-        // If this request fired N+1s, log the top repeating SQL patterns so we
-        // can target the actual lazy loads. Only logs when there are repeats
-        // (count >= 2) — typical normal requests stay quiet.
-        if ($dbCount >= 20) {
-            $top = \App\Http\Middleware\Doctrine\QueryTimingCollector::topPatterns(8);
-            foreach ($top as $row) {
-                Log::warning('N+1 candidate', [
-                    'count'   => $row['count'],
-                    'totalMs' => $row['totalMs'],
-                    'sample'  => mb_substr($row['sample'], 0, 240),
-                ]);
-            }
-            // Dump Member query params so we can see which IDs are being loaded
-            // and correlate to the code path (created_by, updated_by, speaker.member, ...).
-            $memberQueries = \App\Http\Middleware\Doctrine\QueryTimingCollector::$memberQueries;
-            if (!empty($memberQueries)) {
-                Log::warning('member queries', ['count' => count($memberQueries), 'params' => $memberQueries]);
-            }
-        }
 
         return $response;
     }

@@ -979,14 +979,9 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
             return $this->memoizedSelectionStatus;
         }
 
-        $preloadIsSet = isset($this->preloadedSessionSelections);
-        if ($preloadIsSet) {
+        if ($this->preloadedSessionSelections !== null) {
             $session_sel = $this->preloadedSessionSelections;
         } else {
-            \Illuminate\Support\Facades\Log::warning('getSelectionStatus cache MISS', [
-                'pid' => $this->id,
-                'class' => get_class($this),
-            ]);
             $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp
                 JOIN sp.list l
                 JOIN sp.presentation p

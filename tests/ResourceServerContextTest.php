@@ -37,4 +37,33 @@ class ResourceServerContextTest extends BrowserKitTestCase
 
         $member = $ctx->getCurrentUser(true);
     }
+
+    public function testSetAuthorizationContextResetsUserCache(): void
+    {
+        $ctx = App::make(IResourceServerContext::class);
+
+        $context = [];
+        $context['user_id']             = "1080";
+        $context['external_user_id']    = "1080";
+        $context['user_identifier']     = "test";
+        $context['user_email']          = "test@test.com";
+        $context['user_email_verified'] = true;
+        $context['user_first_name']     = "test";
+        $context['user_last_name']      = "test";
+        $context['user_groups']         = ['raw-users'];
+        $ctx->setAuthorizationContext($context);
+        $ctx->getCurrentUser(false); // warm the request-scoped cache
+
+        $ref  = new \ReflectionClass($ctx);
+        $prop = $ref->getProperty('cachedCurrentUserResolved');
+        $prop->setAccessible(true);
+        $this->assertTrue($prop->getValue($ctx),
+            'Prerequisite: cache must be warm after the first getCurrentUser() call');
+
+        // A second setAuthorizationContext() must invalidate the cache so the
+        // next getCurrentUser() re-fetches instead of returning the stale member.
+        $ctx->setAuthorizationContext($context);
+        $this->assertFalse($prop->getValue($ctx),
+            'setAuthorizationContext() must reset cachedCurrentUserResolved');
+    }
 }

@@ -702,13 +702,17 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             null,
             null,
             $params,
-            // afterQuery hook: batch-preload Summit::getSpeakerByMemberId() cache
-            // for every attendee's member on this page. Collapses the per-attendee
-            // 3-query speaker lookup (moderator/speaker/assistance) into 3 batch
-            // queries total — biggest /attendees N+1 (~24 queries on a 10-row page).
+            // afterQuery hook: batch-preload everything the serializer is about
+            // to touch per-attendee. Collapses ~38 lazy-load queries per request
+            // (Notes/Tickets/Tags/Member/Speaker lookups) into 4 batch queries.
             function ($data) use ($summit) {
+                $items = $data->getItems();
+                $attendeeIds = [];
                 $memberIds = [];
-                foreach ($data->getItems() as $attendee) {
+                foreach ($items as $attendee) {
+                    if (method_exists($attendee, 'getId') && $attendee->getId()) {
+                        $attendeeIds[] = $attendee->getId();
+                    }
                     if (method_exists($attendee, 'getMember')) {
                         $m = $attendee->getMember();
                         if ($m !== null && method_exists($m, 'getId') && $m->getId()) {
@@ -716,8 +720,57 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                         }
                     }
                 }
+
+                // Speaker lookup cache (moderator/speaker/assistance × N members).
                 if (!empty($memberIds)) {
                     $summit->preloadSpeakersByMemberIds($memberIds);
+                }
+
+                if (!empty($attendeeIds)) {
+                    $em = \LaravelDoctrine\ORM\Facades\Registry::getManager(
+                        \models\utils\SilverstripeBaseModel::EntityManager
+                    );
+
+                    // Notes (SummitAttendeeNote) — one batch query covers all attendees.
+                    try {
+                        $em->createQuery(
+                            'SELECT a, n FROM ' . \models\summit\SummitAttendee::class . ' a ' .
+                            'LEFT JOIN a.notes n WHERE a.id IN (:ids)'
+                        )->setParameter('ids', $attendeeIds)->getResult();
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::warning('attendees notes preload failed', ['error' => $ex->getMessage()]);
+                    }
+
+                    // Tickets — fetch-join collection.
+                    try {
+                        $em->createQuery(
+                            'SELECT a, t FROM ' . \models\summit\SummitAttendee::class . ' a ' .
+                            'LEFT JOIN a.tickets t WHERE a.id IN (:ids)'
+                        )->setParameter('ids', $attendeeIds)->getResult();
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::warning('attendees tickets preload failed', ['error' => $ex->getMessage()]);
+                    }
+
+                    // Tags ManyToMany — fetch-join populates the inverse collection.
+                    try {
+                        $em->createQuery(
+                            'SELECT a, tg FROM ' . \models\summit\SummitAttendee::class . ' a ' .
+                            'LEFT JOIN a.tags tg WHERE a.id IN (:ids)'
+                        )->setParameter('ids', $attendeeIds)->getResult();
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::warning('attendees tags preload failed', ['error' => $ex->getMessage()]);
+                    }
+
+                    // Member fetch-join so $attendee->getMember() returns an
+                    // initialized entity instead of triggering a per-attendee lazy load.
+                    try {
+                        $em->createQuery(
+                            'SELECT a, m FROM ' . \models\summit\SummitAttendee::class . ' a ' .
+                            'LEFT JOIN a.member m WHERE a.id IN (:ids)'
+                        )->setParameter('ids', $attendeeIds)->getResult();
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::warning('attendees member preload failed', ['error' => $ex->getMessage()]);
+                    }
                 }
             }
         );

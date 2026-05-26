@@ -456,11 +456,13 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         $order = $this->getSpeakerAssignmentsMaxOrder();
         $speaker_assignment = new PresentationSpeakerAssignment($this, $speaker, $order + 1);
         $this->speakers->add($speaker_assignment);
+        $this->updateLastEdited();
     }
 
     public function clearSpeakers()
     {
         $this->speakers->clear();
+        $this->updateLastEdited();
     }
 
     /**
@@ -474,6 +476,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         if ($speaker_assignment === false) return;
         $this->speakers->removeElement($speaker_assignment);
         self::resetOrderForSelectable($this->speakers, PresentationSpeakerAssignment::class);
+        $this->updateLastEdited();
     }
 
     /**
@@ -621,6 +624,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($video);
         $video->unsetPresentation();
+        $this->updateLastEdited();
     }
 
     /**
@@ -630,6 +634,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($slide);
         $slide->unsetPresentation();
+        $this->updateLastEdited();
     }
 
     /**
@@ -639,6 +644,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($link);
         $link->unsetPresentation();
+        $this->updateLastEdited();
     }
 
     /**
@@ -648,6 +654,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($mediaUpload);
         $mediaUpload->unsetPresentation();
+        $this->updateLastEdited();
     }
 
     /**
@@ -911,6 +918,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         $this->materials->add($material);
         $material->setPresentation($this);
         $material->setOrder($this->getMaterialsMaxOrder() + 1);
+        $this->updateLastEdited();
         return $this;
     }
 

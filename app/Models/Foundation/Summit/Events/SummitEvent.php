@@ -821,11 +821,13 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     {
         if ($this->tags->contains($tag)) return;
         $this->tags->add($tag);
+        $this->updateLastEdited();
     }
 
     public function clearTags()
     {
         $this->tags->clear();
+        $this->updateLastEdited();
     }
 
     /**

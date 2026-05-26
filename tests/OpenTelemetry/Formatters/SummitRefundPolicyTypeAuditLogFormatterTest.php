@@ -122,7 +122,7 @@ class SummitRefundPolicyTypeAuditLogFormatterTest extends TestCase
 
         $result = $this->formatter_update->format($policy, []);
 
-        $this->assertStringContainsString("properties without changes registered", $result);
-    }
+        $this->assertNull($result);
+}
 
 }

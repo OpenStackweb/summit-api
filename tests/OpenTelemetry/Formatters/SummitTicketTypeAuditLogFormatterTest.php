@@ -142,7 +142,7 @@ class SummitTicketTypeAuditLogFormatterTest extends TestCase
         $ticket_type = $this->createMockTicketType('Empty Ticket', 0.0, 'USD', 0, 0);
         $result = $this->formatter_update->format($ticket_type, []);
 
-        $this->assertStringContainsString("properties without changes registered", $result);
-    }
+        $this->assertNull($result);
+}
 
 }

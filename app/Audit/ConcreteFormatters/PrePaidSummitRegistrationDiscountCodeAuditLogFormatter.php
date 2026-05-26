@@ -72,6 +72,9 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Pre-Paid Discount Code '%s' (%d) for Summit '%s' updated: %s (current: %s) by user %s",
                         $code,

@@ -62,13 +62,6 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 Log::warning("AuditLogOtlpStrategy::audit formatter not found");
                 return;
             }
-            if ($event_type === IAuditStrategy::EVENT_ENTITY_UPDATE
-                && !$formatter->hasMeaningfulChanges($change_set)) {
-                Log::debug("AuditLogOtlpStrategy::audit skipping no-op entity update", [
-                    'subject_class' => is_object($subject) ? get_class($subject) : gettype($subject),
-                ]);
-                return;
-            }
             $description = $formatter->format($subject, $change_set);
             if(is_null($description)){
                 Log::warning("AuditLogOtlpStrategy::audit description is empty");

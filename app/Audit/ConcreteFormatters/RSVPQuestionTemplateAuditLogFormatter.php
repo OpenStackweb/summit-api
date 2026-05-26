@@ -52,6 +52,9 @@ class RSVPQuestionTemplateAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "%s question '%s' (ID: %s) in RSVP template (ID: %s) updated: %s by user %s",
                         $className,

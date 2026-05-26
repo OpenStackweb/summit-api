@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
 class ServerTimingDoctrine
@@ -30,20 +29,18 @@ class ServerTimingDoctrine
         $bootMs  = defined('LARAVEL_START') ? max(($start - LARAVEL_START) * 1000.0, 0.0) : 0.0;
         $appMs   = max($totalMs - $dbMs, 0.0);
 
-        // Read controller-level timing markers (set by the controller method).
+        // Read controller-level timing markers (set by the controller via $request->attributes).
         // If the controller didn't set them, these phases are reported as 0.
-        $cStart     = Session::has("timing.controller_start")  ? (float) Session::get("timing.controller_start")  : null;
-        $cEnd       = Session::has("timing.controller_end")    ? (float) Session::get("timing.controller_end")    : null;
-        $sStart     = Session::has("timing.serializer_start")  ? (float) Session::get("timing.serializer_start")  : null;
-        $sEnd       = Session::has("timing.serializer_end")    ? (float) Session::get("timing.serializer_end")    : null;
+        $attrs    = $request->attributes;
+        $cStart   = $attrs->has("timing.controller_start")  ? (float) $attrs->get("timing.controller_start")  : null;
+        $cEnd     = $attrs->has("timing.controller_end")    ? (float) $attrs->get("timing.controller_end")    : null;
+        $sStart   = $attrs->has("timing.serializer_start")  ? (float) $attrs->get("timing.serializer_start")  : null;
+        $sEnd     = $attrs->has("timing.serializer_end")    ? (float) $attrs->get("timing.serializer_end")    : null;
 
         $preMs        = ($cStart !== null) ? max(($cStart - $start) * 1000.0, 0.0) : 0.0;
         $controllerMs = ($cStart !== null && $cEnd !== null) ? max(($cEnd - $cStart) * 1000.0, 0.0) : 0.0;
         $serializerMs = ($sStart !== null && $sEnd !== null) ? max(($sEnd - $sStart) * 1000.0, 0.0) : 0.0;
         $postMs       = ($cEnd !== null) ? max(($end - $cEnd) * 1000.0, 0.0) : 0.0;
-
-        // Clear so they don't leak into a recycled worker's next request.
-        Session::forget(['timing.controller_start','timing.controller_end','timing.serializer_start','timing.serializer_end']);
 
         $response->headers->set('Server-Timing',
             sprintf(

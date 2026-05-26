@@ -128,6 +128,8 @@ final class ResourceServerContext implements IResourceServerContext
         $this->auth_context = $auth_context;
         $this->cachedCurrentUser = null;
         $this->cachedCurrentUserResolved = false;
+        $this->groupsSynched = false;
+        $this->fieldsSynched = false;
     }
 
     /**
@@ -160,6 +162,8 @@ final class ResourceServerContext implements IResourceServerContext
             $this->auth_context[$varName] = $value;
             $this->cachedCurrentUser = null;
             $this->cachedCurrentUserResolved = false;
+            $this->groupsSynched = false;
+            $this->fieldsSynched = false;
         }
     }
 
@@ -170,12 +174,14 @@ final class ResourceServerContext implements IResourceServerContext
      * this cache, profiling /events showed the same Member SELECT firing 98+
      * times via getByExternalId().
      *
-     * Caches the resolved Member regardless of \$synch_groups / \$update_member_fields
-     * arguments — the side-effects (group sync, event dispatch, field updates)
-     * are idempotent per request and only need to run once.
+     * Side-effects ($synch_groups, $update_member_fields) are tracked separately
+     * so a first call with false does not permanently suppress them — a later
+     * call with true will still run the missing side-effect exactly once.
      */
     private ?Member $cachedCurrentUser = null;
     private bool $cachedCurrentUserResolved = false;
+    private bool $groupsSynched = false;
+    private bool $fieldsSynched = false;
 
     /**
      * @param bool $synch_groups
@@ -186,6 +192,13 @@ final class ResourceServerContext implements IResourceServerContext
     public function getCurrentUser(bool $synch_groups = true, bool $update_member_fields = true): ?Member
     {
         if ($this->cachedCurrentUserResolved) {
+            if ($synch_groups && !$this->groupsSynched && $this->cachedCurrentUser !== null) {
+                $member = $this->cachedCurrentUser;
+                $this->cachedCurrentUser = $this->tx_service->transaction(
+                    fn() => $this->checkGroups($member)
+                );
+                $this->groupsSynched = true;
+            }
             return $this->cachedCurrentUser;
         }
 
@@ -304,6 +317,8 @@ final class ResourceServerContext implements IResourceServerContext
         });
 
         $this->cachedCurrentUserResolved = true;
+        $this->groupsSynched = $synch_groups;
+        $this->fieldsSynched = $update_member_fields;
         return $this->cachedCurrentUser = $resolved;
     }
 

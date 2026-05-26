@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Middleware\Doctrine\QueryTimingCollector;
 use Closure;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -16,13 +17,13 @@ class ServerTimingDoctrine
         // registered globally in config/doctrine.php. That gives accurate
         // per-statement durations under DBAL 3.x prepared statements, which
         // the deprecated SQLLogger / Logging\Middleware paths do not.
-        \App\Http\Middleware\Doctrine\QueryTimingCollector::reset();
+        QueryTimingCollector::reset();
 
         /** @var Response $response */
         $response = $next($request);
 
-        $dbMs = \App\Http\Middleware\Doctrine\QueryTimingCollector::$totalMs;
-        $dbCount = \App\Http\Middleware\Doctrine\QueryTimingCollector::$count;
+        $dbMs = QueryTimingCollector::$totalMs;
+        $dbCount = QueryTimingCollector::$count;
 
         $end = microtime(true);
         $totalMs = ($end - $start) * 1000.0;

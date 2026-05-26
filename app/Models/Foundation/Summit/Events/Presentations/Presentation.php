@@ -927,6 +927,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function setSelectedPresentations($selected_presentations)
     {
+        $this->memoizedSelectionStatus = null;
         $this->selected_presentations = $selected_presentations;
     }
 
@@ -1078,6 +1079,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function setSelectionPlan($selection_plan)
     {
+        $this->memoizedSelectionStatus = null;
         $oldSelectionPlan = $this->selection_plan;
         // if selection plan changes
         if (!is_null($oldSelectionPlan) && $oldSelectionPlan->getId() != $selection_plan->getId()) {
@@ -1089,6 +1091,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
 
     public function clearSelectionPlan()
     {
+        $this->memoizedSelectionStatus = null;
         $this->selection_plan = null;
     }
 
@@ -2181,6 +2184,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function setCategory(PresentationCategory $category)
     {
+        $this->memoizedSelectionStatus = null;
         // check if we change the category
         $oldCategory = $this->category;
         if (!is_null($oldCategory) && $oldCategory->getId() != $category->getId()) {

@@ -49,6 +49,9 @@ class SponsorBadgeScanExtraQuestionAnswerAuditLogFormatter extends AbstractAudit
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $details = $this->buildChangeDetails($change_set);
+                    if ($details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Sponsor Badge Scan Extra Question Answer (ID: %s) for question '%s' updated: %s by user %s",
                         $id,

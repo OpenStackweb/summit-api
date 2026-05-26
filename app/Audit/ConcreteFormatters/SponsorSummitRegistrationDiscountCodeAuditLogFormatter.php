@@ -68,6 +68,9 @@ class SponsorSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $details = $this->buildChangeDetails($change_set);
+                    if ($details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Sponsor Registration Discount Code '%s' (ID: %s) in Summit '%s' updated: %s (current: %s) by user %s",
                         $code,

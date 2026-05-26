@@ -47,6 +47,9 @@ class PresentationSlideAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Presentation Slide '%s' (%d) for presentation '%s' updated: %s by user %s",
                         $title,

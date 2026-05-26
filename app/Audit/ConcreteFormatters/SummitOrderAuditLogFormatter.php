@@ -42,6 +42,9 @@ class SummitOrderAuditLogFormatter extends AbstractAuditLogFormatter
                     return sprintf("Order '%s' (%s) created for '%s' in Summit '%s' with status '%s' by user %s", $order_number, $id, $owner_email, $summit_name, $status, $this->getUserInfo());
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $details = $this->buildChangeDetails($change_set);
+                    if ($details === null) {
+                        return null;
+                    }
                     return sprintf("Order '%s' (%s) in Summit '%s' updated: %s by user %s", $order_number, $id, $summit_name, $details, $this->getUserInfo());
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Order '%s' (%s) in Summit '%s' deleted by user %s", $order_number, $id, $summit_name, $this->getUserInfo());

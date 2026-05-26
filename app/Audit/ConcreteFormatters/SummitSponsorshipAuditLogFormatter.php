@@ -47,6 +47,9 @@ class SummitSponsorshipAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Summit Sponsorship (%d) for Sponsor '%s' Type '%s' updated: %s by user %s",
                         $id,

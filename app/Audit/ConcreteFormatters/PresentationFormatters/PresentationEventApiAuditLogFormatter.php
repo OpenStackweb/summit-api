@@ -30,13 +30,17 @@ class PresentationEventApiAuditLogFormatter extends BasePresentationAuditLogForm
         );
     }
 
-    protected function formatUpdate(array $data, array $change_set): string
+    protected function formatUpdate(array $data, array $change_set): ?string
     {
+        $change_details = $this->buildChangeDetails($change_set);
+        if ($change_details === null) {
+            return null;
+        }
         return sprintf(
             "Presentation '%s' (%s) updated: %s by user %s",
             $data['title'],
             $data['id'],
-            $this->buildChangeDetails($change_set),
+            $change_details,
             $this->getUserInfo()
         );
     }

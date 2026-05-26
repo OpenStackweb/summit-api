@@ -50,6 +50,9 @@ class SummitEventAttendanceMetricAuditLogFormatter extends AbstractAuditLogForma
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Attendance Metric (%d) for event '%s' updated: %s by user %s",
                         $id,

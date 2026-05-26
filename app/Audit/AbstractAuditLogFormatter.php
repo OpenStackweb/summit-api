@@ -22,7 +22,6 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
 {
     protected ?AuditContext $ctx = null;
     protected string $event_type;
-    public const NO_CHANGES_REGISTERED_MESSAGE = 'properties without changes registered';
 
     public function __construct(string $event_type)
     {
@@ -159,7 +158,7 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
     }
 
 
-    protected function buildChangeDetails(array $change_set): string
+    protected function buildChangeDetails(array $change_set): ?string
     {
         $changed_fields = [];
         $ignored_fields = $this->getIgnoredFields();
@@ -179,33 +178,13 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         }
 
         if (empty($changed_fields)) {
-            return self::NO_CHANGES_REGISTERED_MESSAGE;
+            return null;
         }
 
         $fields_summary = count($changed_fields) . ' field(s) modified: ';
         return $fields_summary . implode(' | ', $changed_fields);
     }
 
-
-    final public function hasMeaningfulChanges(array $change_set): bool
-    {
-        $ignored_fields = $this->getIgnoredFields();
-
-        foreach ($change_set as $prop_name => $change_values) {
-            if (in_array($prop_name, $ignored_fields)) {
-                continue;
-            }
-
-            $old_value = $change_values[0] ?? null;
-            $new_value = $change_values[1] ?? null;
-
-            if ($this->formatFieldChange($prop_name, $old_value, $new_value) !== null) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     protected function formatFieldChange(string $prop_name, $old_value, $new_value): ?string
     {

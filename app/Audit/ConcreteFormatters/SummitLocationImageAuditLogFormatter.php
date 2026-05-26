@@ -50,6 +50,9 @@ class SummitLocationImageAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Location Image '%s' (%d) for Location '%s' in Summit '%s' updated: %s by user %s",
                         $name,

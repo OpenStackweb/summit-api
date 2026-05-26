@@ -46,6 +46,9 @@ class SummitMemberScheduleAuditLogFormatter extends AbstractAuditLogFormatter
 
            case IAuditStrategy::EVENT_ENTITY_UPDATE:
                $change_details = $this->buildChangeDetails($change_set);
+               if ($change_details === null) {
+                   return null;
+               }
                return sprintf(
                    "Activity '%s' (%s) in user custom schedule updated: %s by user %s",
                    $event_title,

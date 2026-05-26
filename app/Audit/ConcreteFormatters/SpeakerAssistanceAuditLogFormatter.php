@@ -57,6 +57,9 @@ class SpeakerAssistanceAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Speaker assistance for '%s' (%s) on Summit '%s' updated: %s by user %s",
                         $speaker_name,

@@ -45,6 +45,9 @@ class SpeakerRegistrationRequestAuditLogFormatter extends AbstractAuditLogFormat
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Speaker registration request for '%s' updated: %s by user %s",
                         $email,

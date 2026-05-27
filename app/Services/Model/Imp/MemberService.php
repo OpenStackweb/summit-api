@@ -316,6 +316,14 @@ final class MemberService
             );
             $member = $this->member_repository->getByExternalIdExclusiveLock($userDTO->getId());
             if(is_null($member)) {
+                // guard against email collision: a former member (e.g. a failed delete) may still hold this email
+                $member_by_email = $this->member_repository->getByEmail($userDTO->getEmail());
+                if(!is_null($member_by_email) && $member_by_email->getUserExternalId() != $userDTO->getId()) {
+                    // the idp is the source of truth
+                    Log::warning(sprintf("MemberService::registerExternalUser there is a former user with same email %s former id %s invalidating email", $userDTO->getEmail(), $member_by_email->getId()));
+                    $member_by_email->setEmail(sprintf("%s-invalid@invalid", $member_by_email->getUserExternalId()));
+                    $this->member_repository->add($member_by_email, true);
+                }
                 $member = new Member();
                 $member->setUserExternalId($userDTO->getId());
                 $member->setActive($userDTO->isActive());

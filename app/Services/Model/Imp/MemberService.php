@@ -342,11 +342,20 @@ final class MemberService
         // first by external id due email could be updated
         Log::debug(sprintf("MemberService::registerExternalUserByPayload trying to get user by external id %s", $user_external_id));
         $member = $this->member_repository->getByExternalIdExclusiveLock(intval($user_external_id));
+        $member_by_email = $this->member_repository->getByEmail($email);
+        // if there are 2 users and the email was transferred to the new external id
+        if(!is_null($member) && !is_null($member_by_email) && $member_by_email->getUserExternalId() != $user_external_id) {
+          // the idp is the source of truth
+            Log::warning(sprintf("MemberService::registerExternalUserByPayload there is a former user with same email %s former id %s invalidating email", $email, $member_by_email->getId()));
+            $member_by_email->setEmail(sprintf("%s-invalid@invalid", $member_by_email->getUserExternalId()));
+            $this->member_repository->add($member_by_email, true);
+        }
         // if we dont registered yet a member with that external id try to get by email
         if(is_null($member)) {
             Log::debug(sprintf("MemberService::registerExternalUserByPayload trying to get user by email %s", $email));
-            $member = $this->member_repository->getByEmail($email);
+            $member = $member_by_email;
         }
+
         $is_new = false;
         if(is_null($member)) {
             Log::debug(sprintf("MemberService::registerExternalUserByPayload %s does not exists , creating it ...", $email));

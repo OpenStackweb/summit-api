@@ -348,13 +348,15 @@ final class EventServiceProvider extends ServiceProvider
 
             Log::debug(sprintf("ScheduleEntityLifeCycleEvent event %s", $event));
 
-            ProcessScheduleEntityLifeCycleEvent::dispatch
-            (
-                $event->entity_operator,
-                $event->summit_id,
-                $event->entity_id,
-                $event->entity_type,
-                $event->params
+            JobDispatcher::withDbFallback(
+                new ProcessScheduleEntityLifeCycleEvent(
+                    $event->entity_operator,
+                    $event->summit_id,
+                    $event->entity_id,
+                    $event->entity_type,
+                    $event->params
+                ),
+                ['entity_type' => $event->entity_type, 'entity_id' => $event->entity_id]
             );
         });
 

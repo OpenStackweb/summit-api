@@ -249,6 +249,16 @@ final class ResourceServerContext implements IResourceServerContext
                 // update member fields
                 if (!empty($user_email)) {
                     Log::debug(sprintf("ResourceServerContext::getCurrentUser setting email for member %s", $member->getId()));
+                    // guard against email collision: another member may already hold this email
+                    $member_by_email = $this->member_repository->getByEmail($user_email);
+                    if (!is_null($member_by_email) && $member_by_email->getId() !== $member->getId()) {
+                        Log::warning(sprintf(
+                            "ResourceServerContext::getCurrentUser email %s already owned by member %s, invalidating it",
+                            $user_email,
+                            $member_by_email->getId()
+                        ));
+                        $member_by_email->setEmail(sprintf("%s-invalid@invalid", $member_by_email->getId()));
+                    }
                     $member->setEmail($user_email);
                 }
 

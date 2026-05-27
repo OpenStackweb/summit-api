@@ -22,7 +22,6 @@ use App\Audit\ConcreteFormatters\DefaultEntityManyToManyCollectionUpdateAuditLog
 use App\Audit\ConcreteFormatters\DefaultEntityManyToManyCollectionDeleteAuditLogFormatter;
 use App\Audit\ConcreteFormatters\EntityUpdateAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
-use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -223,10 +222,6 @@ class AuditLogFormatterFactory implements IAuditLogFormatterFactory
     {
         if (!is_object($subject)) {
             return null;
-        }
-
-        if (class_exists(ClassUtils::class)) {
-            return ClassUtils::getClass($subject);
         }
 
         return get_class($subject);

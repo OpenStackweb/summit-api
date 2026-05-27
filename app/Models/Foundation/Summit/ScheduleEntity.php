@@ -70,23 +70,39 @@ trait ScheduleEntity
     #[ORM\PreRemove]
     public function deleting($args)
     {
-        Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Delete,
-            $this->_getSummitId(),
-            $this->id,
-            $this->_getClassName()));
+        try {
+            Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Delete,
+                $this->_getSummitId(),
+                $this->id,
+                $this->_getClassName()));
+        } catch (\Exception $ex) {
+            // Lifecycle notifications must not abort Doctrine transactions.
+            // A queue/cache failure here should never roll back the delete.
+            Log::warning(sprintf(
+                "ScheduleEntity::deleting failed to dispatch lifecycle event for %s id %s: %s",
+                $this->_getClassName(), $this->id, $ex->getMessage()
+            ));
+        }
     }
 
     #[ORM\PostRemove]
     public function deleted($args)
     {
-        $this->cachedDeleted($args);
+        try {
+            $this->cachedDeleted($args);
+        } catch (\Exception $ex) {
+            Log::warning(sprintf(
+                "ScheduleEntity::deleted failed cache cleanup for %s id %s: %s",
+                $this->_getClassName(), $this->id, $ex->getMessage()
+            ));
+        }
     }
 
     #[ORM\PreUpdate]
     public function updating(PreUpdateEventArgs $args)
     {
         parent::updating($args);
-    }
+     }
 
     #[ORM\PostUpdate]
     public function updated($args)
@@ -94,22 +110,43 @@ trait ScheduleEntity
         if($this->shouldSkipDataUpdate()){
             Log::debug(sprintf("ScheduleEntity::updated skipping data update for id %s type %s ...", $this->id, $this->_getClassName()));
             return;
-        };
+        }
         Log::debug(sprintf("ScheduleEntity::updated id %s", $this->id));
-        $this->cachedUpdated($args);
-        Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Update,
-            $this->_getSummitId(),
-            $this->id,
-            $this->_getClassName()));
+        try {
+            $this->cachedUpdated($args);
+        } catch (\Exception $ex) {
+            Log::warning(sprintf(
+                "ScheduleEntity::updated failed cache update for %s id %s: %s",
+                $this->_getClassName(), $this->id, $ex->getMessage()
+            ));
+        }
+        try {
+            Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Update,
+                $this->_getSummitId(),
+                $this->id,
+                $this->_getClassName()));
+        } catch (\Exception $ex) {
+            Log::warning(sprintf(
+                "ScheduleEntity::updated failed to dispatch lifecycle event for %s id %s: %s",
+                $this->_getClassName(), $this->id, $ex->getMessage()
+            ));
+        }
     }
 
     // events
     #[ORM\PostPersist]
     public function inserted($args)
     {
-        Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Insert,
-            $this->_getSummitId(),
-            $this->id,
-            $this->_getClassName()));
+        try {
+            Event::dispatch(new ScheduleEntityLifeCycleEvent(ScheduleEntityLifeCycleEvent::Operation_Insert,
+                $this->_getSummitId(),
+                $this->id,
+                $this->_getClassName()));
+        } catch (\Exception $ex) {
+            Log::warning(sprintf(
+                "ScheduleEntity::inserted failed to dispatch lifecycle event for %s id %s: %s",
+                $this->_getClassName(), $this->id, $ex->getMessage()
+            ));
+        }
     }
 }

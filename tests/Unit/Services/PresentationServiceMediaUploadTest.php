@@ -17,7 +17,7 @@ use Doctrine\ORM\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ITransactionService;
 use Mockery;
-use models\summit\IStorageTypesConstants;
+use App\Models\Utils\IStorageTypesConstants;
 use models\summit\PendingMediaUpload;
 use models\summit\Presentation;
 use models\summit\PresentationMediaUpload;

@@ -115,6 +115,17 @@ final class SummitPromoCodeFactory
      */
     public static function populate(SummitRegistrationPromoCode $promo_code, Summit $summit, array $data, array $params = []){
 
+        // Discount codes are mutually exclusive: a code carries EITHER a flat
+        // amount/rate OR per-ticket-type rules. When the payload includes
+        // ticket_types_rules, the top-level amount/rate are leftover fields echoed
+        // back from the serialized object and must be ignored — otherwise
+        // setAmount()/setRate() clear the ticket_types_rules collection
+        // (orphanRemoval) and wipe the rules on update.
+        // See SummitRegistrationDiscountCode::setRate()/setAmount().
+        if (!empty($data['ticket_types_rules'])) {
+            unset($data['amount'], $data['rate']);
+        }
+
         // common members
 
         if(isset($params['allowed_ticket_types'])){

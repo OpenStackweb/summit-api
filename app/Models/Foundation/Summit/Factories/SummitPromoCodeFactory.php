@@ -128,7 +128,11 @@ final class SummitPromoCodeFactory
 
         // common members
 
-        if(isset($params['allowed_ticket_types'])){
+        // Discount codes manage allowed_ticket_types exclusively via ticket_types_rules
+        // (addTicketTypeRule writes both collections). Applying clearTicketTypes() here
+        // would wipe the join table every time the promo code is saved, even when
+        // allowed_ticket_types arrives as [] from the admin UI.
+        if(isset($params['allowed_ticket_types']) && !($promo_code instanceof SummitRegistrationDiscountCode)){
             $promo_code->clearTicketTypes();
             foreach ($params['allowed_ticket_types'] as $ticket_type){
                 $promo_code->addAllowedTicketType($ticket_type);

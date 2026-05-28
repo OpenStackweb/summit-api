@@ -96,6 +96,28 @@ class SummitRegistrationDiscountCode extends SummitRegistrationPromoCode
     }
 
     /**
+     * Derives allowed ticket types from ticket_types_rules, which is the
+     * authoritative source for discount codes. The base-class join table
+     * (SummitRegistrationPromoCode_AllowedTicketTypes) can be empty when
+     * a promo-code save wipes it (factory clearTicketTypes bug, Jan 2024),
+     * so we never rely on it here.
+     */
+    public function getAllowedTicketTypes()
+    {
+        if ($this->ticket_types_rules->isEmpty()) {
+            return parent::getAllowedTicketTypes();
+        }
+        $types = new ArrayCollection();
+        foreach ($this->ticket_types_rules as $rule) {
+            $tt = $rule->getTicketType();
+            if (!is_null($tt) && !$types->contains($tt)) {
+                $types->add($tt);
+            }
+        }
+        return $types;
+    }
+
+    /**
      * @param SummitTicketType $ticket_type
      * @return bool
      */

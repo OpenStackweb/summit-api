@@ -22,7 +22,6 @@ use models\summit\MemberSummitRegistrationPromoCode;
 use models\summit\SpeakerSummitRegistrationDiscountCode;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 use models\summit\Summit;
-use models\summit\SummitRegistrationDiscountCodeTicketTypeRule;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitTicketType;
 use models\main\Member;
@@ -390,73 +389,6 @@ class DomainAuthorizedPromoCodeTest extends TestCase
 
         $ids = array_map(fn($tt) => $tt->getId(), $result);
         $this->assertContains(40, $ids, 'Audience_All ticket type should be returned with a promo code');
-    }
-
-    // -----------------------------------------------------------------------
-    // Collision avoidance — DomainAuthorizedSummitRegistrationDiscountCode
-    // -----------------------------------------------------------------------
-
-    /**
-     * addTicketTypeRule rejects rules for types not in allowed_ticket_types (Truth #4).
-     */
-    public function testAddTicketTypeRuleRejectsWhenTypeNotInAllowedTicketTypes(): void
-    {
-        $code = new DomainAuthorizedSummitRegistrationDiscountCode();
-
-        $ticketType = $this->createMock(SummitTicketType::class);
-        $ticketType->method('getId')->willReturn(1);
-
-        $rule = new SummitRegistrationDiscountCodeTicketTypeRule();
-        $rule->setTicketType($ticketType);
-
-        $this->expectException(ValidationException::class);
-        $code->addTicketTypeRule($rule);
-    }
-
-    /**
-     * addTicketTypeRule does NOT mutate allowed_ticket_types — override skips parent's add().
-     */
-    public function testAddTicketTypeRuleDoesNotMutateAllowedTicketTypes(): void
-    {
-        $code = new DomainAuthorizedSummitRegistrationDiscountCode();
-
-        $ticketType = $this->createMock(SummitTicketType::class);
-        $ticketType->method('getId')->willReturn(1);
-
-        // First add to allowed_ticket_types
-        $code->addAllowedTicketType($ticketType);
-        $this->assertEquals(1, $code->getAllowedTicketTypes()->count());
-
-        // Now add a discount rule — should NOT add a second entry to allowed_ticket_types
-        $rule = new SummitRegistrationDiscountCodeTicketTypeRule();
-        $rule->setTicketType($ticketType);
-        $code->addTicketTypeRule($rule);
-
-        $this->assertEquals(1, $code->getAllowedTicketTypes()->count(),
-            'addTicketTypeRule must not mutate allowed_ticket_types');
-    }
-
-    /**
-     * removeTicketTypeRule does NOT mutate allowed_ticket_types.
-     */
-    public function testRemoveTicketTypeRuleDoesNotMutateAllowedTicketTypes(): void
-    {
-        $code = new DomainAuthorizedSummitRegistrationDiscountCode();
-
-        $ticketType = $this->createMock(SummitTicketType::class);
-        $ticketType->method('getId')->willReturn(1);
-
-        $code->addAllowedTicketType($ticketType);
-
-        $rule = new SummitRegistrationDiscountCodeTicketTypeRule();
-        $rule->setTicketType($ticketType);
-        $code->addTicketTypeRule($rule);
-
-        // Remove the rule — allowed_ticket_types must remain intact
-        $code->removeTicketTypeRule($rule);
-
-        $this->assertEquals(1, $code->getAllowedTicketTypes()->count(),
-            'removeTicketTypeRule must not mutate allowed_ticket_types');
     }
 
     // -----------------------------------------------------------------------

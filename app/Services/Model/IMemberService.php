@@ -76,9 +76,12 @@ interface IMemberService
     /**
      * @param Member $member
      * @param array $groups
+     * @param bool $allow_removals when false, groups absent from $groups are NOT pruned
+     *                             (used by the per-request, possibly-stale, token-claim path);
+     *                             only the authoritative live-IDP path should pass true.
      * @return Member
      */
-    public function synchronizeGroups(Member $member, array $groups):Member;
+    public function synchronizeGroups(Member $member, array $groups, bool $allow_removals = true):Member;
 
     /**
      * @param string $email

@@ -503,11 +503,15 @@ final class MemberService
             // suppress a later full (authoritative idp) sync of the same group set.
             $groups_key = $groups;
             sort($groups_key);
+            // fingerprint the (sorted) group set so distinct lists can't collide into the same
+            // key: a raw "_" join is ambiguous (["a_b","c"] and ["a","b_c"] both yield "a_b_c"),
+            // which would wrongly short-circuit a sync for the wrong set for the TTL window.
+            $groups_fingerprint = sha1(json_encode(array_values($groups_key)));
             $cache_key = sprintf(
                 "member_%s_%s_%s_sync_groups",
                 $member->getId(),
                 $allow_removals ? "full" : "add",
-                implode("_", $groups_key)
+                $groups_fingerprint
             );
 
             $val = $this->cache_service->getSingleValue($cache_key);

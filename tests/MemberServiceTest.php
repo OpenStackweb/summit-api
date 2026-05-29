@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ITransactionService;
+use models\main\Group;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 
@@ -182,6 +183,89 @@ final class MemberServiceTest extends TestCase
             $former_member->getEmail(),
             "former member's email must be invalidated"
         );
+    }
+
+    /**
+     * Regression: the per-request group sync is driven by the access-token "user_groups"
+     * claim, which is a snapshot taken when the token was issued and can be stale. It must
+     * NOT remove groups assigned out-of-band after the token was minted (e.g. a member added
+     * to "sponsors-services" by the IDP webhook). Only the authoritative live-IDP path
+     * (allow_removals = true) may prune groups.
+     */
+    public function testSynchronizeGroupsAdditiveModePreservesOutOfBandGroups(): void
+    {
+        $prefix    = strtolower(str_random(8));
+        $keep_code = "keep-{$prefix}";
+        $drop_code = "drop-{$prefix}";
+
+        $member = new Member();
+        $member->setEmail(strtolower("sync+{$prefix}@test.com"));
+        $member->setActive(true);
+        $member->setEmailVerified(true);
+        $member->setFirstName("Sync");
+        $member->setLastName("User");
+        $member->setUserExternalId($this->create_external_id);
+
+        $keep_group = new Group();
+        $keep_group->setCode($keep_code);
+        $keep_group->setTitle($keep_code);
+        $keep_group->setDescription($keep_code);
+        $keep_group->setExternal();
+
+        // group assigned out-of-band (not present in the stale token claim, not in the skip-list)
+        $drop_group = new Group();
+        $drop_group->setCode($drop_code);
+        $drop_group->setTitle($drop_code);
+        $drop_group->setDescription($drop_code);
+        $drop_group->setExternal();
+
+        $this->em->persist($keep_group);
+        $this->em->persist($drop_group);
+        $member->add2Group($keep_group);
+        $member->add2Group($drop_group);
+        $this->em->persist($member);
+        $this->em->flush();
+
+        $member_id = $member->getId();
+        $service   = App::make(IMemberService::class);
+
+        // request/token path: stale claim lists only $keep_code, removals disabled
+        $service->synchronizeGroups($member, [$keep_code], false);
+        $this->em->clear();
+
+        $member = $this->member_repository->find($member_id);
+        $this->assertTrue($member->belongsToGroup($keep_code), "kept group must remain");
+        $this->assertTrue(
+            $member->belongsToGroup($drop_code),
+            "additive (request) sync must not remove out-of-band group {$drop_code}"
+        );
+
+        // authoritative live-IDP path: same claim, removals enabled -> prunes $drop_code
+        $service->synchronizeGroups($member, [$keep_code]);
+        $this->em->clear();
+
+        $member = $this->member_repository->find($member_id);
+        $this->assertTrue($member->belongsToGroup($keep_code), "kept group must remain after full sync");
+        $this->assertFalse(
+            $member->belongsToGroup($drop_code),
+            "authoritative full sync must still prune {$drop_code}"
+        );
+
+        // best-effort cleanup of the test groups (the member is removed in tearDown)
+        try {
+            $member = $this->member_repository->find($member_id);
+            if (!is_null($member)) {
+                $member->setGroups(new \Doctrine\Common\Collections\ArrayCollection());
+                $this->em->flush();
+            }
+            foreach ([$keep_code, $drop_code] as $code) {
+                $g = $this->em->getRepository(Group::class)->findOneBy(['code' => $code]);
+                if (!is_null($g)) $this->em->remove($g);
+            }
+            $this->em->flush();
+        } catch (\Exception $ex) {
+            // best-effort
+        }
     }
 
     private function buildExternalProfilePayload(int $external_id, string $email): array

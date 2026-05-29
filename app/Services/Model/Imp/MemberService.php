@@ -492,50 +492,75 @@ final class MemberService
      * @return Member
      * @throws \Exception
      */
-    public function synchronizeGroups(Member $member, array $groups): Member
+    public function synchronizeGroups(Member $member, array $groups, bool $allow_removals = true): Member
     {
-        return $this->tx_service->transaction(function () use ($member, $groups) {
+        return $this->tx_service->transaction(function () use ($member, $groups, $allow_removals) {
 
-            $val = $this->cache_service->getSingleValue(sprintf("member_%s_%s_sync_groups", $member->getId(), implode("_", $groups)));
+            // GET and SET must share the same key. The previous code read a per-group key but
+            // wrote one without the group list, so the throttle never hit and the full add/remove
+            // logic ran on every request. The list is sorted so token/idp orderings collapse to a
+            // single entry, and the mode is part of the key so an additive (request) sync can't
+            // suppress a later full (authoritative idp) sync of the same group set.
+            $groups_key = $groups;
+            sort($groups_key);
+            // fingerprint the (sorted) group set so distinct lists can't collide into the same
+            // key: a raw "_" join is ambiguous (["a_b","c"] and ["a","b_c"] both yield "a_b_c"),
+            // which would wrongly short-circuit a sync for the wrong set for the TTL window.
+            $groups_fingerprint = sha1(json_encode(array_values($groups_key)));
+            $cache_key = sprintf(
+                "member_%s_%s_%s_sync_groups",
+                $member->getId(),
+                $allow_removals ? "full" : "add",
+                $groups_fingerprint
+            );
+
+            $val = $this->cache_service->getSingleValue($cache_key);
 
             if(!empty($val)){
                 Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s synch already done", $member->getId(), $member->getEmail()));
                 return $member;
             }
 
-            $groups2Remove = [];
+            Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s allow_removals %s", $member->getId(), $member->getEmail(), $allow_removals ? "true" : "false"));
 
-            Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s", $member->getId(), $member->getEmail()));
+            // Removals are driven only by the authoritative live IDP profile (the webhook path).
+            // The per-request path passes the access-token group claim, a snapshot taken when the
+            // token was issued that can be stale, so it must never remove groups assigned out-of-band
+            // (e.g. a sponsors-services group added after the token was minted).
+            if ($allow_removals) {
 
-            foreach($member->getGroups() as $group){
-                // if this group was added from idp, clear it, just in case we were deleted from that group
-                if(!in_array($group->getCode(), $groups)){
-                    // do not remove if we are super admins, since we do need this group too ( backward compatibility with SS CMS)
-                    if($group->getCode() == IGroup::Administrators && in_array(IGroup::SuperAdmins, $groups))
-                        continue;
+                $groups2Remove = [];
 
-                    // skipping this groups bc are managed by SS side
-                    if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs, IGroup::Sponsors])){
-                        Log::debug(sprintf("MemberService::synchronizeGroups skipping group %s removal", $group->getCode()));
-                        continue;
-                    }
+                foreach($member->getGroups() as $group){
+                    // if this group was added from idp, clear it, just in case we were deleted from that group
+                    if(!in_array($group->getCode(), $groups)){
+                        // do not remove if we are super admins, since we do need this group too ( backward compatibility with SS CMS)
+                        if($group->getCode() == IGroup::Administrators && in_array(IGroup::SuperAdmins, $groups))
+                            continue;
 
-                    Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s marking group %s to remove (external) dues is not on member current groups", $member->getId(), $member->getEmail(), $group->getCode()));
-                    $groups2Remove[] = $group;
-                }
-            }
+                        // skipping this groups bc are managed by SS side
+                        if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs, IGroup::Sponsors])){
+                            Log::debug(sprintf("MemberService::synchronizeGroups skipping group %s removal", $group->getCode()));
+                            continue;
+                        }
 
-            // remove all groups that arent on our IDP profile anymore ...
-            foreach ($groups2Remove as $externalGroup){
-                if($externalGroup->getCode() === IGroup::SuperAdmins && $member->belongsToGroup(IGroup::Administrators)){
-                    $group = $this->group_repository->getBySlug(IGroup::Administrators);
-                    if(!is_null($group)) {
-                        Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s due is also a super admin", $member->getId(), $member->getEmail(), $group->getCode()));
-                        $member->removeFromGroup($group);
+                        Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s marking group %s to remove (external) dues is not on member current groups", $member->getId(), $member->getEmail(), $group->getCode()));
+                        $groups2Remove[] = $group;
                     }
                 }
-                Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
-                $member->removeFromGroup($externalGroup);
+
+                // remove all groups that arent on our IDP profile anymore ...
+                foreach ($groups2Remove as $externalGroup){
+                    if($externalGroup->getCode() === IGroup::SuperAdmins && $member->belongsToGroup(IGroup::Administrators)){
+                        $group = $this->group_repository->getBySlug(IGroup::Administrators);
+                        if(!is_null($group)) {
+                            Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s due is also a super admin", $member->getId(), $member->getEmail(), $group->getCode()));
+                            $member->removeFromGroup($group);
+                        }
+                    }
+                    Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
+                    $member->removeFromGroup($externalGroup);
+                }
             }
 
             // sync
@@ -584,7 +609,7 @@ final class MemberService
 
             }
 
-            $this->cache_service->setSingleValue(sprintf("member_%s_sync_groups", $member->getId()), 1, self::SYNCH_GROUPS_TTL);
+            $this->cache_service->setSingleValue($cache_key, 1, self::SYNCH_GROUPS_TTL);
             return $member;
         });
     }

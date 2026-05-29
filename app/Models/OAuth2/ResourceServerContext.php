@@ -299,7 +299,10 @@ final class ResourceServerContext implements IResourceServerContext
             $groups[] = trim($slug);
             Log::debug(sprintf("ResourceServerContext::checkGroups member %s %s slug %s", $member->getId(), $member->getEmail(), trim($idpGroup['slug'])));
         }
-        return $this->member_service->synchronizeGroups($member, $groups);
+        // additive-only: the token "user_groups" claim is a snapshot taken at token issuance and
+        // can be stale, so it must not prune groups assigned out-of-band after login. Group
+        // removals are handled exclusively by the authoritative live-IDP webhook path.
+        return $this->member_service->synchronizeGroups($member, $groups, false);
     }
 
     /**

@@ -491,6 +491,10 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         $speaker_assignment = $this->speakers->matching($criteria)->first();
         if ($speaker_assignment === false) return;
         self::recalculateOrderForSelectable($this->speakers, $speaker_assignment, $order, PresentationSpeakerAssignment::class);
+        // Reordering only mutates child PresentationSpeakerAssignment rows, which does not
+        // dirty the parent Presentation, so the PreUpdate last_edited bump never fires.
+        // Bump explicitly so the serializer cache key (which embeds last_edited) invalidates.
+        $this->updateLastEdited();
     }
 
     /**

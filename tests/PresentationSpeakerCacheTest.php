@@ -140,4 +140,35 @@ final class PresentationSpeakerCacheTest extends TestCase
         $status = $pres->getSelectionStatus();
         $this->assertSame(Presentation::SelectionStatus_Pending, $status);
     }
+
+    // ------------------------------------------------------------------ //
+    // Presentation::updateSpeakerOrder cache invalidation (last_edited)   //
+    // ------------------------------------------------------------------ //
+
+    /**
+     * Reordering speakers only mutates child PresentationSpeakerAssignment rows,
+     * which does not dirty the parent Presentation, so the ORM PreUpdate
+     * last_edited bump never fires. Since PresentationSerializer's cache key now
+     * embeds last_edited, a reorder that does not bump it would serve stale
+     * cached speaker order for the full TTL. updateSpeakerOrder() must bump
+     * last_edited explicitly so the cache key invalidates.
+     */
+    public function testUpdateSpeakerOrderBumpsLastEditedToInvalidateSerializerCache(): void
+    {
+        $presentation = new Presentation();
+        $speaker      = new PresentationSpeaker();
+        $presentation->addSpeaker($speaker);
+
+        // Pin last_edited to a deliberately stale value (the cache key embeds this).
+        $presentation->setLastEdited(new \DateTime('2000-01-01 00:00:00', new \DateTimeZone('UTC')));
+        $staleTs = $presentation->getLastEditedUTC()->getTimestamp();
+
+        $presentation->updateSpeakerOrder($speaker, 1);
+
+        $this->assertGreaterThan(
+            $staleTs,
+            $presentation->getLastEditedUTC()->getTimestamp(),
+            'updateSpeakerOrder must bump last_edited so the presentation serializer cache key invalidates'
+        );
+    }
 }

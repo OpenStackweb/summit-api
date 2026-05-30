@@ -21,8 +21,7 @@ class ResourceServerContextTest extends BrowserKitTestCase
 {
     public function testSync(){
         $ctx = App::make(IResourceServerContext::class);
-        if(!$ctx instanceof IResourceServerContext)
-            throw new \Exception();
+        $this->assertInstanceOf(IResourceServerContext::class, $ctx);
 
         $context = [];
         $context['user_id'] = "1080";
@@ -36,6 +35,20 @@ class ResourceServerContextTest extends BrowserKitTestCase
         $ctx->setAuthorizationContext($context);
 
         $member = $ctx->getCurrentUser(true);
+
+        // A member is resolved/created from the IDP auth-context claims...
+        $this->assertNotNull($member, 'getCurrentUser must resolve a member from the auth context');
+        // ...and the claim fields are synced onto it.
+        $this->assertEquals($context['user_email'], $member->getEmail());
+        $this->assertEquals($context['user_first_name'], $member->getFirstName());
+        $this->assertEquals($context['user_last_name'], $member->getLastName());
+
+        // Request-scoped cache: a second call returns the identical instance.
+        $this->assertSame(
+            $member,
+            $ctx->getCurrentUser(true),
+            'getCurrentUser must return the cached instance within a request'
+        );
     }
 
     public function testSetAuthorizationContextResetsUserCache(): void

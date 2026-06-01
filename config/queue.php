@@ -184,6 +184,9 @@ return [
          *  - summit_created ( see app/Events/SponsorServices/SummitDomainEvents.php )
          *  - summit_updated
          *  - summit_deleted
+         *  - summit_media_file_type_created ( see app/Events/SponsorServices/SummitMediaFileTypeDomainEvents.php )
+         *  - summit_media_file_type_updated
+         *  - summit_media_file_type_deleted
          */
         'domain_events_message_broker' => [
             'driver' => 'rabbitmq',

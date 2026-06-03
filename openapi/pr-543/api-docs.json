@@ -59359,10 +59359,10 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Summit ID or slug",
+                        "description": "Summit ID",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {

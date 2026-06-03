@@ -172,6 +172,44 @@ final class OAuth2SummitSelectionPlansApiTest extends ProtectedApiTestCase
         $this->assertEquals($is_hidden, $selectionPlan->is_hidden);
     }
 
+    public function testUpdateSelectionPlanWithEmojiInDisclaimer()
+    {
+        // Regression: SubmissionPeriodDisclaimer column was utf8 (3-byte), which rejected U+1F4C5 (📅)
+        $disclaimer = "Submit before the deadline \u{1F4C5}";
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'selection_plan_id' => self::$default_selection_plan->getId(),
+        ];
+
+        $data = [
+            'submission_period_disclaimer' => $disclaimer,
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSelectionPlansApiController@updateSelectionPlan",
+            $params,
+            [],
+            [],
+            [],
+            $this->getHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $selectionPlan = json_decode($content);
+        $this->assertNotNull($selectionPlan);
+        $this->assertEquals($disclaimer, $selectionPlan->submission_period_disclaimer);
+
+        // Verify the value was actually persisted and reads back identically
+        $repository = self::$em->getRepository(\App\Models\Foundation\Summit\SelectionPlan::class);
+        self::$em->clear();
+        $persisted = $repository->find(self::$default_selection_plan->getId());
+        $this->assertEquals($disclaimer, $persisted->getSubmissionPeriodDisclaimer());
+    }
+
     public function testAttachPresentationType()
     {
         $params = [

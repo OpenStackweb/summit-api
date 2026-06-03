@@ -8,8 +8,8 @@ $model_db_config = [
     'username' => env('SS_DB_USERNAME'),
     'password' => env('SS_DB_PASSWORD'),
     'port' => env('SS_DB_PORT', 3306),
-    'charset' => env('SS_DB_CHARSET', 'utf8'),
-    'collation' => env('SS_DB_COLLATION', 'utf8_unicode_ci'),
+    'charset' => env('SS_DB_CHARSET', 'utf8mb4'),
+    'collation' => env('SS_DB_COLLATION', 'utf8mb4_unicode_ci'),
     'prefix' => env('SS_DB_PREFIX', ''),
     'serverVersion' => env('DB_SERVER_VERSION',  '8.0.43')
 ];
@@ -61,8 +61,8 @@ $model_write__db_config = [
     'username' => env('SS_DB_USERNAME'),
     'password' => env('SS_DB_PASSWORD'),
     'port' => env('SS_DB_PORT', 3306),
-    'charset' => env('SS_DB_CHARSET', 'utf8'),
-    'collation' => env('SS_DB_COLLATION', 'utf8_unicode_ci'),
+    'charset' => env('SS_DB_CHARSET', 'utf8mb4'),
+    'collation' => env('SS_DB_COLLATION', 'utf8mb4_unicode_ci'),
     'prefix' => env('SS_DB_PREFIX', ''),
     'serverVersion' => env('DB_SERVER_VERSION',  '8.0.43')
 ];

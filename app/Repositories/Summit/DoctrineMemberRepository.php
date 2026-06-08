@@ -646,35 +646,19 @@ SQL,
      */
     public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
     {
-        // Collect distinct member IDs matching the summit + filter using the
-        // same base query / filter mappings as getSubmittersBySummit.
-        $qb = $this->getEntityManager()->createQueryBuilder()
-            ->distinct(true)
-            ->select("e.id")
-            ->from($this->getBaseEntity(), "e")
-            ->where("
-                     EXISTS (
-                        SELECT __p.id FROM models\summit\Presentation __p
-                        WHERE __p.created_by = e AND __p.summit = :summit
-                     )")
-            ->setParameter("summit", $summit);
-
-        $qb = $this->applyExtraJoins($qb, $filter);
-
-        if (!is_null($filter)) {
-            $filter->apply2Query($qb, $this->getFilterMappings($filter));
-        }
-
-        // Count distinct presentations using the member query as a subquery — no PHP ID materialization.
+        // Start from Presentation and JOIN to the submitter (created_by).
+        // Bounded by summit — no subquery needed, filter mappings apply to e unchanged.
         $countQb = $this->getEntityManager()->createQueryBuilder()
             ->select("COUNT(DISTINCT p.id)")
             ->from('models\summit\Presentation', 'p')
-            ->where('p.summit = :summit_outer')
-            ->andWhere("p.created_by IN ({$qb->getDQL()})");
+            ->join('p.created_by', 'e')
+            ->where('p.summit = :summit')
+            ->setParameter('summit', $summit);
 
-        $countQb->setParameter('summit_outer', $summit);
-        foreach ($qb->getParameters() as $param) {
-            $countQb->setParameter($param->getName(), $param->getValue(), $param->getType());
+        $countQb = $this->applyExtraJoins($countQb, $filter);
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($countQb, $this->getFilterMappings($filter));
         }
 
         return intval($countQb->getQuery()->getSingleScalarResult());

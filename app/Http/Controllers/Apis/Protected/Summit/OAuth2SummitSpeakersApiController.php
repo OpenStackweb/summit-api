@@ -336,9 +336,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'full_name' => 'sometimes|string',
                     'member_id' => 'sometimes|integer',
                     'member_user_external_id' => 'sometimes|integer',
-                    'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
-                    'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
-                    'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_accepted_presentations' => 'sometimes|string|in:true,false',
+                    'has_alternate_presentations' => 'sometimes|string|in:true,false',
+                    'has_rejected_presentations' => 'sometimes|string|in:true,false',
                     'presentations_track_id' => 'sometimes|integer',
                     'presentations_track_group_id' => 'sometimes|integer',
                     'presentations_selection_plan_id' => 'sometimes|integer',
@@ -433,7 +433,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     {
         return $this->processRequest(function () use ($summit_id) {
 
-            $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
+            $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find(intval($summit_id));
             if (is_null($summit)) return $this->error404();
 
             $filter = null;
@@ -474,9 +474,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'full_name' => 'sometimes|string',
                     'member_id' => 'sometimes|integer',
                     'member_user_external_id' => 'sometimes|integer',
-                    'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
-                    'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
-                    'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_accepted_presentations' => 'sometimes|string|in:true,false',
+                    'has_alternate_presentations' => 'sometimes|string|in:true,false',
+                    'has_rejected_presentations' => 'sometimes|string|in:true,false',
                     'presentations_track_id' => 'sometimes|integer',
                     'presentations_track_group_id' => 'sometimes|integer',
                     'presentations_selection_plan_id' => 'sometimes|integer',
@@ -614,9 +614,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     'full_name' => 'sometimes|string',
                     'member_id' => 'sometimes|integer',
                     'member_user_external_id' => 'sometimes|integer',
-                    'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
-                    'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
-                    'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
+                    'has_accepted_presentations' => 'sometimes|string|in:true,false',
+                    'has_alternate_presentations' => 'sometimes|string|in:true,false',
+                    'has_rejected_presentations' => 'sometimes|string|in:true,false',
                     'presentations_track_id' => 'sometimes|integer',
                     'presentations_track_group_id' => 'sometimes|integer',
                     'presentations_selection_plan_id' => 'sometimes|integer',
@@ -3275,9 +3275,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'last_name' => 'sometimes|string',
                 'email' => 'sometimes|string',
                 'full_name' => 'sometimes|string',
-                'has_accepted_presentations' => 'sometimes|required|string|in:true,false',
-                'has_alternate_presentations' => 'sometimes|required|string|in:true,false',
-                'has_rejected_presentations' => 'sometimes|required|string|in:true,false',
+                'has_accepted_presentations' => 'sometimes|string|in:true,false',
+                'has_alternate_presentations' => 'sometimes|string|in:true,false',
+                'has_rejected_presentations' => 'sometimes|string|in:true,false',
                 'presentations_track_id' => 'sometimes|integer',
                 'presentations_track_group_id' => 'sometimes|integer',
                 'presentations_selection_plan_id' => 'sometimes|integer',

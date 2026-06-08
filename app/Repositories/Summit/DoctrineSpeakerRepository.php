@@ -705,29 +705,54 @@ SQL,
      */
     public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
     {
-        // Single query: cross-join Presentation × PresentationSpeaker, then filter to
-        // rows where the speaker is either an assigned speaker OR the moderator.
-        // COUNT(DISTINCT p.id) deduplicates in SQL — no PHP-side array_unique needed.
-        // All aliases (e, m, rr) are top-level, so getFilterMappings() applies unchanged.
-        $countQb = $this->getEntityManager()->createQueryBuilder()
-            ->select('COUNT(DISTINCT p.id)')
-            ->from('models\summit\Presentation', 'p')
+        // Inner query: distinct IDs of speakers who belong to this summit (via assignment
+        // or moderator role) and match any caller-supplied filter. Uses IDENTITY() with a
+        // scalar summit ID so no entity parameter is embedded in the getDQL() string —
+        // entity parameters copied into an outer QB via getDQL() are not correctly resolved
+        // to their primary key by Doctrine's type system.
+        $innerQb = $this->getEntityManager()->createQueryBuilder()
+            ->select('e.id')
+            ->distinct(true)
             ->from('models\summit\PresentationSpeaker', 'e')
             ->leftJoin('e.registration_request', 'rr')
             ->leftJoin('e.member', 'm')
+            ->where(
+                'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __a'
+                . ' JOIN __a.presentation __ap WHERE IDENTITY(__ap.summit) = :summit_id AND __a.speaker = e)'
+                . ' OR EXISTS (SELECT 1 FROM models\summit\Presentation __mp WHERE IDENTITY(__mp.summit) = :summit_id AND __mp.moderator = e)'
+            )
+            ->setParameter('summit_id', $summit->getId());
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($innerQb, $this->getFilterMappings($filter));
+        }
+
+        $innerDql = $innerQb->getDQL();
+
+        // Outer query counts distinct presentations where at least one matched speaker is
+        // either an assigned speaker or the moderator. The inner DQL is embedded exactly
+        // once (inside a single wrapper EXISTS) to avoid Doctrine alias-conflict errors.
+        $outerQb = $this->getEntityManager()->createQueryBuilder()
+            ->select('COUNT(DISTINCT p.id)')
+            ->from('models\summit\Presentation', 'p')
             ->where('p.summit = :summit')
             ->andWhere(
-                'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __cnt'
-                . ' WHERE __cnt.presentation = p AND __cnt.speaker = e)'
-                . ' OR p.moderator = e'
+                'EXISTS ('
+                . 'SELECT 1 FROM models\summit\PresentationSpeaker __spk'
+                . ' WHERE __spk.id IN (' . $innerDql . ')'
+                . ' AND ('
+                . 'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __cnt WHERE __cnt.presentation = p AND __cnt.speaker = __spk)'
+                . ' OR p.moderator = __spk'
+                . ')'
+                . ')'
             )
             ->setParameter('summit', $summit);
 
-        if (!is_null($filter)) {
-            $filter->apply2Query($countQb, $this->getFilterMappings($filter));
+        foreach ($innerQb->getParameters() as $param) {
+            $outerQb->setParameter($param->getName(), $param->getValue());
         }
 
-        return intval($countQb->getQuery()->getSingleScalarResult());
+        return intval($outerQb->getQuery()->getSingleScalarResult());
     }
 
     /**

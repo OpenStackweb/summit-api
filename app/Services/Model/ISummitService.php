@@ -53,9 +53,10 @@ interface ISummitService
      * @param int $event_id
      * @param array $data
      * @param bool $trigger_data_update
+     * @param bool $saveAsIncomplete
      * @return SummitEvent
      */
-    public function updateEvent(Summit $summit, $event_id, array $data, bool $trigger_data_update = true);
+    public function updateEvent(Summit $summit, $event_id, array $data, bool $trigger_data_update = true, bool $saveAsIncomplete = false);
 
     /**
      * @param Summit $summit

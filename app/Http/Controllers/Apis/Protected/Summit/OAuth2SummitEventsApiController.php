@@ -1085,9 +1085,48 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
      */
     public function updateEvent($summit_id, $event_id)
     {
-        return $this->processRequest(function() use($summit_id, $event_id){
+        return $this->_updateEvent($summit_id, $event_id);
+    }
 
-            Log::debug(sprintf("OAuth2SummitEventsApiController::updateEvent summit id %s event id %s", $summit_id, $event_id));
+     #[OA\Put(
+        path: '/api/v1/summits/{id}/events/{event_id}/draft',
+        operationId: 'updateDraftEvent',
+        summary: 'Update an existing draft event',
+        description: 'Updates an existing draft event for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData]]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        tags: ['Summit Events'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/UpdateSummitEventRequest')
+        ),
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Draft event updated successfully', content: new OA\JsonContent(ref: '#/components/schemas/SummitEvent')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation error'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+    /**
+     * @param $summit_id
+     * @param $event_id
+     * @return mixed
+     */
+    public function updateDraftEvent($summit_id, $event_id)
+    {
+        return $this->_updateEvent($summit_id, $event_id, true);
+    }
+
+    private function _updateEvent($summit_id, $event_id, bool $saveAsIncomplete = false)
+    {
+        return $this->processRequest(function() use($summit_id, $event_id, $saveAsIncomplete) {
 
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit))
@@ -1106,42 +1145,30 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
             $payload = $this->getJsonData();
 
-            // Creates a Validator instance and validates the data.
             $rules = $isAdmin ? SummitEventValidationRulesFactory::build($payload, true) : null;
-            if(is_null($rules)){
+            if (is_null($rules)) {
                 $rules = $isTrackChair ? SummitEventValidationRulesFactory::buildForTrackChair($payload, true) : null;
             }
 
-            if(is_null($rules))
+            if (is_null($rules))
                 return $this->error403();
-
 
             $payload = $this->getJsonPayload($rules, true);
 
-            $fields = [
-                'title',
-                'description',
-                'social_summary',
-            ];
+            $fields = ['title', 'description', 'social_summary'];
 
-            if($isAdmin) {
-                Log::debug(sprintf("OAuth2SummitEventsApiController::updateEvent summit id %s event id %s updating event", $summit_id, $event_id));
-                $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($payload, $fields));
-            }
-            else{
-                Log::debug(sprintf("OAuth2SummitEventsApiController::updateEvent summit id %s event id %s updating duration", $summit_id, $event_id));
+            if ($isAdmin) {
+                $event = $this->service->updateEvent($summit, $event_id, HTMLCleaner::cleanData($payload, $fields), true, $saveAsIncomplete);
+            } else {
                 $event = $this->service->updateDuration($payload, $summit, $event);
             }
 
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())
-                ->serialize
-                (
+                ->serialize(
                     SerializerUtils::getExpand(),
                     SerializerUtils::getFields(),
                     SerializerUtils::getRelations(),
-                    [
-                        'current_user' => $current_member
-                    ]
+                    ['current_user' => $current_member]
                 )
             );
         });

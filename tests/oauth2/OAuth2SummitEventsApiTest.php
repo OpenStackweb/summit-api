@@ -12,10 +12,12 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use App\Services\Model\ISummitService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
 use models\utils\SilverstripeBaseModel;
 use services\model\IPresentationService;
+use models\summit\Presentation;
 use models\summit\SummitEvent;
 
 final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
@@ -37,6 +39,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
 
     public function tearDown():void
     {
+        self::clearOrdersTestData();
         self::clearSummitTestData();
         parent::tearDown();
     }
@@ -475,6 +478,46 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
         $this->assertTrue(count($event->allowed_ticket_types) == 2);
         return $event;
 
+    }
+
+    public function testUpdateDraftEventDoesNotCompleteIncompletePresentation()
+    {
+        $presentation = new Presentation();
+        self::$summit->addEvent($presentation);
+        $presentation->setTitle("Incomplete Draft Presentation");
+        $presentation->setAbstract("Draft abstract");
+        $presentation->setCategory(self::$defaultTrack);
+        $presentation->setType(self::$defaultPresentationType);
+        $presentation->setProgress(Presentation::PHASE_SUMMARY);
+        self::$em->persist($presentation);
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'event_id' => $presentation->getId(),
+        ];
+
+        $data = [
+            'title' => 'Updated Draft Title',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitEventsApiController@updateDraftEvent",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+        $content = $response->getContent();
+        $event = json_decode($content);
+        $this->assertEquals('Updated Draft Title', $event->title);
+        $this->assertNotEquals('COMPLETE', $event->progress);
+        $this->assertNotEquals(Presentation::STATUS_RECEIVED, $event->status);
     }
 
     public function testPublishEvent($start_date = 1509789600, $end_date = 1509791400)

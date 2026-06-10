@@ -139,4 +139,14 @@ trait InsertOrdersTestData
         self::$em->persist(self::$summit);
         self::$em->flush();
     }
+
+    protected static function clearOrdersTestData(): void
+    {
+        if (!is_null(self::$default_ticket_type) && !is_null(self::$default_ticket_type->getId())) {
+            DB::table('SummitTicketType')
+                ->where('ID', self::$default_ticket_type->getId())
+                ->update(['QuantitySold' => 0]);
+            self::$em->clear();
+        }
+    }
 }

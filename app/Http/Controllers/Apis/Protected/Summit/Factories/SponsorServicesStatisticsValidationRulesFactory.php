@@ -32,4 +32,15 @@ final class SponsorServicesStatisticsValidationRulesFactory extends AbstractVali
     {
         return self::buildForAdd();
     }
+
+    public static function buildForBulkUpdate(array $payload = []): array
+    {
+        return [
+            '*.sponsor_id'    => 'required|integer',
+            '*.forms_qty'     => 'sometimes|integer',
+            '*.purchases_qty' => 'sometimes|integer',
+            '*.pages_qty'     => 'sometimes|integer',
+            '*.documents_qty' => 'sometimes|integer',
+        ];
+    }
 }

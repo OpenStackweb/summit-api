@@ -1656,4 +1656,75 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertNotNull($page);
         $this->assertGreaterThan(0, $page->total);
     }
+
+    // ---- Bulk Sponsor Services Statistics ----
+
+    public function testBulkUpdateSponsorServicesStatistics()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        // sponsors[0] already has statistics (even index), sponsors[1] does not (odd index)
+        $data = [
+            [
+                'sponsor_id'   => self::$sponsors[0]->getId(),
+                'forms_qty'    => 100,
+                'purchases_qty'=> 200,
+                'pages_qty'    => 300,
+                'documents_qty'=> 400,
+            ],
+            [
+                'sponsor_id'   => self::$sponsors[1]->getId(),
+                'forms_qty'    => 10,
+            ],
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSponsorApiController@bulkUpdateSponsorServicesStatistics",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $results = json_decode($content);
+        $this->assertIsArray($results);
+        $this->assertCount(2, $results);
+        $this->assertEquals(100, $results[0]->forms_qty);
+        $this->assertEquals(10, $results[1]->forms_qty);
+    }
+
+    public function testBulkUpdateSponsorServicesStatisticsValidationError()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        // forms_qty is a string instead of integer — should fail validation
+        $data = [
+            [
+                'sponsor_id' => self::$sponsors[0]->getId(),
+                'forms_qty'  => 'not-an-integer',
+            ],
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSponsorApiController@bulkUpdateSponsorServicesStatistics",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(412);
+    }
 }

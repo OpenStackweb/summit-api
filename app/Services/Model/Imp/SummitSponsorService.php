@@ -1280,4 +1280,27 @@ final class SummitSponsorService
             return SponsorServicesStatisticsFactory::populate($statistics, $payload);
         });
     }
+
+    public function bulkUpdateSponsorServicesStatistics(Summit $summit, array $payload): array
+    {
+        return $this->tx_service->transaction(function () use ($summit, $payload) {
+            $results = [];
+            foreach ($payload as $item) {
+                $sponsor_id = intval($item['sponsor_id']);
+                $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+                if (is_null($summit_sponsor))
+                    throw new EntityNotFoundException(sprintf("Sponsor %d not found.", $sponsor_id));
+
+                $statistics = $summit_sponsor->getSponsorServicesStatistics();
+                if (!$statistics) {
+                    $statistics = SponsorServicesStatisticsFactory::build($item);
+                    $summit_sponsor->setSponsorServicesStatistics($statistics);
+                } else {
+                    SponsorServicesStatisticsFactory::populate($statistics, $item);
+                }
+                $results[] = $statistics;
+            }
+            return $results;
+        });
+    }
 }

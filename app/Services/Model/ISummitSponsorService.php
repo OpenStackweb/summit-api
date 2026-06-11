@@ -336,4 +336,12 @@ interface ISummitSponsorService
      * @throws \Exception
      */
     public function updateSponsorServicesStatistics(Summit $summit, int $sponsor_id, array $payload): SponsorStatistics;
+
+    /**
+     * @param Summit $summit
+     * @param array $payload
+     * @return SponsorStatistics[]
+     * @throws \Exception
+     */
+    public function bulkUpdateSponsorServicesStatistics(Summit $summit, array $payload): array;
 }

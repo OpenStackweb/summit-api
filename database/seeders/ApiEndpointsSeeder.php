@@ -2826,6 +2826,19 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            [
+                'name' => 'bulk-update-sponsor-services-statistics',
+                'route' => '/api/v1/summits/{id}/sponsors/all/sponsorservices-statistics/bulk',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             // Add-On types
             [
                 'name' => 'get-add-ons-metadata',

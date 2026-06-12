@@ -16,6 +16,8 @@ namespace Tests\OpenTelemetry;
 
 use App\Audit\AuditContext;
 use App\Audit\AuditLogFormatterFactory;
+use App\Audit\AbstractAuditLogFormatter;
+use App\Audit\Interfaces\IAuditStrategy;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -153,5 +155,87 @@ class AuditLogFormatterFactoryTest extends TestCase
 
         $result = $method->invoke($this->factory, $strategy, $ctx);
         $this->assertFalse($result, 'matchesStrategy should return false when routes do not match');
+    }
+
+    public function testIsAuditDisabledForSubjectReturnsTrueWhenEntityIsDisabled(): void
+    {
+        $this->setFactoryConfig([
+            'entities' => [
+                FakeAuditEntity::class => [
+                    'enabled' => false,
+                    'strategy' => FakeAuditFormatter::class,
+                ],
+            ],
+        ]);
+
+        $method = (new \ReflectionClass($this->factory))->getMethod('isAuditDisabledForSubject');
+        $method->setAccessible(true);
+
+        $this->assertTrue($method->invoke($this->factory, new FakeAuditEntity()));
+    }
+
+    public function testIsAuditDisabledForSubjectReturnsFalseWhenEntityIsEnabled(): void
+    {
+        $this->setFactoryConfig([
+            'entities' => [
+                FakeAuditEntity::class => [
+                    'enabled' => true,
+                    'strategy' => FakeAuditFormatter::class,
+                ],
+            ],
+        ]);
+
+        $method = (new \ReflectionClass($this->factory))->getMethod('isAuditDisabledForSubject');
+        $method->setAccessible(true);
+
+        $this->assertFalse($method->invoke($this->factory, new FakeAuditEntity()));
+    }
+
+    public function testMakeReturnsNullWhenEntityIsDisabled(): void
+    {
+        $this->setFactoryConfig([
+            'entities' => [
+                FakeAuditEntity::class => [
+                    'enabled' => false,
+                    'strategy' => FakeAuditFormatter::class,
+                ],
+            ],
+        ]);
+
+        $ctx = new AuditContext();
+        $formatter = $this->factory->make($ctx, new FakeAuditEntity(), IAuditStrategy::EVENT_ENTITY_CREATION);
+
+        $this->assertNull($formatter);
+    }
+
+    public function testIsAuditDisabledPublicMethodReturnsFalseForNonObjectSubject(): void
+    {
+        $this->setFactoryConfig([
+            'entities' => [
+                FakeAuditEntity::class => [
+                    'enabled' => false,
+                    'strategy' => FakeAuditFormatter::class,
+                ],
+            ],
+        ]);
+
+        $this->assertFalse($this->factory->isAuditDisabled('not-an-object'));
+    }
+
+    private function setFactoryConfig(array $config): void
+    {
+        $prop = (new \ReflectionClass($this->factory))->getProperty('config');
+        $prop->setAccessible(true);
+        $prop->setValue($this->factory, $config);
+    }
+}
+
+class FakeAuditEntity {}
+
+class FakeAuditFormatter extends AbstractAuditLogFormatter
+{
+    public function format(mixed $subject, array $change_set): ?string
+    {
+        return 'ok';
     }
 }

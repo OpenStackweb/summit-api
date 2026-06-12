@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Date;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
+use utils\FilterParser;
 use models\summit\SpeakersSummitRegistrationPromoCode;
 
 final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
@@ -1959,12 +1960,42 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
     public function testGetCurrentSummitSpeakersActivitiesCountWithAcceptedPresentations()
     {
-        $params = [
-            'id'     => self::$summit->getId(),
-            'filter' => [
-                'has_accepted_presentations==true',
-            ],
-        ];
+        // Get the filtered baseline before seeding so the assertion is exact.
+        // A broken filter that returns all results would produce a count far
+        // greater than baseline + 1, causing the assertEquals to fail.        
+        $baseline = EntityManager::getRepository(PresentationSpeaker::class)
+            ->getUniqueActivitiesCountBySummit(
+                self::$summit,
+                FilterParser::parse(
+                    ['filter' => 'has_accepted_presentations==true'],
+                    ['has_accepted_presentations' => ['==']]
+                )
+            );
+
+        // Seed a new speaker with exactly one published presentation so the
+        // filter count must increase by exactly 1. A broken filter returning
+        // all results would produce a count far greater than baseline + 1.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Carol");
+        $speaker->setLastName("Test");
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Accepted Test Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setProgress(Presentation::PHASE_COMPLETE);
+        $pres->setStatus(Presentation::STATUS_RECEIVED);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->addSpeaker($speaker);
+        $pres->publish();
+        self::$em->flush();
 
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
@@ -1974,19 +2005,15 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $response = $this->action(
             "GET",
             "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
-            $params,
-            [],
-            [],
-            [],
-            $headers
+            ['id' => self::$summit->getId(), 'filter' => ['has_accepted_presentations==true']],
+            [], [], [], $headers
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(200);
-        $data = json_decode($content);
+        $data = json_decode($response->getContent());
         $this->assertNotNull($data);
         $this->assertTrue(isset($data->count));
-        $this->assertGreaterThan(0, $data->count);
+        $this->assertEquals($baseline + 1, $data->count);
     }
 
 }

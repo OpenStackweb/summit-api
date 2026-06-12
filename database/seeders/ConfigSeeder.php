@@ -31,7 +31,6 @@ final class ConfigSeeder extends Seeder
             // clear all
             $em = Registry::getManager(ResourceServerEntity::EntityManager);
             $em->clear();
-
             $connection = $em->getConnection();
             $connection->beginTransaction();
             $statements = [

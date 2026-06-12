@@ -34,8 +34,6 @@ final class Version20260609175051 extends AbstractMigration
         IGroup::SuperAdmins,
         IGroup::Administrators,
         IGroup::SummitAdministrators,
-        IGroup::SummitRegistrationAdmins,
-        IGroup::TrackChairs,
         IGroup::TrackChairsAdmins,
     ];
 

@@ -516,8 +516,29 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $event = json_decode($content);
         $this->assertEquals('Updated Draft Title', $event->title);
-        $this->assertNotEquals('COMPLETE', $event->progress);
+        $this->assertNotEquals(Presentation::PHASE_COMPLETE, $event->progress);
         $this->assertNotEquals(Presentation::STATUS_RECEIVED, $event->status);
+    }
+
+    public function testUpdateDraftEventOnPublishedPresentationReturns412()
+    {
+        $presentation = self::$presentations[0];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitEventsApiController@updateDraftEvent",
+            [
+                'id'       => self::$summit->getId(),
+                'event_id' => $presentation->getId(),
+            ],
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['title' => 'Should Not Update'])
+        );
+
+        $this->assertResponseStatus(412);
     }
 
     public function testPublishEvent($start_date = 1509789600, $end_date = 1509791400)

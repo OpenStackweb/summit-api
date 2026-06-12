@@ -889,6 +889,9 @@ final class SummitService
     {
         if (!$event instanceof Presentation) return;
 
+        if ($saveAsIncomplete && $event->isPublished())
+            throw new ValidationException('Cannot save a published event as incomplete.');
+
         if (!$saveAsIncomplete || $event->isNew()) {
             // if we are creating the presentation from admin, then
             // we should mark it as received and complete
@@ -903,13 +906,15 @@ final class SummitService
             $shouldClearSpeakers = isset($data['speakers']) && count($data['speakers']) == 0;
             $speakers = $data['speakers'] ?? [];
 
-            if ((!$saveAsIncomplete || $event->isNew()) && $event_type->isAreSpeakersMandatory()) {
-                if ($shouldClearSpeakers || ($event->isNew() && count($speakers) == 0))
-                    throw new ValidationException('Speakers are mandatory.');
-            }
+            if (!$saveAsIncomplete || $event->isNew()) {
+                if ($event_type->isAreSpeakersMandatory()) {
+                    if ($shouldClearSpeakers || ($event->isNew() && count($speakers) == 0))
+                        throw new ValidationException('Speakers are mandatory.');
+                }
 
-            if ($shouldClearSpeakers) {
-                $event->clearSpeakers();
+                if ($shouldClearSpeakers) {
+                    $event->clearSpeakers();
+                }
             }
 
             if (count($speakers) > 0) {
@@ -929,12 +934,14 @@ final class SummitService
             $shouldClearModerator = isset($data['moderator_speaker_id']) && intval($data['moderator_speaker_id']) == 0;
             $moderator_id = isset($data['moderator_speaker_id']) ? intval($data['moderator_speaker_id']) : 0;
 
-            if ((!$saveAsIncomplete || $event->isNew()) && $event_type->isModeratorMandatory()) {
-                if ($shouldClearModerator || ($event->isNew() && $moderator_id == 0))
-                    throw new ValidationException('moderator_speaker_id is mandatory.');
-            }
+            if (!$saveAsIncomplete || $event->isNew()) {
+                if ($event_type->isModeratorMandatory()) {
+                    if ($shouldClearModerator || ($event->isNew() && $moderator_id == 0))
+                        throw new ValidationException('moderator_speaker_id is mandatory.');
+                }
 
-            if ($shouldClearModerator) $event->unsetModerator();
+                if ($shouldClearModerator) $event->unsetModerator();
+            }
 
             if ($moderator_id > 0) {
                 $moderator = $this->speaker_repository->getById($moderator_id);

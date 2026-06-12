@@ -4279,8 +4279,6 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
-                    IGroup::SummitRegistrationAdmins,
-                    IGroup::TrackChairs,
                     IGroup::TrackChairsAdmins,
                 ]
             ],

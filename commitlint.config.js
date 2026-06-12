@@ -14,7 +14,8 @@ module.exports = {
         "subject-min-length": [RULE_ERROR_LEVEL, "always", SUBJECT_MIN_LENGTH],
         "subject-case": [0], // optional: allow flexibility in subject case
         "header-max-length": [RULE_ERROR_LEVEL, "always", HEADER_MAX_LENGTH],
-        "body-max-line-length":  [RULE_ERROR_LEVEL, "always", BODY_MAX_LENGTH]
+        "body-max-line-length":  [RULE_ERROR_LEVEL, "always", BODY_MAX_LENGTH],
+        "footer-max-line-length":   [RULE_ERROR_LEVEL, "always", BODY_MAX_LENGTH],
     },
     plugins: [
         {

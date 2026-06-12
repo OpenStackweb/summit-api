@@ -175,7 +175,7 @@ final class ResourceServerContext implements IResourceServerContext
      * times via getByExternalId().
      *
      * Side-effects ($synch_groups, $update_member_fields) are tracked separately
-     * so a first call with false does not permanently suppress them — a later
+     * so a first call with false does not permanently suppress them - a later
      * call with true will still run the missing side-effect exactly once.
      */
     private ?Member $cachedCurrentUser = null;        // resolved Member (or null) for this request
@@ -191,14 +191,14 @@ final class ResourceServerContext implements IResourceServerContext
      *
      * The method has two phases:
      *
-     *   PHASE A — fast path (cache hit): if the user was already resolved this
+     *   PHASE A - fast path (cache hit): if the user was already resolved this
      *   request, return the cached Member immediately. Any side-effect that an
      *   earlier call suppressed (e.g. a previous getCurrentUser(false, false))
      *   is run now, once, so the side-effect flags reflect the strongest request
      *   so far. This is what keeps the /events serializer from re-running the
      *   same Member SELECT ~98 times per request.
      *
-     *   PHASE B — full resolution (cache miss): look the Member up by external
+     *   PHASE B - full resolution (cache miss): look the Member up by external
      *   id, then by email, then create it locally if the IDP knows it but we
      *   don't. Apply the always-on side-effects (external id, email-verified
      *   flag, order-association event) plus the optional field/group syncs, then
@@ -211,12 +211,12 @@ final class ResourceServerContext implements IResourceServerContext
      */
     public function getCurrentUser(bool $synch_groups = true, bool $update_member_fields = true): ?Member
     {
-        // ---- PHASE A: fast path — user already resolved this request ----------
+        // ---- PHASE A: fast path - user already resolved this request ----------
         if ($this->cachedCurrentUserResolved) {
             // Only Members carry side-effects; a cached null is returned as-is.
             if ($this->cachedCurrentUser !== null) {
                 // Apply field updates that an earlier call suppressed
-                // ($update_member_fields=false), exactly once — mirroring the
+                // ($update_member_fields=false), exactly once - mirroring the
                 // deferred-groups handling below so the documented contract holds.
                 if ($update_member_fields && !$this->fieldsSynched) {
                     $member = $this->cachedCurrentUser;
@@ -228,6 +228,12 @@ final class ResourceServerContext implements IResourceServerContext
                             $this->getAuthContextVar(IResourceServerContext::UserLastName)
                         );
                     });
+                    // syncMemberFields() calls setFirstName()/setLastName() on the Member,
+                    // which call updateAuthContextVar() and clear cachedCurrentUser/cachedCurrentUserResolved.
+                    // Restore from the local reference so the groups-sync block below
+                    // does not receive null.
+                    $this->cachedCurrentUser = $member;
+                    $this->cachedCurrentUserResolved = true;
                     $this->fieldsSynched = true;
                 }
                 // checkGroups() may return a re-fetched instance, so reassign the cache.
@@ -242,7 +248,7 @@ final class ResourceServerContext implements IResourceServerContext
             return $this->cachedCurrentUser;
         }
 
-        // ---- PHASE B: full resolution — first call this request ---------------
+        // ---- PHASE B: full resolution - first call this request ---------------
         // Read the IDP claims off the auth context up front.
         $user_external_id = $this->getAuthContextVar(IResourceServerContext::UserId);
         $user_first_name = $this->getAuthContextVar(IResourceServerContext::UserFirstName);
@@ -315,7 +321,7 @@ final class ResourceServerContext implements IResourceServerContext
      *   1. by external id (the stable identifier)
      *   2. by primary email (covers members created before the external id was linked)
      *   3. provision locally via registerExternalUser() when the IDP knows the
-     *      user but we don't — racy under concurrent first-time logins, so on
+     *      user but we don't - racy under concurrent first-time logins, so on
      *      failure we re-read by external id (the winner of the race created it)
      *
      * This is lookup/creation only; the profile-field, external-id, email-verified
@@ -383,7 +389,7 @@ final class ResourceServerContext implements IResourceServerContext
                 );
             } catch (\Exception $ex) {
                 Log::warning($ex);
-                // race condition lost — re-read the instance the winner created
+                // race condition lost - re-read the instance the winner created
                 $member = $this->tx_service->transaction(function () use ($user_external_id) {
                     return $this->member_repository->getByExternalId(intval($user_external_id));
                 });

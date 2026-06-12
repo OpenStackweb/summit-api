@@ -940,6 +940,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function setSelectedPresentations($selected_presentations)
     {
         $this->memoizedSelectionStatus = null;
+        $this->preloadedSessionSelections = null;
         $this->selected_presentations = $selected_presentations;
     }
 
@@ -2200,6 +2201,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function setCategory(PresentationCategory $category)
     {
         $this->memoizedSelectionStatus = null;
+        $this->preloadedSessionSelections = null;
         // check if we change the category
         $oldCategory = $this->category;
         if (!is_null($oldCategory) && $oldCategory->getId() != $category->getId()) {

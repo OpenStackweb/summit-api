@@ -966,7 +966,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     /**
      * Request-scoped preload cache populated by DoctrineSummitEventRepository::getAllByPage
      * via setPreloadedSessionSelections(). When set, getSelectionStatus() uses these
-     * pre-fetched rows instead of firing its own DQL — eliminates one query per
+     * pre-fetched rows instead of firing its own DQL - eliminates one query per
      * Presentation on /events listings. Doctrine ignores the unannotated property.
      *
      * @var SummitSelectedPresentation[]|null
@@ -1092,6 +1092,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function setSelectionPlan($selection_plan)
     {
         $this->memoizedSelectionStatus = null;
+        $this->preloadedSessionSelections = null;
         $oldSelectionPlan = $this->selection_plan;
         // if selection plan changes
         if (!is_null($oldSelectionPlan) && $oldSelectionPlan->getId() != $selection_plan->getId()) {
@@ -1104,6 +1105,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function clearSelectionPlan()
     {
         $this->memoizedSelectionStatus = null;
+        $this->preloadedSessionSelections = null;
         $this->selection_plan = null;
     }
 
@@ -1309,6 +1311,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function recalculateMaterialOrder(PresentationMaterial $material, $new_order)
     {
         self::recalculateOrderForSelectable($this->materials, $material, $new_order);
+        $this->updateLastEdited();
     }
 
     use OrderableChilds;

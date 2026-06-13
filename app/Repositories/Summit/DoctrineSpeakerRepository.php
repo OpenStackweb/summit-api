@@ -67,7 +67,7 @@ final class DoctrineSpeakerRepository
             }
             if($filter->hasFilter("presentations_track_group_id")){
                 $v = $filter->getValue("presentations_track_group_id");
-                $category_categorygroup_subquery = 'SELECT ___cat%1$s.id 
+                $category_categorygroup_subquery = 'SELECT ___cat%1$s.id
                     FROM models\summit\PresentationCategory ___cat%1$s
                     JOIN ___cat%1$s.groups ___catg%1$s
                     WHERE ___catg%1$s.id IN ('.implode(',', $v).')';
@@ -88,8 +88,8 @@ final class DoctrineSpeakerRepository
             }
             if($filter->hasFilter("has_not_media_upload_with_type")){
                 $v = $filter->getValue("has_not_media_upload_with_type");
-                $extraSelectionStatusFilter .= ' AND NOT EXISTS (   
-                     SELECT __pm%1$s_%1$s.id FROM models\summit\PresentationMediaUpload __pm%1$s_%1$s 
+                $extraSelectionStatusFilter .= ' AND NOT EXISTS (
+                     SELECT __pm%1$s_%1$s.id FROM models\summit\PresentationMediaUpload __pm%1$s_%1$s
                      LEFT JOIN __pm%1$s_%1$s.media_upload_type __mut%1$s_%1$s
                      WHERE  __pm%1$s_%1$s.presentation = __p%1$s AND  __mut%1$s_%1$s.id IN ('.implode(',', $v).')
                  ) ';
@@ -124,132 +124,132 @@ final class DoctrineSpeakerRepository
                 "( m.user_external_id :operator :value )"
             ),
             'presentations_track_id' => new DoctrineFilterMapping(
-                'EXISTS ( 
-                              SELECT __p41_:i.id FROM models\summit\Presentation __p41_:i 
-                              JOIN __p41_:i.speakers __spk41_:i WITH __spk41_:i.speaker = e.id 
-                              JOIN __p41_:i.category __tr41_:i 
-                              WHERE 
+                'EXISTS (
+                              SELECT __p41_:i.id FROM models\summit\Presentation __p41_:i
+                              JOIN __p41_:i.speakers __spk41_:i WITH __spk41_:i.speaker = e.id
+                              JOIN __p41_:i.category __tr41_:i
+                              WHERE
                               __p41_:i.summit = :summit AND
                               __tr41_:i.id :operator :value )'.
-                'OR EXISTS ( 
-                              SELECT __p42_:i.id FROM models\summit\Presentation __p42_:i 
-                              JOIN __p42_:i.moderator __md42_:i WITH __md42_:i.id = e.id 
-                              JOIN __p42_:i.category __tr42_:i 
-                              WHERE 
+                'OR EXISTS (
+                              SELECT __p42_:i.id FROM models\summit\Presentation __p42_:i
+                              JOIN __p42_:i.moderator __md42_:i WITH __md42_:i.id = e.id
+                              JOIN __p42_:i.category __tr42_:i
+                              WHERE
                               __p42_:i.summit = :summit AND
                               __tr42_:i.id :operator :value )'
             ),
             'presentations_track_group_id' => new DoctrineFilterMapping(
-                'EXISTS ( 
-                              SELECT __p41_:i.id FROM models\summit\Presentation __p41_:i 
-                              JOIN __p41_:i.speakers __spk41_:i WITH __spk41_:i.speaker = e.id 
-                              JOIN __p41_:i.category __tr41_:i 
-                              JOIN __tr41_:i.groups __trg41_:i 
-                              WHERE 
+                'EXISTS (
+                              SELECT __p41_:i.id FROM models\summit\Presentation __p41_:i
+                              JOIN __p41_:i.speakers __spk41_:i WITH __spk41_:i.speaker = e.id
+                              JOIN __p41_:i.category __tr41_:i
+                              JOIN __tr41_:i.groups __trg41_:i
+                              WHERE
                               __p41_:i.summit = :summit AND
                               __trg41_:i.id :operator :value )'.
-                'OR EXISTS ( 
-                              SELECT __p42_:i.id FROM models\summit\Presentation __p42_:i 
-                              JOIN __p42_:i.moderator __md42_:i WITH __md42_:i.id = e.id 
-                              JOIN __p42_:i.category __tr42_:i 
-                              JOIN __tr42_:i.groups __trg42_:i 
-                              WHERE 
+                'OR EXISTS (
+                              SELECT __p42_:i.id FROM models\summit\Presentation __p42_:i
+                              JOIN __p42_:i.moderator __md42_:i WITH __md42_:i.id = e.id
+                              JOIN __p42_:i.category __tr42_:i
+                              JOIN __tr42_:i.groups __trg42_:i
+                              WHERE
                               __p42_:i.summit = :summit AND
                               __trg42_:i.id :operator :value )'
             ),
             'presentations_selection_plan_id' => new DoctrineFilterMapping(
-                'EXISTS ( 
-                              SELECT __p51_:i.id FROM models\summit\Presentation __p51_:i 
-                              JOIN __p51_:i.speakers __spk51_:i WITH __spk51_:i.speaker = e.id 
-                              JOIN __p51_:i.selection_plan __sel_plan51_:i 
-                              JOIN __p51_:i.category __tr51_:i 
-                              JOIN __p51_:i.type __type51_:i 
-                              WHERE 
+                'EXISTS (
+                              SELECT __p51_:i.id FROM models\summit\Presentation __p51_:i
+                              JOIN __p51_:i.speakers __spk51_:i WITH __spk51_:i.speaker = e.id
+                              JOIN __p51_:i.selection_plan __sel_plan51_:i
+                              JOIN __p51_:i.category __tr51_:i
+                              JOIN __p51_:i.type __type51_:i
+                              WHERE
                               __p51_:i.summit = :summit AND
                               __sel_plan51_:i.id :operator :value'.(!empty($extraSelectionPlanFilter) ? sprintf($extraSelectionPlanFilter, '51'):''). ')'.
-                ' OR EXISTS ( 
-                              SELECT __p52_:i.id FROM models\summit\Presentation __p52_:i 
-                              JOIN __p52_:i.moderator __md52_:i WITH __md52_:i.id = e.id 
+                ' OR EXISTS (
+                              SELECT __p52_:i.id FROM models\summit\Presentation __p52_:i
+                              JOIN __p52_:i.moderator __md52_:i WITH __md52_:i.id = e.id
                               JOIN __p52_:i.selection_plan __sel_plan52_:i
-                              JOIN __p52_:i.category __tr52_:i 
-                              JOIN __p52_:i.type __type52_:i 
-                              WHERE 
+                              JOIN __p52_:i.category __tr52_:i
+                              JOIN __p52_:i.type __type52_:i
+                              WHERE
                               __p52_:i.summit = :summit AND
                               __sel_plan52_:i.id :operator :value'.(!empty($extraSelectionPlanFilter) ? sprintf($extraSelectionPlanFilter, '52'):''). ')',
             ),
             'presentations_type_id' =>  new DoctrineFilterMapping(
-                'EXISTS ( 
-                              SELECT __p61_:i.id FROM models\summit\Presentation __p61_:i 
-                              JOIN __p61_:i.speakers __spk61_:i WITH __spk61_:i.speaker = e.id 
-                              JOIN __p61_:i.type __type61_:i 
-                              WHERE 
+                'EXISTS (
+                              SELECT __p61_:i.id FROM models\summit\Presentation __p61_:i
+                              JOIN __p61_:i.speakers __spk61_:i WITH __spk61_:i.speaker = e.id
+                              JOIN __p61_:i.type __type61_:i
+                              WHERE
                               __p61_:i.summit = :summit AND
                               __type61_:i.id :operator :value )'.
-                ' OR EXISTS ( 
+                ' OR EXISTS (
                               SELECT __p62_:i.id FROM models\summit\Presentation __p62_:i
-                              JOIN __p62_:i.moderator __md62_:i WITH __md62_:i.id = e.id 
+                              JOIN __p62_:i.moderator __md62_:i WITH __md62_:i.id = e.id
                               JOIN __p62_:i.type __type62_:i
-                              WHERE 
+                              WHERE
                               __p62_:i.summit = :summit AND
                               __type62_:i.id :operator :value )',
             ),
             'presentations_title' =>  new DoctrineFilterMapping(
-                'EXISTS ( 
+                'EXISTS (
                               SELECT __p71.id FROM models\summit\Presentation __p71
-                              JOIN __p71.speakers __spk71 WITH __spk71.speaker = e.id 
-                              WHERE 
+                              JOIN __p71.speakers __spk71 WITH __spk71.speaker = e.id
+                              WHERE
                               __p71.summit = :summit AND
                               LOWER(__p71.title) :operator LOWER(:value) )'.
-                ' OR EXISTS ( 
+                ' OR EXISTS (
                               SELECT __p72.id FROM models\summit\Presentation __p72
-                              JOIN __p72.moderator __md72 WITH __md72.id = e.id 
-                              WHERE 
+                              JOIN __p72.moderator __md72 WITH __md72.id = e.id
+                              WHERE
                               __p72.summit = :summit AND
                               LOWER(__p72.title) :operator LOWER(:value) )',
 
             ),
             'presentations_abstract' =>  new DoctrineFilterMapping(
-                'EXISTS ( 
+                'EXISTS (
                               SELECT __p81.id FROM models\summit\Presentation __p81
-                              JOIN __p81.speakers __spk81 WITH __spk81.speaker = e.id 
-                              WHERE 
+                              JOIN __p81.speakers __spk81 WITH __spk81.speaker = e.id
+                              WHERE
                               __p81.summit = :summit AND
                               LOWER(__p81.abstract) :operator LOWER(:value) )'.
-                ' OR EXISTS ( 
+                ' OR EXISTS (
                               SELECT __p82.id FROM models\summit\Presentation __p82
-                              JOIN __p82.moderator __md82 WITH __md82.id = e.id 
-                              WHERE 
+                              JOIN __p82.moderator __md82 WITH __md82.id = e.id
+                              WHERE
                               __p82.summit = :summit AND
                               LOWER(__p82.abstract) :operator LOWER(:value) )',
             ),
             'presentations_submitter_full_name' => new DoctrineFilterMapping(
-                "EXISTS ( 
+                "EXISTS (
                               SELECT __p91.id FROM models\summit\Presentation __p91
-                              JOIN __p91.speakers __spk91 WITH __spk91.speaker = e.id 
+                              JOIN __p91.speakers __spk91 WITH __spk91.speaker = e.id
                               JOIN __p91.created_by __cb91
-                              WHERE 
+                              WHERE
                               __p91.summit = :summit AND
                               concat(LOWER(__cb91.first_name), ' ', LOWER(__cb91.last_name)) :operator LOWER(:value) )".
-                " OR EXISTS ( 
+                " OR EXISTS (
                               SELECT __p92.id FROM models\summit\Presentation __p92
-                              JOIN __p92.moderator __md92 WITH __md92.id = e.id 
+                              JOIN __p92.moderator __md92 WITH __md92.id = e.id
                               JOIN __p92.created_by __cb92
-                              WHERE 
+                              WHERE
                               __p92.summit = :summit AND
                                concat(LOWER(__cb92.first_name), ' ', LOWER(__cb92.last_name)) :operator LOWER(:value) )",
             ),
-            'presentations_submitter_email' => new DoctrineFilterMapping("EXISTS ( 
+            'presentations_submitter_email' => new DoctrineFilterMapping("EXISTS (
                               SELECT __p10_1.id FROM models\summit\Presentation __p10_1
-                              JOIN __p10_1.speakers __spk10_1 WITH __spk10_1.speaker = e.id 
+                              JOIN __p10_1.speakers __spk10_1 WITH __spk10_1.speaker = e.id
                               JOIN __p10_1.created_by __cb10_1
-                              WHERE 
+                              WHERE
                               __p10_1.summit = :summit AND
                               LOWER(__cb10_1.email) :operator LOWER(:value) )".
-                " OR EXISTS ( 
+                " OR EXISTS (
                               SELECT __p10_2.id FROM models\summit\Presentation __p10_2
-                              JOIN __p10_2.moderator __md10_2 WITH __md10_2.id = e.id 
+                              JOIN __p10_2.moderator __md10_2 WITH __md10_2.id = e.id
                               JOIN __p10_2.created_by __cb10_2
-                              WHERE 
+                              WHERE
                               __p10_2.summit = :summit AND
                               LOWER(__cb10_2.email) :operator LOWER(:value) )"),
             'has_accepted_presentations' =>
@@ -258,16 +258,16 @@ final class DoctrineSpeakerRepository
                             'true',
                             sprintf('
                                      EXISTS (
-                                        SELECT __p12.id FROM models\summit\Presentation __p12 
-                                        JOIN __p12.speakers __spk12 WITH __spk12.speaker = e.id 
+                                        SELECT __p12.id FROM models\summit\Presentation __p12
+                                        JOIN __p12.speakers __spk12 WITH __spk12.speaker = e.id
                                         JOIN __p12.category __cat12
                                         JOIN __p12.type __t12
-                                        LEFT JOIN __p12.selection_plan __sel_plan12 
-                                        LEFT JOIN __p12.selected_presentations __sp12 
-                                        LEFT JOIN __sp12.list __spl12 
+                                        LEFT JOIN __p12.selection_plan __sel_plan12
+                                        LEFT JOIN __p12.selected_presentations __sp12
+                                        LEFT JOIN __sp12.list __spl12
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm12 WITH __pm12.presentation = __p12
                                         LEFT JOIN __pm12.media_upload_type __mut12
-                                        WHERE 
+                                        WHERE
                                         __p12.summit = :summit AND
                                         ((__sp12.order is not null AND
                                         __sp12.order <= __cat12.session_count AND __sp12.collection = \'%1$s\' AND
@@ -279,16 +279,16 @@ final class DoctrineSpeakerRepository
                                      ' ) OR '.
                                      sprintf('
                                      EXISTS (
-                                        SELECT __p14.id FROM models\summit\Presentation __p14 
-                                        JOIN __p14.moderator __md14 WITH __md14.id = e.id 
+                                        SELECT __p14.id FROM models\summit\Presentation __p14
+                                        JOIN __p14.moderator __md14 WITH __md14.id = e.id
                                         JOIN __p14.category __cat14
                                         JOIN __p14.type __t14
                                         LEFT JOIN __p14.selection_plan __sel_plan14
                                         LEFT JOIN __p14.selected_presentations __sp14
-                                        LEFT JOIN __sp14.list __spl14 
+                                        LEFT JOIN __sp14.list __spl14
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm14 WITH __pm14.presentation = __p14
                                         LEFT JOIN __pm14.media_upload_type __mut14
-                                        WHERE 
+                                        WHERE
                                         __p14.summit = :summit AND
                                         ((__sp14.order is not null AND
                                         __sp14.order <= __cat14.session_count AND __sp14.collection = \'%1$s\'
@@ -303,16 +303,16 @@ final class DoctrineSpeakerRepository
                             'false',
                             sprintf('
                                      NOT EXISTS (
-                                        SELECT __p12.id FROM models\summit\Presentation __p12 
-                                        JOIN __p12.speakers __spk12 WITH __spk12.speaker = e.id 
+                                        SELECT __p12.id FROM models\summit\Presentation __p12
+                                        JOIN __p12.speakers __spk12 WITH __spk12.speaker = e.id
                                         JOIN __p12.category __cat12
                                         JOIN __p12.type __t12
-                                        LEFT JOIN __p12.selection_plan __sel_plan12 
-                                        LEFT JOIN __p12.selected_presentations __sp12 
+                                        LEFT JOIN __p12.selection_plan __sel_plan12
+                                        LEFT JOIN __p12.selected_presentations __sp12
                                         LEFT JOIN __sp12.list __spl12
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm12 WITH __pm12.presentation = __p12
                                         LEFT JOIN __pm12.media_upload_type __mut12
-                                        WHERE 
+                                        WHERE
                                         __p12.summit = :summit AND
                                         ((__sp12.order is not null AND
                                         __sp12.order <= __cat12.session_count AND __sp12.collection = \'%1$s\' AND
@@ -324,16 +324,16 @@ final class DoctrineSpeakerRepository
                                      ')
                                      AND '.
                                      sprintf('NOT EXISTS (
-                                        SELECT __p14.id FROM models\summit\Presentation __p14 
-                                        JOIN __p14.moderator __md14 WITH __md14.id = e.id 
+                                        SELECT __p14.id FROM models\summit\Presentation __p14
+                                        JOIN __p14.moderator __md14 WITH __md14.id = e.id
                                         JOIN __p14.category __cat14
                                         JOIN __p14.type __t14
                                         LEFT JOIN __p14.selection_plan __sel_plan14
-                                        LEFT JOIN __p14.selected_presentations __sp14 
+                                        LEFT JOIN __p14.selected_presentations __sp14
                                         LEFT JOIN __sp14.list __spl14
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm14 WITH __pm14.presentation = __p14
                                         LEFT JOIN __pm14.media_upload_type __mut14
-                                        WHERE 
+                                        WHERE
                                         __p14.summit = :summit AND
                                         ((__sp14.order is not null AND
                                         __sp14.order <= __cat14.session_count AND __sp14.collection = \'%1$s\' AND
@@ -351,16 +351,16 @@ final class DoctrineSpeakerRepository
                         'true' => new DoctrineCaseFilterMapping(
                             'true',
                             sprintf('EXISTS (
-                                        SELECT __p21.id FROM models\summit\Presentation __p21 
-                                        JOIN __p21.speakers __spk21 WITH __spk21.speaker = e.id 
+                                        SELECT __p21.id FROM models\summit\Presentation __p21
+                                        JOIN __p21.speakers __spk21 WITH __spk21.speaker = e.id
                                         JOIN __p21.category __cat21
                                         JOIN __p21.type __t21
-                                        LEFT JOIN __p21.selection_plan __sel_plan21 
+                                        LEFT JOIN __p21.selection_plan __sel_plan21
                                         JOIN __p21.selected_presentations __sp21 WITH __sp21.collection = \'%1$s\'
                                         JOIN __sp21.list __spl21 WITH __spl21.list_type = \'%2$s\' AND __spl21.list_class = \'%3$s\'
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm21 WITH __pm21.presentation = __p21
                                         LEFT JOIN __pm21.media_upload_type __mut21
-                                        WHERE 
+                                        WHERE
                                         __p21.summit = :summit AND
                                         __sp21.order is not null AND
                                         __sp21.order > __cat21.session_count',
@@ -371,16 +371,16 @@ final class DoctrineSpeakerRepository
                                      ')
                                      OR '.
                                     sprintf('EXISTS (
-                                        SELECT __p22.id FROM models\summit\Presentation __p22 
-                                        JOIN __p22.moderator __md22 WITH __md22.id = e.id 
+                                        SELECT __p22.id FROM models\summit\Presentation __p22
+                                        JOIN __p22.moderator __md22 WITH __md22.id = e.id
                                         JOIN __p22.category __cat22
                                         JOIN __p22.type __t22
-                                        LEFT JOIN __p22.selection_plan __sel_plan22 
+                                        LEFT JOIN __p22.selection_plan __sel_plan22
                                         JOIN __p22.selected_presentations __sp22 WITH __sp22.collection = \'%1$s\'
                                         JOIN __sp22.list __spl22 WITH __spl22.list_type = \'%2$s\' AND __spl22.list_class = \'%3$s\'
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm22 WITH __pm22.presentation = __p22
                                         LEFT JOIN __pm22.media_upload_type __mut22
-                                        WHERE 
+                                        WHERE
                                         __p22.summit = :summit AND
                                         __sp22.order is not null AND
                                         __sp22.order > __cat22.session_count',
@@ -392,16 +392,16 @@ final class DoctrineSpeakerRepository
                         'false' => new DoctrineCaseFilterMapping(
                             'false',
                             sprintf('NOT EXISTS (
-                                        SELECT __p21.id FROM models\summit\Presentation __p21 
-                                        JOIN __p21.speakers __spk21 WITH __spk21.speaker = e.id 
+                                        SELECT __p21.id FROM models\summit\Presentation __p21
+                                        JOIN __p21.speakers __spk21 WITH __spk21.speaker = e.id
                                         JOIN __p21.category __cat21
                                         JOIN __p21.type __t21
-                                        LEFT JOIN __p21.selection_plan __sel_plan21 
+                                        LEFT JOIN __p21.selection_plan __sel_plan21
                                         JOIN __p21.selected_presentations __sp21 WITH __sp21.collection = \'%1$s\'
                                         JOIN __sp21.list __spl21 WITH __spl21.list_type = \'%2$s\' AND __spl21.list_class = \'%3$s\'
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm21 WITH __pm21.presentation = __p21
                                         LEFT JOIN __pm21.media_upload_type __mut21
-                                        WHERE 
+                                        WHERE
                                         __p21.summit = :summit AND
                                         __sp21.order is not null AND
                                         __sp21.order > __cat21.session_count',
@@ -412,16 +412,16 @@ final class DoctrineSpeakerRepository
                                      ')
                                      AND '.
                                      sprintf('NOT EXISTS (
-                                        SELECT __p22.id FROM models\summit\Presentation __p22 
-                                        JOIN __p22.moderator __md22 WITH __md22.id = e.id 
+                                        SELECT __p22.id FROM models\summit\Presentation __p22
+                                        JOIN __p22.moderator __md22 WITH __md22.id = e.id
                                         JOIN __p22.category __cat22
                                         JOIN __p22.type __t22
-                                        LEFT JOIN __p22.selection_plan __sel_plan22 
+                                        LEFT JOIN __p22.selection_plan __sel_plan22
                                         JOIN __p22.selected_presentations __sp22 WITH __sp22.collection = \'%1$s\'
                                         JOIN __sp22.list __spl22 WITH __spl22.list_type = \'%2$s\' AND __spl22.list_class = \'%3$s\'
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm22 WITH __pm22.presentation = __p22
                                         LEFT JOIN __pm22.media_upload_type __mut22
-                                        WHERE 
+                                        WHERE
                                         __p22.summit = :summit AND
                                         __sp22.order is not null AND
                                         __sp22.order > __cat22.session_count',
@@ -437,19 +437,19 @@ final class DoctrineSpeakerRepository
                         'true' => new DoctrineCaseFilterMapping(
                             'true',
                             sprintf('EXISTS (
-                                        SELECT __p31.id FROM models\summit\Presentation __p31 
-                                        JOIN __p31.speakers __spk31 WITH __spk31.speaker = e.id 
+                                        SELECT __p31.id FROM models\summit\Presentation __p31
+                                        JOIN __p31.speakers __spk31 WITH __spk31.speaker = e.id
                                         JOIN __p31.category __cat31
                                         JOIN __p31.type __t31
-                                        LEFT JOIN __p31.selection_plan __sel_plan31 
+                                        LEFT JOIN __p31.selection_plan __sel_plan31
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm31 WITH __pm31.presentation = __p31
                                         LEFT JOIN __pm31.media_upload_type __mut31
-                                        WHERE 
-                                        __p31.summit = :summit 
+                                        WHERE
+                                        __p31.summit = :summit
                                         AND __p31.published = 0'.
                                         (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '31'): ' ').
                                         'AND NOT EXISTS (
-                                            SELECT ___sp31.id 
+                                            SELECT ___sp31.id
                                             FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
@@ -461,20 +461,20 @@ final class DoctrineSpeakerRepository
                                     ).
                                      ' OR '.
                                     sprintf('EXISTS (
-                                        SELECT __p32.id FROM models\summit\Presentation __p32 
-                                        JOIN __p32.moderator __md32 WITH __md32.id = e.id 
+                                        SELECT __p32.id FROM models\summit\Presentation __p32
+                                        JOIN __p32.moderator __md32 WITH __md32.id = e.id
                                         JOIN __p32.category __cat32
                                         JOIN __p32.type __t32
-                                        LEFT JOIN __p32.selection_plan __sel_plan32 
+                                        LEFT JOIN __p32.selection_plan __sel_plan32
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm32 WITH __pm32.presentation = __p32
                                         LEFT JOIN __pm32.media_upload_type __mut32
-                                        WHERE 
-                                        __p32.summit = :summit 
+                                        WHERE
+                                        __p32.summit = :summit
                                         AND __p32.published = 0'.
                                         (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '32'): ' ').
                                         'AND NOT EXISTS  (
-                                            SELECT ___sp32.id 
-                                            FROM models\summit\SummitSelectedPresentation ___sp32 
+                                            SELECT ___sp32.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp32
                                             JOIN ___sp32.presentation ___p32
                                             JOIN ___sp32.list ___spl32 WITH ___spl32.list_type = \'%2$s\' AND ___spl32.list_class = \'%3$s\'
                                             WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'))',
@@ -487,19 +487,19 @@ final class DoctrineSpeakerRepository
                             'false',
                             sprintf('
                                      NOT EXISTS (
-                                        SELECT __p31.id FROM models\summit\Presentation __p31 
-                                        JOIN __p31.speakers __spk31 WITH __spk31.speaker = e.id 
+                                        SELECT __p31.id FROM models\summit\Presentation __p31
+                                        JOIN __p31.speakers __spk31 WITH __spk31.speaker = e.id
                                         JOIN __p31.category __cat31
                                         JOIN __p31.type __t31
                                         LEFT JOIN __p31.selection_plan __sel_plan31
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm31 WITH __pm31.presentation = __p31
-                                        LEFT JOIN __pm31.media_upload_type __mut31 
-                                        WHERE 
-                                        __p31.summit = :summit  
+                                        LEFT JOIN __pm31.media_upload_type __mut31
+                                        WHERE
+                                        __p31.summit = :summit
                                         AND __p31.published = 0'.
                                         (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '31'): ' ').
                                         'AND NOT EXISTS (
-                                            SELECT ___sp31.id 
+                                            SELECT ___sp31.id
                                             FROM models\summit\SummitSelectedPresentation ___sp31
                                             JOIN ___sp31.presentation ___p31
                                             JOIN ___sp31.list ___spl31 WITH ___spl31.list_type = \'%2$s\' AND ___spl31.list_class = \'%3$s\'
@@ -511,20 +511,20 @@ final class DoctrineSpeakerRepository
                                     ).
                                      ' AND '.
                                      sprintf('NOT EXISTS (
-                                        SELECT __p32.id FROM models\summit\Presentation __p32 
+                                        SELECT __p32.id FROM models\summit\Presentation __p32
                                         JOIN __p32.moderator __md32 WITH __md32.id = e.id
                                         JOIN __p32.category __cat32
                                         JOIN __p32.type __t32
-                                        LEFT JOIN __p32.selection_plan __sel_plan32 
+                                        LEFT JOIN __p32.selection_plan __sel_plan32
                                         LEFT JOIN models\summit\PresentationMediaUpload __pm32 WITH __pm32.presentation = __p32
                                         LEFT JOIN __pm32.media_upload_type __mut32
-                                        WHERE 
-                                        __p32.summit = :summit 
+                                        WHERE
+                                        __p32.summit = :summit
                                         AND __p32.published = 0'.
                                         (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '32'): ' ').
                                         'AND NOT EXISTS (
-                                            SELECT ___sp32.id 
-                                            FROM models\summit\SummitSelectedPresentation ___sp32 
+                                            SELECT ___sp32.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp32
                                             JOIN ___sp32.presentation ___p32
                                             JOIN ___sp32.list ___spl32 WITH ___spl32.list_type = \'%2$s\' AND ___spl32.list_class = \'%3$s\'
                                             WHERE ___p32.id = __p32.id AND ___sp32.collection = \'%1$s\'
@@ -538,56 +538,56 @@ final class DoctrineSpeakerRepository
                 ),
             'has_media_upload_with_type' =>  new DoctrineFilterMapping(
                 "EXISTS (
-                            SELECT __pm10_3:i.id 
+                            SELECT __pm10_3:i.id
                             FROM models\summit\PresentationMediaUpload __pm10_3:i
                             JOIN __pm10_3:i.media_upload_type __mut10_3:i
                             JOIN __pm10_3:i.presentation __p10_3:i
-                            JOIN __p10_3:i.speakers __spk10_3:i WITH __spk10_3:i.speaker = e.id 
+                            JOIN __p10_3:i.speakers __spk10_3:i WITH __spk10_3:i.speaker = e.id
                             LEFT JOIN __p10_3:i.selection_plan __sel_plan10_3:i
                             JOIN __p10_3:i.category __tr10_3:i
                             JOIN __p10_3:i.type __type10_3:i
-                            WHERE 
+                            WHERE
                             __p10_3:i.summit = :summit AND
                             __mut10_3:i.id :operator :value ".
                             (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '10_3'): ' ').")".
                           " OR EXISTS (
-                            SELECT __pm10_4:i.id 
+                            SELECT __pm10_4:i.id
                             FROM models\summit\PresentationMediaUpload __pm10_4:i
                             JOIN __pm10_4:i.media_upload_type __mut10_4:i
                             JOIN __pm10_4:i.presentation __p10_4:i
-                            JOIN __p10_4:i.moderator __md10_4:i WITH __md10_4:i.id = e.id 
+                            JOIN __p10_4:i.moderator __md10_4:i WITH __md10_4:i.id = e.id
                             LEFT JOIN __p10_4:i.selection_plan __sel_plan10_4:i
                             JOIN __p10_4:i.category __tr10_4:i
                             JOIN __p10_4:i.type __type10_4:i
-                            WHERE 
+                            WHERE
                             __p10_4:i.summit = :summit AND
                             __mut10_4:i.id :operator :value ".
                             (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '10_4'): ' ').")"
                 ),
             'has_not_media_upload_with_type' =>  new DoctrineFilterMapping(
                 "NOT EXISTS (
-                            SELECT __pm10_3:i.id 
+                            SELECT __pm10_3:i.id
                             FROM models\summit\PresentationMediaUpload __pm10_3:i
                             JOIN __pm10_3:i.media_upload_type __mut10_3:i
                             JOIN __pm10_3:i.presentation __p10_3:i
-                            JOIN __p10_3:i.speakers __spk10_3:i WITH __spk10_3:i.speaker = e.id 
+                            JOIN __p10_3:i.speakers __spk10_3:i WITH __spk10_3:i.speaker = e.id
                             LEFT JOIN __p10_3:i.selection_plan __sel_plan10_3:i
                             JOIN __p10_3:i.category __tr10_3:i
                             JOIN __p10_3:i.type __type10_3:i
-                            WHERE 
+                            WHERE
                             __p10_3:i.summit = :summit AND
                             __mut10_3:i.id :operator :value ".
                             (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '10_3'): ' ').")".
                         " AND NOT EXISTS (
-                            SELECT __pm10_4:i.id 
+                            SELECT __pm10_4:i.id
                             FROM models\summit\PresentationMediaUpload __pm10_4:i
                             JOIN __pm10_4:i.media_upload_type __mut10_4:i
                             JOIN __pm10_4:i.presentation __p10_4:i
-                            JOIN __p10_4:i.moderator __md10_4:i WITH __md10_4:i.id = e.id 
+                            JOIN __p10_4:i.moderator __md10_4:i WITH __md10_4:i.id = e.id
                             LEFT JOIN __p10_4:i.selection_plan __sel_plan10_4:i
                             JOIN __p10_4:i.category __tr10_4:i
                             JOIN __p10_4:i.type __type10_4:i
-                            WHERE 
+                            WHERE
                             __p10_4:i.summit = :summit AND
                             __mut10_4:i.id :operator :value ".
                             (!empty($extraMediaUploadFilter)? sprintf($extraMediaUploadFilter, '10_4'): ' ').")"
@@ -603,16 +603,16 @@ final class DoctrineSpeakerRepository
         return [
             'id' => 'e.id',
             "first_name" => <<<SQL
-COALESCE(LOWER(m.first_name), LOWER(e.first_name)) 
+COALESCE(LOWER(m.first_name), LOWER(e.first_name))
 SQL,
             "last_name" => <<<SQL
-COALESCE(LOWER(m.last_name), LOWER(e.last_name)) 
+COALESCE(LOWER(m.last_name), LOWER(e.last_name))
 SQL,
             "full_name" => <<<SQL
 COALESCE(LOWER(CONCAT(e.first_name, ' ', e.last_name)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
 SQL,
             'email' => <<<SQL
-COALESCE(LOWER(m.email), LOWER(rr.email)) 
+COALESCE(LOWER(m.email), LOWER(rr.email))
 SQL,
         ];
     }
@@ -636,13 +636,13 @@ SQL,
                 ->leftJoin("e.registration_request", "rr")
                 ->leftJoin("e.member", "m")
                 // we need to have SIZE(e.presentations) > 0 OR SIZE(e.moderated_presentations) > 0 for a particular summit
-                ->where(" 
+                ->where("
                          EXISTS (
-                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.speaker = e.id 
+                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.speaker = e.id
                             WHERE __p.summit = :summit
                          ) OR
                          EXISTS (
-                            SELECT __p1.id FROM models\summit\Presentation __p1 JOIN __p1.moderator __md WITH __md.id = e.id 
+                            SELECT __p1.id FROM models\summit\Presentation __p1 JOIN __p1.moderator __md WITH __md.id = e.id
                             WHERE __p1.summit = :summit
                           )")
                 ->setParameter("summit", $summit);
@@ -675,13 +675,13 @@ SQL,
                 ->leftJoin("e.registration_request", "rr")
                 ->leftJoin("e.member", "m")
                 // we need to have SIZE(e.presentations) > 0 OR SIZE(e.moderated_presentations) > 0 for a particular summit
-                ->where(" 
+                ->where("
                          EXISTS (
-                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.speaker = e.id 
+                            SELECT __p.id FROM models\summit\Presentation __p JOIN __p.speakers __spk WITH __spk.speaker = e.id
                             WHERE __p.summit = :summit
                          ) OR
                          EXISTS (
-                            SELECT __p1.id FROM models\summit\Presentation __p1 JOIN __p1.moderator __md WITH __md.id = e.id 
+                            SELECT __p1.id FROM models\summit\Presentation __p1 JOIN __p1.moderator __md WITH __md.id = e.id
                             WHERE __p1.summit = :summit
                           )")
                 ->setParameter("summit", $summit);
@@ -697,29 +697,28 @@ SQL,
     }
 
 
-    /**
-     * @param Summit $summit
-     * @param PagingInfo $paging_info
-     * @param Filter|null $filter
-     * @param Order|null $order
-     * @return PagingResponse
-     */
-    public function getSpeakersBySummitAndOnSchedule(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
-    {
 
+    public function getSpeakersBySummitAndOnSchedule(
+        Summit $summit,
+        PagingInfo $paging_info,
+        Filter $filter = null,
+        Order $order = null
+    ) {
         $extra_filters = '';
         $extra_events_filters = '';
         $extra_orders = '';
         $bindings = [];
 
+        // 1) Build speaker-level filters (name/email/featured/id)
         if (!is_null($filter)) {
+            // Maps to computed columns we will expose on SpeakerRows (see CTE below)
             $where_conditions = $filter->toRawSQL([
                 'full_name' => 'FullName',
                 'first_name' => 'FirstName',
-                'last_name' => 'LastName',
-                'email' => Filter::buildEmailField('Email'),
-                'id' => 'ID',
-                'featured' => 'Featured'
+                'last_name'  => 'LastName',
+                'email'      => Filter::buildEmailField('Email'),
+                'id'         => 'ID',
+                'featured'   => 'Featured',
             ]);
 
             if (!empty($where_conditions)) {
@@ -727,116 +726,129 @@ SQL,
                 $bindings = array_merge($bindings, $filter->getSQLBindings());
             }
 
+            // 2) Build event-level filters (date range, etc.) evaluated on E.* / P.*
+            // Use an offset so placeholders don't collide with the previous filter
             $where_event_conditions = $filter->toRawSQL([
                 'event_start_date' => 'E.StartDate:datetime_epoch',
-                'event_end_date' => 'E.EndDate:datetime_epoch',
+                'event_end_date'   => 'E.EndDate:datetime_epoch',
             ], count($bindings) + 1);
 
             if (!empty($where_event_conditions)) {
+                // Note: this string is injected into the `QualifiedEvents` CTE (below)
                 $extra_events_filters = " AND {$where_event_conditions}";
                 $bindings = array_merge($bindings, $filter->getSQLBindings());
             }
         }
 
-        foreach ($bindings as $key => $value) {
-            if ($value == 'true')
-                $bindings[$key] = 1;
-            if ($value == 'false')
-                $bindings[$key] = 0;
+        // Normalize boolean-like bindings to ints (sargable for SQL)
+        foreach ($bindings as $k => $v) {
+            if ($v === 'true')  $bindings[$k] = 1;
+            if ($v === 'false') $bindings[$k] = 0;
         }
 
+        // 3) Optional ordering on speaker-level columns (exposed by SpeakerRows)
         if (!is_null($order)) {
             $extra_orders = $order->toRawSQL([
-                'id' => 'ID',
-                'email' => 'Email',
+                'id'         => 'ID',
+                'email'      => 'Email',
                 'first_name' => 'FirstName',
-                'last_name' => 'LastName',
-                'full_name' => 'FullName',
+                'last_name'  => 'LastName',
+                'full_name'  => 'FullName',
             ]);
         }
 
+        $summitId = (int) $summit->getId();
+
+        // -------------------------------
+        // COUNT query
+        // -------------------------------
+        // CTEs:
+        //   QualifiedEvents: events for this summit, published, plus your {$extra_events_filters}
+        //   SpeakerIds:      presenters UNION moderators from QualifiedEvents (DISTINCT by UNION)
+        //   SpeakerRows:     join deduped ids to speaker + member + registration + featured for {$extra_filters}
         $query_count = <<<SQL
-SELECT COUNT(DISTINCT(ID)) AS QTY
-FROM (
-	SELECT S.ID,
-	IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email,
-	EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
-	FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND PS.PresentationSpeakerID = S.ID AND E.Published = 1 {$extra_events_filters}
-	)
-	UNION
-	SELECT S.ID,
-	IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email,
-	EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
-	FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID AND E.Published = 1 {$extra_events_filters}
-	)
-	UNION
-	SELECT S.ID,
-	IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-	IFNULL(M.Email, R.Email) AS Email,
-	EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
-	FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID 
-	WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID AND E.Published = 1 {$extra_events_filters}
-	)
+WITH QualifiedEvents AS (
+  SELECT E.ID
+  FROM SummitEvent E
+  JOIN Presentation P ON P.ID = E.ID
+  WHERE E.SummitID = {$summitId}
+    AND E.Published = 1
+    {$extra_events_filters}  -- only reference E.* and/or P.* here
+),
+SpeakerIds AS (
+  -- presenters
+  SELECT PS.PresentationSpeakerID AS SpeakerID
+  FROM QualifiedEvents QE
+  JOIN Presentation_Speakers PS ON PS.PresentationID = QE.ID
+
+  UNION  -- UNION = DISTINCT (dedup if a speaker is both presenter and moderator)
+
+  -- moderators
+  SELECT P.ModeratorID
+  FROM QualifiedEvents QE
+  JOIN Presentation P ON P.ID = QE.ID
+  WHERE P.ModeratorID IS NOT NULL
+),
+SpeakerRows AS (
+  SELECT
+    S.ID,
+    COALESCE(S.FirstName, M.FirstName) AS FirstName,
+    COALESCE(S.LastName,  M.Surname)   AS LastName,
+    CONCAT(COALESCE(S.FirstName, M.FirstName), ' ', COALESCE(S.LastName, M.Surname)) AS FullName,
+    COALESCE(M.Email, R.Email)         AS Email,
+    (F.PresentationSpeakerID IS NOT NULL) AS Featured
+  FROM (SELECT DISTINCT SpeakerID FROM SpeakerIds) ds
+  JOIN PresentationSpeaker S             ON S.ID = ds.SpeakerID
+  LEFT JOIN Member M                     ON M.ID = S.MemberID
+  LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
+  LEFT JOIN Summit_FeaturedSpeakers F
+         ON F.PresentationSpeakerID = S.ID AND F.SummitID = {$summitId}
 )
-SUMMIT_SPEAKERS
+SELECT COUNT(*) AS QTY
+FROM SpeakerRows
 {$extra_filters}
 SQL;
 
-
-        $stm =
-            DoctrineStatementValueBinder::bind(
-                $this->getEntityManager()->getConnection()->prepare($query_count),
-                $bindings
-            );
+        // Prepare + execute count
+        $stm = DoctrineStatementValueBinder::bind(
+            $this->getEntityManager()->getConnection()->prepare($query_count),
+            $bindings
+        );
         $res = $stm->executeQuery();
         $res = $res->fetchFirstColumn();
+        $total = count($res) > 0 ? (int)$res[0] : 0;
 
-        $total = count($res) > 0 ? $res[0] : 0;
-
-        $bindings = array_merge($bindings, array
-        (
+        // -------------------------------
+        // DATA (paged) query
+        // -------------------------------
+        // Reuse the same CTE structure but project the full speaker fields you need.
+        // Keep extra filters/orders on the outer SELECT so pagination is applied post-filter.
+        $bindings = array_merge($bindings, [
             'per_page' => $paging_info->getPerPage(),
-            'offset' => $paging_info->getOffset(),
-        ));
+            'offset'   => $paging_info->getOffset(),
+        ]);
 
         $query = <<<SQL
-SELECT *
-FROM (
-	SELECT
+WITH QualifiedEvents AS (
+  SELECT E.ID
+  FROM SummitEvent E
+  JOIN Presentation P ON P.ID = E.ID
+  WHERE E.SummitID = {$summitId}
+    AND E.Published = 1
+    {$extra_events_filters}
+),
+SpeakerIds AS (
+  SELECT PS.PresentationSpeakerID AS SpeakerID
+  FROM QualifiedEvents QE
+  JOIN Presentation_Speakers PS ON PS.PresentationID = QE.ID
+  UNION
+  SELECT P.ModeratorID
+  FROM QualifiedEvents QE
+  JOIN Presentation P ON P.ID = QE.ID
+  WHERE P.ModeratorID IS NOT NULL
+),
+SpeakerRows AS (
+  SELECT
     S.ID,
     S.ClassName,
     S.Created,
@@ -852,133 +864,51 @@ FROM (
     S.WillingToPresentVideo,
     S.Notes,
     S.TwitterName,
-    IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-    IFNULL(M.Email,R.Email) AS Email,
+    COALESCE(S.FirstName, M.FirstName) AS FirstName,
+    COALESCE(S.LastName,  M.Surname)   AS LastName,
+    CONCAT(COALESCE(S.FirstName, M.FirstName), ' ', COALESCE(S.LastName, M.Surname)) AS FullName,
+    COALESCE(M.Email, R.Email)         AS Email,
     S.PhotoID,
     S.BigPhotoID,
     R.ID AS RegistrationRequestID,
-    EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
-    FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-	LEFT JOIN File F ON F.ID = S.PhotoID
-	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND PS.PresentationSpeakerID = S.ID AND E.Published = 1 {$extra_events_filters}
-	)
-	UNION
-	SELECT
-    S.ID,
-    S.ClassName,
-    S.Created,
-    S.LastEdited,
-    S.Title AS SpeakerTitle,
-    S.Bio,
-    S.IRCHandle,
-    S.AvailableForBureau,
-    S.FundedTravel,
-    S.Country,
-    S.MemberID,
-    S.WillingToTravel,
-    S.WillingToPresentVideo,
-    S.Notes,
-    S.TwitterName,
-    IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-    IFNULL(M.Email,R.Email) AS Email,
-    S.PhotoID,
-    S.BigPhotoID,
-    R.ID AS RegistrationRequestID,
-    EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
-    FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-    LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-    WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID AND E.Published = 1 {$extra_events_filters}
-	)
-	UNION
-	SELECT
-    S.ID,
-    S.ClassName,
-    S.Created,
-    S.LastEdited,
-    S.Title AS SpeakerTitle,
-    S.Bio,
-    S.IRCHandle,
-    S.AvailableForBureau,
-    S.FundedTravel,
-    S.Country,
-    S.MemberID,
-    S.WillingToTravel,
-    S.WillingToPresentVideo,
-    S.Notes,
-    S.TwitterName,
-    IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-	CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-    IFNULL(M.Email,R.Email) AS Email,
-    S.PhotoID,
-    S.BigPhotoID,
-    R.ID AS RegistrationRequestID,
-    EXISTS(SELECT 1 FROM Summit_FeaturedSpeakers WHERE Summit_FeaturedSpeakers.PresentationSpeakerID = S.ID AND Summit_FeaturedSpeakers.SummitID = {$summit->getId()}) AS Featured
-    FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-    LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-    WHERE
-	EXISTS
-	(
-		SELECT E.ID FROM SummitEvent E
-		INNER JOIN Presentation P ON E.ID = P.ID
-		INNER JOIN Presentation_Speakers PS ON PS.PresentationID = P.ID
-		WHERE E.SummitID = {$summit->getId()} AND P.ModeratorID = S.ID AND E.Published = 1 {$extra_events_filters}
-	)
+    (F.PresentationSpeakerID IS NOT NULL) AS Featured
+  FROM (SELECT DISTINCT SpeakerID FROM SpeakerIds) ds
+  JOIN PresentationSpeaker S             ON S.ID = ds.SpeakerID
+  LEFT JOIN Member M                     ON M.ID = S.MemberID
+  LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
+  LEFT JOIN Summit_FeaturedSpeakers F
+         ON F.PresentationSpeakerID = S.ID AND F.SummitID = {$summitId}
 )
-SUMMIT_SPEAKERS
-{$extra_filters} {$extra_orders} limit :per_page offset :offset;
+SELECT *
+FROM SpeakerRows
+{$extra_filters}
+{$extra_orders}
+LIMIT :per_page OFFSET :offset
 SQL;
 
-        /*$rsm = new ResultSetMapping();
-        $rsm->addEntityResult(\models\summit\PresentationSpeaker::class, 's');
-        $rsm->addJoinedEntityResult(\models\main\File::class,'p', 's', 'photo');
-        $rsm->addJoinedEntityResult(\models\main\Member::class,'m', 's', 'member');
-
-        $rsm->addFieldResult('s', 'ID', 'id');
-        $rsm->addFieldResult('s', 'FirstName', 'first_name');
-        $rsm->addFieldResult('s', 'LastName', 'last_name');
-        $rsm->addFieldResult('s', 'Bio', 'last_name');
-        $rsm->addFieldResult('s', 'SpeakerTitle', 'title' );
-        $rsm->addFieldResult('p', 'PhotoID', 'id');
-        $rsm->addFieldResult('p', 'PhotoTitle', 'title');
-        $rsm->addFieldResult('p', 'PhotoFileName', 'filename');
-        $rsm->addFieldResult('p', 'PhotoName', 'name');
-        $rsm->addFieldResult('m', 'MemberID', 'id');*/
-
+        // Map rows to PresentationSpeaker as root entity.
+        // Note: extra computed columns (FullName, Email, Featured, etc.) are ignored by Doctrine mapping,
+        // but they remain available in the raw result if you fetch scalar-hydrated sets.
         $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        // Alias SpeakerTitle -> Title so the entity field is populated correctly
         $rsm->addRootEntityFromClassMetadata(\models\summit\PresentationSpeaker::class, 's', ['Title' => 'SpeakerTitle']);
 
-        // build rsm here
         $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
-
-        foreach ($bindings as $k => $v)
+        foreach ($bindings as $k => $v) {
             $native_query->setParameter($k, $v);
+        }
 
         $speakers = $native_query->getResult();
 
         $last_page = (int)ceil($total / $paging_info->getPerPage());
 
-        return new PagingResponse($total, $paging_info->getPerPage(), $paging_info->getCurrentPage(), $last_page, $speakers);
+        return new PagingResponse(
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $last_page,
+            $speakers
+        );
     }
 
     /**
@@ -1298,7 +1228,7 @@ FROM (
 	FROM PresentationSpeaker S
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	INNER JOIN Summit_FeaturedSpeakers FS ON FS.PresentationSpeakerID = S.ID AND FS.SummitID = {$summit->getId()}	
+	INNER JOIN Summit_FeaturedSpeakers FS ON FS.PresentationSpeakerID = S.ID AND FS.SummitID = {$summit->getId()}
 )
 SUMMIT_SPEAKERS
 {$extra_filters}
@@ -1347,7 +1277,7 @@ FROM (
 	LEFT JOIN Member M ON M.ID = S.MemberID
 	LEFT JOIN File F ON F.ID = S.PhotoID
     LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-	INNER JOIN Summit_FeaturedSpeakers FS ON FS.PresentationSpeakerID = S.ID AND FS.SummitID = {$summit->getId()}	
+	INNER JOIN Summit_FeaturedSpeakers FS ON FS.PresentationSpeakerID = S.ID AND FS.SummitID = {$summit->getId()}
 )
 SUMMIT_SPEAKERS
 {$extra_filters} {$extra_orders} limit :per_page offset :offset;

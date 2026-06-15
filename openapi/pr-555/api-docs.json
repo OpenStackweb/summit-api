@@ -22415,8 +22415,6 @@
                     "super-admins",
                     "administrators",
                     "summit-front-end-administrators",
-                    "summit-registration-administrators",
-                    "track-chairs",
                     "track-chairs-admins"
                 ]
             }

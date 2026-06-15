@@ -31,9 +31,6 @@ final class LockManagerService implements ILockManagerService {
      */
     private $cache_service;
 
-    /** @var array<string,string>  lock-name → per-call ownership token */
-    private array $tokens = [];
-
     /**
      * LockManagerService constructor.
      * @param ICacheService $cache_service
@@ -45,19 +42,21 @@ final class LockManagerService implements ILockManagerService {
     /**
      * @param string $name
      * @param int $lifetime
-     * @return LockManagerService
+     * @return string ownership token — pass to releaseLock
      * @throws UnacquiredLockException
      */
-    public function acquireLock(string $name, int $lifetime = 3600):LockManagerService
+    public function acquireLock(string $name, int $lifetime = 3600): string
     {
         Log::debug(sprintf("LockManagerService::acquireLock name %s lifetime %s", $name, $lifetime));
+        if ($lifetime <= 0) {
+            throw new \InvalidArgumentException("Lock lifetime must be greater than zero seconds.");
+        }
         $token   = bin2hex(random_bytes(16));
         $attempt = 0;
         do {
             $success = $this->cache_service->addSingleValue($name, $token, $lifetime);
             if ($success) {
-                $this->tokens[$name] = $token;
-                return $this;
+                return $token;
             }
             $wait_interval = (int)(self::BackOffBaseInterval * (self::BackOffMultiplier ** $attempt));
             Log::debug(sprintf("LockManagerService::acquireLock name %s retrying in %s µs (attempt %s)", $name, $wait_interval, $attempt));
@@ -72,36 +71,30 @@ final class LockManagerService implements ILockManagerService {
 
     /**
      * @param string $name
-     * @return $this
+     * @param string $token ownership token returned by acquireLock
      */
-    public function releaseLock(string $name):LockManagerService
+    public function releaseLock(string $name, string $token): void
     {
         Log::debug(sprintf("LockManagerService::releaseLock name %s", $name));
-        if (!isset($this->tokens[$name])) {
-            return $this;
-        }
-        $this->cache_service->deleteIfValueMatches($name, $this->tokens[$name]);
-        unset($this->tokens[$name]);
-        return $this;
+        $this->cache_service->deleteIfValueMatches($name, $token);
     }
 
     /**
      * @param string $name
      * @param Closure $callback
      * @param int $lifetime
-     * @return null
+     * @return mixed
      * @throws UnacquiredLockException
      * @throws Exception
      */
-    public function lock(string $name, Closure $callback, int $lifetime = 3600)
+    public function lock(string $name, Closure $callback, int $lifetime = 3600): mixed
     {
-        $result   = null;
-        $acquired = false;
+        $token  = null;
+        $result = null;
         Log::debug(sprintf("LockManagerService::lock name %s lifetime %s", $name, $lifetime));
 
         try {
-            $this->acquireLock($name, $lifetime);
-            $acquired = true;
+            $token  = $this->acquireLock($name, $lifetime);
             Log::debug(sprintf("LockManagerService::lock name %s calling callback", $name));
             $result = $callback($this);
         }
@@ -114,8 +107,8 @@ final class LockManagerService implements ILockManagerService {
             throw $ex;
         }
         finally {
-            if ($acquired) {
-                $this->releaseLock($name);
+            if ($token !== null) {
+                $this->releaseLock($name, $token);
             }
         }
         return $result;

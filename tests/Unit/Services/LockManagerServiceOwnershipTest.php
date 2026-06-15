@@ -17,14 +17,13 @@ use App\Services\Utils\LockManagerService;
 use libs\utils\ICacheService;
 use Mockery;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 /**
  * Regression tests for the four bugs fixed in LockManagerService:
  *
  * 1. Non-atomic acquisition (setnx + expire → SET NX EX)
  * 2. Missing ownership token (timestamp value → random token)
- * 3. Unconditional release in finally (guarded by $acquired flag)
+ * 3. Unconditional release in finally (guarded by $token !== null)
  * 4. Broken exponential backoff (^ XOR → ** power)
  *
  * These tests use a mock ICacheService so they run without Redis.
@@ -90,43 +89,24 @@ class LockManagerServiceOwnershipTest extends TestCase
     }
 
     /**
-     * Calling releaseLock on a name that was never acquired must be a
-     * complete no-op — no Redis command issued, no exception thrown.
+     * After a full acquire → callback → release cycle exactly one
+     * addSingleValue and one deleteIfValueMatches must have been issued.
+     * Mockery's ->once() expectations enforce this without inspecting internals.
      */
-    public function testReleaseLockWithoutAcquireIsNoOp(): void
-    {
-        $cache = Mockery::mock(ICacheService::class);
-        $cache->shouldReceive('deleteIfValueMatches')->never();
-        $cache->shouldReceive('delete')->never();
-
-        $service = new LockManagerService($cache);
-        $service->releaseLock('never.acquired.lock');
-
-        // Tokens map must still be empty — the no-op must not corrupt state.
-        $ref  = new ReflectionClass($service);
-        $prop = $ref->getProperty('tokens');
-        $prop->setAccessible(true);
-        $this->assertEmpty($prop->getValue($service));
-    }
-
-    /**
-     * After a full acquire → callback → release cycle the internal tokens
-     * map must be empty — no token leak that could cause a future
-     * releaseLock call to issue a stale deleteIfValueMatches.
-     */
-    public function testTokensClearedAfterSuccessfulLockCycle(): void
+    public function testSuccessfulLockCyclePairsAcquireAndRelease(): void
     {
         $cache = Mockery::mock(ICacheService::class);
         $cache->shouldReceive('addSingleValue')->once()->andReturn(true);
         $cache->shouldReceive('deleteIfValueMatches')->once()->andReturn(true);
 
-        $service = new LockManagerService($cache);
-        $service->lock('test.lock', function () {}, 3600);
+        $service     = new LockManagerService($cache);
+        $callbackRan = false;
+        $service->lock('test.lock', function () use (&$callbackRan) {
+            $callbackRan = true;
+        }, 3600);
 
-        $ref  = new ReflectionClass($service);
-        $prop = $ref->getProperty('tokens');
-        $prop->setAccessible(true);
-        $this->assertEmpty($prop->getValue($service), 'tokens map must be empty after release');
+        $this->assertTrue($callbackRan, 'callback must execute inside the lock');
+        // Mockery tearDown verifies addSingleValue and deleteIfValueMatches each fired once.
     }
 
     /**
@@ -143,14 +123,39 @@ class LockManagerServiceOwnershipTest extends TestCase
               ->andReturn(true);
         $cache->shouldReceive('deleteIfValueMatches')->once()->andReturn(true);
 
-        $service = new LockManagerService($cache);
-        $service->lock('test.lock', function () {}, 3600);
+        $service     = new LockManagerService($cache);
+        $callbackRan = false;
+        $service->lock('test.lock', function () use (&$callbackRan) {
+            $callbackRan = true;
+        }, 3600);
 
-        // Tokens cleared — confirms the single addSingleValue call was paired
-        // with exactly one deleteIfValueMatches (not a separate expire call).
-        $ref  = new ReflectionClass($service);
-        $prop = $ref->getProperty('tokens');
-        $prop->setAccessible(true);
-        $this->assertEmpty($prop->getValue($service));
+        $this->assertTrue($callbackRan, 'callback must execute inside the lock');
+        // Mockery tearDown verifies the single atomic SET NX EX call.
+    }
+
+    /**
+     * Known failure mode: when deleteIfValueMatches returns false (Redis
+     * unavailable), the token is passed to the Lua script but deletion fails
+     * silently. The Redis key persists until TTL expiry; there is no
+     * application-level retry path after a failed release.
+     */
+    public function testReleaseLockWhenRedisDownLeavesKeyUntilTtl(): void
+    {
+        $cache = Mockery::mock(ICacheService::class);
+        $cache->shouldReceive('addSingleValue')->once()->andReturn(true);
+        // Simulate Redis unavailable — deletion silently fails.
+        $cache->shouldReceive('deleteIfValueMatches')->once()->andReturn(false);
+
+        $service     = new LockManagerService($cache);
+        $callbackRan = false;
+        $service->lock('resource.lock', function () use (&$callbackRan) {
+            $callbackRan = true;
+        });
+
+        $this->assertTrue($callbackRan, 'callback must run even when the subsequent release fails');
+
+        // The Redis key was NOT deleted; only TTL expiry can free it.
+        // A subsequent acquire attempt on the same resource will fail until the
+        // TTL elapses — there is no application-level retry path.
     }
 }

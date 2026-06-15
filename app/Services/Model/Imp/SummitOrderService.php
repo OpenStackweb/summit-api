@@ -834,7 +834,7 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $qty, $owner_email) {
                     $promo_code->addUsage($owner_email, $qty);
-                });
+                }, 30);
 
             });
             // mark a done
@@ -872,7 +872,7 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $info, $owner_email) {
                     $promo_code->removeUsage(intval($info['qty']), $owner_email);
-                });
+                }, 30);
 
             });
         }
@@ -957,7 +957,7 @@ final class ReserveTicketsTask extends AbstractTask
 
                 $this->lock_service->lock('ticket_type.' . $ticket_type->getId() . '.sell.lock', function () use ($ticket_type, $reservations) {
                     $ticket_type->sell($reservations[$ticket_type->getId()]);
-                });
+                }, 30);
 
             }
         });
@@ -974,7 +974,7 @@ final class ReserveTicketsTask extends AbstractTask
                 if (is_null($ticket_type)) return;
                 $this->lock_service->lock('ticket_type.' . $ticket_type->getId() . '.sell.lock', function () use ($ticket_type, $qty) {
                     $ticket_type->restore($qty);
-                });
+                }, 30);
             });
         }
     }
@@ -1543,7 +1543,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
             if (empty($promo_code_val)) throw new ValidationException("Promo code is required.");
 
             $type_id = $ticket_dto['type_id'];
-            $order = $this->lock_service->lock('ticket_type.' . $type_id . 'promo_code.' . $promo_code_val . '.sell.lock',
+            $order = $this->lock_service->lock('ticket_type.' . $type_id . '.promo_code.' . $promo_code_val . '.sell.lock',
                 function () use ($promo_code_val, $type_id) {
 
                     $attendee_email = $this->owner->getEmail();
@@ -1665,7 +1665,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
 
 
                     return $order;
-                });
+                }, 30);
             return ['order' => $order];
         });
     }

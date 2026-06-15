@@ -495,4 +495,111 @@ final class OAuth2SummitSubmittersApiController
             return $this->ok();
         });
     }
+
+    #[OA\Get(
+        path: "/api/v1/summits/{id}/submitters/all/events/count",
+        summary: "Get unique activities count for submitters",
+        operationId: "getSubmittersActivitiesCount",
+        tags: ["Summit Submitters"],
+        security: [['summit_submitters_oauth2' => [
+            SummitScopes::ReadSummitData,
+            SummitScopes::ReadAllSummitData,
+        ]]],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                in: "path",
+                required: true,
+                description: "Summit ID",
+                schema: new OA\Schema(type: "integer")
+            ),
+            new OA\Parameter(
+                name: "filter",
+                in: "query",
+                required: false,
+                description: "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, is_speaker, has_media_upload_with_type, has_not_media_upload_with_type.",
+                schema: new OA\Schema(type: "string", example: "has_accepted_presentations==true")
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "Unique activities count",
+                content: new OA\JsonContent(
+                    properties: [new OA\Property(property: "count", type: "integer")]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Summit not found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function getSubmittersActivitiesCount($summit_id)
+    {
+        return $this->processRequest(function () use ($summit_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find(intval($summit_id));
+            if (is_null($summit)) return $this->error404();
+
+            $filter = null;
+
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::input('filter'), [
+                    'id' => ['=='],
+                    'not_id' => ['=='],
+                    'first_name' => ['=@', '@@', '=='],
+                    'last_name' => ['=@', '@@', '=='],
+                    'email' => ['=@', '@@', '=='],
+                    'full_name' => ['=@', '@@', '=='],
+                    'member_id' => ['=='],
+                    'member_user_external_id' => ['=='],
+                    'has_accepted_presentations' => ['=='],
+                    'has_alternate_presentations' => ['=='],
+                    'has_rejected_presentations' => ['=='],
+                    'presentations_track_id' => ['=='],
+                    'presentations_selection_plan_id' => ['=='],
+                    'presentations_type_id' => ['=='],
+                    'presentations_title' => ['=@', '@@', '=='],
+                    'presentations_abstract' => ['=@', '@@', '=='],
+                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
+                    'presentations_submitter_email' => ['=@', '@@', '=='],
+                    'is_speaker' => ['=='],
+                    'has_media_upload_with_type' => ['=='],
+                    'has_not_media_upload_with_type' => ['=='],
+                ]);
+            }
+
+            if (!is_null($filter)) {
+                $filter->validate([
+                    'id' => 'sometimes|integer',
+                    'not_id' => 'sometimes|integer',
+                    'first_name' => 'sometimes|string',
+                    'last_name' => 'sometimes|string',
+                    'email' => 'sometimes|string',
+                    'full_name' => 'sometimes|string',
+                    'member_id' => 'sometimes|integer',
+                    'member_user_external_id' => 'sometimes|integer',
+                    'has_accepted_presentations' => 'sometimes|string|in:true,false',
+                    'has_alternate_presentations' => 'sometimes|string|in:true,false',
+                    'has_rejected_presentations' => 'sometimes|string|in:true,false',
+                    'presentations_track_id' => 'sometimes|integer',
+                    'presentations_selection_plan_id' => 'sometimes|integer',
+                    'presentations_type_id' => 'sometimes|integer',
+                    'presentations_title' => 'sometimes|string',
+                    'presentations_abstract' => 'sometimes|string',
+                    'presentations_submitter_full_name' => 'sometimes|string',
+                    'presentations_submitter_email' => 'sometimes|string',
+                    'is_speaker' => 'sometimes|string|in:true,false',
+                    'has_media_upload_with_type' => 'sometimes|integer',
+                    'has_not_media_upload_with_type' => 'sometimes|integer',
+                ]);
+            }
+
+            $count = $this->repository->getUniqueActivitiesCountBySummit($summit, $filter);
+
+            return $this->ok(['count' => $count]);
+        });
+    }
 }

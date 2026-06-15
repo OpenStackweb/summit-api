@@ -58,7 +58,7 @@ final class DoctrineMemberRepository
      */
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null): QueryBuilder
     {
-        if($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id")){
+        if(!is_null($filter) && ($filter->hasFilter("summit_id") || $filter->hasFilter("schedule_event_id"))){
             $query
                 ->leftJoin("e.schedule","sch")
                 ->leftJoin("sch.event", "evt")
@@ -636,6 +636,32 @@ SQL,
                 //default order
                 return $query->addOrderBy("e.id", 'ASC');
             });
+    }
+
+    /**
+     * @param Summit $summit
+     * @param Filter|null $filter
+     * @return int
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
+    {
+        // Start from Presentation and JOIN to the submitter (created_by).
+        // Bounded by summit — no subquery needed, filter mappings apply to e unchanged.
+        $countQb = $this->getEntityManager()->createQueryBuilder()
+            ->select("COUNT(DISTINCT p.id)")
+            ->from('models\summit\Presentation', 'p')
+            ->join('p.created_by', 'e')
+            ->where('p.summit = :summit')
+            ->setParameter('summit', $summit);
+
+        $countQb = $this->applyExtraJoins($countQb, $filter);
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($countQb, $this->getFilterMappings($filter));
+        }
+
+        return intval($countQb->getQuery()->getSingleScalarResult());
     }
 
     /**

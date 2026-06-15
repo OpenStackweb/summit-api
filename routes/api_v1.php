@@ -692,6 +692,7 @@ Route::group(array('prefix' => 'summits'), function () {
                 });
 
                 Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@updateEvent']);
+                Route::put('/draft', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@updateDraftEvent']);
                 Route::put('live-info', ['uses' => 'OAuth2SummitEventsApiController@updateEventLiveInfo']);
                 Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@deleteEvent']);
                 Route::put('/publish', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@publishEvent']);

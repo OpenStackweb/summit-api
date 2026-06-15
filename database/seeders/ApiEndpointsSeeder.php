@@ -4268,6 +4268,21 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'update-draft-event',
+                'route' => '/api/v1/summits/{id}/events/{event_id}/draft',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::TrackChairsAdmins,
+                ]
+            ],
+            [
                 'name' => 'update-event-live-info',
                 'route' => '/api/v1/summits/{id}/events/{event_id}/live-info',
                 'http_method' => 'PUT',

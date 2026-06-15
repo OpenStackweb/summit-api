@@ -617,9 +617,9 @@ final class SummitService
      * @param array $data
      * @return SummitEvent
      */
-    public function updateEvent(Summit $summit, $event_id, array $data, bool $trigger_data_update = true)
+    public function updateEvent(Summit $summit, $event_id, array $data, bool $trigger_data_update = true, bool $saveAsIncomplete = false)
     {
-        return $this->saveOrUpdateEvent($summit, $data, $event_id, $trigger_data_update);
+        return $this->saveOrUpdateEvent($summit, $data, $event_id, $trigger_data_update, $saveAsIncomplete);
     }
 
     /**
@@ -660,19 +660,20 @@ final class SummitService
      * @return SummitEvent
      * @throws Exception
      */
-    private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null, bool $trigger_data_update = true)
+    private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null, bool $trigger_data_update = true, bool $saveAsIncomplete = false)
     {
-        return $this->tx_service->transaction(function () use ($summit, $data, $event_id, $trigger_data_update) {
+        return $this->tx_service->transaction(function () use ($summit, $data, $event_id, $trigger_data_update, $saveAsIncomplete) {
 
             Log::debug
             (
                 sprintf
                 (
-                    "SummitService::saveOrUpdateEvent summit %s event_id %s data %s trigger_data_update %b",
+                    "SummitService::saveOrUpdateEvent summit %s event_id %s data %s trigger_data_update %b saveAsIncomplete %s",
                     $summit->getId(),
                     $event_id ?? "NEW",
                     json_encode($data),
-                    $trigger_data_update
+                    $trigger_data_update,
+                    $saveAsIncomplete
                 )
             );
 
@@ -832,7 +833,7 @@ final class SummitService
                 }
             }
 
-            $this->saveOrUpdatePresentationData($event, $event_type, $data);
+            $this->saveOrUpdatePresentationData($event, $event_type, $data, $saveAsIncomplete);
             $this->saveOrUpdateSummitGroupEventData($event, $event_type, $data);
 
             if (!$event_type->isAllowsLocation())
@@ -881,17 +882,25 @@ final class SummitService
      * @param SummitEvent $event
      * @param SummitEventType $event_type
      * @param array $data
+     * @param bool $saveAsIncomplete
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    private function saveOrUpdatePresentationData(SummitEvent $event, SummitEventType $event_type, array $data)
+    private function saveOrUpdatePresentationData(SummitEvent $event, SummitEventType $event_type, array $data, bool $saveAsIncomplete = false)
     {
         if (!$event instanceof Presentation) return;
 
-        // if we are creating the presentation from admin, then
-        // we should mark it as received and complete
-        $event->setStatus(Presentation::STATUS_RECEIVED);
-        $event->setProgress(Presentation::PHASE_COMPLETE);
+        Log::debug(sprintf("SummitService::saveOrUpdatePresentationData presentation %s saveAsIncomplete %b", $event->getId(), $saveAsIncomplete));
+        if ($saveAsIncomplete && $event->isPublished())
+            throw new ValidationException('Cannot save a published event as incomplete.');
+
+        if (!$saveAsIncomplete || $event->isNew()) {
+            // if we are creating the presentation from admin, then
+            // we should mark it as received and complete
+            Log::debug(sprintf("SummitService::saveOrUpdatePresentationData marking presentation %s as complete", $event->getId()));
+            $event->setStatus(Presentation::STATUS_RECEIVED);
+            $event->setProgress(Presentation::PHASE_COMPLETE);
+        }
 
         // speakers
 
@@ -900,13 +909,15 @@ final class SummitService
             $shouldClearSpeakers = isset($data['speakers']) && count($data['speakers']) == 0;
             $speakers = $data['speakers'] ?? [];
 
-            if ($event_type->isAreSpeakersMandatory()) {
-                if ($shouldClearSpeakers || ($event->isNew() && count($speakers) == 0))
-                    throw new ValidationException('Speakers are mandatory.');
-            }
+            if (!$saveAsIncomplete || $event->isNew()) {
+                if ($event_type->isAreSpeakersMandatory()) {
+                    if ($shouldClearSpeakers || ($event->isNew() && count($speakers) == 0))
+                        throw new ValidationException('Speakers are mandatory.');
+                }
 
-            if ($shouldClearSpeakers) {
-                $event->clearSpeakers();
+                if ($shouldClearSpeakers) {
+                    $event->clearSpeakers();
+                }
             }
 
             if (count($speakers) > 0) {
@@ -926,12 +937,14 @@ final class SummitService
             $shouldClearModerator = isset($data['moderator_speaker_id']) && intval($data['moderator_speaker_id']) == 0;
             $moderator_id = isset($data['moderator_speaker_id']) ? intval($data['moderator_speaker_id']) : 0;
 
-            if ($event_type->isModeratorMandatory()) {
-                if ($shouldClearModerator || ($event->isNew() && $moderator_id == 0))
-                    throw new ValidationException('moderator_speaker_id is mandatory.');
-            }
+            if (!$saveAsIncomplete || $event->isNew()) {
+                if ($event_type->isModeratorMandatory()) {
+                    if ($shouldClearModerator || ($event->isNew() && $moderator_id == 0))
+                        throw new ValidationException('moderator_speaker_id is mandatory.');
+                }
 
-            if ($shouldClearModerator) $event->unsetModerator();
+                if ($shouldClearModerator) $event->unsetModerator();
+            }
 
             if ($moderator_id > 0) {
                 $moderator = $this->speaker_repository->getById($moderator_id);

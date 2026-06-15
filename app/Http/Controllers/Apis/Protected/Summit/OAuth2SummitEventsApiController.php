@@ -1094,7 +1094,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         summary: 'Update an existing draft event',
         description: 'Updates an existing draft event for a specific summit.',
         security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData]]],
-        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairsAdmins]],
         tags: ['Summit Events'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),

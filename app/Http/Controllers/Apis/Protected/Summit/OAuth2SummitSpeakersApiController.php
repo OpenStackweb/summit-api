@@ -425,7 +425,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                     properties: [new OA\Property(property: 'count', type: 'integer')]
                 )
             ),
-            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit not found'),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
         ]
     )]

@@ -144,7 +144,8 @@ final class OAuth2SummitSponsorshipApiControllerTest
             'id' => self::$summit->getId(),
             'sponsor_id' => self::$sponsors[0]->getId(),
             'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
-            'filter' => ['type==Booth'],
+            'filter' => ['type=@Booth'],
+            'expand' => 'type'
         ];
 
         $response = $this->action(
@@ -321,4 +322,5 @@ final class OAuth2SummitSponsorshipApiControllerTest
         $metadata = json_decode($content);
         $this->assertNotNull($metadata);
     }
+
 }

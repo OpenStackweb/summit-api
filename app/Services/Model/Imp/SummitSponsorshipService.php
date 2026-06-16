@@ -19,13 +19,17 @@ use App\Events\SponsorServices\SummitSponsorshipCreatedEventDTO;
 use App\Events\SponsorServices\DeletedEventDTO;
 use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
 use App\Models\Foundation\Summit\Factories\SummitSponsorshipAddOnFactory;
+use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipAddOnTypeRepository;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISummitSponsorshipService;
 use Illuminate\Support\Facades\Log;
+use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\summit\Summit;
 use models\summit\SummitSponsorship;
 use models\summit\SummitSponsorshipAddOn;
+use models\summit\SummitSponsorshipAddOnType;
 
 /**
  * Class SummitSponsorshipService
@@ -33,6 +37,20 @@ use models\summit\SummitSponsorshipAddOn;
  */
 final class SummitSponsorshipService extends AbstractService implements ISummitSponsorshipService
 {
+    /**
+     * @var ISummitSponsorshipAddOnTypeRepository
+     */
+    private $add_on_type_repository;
+
+    public function __construct(
+        ISummitSponsorshipAddOnTypeRepository $add_on_type_repository,
+        ITransactionService                   $tx_service
+    )
+    {
+        parent::__construct($tx_service);
+        $this->add_on_type_repository = $add_on_type_repository;
+    }
+
     /**
      * @inheritDoc
      */
@@ -117,6 +135,10 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
                 throw new EntityNotFoundException("Sponsorship {$sponsorship_id} not found for sponsor {$sponsor_id}.");
 
             $add_on = SummitSponsorshipAddOnFactory::build($payload);
+
+            $type = $this->resolveAddOnType($payload);
+            if (!is_null($type)) $add_on->setType($type);
+
             $sponsorship->addAddOn($add_on);
 
             return $add_on;
@@ -172,7 +194,12 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
             if (is_null($add_on))
                 throw new EntityNotFoundException("AddOn {$add_on_id} not found for sponsorship {$sponsorship_id}.");
 
-            return SummitSponsorshipAddOnFactory::populate($add_on, $payload);
+            SummitSponsorshipAddOnFactory::populate($add_on, $payload);
+
+            $type = $this->resolveAddOnType($payload);
+            if (!is_null($type)) $add_on->setType($type);
+
+            return $add_on;
         });
 
         PublishSponsorServiceDomainEventsJob::dispatch(
@@ -228,5 +255,24 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
         PublishSponsorServiceDomainEventsJob::dispatch(
             DeletedEventDTO::fromEntity($add_on)->serialize(),
             SponsorDomainEvents::SponsorshipAddOnRemoved);
+    }
+
+    private function resolveAddOnType(array $payload): ?SummitSponsorshipAddOnType
+    {
+        if (isset($payload['type_id'])) {
+            $type = $this->add_on_type_repository->getById(intval($payload['type_id']));
+            if (is_null($type))
+                throw new ValidationException(sprintf("Invalid AddOnType %s.", $payload['type_id']));
+            return $type;
+        }
+
+        if (isset($payload['type'])) {
+            $type = $this->add_on_type_repository->getByName(trim($payload['type']));
+            if (is_null($type))
+                throw new ValidationException(sprintf("Invalid AddOnType '%s'.", $payload['type']));
+            return $type;
+        }
+
+        return null;
     }
 }

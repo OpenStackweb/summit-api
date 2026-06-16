@@ -68,6 +68,7 @@ use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitSponsorship;
 use models\summit\SummitSponsorshipAddOn;
+use models\summit\SummitSponsorshipAddOnType;
 use models\summit\SummitSponsorshipType;
 use models\summit\SummitTicketType;
 use models\summit\SummitVenue;
@@ -255,6 +256,16 @@ trait InsertSummitTestData
      * @var SummitSponsorshipType
      */
     static $default_summit_sponsor_type2;
+
+    /**
+     * @var SummitSponsorshipAddOnType
+     */
+    static $default_add_on_type_booth;
+
+    /**
+     * @var SummitSponsorshipAddOnType
+     */
+    static $default_add_on_type_meeting_room;
 
     /**
      * @var array | SummitTicketType
@@ -837,6 +848,14 @@ trait InsertSummitTestData
         self::$default_summit_sponsor_type2->setType(self::$default_sponsor_ship_type2);
         self::$summit->addSponsorshipType(self::$default_summit_sponsor_type2);
 
+        self::$default_add_on_type_booth = new SummitSponsorshipAddOnType();
+        self::$default_add_on_type_booth->setName('Booth_' . str_random(6));
+        self::$em->persist(self::$default_add_on_type_booth);
+
+        self::$default_add_on_type_meeting_room = new SummitSponsorshipAddOnType();
+        self::$default_add_on_type_meeting_room->setName('Meeting_Room_' . str_random(6));
+        self::$em->persist(self::$default_add_on_type_meeting_room);
+
         self::$companies = [];
         self::$sponsors = [];
         for($i = 0 ; $i < 20; $i++){
@@ -876,7 +895,7 @@ trait InsertSummitTestData
 
             for($j = 0; $j < 5; $j ++){
                 $a = new SummitSponsorshipAddOn();
-                $a->setType($j < 3 ? SummitSponsorshipAddOn::Booth_Type : SummitSponsorshipAddOn::MeetingRoom_Type);
+                $a->setType($j < 3 ? self::$default_add_on_type_booth : self::$default_add_on_type_meeting_room);
                 $a->setName(sprintf("AddOn %s %s", $j, str_random(4)));
                 $sps->addAddOn($a);
                 self::$em->persist($a);
@@ -1011,6 +1030,16 @@ trait InsertSummitTestData
         if (!is_null(self::$default_media_file_type)) {
             self::$em->remove(self::$default_media_file_type);
         }
+        if (!is_null(self::$default_add_on_type_booth)) {
+            self::$default_add_on_type_booth = self::$em->find(SummitSponsorshipAddOnType::class, self::$default_add_on_type_booth->getId());
+            if (!is_null(self::$default_add_on_type_booth))
+                self::$em->remove(self::$default_add_on_type_booth);
+        }
+        if (!is_null(self::$default_add_on_type_meeting_room)) {
+            self::$default_add_on_type_meeting_room = self::$em->find(SummitSponsorshipAddOnType::class, self::$default_add_on_type_meeting_room->getId());
+            if (!is_null(self::$default_add_on_type_meeting_room))
+                self::$em->remove(self::$default_add_on_type_meeting_room);
+        }
         self::$em->flush();
 
         // reset static vars
@@ -1018,6 +1047,8 @@ trait InsertSummitTestData
         self::$summit = null;
         self::$default_badge_type = null;
         self::$summit2 = null;
+        self::$default_add_on_type_booth = null;
+        self::$default_add_on_type_meeting_room = null;
         self::$mainVenue = null;
         self::$defaultTags = [];
         self::$ticket_types = [];

@@ -1,6 +1,6 @@
 <?php namespace App\Models\Foundation\Summit\Repositories;
-/**
- * Copyright 2025 OpenStack Foundation
+/*
+ * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,23 +12,18 @@
  * limitations under the License.
  **/
 
-use models\summit\Summit;
+use models\summit\SummitSponsorshipAddOnType;
 use models\utils\IBaseRepository;
+
 /**
- * Interface ISummitSponsorshipAddOnRepository
+ * Interface ISummitSponsorshipAddOnTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
-interface ISummitSponsorshipAddOnRepository extends IBaseRepository
+interface ISummitSponsorshipAddOnTypeRepository extends IBaseRepository
 {
     /**
-     * @param Summit $summit
-     * @return array
+     * @param string $name
+     * @return SummitSponsorshipAddOnType|null
      */
-    public function getMetadata(Summit $summit): array;
-
-    /**
-     * @param int $type_id
-     * @return int
-     */
-    public function countByAddOnType(int $type_id): int;
+    public function getByName(string $name): ?SummitSponsorshipAddOnType;
 }

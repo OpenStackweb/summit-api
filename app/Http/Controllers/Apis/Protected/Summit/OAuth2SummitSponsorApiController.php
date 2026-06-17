@@ -4378,4 +4378,73 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             );
         });
     }
+
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/sponsors/all/sponsorservices-statistics/bulk",
+        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        summary: 'Bulk upsert Sponsor Services Statistics',
+        operationId: 'bulkUpdateSponsorServicesStatistics',
+        tags: ['Sponsors'],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        security: [
+            [
+                'summit_sponsor_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'array',
+                items: new OA\Items(ref: "#/components/schemas/SponsorServicesStatisticsUpsertRequest")
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Sponsor Services Statistics bulk created/updated successfully'
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error")
+        ]
+    )]
+    public function bulkUpdateSponsorServicesStatistics($summit_id) {
+        return $this->processRequest(function () use ($summit_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $payload = $this->getJsonPayload(SponsorServicesStatisticsValidationRulesFactory::buildForBulkUpdate(), true);
+
+            $results = $this->service->bulkUpdateSponsorServicesStatistics($summit, $payload);
+
+            return $this->ok(array_map(function ($statistics) {
+                return SerializerRegistry::getInstance()
+                    ->getSerializer($statistics)
+                    ->serialize(
+                        SerializerUtils::getExpand(),
+                        SerializerUtils::getFields(),
+                        SerializerUtils::getRelations()
+                    );
+            }, $results));
+        });
+    }
 }

@@ -1230,6 +1230,10 @@ Route::group(array('prefix' => 'summits'), function () {
                         Route::put('send', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitPromoCodesApiController@sendSponsorPromoCodes']);
                     });
                 });
+
+                Route::group(['prefix' => 'sponsorservices-statistics'], function () {
+                    Route::put('bulk', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorApiController@bulkUpdateSponsorServicesStatistics']);
+                });
             });
             Route::group(['prefix' => '{sponsor_id}'], function () {
 

@@ -45,6 +45,9 @@ class FileAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "File '%s' (%s) (%d) updated: %s by user %s",
                         $name,

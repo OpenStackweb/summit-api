@@ -39,6 +39,9 @@ class SummitSponsorshipAddOnAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $details = $this->buildChangeDetails($change_set);
+                    if ($details === null) {
+                        return null;
+                    }
                     return sprintf("Sponsorship Add-On (%s) '%s' (%s) updated: %s by user %s", $id, $name, $type, $details, $this->getUserInfo());
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:

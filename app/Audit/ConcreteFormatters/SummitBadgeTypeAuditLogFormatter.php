@@ -46,6 +46,9 @@ class SummitBadgeTypeAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Badge Type '%s' (%s) in Summit '%s' updated: %s by user %s",
                         $name,

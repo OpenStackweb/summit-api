@@ -50,6 +50,9 @@ class PresentationCategoryGroupAuditLogFormatter extends AbstractAuditLogFormatt
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Track Group (PresentationCategoryGroup) '%s' (%s) for Summit '%s' updated: %s by user %s",
                         $name,

@@ -117,10 +117,8 @@ class SummitAccessLevelTypeAuditLogFormatterTest extends TestCase
         $this->formatter_update->setContext($this->audit_context);
         $result = $this->formatter_update->format($access_level, []);
 
-        $this->assertNotNull($result);
-        $this->assertStringContainsString("Test Access", $result);
-        $this->assertStringContainsString("updated", $result);
-    }
+        $this->assertNull($result);
+}
 
     public function testPropertiesExist(): void
     {

@@ -24,14 +24,15 @@ interface ILockManagerService
      * @param string $name
      * @param int $lifetime
      * @throws UnacquiredLockException
-     * @return mixed
+     * @return string ownership token — must be passed to releaseLock
      */
-    public function acquireLock(string $name,int $lifetime = self::DefaultLifetime);
+    public function acquireLock(string $name, int $lifetime = self::DefaultLifetime): string;
+
     /**
-     * @param  string $name
-     * @return mixed
+     * @param string $name
+     * @param string $token ownership token returned by acquireLock
      */
-    public function releaseLock(string $name);
+    public function releaseLock(string $name, string $token): void;
 
     /**
      * @param string $name
@@ -39,5 +40,5 @@ interface ILockManagerService
      * @param int $lifetime
      * @return mixed
      */
-    public function lock(string $name, Closure $callback, int $lifetime = self::DefaultLifetime);
+    public function lock(string $name, Closure $callback, int $lifetime = self::DefaultLifetime): mixed;
 }

@@ -62,7 +62,10 @@ trait FileUtils{
         stream_set_blocking($stream, true);
         @stream_set_read_buffer($stream, 0);
 
-        $localPath = rtrim(self::getLocalTmpStorage(), '/')."/".$file_name;
+        $localPath = tempnam(self::getLocalTmpStorage(), 'fproc_');
+        if ($localPath === false) {
+            throw new ValidationException("Unable to create local temporary file.");
+        }
 
         $out = fopen($localPath, 'wb'); // binary mode
         if ($out === false) {

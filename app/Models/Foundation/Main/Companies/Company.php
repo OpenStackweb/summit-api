@@ -25,6 +25,7 @@ use Doctrine\ORM\Mapping AS ORM;
 #[ORM\Cache(usage: 'NONSTRICT_READ_WRITE', region: 'sponsors_region')] // Class Company
 class Company extends SilverstripeBaseModel
 {
+    public const LogoAllowedExtensions = ['png', 'jpg', 'jpeg', 'svg'];
     /**
      * @var string
      */

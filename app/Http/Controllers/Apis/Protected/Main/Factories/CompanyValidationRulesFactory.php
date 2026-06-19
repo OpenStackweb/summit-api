@@ -69,6 +69,20 @@ final class CompanyValidationRulesFactory
             'overview' => 'nullable|string',
             'commitment' => 'nullable|string',
             'commitment_author' => 'nullable|string',
+            'big_logo' => 'sometimes|file_dto',
+            'logo' =>'sometimes|file_dto',
+        ];
+    }
+
+
+    public static function buildForFileInfo(): array {
+        return [
+            'filepath' => 'required|string',
+            'filename' => 'required|string',
+            'md5' => 'required|string',
+            'size' => 'required|integer',
+            'mime_type'=> 'sometimes|string',
+            'source_bucket' => 'sometimes|string',
         ];
     }
 }

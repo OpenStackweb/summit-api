@@ -47,19 +47,32 @@ final class FileUploadInfo
      */
     private $filePath;
 
+    private $md5;
+
+    private $mime_type;
+
+    private $source_bucket;
+
     /**
      * @param $file
      * @param $fileName
      * @param $fileExt
      * @param $filePath
      * @param $size
+     * @param $md5
+     * @param $mime_type
+     * @param $source_bucket
      */
     private function __construct(
         $file,
         $fileName,
         $fileExt,
         $filePath,
-        $size
+        $size,
+        $md5 = null,
+        $mime_type = null,
+        $source_bucket = null,
+
     )
     {
         $this->file = $file;
@@ -67,6 +80,9 @@ final class FileUploadInfo
         $this->fileExt = $fileExt;
         $this->size = $size;
         $this->filePath = $filePath;
+        $this->md5 = $md5;
+        $this->mime_type = $mime_type;
+        $this->source_bucket = $source_bucket;
     }
 
     public static function getStorageDriver():string{
@@ -103,23 +119,8 @@ final class FileUploadInfo
             $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
         }
 
-        if(is_null($file) && isset($payload['filepath']) && !empty($payload['filepath'])){
-            Log::debug(sprintf("FileUploadInfo::build build file is present on as %s storage (%s)", self::getStorageDriver(), $payload['filepath']));
-            $disk = Storage::disk(self::getStorageDriver());
-
-            if(!$disk->exists($payload['filepath']))
-                throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", self::getStorageDriver(), $payload['filepath']));
-
-            // get in bytes should be converted to KB
-            $size = $disk->size($payload['filepath']);
-            Log::debug(sprintf("FileUploadInfo::build build file %s storage (%s) size %s", self::getStorageDriver(), $payload['filepath'], $size));
-            if($size == 0)
-                throw new ValidationException("File size is zero.");
-
-            $filePath = $payload['filepath'];
-            $fileName = pathinfo($payload['filepath'],PATHINFO_BASENAME);
-            $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-            $file = self::isLocal() ? new UploadedFile($disk->path($payload['filepath']), $fileName): null;
+        if(is_null($file)){
+            return self::buildFromPayload($payload);
         }
 
         $fileName = $fileName && !empty($fileName) ? FileNameSanitizer::sanitize($fileName) : $fileName;
@@ -127,6 +128,50 @@ final class FileUploadInfo
         if(empty($filePath)) return null;
 
         return new self($file, $fileName, $fileExt, $filePath, $size);
+    }
+
+    public static function buildFromPayload(array $payload):?FileUploadInfo{
+        $filepath = null;
+        $filename = null;
+        $md5 = null;
+        $size = 0;
+        $mime_type = null;
+        $source_bucket = null;
+        $fileExt = null;
+        $file = null;
+        if(isset($payload['filepath']) && !empty($payload['filepath'])){
+            $filepath = trim($payload['filepath']);
+            Log::debug(sprintf("FileUploadInfo::buildFromPayload file is present on as %s storage (%s)", self::getStorageDriver(), $filepath));
+            $disk = Storage::disk(self::getStorageDriver());
+
+            if(!$disk->exists($payload['filepath'])) {
+                Log::warning(sprintf("FileUploadInfo::buildFromPayload file %s is not present at storage (%s)", self::getStorageDriver(), $filepath));
+                throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", self::getStorageDriver(), $filepath));
+            }
+
+            // get in bytes should be converted to KB
+            $size = isset($payload['size']) ? intval($payload['size']): $disk->size($filepath);
+
+            Log::debug(sprintf("FileUploadInfo::buildFromPayload file %s storage (%s) size %s", self::getStorageDriver(), $payload['filepath'], $size));
+            if($size == 0) {
+                Log::warning(sprintf("FileUploadInfo::buildFromPayload file %s size is zero", $filepath));
+                throw new ValidationException("File size is zero.");
+            }
+
+
+            $filename = isset($payload['filename']) ? trim($payload['filename']): pathinfo($filepath, PATHINFO_BASENAME);
+            $md5 = isset($payload['md5']) ? trim($payload['md5']) : null;
+            $mime_type= isset($payload['mime_type']) ? trim($payload['mime_type']) : null;
+            $source_bucket =  isset($payload['source_bucket']) ? trim($payload['source_bucket']) : null;
+            $fileExt = pathinfo($filename, PATHINFO_EXTENSION);
+            $file = self::isLocal() ? new UploadedFile($disk->path($payload['filepath']), $filename): null;
+        }
+
+        $filename = $filename && !empty($filename) ? FileNameSanitizer::sanitize($filename) : $filename;
+
+        if(empty($filename) || empty($filepath)) return null;
+
+        return new self(null, $filename, $fileExt, $filepath, $size, $md5, $mime_type, $source_bucket);
     }
 
     /**
@@ -175,9 +220,26 @@ final class FileUploadInfo
         Log::debug(sprintf("FileUploadInfo::delete deleting file %s", $realPath));
     }
 
+    public function getMd5(): ?string
+    {
+        return $this->md5;
+    }
+
+    public function getMimeType(): ?string
+    {
+        return $this->mime_type;
+    }
+
+    public function getSourceBucket(): ?string
+    {
+        return $this->source_bucket;
+    }
+
     public function getFilePath(): ?string
     {
         return $this->filePath;
     }
+
+
 
 }

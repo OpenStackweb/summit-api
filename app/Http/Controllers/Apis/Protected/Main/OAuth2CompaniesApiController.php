@@ -19,10 +19,12 @@ use App\Models\Foundation\Main\IGroup;
 use App\Rules\Boolean;
 use App\Security\CompanyScopes;
 use App\Security\SummitScopes;
+use App\Services\Model\FileInfoDTO;
 use App\Services\Model\ICompanyService;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
 use models\exceptions\ValidationException;
+use models\main\Company;
 use models\main\ICompanyRepository;
 use models\oauth2\IResourceServerContext;
 use models\utils\IEntity;
@@ -505,7 +507,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         path: "/api/v1/companies/{id}/logo",
         operationId: "addCompanyLogo",
         summary: "Add company logo",
-        description: "Uploads a logo image for the company",
+        description: "Uploads a logo image for the company. Accepts either a multipart file upload or a JSON payload referencing a file already stored in the file API.",
         security: [
             [
                 "companies_oauth2" => [
@@ -531,20 +533,36 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\MediaType(
-                mediaType: "multipart/form-data",
-                schema: new OA\Schema(
-                    required: ["file"],
-                    properties: [
-                        new OA\Property(
-                            property: "file",
-                            type: "string",
-                            format: "binary",
-                            description: "Logo image file"
-                        )
-                    ]
-                )
-            )
+            content: [
+                new OA\MediaType(
+                    mediaType: "multipart/form-data",
+                    schema: new OA\Schema(
+                        required: ["file"],
+                        properties: [
+                            new OA\Property(
+                                property: "file",
+                                type: "string",
+                                format: "binary",
+                                description: "Logo image file"
+                            )
+                        ]
+                    )
+                ),
+                new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        required: ["filepath", "filename", "md5", "size"],
+                        properties: [
+                            new OA\Property(property: "filepath", type: "string", description: "Remote storage path of the uploaded file"),
+                            new OA\Property(property: "filename", type: "string", description: "Original file name"),
+                            new OA\Property(property: "md5", type: "string", description: "MD5 hash of the file for integrity verification"),
+                            new OA\Property(property: "size", type: "integer", description: "File size in bytes"),
+                            new OA\Property(property: "mime_type", type: "string", description: "MIME type of the file"),
+                            new OA\Property(property: "source_bucket", type: "string", description: "Source storage bucket"),
+                        ]
+                    )
+                ),
+            ]
         ),
         responses: [
             new OA\Response(
@@ -556,7 +574,6 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
-            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "File parameter not set"),
         ]
     )]
     public function addCompanyLogo(LaravelRequest $request, $company_id)
@@ -564,12 +581,26 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         return $this->processRequest(function () use ($request, $company_id) {
 
             $file = $request->file('file');
-            if (is_null($file)) {
-                return $this->error412(array('file param not set!'));
+            if (!is_null($file)) {
+                $logo = $this->service->addCompanyLogo(intval($company_id), $file);
+
+                return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
             }
 
-            $logo = $this->service->addCompanyLogo(intval($company_id), $file);
+            // file api post processing ( new flow )
+            $payload = $this->getJsonPayload(CompanyValidationRulesFactory::buildForFileInfo());
 
+            $logo = $this->service->processFileForChildEntity(new FileInfoDTO(
+                owner_entity_id: intval($company_id),
+                owner_entity_class: Company::class,
+                owner_member_name: 'logo',
+                filepath: $payload['filepath'],
+                filename: $payload['filename'],
+                size: intval($payload['size']),
+                md5: $payload['md5'] ?? null,
+                mime_type: $payload['mime_type'] ?? null,
+                source_bucket: $payload['source_bucket'] ?? null,
+            ));
             return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
         });
     }
@@ -624,7 +655,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         path: "/api/v1/companies/{id}/logo/big",
         operationId: "addCompanyBigLogo",
         summary: "Add company big logo",
-        description: "Uploads a big logo image for the company",
+        description: "Uploads a big logo image for the company. Accepts either a multipart file upload or a JSON payload referencing a file already stored in the file API.",
         security: [
             [
                 "companies_oauth2" => [
@@ -650,20 +681,36 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         ],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\MediaType(
-                mediaType: "multipart/form-data",
-                schema: new OA\Schema(
-                    required: ["file"],
-                    properties: [
-                        new OA\Property(
-                            property: "file",
-                            type: "string",
-                            format: "binary",
-                            description: "Big logo image file"
-                        )
-                    ]
-                )
-            )
+            content: [
+                new OA\MediaType(
+                    mediaType: "multipart/form-data",
+                    schema: new OA\Schema(
+                        required: ["file"],
+                        properties: [
+                            new OA\Property(
+                                property: "file",
+                                type: "string",
+                                format: "binary",
+                                description: "Big logo image file"
+                            )
+                        ]
+                    )
+                ),
+                new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        required: ["filepath", "filename", "md5", "size"],
+                        properties: [
+                            new OA\Property(property: "filepath", type: "string", description: "Remote storage path of the uploaded file"),
+                            new OA\Property(property: "filename", type: "string", description: "Original file name"),
+                            new OA\Property(property: "md5", type: "string", description: "MD5 hash of the file for integrity verification"),
+                            new OA\Property(property: "size", type: "integer", description: "File size in bytes"),
+                            new OA\Property(property: "mime_type", type: "string", description: "MIME type of the file"),
+                            new OA\Property(property: "source_bucket", type: "string", description: "Source storage bucket"),
+                        ]
+                    )
+                ),
+            ]
         ),
         responses: [
             new OA\Response(
@@ -675,19 +722,31 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Company not found"),
-            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "File parameter not set"),
         ]
     )]
     public function addCompanyBigLogo(LaravelRequest $request, $company_id)
     {
         return $this->processRequest(function () use ($request, $company_id) {
             $file = $request->file('file');
-            if (is_null($file)) {
-                return $this->error412(array('file param not set!'));
+            if (!is_null($file)) {
+                $logo = $this->service->addCompanyBigLogo(intval($company_id), $file);
+                return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
             }
 
-            $logo = $this->service->addCompanyBigLogo(intval($company_id), $file);
+            // file api post processing ( new flow )
+            $payload = $this->getJsonPayload(CompanyValidationRulesFactory::buildForFileInfo());
 
+            $logo = $this->service->processFileForChildEntity(new FileInfoDTO(
+                owner_entity_id: intval($company_id),
+                owner_entity_class: Company::class,
+                owner_member_name: 'big_logo',
+                filepath: $payload['filepath'],
+                filename: $payload['filename'],
+                size: intval($payload['size']),
+                md5: $payload['md5'] ?? null,
+                mime_type: $payload['mime_type'] ?? null,
+                source_bucket: $payload['source_bucket'] ?? null,
+            ));
             return $this->created(SerializerRegistry::getInstance()->getSerializer($logo)->serialize());
         });
     }

@@ -11,26 +11,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\CompanyEventJob;
+use App\Jobs\FileProcessingJob;
+use App\Jobs\Utils\JobDispatcher;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Services\Model\AbstractService;
+use App\Services\Model\FileInfoDTO;
 use App\Services\Model\ICompanyService;
+use App\Services\Model\IFilePostProcessorForChildEntity;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
+use libs\utils\FileUtils;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Company;
 use models\main\File;
 use models\main\ICompanyRepository;
+use models\utils\IEntity;
+
 /**
  * Class CompanyService
  * @package App\Services\Model\Imp
  */
 final class CompanyService
     extends AbstractService
-    implements ICompanyService
+    implements ICompanyService, IFilePostProcessorForChildEntity
 {
+    use FileUtils;
 
     /**
      * @var ICompanyRepository
@@ -66,7 +77,8 @@ final class CompanyService
      */
     public function addCompany(array $payload): Company
     {
-       return $this->tx_service->transaction(function() use($payload){
+
+       $company = $this->tx_service->transaction(function() use($payload){
            $company_name = trim($payload['name']);
            $former_company = $this->repository->getByName($company_name);
            if(!is_null($former_company)){
@@ -76,7 +88,54 @@ final class CompanyService
            $this->repository->add($company);
            return $company;
        });
+
+        if(isset($payload['logo'])){
+            $file_upload_info = FileUploadInfo::buildFromPayload($payload['logo']);
+            if(!is_null($file_upload_info)){
+                if(!in_array($file_upload_info->getFileExt(),Company::LogoAllowedExtensions ))
+                    throw new ValidationException(sprintf("Logo file does not has a valid extension (%s).", implode(',', Company::LogoAllowedExtensions)));
+                $job = new FileProcessingJob(new FileInfoDTO(
+                    owner_entity_id : $company->getId(),
+                    owner_entity_class: Company::class,
+                    owner_member_name: "logo",
+                    filepath: $file_upload_info->getFilePath(),
+                    filename: $file_upload_info->getFileName(),
+                    size: $file_upload_info->getSize(),
+                    md5: $file_upload_info->getMd5(),
+                    mime_type: $file_upload_info->getMimeType(),
+                    source_bucket: $file_upload_info->getSourceBucket()
+                ));
+                JobDispatcher::withDbFallback(
+                    job: $job,
+                );
+            }
+        }
+
+        if(isset($payload['big_logo'])){
+            $file_upload_info = FileUploadInfo::buildFromPayload($payload['big_logo']);
+            if(!is_null($file_upload_info)){
+                if(!in_array($file_upload_info->getFileExt(),Company::LogoAllowedExtensions ))
+                    throw new ValidationException(sprintf("Big Logo file does not has a valid extension (%s).", implode(',', Company::LogoAllowedExtensions)));
+                $job = new FileProcessingJob(new FileInfoDTO(
+                    owner_entity_id : $company->getId(),
+                    owner_entity_class: Company::class,
+                    owner_member_name: "big_logo",
+                    filepath: $file_upload_info->getFilePath(),
+                    filename: $file_upload_info->getFileName(),
+                    size: $file_upload_info->getSize(),
+                    md5: $file_upload_info->getMd5(),
+                    mime_type: $file_upload_info->getMimeType(),
+                    source_bucket: $file_upload_info->getSourceBucket()
+                ));
+                JobDispatcher::withDbFallback(
+                    job: $job,
+                );
+            }
+        }
+
+       return $company;
     }
+
 
     /**
      * @param int $company_id
@@ -97,6 +156,8 @@ final class CompanyService
                 if(!is_null($former_company) && $company_id !== $former_company->getId()){
                     throw new ValidationException(sprintf("company %s already exists", $payload['name']));
                 }
+
+
             }
 
             return CompanyFactory::populate($company, $payload);
@@ -128,16 +189,14 @@ final class CompanyService
     {
         return $this->tx_service->transaction(function () use ($company_id, $file, $max_file_size) {
 
-            $allowed_extensions = ['png', 'jpg', 'jpeg', 'svg'];
-
             $company = $this->repository->getById($company_id);
 
             if (is_null($company) || !$company instanceof Company) {
                 throw new EntityNotFoundException('company not found!');
             }
 
-            if (!in_array($file->extension(), $allowed_extensions)) {
-                throw new ValidationException("file does not has a valid extension ('png', 'jpg', 'jpeg', 'svg').");
+            if (!in_array($file->extension(), Company::LogoAllowedExtensions)) {
+                throw new ValidationException(sprintf("file does not has a valid extension (%s).", implode(', ', Company::LogoAllowedExtensions)));
             }
 
             if ($file->getSize() > $max_file_size) {
@@ -175,16 +234,14 @@ final class CompanyService
     {
         return $this->tx_service->transaction(function () use ($company_id, $file, $max_file_size) {
 
-            $allowed_extensions = ['png', 'jpg', 'jpeg', 'svg'];
-
             $company = $this->repository->getById($company_id);
 
             if (is_null($company) || !$company instanceof Company) {
                 throw new EntityNotFoundException('company not found!');
             }
 
-            if (!in_array($file->extension(), $allowed_extensions)) {
-                throw new ValidationException("file does not has a valid extension ('png', 'jpg', 'jpeg', 'svg').");
+            if (!in_array($file->extension(), Company::LogoAllowedExtensions)) {
+                throw new ValidationException(sprintf("file does not has a valid extension (%s).", implode(', ', Company::LogoAllowedExtensions)));
             }
 
             if ($file->getSize() > $max_file_size) {
@@ -213,5 +270,72 @@ final class CompanyService
             $company->clearBigLogo();
 
         });
+    }
+
+    /**
+     * @param FileInfoDTO $file_info_dto
+     * @return IEntity
+     * @throws EntityNotFoundException
+     * @throws ValidationException
+     */
+    public function processFileForChildEntity(FileInfoDTO $file_info_dto): IEntity{
+        Log::debug(sprintf("CompanyService::processFileForChildEntity file_info_dto %s", $file_info_dto ));
+        $logo = null;
+        switch($file_info_dto->owner_member_name){
+            case 'big_logo':
+                $localPath = self::getFileFromRemoteStorageOnTempStorage(
+                    $file_info_dto->filename,
+                    $file_info_dto->filepath
+                );
+                try {
+                    if (!is_null($file_info_dto->md5)) {
+                        $localHash = md5_file($localPath);
+                        if ($localHash === false)
+                            throw new ValidationException("File integrity check failed: unable to read local temp file.");
+                        if ($localHash !== strtolower($file_info_dto->md5))
+                            throw new ValidationException("File integrity check failed: MD5 mismatch.");
+                    }
+                    $file = new UploadedFile(
+                        path: $localPath,
+                        originalName: $file_info_dto->filename,
+                        mimeType: $file_info_dto->mime_type,
+                        error: null,
+                        test: true,
+                    );
+                    $logo = $this->addCompanyBigLogo($file_info_dto->owner_entity_id, $file);
+                } finally {
+                    self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                }
+                return $logo;
+            case 'logo':
+                $localPath = self::getFileFromRemoteStorageOnTempStorage(
+                    $file_info_dto->filename,
+                    $file_info_dto->filepath
+                );
+
+                try {
+                    if (!is_null($file_info_dto->md5)) {
+                        $localHash = md5_file($localPath);
+                        if ($localHash === false)
+                            throw new ValidationException("File integrity check failed: unable to read local temp file.");
+                        if ($localHash !== strtolower($file_info_dto->md5))
+                            throw new ValidationException("File integrity check failed: MD5 mismatch.");
+                    }
+                    $file = new UploadedFile(
+                        path: $localPath,
+                        originalName: $file_info_dto->filename,
+                        mimeType: $file_info_dto->mime_type,
+                        error: null,
+                        test: true,
+                    );
+                    $logo = $this->addCompanyLogo($file_info_dto->owner_entity_id, $file);
+                } finally {
+                    self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                }
+                return $logo;
+            default:
+                Log::warning(sprintf("CompanyService::processFileForChildEntity unknown member name '%s'", $file_info_dto->owner_member_name));
+                throw new \InvalidArgumentException(sprintf("Unknown owner_member_name '%s' for entity class '%s'.", $file_info_dto->owner_member_name, $file_info_dto->owner_entity_class));
+        }
     }
 }

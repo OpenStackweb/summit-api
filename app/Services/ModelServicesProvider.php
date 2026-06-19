@@ -18,6 +18,7 @@ use App\Services\Apis\ExternalRegistrationFeeds\ExternalRegistrationFeedFactory;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\ExternalScheduleFeedFactory;
 use App\Services\Apis\ExternalScheduleFeeds\IExternalScheduleFeedFactory;
+use App\Services\FilePostProcessorService;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
@@ -29,12 +30,12 @@ use App\Services\Model\IAttendeeService;
 use App\Services\Model\IBadgeViewTypeService;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\IElectionService;
+use App\Services\Model\IFilePostProcessorService;
 use App\Services\Model\ILocationService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\BadgeViewTypeService;
 use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\ElectionService;
-use App\Services\Model\Imp\Factories\RabbitPublisherFactory;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
 use App\Services\Model\Imp\ProcessScheduleEntityLifeCycleEventService;
@@ -140,8 +141,6 @@ use App\Services\SummitOrderExtraQuestionTypeService;
 use App\Services\SummitRefundPolicyTypeService;
 use App\Services\SummitSponsorService;
 use App\Services\SummitSponsorshipService;
-use App\Services\Utils\IPublisherService;
-use App\Services\Utils\RabbitPublisherService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 use services\model\ChatTeamService;
@@ -529,6 +528,10 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitRSVPService::class,
             SummitRSVPService::class
         );
+        App::singleton(
+            IFilePostProcessorService::class,
+            FilePostProcessorService::class
+        );
     }
 
     /**
@@ -602,6 +605,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISponsorUserSyncService::class,
             ISummitRSVPService::class,
             ISummitRSVPInvitationService::class,
+            IFilePostProcessorService::class,
         ];
     }
 }

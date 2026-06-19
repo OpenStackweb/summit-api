@@ -188,6 +188,25 @@ class AppServiceProvider extends ServiceProvider
         'type_id' => 'required|integer',
     ];
 
+    static $file_dto_fields = [
+        'filepath',
+        'filename',
+        'md5',
+        'size',
+        'mime_type',
+        'source_bucket',
+    ];
+
+    static $file_dto_validation_rules = [
+        'filepath' => 'required|string',
+        'filename' => 'required|string',
+        'md5' => 'required|string',
+        'size' => 'required|integer',
+        'mime_type'=> 'sometimes|string',
+        'source_bucket' => 'sometimes|string',
+    ];
+
+
     /**
      * Bootstrap any application services.
      * @return void
@@ -709,6 +728,14 @@ class AppServiceProvider extends ServiceProvider
             return is_numeric($value) && intval($value) > - strlen(strval($value)) == 10;
         });
 
+        Validator::replacer('file_dto', function ($message, $attribute, $rule, $parameters) {
+            return sprintf("%s should be a valid file dto (%s)", $attribute, implode(',', self::$file_dto_fields));
+        });
+
+        Validator::extend('file_dto', function ($attribute, $value, $parameters, $validator) {
+            $validation = Validator::make($value, self::$file_dto_validation_rules);
+            return !$validation->fails();
+        });
     }
 
     /**

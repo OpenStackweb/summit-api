@@ -137,4 +137,17 @@ trait FileUtils{
         Log::debug(sprintf("cleanLocalFile deleting local file %s", $localPath));
         unlink($localPath);
     }
+
+    /**
+     * Deletes only the local temp file. Use in finally blocks where the remote
+     * file must be preserved on failure so queue job retries can re-download it.
+     * @param string $localPath
+     * @return void
+     */
+    public static function cleanLocalFile(string $localPath): void {
+        if (file_exists($localPath)) {
+            Log::debug(sprintf("FileUtils::cleanLocalFile deleting local temp file %s", $localPath));
+            @unlink($localPath);
+        }
+    }
 }

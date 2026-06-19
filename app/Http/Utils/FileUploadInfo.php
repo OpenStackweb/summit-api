@@ -144,15 +144,15 @@ final class FileUploadInfo
             Log::debug(sprintf("FileUploadInfo::buildFromPayload file is present on as %s storage (%s)", self::getStorageDriver(), $filepath));
             $disk = Storage::disk(self::getStorageDriver());
 
-            if(!$disk->exists($payload['filepath'])) {
+            if(!$disk->exists($filepath)) {
                 Log::warning(sprintf("FileUploadInfo::buildFromPayload file %s is not present at storage (%s)", self::getStorageDriver(), $filepath));
                 throw new ValidationException(sprintf("file provide on filepath %s does not exists on %s storage.", self::getStorageDriver(), $filepath));
             }
 
-            // get in bytes should be converted to KB
-            $size = isset($payload['size']) ? intval($payload['size']): $disk->size($filepath);
+            // Always retrieve the actual size from storage; never trust client-provided value.
+            $size = $disk->size($filepath);
 
-            Log::debug(sprintf("FileUploadInfo::buildFromPayload file %s storage (%s) size %s", self::getStorageDriver(), $payload['filepath'], $size));
+            Log::debug(sprintf("FileUploadInfo::buildFromPayload file %s storage (%s) size %s", self::getStorageDriver(), $filepath, $size));
             if($size == 0) {
                 Log::warning(sprintf("FileUploadInfo::buildFromPayload file %s size is zero", $filepath));
                 throw new ValidationException("File size is zero.");
@@ -164,7 +164,7 @@ final class FileUploadInfo
             $mime_type= isset($payload['mime_type']) ? trim($payload['mime_type']) : null;
             $source_bucket =  isset($payload['source_bucket']) ? trim($payload['source_bucket']) : null;
             $fileExt = pathinfo($filename, PATHINFO_EXTENSION);
-            $file = self::isLocal() ? new UploadedFile($disk->path($payload['filepath']), $filename): null;
+            $file = self::isLocal() ? new UploadedFile($disk->path($filepath), $filename): null;
         }
 
         $filename = $filename && !empty($filename) ? FileNameSanitizer::sanitize($filename) : $filename;

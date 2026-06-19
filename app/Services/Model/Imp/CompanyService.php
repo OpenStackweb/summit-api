@@ -287,6 +287,7 @@ final class CompanyService
                     $file_info_dto->filename,
                     $file_info_dto->filepath
                 );
+                $succeeded = false;
                 try {
                     if (!is_null($file_info_dto->md5)) {
                         $localHash = md5_file($localPath);
@@ -303,8 +304,14 @@ final class CompanyService
                         test: true,
                     );
                     $logo = $this->addCompanyBigLogo($file_info_dto->owner_entity_id, $file);
+                    $succeeded = true;
                 } finally {
-                    self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                    // Remote file preserved on failure so queue retries can re-download it.
+                    if ($succeeded) {
+                        self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                    } else {
+                        self::cleanLocalFile($localPath);
+                    }
                 }
                 return $logo;
             case 'logo':
@@ -312,7 +319,7 @@ final class CompanyService
                     $file_info_dto->filename,
                     $file_info_dto->filepath
                 );
-
+                $succeeded = false;
                 try {
                     if (!is_null($file_info_dto->md5)) {
                         $localHash = md5_file($localPath);
@@ -329,8 +336,14 @@ final class CompanyService
                         test: true,
                     );
                     $logo = $this->addCompanyLogo($file_info_dto->owner_entity_id, $file);
+                    $succeeded = true;
                 } finally {
-                    self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                    // Remote file preserved on failure so queue retries can re-download it.
+                    if ($succeeded) {
+                        self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                    } else {
+                        self::cleanLocalFile($localPath);
+                    }
                 }
                 return $logo;
             default:

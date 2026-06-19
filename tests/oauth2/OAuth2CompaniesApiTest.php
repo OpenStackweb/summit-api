@@ -13,6 +13,7 @@
  **/
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 
 class OAuth2CompaniesApiTest extends ProtectedApiTestCase
@@ -107,6 +108,7 @@ class OAuth2CompaniesApiTest extends ProtectedApiTestCase
 
     public function testAddCompanyLogoViaJsonPayload(): void
     {
+        Config::set('file_upload.storage_driver', 'local');
         Storage::fake('local');
         Storage::fake('public');
         Storage::fake('assets');
@@ -202,6 +204,7 @@ class OAuth2CompaniesApiTest extends ProtectedApiTestCase
 
     public function testAddCompanyBigLogoViaJsonPayload(): void
     {
+        Config::set('file_upload.storage_driver', 'local');
         Storage::fake('local');
         Storage::fake('public');
         Storage::fake('assets');

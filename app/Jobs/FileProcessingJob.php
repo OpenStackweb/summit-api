@@ -34,7 +34,10 @@ class FileProcessingJob implements ShouldQueue
     ) {}
 
     public function handle(IFilePostProcessorService $service){
-        $service->postProcessFileFromFileApi($this->fileInfoDTO);
+        $result = $service->postProcessFileFromFileApi($this->fileInfoDTO);
+        if (!$result) {
+            throw new \RuntimeException(sprintf("FileProcessingJob: postProcessFileFromFileApi returned false for %s", $this->fileInfoDTO));
+        }
     }
 
     public function failed(\Throwable $exception)

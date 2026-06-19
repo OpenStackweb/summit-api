@@ -28,6 +28,10 @@ class FileProcessingJob implements ShouldQueue
 
     public $timeout = 600;
 
+    public function backoff(): array {
+        return [30, 60];
+    }
+
 
     public function __construct(
         public readonly FileInfoDTO $fileInfoDTO,

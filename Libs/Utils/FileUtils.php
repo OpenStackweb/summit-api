@@ -118,7 +118,7 @@ trait FileUtils{
                 );
             }
         } catch (\Throwable $e) {
-          throw new ValidationException($e->getMessage());
+          throw new ValidationException($e->getMessage(), 0, $e);
         }
 
         return $localPath;

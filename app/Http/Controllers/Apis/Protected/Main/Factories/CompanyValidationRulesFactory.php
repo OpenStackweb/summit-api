@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Model\FileInfoDTO;
 
 /**
  * Class CompanyValidationRulesFactory
@@ -76,13 +77,6 @@ final class CompanyValidationRulesFactory
 
 
     public static function buildForFileInfo(): array {
-        return [
-            'filepath' => 'required|string',
-            'filename' => 'required|string',
-            'md5' => 'required|string',
-            'size' => 'required|integer',
-            'mime_type'=> 'sometimes|string',
-            'source_bucket' => 'sometimes|string',
-        ];
+        return FileInfoDTO::validationRules();
     }
 }

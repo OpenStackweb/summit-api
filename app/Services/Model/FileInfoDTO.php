@@ -13,6 +13,17 @@
  **/
 
 final class FileInfoDTO {
+    public static function validationRules(): array {
+        return [
+            'filepath'      => 'required|string',
+            'filename'      => 'required|string',
+            'md5'           => 'required|string',
+            'size'          => 'required|integer',
+            'mime_type'     => 'sometimes|string',
+            'source_bucket' => 'sometimes|string',
+        ];
+    }
+
     public function __construct(
         public readonly int $owner_entity_id,
         public readonly string $owner_entity_class,

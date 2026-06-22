@@ -252,7 +252,8 @@ final class CompanyService
     /**
      * Downloads a file from remote storage to a local temp path, verifies its MD5 (when provided),
      * invokes $uploader to persist it, then cleans up. On failure the remote file is preserved
-     * so queue retries can re-download it.
+     * so queue retries can re-download it. Cleanup errors after a successful upload are logged
+     * but not re-thrown - upload success determines job success, not storage housekeeping.
      */
     private function processLogoFile(FileInfoDTO $file_info_dto, callable $uploader): IEntity
     {
@@ -280,7 +281,17 @@ final class CompanyService
             $succeeded = true;
         } finally {
             if ($succeeded) {
-                self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                try {
+                    self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                } catch (\Throwable $e) {
+                    // Upload succeeded; cleanup failure is non-fatal. Log and continue so the
+                    // job does not retry and create duplicate File records.
+                    Log::warning(sprintf(
+                        "CompanyService::processLogoFile cleanup failed after successful upload (filepath=%s): %s",
+                        $file_info_dto->filepath,
+                        $e->getMessage()
+                    ));
+                }
             } else {
                 self::cleanLocalFile($localPath);
             }

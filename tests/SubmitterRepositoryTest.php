@@ -443,10 +443,10 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
 
         $repo = EntityManager::getRepository(Member::class);
         $filter = FilterParser::parse(
-            ['filter' => [
+            [
                 'has_accepted_presentations==true',
                 'presentations_track_id==' . self::$defaultTrack->getId(),
-            ]],
+            ],
             ['has_accepted_presentations' => ['=='], 'presentations_track_id' => ['==']]
         );
         $page = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);

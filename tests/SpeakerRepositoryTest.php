@@ -262,10 +262,10 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
         // All seeded presentations are published (accepted) AND in defaultTrack (defaultTrackGroup),
         // so the combined filter matches the same set as the unfiltered query.
         $filter = FilterParser::parse(
-            ['filter' => [
+            [
                 'has_accepted_presentations==true',
                 'presentations_track_group_id==' . self::$defaultTrackGroup->getId(),
-            ]],
+            ],
             ['has_accepted_presentations' => ['=='], 'presentations_track_group_id' => ['==']]
         );
 
@@ -280,10 +280,10 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
         // The injected condition restricts has_accepted to group 999999, which has no presentations.
         // This verifies the injection actually filters (not a no-op) and produces valid DQL.
         $filter = FilterParser::parse(
-            ['filter' => [
+            [
                 'has_accepted_presentations==true',
                 'presentations_track_group_id==999999',
-            ]],
+            ],
             ['has_accepted_presentations' => ['=='], 'presentations_track_group_id' => ['==']]
         );
         $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);

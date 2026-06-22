@@ -178,4 +178,115 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
         $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
         $this->assertEquals(0, $count);
     }
+
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - presentations_track_group_id
+    // New filter added in this PR; zero coverage before.
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitFilterByPresentationsTrackGroupId(): void
+    {
+        // speaker1 (Sebastian) has 40 presentations in defaultTrack -> defaultTrackGroup
+        $filter = FilterParser::parse(
+            ['filter' => 'presentations_track_group_id==' . self::$defaultTrackGroup->getId()],
+            ['presentations_track_group_id' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertGreaterThan(0, $count);
+    }
+
+    public function testGetUniqueActivitiesCountBySummitFilterByUnknownTrackGroupIdReturnsZero(): void
+    {
+        $filter = FilterParser::parse(
+            ['filter' => 'presentations_track_group_id==999999'],
+            ['presentations_track_group_id' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertEquals(0, $count);
+    }
+
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - presentations_track_id
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitFilterByPresentationsTrackId(): void
+    {
+        $filter = FilterParser::parse(
+            ['filter' => 'presentations_track_id==' . self::$defaultTrack->getId()],
+            ['presentations_track_id' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertGreaterThan(0, $count);
+    }
+
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - presentations_selection_plan_id
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitFilterBySelectionPlanId(): void
+    {
+        // presentations 0-19 are in default_selection_plan; speaker1 is assigned to all of them
+        $filter = FilterParser::parse(
+            ['filter' => 'presentations_selection_plan_id==' . self::$default_selection_plan->getId()],
+            ['presentations_selection_plan_id' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertGreaterThan(0, $count);
+    }
+
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - has_accepted_presentations
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitHasAcceptedPresentationsTrue(): void
+    {
+        // All seeded presentations are published (accepted); speaker1 satisfies the filter
+        $filter = FilterParser::parse(
+            ['filter' => 'has_accepted_presentations==true'],
+            ['has_accepted_presentations' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertGreaterThan(0, $count);
+    }
+
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - combined filter
+    // Exercises the $extraSelectionStatusFilter injection path:
+    // when presentations_track_group_id is active alongside
+    // has_accepted_presentations the DQL for has_accepted is rewritten
+    // to also filter by track group.
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitHasAcceptedWithTrackGroupIdCombined(): void
+    {
+        // All seeded presentations are published (accepted) AND in defaultTrack (defaultTrackGroup),
+        // so the combined filter matches the same set as the unfiltered query.
+        $filter = FilterParser::parse(
+            ['filter' => [
+                'has_accepted_presentations==true',
+                'presentations_track_group_id==' . self::$defaultTrackGroup->getId(),
+            ]],
+            ['has_accepted_presentations' => ['=='], 'presentations_track_group_id' => ['==']]
+        );
+
+        $unfiltered = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit);
+        $combined   = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+
+        $this->assertEquals($unfiltered, $combined);
+    }
+
+    public function testGetUniqueActivitiesCountBySummitHasAcceptedWithUnknownTrackGroupReturnsZero(): void
+    {
+        // The injected condition restricts has_accepted to group 999999, which has no presentations.
+        // This verifies the injection actually filters (not a no-op) and produces valid DQL.
+        $filter = FilterParser::parse(
+            ['filter' => [
+                'has_accepted_presentations==true',
+                'presentations_track_group_id==999999',
+            ]],
+            ['has_accepted_presentations' => ['=='], 'presentations_track_group_id' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertEquals(0, $count);
+    }
 }

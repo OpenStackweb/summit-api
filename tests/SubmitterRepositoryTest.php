@@ -244,4 +244,215 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
         self::assertContains($member2->getId(), $ids, 'member2 (defaultTrack in defaultTrackGroup) must be included');
         self::assertNotContains($member->getId(), $ids, 'member (altTrack, no group) must be excluded');
     }
+
+    // -----------------------------------------------------------------
+    // presentations_track_id filter
+    // -----------------------------------------------------------------
+
+    public function testGetSubmittersByPresentationsTrackId(): void
+    {
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $altTrack = new PresentationCategory();
+        $altTrack->setTitle('Alt Track For Track ID Filter Test');
+        $altTrack->setCode('ALTTID');
+        $altTrack->setSessionCount(3);
+        $altTrack->setAlternateCount(3);
+        $altTrack->setLightningCount(3);
+        $altTrack->setChairVisible(false);
+        $altTrack->setVotingVisible(false);
+        self::$summit->addPresentationCategory($altTrack);
+        self::$em->persist($altTrack);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Track ID Filter - Default Track');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate($end);
+        $p1->setCreatedBy($member2);
+
+        $p2 = new Presentation();
+        self::$summit->addEvent($p2);
+        $p2->setTitle('Track ID Filter - Alt Track');
+        $p2->setAbstract('Abstract');
+        $p2->setCategory($altTrack);
+        $p2->setType(self::$defaultPresentationType);
+        $p2->setProgress(Presentation::PHASE_COMPLETE);
+        $p2->setStatus(Presentation::STATUS_RECEIVED);
+        $p2->setStartDate($start);
+        $p2->setEndDate($end);
+        $p2->setCreatedBy($member);
+
+        self::$em->flush();
+
+        $repo = EntityManager::getRepository(Member::class);
+        $filter = FilterParser::parse(
+            ['filter' => 'presentations_track_id==' . self::$defaultTrack->getId()],
+            ['presentations_track_id' => ['==']]
+        );
+        $page = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);
+
+        $ids = array_map(fn($m) => $m->getId(), $page->getItems());
+        self::assertContains($member2->getId(), $ids, 'member2 (defaultTrack) must be included');
+        self::assertNotContains($member->getId(), $ids, 'member (altTrack) must be excluded');
+    }
+
+    // -----------------------------------------------------------------
+    // presentations_selection_plan_id filter
+    // -----------------------------------------------------------------
+
+    public function testGetSubmittersBySelectionPlanId(): void
+    {
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        // p1: member2 in default_selection_plan
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Selection Plan Filter - In Plan');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate($end);
+        $p1->setCreatedBy($member2);
+        self::$default_selection_plan->addPresentation($p1);
+
+        // p2: member not in any selection plan
+        $p2 = new Presentation();
+        self::$summit->addEvent($p2);
+        $p2->setTitle('Selection Plan Filter - No Plan');
+        $p2->setAbstract('Abstract');
+        $p2->setCategory(self::$defaultTrack);
+        $p2->setType(self::$defaultPresentationType);
+        $p2->setProgress(Presentation::PHASE_COMPLETE);
+        $p2->setStatus(Presentation::STATUS_RECEIVED);
+        $p2->setStartDate($start);
+        $p2->setEndDate($end);
+        $p2->setCreatedBy($member);
+
+        self::$em->flush();
+
+        $repo = EntityManager::getRepository(Member::class);
+        $filter = FilterParser::parse(
+            ['filter' => 'presentations_selection_plan_id==' . self::$default_selection_plan->getId()],
+            ['presentations_selection_plan_id' => ['==']]
+        );
+        $page = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);
+
+        $ids = array_map(fn($m) => $m->getId(), $page->getItems());
+        self::assertContains($member2->getId(), $ids, 'member2 (in selection plan) must be included');
+        self::assertNotContains($member->getId(), $ids, 'member (no selection plan) must be excluded');
+    }
+
+    // -----------------------------------------------------------------
+    // has_accepted_presentations filter
+    // -----------------------------------------------------------------
+
+    public function testGetSubmittersHasAcceptedPresentationsTrue(): void
+    {
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        // member2: published (accepted) presentation
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Accepted Filter - Published');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate($end);
+        $p1->setCreatedBy($member2);
+        $p1->publish();
+
+        // member: unpublished (not accepted)
+        $p2 = new Presentation();
+        self::$summit->addEvent($p2);
+        $p2->setTitle('Accepted Filter - Unpublished');
+        $p2->setAbstract('Abstract');
+        $p2->setCategory(self::$defaultTrack);
+        $p2->setType(self::$defaultPresentationType);
+        $p2->setProgress(Presentation::PHASE_COMPLETE);
+        $p2->setStatus(Presentation::STATUS_RECEIVED);
+        $p2->setStartDate($start);
+        $p2->setEndDate($end);
+        $p2->setCreatedBy($member);
+
+        self::$em->flush();
+
+        $repo = EntityManager::getRepository(Member::class);
+        $filter = FilterParser::parse(
+            ['filter' => 'has_accepted_presentations==true'],
+            ['has_accepted_presentations' => ['==']]
+        );
+        $page = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);
+
+        $ids = array_map(fn($m) => $m->getId(), $page->getItems());
+        self::assertContains($member2->getId(), $ids, 'member2 (published presentation) must be included');
+        self::assertNotContains($member->getId(), $ids, 'member (unpublished presentation) must be excluded');
+    }
+
+    // -----------------------------------------------------------------
+    // combined has_accepted_presentations + presentations_track_id
+    // Exercises the $extraSelectionStatusFilter injection path: when
+    // presentations_track_id is active alongside has_accepted_presentations
+    // the accepted-check DQL is rewritten to also filter by track.
+    // -----------------------------------------------------------------
+
+    public function testGetSubmittersHasAcceptedWithTrackIdCombined(): void
+    {
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Combined Filter - Accepted + Track');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate($start);
+        $p->setEndDate($end);
+        $p->setCreatedBy($member2);
+        $p->publish();
+
+        self::$em->flush();
+
+        $repo = EntityManager::getRepository(Member::class);
+        $filter = FilterParser::parse(
+            ['filter' => [
+                'has_accepted_presentations==true',
+                'presentations_track_id==' . self::$defaultTrack->getId(),
+            ]],
+            ['has_accepted_presentations' => ['=='], 'presentations_track_id' => ['==']]
+        );
+        $page = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);
+
+        $ids = array_map(fn($m) => $m->getId(), $page->getItems());
+        self::assertContains($member2->getId(), $ids,
+            'member2 must appear: published presentation in defaultTrack');
+    }
 }

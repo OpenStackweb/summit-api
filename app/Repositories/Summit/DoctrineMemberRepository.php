@@ -686,27 +686,53 @@ SQL,
      */
     public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
     {
-        // Phase 1: member IDs matching the summit scope + filter (no pagination).
-        $memberIdsQb = $this->buildSubmitterBaseQuery($summit)->distinct(true)->select('e.id');
-        $memberIdsQb = $this->applyExtraJoins($memberIdsQb, $filter);
-        if (!is_null($filter)) $filter->apply2Query($memberIdsQb, $this->getFilterMappings($filter));
-        $memberIds = array_column($memberIdsQb->getQuery()->getArrayResult(), 'id');
-
-        if (empty($memberIds)) return 0;
-
-        // Phase 2: count distinct presentations whose author is one of those members.
-        return intval(
-            $this->getEntityManager()->createQueryBuilder()
-                ->select('COUNT(DISTINCT p.id)')
-                ->from('models\summit\Presentation', 'p')
-                ->join('p.created_by', 'cb')
-                ->where('p.summit = :summit')
-                ->andWhere('cb.id IN (:member_ids)')
-                ->setParameter('summit', $summit)
-                ->setParameter('member_ids', $memberIds)
-                ->getQuery()
-                ->getSingleScalarResult()
+        $conn = $this->getEntityManager()->getConnection();
+        $conn->executeStatement(
+            'CREATE TEMPORARY TABLE IF NOT EXISTS `__tmp_mbr_ids`
+             (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY'
         );
+        $conn->executeStatement('TRUNCATE TABLE `__tmp_mbr_ids`');
+
+        try {
+            // Phase 1: stream member IDs (summit-scoped + filtered) into the
+            // temp table in chunks so PHP never holds the full set in memory.
+            $chunkSize = 1000;
+            $offset    = 0;
+
+            $qb = $this->buildSubmitterBaseQuery($summit)
+                ->distinct(true)
+                ->select('e.id')
+                ->addOrderBy('e.id', 'ASC');
+            $qb = $this->applyExtraJoins($qb, $filter);
+            if (!is_null($filter)) {
+                $filter->apply2Query($qb, $this->getFilterMappings($filter));
+            }
+
+            do {
+                $chunk = $qb->setFirstResult($offset)->setMaxResults($chunkSize)
+                    ->getQuery()->getArrayResult();
+
+                if (!empty($chunk)) {
+                    $vals = implode(',', array_map(fn($r) => '(' . (int)$r['id'] . ')', $chunk));
+                    $conn->executeStatement("INSERT IGNORE INTO `__tmp_mbr_ids` (id) VALUES $vals");
+                }
+
+                $offset += $chunkSize;
+            } while (count($chunk) === $chunkSize);
+
+            // Phase 2: count distinct presentations whose creator is in the matched set.
+            $sql = <<<SQL
+                SELECT COUNT(DISTINCT E.ID)
+                FROM SummitEvent E
+                INNER JOIN Presentation P ON P.ID = E.ID
+                INNER JOIN `__tmp_mbr_ids` T ON T.id = E.CreatedByID
+                WHERE E.SummitID = ?
+            SQL;
+
+            return (int) $conn->fetchOne($sql, [$summit->getId()]);
+        } finally {
+            $conn->executeStatement('DROP TEMPORARY TABLE IF EXISTS `__tmp_mbr_ids`');
+        }
     }
 
     /**

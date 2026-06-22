@@ -764,46 +764,68 @@ SQL,
      */
     public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
     {
-        // Phase 1: distinct speaker IDs scoped to this summit that match the caller filter.
-        // Uses IDENTITY() with a scalar so no entity param leaks into the embedded DQL string.
-        $speakerIdsQb = $this->buildSpeakerBaseQuery()
-            ->distinct(true)
-            ->select('e.id')
-            ->where(
-                'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __a'
-                . ' JOIN __a.presentation __ap WHERE IDENTITY(__ap.summit) = :summit_id AND __a.speaker = e)'
-                . ' OR EXISTS (SELECT 1 FROM models\summit\Presentation __mp WHERE IDENTITY(__mp.summit) = :summit_id AND __mp.moderator = e)'
-            )
-            ->setParameter('summit_id', $summit->getId());
+        $conn = $this->getEntityManager()->getConnection();
+        $conn->executeStatement(
+            'CREATE TEMPORARY TABLE IF NOT EXISTS `__tmp_spk_ids`
+             (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY'
+        );
+        $conn->executeStatement('TRUNCATE TABLE `__tmp_spk_ids`');
 
-        if (!is_null($filter)) {
-            $filter->apply2Query($speakerIdsQb, $this->getFilterMappings($filter));
+        try {
+            // Phase 1: stream speaker IDs (summit-scoped + filtered) into the
+            // temp table in chunks so PHP never holds the full set in memory.
+            $chunkSize = 1000;
+            $offset    = 0;
+
+            $qb = $this->buildSpeakerBaseQuery()
+                ->distinct(true)
+                ->select('e.id')
+                ->addOrderBy('e.id', 'ASC')
+                ->where(
+                    'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __a'
+                    . ' JOIN __a.presentation __ap WHERE IDENTITY(__ap.summit) = :summit_id AND __a.speaker = e)'
+                    . ' OR EXISTS (SELECT 1 FROM models\summit\Presentation __mp WHERE IDENTITY(__mp.summit) = :summit_id AND __mp.moderator = e)'
+                )
+                ->setParameter('summit_id', $summit->getId());
+
+            if (!is_null($filter)) {
+                $filter->apply2Query($qb, $this->getFilterMappings($filter));
+            }
+
+            do {
+                $chunk = $qb->setFirstResult($offset)->setMaxResults($chunkSize)
+                    ->getQuery()->getArrayResult();
+
+                if (!empty($chunk)) {
+                    $vals = implode(',', array_map(fn($r) => '(' . (int)$r['id'] . ')', $chunk));
+                    $conn->executeStatement("INSERT IGNORE INTO `__tmp_spk_ids` (id) VALUES $vals");
+                }
+
+                $offset += $chunkSize;
+            } while (count($chunk) === $chunkSize);
+
+            // Phase 2: count distinct presentations linked via assignment or moderator.
+            // UNION deduplicates across both roles in a single round-trip.
+            $sql = <<<SQL
+                SELECT COUNT(*) FROM (
+                    SELECT DISTINCT E.ID
+                    FROM SummitEvent E
+                    INNER JOIN Presentation_Speakers PS ON PS.PresentationID = E.ID
+                    INNER JOIN `__tmp_spk_ids` T ON T.id = PS.PresentationSpeakerID
+                    WHERE E.SummitID = ?
+                    UNION
+                    SELECT DISTINCT E.ID
+                    FROM SummitEvent E
+                    INNER JOIN Presentation P ON P.ID = E.ID
+                    INNER JOIN `__tmp_spk_ids` T ON T.id = P.ModeratorID
+                    WHERE E.SummitID = ?
+                ) AS matched
+            SQL;
+
+            return (int) $conn->fetchOne($sql, [$summit->getId(), $summit->getId()]);
+        } finally {
+            $conn->executeStatement('DROP TEMPORARY TABLE IF EXISTS `__tmp_spk_ids`');
         }
-
-        $innerDql = $speakerIdsQb->getDQL();
-
-        // Phase 2: count distinct presentations linked to any matched speaker.
-        $outerQb = $this->getEntityManager()->createQueryBuilder()
-            ->select('COUNT(DISTINCT p.id)')
-            ->from('models\summit\Presentation', 'p')
-            ->where('p.summit = :summit')
-            ->andWhere(
-                'EXISTS ('
-                . 'SELECT 1 FROM models\summit\PresentationSpeaker __spk'
-                . ' WHERE __spk.id IN (' . $innerDql . ')'
-                . ' AND ('
-                . 'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __cnt WHERE __cnt.presentation = p AND __cnt.speaker = __spk)'
-                . ' OR p.moderator = __spk'
-                . ')'
-                . ')'
-            )
-            ->setParameter('summit', $summit);
-
-        foreach ($speakerIdsQb->getParameters() as $param) {
-            $outerQb->setParameter($param->getName(), $param->getValue());
-        }
-
-        return intval($outerQb->getQuery()->getSingleScalarResult());
     }
 
     /**

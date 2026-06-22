@@ -804,26 +804,38 @@ SQL,
                 $offset += $chunkSize;
             } while (count($chunk) === $chunkSize);
 
-            // Phase 2: count distinct presentations linked via assignment or moderator.
-            // UNION deduplicates across both roles in a single round-trip.
-            $sql = <<<SQL
-                SELECT COUNT(*) FROM (
-                    SELECT DISTINCT E.ID
-                    FROM SummitEvent E
-                    INNER JOIN Presentation_Speakers PS ON PS.PresentationID = E.ID
-                    INNER JOIN `__tmp_spk_ids` T ON T.id = PS.PresentationSpeakerID
-                    WHERE E.SummitID = ?
-                    UNION
-                    SELECT DISTINCT E.ID
-                    FROM SummitEvent E
-                    INNER JOIN Presentation P ON P.ID = E.ID
-                    INNER JOIN `__tmp_spk_ids` T ON T.id = P.ModeratorID
-                    WHERE E.SummitID = ?
-                ) AS matched
-            SQL;
+            // Phase 2: collect distinct presentation IDs from both roles into a second
+            // temp table using two separate statements -- MySQL forbids referencing the
+            // same TEMPORARY TABLE more than once per query (error 1137).
+            $conn->executeStatement(
+                'CREATE TEMPORARY TABLE IF NOT EXISTS `__tmp_pres_ids`
+                 (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY'
+            );
+            $conn->executeStatement('TRUNCATE TABLE `__tmp_pres_ids`');
 
-            return (int) $conn->fetchOne($sql, [$summit->getId(), $summit->getId()]);
+            $conn->executeStatement(
+                'INSERT IGNORE INTO `__tmp_pres_ids` (id)
+                 SELECT DISTINCT E.ID
+                 FROM SummitEvent E
+                 INNER JOIN Presentation_Speakers PS ON PS.PresentationID = E.ID
+                 INNER JOIN `__tmp_spk_ids` T ON T.id = PS.PresentationSpeakerID
+                 WHERE E.SummitID = ?',
+                [$summit->getId()]
+            );
+
+            $conn->executeStatement(
+                'INSERT IGNORE INTO `__tmp_pres_ids` (id)
+                 SELECT DISTINCT E.ID
+                 FROM SummitEvent E
+                 INNER JOIN Presentation P ON P.ID = E.ID
+                 INNER JOIN `__tmp_spk_ids` T ON T.id = P.ModeratorID
+                 WHERE E.SummitID = ?',
+                [$summit->getId()]
+            );
+
+            return (int) $conn->fetchOne('SELECT COUNT(*) FROM `__tmp_pres_ids`');
         } finally {
+            $conn->executeStatement('DROP TEMPORARY TABLE IF EXISTS `__tmp_pres_ids`');
             $conn->executeStatement('DROP TEMPORARY TABLE IF EXISTS `__tmp_spk_ids`');
         }
     }

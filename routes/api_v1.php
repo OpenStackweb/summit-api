@@ -635,7 +635,7 @@ Route::group(array('prefix' => 'summits'), function () {
         // events
         Route::group(array('prefix' => 'events'), function () {
 
-            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEvents']);
+            Route::get('', ['middleware' => ['server.timing.doctrine', 'auth.user'], 'uses' => 'OAuth2SummitEventsApiController@getEvents']);
 
             Route::group(['prefix' => 'csv'], function () {
                 Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@getEventsCSV']);
@@ -1537,7 +1537,7 @@ Route::group(array('prefix' => 'summits'), function () {
         // tickets
         Route::group(['prefix' => 'tickets'], function () {
 
-            Route::get('', ['middleware' => ['auth.user',  'server.timing.doctrine'], 'uses' => 'OAuth2SummitTicketApiController@getAllBySummit']);
+            Route::get('', ['middleware' => ['server.timing.doctrine', 'auth.user'], 'uses' => 'OAuth2SummitTicketApiController@getAllBySummit']);
             Route::get('external', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitTicketApiController@getAllBySummitExternal']);
 
             Route::group(['prefix' => 'csv'], function () {

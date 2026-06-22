@@ -456,11 +456,13 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         $order = $this->getSpeakerAssignmentsMaxOrder();
         $speaker_assignment = new PresentationSpeakerAssignment($this, $speaker, $order + 1);
         $this->speakers->add($speaker_assignment);
+        $this->updateLastEdited();
     }
 
     public function clearSpeakers()
     {
         $this->speakers->clear();
+        $this->updateLastEdited();
     }
 
     /**
@@ -474,6 +476,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         if ($speaker_assignment === false) return;
         $this->speakers->removeElement($speaker_assignment);
         self::resetOrderForSelectable($this->speakers, PresentationSpeakerAssignment::class);
+        $this->updateLastEdited();
     }
 
     /**
@@ -488,6 +491,10 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         $speaker_assignment = $this->speakers->matching($criteria)->first();
         if ($speaker_assignment === false) return;
         self::recalculateOrderForSelectable($this->speakers, $speaker_assignment, $order, PresentationSpeakerAssignment::class);
+        // Reordering only mutates child PresentationSpeakerAssignment rows, which does not
+        // dirty the parent Presentation, so the PreUpdate last_edited bump never fires.
+        // Bump explicitly so the serializer cache key (which embeds last_edited) invalidates.
+        $this->updateLastEdited();
     }
 
     /**
@@ -621,6 +628,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($video);
         $video->unsetPresentation();
+        $this->updateLastEdited();
     }
 
     /**
@@ -630,6 +638,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($slide);
         $slide->unsetPresentation();
+        $this->updateLastEdited();
     }
 
     /**
@@ -639,6 +648,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($link);
         $link->unsetPresentation();
+        $this->updateLastEdited();
     }
 
     /**
@@ -648,6 +658,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     {
         $this->materials->removeElement($mediaUpload);
         $mediaUpload->unsetPresentation();
+        $this->updateLastEdited();
     }
 
     /**
@@ -911,6 +922,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         $this->materials->add($material);
         $material->setPresentation($this);
         $material->setOrder($this->getMaterialsMaxOrder() + 1);
+        $this->updateLastEdited();
         return $this;
     }
 
@@ -927,6 +939,8 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function setSelectedPresentations($selected_presentations)
     {
+        $this->memoizedSelectionStatus = null;
+        $this->preloadedSessionSelections = null;
         $this->selected_presentations = $selected_presentations;
     }
 
@@ -950,20 +964,50 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      * @return string
      * @throws ValidationException
      */
+    /**
+     * Request-scoped preload cache populated by DoctrineSummitEventRepository::getAllByPage
+     * via setPreloadedSessionSelections(). When set, getSelectionStatus() uses these
+     * pre-fetched rows instead of firing its own DQL - eliminates one query per
+     * Presentation on /events listings. Doctrine ignores the unannotated property.
+     *
+     * @var SummitSelectedPresentation[]|null
+     */
+    private ?array $preloadedSessionSelections = null;
+
+    /** @var string|null memoized result of getSelectionStatus() within a request */
+    private ?string $memoizedSelectionStatus = null;
+
+    /**
+     * @param SummitSelectedPresentation[] $selections rows already filtered for
+     *        (collection=Selected, list_type=Group, list_class=Session)
+     */
+    public function setPreloadedSessionSelections(array $selections): void
+    {
+        $this->preloadedSessionSelections = $selections;
+        $this->memoizedSelectionStatus = null;
+    }
+
     public function getSelectionStatus()
     {
+        if ($this->memoizedSelectionStatus !== null) {
+            return $this->memoizedSelectionStatus;
+        }
 
-        $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp
-            JOIN sp.list l
-            JOIN sp.presentation p
-            WHERE p.id = :presentation_id
-            AND sp.collection = :collection
-            AND l.list_type = :list_type
-            AND l.list_class = :list_class")
-            ->setParameter('presentation_id', $this->id)
-            ->setParameter('collection', SummitSelectedPresentation::CollectionSelected)
-            ->setParameter('list_type', SummitSelectedPresentationList::Group)
-            ->setParameter('list_class', SummitSelectedPresentationList::Session)->getResult();
+        if ($this->preloadedSessionSelections !== null) {
+            $session_sel = $this->preloadedSessionSelections;
+        } else {
+            $session_sel = $this->createQuery("SELECT sp from models\summit\SummitSelectedPresentation sp
+                JOIN sp.list l
+                JOIN sp.presentation p
+                WHERE p.id = :presentation_id
+                AND sp.collection = :collection
+                AND l.list_type = :list_type
+                AND l.list_class = :list_class")
+                ->setParameter('presentation_id', $this->id)
+                ->setParameter('collection', SummitSelectedPresentation::CollectionSelected)
+                ->setParameter('list_type', SummitSelectedPresentationList::Group)
+                ->setParameter('list_class', SummitSelectedPresentationList::Session)->getResult();
+        }
 
         // Error out if a talk has more than one selection
         if (count($session_sel) > 1) {
@@ -971,20 +1015,20 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         }
 
         if ($this->isPublished()) {
-            return Presentation::SelectionStatus_Accepted;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Accepted;
         }
 
         // from here we need to be sure that the selection period is going on or it is over
 
         $selection_plan = $this->getSelectionPlan();
         if (is_null($selection_plan)) {
-            return Presentation::SelectionStatus_Pending;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Pending;
         }
         if (!$selection_plan->hasSelectionPeriodDefined()) {
-            return Presentation::SelectionStatus_Pending;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Pending;
         }
         if ($selection_plan->isSelectionNotYetStarted()) {
-            return Presentation::SelectionStatus_Pending;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Pending;
         }
 
         $selection = null;
@@ -993,14 +1037,14 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         }
 
         if (!$selection) {
-            return Presentation::SelectionStatus_Unaccepted;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Unaccepted;
         }
 
         if ($selection->getOrder() <= $this->getCategory()->getSessionCount()) {
-            return Presentation::SelectionStatus_Accepted;
+            return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Accepted;
         }
 
-        return Presentation::SelectionStatus_Alternate;
+        return $this->memoizedSelectionStatus = Presentation::SelectionStatus_Alternate;
     }
 
     public function getRank(): ?int
@@ -1048,6 +1092,8 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function setSelectionPlan($selection_plan)
     {
+        $this->memoizedSelectionStatus = null;
+        $this->preloadedSessionSelections = null;
         $oldSelectionPlan = $this->selection_plan;
         // if selection plan changes
         if (!is_null($oldSelectionPlan) && $oldSelectionPlan->getId() != $selection_plan->getId()) {
@@ -1059,6 +1105,8 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
 
     public function clearSelectionPlan()
     {
+        $this->memoizedSelectionStatus = null;
+        $this->preloadedSessionSelections = null;
         $this->selection_plan = null;
     }
 
@@ -1264,6 +1312,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     public function recalculateMaterialOrder(PresentationMaterial $material, $new_order)
     {
         self::recalculateOrderForSelectable($this->materials, $material, $new_order);
+        $this->updateLastEdited();
     }
 
     use OrderableChilds;
@@ -2151,6 +2200,8 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
      */
     public function setCategory(PresentationCategory $category)
     {
+        $this->memoizedSelectionStatus = null;
+        $this->preloadedSessionSelections = null;
         // check if we change the category
         $oldCategory = $this->category;
         if (!is_null($oldCategory) && $oldCategory->getId() != $category->getId()) {

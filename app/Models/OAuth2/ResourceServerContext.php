@@ -126,6 +126,10 @@ final class ResourceServerContext implements IResourceServerContext
     public function setAuthorizationContext(array $auth_context)
     {
         $this->auth_context = $auth_context;
+        $this->cachedCurrentUser = null;
+        $this->cachedCurrentUserResolved = false;
+        $this->groupsSynched = false;
+        $this->fieldsSynched = false;
     }
 
     /**
@@ -156,50 +160,213 @@ final class ResourceServerContext implements IResourceServerContext
     public function updateAuthContextVar(string $varName, $value):void {
         if(isset($this->auth_context[$varName])){
             $this->auth_context[$varName] = $value;
+            $this->cachedCurrentUser = null;
+            $this->cachedCurrentUserResolved = false;
+            $this->groupsSynched = false;
+            $this->fieldsSynched = false;
         }
     }
 
     /**
-     * @param bool $synch_groups
-     * @param bool $update_member_fields
-     * @return Member|null
+     * Request-scoped cache. The current authenticated user does not change
+     * within a single request, and getCurrentUser() is called many times by
+     * serializers (per-event, per-sub-serializer permission checks). Without
+     * this cache, profiling /events showed the same Member SELECT firing 98+
+     * times via getByExternalId().
+     *
+     * Side-effects ($synch_groups, $update_member_fields) are tracked separately
+     * so a first call with false does not permanently suppress them - a later
+     * call with true will still run the missing side-effect exactly once.
+     */
+    private ?Member $cachedCurrentUser = null;        // resolved Member (or null) for this request
+    private bool $cachedCurrentUserResolved = false;  // has resolution run at least once? (null is a valid resolved value)
+    private bool $groupsSynched = false;              // has checkGroups() run for the cached user?
+    private bool $fieldsSynched = false;              // has syncMemberFields() run for the cached user?
+
+    /**
+     * Resolves the Member behind the current request's OAuth2 auth context (the
+     * IDP claims set via setAuthorizationContext()), creating a local Member the
+     * first time an IDP user is seen, and optionally syncing profile fields and
+     * group membership from the claims.
+     *
+     * The method has two phases:
+     *
+     *   PHASE A - fast path (cache hit): if the user was already resolved this
+     *   request, return the cached Member immediately. Any side-effect that an
+     *   earlier call suppressed (e.g. a previous getCurrentUser(false, false))
+     *   is run now, once, so the side-effect flags reflect the strongest request
+     *   so far. This is what keeps the /events serializer from re-running the
+     *   same Member SELECT ~98 times per request.
+     *
+     *   PHASE B - full resolution (cache miss): look the Member up by external
+     *   id, then by email, then create it locally if the IDP knows it but we
+     *   don't. Apply the always-on side-effects (external id, email-verified
+     *   flag, order-association event) plus the optional field/group syncs, then
+     *   cache the result for the rest of the request.
+     *
+     * @param bool $synch_groups         when true, reconcile local groups from the IDP claims
+     * @param bool $update_member_fields when true, copy email / first / last name from the claims
+     * @return Member|null               null when there is no authenticated user, or it cannot be resolved
      * @throws \Exception
      */
     public function getCurrentUser(bool $synch_groups = true, bool $update_member_fields = true): ?Member
     {
-        $member = null;
-        // try to get by external id
+        // ---- PHASE A: fast path - user already resolved this request ----------
+        if ($this->cachedCurrentUserResolved) {
+            // Only Members carry side-effects; a cached null is returned as-is.
+            if ($this->cachedCurrentUser !== null) {
+                // Apply field updates that an earlier call suppressed
+                // ($update_member_fields=false), exactly once - mirroring the
+                // deferred-groups handling below so the documented contract holds.
+                if ($update_member_fields && !$this->fieldsSynched) {
+                    $member = $this->cachedCurrentUser;
+                    $this->tx_service->transaction(function () use ($member) {
+                        $this->syncMemberFields(
+                            $member,
+                            $this->getAuthContextVar(IResourceServerContext::UserEmail),
+                            $this->getAuthContextVar(IResourceServerContext::UserFirstName),
+                            $this->getAuthContextVar(IResourceServerContext::UserLastName)
+                        );
+                    });
+                    // syncMemberFields() calls setFirstName()/setLastName() on the Member,
+                    // which call updateAuthContextVar() and clear cachedCurrentUser/cachedCurrentUserResolved.
+                    // Restore from the local reference so the groups-sync block below
+                    // does not receive null.
+                    $this->cachedCurrentUser = $member;
+                    $this->cachedCurrentUserResolved = true;
+                    $this->fieldsSynched = true;
+                }
+                // checkGroups() may return a re-fetched instance, so reassign the cache.
+                if ($synch_groups && !$this->groupsSynched) {
+                    $member = $this->cachedCurrentUser;
+                    $this->cachedCurrentUser = $this->tx_service->transaction(
+                        fn() => $this->checkGroups($member)
+                    );
+                    $this->groupsSynched = true;
+                }
+            }
+            return $this->cachedCurrentUser;
+        }
+
+        // ---- PHASE B: full resolution - first call this request ---------------
+        // Read the IDP claims off the auth context up front.
         $user_external_id = $this->getAuthContextVar(IResourceServerContext::UserId);
         $user_first_name = $this->getAuthContextVar(IResourceServerContext::UserFirstName);
         $user_last_name = $this->getAuthContextVar(IResourceServerContext::UserLastName);
         $user_email = $this->getAuthContextVar(IResourceServerContext::UserEmail);
         $user_email_verified = boolval($this->getAuthContextVar(IResourceServerContext::UserEmailVerified));
 
+        // No external id => no authenticated user. Cache the null so we don't
+        // re-attempt resolution on every subsequent call this request.
         if (is_null($user_external_id)) {
-            return null;
+            $this->cachedCurrentUserResolved = true;
+            return $this->cachedCurrentUser = null;
         }
-        // first we check by external id
+
+        // Find the Member by external id / email, provisioning it locally if the
+        // IDP knows the user but we don't. Side-effects are applied below.
+        $member = $this->resolveMemberFromClaims(
+            $user_external_id,
+            $user_email,
+            $user_first_name,
+            $user_last_name,
+            $user_email_verified
+        );
+
+        // Still nothing (creation failed and the re-read found nothing): give up
+        // for this request, caching the null so we don't retry on every call.
+        if (is_null($member)) {
+            Log::warning(sprintf("ResourceServerContext::getCurrentUser user not found %s (%s).", $user_external_id, $user_email));
+            $this->cachedCurrentUserResolved = true;
+            return $this->cachedCurrentUser = null;
+        }
+
+        // Apply side-effects in a single transaction:
+        //   - optional field sync (email / names) when $update_member_fields
+        //   - always: persist the external id + email-verified flag, and dispatch
+        //     the order-association event
+        //   - optional group reconciliation when $synch_groups (checkGroups() may
+        //     return a re-fetched instance, which becomes the resolved Member)
+        $resolved = $this->tx_service->transaction(function () use
+        (
+            $member,
+            $user_email,
+            $user_first_name,
+            $user_last_name,
+            $user_external_id,
+            $user_email_verified,
+            $synch_groups,
+            $update_member_fields
+        ) {
+            if($update_member_fields) {
+                $this->syncMemberFields($member, $user_email, $user_first_name, $user_last_name);
+            }
+
+            $member->setUserExternalId($user_external_id);
+            $member->setEmailVerified($user_email_verified);
+            MemberAssocSummitOrders::dispatch($member->getId());
+            return $synch_groups ? $this->checkGroups($member) : $member;
+        });
+
+        // Cache the resolved user and record which side-effects ran, so PHASE A
+        // can defer only the ones a weaker first call skipped.
+        $this->cachedCurrentUserResolved = true;
+        $this->groupsSynched = $synch_groups;
+        $this->fieldsSynched = $update_member_fields;
+        return $this->cachedCurrentUser = $resolved;
+    }
+
+    /**
+     * Runs the three-strategy lookup for the Member behind the given IDP claims:
+     *   1. by external id (the stable identifier)
+     *   2. by primary email (covers members created before the external id was linked)
+     *   3. provision locally via registerExternalUser() when the IDP knows the
+     *      user but we don't - racy under concurrent first-time logins, so on
+     *      failure we re-read by external id (the winner of the race created it)
+     *
+     * This is lookup/creation only; the profile-field, external-id, email-verified
+     * and group side-effects are applied by the caller (getCurrentUser).
+     *
+     * @param string|int  $user_external_id
+     * @param string|null $user_email
+     * @param string|null $user_first_name
+     * @param string|null $user_last_name
+     * @param bool        $user_email_verified
+     * @return Member|null null when the user can be neither found nor created
+     * @throws \Exception
+     */
+    private function resolveMemberFromClaims(
+        $user_external_id,
+        ?string $user_email,
+        ?string $user_first_name,
+        ?string $user_last_name,
+        bool $user_email_verified
+    ): ?Member
+    {
+        // Lookup strategy 1: by IDP external id (the stable identifier).
         $member = $this->tx_service->transaction(function () use ($user_external_id) {
             return $this->member_repository->getByExternalId(intval($user_external_id));
         });
 
         if (is_null($member)) {
-            // then by primary email
+            // Lookup strategy 2: by primary email.
             $member = $this->tx_service->transaction(function () use ($user_email) {
                 // we assume that is new idp version and claims already exists on context
                 $user_email = $this->getAuthContextVar(IResourceServerContext::UserEmail);
                 // at last resort try to get by email
-                Log::debug(sprintf("ResourceServerContext::getCurrentUser getting user by email %s", $user_email));
+                Log::debug(sprintf("ResourceServerContext::resolveMemberFromClaims getting user by email %s", $user_email));
                 return $this->member_repository->getByEmail($user_email);
             });
         }
 
-        if (is_null($member)) {// user exist on IDP but not in our local DB, proceed to create it
+        if (is_null($member)) {
+            // Lookup strategy 3: user exists on the IDP but not in our local DB,
+            // so provision it.
             Log::debug
             (
                 sprintf
                 (
-                    "ResourceServerContext::getCurrentUser creating user email %s user_external_id %s fname %s lname %s",
+                    "ResourceServerContext::resolveMemberFromClaims creating user email %s user_external_id %s fname %s lname %s",
                     $user_email,
                     $user_external_id,
                     $user_first_name,
@@ -222,62 +389,53 @@ final class ResourceServerContext implements IResourceServerContext
                 );
             } catch (\Exception $ex) {
                 Log::warning($ex);
-                // race condition lost
+                // race condition lost - re-read the instance the winner created
                 $member = $this->tx_service->transaction(function () use ($user_external_id) {
                     return $this->member_repository->getByExternalId(intval($user_external_id));
                 });
             }
         }
 
-        if (is_null($member)) {
-            Log::warning(sprintf("ResourceServerContext::getCurrentUser user not found %s (%s).", $user_external_id, $user_email));
-            return null;
+        return $member;
+    }
+
+    /**
+     * Applies IDP claim values (email / first name / last name) onto the local
+     * Member. Extracted so it can run both during initial resolution and as a
+     * deferred side-effect when an earlier getCurrentUser() call passed
+     * $update_member_fields=false and a later one passes true within the same request.
+     *
+     * @param Member $member
+     * @param string|null $user_email
+     * @param string|null $user_first_name
+     * @param string|null $user_last_name
+     */
+    private function syncMemberFields(Member $member, ?string $user_email, ?string $user_first_name, ?string $user_last_name): void
+    {
+        if (!empty($user_email)) {
+            Log::debug(sprintf("ResourceServerContext::syncMemberFields setting email for member %s", $member->getId()));
+            // guard against email collision: another member may already hold this email
+            $member_by_email = $this->member_repository->getByEmail($user_email);
+            if (!is_null($member_by_email) && $member_by_email->getId() !== $member->getId()) {
+                Log::warning(sprintf(
+                    "ResourceServerContext::syncMemberFields email %s already owned by member %s, invalidating it",
+                    $user_email,
+                    $member_by_email->getId()
+                ));
+                $member_by_email->setEmail(sprintf("%s-invalid@invalid", $member_by_email->getId()));
+            }
+            $member->setEmail($user_email);
         }
 
-        return $this->tx_service->transaction(function () use
-        (
-            $member,
-            $user_email,
-            $user_first_name,
-            $user_last_name,
-            $user_external_id,
-            $user_email_verified,
-            $synch_groups,
-            $update_member_fields
-        ) {
-            if($update_member_fields) {
-                // update member fields
-                if (!empty($user_email)) {
-                    Log::debug(sprintf("ResourceServerContext::getCurrentUser setting email for member %s", $member->getId()));
-                    // guard against email collision: another member may already hold this email
-                    $member_by_email = $this->member_repository->getByEmail($user_email);
-                    if (!is_null($member_by_email) && $member_by_email->getId() !== $member->getId()) {
-                        Log::warning(sprintf(
-                            "ResourceServerContext::getCurrentUser email %s already owned by member %s, invalidating it",
-                            $user_email,
-                            $member_by_email->getId()
-                        ));
-                        $member_by_email->setEmail(sprintf("%s-invalid@invalid", $member_by_email->getId()));
-                    }
-                    $member->setEmail($user_email);
-                }
+        if (!empty($user_first_name)) {
+            Log::debug(sprintf("ResourceServerContext::syncMemberFields setting first name for member %s", $member->getId()));
+            $member->setFirstName($user_first_name);
+        }
 
-                if (!empty($user_first_name)) {
-                    Log::debug(sprintf("ResourceServerContext::getCurrentUser setting first name for member %s", $member->getId()));
-                    $member->setFirstName($user_first_name);
-                }
-
-                if (!empty($user_last_name)) {
-                    Log::debug(sprintf("ResourceServerContext::getCurrentUser setting last name for member %s", $member->getId()));
-                    $member->setLastName($user_last_name);
-                }
-            }
-
-            $member->setUserExternalId($user_external_id);
-            $member->setEmailVerified($user_email_verified);
-            MemberAssocSummitOrders::dispatch($member->getId());
-            return $synch_groups ? $this->checkGroups($member) : $member;
-        });
+        if (!empty($user_last_name)) {
+            Log::debug(sprintf("ResourceServerContext::syncMemberFields setting last name for member %s", $member->getId()));
+            $member->setLastName($user_last_name);
+        }
     }
 
     /**

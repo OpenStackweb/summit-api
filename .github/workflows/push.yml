@@ -65,6 +65,7 @@ jobs:
                     - { name: "GuzzleTracingTest", filter: "--filter GuzzleTracingTest" }
                     - { name: "Repositories", filter: "tests/Repositories/" }
                     - { name: "Services", filter: "tests/Unit/Services/" }
+                    - { name: "CacheOptimizations", filter: "--filter '(PresentationSpeakerCacheTest|ResourceServerContextTest)'" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

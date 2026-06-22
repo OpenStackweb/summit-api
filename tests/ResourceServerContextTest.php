@@ -21,8 +21,7 @@ class ResourceServerContextTest extends BrowserKitTestCase
 {
     public function testSync(){
         $ctx = App::make(IResourceServerContext::class);
-        if(!$ctx instanceof IResourceServerContext)
-            throw new \Exception();
+        $this->assertInstanceOf(IResourceServerContext::class, $ctx);
 
         $context = [];
         $context['user_id'] = "1080";
@@ -36,5 +35,48 @@ class ResourceServerContextTest extends BrowserKitTestCase
         $ctx->setAuthorizationContext($context);
 
         $member = $ctx->getCurrentUser(true);
+
+        // A member is resolved/created from the IDP auth-context claims...
+        $this->assertNotNull($member, 'getCurrentUser must resolve a member from the auth context');
+        // ...and the claim fields are synced onto it.
+        $this->assertEquals($context['user_email'], $member->getEmail());
+        $this->assertEquals($context['user_first_name'], $member->getFirstName());
+        $this->assertEquals($context['user_last_name'], $member->getLastName());
+
+        // Request-scoped cache: a second call returns the identical instance.
+        $this->assertSame(
+            $member,
+            $ctx->getCurrentUser(true),
+            'getCurrentUser must return the cached instance within a request'
+        );
+    }
+
+    public function testSetAuthorizationContextResetsUserCache(): void
+    {
+        $ctx = App::make(IResourceServerContext::class);
+
+        $context = [];
+        $context['user_id']             = "1080";
+        $context['external_user_id']    = "1080";
+        $context['user_identifier']     = "test";
+        $context['user_email']          = "test@test.com";
+        $context['user_email_verified'] = true;
+        $context['user_first_name']     = "test";
+        $context['user_last_name']      = "test";
+        $context['user_groups']         = ['raw-users'];
+        $ctx->setAuthorizationContext($context);
+        $ctx->getCurrentUser(false); // warm the request-scoped cache
+
+        $ref  = new \ReflectionClass($ctx);
+        $prop = $ref->getProperty('cachedCurrentUserResolved');
+        $prop->setAccessible(true);
+        $this->assertTrue($prop->getValue($ctx),
+            'Prerequisite: cache must be warm after the first getCurrentUser() call');
+
+        // A second setAuthorizationContext() must invalidate the cache so the
+        // next getCurrentUser() re-fetches instead of returning the stale member.
+        $ctx->setAuthorizationContext($context);
+        $this->assertFalse($prop->getValue($ctx),
+            'setAuthorizationContext() must reset cachedCurrentUserResolved');
     }
 }

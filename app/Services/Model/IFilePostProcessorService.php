@@ -11,9 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-
+use models\utils\IEntity;
 
 interface IFilePostProcessorService
 {
-    public function postProcessFileFromFileApi(FileInfoDTO $file_info_dto):bool;
+    public function postProcessFileFromFileApi(FileInfoDTO $file_info_dto):IEntity;
 }

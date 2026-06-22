@@ -21,7 +21,6 @@ use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\FileInfoDTO;
 use App\Services\Model\ICompanyService;
-use App\Services\Model\IFilePostProcessorForChildEntity;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use libs\utils\FileUtils;
@@ -39,7 +38,7 @@ use models\utils\IEntity;
  */
 final class CompanyService
     extends AbstractService
-    implements ICompanyService, IFilePostProcessorForChildEntity
+    implements ICompanyService
 {
     use FileUtils;
 
@@ -89,49 +88,8 @@ final class CompanyService
            return $company;
        });
 
-        if(isset($payload['logo'])){
-            $file_upload_info = FileUploadInfo::buildFromPayload($payload['logo']);
-            if(!is_null($file_upload_info)){
-                if(!in_array($file_upload_info->getFileExt(),Company::LogoAllowedExtensions ))
-                    throw new ValidationException(sprintf("Logo file does not has a valid extension (%s).", implode(',', Company::LogoAllowedExtensions)));
-                $job = new FileProcessingJob(new FileInfoDTO(
-                    owner_entity_id : $company->getId(),
-                    owner_entity_class: Company::class,
-                    owner_member_name: "logo",
-                    filepath: $file_upload_info->getFilePath(),
-                    filename: $file_upload_info->getFileName(),
-                    size: $file_upload_info->getSize(),
-                    md5: $file_upload_info->getMd5(),
-                    mime_type: $file_upload_info->getMimeType(),
-                    source_bucket: $file_upload_info->getSourceBucket()
-                ));
-                JobDispatcher::withDbFallback(
-                    job: $job,
-                );
-            }
-        }
-
-        if(isset($payload['big_logo'])){
-            $file_upload_info = FileUploadInfo::buildFromPayload($payload['big_logo']);
-            if(!is_null($file_upload_info)){
-                if(!in_array($file_upload_info->getFileExt(),Company::LogoAllowedExtensions ))
-                    throw new ValidationException(sprintf("Big Logo file does not has a valid extension (%s).", implode(',', Company::LogoAllowedExtensions)));
-                $job = new FileProcessingJob(new FileInfoDTO(
-                    owner_entity_id : $company->getId(),
-                    owner_entity_class: Company::class,
-                    owner_member_name: "big_logo",
-                    filepath: $file_upload_info->getFilePath(),
-                    filename: $file_upload_info->getFileName(),
-                    size: $file_upload_info->getSize(),
-                    md5: $file_upload_info->getMd5(),
-                    mime_type: $file_upload_info->getMimeType(),
-                    source_bucket: $file_upload_info->getSourceBucket()
-                ));
-                JobDispatcher::withDbFallback(
-                    job: $job,
-                );
-            }
-        }
+        if (isset($payload['logo']))     $this->dispatchLogoJob($company, 'logo',     $payload['logo']);
+        if (isset($payload['big_logo'])) $this->dispatchLogoJob($company, 'big_logo', $payload['big_logo']);
 
        return $company;
     }
@@ -278,77 +236,80 @@ final class CompanyService
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function processFileForChildEntity(FileInfoDTO $file_info_dto): IEntity{
-        Log::debug(sprintf("CompanyService::processFileForChildEntity file_info_dto %s", $file_info_dto ));
-        $logo = null;
-        switch($file_info_dto->owner_member_name){
+    public function processFileForChildEntity(FileInfoDTO $file_info_dto): IEntity {
+        Log::debug(sprintf("CompanyService::processFileForChildEntity file_info_dto %s", $file_info_dto));
+        switch ($file_info_dto->owner_member_name) {
             case 'big_logo':
-                $localPath = self::getFileFromRemoteStorageOnTempStorage(
-                    $file_info_dto->filename,
-                    $file_info_dto->filepath
-                );
-                $succeeded = false;
-                try {
-                    if (!is_null($file_info_dto->md5)) {
-                        $localHash = md5_file($localPath);
-                        if ($localHash === false)
-                            throw new ValidationException("File integrity check failed: unable to read local temp file.");
-                        if ($localHash !== strtolower($file_info_dto->md5))
-                            throw new ValidationException("File integrity check failed: MD5 mismatch.");
-                    }
-                    $file = new UploadedFile(
-                        path: $localPath,
-                        originalName: $file_info_dto->filename,
-                        mimeType: $file_info_dto->mime_type,
-                        error: null,
-                        test: true,
-                    );
-                    $logo = $this->addCompanyBigLogo($file_info_dto->owner_entity_id, $file);
-                    $succeeded = true;
-                } finally {
-                    // Remote file preserved on failure so queue retries can re-download it.
-                    if ($succeeded) {
-                        self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
-                    } else {
-                        self::cleanLocalFile($localPath);
-                    }
-                }
-                return $logo;
+                return $this->processLogoFile($file_info_dto, [$this, 'addCompanyBigLogo']);
             case 'logo':
-                $localPath = self::getFileFromRemoteStorageOnTempStorage(
-                    $file_info_dto->filename,
-                    $file_info_dto->filepath
-                );
-                $succeeded = false;
-                try {
-                    if (!is_null($file_info_dto->md5)) {
-                        $localHash = md5_file($localPath);
-                        if ($localHash === false)
-                            throw new ValidationException("File integrity check failed: unable to read local temp file.");
-                        if ($localHash !== strtolower($file_info_dto->md5))
-                            throw new ValidationException("File integrity check failed: MD5 mismatch.");
-                    }
-                    $file = new UploadedFile(
-                        path: $localPath,
-                        originalName: $file_info_dto->filename,
-                        mimeType: $file_info_dto->mime_type,
-                        error: null,
-                        test: true,
-                    );
-                    $logo = $this->addCompanyLogo($file_info_dto->owner_entity_id, $file);
-                    $succeeded = true;
-                } finally {
-                    // Remote file preserved on failure so queue retries can re-download it.
-                    if ($succeeded) {
-                        self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
-                    } else {
-                        self::cleanLocalFile($localPath);
-                    }
-                }
-                return $logo;
+                return $this->processLogoFile($file_info_dto, [$this, 'addCompanyLogo']);
             default:
                 Log::warning(sprintf("CompanyService::processFileForChildEntity unknown member name '%s'", $file_info_dto->owner_member_name));
                 throw new \InvalidArgumentException(sprintf("Unknown owner_member_name '%s' for entity class '%s'.", $file_info_dto->owner_member_name, $file_info_dto->owner_entity_class));
         }
+    }
+
+    /**
+     * Downloads a file from remote storage to a local temp path, verifies its MD5 (when provided),
+     * invokes $uploader to persist it, then cleans up. On failure the remote file is preserved
+     * so queue retries can re-download it.
+     */
+    private function processLogoFile(FileInfoDTO $file_info_dto, callable $uploader): IEntity
+    {
+        $localPath = self::getFileFromRemoteStorageOnTempStorage(
+            $file_info_dto->filename,
+            $file_info_dto->filepath
+        );
+        $succeeded = false;
+        try {
+            if (!is_null($file_info_dto->md5)) {
+                $localHash = md5_file($localPath);
+                if ($localHash === false)
+                    throw new ValidationException("File integrity check failed: unable to read local temp file.");
+                if ($localHash !== strtolower($file_info_dto->md5))
+                    throw new ValidationException("File integrity check failed: MD5 mismatch.");
+            }
+            $file = new UploadedFile(
+                path: $localPath,
+                originalName: $file_info_dto->filename,
+                mimeType: $file_info_dto->mime_type,
+                error: null,
+                test: true,
+            );
+            $logo = $uploader($file_info_dto->owner_entity_id, $file);
+            $succeeded = true;
+        } finally {
+            if ($succeeded) {
+                self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+            } else {
+                self::cleanLocalFile($localPath);
+            }
+        }
+        return $logo;
+    }
+
+    private function dispatchLogoJob(Company $company, string $memberName, array $payload): void
+    {
+        $file_upload_info = FileUploadInfo::buildFromPayload($payload);
+        if (is_null($file_upload_info)) return;
+
+        if (!in_array($file_upload_info->getFileExt(), Company::LogoAllowedExtensions))
+            throw new ValidationException(sprintf(
+                "%s file does not have a valid extension (%s).",
+                ucwords(str_replace('_', ' ', $memberName)),
+                implode(',', Company::LogoAllowedExtensions)
+            ));
+
+        JobDispatcher::withDbFallback(job: new FileProcessingJob(new FileInfoDTO(
+            owner_entity_id:    $company->getId(),
+            owner_entity_class: Company::class,
+            owner_member_name:  $memberName,
+            filepath:           $file_upload_info->getFilePath(),
+            filename:           $file_upload_info->getFileName(),
+            size:               $file_upload_info->getSize(),
+            md5:                $file_upload_info->getMd5(),
+            mime_type:          $file_upload_info->getMimeType(),
+            source_bucket:      $file_upload_info->getSourceBucket()
+        )));
     }
 }

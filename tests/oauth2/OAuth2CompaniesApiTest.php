@@ -308,7 +308,8 @@ class OAuth2CompaniesApiTest extends ProtectedApiTestCase
         Storage::fake('local');
         Bus::fake();
 
-        $content = file_get_contents(UploadedFile::fake()->image('logo.png')->getRealPath());
+        $fakeFile = UploadedFile::fake()->image('logo.png');
+        $content  = file_get_contents($fakeFile->getRealPath());
         Storage::disk('local')->put('companies/tmp/logo.png',     $content);
         Storage::disk('local')->put('companies/tmp/big_logo.png', $content);
 

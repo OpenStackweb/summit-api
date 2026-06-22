@@ -576,39 +576,98 @@ SQL,
     }
 
     /**
+     * Base QB shared by all per-summit submitter queries.
+     * Scopes to members who created at least one presentation in the given summit.
+     */
+    private function buildSubmitterBaseQuery(Summit $summit): QueryBuilder
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->from($this->getBaseEntity(), 'e')
+            ->where(
+                'EXISTS (SELECT __p.id FROM models\summit\Presentation __p ' .
+                'JOIN __p.created_by __cb93 WITH __cb93 = e.id ' .
+                'WHERE __p.summit = :summit)'
+            )
+            ->setParameter('summit', $summit);
+    }
+
+    /**
+     * COUNT(DISTINCT e.id) for per-summit submitters with optional filter.
+     */
+    private function getSubmittersFastCount(Summit $summit, ?Filter $filter = null, ?Order $order = null): int
+    {
+        $qb = $this->buildSubmitterBaseQuery($summit)->select('COUNT(DISTINCT e.id)');
+        $qb = $this->applyExtraJoins($qb, $filter, $order);
+        if (!is_null($filter)) $filter->apply2Query($qb, $this->getFilterMappings($filter));
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Paginated, ordered array of member IDs for a summit.
+     * Phase 1 of the two-phase submitter query pattern.
+     */
+    private function getSubmittersIdsByPage(
+        Summit $summit,
+        PagingInfo $paging_info,
+        ?Filter $filter = null,
+        ?Order $order = null
+    ): array {
+        $qb = $this->buildSubmitterBaseQuery($summit)->distinct(true)->select('e.id');
+        $qb = $this->applyExtraJoins($qb, $filter, $order);
+        if (!is_null($filter)) $filter->apply2Query($qb, $this->getFilterMappings($filter));
+        if (!is_null($order)) $order->apply2Query($qb, $this->getOrderMappings());
+        else $qb->addOrderBy('e.id', 'ASC');
+        $qb->setFirstResult($paging_info->getOffset())->setMaxResults($paging_info->getPerPage());
+        return array_column($qb->getQuery()->getArrayResult(), 'id');
+    }
+
+    /**
      * @inheritDoc
      */
     public function getSubmittersBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
         Log::debug(sprintf("DoctrineMemberRepository::getSubmittersBySummit summit %s", $summit->getId()));
-        $start  = time();
-        $res = $this->getParametrizedAllByPage(function () use ($summit) {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->distinct(true)
-                ->select("e")
-                ->from($this->getBaseEntity(), "e")
-                ->where(" 
-                         EXISTS (
-                            SELECT __p.id FROM models\summit\Presentation __p 
-                            JOIN __p.created_by __cb93 WITH __cb93 = e.id 
-                            WHERE __p.summit = :summit
-                         )")
-                ->setParameter("summit", $summit);
-        },
-            $paging_info,
-            $filter,
-            $order,
-            function ($query) {
-                //default order
-                return $query->addOrderBy("e.id", 'ASC');
-            });
+        $start = time();
 
-        $end = time();
-        $delta = $end - $start;
+        $total = $this->getSubmittersFastCount($summit, $filter, $order);
+        $ids   = $this->getSubmittersIdsByPage($summit, $paging_info, $filter, $order);
 
-        Log::debug(sprintf("DoctrineMemberRepository::getSubmittersBySummit summit %s duration %s seconds.", $summit->getId(), $delta));
+        if (empty($ids)) {
+            return new PagingResponse(
+                $total,
+                $paging_info->getPerPage(),
+                $paging_info->getCurrentPage(),
+                $paging_info->getLastPage($total),
+                []
+            );
+        }
 
-        return $res;
+        $members = $this->getEntityManager()->createQueryBuilder()
+            ->select('e')
+            ->from($this->getBaseEntity(), 'e')
+            ->where('e.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getResult();
+
+        $byId = [];
+        foreach ($members as $m) $byId[$m->getId()] = $m;
+        $data = [];
+        foreach ($ids as $id) if (isset($byId[$id])) $data[] = $byId[$id];
+
+        Log::debug(sprintf(
+            "DoctrineMemberRepository::getSubmittersBySummit summit %s duration %s seconds.",
+            $summit->getId(),
+            time() - $start
+        ));
+
+        return new PagingResponse(
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
     }
 
     /**
@@ -616,26 +675,7 @@ SQL,
      */
     public function getSubmittersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
-        return $this->getParametrizedAllIdsByPage(function () use ($summit) {
-            return $this->getEntityManager()->createQueryBuilder()
-                ->distinct(true)
-                ->select("e.id")
-                ->from($this->getBaseEntity(), "e")
-                ->where(" 
-                         EXISTS (
-                            SELECT __p.id FROM models\summit\Presentation __p 
-                            JOIN __p.created_by __cb93 WITH __cb93 = e.id 
-                            WHERE __p.summit = :summit
-                         )")
-                ->setParameter("summit", $summit);
-        },
-            $paging_info,
-            $filter,
-            $order,
-            function ($query) {
-                //default order
-                return $query->addOrderBy("e.id", 'ASC');
-            });
+        return $this->getSubmittersIdsByPage($summit, $paging_info, $filter, $order);
     }
 
     /**
@@ -646,22 +686,27 @@ SQL,
      */
     public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
     {
-        // Start from Presentation and JOIN to the submitter (created_by).
-        // Bounded by summit — no subquery needed, filter mappings apply to e unchanged.
-        $countQb = $this->getEntityManager()->createQueryBuilder()
-            ->select("COUNT(DISTINCT p.id)")
-            ->from('models\summit\Presentation', 'p')
-            ->join('p.created_by', 'e')
-            ->where('p.summit = :summit')
-            ->setParameter('summit', $summit);
+        // Phase 1: member IDs matching the summit scope + filter (no pagination).
+        $memberIdsQb = $this->buildSubmitterBaseQuery($summit)->distinct(true)->select('e.id');
+        $memberIdsQb = $this->applyExtraJoins($memberIdsQb, $filter);
+        if (!is_null($filter)) $filter->apply2Query($memberIdsQb, $this->getFilterMappings($filter));
+        $memberIds = array_column($memberIdsQb->getQuery()->getArrayResult(), 'id');
 
-        $countQb = $this->applyExtraJoins($countQb, $filter);
+        if (empty($memberIds)) return 0;
 
-        if (!is_null($filter)) {
-            $filter->apply2Query($countQb, $this->getFilterMappings($filter));
-        }
-
-        return intval($countQb->getQuery()->getSingleScalarResult());
+        // Phase 2: count distinct presentations whose author is one of those members.
+        return intval(
+            $this->getEntityManager()->createQueryBuilder()
+                ->select('COUNT(DISTINCT p.id)')
+                ->from('models\summit\Presentation', 'p')
+                ->join('p.created_by', 'cb')
+                ->where('p.summit = :summit')
+                ->andWhere('cb.id IN (:member_ids)')
+                ->setParameter('summit', $summit)
+                ->setParameter('member_ids', $memberIds)
+                ->getQuery()
+                ->getSingleScalarResult()
+        );
     }
 
     /**

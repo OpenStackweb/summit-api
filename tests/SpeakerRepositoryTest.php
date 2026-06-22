@@ -142,4 +142,40 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
         sort($sorted);
         $this->assertEquals($sorted, $names);
     }
+
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - regression for MySQL 1137
+    // The previous UNION query referenced __tmp_spk_ids twice in one
+    // SQL statement, triggering "Can't reopen table".
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitReturnsPositiveInt(): void
+    {
+        // InsertSummitTestData seeds speaker1 (first_name="Sebastian") on 40 presentations.
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit);
+        $this->assertIsInt($count);
+        $this->assertGreaterThan(0, $count);
+    }
+
+    public function testGetUniqueActivitiesCountBySummitWithMatchingFilter(): void
+    {
+        $filter = FilterParser::parse(
+            ['filter' => 'first_name==Sebastian'],
+            ['first_name' => ['==']]
+        );
+        $unfiltered = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit);
+        $filtered   = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        // All seeded presentations use speaker1 (Sebastian), so the counts must be equal.
+        $this->assertEquals($unfiltered, $filtered);
+    }
+
+    public function testGetUniqueActivitiesCountBySummitZeroForUnknownSpeaker(): void
+    {
+        $filter = FilterParser::parse(
+            ['filter' => 'first_name==NoSuchSpeakerXYZ'],
+            ['first_name' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertEquals(0, $count);
+    }
 }

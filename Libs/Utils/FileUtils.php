@@ -70,6 +70,7 @@ trait FileUtils{
         $out = fopen($localPath, 'wb'); // binary mode
         if ($out === false) {
             fclose($stream);
+            @unlink($localPath);
             throw new ValidationException("Unable to open local temp file for writing: {$localPath}");
         }
         stream_set_blocking($out, true);

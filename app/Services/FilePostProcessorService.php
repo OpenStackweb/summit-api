@@ -19,6 +19,7 @@ use App\Services\Model\IFilePostProcessorService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use models\main\Company;
+use models\utils\IEntity;
 
 final class FilePostProcessorService implements IFilePostProcessorService
 {
@@ -36,7 +37,7 @@ final class FilePostProcessorService implements IFilePostProcessorService
         return null;
     }
 
-    public function postProcessFileFromFileApi(FileInfoDTO $file_info_dto): bool
+    public function postProcessFileFromFileApi(FileInfoDTO $file_info_dto): IEntity
     {
        Log::debug(sprintf("FilePostProcessorService::postProcessFileFromFileApi entity_class=%s member=%s", $file_info_dto->owner_entity_class, $file_info_dto->owner_member_name));
        $service = $this->locateService($file_info_dto->owner_entity_class);

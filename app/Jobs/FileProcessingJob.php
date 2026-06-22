@@ -38,10 +38,13 @@ class FileProcessingJob implements ShouldQueue
     ) {}
 
     public function handle(IFilePostProcessorService $service){
-        $result = $service->postProcessFileFromFileApi($this->fileInfoDTO);
-        if (!$result) {
-            throw new \RuntimeException(sprintf("FileProcessingJob: postProcessFileFromFileApi returned false for %s", $this->fileInfoDTO));
+        try {
+            $service->postProcessFileFromFileApi($this->fileInfoDTO);
+        } catch (\InvalidArgumentException $ex) {
+            // Unrecoverable: unknown entity class or member - fail immediately, no retry
+            $this->fail($ex);
         }
+        // All other exceptions propagate so the queue retries (up to $tries times)
     }
 
     public function failed(\Throwable $exception)

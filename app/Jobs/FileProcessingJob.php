@@ -19,6 +19,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 
 class FileProcessingJob implements ShouldQueue
 {
@@ -40,11 +42,12 @@ class FileProcessingJob implements ShouldQueue
     public function handle(IFilePostProcessorService $service){
         try {
             $service->postProcessFileFromFileApi($this->fileInfoDTO);
-        } catch (\InvalidArgumentException $ex) {
-            // Unrecoverable: unknown entity class or member - fail immediately, no retry
+        } catch (\InvalidArgumentException | ValidationException | EntityNotFoundException $ex) {
+            // Unrecoverable: bad config, data integrity failure (MD5 mismatch, zero-size file),
+            // or entity not found. The file content won't change between retries, so fail immediately.
             $this->fail($ex);
         }
-        // All other exceptions propagate so the queue retries (up to $tries times)
+        // Network/DB errors propagate so the queue retries (up to $tries times)
     }
 
     public function failed(\Throwable $exception)

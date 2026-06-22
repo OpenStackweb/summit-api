@@ -705,22 +705,13 @@ SQL,
      */
     public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
     {
-        // Build the EXISTS inner QB rooted at PresentationSpeaker (e) with the joins that
-        // filter mappings expect (m, rr). The initial WHERE ties e to the outer presentation
-        // p via assignment or moderator role; filter conditions are then appended by
-        // apply2Query.  The EXISTS approach lets MySQL use the
-        // index on Presentation_Speakers(PresentationID) to reach speakers for each p directly
-        // and short-circuit on the first match.
+        // Build a non-correlated inner QB that selects IDs of speakers matching the filter.
+        // MySQL can materialise this set once per query rather than re-executing per row.
         $innerQb = $this->getEntityManager()->createQueryBuilder()
-            ->select('1')
+            ->select('e.id')
             ->from('models\summit\PresentationSpeaker', 'e')
             ->leftJoin('e.member', 'm')
-            ->leftJoin('e.registration_request', 'rr')
-            ->where(
-                'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __a'
-                . ' WHERE __a.presentation = p AND __a.speaker = e)'
-                . ' OR p.moderator = e'
-            );
+            ->leftJoin('e.registration_request', 'rr');
 
         if (!is_null($filter)) {
             $filter->apply2Query($innerQb, $this->getFilterMappings($filter));
@@ -728,22 +719,35 @@ SQL,
 
         $innerDql = $innerQb->getDQL();
 
-        $qb = $this->getEntityManager()->createQueryBuilder()
-            ->select('COUNT(DISTINCT p.id)')
+        // Q1: presentation IDs where a qualifying speaker is formally assigned.
+        $assignmentQb = $this->getEntityManager()->createQueryBuilder()
+            ->select('p.id')
             ->from('models\summit\Presentation', 'p')
+            ->join('p.speakers', 'a')
             ->where('p.summit = :summit')
-            ->andWhere('EXISTS (' . $innerDql . ')')
+            ->andWhere('a.speaker IN (' . $innerDql . ')')
             ->setParameter('summit', $summit);
 
-        // Copy filter-specific parameter bindings (e.g. :value_N for text/id filters).
-        // Filter sub-queries reference :summit by name; that is satisfied by the binding above.
         foreach ($innerQb->getParameters() as $param) {
-            if ($param->getName() !== 'summit') {
-                $qb->setParameter($param->getName(), $param->getValue(), $param->getType());
-            }
+            $assignmentQb->setParameter($param->getName(), $param->getValue(), $param->getType());
         }
 
-        return intval($qb->getQuery()->getSingleScalarResult());
+        // Q2: presentation IDs where the moderator is a qualifying speaker.
+        $moderatorQb = $this->getEntityManager()->createQueryBuilder()
+            ->select('p.id')
+            ->from('models\summit\Presentation', 'p')
+            ->where('p.summit = :summit')
+            ->andWhere('p.moderator IN (' . $innerDql . ')')
+            ->setParameter('summit', $summit);
+
+        foreach ($innerQb->getParameters() as $param) {
+            $moderatorQb->setParameter($param->getName(), $param->getValue(), $param->getType());
+        }
+
+        $assignmentIds = array_column($assignmentQb->getQuery()->getScalarResult(), 'id');
+        $moderatorIds  = array_column($moderatorQb->getQuery()->getScalarResult(), 'id');
+
+        return count(array_unique(array_merge($assignmentIds, $moderatorIds)));
     }
 
     /**

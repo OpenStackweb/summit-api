@@ -603,10 +603,10 @@ final class DoctrineSpeakerRepository
         return [
             'id' => 'e.id',
             "first_name" => <<<SQL
-COALESCE(LOWER(m.first_name), LOWER(e.first_name))
+COALESCE(LOWER(e.first_name), LOWER(m.first_name))
 SQL,
             "last_name" => <<<SQL
-COALESCE(LOWER(m.last_name), LOWER(e.last_name))
+COALESCE(LOWER(e.last_name), LOWER(m.last_name))
 SQL,
             "full_name" => <<<SQL
 COALESCE(LOWER(CONCAT(e.first_name, ' ', e.last_name)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))

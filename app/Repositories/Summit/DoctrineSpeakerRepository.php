@@ -783,11 +783,9 @@ SQL,
                 ->addOrderBy('e.id', 'ASC')
                 ->where(
                     'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __a'
-                    . ' JOIN __a.presentation __ap WHERE IDENTITY(__ap.summit) = :summit_id AND __a.speaker = e)'
-                    . ' OR EXISTS (SELECT 1 FROM models\summit\Presentation __mp WHERE IDENTITY(__mp.summit) = :summit_id AND __mp.moderator = e)'
+                    . ' JOIN __a.presentation __ap WHERE __ap.summit = :summit AND __a.speaker = e)'
+                    . ' OR EXISTS (SELECT 1 FROM models\summit\Presentation __mp WHERE __mp.summit = :summit AND __mp.moderator = e)'
                 )
-                ->setParameter('summit_id', $summit->getId())
-                // filter mappings reference :summit (entity) for EXISTS subqueries
                 ->setParameter('summit', $summit);
 
             if (!is_null($filter)) {

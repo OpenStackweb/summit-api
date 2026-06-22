@@ -97,6 +97,17 @@ final class DoctrineMemberRepository
                 $extraSelectionPlanFilter .= ' AND __type%1$s_:i.id IN ('.implode(',', $v).')';
                 $extraMediaUploadFilter .= ' AND __type%1$s:i.id IN ('.implode(',', $v).')';
             }
+            if($filter->hasFilter("presentations_track_group_id")){
+                $v = $filter->getValue("presentations_track_group_id");
+                $category_categorygroup_subquery = 'SELECT ___cat%1$s.id
+                    FROM models\summit\PresentationCategory ___cat%1$s
+                    JOIN ___cat%1$s.groups ___catg%1$s
+                    WHERE ___catg%1$s.id IN ('.implode(',', $v).')';
+
+                $extraSelectionStatusFilter .= ' AND __cat%1$s.id IN ('.$category_categorygroup_subquery.')';
+                $extraSelectionPlanFilter .= ' AND __tr%1$s_:i.id IN ('.$category_categorygroup_subquery.')';
+                $extraMediaUploadFilter .= ' AND __tr%1$s:i.id IN ('.$category_categorygroup_subquery.')';
+            }
 
             if($filter->hasFilter("has_media_upload_with_type")){
                 $v = $filter->getValue("has_media_upload_with_type");
@@ -158,13 +169,23 @@ final class DoctrineMemberRepository
             'email_verified' => 'e.email_verified:json_int',
             'active'         => 'e.active:json_int',
             'presentations_track_id' => new DoctrineFilterMapping(
-                "EXISTS ( 
-                              SELECT __p41_:i.id FROM models\summit\Presentation __p41_:i 
+                "EXISTS (
+                              SELECT __p41_:i.id FROM models\summit\Presentation __p41_:i
                               JOIN __p41_:i.created_by __c41_:i WITH __c41_:i = e.id
-                              JOIN __p41_:i.category __tr41_:i 
-                              WHERE 
+                              JOIN __p41_:i.category __tr41_:i
+                              WHERE
                               __p41_:i.summit = :summit AND
                               __tr41_:i.id :operator :value )"
+            ),
+            'presentations_track_group_id' => new DoctrineFilterMapping(
+                "EXISTS (
+                              SELECT __p42_:i.id FROM models\summit\Presentation __p42_:i
+                              JOIN __p42_:i.created_by __c42_:i WITH __c42_:i = e.id
+                              JOIN __p42_:i.category __tr42_:i
+                              JOIN __tr42_:i.groups __trg42_:i
+                              WHERE
+                              __p42_:i.summit = :summit AND
+                              __trg42_:i.id :operator :value )"
             ),
             'presentations_selection_plan_id' => new DoctrineFilterMapping(
                 "EXISTS ( 

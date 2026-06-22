@@ -3,6 +3,7 @@ use App\ModelSerializers\IMemberSerializerTypes;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\main\Member;
 use models\summit\Presentation;
+use models\summit\PresentationCategory;
 use models\summit\PresentationSpeaker;
 use ModelSerializers\SerializerRegistry;
 use utils\FilterParser;
@@ -178,5 +179,69 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
         );
         $filteredCount = $submitter_repository->getUniqueActivitiesCountBySummit(self::$summit, $filter);
         self::assertEquals(2, $filteredCount);
+    }
+
+    public function testGetSubmittersByTrackGroupId(): void
+    {
+        // P1: member2 submits in defaultTrack (belongs to defaultTrackGroup) -> must appear.
+        // P2: member submits in altTrack (not in any group) -> must be excluded.
+        // RED: before Task 2 the filter is silently ignored and both members are returned.
+        // GREEN: after Task 2 only member2 is returned.
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $altTrack = new PresentationCategory();
+        $altTrack->setTitle('Alt Track For Group Filter Test');
+        $altTrack->setCode('ALTTST');
+        $altTrack->setSessionCount(3);
+        $altTrack->setAlternateCount(3);
+        $altTrack->setLightningCount(3);
+        $altTrack->setChairVisible(false);
+        $altTrack->setVotingVisible(false);
+        self::$summit->addPresentationCategory($altTrack);
+        self::$em->persist($altTrack);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Track Group Filter Test - In Group');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate($end);
+        $p1->setCreatedBy($member2);
+
+        $p2 = new Presentation();
+        self::$summit->addEvent($p2);
+        $p2->setTitle('Track Group Filter Test - Not In Group');
+        $p2->setAbstract('Abstract');
+        $p2->setCategory($altTrack);
+        $p2->setType(self::$defaultPresentationType);
+        $p2->setProgress(Presentation::PHASE_COMPLETE);
+        $p2->setStatus(Presentation::STATUS_RECEIVED);
+        $p2->setStartDate($start);
+        $p2->setEndDate($end);
+        $p2->setCreatedBy($member);
+
+        self::$em->flush();
+
+        $submitter_repository = EntityManager::getRepository(Member::class);
+
+        $filter = FilterParser::parse(
+            ["filter" => sprintf("presentations_track_group_id==%s", self::$defaultTrackGroup->getId())],
+            ["presentations_track_group_id" => ['==']]
+        );
+
+        $page = $submitter_repository->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);
+
+        self::assertNotNull($page);
+        $ids = array_map(fn($m) => $m->getId(), $page->getItems());
+        self::assertContains($member2->getId(), $ids, 'member2 (defaultTrack in defaultTrackGroup) must be included');
+        self::assertNotContains($member->getId(), $ids, 'member (altTrack, no group) must be excluded');
     }
 }

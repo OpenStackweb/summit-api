@@ -786,7 +786,9 @@ SQL,
                     . ' JOIN __a.presentation __ap WHERE IDENTITY(__ap.summit) = :summit_id AND __a.speaker = e)'
                     . ' OR EXISTS (SELECT 1 FROM models\summit\Presentation __mp WHERE IDENTITY(__mp.summit) = :summit_id AND __mp.moderator = e)'
                 )
-                ->setParameter('summit_id', $summit->getId());
+                ->setParameter('summit_id', $summit->getId())
+                // filter mappings reference :summit (entity) for EXISTS subqueries
+                ->setParameter('summit', $summit);
 
             if (!is_null($filter)) {
                 $filter->apply2Query($qb, $this->getFilterMappings($filter));

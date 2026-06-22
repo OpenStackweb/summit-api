@@ -715,6 +715,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Validator::extend('file_dto', function ($attribute, $value, $parameters, $validator) {
+            if (empty($value)) return true;
+            if (!is_array($value)) return false;
             return !Validator::make($value, FileInfoDTO::validationRules())->fails();
         });
     }

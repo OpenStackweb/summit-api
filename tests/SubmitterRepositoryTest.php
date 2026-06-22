@@ -115,8 +115,8 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
         // can be asserted.  The trait fixture leaves created_by null on all presentations,
         // so without this seeding the method returns 0 for every call and the test is vacuous.
         //
-        //   P1 + P2 — submitted by member2 (no PresentationSpeaker entity → is_speaker==false)
-        //   P3      — submitted by member, who is also a speaker on that same presentation,
+        //   P1 + P2 - submitted by member2 (no PresentationSpeaker entity -> is_speaker==false)
+        //   P3      - submitted by member, who is also a speaker on that same presentation,
         //             making them an is_speaker==true submitter.
         //
         // Re-fetch both members through the current EM.  insertSummitTestData() resets the
@@ -170,7 +170,7 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
         $totalCount = $submitter_repository->getUniqueActivitiesCountBySummit(self::$summit, null);
         self::assertEquals(3, $totalCount);
 
-        // is_speaker==false: P1 and P2 only — member2 is never both creator and speaker
+        // is_speaker==false: P1 and P2 only - member2 is never both creator and speaker
         // on the same presentation.  P3 is excluded because member is a speaker on their
         // own submission.
         $filter = FilterParser::parse(
@@ -454,5 +454,115 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
         $ids = array_map(fn($m) => $m->getId(), $page->getItems());
         self::assertContains($member2->getId(), $ids,
             'member2 must appear: published presentation in defaultTrack');
+    }
+
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - presentations_track_group_id
+    // The submitter repo and speaker repo share the filter name but use
+    // different DQL paths. The speaker repo has this covered; the
+    // submitter path (buildSubmitterBaseQuery + __tmp_mbr_ids) does not.
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitFilterByPresentationsTrackGroupId(): void
+    {
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        // P1: member2 submits in defaultTrack, which belongs to defaultTrackGroup.
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Submitter Count - In Track Group');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate($end);
+        $p1->setCreatedBy($member2);
+
+        self::$em->flush();
+
+        $repo = EntityManager::getRepository(Member::class);
+
+        $filter = FilterParser::parse(
+            ['filter' => 'presentations_track_group_id==' . self::$defaultTrackGroup->getId()],
+            ['presentations_track_group_id' => ['==']]
+        );
+        $count = $repo->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertGreaterThan(0, $count, 'Must count presentations by submitters in defaultTrackGroup');
+
+        $filterNone = FilterParser::parse(
+            ['filter' => 'presentations_track_group_id==999999'],
+            ['presentations_track_group_id' => ['==']]
+        );
+        $countNone = $repo->getUniqueActivitiesCountBySummit(self::$summit, $filterNone);
+        $this->assertEquals(0, $countNone, 'Non-existent track group must yield 0');
+    }
+
+    // -----------------------------------------------------------------
+    // getSubmittersBySummit - multi-page pagination
+    // The two-phase refactor uses LIMIT/OFFSET for page > 1.
+    // Verifies page 2 is non-empty, disjoint from page 1, and reports
+    // the same total as page 1.
+    // -----------------------------------------------------------------
+
+    public function testGetSubmittersBySummitPaginatesCorrectlyAcrossPages(): void
+    {
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        foreach ([$member, $member2] as $creator) {
+            $p = new Presentation();
+            self::$summit->addEvent($p);
+            $p->setTitle('Pagination Test Submission - ' . $creator->getId());
+            $p->setAbstract('Abstract');
+            $p->setCategory(self::$defaultTrack);
+            $p->setType(self::$defaultPresentationType);
+            $p->setProgress(Presentation::PHASE_COMPLETE);
+            $p->setStatus(Presentation::STATUS_RECEIVED);
+            $p->setStartDate($start);
+            $p->setEndDate($end);
+            $p->setCreatedBy($creator);
+        }
+        self::$em->flush();
+
+        $repo = EntityManager::getRepository(Member::class);
+
+        $page1 = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 1), null, null);
+        $page2 = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(2, 1), null, null);
+
+        $ids1 = array_map(fn($m) => $m->getId(), $page1->getItems());
+        $ids2 = array_map(fn($m) => $m->getId(), $page2->getItems());
+
+        $this->assertNotEmpty($ids1, 'Page 1 must not be empty');
+        $this->assertNotEmpty($ids2, 'Page 2 must not be empty');
+        $this->assertEmpty(array_intersect($ids1, $ids2), 'Page 1 and page 2 must not share submitters');
+        $this->assertEquals($page1->getTotal(), $page2->getTotal(), 'Total must be consistent across pages');
+    }
+
+    // -----------------------------------------------------------------
+    // getSubmittersBySummit - empty result early-exit path
+    // When no IDs match, the method returns early without a Phase-3 query.
+    // -----------------------------------------------------------------
+
+    public function testGetSubmittersBySummitReturnsEmptyPageForNonMatchingFilter(): void
+    {
+        $filter = FilterParser::parse(
+            ['filter' => 'first_name==__NONEXISTENT_9999__'],
+            ['first_name' => ['==']]
+        );
+
+        $repo = EntityManager::getRepository(Member::class);
+        $page = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);
+
+        $this->assertNotNull($page);
+        $this->assertEquals(0, $page->getTotal());
+        $this->assertEmpty($page->getItems());
     }
 }

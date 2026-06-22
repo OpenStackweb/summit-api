@@ -1,6 +1,7 @@
 <?php namespace Tests;
 
 use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
 use utils\FilterParser;
 use utils\Order;
@@ -288,5 +289,78 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
         );
         $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
         $this->assertEquals(0, $count);
+    }
+
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - moderator role (Phase 2 path)
+    // Phase 2 has two INSERT statements: one via Presentation_Speakers
+    // (speaker role) and one via Presentation.ModeratorID (moderator role).
+    // All fixture speakers are added via addSpeaker(); this test is the only
+    // one that exercises the moderator INSERT path.
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitCountsModeratorPresentation(): void
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ModeratorOnlySpeaker');
+        $speaker->setLastName('TestMod');
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Moderator-Only Presentation');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate($start);
+        $p->setEndDate($end);
+        $p->setModerator($speaker); // moderator role only - NOT in Presentation_Speakers
+
+        self::$em->flush();
+
+        // Filter to this speaker exclusively to isolate the moderator path.
+        $filter = FilterParser::parse(
+            ['filter' => 'first_name==ModeratorOnlySpeaker'],
+            ['first_name' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+
+        // The speaker moderates exactly 1 presentation; Phase 2 must find it via ModeratorID.
+        $this->assertEquals(1, $count);
+    }
+
+    // -----------------------------------------------------------------
+    // getAllByPage - multi-page pagination
+    // The two-phase approach uses LIMIT/OFFSET for page > 1.
+    // Verifies pages are disjoint and cover the full result set.
+    // -----------------------------------------------------------------
+
+    public function testGetAllByPagePaginatesCorrectlyAcrossPages(): void
+    {
+        $all   = $this->repo()->getAllByPage(new PagingInfo(1, 100));
+        $total = $all->getTotal();
+
+        if ($total < 2) {
+            $this->markTestSkipped('Need at least 2 speakers to test multi-page pagination.');
+        }
+
+        $perPage = (int) ceil($total / 2);
+
+        $page1 = $this->repo()->getAllByPage(new PagingInfo(1, $perPage));
+        $page2 = $this->repo()->getAllByPage(new PagingInfo(2, $perPage));
+
+        $ids1 = array_map(fn($s) => $s->getId(), $page1->getItems());
+        $ids2 = array_map(fn($s) => $s->getId(), $page2->getItems());
+
+        $this->assertNotEmpty($ids1, 'Page 1 must not be empty');
+        $this->assertNotEmpty($ids2, 'Page 2 must not be empty');
+        $this->assertEmpty(array_intersect($ids1, $ids2), 'Pages must be disjoint');
+        $this->assertEquals($total, $page1->getTotal(), 'Total must be consistent across pages');
+        $this->assertEquals($total, $page2->getTotal());
     }
 }

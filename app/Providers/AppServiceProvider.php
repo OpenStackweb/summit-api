@@ -13,6 +13,7 @@
  **/
 
 use App\Http\Utils\Logs\LaravelMailerHandler;
+use App\Services\Model\FileInfoDTO;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -709,6 +710,13 @@ class AppServiceProvider extends ServiceProvider
             return is_numeric($value) && intval($value) > - strlen(strval($value)) == 10;
         });
 
+        Validator::replacer('file_dto', function ($message, $attribute, $rule, $parameters) {
+            return sprintf("%s should be a valid file dto (%s)", $attribute, implode(',', array_keys(FileInfoDTO::validationRules())));
+        });
+
+        Validator::extend('file_dto', function ($attribute, $value, $parameters, $validator) {
+            return !Validator::make($value, FileInfoDTO::validationRules())->fails();
+        });
     }
 
     /**

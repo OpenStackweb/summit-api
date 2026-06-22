@@ -46,6 +46,7 @@ class PaginatedBaseCompaniesResponseSchema
 {
 }
 
+
 #[OA\Schema(
     schema: "CompanyCreateRequest",
     description: "Request to create a Company",
@@ -69,6 +70,8 @@ class PaginatedBaseCompaniesResponseSchema
         new OA\Property(property: "overview", type: "string", nullable: true, example: "Company overview"),
         new OA\Property(property: "commitment", type: "string", nullable: true, example: "Commitment to open source"),
         new OA\Property(property: "commitment_author", type: "string", nullable: true, example: "John Doe, CEO"),
+        new OA\Property(property: "logo", nullable: true, ref: "#/components/schemas/FileDTO", description: "Company logo (File API payload)"),
+        new OA\Property(property: "big_logo", nullable: true, ref: "#/components/schemas/FileDTO", description: "Company big logo (File API payload)"),
     ],
     type: "object"
 )]
@@ -98,6 +101,8 @@ class CompanyCreateRequestSchema
         new OA\Property(property: "overview", type: "string", nullable: true, example: "Company overview"),
         new OA\Property(property: "commitment", type: "string", nullable: true, example: "Commitment to open source"),
         new OA\Property(property: "commitment_author", type: "string", nullable: true, example: "John Doe, CEO"),
+        new OA\Property(property: "logo", nullable: true, ref: "#/components/schemas/FileDTO", description: "Company logo (File API payload)"),
+        new OA\Property(property: "big_logo", nullable: true, ref: "#/components/schemas/FileDTO", description: "Company big logo (File API payload)"),
     ],
     type: "object"
 )]

@@ -20,7 +20,7 @@ use models\main\File;
  * Interface ICompanyService
  * @package App\Services\Model
  */
-interface ICompanyService
+interface ICompanyService extends IFilePostProcessorForChildEntity
 {
     /**
      * @param array $payload

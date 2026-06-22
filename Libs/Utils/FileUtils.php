@@ -62,11 +62,15 @@ trait FileUtils{
         stream_set_blocking($stream, true);
         @stream_set_read_buffer($stream, 0);
 
-        $localPath = rtrim(self::getLocalTmpStorage(), '/')."/".$file_name;
+        $localPath = tempnam(self::getLocalTmpStorage(), 'fproc_');
+        if ($localPath === false) {
+            throw new ValidationException("Unable to create local temporary file.");
+        }
 
         $out = fopen($localPath, 'wb'); // binary mode
         if ($out === false) {
             fclose($stream);
+            @unlink($localPath);
             throw new ValidationException("Unable to open local temp file for writing: {$localPath}");
         }
         stream_set_blocking($out, true);
@@ -115,7 +119,7 @@ trait FileUtils{
                 );
             }
         } catch (\Throwable $e) {
-          throw new ValidationException($e->getMessage());
+          throw new ValidationException($e->getMessage(), 0, $e);
         }
 
         return $localPath;
@@ -133,5 +137,18 @@ trait FileUtils{
         $disk->delete($remotePath);
         Log::debug(sprintf("cleanLocalFile deleting local file %s", $localPath));
         unlink($localPath);
+    }
+
+    /**
+     * Deletes only the local temp file. Use in finally blocks where the remote
+     * file must be preserved on failure so queue job retries can re-download it.
+     * @param string $localPath
+     * @return void
+     */
+    public static function cleanLocalFile(string $localPath): void {
+        if (file_exists($localPath)) {
+            Log::debug(sprintf("FileUtils::cleanLocalFile deleting local temp file %s", $localPath));
+            @unlink($localPath);
+        }
     }
 }

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Model\FileInfoDTO;
 
 /**
  * Class CompanyValidationRulesFactory
@@ -69,6 +70,13 @@ final class CompanyValidationRulesFactory
             'overview' => 'nullable|string',
             'commitment' => 'nullable|string',
             'commitment_author' => 'nullable|string',
+            'big_logo' => 'sometimes|file_dto',
+            'logo' =>'sometimes|file_dto',
         ];
+    }
+
+
+    public static function buildForFileInfo(): array {
+        return FileInfoDTO::validationRules();
     }
 }

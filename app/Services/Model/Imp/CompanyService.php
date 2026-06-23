@@ -88,8 +88,8 @@ final class CompanyService
            return $company;
        });
 
-        if (isset($payload['logo']))     $this->dispatchLogoJob($company, 'logo',     $payload['logo']);
-        if (isset($payload['big_logo'])) $this->dispatchLogoJob($company, 'big_logo', $payload['big_logo']);
+        if (isset($payload['logo']) && is_array($payload['logo']))         $this->dispatchLogoJob($company, 'logo',     $payload['logo']);
+        if (isset($payload['big_logo']) && is_array($payload['big_logo'])) $this->dispatchLogoJob($company, 'big_logo', $payload['big_logo']);
 
        return $company;
     }

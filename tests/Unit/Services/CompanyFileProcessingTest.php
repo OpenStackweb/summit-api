@@ -13,13 +13,16 @@
  **/
 
 use App\Services\FilePostProcessorService;
+use App\Services\Model\AbstractService;
 use App\Services\Model\FileInfoDTO;
 use App\Services\Model\Imp\CompanyService;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
+use libs\utils\ITransactionService;
 use Mockery;
 use models\exceptions\ValidationException;
 use models\main\Company;
+use models\main\ICompanyRepository;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -204,6 +207,57 @@ class CompanyFileProcessingTest extends TestCase
         $this->expectExceptionMessageMatches('/SomeUnregisteredEntity/');
 
         $service->postProcessFileFromFileApi($dto);
+    }
+
+    // -------------------------------------------------------------------------
+    // addCompany - empty-string logo regression (TypeError guard)
+    // -------------------------------------------------------------------------
+
+    private function makeCompanyServiceWithMockedDeps(): CompanyService
+    {
+        $repoMock = Mockery::mock(ICompanyRepository::class);
+        $repoMock->shouldReceive('getByName')->andReturn(null);
+        $repoMock->shouldReceive('add')->once();
+
+        $txMock = Mockery::mock(ITransactionService::class);
+        $txMock->shouldReceive('transaction')->andReturnUsing(fn($cb) => $cb());
+
+        $ref = new \ReflectionClass(CompanyService::class);
+        $service = $ref->newInstanceWithoutConstructor();
+
+        $repoProp = $ref->getProperty('repository');
+        $repoProp->setAccessible(true);
+        $repoProp->setValue($service, $repoMock);
+
+        $txProp = (new \ReflectionClass(AbstractService::class))->getProperty('tx_service');
+        $txProp->setAccessible(true);
+        $txProp->setValue($service, $txMock);
+
+        return $service;
+    }
+
+    /**
+     * Regression: addCompany threw TypeError when a form submitted logo as an
+     * empty string. isset('') is true, so the guard reached dispatchLogoJob
+     * which declares array $payload - crashing with type mismatch.
+     * The fix adds is_array() so empty strings are silently skipped.
+     */
+    public function testAddCompanySkipsDispatchLogoJobWhenLogoIsEmptyString(): void
+    {
+        $service = $this->makeCompanyServiceWithMockedDeps();
+
+        $company = $service->addCompany(['name' => 'Test Co', 'logo' => '']);
+
+        $this->assertInstanceOf(Company::class, $company);
+    }
+
+    public function testAddCompanySkipsDispatchLogoJobWhenBigLogoIsEmptyString(): void
+    {
+        $service = $this->makeCompanyServiceWithMockedDeps();
+
+        $company = $service->addCompany(['name' => 'Test Co', 'big_logo' => '']);
+
+        $this->assertInstanceOf(Company::class, $company);
     }
 
     // -------------------------------------------------------------------------

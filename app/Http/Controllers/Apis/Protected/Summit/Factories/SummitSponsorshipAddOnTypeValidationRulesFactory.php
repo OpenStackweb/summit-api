@@ -30,7 +30,7 @@ final class SummitSponsorshipAddOnTypeValidationRulesFactory extends AbstractVal
     public static function buildForUpdate(array $payload = []): array
     {
         return [
-            'name' => 'sometimes|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
         ];
     }
 }

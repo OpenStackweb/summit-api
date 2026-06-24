@@ -67,6 +67,7 @@ implements ISummitSponsorshipAddOnRepository
         return [
             'id'   => 'e.id',
             'name' => 'e.name',
+            'type' => 'at.name',
         ];
     }
 

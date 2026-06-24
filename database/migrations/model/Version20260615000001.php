@@ -52,8 +52,9 @@ final class Version20260615000001 extends AbstractMigration
         }
 
         // Seed the four types that correspond to the old string constants.
+        // INSERT IGNORE makes this safe to re-run (unique constraint on Name).
         $this->addSql(<<<SQL
-            INSERT INTO `SummitSponsorshipAddOnType` (`Created`, `LastEdited`, `Name`) VALUES
+            INSERT IGNORE INTO `SummitSponsorshipAddOnType` (`Created`, `LastEdited`, `Name`) VALUES
                 (NOW(), NOW(), 'Booth'),
                 (NOW(), NOW(), 'Meeting_Room'),
                 (NOW(), NOW(), 'Schedule_Spot'),

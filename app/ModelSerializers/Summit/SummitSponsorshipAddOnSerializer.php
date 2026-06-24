@@ -23,8 +23,9 @@ use ModelSerializers\SilverStripeSerializer;
 final class SummitSponsorshipAddOnSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
-        'Name'         => 'name:json_string',
-        'TypeId'       => 'type_id:json_int',
+        'Name'          => 'name:json_string',
+        'TypeId'        => 'type_id:json_int',
+        'TypeName'      => 'type_name:json_string',
         'SponsorshipId' => 'sponsorship_id:json_int',
     ];
 

@@ -227,6 +227,24 @@ final class OAuth2SummitSponsorshipAddOnTypesApiControllerTest extends Protected
         $this->assertEquals($new_name, $type->name);
     }
 
+    public function testUpdateWithEmptyName(): void
+    {
+        $params = ['id' => self::$default_type->getId()];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitSponsorshipAddOnTypesApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['name' => ''])
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
     public function testUpdateNotFound(): void
     {
         $params = ['id' => PHP_INT_MAX];

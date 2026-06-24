@@ -300,4 +300,39 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $this->assertTrue(isset($data->count));
         $this->assertGreaterThanOrEqual(0, $data->count);
     }
+
+    public function testGetSubmittersFilterByTrackGroupId()
+    {
+        // Smoke test: filter[]=presentations_track_group_id==N must return HTTP 200, not 422.
+        // Before Task 1 the controller rejects this field with "Filter by field ... is not allowed."
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                sprintf('presentations_track_group_id==%s', self::$defaultTrackGroup->getId()),
+            ],
+            'order'    => '+id',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSubmittersApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $submitters = json_decode($content);
+        $this->assertNotNull($submitters);
+    }
 }

@@ -86,7 +86,7 @@ interface IMemberRepository extends IBaseRepository
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
-     * @return PagingResponse
+     * @return array
      * @throws \Doctrine\DBAL\Exception
      */
     public function getSubmittersIdsBySummit(Summit $summit, PagingInfo $paging_info, Filter $filter = null, Order $order = null);

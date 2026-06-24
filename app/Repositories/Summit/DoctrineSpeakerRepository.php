@@ -603,18 +603,77 @@ final class DoctrineSpeakerRepository
         return [
             'id' => 'e.id',
             "first_name" => <<<SQL
-COALESCE(LOWER(m.first_name), LOWER(e.first_name)) 
+COALESCE(LOWER(e.first_name), LOWER(m.first_name))
 SQL,
             "last_name" => <<<SQL
-COALESCE(LOWER(m.last_name), LOWER(e.last_name)) 
+COALESCE(LOWER(e.last_name), LOWER(m.last_name))
 SQL,
             "full_name" => <<<SQL
 COALESCE(LOWER(CONCAT(e.first_name, ' ', e.last_name)), LOWER(CONCAT(m.first_name, ' ', m.last_name)))
 SQL,
             'email' => <<<SQL
-COALESCE(LOWER(m.email), LOWER(rr.email)) 
+COALESCE(LOWER(m.email), LOWER(rr.email))
 SQL,
         ];
+    }
+
+    /**
+     * Base QB for speaker queries: PresentationSpeaker aliased as 'e', with
+     * Member ('m') and SpeakerRegistrationRequest ('rr') left-joined.
+     * All filter and order mappings in this repo assume these three aliases.
+     */
+    private function buildSpeakerBaseQuery(): \Doctrine\ORM\QueryBuilder
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->from(PresentationSpeaker::class, 'e')
+            ->leftJoin('e.member', 'm')
+            ->leftJoin('e.registration_request', 'rr');
+    }
+
+    /**
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return int
+     */
+    public function getFastCount(Filter $filter = null, Order $order = null): int
+    {
+        $query = $this->buildSpeakerBaseQuery()
+            ->select('COUNT(DISTINCT e.id)');
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
+        }
+
+        return (int) $query->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * @param PagingInfo $paging_info
+     * @param Filter|null $filter
+     * @param Order|null $order
+     * @return array
+     */
+    public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null): array
+    {
+        $query = $this->buildSpeakerBaseQuery()
+            ->distinct(true)
+            ->select('e.id');
+
+        if (!is_null($filter)) {
+            $filter->apply2Query($query, $this->getFilterMappings($filter));
+        }
+
+        if (!is_null($order)) {
+            $order->apply2Query($query, $this->getOrderMappings());
+        } else {
+            $query->addOrderBy('e.id', 'ASC');
+        }
+
+        $query->setFirstResult($paging_info->getOffset())
+              ->setMaxResults($paging_info->getPerPage());
+
+        $res = $query->getQuery()->getArrayResult();
+        return array_column($res, 'id');
     }
 
     /**
@@ -705,54 +764,80 @@ SQL,
      */
     public function getUniqueActivitiesCountBySummit(Summit $summit, Filter $filter = null): int
     {
-        // Inner query: distinct IDs of speakers who belong to this summit (via assignment
-        // or moderator role) and match any caller-supplied filter. Uses IDENTITY() with a
-        // scalar summit ID so no entity parameter is embedded in the getDQL() string —
-        // entity parameters copied into an outer QB via getDQL() are not correctly resolved
-        // to their primary key by Doctrine's type system.
-        $innerQb = $this->getEntityManager()->createQueryBuilder()
-            ->select('e.id')
-            ->distinct(true)
-            ->from('models\summit\PresentationSpeaker', 'e')
-            ->leftJoin('e.registration_request', 'rr')
-            ->leftJoin('e.member', 'm')
-            ->where(
-                'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __a'
-                . ' JOIN __a.presentation __ap WHERE IDENTITY(__ap.summit) = :summit_id AND __a.speaker = e)'
-                . ' OR EXISTS (SELECT 1 FROM models\summit\Presentation __mp WHERE IDENTITY(__mp.summit) = :summit_id AND __mp.moderator = e)'
-            )
-            ->setParameter('summit_id', $summit->getId());
+        $conn = $this->getEntityManager()->getConnection();
+        $conn->executeStatement(
+            'CREATE TEMPORARY TABLE IF NOT EXISTS `__tmp_spk_ids`
+             (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY'
+        );
+        $conn->executeStatement('TRUNCATE TABLE `__tmp_spk_ids`');
 
-        if (!is_null($filter)) {
-            $filter->apply2Query($innerQb, $this->getFilterMappings($filter));
+        try {
+            // Phase 1: stream speaker IDs (summit-scoped + filtered) into the
+            // temp table in chunks so PHP never holds the full set in memory.
+            $chunkSize = 1000;
+            $offset    = 0;
+
+            $qb = $this->buildSpeakerBaseQuery()
+                ->distinct(true)
+                ->select('e.id')
+                ->addOrderBy('e.id', 'ASC')
+                ->where(
+                    'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __a'
+                    . ' JOIN __a.presentation __ap WHERE __ap.summit = :summit AND __a.speaker = e)'
+                    . ' OR EXISTS (SELECT 1 FROM models\summit\Presentation __mp WHERE __mp.summit = :summit AND __mp.moderator = e)'
+                )
+                ->setParameter('summit', $summit);
+
+            if (!is_null($filter)) {
+                $filter->apply2Query($qb, $this->getFilterMappings($filter));
+            }
+
+            do {
+                $chunk = $qb->setFirstResult($offset)->setMaxResults($chunkSize)
+                    ->getQuery()->getArrayResult();
+
+                if (!empty($chunk)) {
+                    $vals = implode(',', array_map(fn($r) => '(' . (int)$r['id'] . ')', $chunk));
+                    $conn->executeStatement("INSERT IGNORE INTO `__tmp_spk_ids` (id) VALUES $vals");
+                }
+
+                $offset += $chunkSize;
+            } while (count($chunk) === $chunkSize);
+
+            // Phase 2: collect distinct presentation IDs from both roles into a second
+            // temp table using two separate statements -- MySQL forbids referencing the
+            // same TEMPORARY TABLE more than once per query (error 1137).
+            $conn->executeStatement(
+                'CREATE TEMPORARY TABLE IF NOT EXISTS `__tmp_pres_ids`
+                 (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY'
+            );
+            $conn->executeStatement('TRUNCATE TABLE `__tmp_pres_ids`');
+
+            $conn->executeStatement(
+                'INSERT IGNORE INTO `__tmp_pres_ids` (id)
+                 SELECT DISTINCT E.ID
+                 FROM SummitEvent E
+                 INNER JOIN Presentation_Speakers PS ON PS.PresentationID = E.ID
+                 INNER JOIN `__tmp_spk_ids` T ON T.id = PS.PresentationSpeakerID
+                 WHERE E.SummitID = ?',
+                [$summit->getId()]
+            );
+
+            $conn->executeStatement(
+                'INSERT IGNORE INTO `__tmp_pres_ids` (id)
+                 SELECT DISTINCT E.ID
+                 FROM SummitEvent E
+                 INNER JOIN Presentation P ON P.ID = E.ID
+                 INNER JOIN `__tmp_spk_ids` T ON T.id = P.ModeratorID
+                 WHERE E.SummitID = ?',
+                [$summit->getId()]
+            );
+
+            return (int) $conn->fetchOne('SELECT COUNT(*) FROM `__tmp_pres_ids`');
+        } finally {
+            $conn->executeStatement('DROP TEMPORARY TABLE IF EXISTS `__tmp_pres_ids`');
+            $conn->executeStatement('DROP TEMPORARY TABLE IF EXISTS `__tmp_spk_ids`');
         }
-
-        $innerDql = $innerQb->getDQL();
-
-        // Outer query counts distinct presentations where at least one matched speaker is
-        // either an assigned speaker or the moderator. The inner DQL is embedded exactly
-        // once (inside a single wrapper EXISTS) to avoid Doctrine alias-conflict errors.
-        $outerQb = $this->getEntityManager()->createQueryBuilder()
-            ->select('COUNT(DISTINCT p.id)')
-            ->from('models\summit\Presentation', 'p')
-            ->where('p.summit = :summit')
-            ->andWhere(
-                'EXISTS ('
-                . 'SELECT 1 FROM models\summit\PresentationSpeaker __spk'
-                . ' WHERE __spk.id IN (' . $innerDql . ')'
-                . ' AND ('
-                . 'EXISTS (SELECT 1 FROM App\Models\Foundation\Summit\Speakers\PresentationSpeakerAssignment __cnt WHERE __cnt.presentation = p AND __cnt.speaker = __spk)'
-                . ' OR p.moderator = __spk'
-                . ')'
-                . ')'
-            )
-            ->setParameter('summit', $summit);
-
-        foreach ($innerQb->getParameters() as $param) {
-            $outerQb->setParameter($param->getName(), $param->getValue());
-        }
-
-        return intval($outerQb->getQuery()->getSingleScalarResult());
     }
 
     /**
@@ -1047,141 +1132,47 @@ SQL;
      */
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null)
     {
+        $total = $this->getFastCount($filter, $order);
+        $ids   = $this->getAllIdsByPage($paging_info, $filter, $order);
 
-        $extra_filters = '';
-        $extra_orders = '';
-        $bindings = [];
-
-        if (!is_null($filter)) {
-            $where_conditions = $filter->toRawSQL([
-                'first_name' => 'FirstName',
-                'last_name' => 'LastName',
-                'email' => [
-                    Filter::buildEmailField('Email'),
-                    Filter::buildEmailField('Email2'),
-                    Filter::buildEmailField('Email3'),
-                ],
-                'id' => 'ID',
-                'full_name' => "FullName",
-                'member_id' => "MemberID",
-                'member_user_external_id' => "MemberUserExternalID",
-            ]);
-            if (!empty($where_conditions)) {
-                $extra_filters = " WHERE {$where_conditions}";
-                $bindings = array_merge($bindings, $filter->getSQLBindings());
-            }
+        if (empty($ids)) {
+            return new PagingResponse(
+                $total,
+                $paging_info->getPerPage(),
+                $paging_info->getCurrentPage(),
+                $paging_info->getLastPage($total),
+                []
+            );
         }
 
-        if (!is_null($order)) {
-            $extra_orders = $order->toRawSQL(array
-            (
-                'first_name' => 'FirstName',
-                'last_name' => 'LastName',
-                'email' => 'Email',
-                'id' => 'ID',
-                'full_name' => "FullName",
-            ));
+        // Phase 2: fetch full entities for the paged IDs, eagerly loading member and
+        // registration_request to avoid N+1 on the fields used by the serializer.
+        $query = $this->buildSpeakerBaseQuery()
+            ->select('e')
+            ->addSelect('m')
+            ->addSelect('rr')
+            ->where('e.id IN (:ids)')
+            ->setParameter('ids', $ids);
+
+        $speakers = $query->getQuery()->getResult();
+
+        // Restore Phase-1 order (IN (:ids) gives no ordering guarantee).
+        $byId = [];
+        foreach ($speakers as $s) {
+            $byId[$s->getId()] = $s;
+        }
+        $data = [];
+        foreach ($ids as $id) {
+            if (isset($byId[$id])) $data[] = $byId[$id];
         }
 
-        $query_count = <<<SQL
-SELECT COUNT(DISTINCT(ID)) AS QTY
-FROM (
-    SELECT S.ID,
-           M.ID AS MemberID,
-           M.ExternalUserID AS MemberUserExternalID,
-           IFNULL(S.FirstName, M.FirstName) AS FirstName,
-           IFNULL(S.LastName, M.Surname) AS LastName,
-           CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-           IFNULL(M.Email,R.Email) AS Email,
-           M.SecondEmail AS Email2,
-           M.ThirdEmail AS Email3
-    FROM PresentationSpeaker S
-        LEFT JOIN Member M ON M.ID = S.MemberID
-        LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-)
-SUMMIT_SPEAKERS
-{$extra_filters}
-SQL;
-
-
-        $stm = $this->getEntityManager()->getConnection()->executeQuery($query_count, $bindings);
-
-        $total = intval($stm->fetchOne());
-
-        $bindings = array_merge($bindings, array
-        (
-            'per_page' => $paging_info->getPerPage(),
-            'offset' => $paging_info->getOffset(),
-        ));
-
-        $query = <<<SQL
-SELECT *
-FROM (
-	SELECT
-    S.ID,
-    S.ClassName,
-    S.Created,
-    S.LastEdited,
-    S.Title AS SpeakerTitle,
-    S.Bio,
-    S.IRCHandle,
-    S.AvailableForBureau,
-    S.FundedTravel,
-    S.Country,
-    S.WillingToTravel,
-    S.WillingToPresentVideo,
-    S.Notes,
-    S.TwitterName,
-    IFNULL(S.FirstName, M.FirstName) AS FirstName,
-	IFNULL(S.LastName, M.Surname) AS LastName,
-    IFNULL(M.Email,R.Email) AS Email,
-	M.SecondEmail AS Email2,
-    M.ThirdEmail AS Email3,
-    CONCAT(IFNULL(S.FirstName, M.FirstName), ' ', IFNULL(S.LastName, M.Surname)) AS FullName,
-    S.PhotoID,
-    S.BigPhotoID,
-    M.ID AS MemberID,
-    M.ExternalUserID AS MemberUserExternalID,
-    R.ID AS RegistrationRequestID
-    FROM PresentationSpeaker S
-	LEFT JOIN Member M ON M.ID = S.MemberID
-	LEFT JOIN File F ON F.ID = S.PhotoID
-    LEFT JOIN SpeakerRegistrationRequest R ON R.SpeakerID = S.ID
-)
-SUMMIT_SPEAKERS
-{$extra_filters} {$extra_orders} limit :per_page offset :offset;
-SQL;
-
-        /*$rsm = new ResultSetMapping();
-        $rsm->addEntityResult(\models\summit\PresentationSpeaker::class, 's');
-        $rsm->addJoinedEntityResult(\models\main\File::class,'p', 's', 'photo');
-        $rsm->addJoinedEntityResult(\models\main\Member::class,'m', 's', 'member');
-
-        $rsm->addFieldResult('s', 'ID', 'id');
-        $rsm->addFieldResult('s', 'FirstName', 'first_name');
-        $rsm->addFieldResult('s', 'LastName', 'last_name');
-        $rsm->addFieldResult('s', 'Bio', 'last_name');
-        $rsm->addFieldResult('s', 'SpeakerTitle', 'title' );
-        $rsm->addFieldResult('p', 'PhotoID', 'id');
-        $rsm->addFieldResult('p', 'PhotoTitle', 'title');
-        $rsm->addFieldResult('p', 'PhotoFileName', 'filename');
-        $rsm->addFieldResult('p', 'PhotoName', 'name');
-        $rsm->addFieldResult('m', 'MemberID', 'id');*/
-
-        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
-        $rsm->addRootEntityFromClassMetadata(\models\summit\PresentationSpeaker::class, 's', ['Title' => 'SpeakerTitle']);
-
-        // build rsm here
-        $native_query = $this->getEntityManager()->createNativeQuery($query, $rsm);
-
-        foreach ($bindings as $k => $v)
-            $native_query->setParameter($k, $v);
-
-        $speakers = $native_query->getResult();
-
-        $last_page = (int)ceil($total / $paging_info->getPerPage());
-
-        return new PagingResponse($total, $paging_info->getPerPage(), $paging_info->getCurrentPage(), $last_page, $speakers);
+        return new PagingResponse(
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
     }
 
     /**

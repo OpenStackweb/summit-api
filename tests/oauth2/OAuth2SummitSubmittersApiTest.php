@@ -1,5 +1,6 @@
 <?php namespace Tests;
 use App\Models\Foundation\Main\IGroup;
+use models\summit\Presentation;
 
 /**
  * Copyright 2023 OpenStack Foundation
@@ -130,6 +131,57 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
         $submitters = json_decode($content);
         $this->assertTrue(!is_null($submitters));
+    }
+
+    public function testGetCurrentSummitSubmittersWithPendingPresentations()
+    {
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Pending Test Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setProgress(Presentation::PHASE_COMPLETE);
+        $pres->setStatus(Presentation::STATUS_RECEIVED);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->setCreatedBy(self::$defaultMember);
+        // Deliberately NOT published and NOT added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'has_pending_presentations==true',
+            ],
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSubmittersApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $submitters = json_decode($content);
+        $this->assertTrue(!is_null($submitters));
+        $this->assertTrue(count($submitters->data) > 0);
     }
 
     public function testExportCurrentSummitSubmittersWhoAreSpeakers()

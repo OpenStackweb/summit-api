@@ -614,6 +614,62 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($speakers));
     }
 
+    public function testGetCurrentSummitSpeakersWithPendingPresentations()
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Pending");
+        $speaker->setLastName("Speaker");
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Pending Test Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setProgress(Presentation::PHASE_COMPLETE);
+        $pres->setStatus(Presentation::STATUS_RECEIVED);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->addSpeaker($speaker);
+        // Deliberately NOT published and NOT added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'has_pending_presentations==true',
+            ],
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($content);
+        $this->assertTrue(!is_null($speakers));
+        $this->assertTrue(count($speakers->data) > 0);
+    }
+
     public function testGetCurrentSummitSpeakersFilteredByMemberExternalUserID()
     {
         $params = [
@@ -2006,6 +2062,58 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
             "GET",
             "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
             ['id' => self::$summit->getId(), 'filter' => ['has_accepted_presentations==true']],
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $data = json_decode($response->getContent());
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertEquals($baseline + 1, $data->count);
+    }
+
+    public function testGetCurrentSummitSpeakersActivitiesCountWithPendingPresentations()
+    {
+        $baseline = EntityManager::getRepository(PresentationSpeaker::class)
+            ->getUniqueActivitiesCountBySummit(
+                self::$summit,
+                FilterParser::parse(
+                    ['filter' => 'has_pending_presentations==true'],
+                    ['has_pending_presentations' => ['==']]
+                )
+            );
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Pending");
+        $speaker->setLastName("Test");
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Pending Test Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setProgress(Presentation::PHASE_COMPLETE);
+        $pres->setStatus(Presentation::STATUS_RECEIVED);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->addSpeaker($speaker);
+        // Deliberately NOT published and NOT added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            ['id' => self::$summit->getId(), 'filter' => ['has_pending_presentations==true']],
             [], [], [], $headers
         );
 

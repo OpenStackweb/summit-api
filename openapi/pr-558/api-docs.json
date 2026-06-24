@@ -1321,7 +1321,7 @@
                     "Companies"
                 ],
                 "summary": "Add company logo",
-                "description": "Uploads a logo image for the company",
+                "description": "Uploads a logo image for the company. Accepts either a multipart file upload or a JSON payload referencing a file already stored in the file API.",
                 "operationId": "addCompanyLogo",
                 "parameters": [
                     {
@@ -1351,6 +1351,43 @@
                                 },
                                 "type": "object"
                             }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "filepath",
+                                    "filename",
+                                    "md5",
+                                    "size"
+                                ],
+                                "properties": {
+                                    "filepath": {
+                                        "description": "Remote storage path of the uploaded file",
+                                        "type": "string"
+                                    },
+                                    "filename": {
+                                        "description": "Original file name",
+                                        "type": "string"
+                                    },
+                                    "md5": {
+                                        "description": "MD5 hash of the file for integrity verification",
+                                        "type": "string"
+                                    },
+                                    "size": {
+                                        "description": "File size in bytes",
+                                        "type": "integer"
+                                    },
+                                    "mime_type": {
+                                        "description": "MIME type of the file",
+                                        "type": "string"
+                                    },
+                                    "source_bucket": {
+                                        "description": "Source storage bucket",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
                 },
@@ -1376,9 +1413,6 @@
                     },
                     "404": {
                         "description": "Company not found"
-                    },
-                    "412": {
-                        "description": "File parameter not set"
                     }
                 },
                 "security": [
@@ -1444,7 +1478,7 @@
                     "Companies"
                 ],
                 "summary": "Add company big logo",
-                "description": "Uploads a big logo image for the company",
+                "description": "Uploads a big logo image for the company. Accepts either a multipart file upload or a JSON payload referencing a file already stored in the file API.",
                 "operationId": "addCompanyBigLogo",
                 "parameters": [
                     {
@@ -1474,6 +1508,43 @@
                                 },
                                 "type": "object"
                             }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "filepath",
+                                    "filename",
+                                    "md5",
+                                    "size"
+                                ],
+                                "properties": {
+                                    "filepath": {
+                                        "description": "Remote storage path of the uploaded file",
+                                        "type": "string"
+                                    },
+                                    "filename": {
+                                        "description": "Original file name",
+                                        "type": "string"
+                                    },
+                                    "md5": {
+                                        "description": "MD5 hash of the file for integrity verification",
+                                        "type": "string"
+                                    },
+                                    "size": {
+                                        "description": "File size in bytes",
+                                        "type": "integer"
+                                    },
+                                    "mime_type": {
+                                        "description": "MIME type of the file",
+                                        "type": "string"
+                                    },
+                                    "source_bucket": {
+                                        "description": "Source storage bucket",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
                 },
@@ -1499,9 +1570,6 @@
                     },
                     "404": {
                         "description": "Company not found"
-                    },
-                    "412": {
-                        "description": "File parameter not set"
                     }
                 },
                 "security": [
@@ -56982,6 +57050,69 @@
                 ]
             }
         },
+        "/api/v1/summits/{id}/sponsors/all/sponsorservices-statistics/bulk": {
+            "put": {
+                "tags": [
+                    "Sponsors"
+                ],
+                "summary": "Bulk upsert Sponsor Services Statistics",
+                "description": "required-groups super-admins, administrators, summit-front-end-administrators",
+                "operationId": "bulkUpdateSponsorServicesStatistics",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The summit id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/SponsorServicesStatisticsUpsertRequest"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sponsor Services Statistics bulk created/updated successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    },
+                    "412": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_sponsor_oauth2": [
+                            "http://localhost/summits/write"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators"
+                ]
+            }
+        },
         "/api/v1/summits/all/add-on-types": {
             "get": {
                 "tags": [
@@ -68442,6 +68573,24 @@
                         "type": "string",
                         "example": "John Doe, CEO",
                         "nullable": true
+                    },
+                    "logo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Company logo (File API payload)"
+                    },
+                    "big_logo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Company big logo (File API payload)"
                     }
                 },
                 "type": "object"
@@ -68542,6 +68691,24 @@
                         "type": "string",
                         "example": "John Doe, CEO",
                         "nullable": true
+                    },
+                    "logo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Company logo (File API payload)"
+                    },
+                    "big_logo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Company big logo (File API payload)"
                     }
                 },
                 "type": "object"
@@ -68822,6 +68989,50 @@
                         "type": "object"
                     }
                 ]
+            },
+            "FileDTO": {
+                "description": "File metadata payload produced by the File API after a successful upload",
+                "required": [
+                    "filepath",
+                    "filename",
+                    "md5",
+                    "size"
+                ],
+                "properties": {
+                    "filepath": {
+                        "description": "Remote storage path of the uploaded file",
+                        "type": "string",
+                        "example": "companies/1/tmp/logo.png"
+                    },
+                    "filename": {
+                        "description": "Original file name",
+                        "type": "string",
+                        "example": "logo.png"
+                    },
+                    "md5": {
+                        "description": "MD5 hash of the file for integrity verification",
+                        "type": "string",
+                        "example": "d41d8cd98f00b204e9800998ecf8427e"
+                    },
+                    "size": {
+                        "description": "File size in bytes",
+                        "type": "integer",
+                        "example": 204800
+                    },
+                    "mime_type": {
+                        "description": "MIME type of the file",
+                        "type": "string",
+                        "example": "image/png",
+                        "nullable": true
+                    },
+                    "source_bucket": {
+                        "description": "Source storage bucket",
+                        "type": "string",
+                        "example": "my-uploads-bucket",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             },
             "ISOLanguageElementSchema": {
                 "properties": {

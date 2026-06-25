@@ -187,6 +187,7 @@ final class AccessTokenService implements IAccessTokenService
     {
 
         Log::debug(sprintf("AccessTokenService::doIntrospectionRequest token %s", $token_value));
+        $start = microtime(true);
         try {
             $stack = HandlerStack::create();
             $stack->push(GuzzleRetryMiddleware::factory());
@@ -232,10 +233,17 @@ final class AccessTokenService implements IAccessTokenService
                 Log::warning(sprintf("AccessTokenService::doIntrospectionRequest status %s content type %s body %s", $status, $content_type, $body));
                 throw new \Exception($body);
             }
-            return json_decode($response->getBody()->getContents(), true);
+            $res = json_decode($response->getBody()->getContents(), true);
+            $end = microtime(true);
+            $executionTimeMs = ($end - $start) * 1000;
+            Log::debug(sprintf("AccessTokenService::doIntrospectionRequest instrospection request time %s ms", round($executionTimeMs, 2) ));
+            return $res;
         }
         catch (RequestException $ex) {
 
+            $end = microtime(true);
+            $executionTimeMs = ($end - $start) * 1000;
+            Log::debug(sprintf("AccessTokenService::doIntrospectionRequest instrospection request time %s ms (failed)", round($executionTimeMs, 2)));
             Log::warning($ex->getMessage());
             $response  = $ex->getResponse();
 

@@ -21,6 +21,9 @@ use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
 use utils\FilterParser;
 use models\summit\SpeakersSummitRegistrationPromoCode;
+use models\main\Member;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
 
 final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 {
@@ -2014,6 +2017,141 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertNotNull($data);
         $this->assertTrue(isset($data->count));
         $this->assertEquals($baseline + 1, $data->count);
+    }
+
+    private function resetEmIfNeeded(): void
+    {
+        if (!self::$em->isOpen()) {
+            self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        }
+    }
+
+    /**
+     * Regression test for: createMySpeaker must honour the bio submitted in the
+     * payload and must NOT silently overwrite it with the member's bio.
+     *
+     * Previously array_merge($payload, $aux_payload) put $aux_payload last so
+     * member->getBio() always won regardless of what the user submitted.
+     */
+    public function testCreateMySpeakerPayloadBioTakesPrecedenceOverMemberBio()
+    {
+        // Create a fresh member (no speaker attached) with a known bio
+        $prefix      = str_random(10);
+        $memberBio   = "This is the OLD bio from the member/FNid profile.";
+        $payloadBio  = "This is the NEW bio submitted by the user in the portal.";
+
+        $newMember = new Member();
+        $newMember->setEmail("test_bio_precedence_{$prefix}@example.com");
+        $newMember->setFirstName("Bio");
+        $newMember->setLastName("Precedence");
+        $newMember->setActive(true);
+        $newMember->setEmailVerified(true);
+        $newMember->setUserExternalId(mt_rand());
+        $newMember->setBio($memberBio);
+        self::$em->persist($newMember);
+        self::$em->flush();
+
+        // Authenticate as the new member
+        self::$service->setUserId($newMember->getUserExternalId());
+        self::$service->setUserExternalId($newMember->getUserExternalId());
+        self::$service->setUserEmail($newMember->getEmail());
+        self::$service->setUserFirstName($newMember->getFirstName());
+        self::$service->setUserLastName($newMember->getLastName());
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSpeakersApiController@createMySpeaker",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode(['bio' => $payloadBio])
+        );
+
+        // Restore authenticated member so tearDown works correctly
+        self::$service->setUserId(self::$member->getUserExternalId());
+        self::$service->setUserExternalId(self::$member->getUserExternalId());
+        self::$service->setUserEmail(self::$member->getEmail());
+        self::$service->setUserFirstName(self::$member->getFirstName());
+        self::$service->setUserLastName(self::$member->getLastName());
+
+        $this->assertResponseStatus(201);
+        $speaker = json_decode($response->getContent());
+        $this->assertNotNull($speaker);
+        $this->assertEquals($payloadBio, $speaker->bio,
+            "Speaker bio must match what the user submitted, not the member/FNid bio.");
+
+        // Cleanup — EM may have been closed by the BrowserKit HTTP simulation
+        $this->resetEmIfNeeded();
+        self::$em->remove(self::$em->find(Member::class, $newMember->getId()));
+        self::$em->flush();
+    }
+
+    /**
+     * When no bio is submitted in the payload, createMySpeaker should fall back
+     * to the member's bio so that a first-time speaker gets a sensible default.
+     */
+    public function testCreateMySpeakerFallsBackToMemberBioWhenNoneSubmitted()
+    {
+        $prefix    = str_random(10);
+        $memberBio = "Default bio coming from the FNid member profile.";
+
+        $newMember = new Member();
+        $newMember->setEmail("test_bio_fallback_{$prefix}@example.com");
+        $newMember->setFirstName("Bio");
+        $newMember->setLastName("Fallback");
+        $newMember->setActive(true);
+        $newMember->setEmailVerified(true);
+        $newMember->setUserExternalId(mt_rand());
+        $newMember->setBio($memberBio);
+        self::$em->persist($newMember);
+        self::$em->flush();
+
+        self::$service->setUserId($newMember->getUserExternalId());
+        self::$service->setUserExternalId($newMember->getUserExternalId());
+        self::$service->setUserEmail($newMember->getEmail());
+        self::$service->setUserFirstName($newMember->getFirstName());
+        self::$service->setUserLastName($newMember->getLastName());
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        // No 'bio' key in the payload — member bio should be used as default
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSpeakersApiController@createMySpeaker",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode(['title' => 'Engineer'])
+        );
+
+        self::$service->setUserId(self::$member->getUserExternalId());
+        self::$service->setUserExternalId(self::$member->getUserExternalId());
+        self::$service->setUserEmail(self::$member->getEmail());
+        self::$service->setUserFirstName(self::$member->getFirstName());
+        self::$service->setUserLastName(self::$member->getLastName());
+
+        $this->assertResponseStatus(201);
+        $speaker = json_decode($response->getContent());
+        $this->assertNotNull($speaker);
+        $this->assertEquals($memberBio, $speaker->bio,
+            "When no bio is submitted, speaker bio must default to the member/FNid bio.");
+
+        // Cleanup — EM may have been closed by the BrowserKit HTTP simulation
+        $this->resetEmIfNeeded();
+        self::$em->remove(self::$em->find(Member::class, $newMember->getId()));
+        self::$em->flush();
     }
 
 }

@@ -120,7 +120,11 @@ final class OAuth2SummitSponsorshipAddOnTypesApiController extends OAuth2Protect
             new OA\Parameter(name: "order", description: "Order by (+id, -name)", in: "query", required: false, schema: new OA\Schema(type: "string")),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitSponsorshipAddOnTypeResponse')
+            ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -152,7 +156,11 @@ final class OAuth2SummitSponsorshipAddOnTypesApiController extends OAuth2Protect
             )
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_CREATED, description: "Created"),
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorshipAddOnType')
+            ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
@@ -190,7 +198,11 @@ final class OAuth2SummitSponsorshipAddOnTypesApiController extends OAuth2Protect
             new OA\Parameter(name: "id", description: "Add-on Type ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
         ],
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorshipAddOnType')
+            ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
@@ -239,7 +251,11 @@ final class OAuth2SummitSponsorshipAddOnTypesApiController extends OAuth2Protect
             )
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_OK, description: "OK"),
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(ref: '#/components/schemas/SummitSponsorshipAddOnType')
+            ),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),

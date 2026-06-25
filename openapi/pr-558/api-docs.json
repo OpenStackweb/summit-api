@@ -57221,7 +57221,14 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Created"
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SummitSponsorshipAddOnType"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -57270,7 +57277,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SummitSponsorshipAddOnType"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Not Found"
@@ -57328,7 +57342,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SummitSponsorshipAddOnType"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Not Found"

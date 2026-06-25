@@ -1353,17 +1353,18 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'notes'
             ];
 
-            // set data from current member ...
-            $aux_payload = [
-                'member_id' => $current_member->getId(),
+            // Member fields are used as defaults only — user-submitted values take precedence.
+            // member_id is always forced from the authenticated user for security.
+            $member_defaults = [
                 'first_name' => $current_member->getFirstName(),
-                'last_name' => $current_member->getLastName(),
-                'bio' => $current_member->getBio(),
-                'twitter' => $current_member->getTwitterHandle(),
-                'irc' => $current_member->getIrcHandle(),
+                'last_name'  => $current_member->getLastName(),
+                'bio'        => $current_member->getBio(),
+                'twitter'    => $current_member->getTwitterHandle(),
+                'irc'        => $current_member->getIrcHandle(),
             ];
 
-            $payload = array_merge($payload, $aux_payload);
+            $payload = array_merge($member_defaults, $payload);
+            $payload['member_id'] = $current_member->getId();
 
             $speaker = $this->service->addSpeaker(HTMLCleaner::cleanData($payload, $fields), $current_member);
 

@@ -302,6 +302,69 @@ final class OAuth2SummitSponsorshipApiControllerTest
         $this->assertResponseStatus(204);
     }
 
+    // Regression: SummitSponsorship::addAddOn was passing getType() as string to Doctrine Criteria
+    // on a ManyToOne association field, causing a 500 when the type was resolved to an entity object.
+
+    public function testAddNewAddOnWithTypeByName(){
+        $params = [
+            'id'             => self::$summit->getId(),
+            'sponsor_id'     => self::$sponsors[0]->getId(),
+            'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
+        ];
+
+        $data = [
+            'name' => 'Regression AddOn By Name',
+            'type' => self::$default_add_on_type_booth->getName(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSponsorshipsApiController@addNewAddOn",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $add_on = json_decode($content);
+        $this->assertNotNull($add_on);
+        $this->assertEquals($data['name'], $add_on->name);
+    }
+
+    public function testAddNewAddOnWithTypeById(){
+        $params = [
+            'id'             => self::$summit->getId(),
+            'sponsor_id'     => self::$sponsors[0]->getId(),
+            'sponsorship_id' => self::$sponsors[0]->getSponsorships()[0]->getId(),
+        ];
+
+        $data = [
+            'name'    => 'Regression AddOn By TypeId',
+            'type_id' => self::$default_add_on_type_meeting_room->getId(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSponsorshipsApiController@addNewAddOn",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $add_on = json_decode($content);
+        $this->assertNotNull($add_on);
+        $this->assertEquals($data['name'], $add_on->name);
+    }
+
     public function testGetAddsMetadata(){
         $params = [
             'id' => self::$summit->getId(),

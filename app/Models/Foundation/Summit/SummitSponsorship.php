@@ -99,11 +99,11 @@ class SummitSponsorship extends SilverstripeBaseModel
     {
         if ($this->add_ons->contains($add_on)) return;
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('type', trim($add_on->getType())));
+        $criteria->where(Criteria::expr()->eq('type', $add_on->getType()));
         $criteria->andWhere(Criteria::expr()->eq('name', trim($add_on->getName())));
         if ($this->add_ons->matching($criteria)->count() > 0) {
             throw new ValidationException(sprintf("An add-on with the same name (%s) and type (%s) already exists",
-                $add_on->getName(), $add_on->getType()));
+                $add_on->getName(), $add_on->getTypeName()));
         }
         $add_on->setSponsorship($this);
         $this->add_ons->add($add_on);

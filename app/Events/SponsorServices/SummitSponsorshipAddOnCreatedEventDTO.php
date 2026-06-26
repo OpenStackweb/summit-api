@@ -66,7 +66,7 @@ class SummitSponsorshipAddOnCreatedEventDTO
             $summit_sponsorship_type->getId(),
             $sponsorship_type->getId(),
             $sponsorship_type->getName(),
-            $add_on->getType(),
+            $add_on->getTypeName() ?? '',
             $add_on->getName(),
             $sponsor?->getId() ?? 0,
             $sponsor?->getSummitId() ?? 0,

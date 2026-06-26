@@ -14,7 +14,6 @@
 
 use App\Repositories\Summit\DoctrineSummitSponsorshipAddOnRepository;
 use Doctrine\ORM\Mapping as ORM;
-use models\exceptions\ValidationException;
 use models\utils\One2ManyPropertyTrait;
 use models\utils\SilverstripeBaseModel;
 
@@ -30,29 +29,13 @@ class SummitSponsorshipAddOn extends SilverstripeBaseModel
 
     protected $getIdMappings = [
         'getSponsorshipId' => 'sponsorship',
+        'getTypeId'        => 'type',
     ];
 
     protected $hasPropertyMappings = [
         'hasSponsorship' => 'sponsorship',
+        'hasType'        => 'type',
     ];
-
-    const Booth_Type = 'Booth';
-    const MeetingRoom_Type = 'Meeting_Room';
-    const ScheduleSpot_Type = 'Schedule_Spot';
-    const SignageSpot_Type = 'Signage_Spot';
-
-    const ValidTypes = [
-        self::Booth_Type,
-        self::MeetingRoom_Type,
-        self::ScheduleSpot_Type,
-        self::SignageSpot_Type,
-    ];
-
-    /**
-     * @var string
-     */
-    #[ORM\Column(name: 'Type', type: 'string')]
-    private $type;
 
     /**
      * @var string
@@ -60,32 +43,19 @@ class SummitSponsorshipAddOn extends SilverstripeBaseModel
     #[ORM\Column(name: 'Name', type: 'string')]
     private $name;
 
-     /**
+    /**
+     * @var SummitSponsorshipAddOnType|null
+     */
+    #[ORM\ManyToOne(targetEntity: SummitSponsorshipAddOnType::class, fetch: 'EXTRA_LAZY')]
+    #[ORM\JoinColumn(name: 'AddOnTypeID', referencedColumnName: 'ID', onDelete: 'SET NULL', nullable: true)]
+    private $type;
+
+    /**
      * @var SummitSponsorship
      */
     #[ORM\ManyToOne(targetEntity: SummitSponsorship::class, fetch: 'EXTRA_LAZY', inversedBy: 'add_ons')]
     #[ORM\JoinColumn(name: 'SponsorshipID', referencedColumnName: 'ID')]
     protected $sponsorship;
-
-    public static function getMetadata(): array
-    {
-        return self::ValidTypes;
-    }
-
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    /**
-     * @throws ValidationException
-     */
-    public function setType(string $type): void
-    {
-        if(!in_array($type, self::ValidTypes))
-            throw new ValidationException(sprintf("%s is not a valid type.", $type));
-        $this->type = $type;
-    }
 
     public function getName(): string
     {
@@ -95,6 +65,26 @@ class SummitSponsorshipAddOn extends SilverstripeBaseModel
     public function setName(string $name): void
     {
         $this->name = $name;
+    }
+
+    public function getType(): ?SummitSponsorshipAddOnType
+    {
+        return $this->type;
+    }
+
+    public function getTypeName(): ?string
+    {
+        return $this->type?->getName();
+    }
+
+    public function setType(SummitSponsorshipAddOnType $type): void
+    {
+        $this->type = $type;
+    }
+
+    public function clearType(): void
+    {
+        $this->type = null;
     }
 
     public function getSponsorship(): SummitSponsorship

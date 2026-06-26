@@ -1,6 +1,6 @@
 <?php namespace App\Http\Controllers;
-/**
- * Copyright 2025 OpenStack Foundation
+/*
+ * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,37 +11,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 use App\Http\ValidationRulesFactories\AbstractValidationRulesFactory;
-use models\exceptions\ValidationException;
 
 /**
- * Class SummitSponsorshipAddOnsValidationRulesFactory
+ * Class SummitSponsorshipAddOnTypeValidationRulesFactory
  * @package App\Http\Controllers
  */
-final class SummitSponsorshipAddOnsValidationRulesFactory extends AbstractValidationRulesFactory
+final class SummitSponsorshipAddOnTypeValidationRulesFactory extends AbstractValidationRulesFactory
 {
-
     public static function buildForAdd(array $payload = []): array
     {
-        if (isset($payload['type_id']) && isset($payload['type']))
-            throw new ValidationException("type_id and type are mutually exclusive.");
-
         return [
-            'name'    => 'required|string|max:255',
-            'type_id' => 'required_without:type|integer',
-            'type'    => 'required_without:type_id|string|max:255',
+            'name' => 'required|string|max:255',
         ];
     }
 
     public static function buildForUpdate(array $payload = []): array
     {
-        if (isset($payload['type_id']) && isset($payload['type']))
-            throw new ValidationException("type_id and type are mutually exclusive.");
-
         return [
-            'name'    => 'sometimes|string|max:255',
-            'type_id' => 'sometimes|integer',
-            'type'    => 'sometimes|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
         ];
     }
 }

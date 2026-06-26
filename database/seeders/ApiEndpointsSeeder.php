@@ -2853,6 +2853,73 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            [
+                'name' => 'get-sponsorship-add-on-types',
+                'route' => '/api/v1/summits/all/add-on-types',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'add-sponsorship-add-on-type',
+                'route' => '/api/v1/summits/all/add-on-types',
+                'http_method' => 'POST',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-sponsorship-add-on-type',
+                'route' => '/api/v1/summits/all/add-on-types/{id}',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'update-sponsorship-add-on-type',
+                'route' => '/api/v1/summits/all/add-on-types/{id}',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'delete-sponsorship-add-on-type',
+                'route' => '/api/v1/summits/all/add-on-types/{id}',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
             //
             [
                 'name' => 'add-sponsor-user',

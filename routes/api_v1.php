@@ -175,6 +175,17 @@ Route::group(array('prefix' => 'summits'), function () {
     Route::group(['prefix' => 'all'], function () {
 
         Route::get('', 'OAuth2SummitApiController@getAllSummits');
+
+        Route::group(['prefix' => 'add-on-types'], function () {
+            Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipAddOnTypesApiController@getAll']);
+            Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipAddOnTypesApiController@add']);
+            Route::group(['prefix' => '{id}'], function () {
+                Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipAddOnTypesApiController@get']);
+                Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipAddOnTypesApiController@update']);
+                Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitSponsorshipAddOnTypesApiController@delete']);
+            });
+        });
+
         Route::group(['prefix' => '{id}'], function () {
             Route::get('', 'OAuth2SummitApiController@getAllSummitByIdOrSlug');
             Route::group(['prefix' => 'registration-stats'], function () {
@@ -239,6 +250,7 @@ Route::group(array('prefix' => 'summits'), function () {
             });
 
         });
+
     });
 
     Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitApiController@addSummit']);

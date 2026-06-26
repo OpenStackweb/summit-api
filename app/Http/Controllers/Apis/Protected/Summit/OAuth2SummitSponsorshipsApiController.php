@@ -409,21 +409,22 @@ final class OAuth2SummitSponsorshipsApiController
         return $this->_getAll(
             function () {
                 return [
-                    'name' => Filter::buildStringDefaultOperators(),
-                    'type' => Filter::buildStringDefaultOperators(),
+                    'name'    => Filter::buildStringDefaultOperators(),
+                    'type'    => ['==', '=@'],
+                    'type_id' => ['=='],
                 ];
             },
             function () {
                 return [
-                    'name' => 'sometimes|string',
-                    'type' => 'sometimes|string',
+                    'name'    => 'sometimes|string',
+                    'type'    => 'sometimes|string',
+                    'type_id' => 'sometimes|integer',
                 ];
             },
             function () {
                 return [
                     'id',
                     'name',
-                    'type',
                 ];
             },
             function ($filter) use ($summit, $sponsor, $sponsorship) {

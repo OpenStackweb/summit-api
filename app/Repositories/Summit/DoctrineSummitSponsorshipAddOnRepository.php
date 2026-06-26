@@ -17,6 +17,7 @@ use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\Summit;
 use models\summit\SummitSponsorshipAddOn;
+use models\summit\SummitSponsorshipAddOnType;
 use utils\DoctrineFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -39,6 +40,7 @@ implements ISummitSponsorshipAddOnRepository
         $query->innerJoin("e.sponsorship", "sps");
         $query->innerJoin("sps.sponsor", "sp");
         $query->innerJoin("sp.summit", "s");
+        $query->leftJoin("e.type", "at");
         return $query;
     }
 
@@ -48,12 +50,13 @@ implements ISummitSponsorshipAddOnRepository
     protected function getFilterMappings(): array
     {
         return [
-            'id'   => new DoctrineFilterMapping("e.id :operator :value"),
-            'name' => 'e.name',
-            'type' => 'e.type',
+            'id'             => new DoctrineFilterMapping("e.id :operator :value"),
+            'name'           => 'e.name',
+            'type'           => 'at.name',
+            'type_id'        => 'at.id',
             'sponsorship_id' => 'sps.id',
-            'sponsor_id' => 'sp.id',
-            'summit_id'  => 's.id',
+            'sponsor_id'     => 'sp.id',
+            'summit_id'      => 's.id',
         ];
     }
 
@@ -65,7 +68,7 @@ implements ISummitSponsorshipAddOnRepository
         return [
             'id'   => 'e.id',
             'name' => 'e.name',
-            'type' => 'e.type',
+            'type' => 'at.name',
         ];
     }
 
@@ -83,6 +86,21 @@ implements ISummitSponsorshipAddOnRepository
      */
     public function getMetadata(Summit $summit): array
     {
-        return SummitSponsorshipAddOn::getMetadata();
+        $rows = $this->getEntityManager()
+            ->createQuery('SELECT t.name FROM ' . SummitSponsorshipAddOnType::class . ' t ORDER BY t.name ASC')
+            ->getScalarResult();
+        return array_column($rows, 'name');
+    }
+
+    /**
+     * @param int $type_id
+     * @return int
+     */
+    public function countByAddOnType(int $type_id): int
+    {
+        return (int) $this->getEntityManager()
+            ->createQuery('SELECT COUNT(e.id) FROM ' . SummitSponsorshipAddOn::class . ' e WHERE e.type = :type_id')
+            ->setParameter('type_id', $type_id)
+            ->getSingleScalarResult();
     }
 }

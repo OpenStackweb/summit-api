@@ -36,6 +36,7 @@ use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\BadgeViewTypeService;
 use App\Services\Model\Imp\CompanyService;
 use App\Services\Model\Imp\ElectionService;
+use App\Services\Model\Imp\Factories\RabbitPublisherFactory;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use App\Services\Model\Imp\PresentationVideoMediaUploadProcessor;
 use App\Services\Model\Imp\ProcessScheduleEntityLifeCycleEventService;
@@ -59,6 +60,7 @@ use App\Services\Model\Imp\SummitRSVPService;
 use App\Services\Model\Imp\SummitScheduleSettingsService;
 use App\Services\Model\Imp\SummitSelectedPresentationListService;
 use App\Services\Model\Imp\SummitSignService;
+use App\Services\Model\Imp\SummitSponsorshipAddOnTypeService;
 use App\Services\Model\Imp\SummitSponsorshipTypeService;
 use App\Services\Model\Imp\SummitSubmissionInvitationService;
 use App\Services\Model\Imp\TrackChairRankingService;
@@ -100,6 +102,7 @@ use App\Services\Model\ISummitScheduleSettingsService;
 use App\Services\Model\ISummitSelectedPresentationListService;
 use App\Services\Model\ISummitSelectionPlanService;
 use App\Services\Model\ISummitSignService;
+use App\Services\Model\ISummitSponsorshipAddOnTypeService;
 use App\Services\Model\ISummitSponsorshipService;
 use App\Services\Model\ISummitSponsorshipTypeService;
 use App\Services\Model\ISummitSubmissionInvitationService;
@@ -343,6 +346,11 @@ final class ModelServicesProvider extends ServiceProvider
         App::singleton(
             ISummitSponsorshipService::class,
             SummitSponsorshipService::class
+        );
+
+        App::singleton(
+            ISummitSponsorshipAddOnTypeService::class,
+            SummitSponsorshipAddOnTypeService::class
         );
 
         App::singleton(ISummitOrderService::class, SummitOrderService::class);
@@ -606,6 +614,7 @@ final class ModelServicesProvider extends ServiceProvider
             ISummitRSVPService::class,
             ISummitRSVPInvitationService::class,
             IFilePostProcessorService::class,
+            ISummitSponsorshipAddOnTypeService::class,
         ];
     }
 }

@@ -1,6 +1,6 @@
 <?php namespace App\Models\Foundation\Summit\Factories;
-/**
- * Copyright 2025 OpenStack Foundation
+/*
+ * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,34 +12,33 @@
  * limitations under the License.
  **/
 
-use models\exceptions\ValidationException;
-use models\summit\SummitSponsorshipAddOn;
+use models\summit\SummitSponsorshipAddOnType;
 
 /**
- * Class SummitSponsorshipAddOnFactory
+ * Class SummitSponsorshipAddOnTypeFactory
  * @package App\Models\Foundation\Summit\Factories
  */
-final class SummitSponsorshipAddOnFactory
+final class SummitSponsorshipAddOnTypeFactory
 {
     /**
      * @param array $data
-     * @return SummitSponsorshipAddOn
+     * @return SummitSponsorshipAddOnType
      */
-    public static function build(array $data): SummitSponsorshipAddOn {
-        return self::populate(new SummitSponsorshipAddOn, $data);
+    public static function build(array $data): SummitSponsorshipAddOnType
+    {
+        return self::populate(new SummitSponsorshipAddOnType(), $data);
     }
 
     /**
-     * @param SummitSponsorshipAddOn $add_on
+     * @param SummitSponsorshipAddOnType $type
      * @param array $data
-     * @return SummitSponsorshipAddOn
-     * @throws ValidationException
+     * @return SummitSponsorshipAddOnType
      */
-    public static function populate(SummitSponsorshipAddOn $add_on, array $data): SummitSponsorshipAddOn{
+    public static function populate(SummitSponsorshipAddOnType $type, array $data): SummitSponsorshipAddOnType
+    {
+        if (isset($data['name']))
+            $type->setName(trim($data['name']));
 
-        if(isset($data['name']))
-            $add_on->setName(trim($data['name']));
-
-        return $add_on;
+        return $type;
     }
 }

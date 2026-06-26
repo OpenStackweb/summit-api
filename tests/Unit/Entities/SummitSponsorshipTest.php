@@ -17,6 +17,7 @@ namespace Tests\Unit\Entities;
 
 use models\summit\SummitSponsorship;
 use models\summit\SummitSponsorshipAddOn;
+use models\summit\SummitSponsorshipAddOnType;
 use models\summit\SummitSponsorshipType;
 use Tests\InsertSummitTestData;
 use Tests\TestCase;
@@ -62,7 +63,7 @@ class SummitSponsorshipTest extends TestCase
         // Create a new add-on
         $add_on = new SummitSponsorshipAddOn();
         $add_on->setName("Test Add-On " . str_random(5));
-        $add_on->setType(SummitSponsorshipAddOn::Booth_Type);
+        $add_on->setType(self::$default_add_on_type_booth);
         self::$em->persist($add_on);
         
         // Add the add-on (OneToMany relationship)
@@ -118,7 +119,7 @@ class SummitSponsorshipTest extends TestCase
         // Create a new add-on
         $add_on = new SummitSponsorshipAddOn();
         $add_on->setName("Test Add-On " . str_random(5));
-        $add_on->setType(SummitSponsorshipAddOn::Booth_Type);
+        $add_on->setType(self::$default_add_on_type_booth);
         self::$em->persist($add_on);
         
         // Add the add-on (OneToMany relationship)

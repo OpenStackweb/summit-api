@@ -162,6 +162,7 @@ class Company extends SilverstripeBaseModel
      */
     #[ORM\JoinColumn(name: 'LogoID', referencedColumnName: 'ID')]
     #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist', 'remove'])]
+    #[ORM\Cache(usage: 'NONSTRICT_READ_WRITE')]
     private $logo;
 
     /**
@@ -169,6 +170,7 @@ class Company extends SilverstripeBaseModel
      */
     #[ORM\JoinColumn(name: 'BigLogoID', referencedColumnName: 'ID')]
     #[ORM\ManyToOne(targetEntity: \models\main\File::class, cascade: ['persist', 'remove'])]
+    #[ORM\Cache(usage: 'NONSTRICT_READ_WRITE')]
     private $big_logo;
 
     /**

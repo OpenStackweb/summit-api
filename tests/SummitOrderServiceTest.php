@@ -678,4 +678,23 @@ CSV;
         $this->assertNotNull($answer);
         $this->assertEquals('Vegan', $answer->getValue());
     }
+
+    public function testImportTicketDataCreatesBadgeWhenTicketHasNone()
+    {
+        Queue::fake();
+
+        $ticket = $this->getUnassignedTicket();
+        $this->assertFalse($ticket->hasBadge());
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,badge_type_name
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,BADGE TYPE1
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $this->assertTrue($ticket->hasBadge());
+        $this->assertEquals('BADGE TYPE1', $ticket->getBadge()->getType()->getName());
+    }
 }

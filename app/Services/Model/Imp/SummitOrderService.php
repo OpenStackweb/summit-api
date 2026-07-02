@@ -4614,7 +4614,7 @@ final class SummitOrderService
 
                 if (!$ticket->hasBadge()) {
                     // create it
-                    if (!is_null($badge_type)) {
+                    if (is_null($badge_type)) {
                         Log::warning("SummitOrderService::processTicketData badge type is null stop current row processing.");
                         return;
                     }

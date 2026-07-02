@@ -26,6 +26,8 @@ use App\Jobs\ProcessPaymentGatewayRefundJob;
 use App\Jobs\ProcessTicketDataImport;
 use App\Jobs\SendAttendeeInvitationEmail;
 use App\Jobs\Utils\JobDispatcher;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
@@ -4284,6 +4286,7 @@ final class SummitOrderService
             * badge_type_id (optional)
             * badge_type_name (optional)
             * one col per feature
+            * extra_question:{question name} (optional, one col per order extra question - Ticket/Both usage)
          */
 
         // validate format with col names
@@ -4583,6 +4586,11 @@ final class SummitOrderService
 
                 Log::debug(sprintf("SummitOrderService::processTicketData - got ticket %s (%s)", $ticket->getId(), $ticket->getNumber()));
 
+                // extra questions ( extra_question:{question name} columns )
+                $answers_owner = !is_null($attendee) ? $attendee : ($ticket->hasOwner() ? $ticket->getOwner() : null);
+                if (!is_null($answers_owner))
+                    $this->upsertAttendeeExtraQuestionAnswers($summit, $answers_owner, $row);
+
                 // badge data
                 if (!$badge_data_present) {
                     Log::warning("SummitOrderService::processTicketData badge data is not present stop current row processing.");
@@ -4655,6 +4663,182 @@ final class SummitOrderService
 
         Log::debug(sprintf("SummitOrderService::processTicketData deleting file %s from storage %s", $path, $this->download_strategy->getDriver()));
         $this->download_strategy->delete($path);
+    }
+
+    /**
+     * Upserts attendee extra question answers from a ticket data import row
+     * (one column per question, "extra_question:{question name}" naming convention).
+     * Unknown question names, order-scoped questions, disallowed questions and empty values are
+     * skipped, never fail the row. Mandatory-question completeness is not enforced ( admin bulk load ).
+     * Former answers not present on the row are carried over on a best effort basis: the shared
+     * persistence path ( ExtraQuestionAnswerHolder::hadCompletedExtraQuestions ) rebuilds the full
+     * answers set and drops answers whose question no longer exists or is no longer allowed for the
+     * attendee, same as the admin attendee update flow.
+     * @param Summit $summit
+     * @param SummitAttendee $attendee
+     * @param array $row
+     * @throws ValidationException
+     */
+    private function upsertAttendeeExtraQuestionAnswers(Summit $summit, SummitAttendee $attendee, array $row): void
+    {
+        $new_answers = [];
+
+        foreach ($row as $col => $value) {
+
+            if (!str_starts_with(strval($col), self::ExtraQuestionColumnPrefix)) continue;
+
+            $question_name = trim(substr($col, strlen(self::ExtraQuestionColumnPrefix)));
+            $value = trim(strval($value));
+
+            if ($value === '') {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::upsertAttendeeExtraQuestionAnswers question %s has an empty value for attendee %s, skipping it",
+                        $question_name,
+                        $attendee->getEmail()
+                    )
+                );
+                continue;
+            }
+
+            $question = $summit->getOrderExtraQuestionByName($question_name);
+            if (is_null($question)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::upsertAttendeeExtraQuestionAnswers question %s does not exist on summit %s, skipping it",
+                        $question_name,
+                        $summit->getId()
+                    )
+                );
+                continue;
+            }
+
+            if ($question->getUsage() === SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::upsertAttendeeExtraQuestionAnswers question %s is order scoped, can not be answered per attendee, skipping it",
+                        $question_name
+                    )
+                );
+                continue;
+            }
+
+            if (!$attendee->isAllowedQuestion($question)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::upsertAttendeeExtraQuestionAnswers question %s is not allowed for attendee %s, skipping it",
+                        $question_name,
+                        $attendee->getEmail()
+                    )
+                );
+                continue;
+            }
+
+            if ($question->allowsValues()) {
+                // list type questions store the value id(s) ( comma separated when multi value )
+                // csv cells accept the value name/label ( "|" separated for multi value ) or the raw value id
+                $value_ids = [];
+                foreach (explode('|', $value) as $v) {
+                    $v = trim($v);
+                    if ($v === '') continue;
+                    $question_value = $question->getValueByName($v);
+                    if (is_null($question_value))
+                        $question_value = $question->getValueByLabel($v);
+                    if (is_null($question_value) && is_numeric($v))
+                        $question_value = $question->getValueById(intval($v));
+                    if (is_null($question_value)) {
+                        Log::warning
+                        (
+                            sprintf
+                            (
+                                "SummitOrderService::upsertAttendeeExtraQuestionAnswers value %s does not exist on question %s, skipping it",
+                                $v,
+                                $question_name
+                            )
+                        );
+                        continue;
+                    }
+                    $value_ids[] = $question_value->getId();
+                }
+                if (count($value_ids) === 0) continue;
+                // only CheckBoxList questions admit multiple selected values
+                if (count($value_ids) > 1 && $question->getType() !== ExtraQuestionTypeConstants::CheckBoxListQuestionType) {
+                    Log::warning
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::upsertAttendeeExtraQuestionAnswers question %s admits a single value, got %s, skipping it",
+                            $question_name,
+                            count($value_ids)
+                        )
+                    );
+                    continue;
+                }
+                $value = implode(ExtraQuestionType::QuestionChoicesCharSeparator, $value_ids);
+            }
+
+            $former_answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+            $former_value = is_null($former_answer) ? '' : $former_answer->getValue();
+            if (!empty($former_value) && $former_value != $value && !$attendee->canChangeAnswerValue($question)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::upsertAttendeeExtraQuestionAnswers answer for question %s can not be changed by this time for attendee %s, skipping it",
+                        $question_name,
+                        $attendee->getEmail()
+                    )
+                );
+                continue;
+            }
+
+            $new_answers[$question->getId()] = $value;
+        }
+
+        if (count($new_answers) === 0) return;
+
+        if (!$attendee->hasAllowedExtraQuestions()) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "SummitOrderService::upsertAttendeeExtraQuestionAnswers attendee %s does not have allowed extra questions, skipping answers",
+                    $attendee->getEmail()
+                )
+            );
+            return;
+        }
+
+        // upsert semantics: the persistence path rebuilds the full answers set, so carry over
+        // the former answers not overridden by the csv row ( best effort, see docblock )
+        $extra_questions = [];
+        foreach ($attendee->getExtraQuestionAnswers() as $former_answer) {
+            $question_id = $former_answer->getQuestionId();
+            if (!array_key_exists($question_id, $new_answers))
+                $extra_questions[] = ['question_id' => $question_id, 'answer' => $former_answer->getValue()];
+        }
+        foreach ($new_answers as $question_id => $value)
+            $extra_questions[] = ['question_id' => $question_id, 'answer' => $value];
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::upsertAttendeeExtraQuestionAnswers attendee %s answers %s",
+                $attendee->getEmail(),
+                json_encode($extra_questions)
+            )
+        );
+
+        $attendee->hadCompletedExtraQuestions($extra_questions);
     }
 
     /**

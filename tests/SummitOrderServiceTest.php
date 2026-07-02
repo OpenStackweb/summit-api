@@ -14,6 +14,8 @@
 
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepository;
@@ -29,6 +31,7 @@ use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Model\SummitOrderService;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use libs\utils\ITransactionService;
 use Mockery;
@@ -43,7 +46,11 @@ use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitOrder;
+use models\summit\SummitOrderExtraQuestionAnswer;
+use models\summit\SummitOrderExtraQuestionType;
+use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\summit\SummitTicketType;
 
 /**
@@ -372,5 +379,297 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             $this->assertInstanceOf(ValidationException::class, $ex);
             $this->assertTrue(str_starts_with($ex->getMessage(), 'No more available PrePaid Tickets for Promo Code'));
         }
+    }
+
+    /**
+     * @param string $csv_content
+     * @return ISummitOrderService
+     */
+    private function buildTicketDataImportService(string $csv_content): ISummitOrderService
+    {
+        $upload_strategy = Mockery::mock(IFileUploadStrategy::class);
+
+        $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
+        $download_strategy->shouldReceive('exists')->andReturn(true);
+        $download_strategy->shouldReceive('get')->andReturn($csv_content);
+        $download_strategy->shouldReceive('getDriver')->andReturn('mock');
+        $download_strategy->shouldReceive('delete');
+
+        return new SummitOrderService(
+            App::make(ISummitTicketTypeRepository::class),
+            App::make(IMemberRepository::class),
+            App::make(ISummitRegistrationPromoCodeRepository::class),
+            App::make(\models\summit\ISummitPromoCodeMemberReservationRepository::class),
+            App::make(ISummitAttendeeRepository::class),
+            App::make(ISummitOrderRepository::class),
+            App::make(ISummitAttendeeTicketRepository::class),
+            App::make(ISummitAttendeeBadgeRepository::class),
+            App::make(ISummitRepository::class),
+            App::make(ISummitAttendeeBadgePrintRuleRepository::class),
+            App::make(IMemberService::class),
+            App::make(IBuildDefaultPaymentGatewayProfileStrategy::class),
+            $upload_strategy,
+            $download_strategy,
+            App::make(ICompanyRepository::class),
+            App::make(ITagRepository::class),
+            App::make(ISummitRefundRequestRepository::class),
+            App::make(ICompanyService::class),
+            App::make(ITicketFinderStrategyFactory::class),
+            App::make(ITransactionService::class),
+            App::make(ILockManagerService::class)
+        );
+    }
+
+    /**
+     * @param string $name
+     * @param string $type
+     * @param array $values
+     * @return SummitOrderExtraQuestionType
+     */
+    private function insertOrderExtraQuestion
+    (
+        string $name,
+        string $type = ExtraQuestionTypeConstants::TextQuestionType,
+        array $values = []
+    ): SummitOrderExtraQuestionType
+    {
+        $question = new SummitOrderExtraQuestionType();
+        $question->setName($name);
+        $question->setLabel($name);
+        $question->setType($type);
+        $question->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+
+        foreach ($values as $value_name) {
+            $value = new ExtraQuestionTypeValue();
+            $value->setValue($value_name);
+            $value->setLabel($value_name);
+            $question->addValue($value);
+        }
+
+        self::$summit->addOrderExtraQuestion($question);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        return $question;
+    }
+
+    /**
+     * @param SummitAttendee $attendee
+     * @param SummitOrderExtraQuestionType $question
+     * @param string $value
+     */
+    private function insertExtraQuestionAnswer(SummitAttendee $attendee, SummitOrderExtraQuestionType $question, string $value): void
+    {
+        $answer = new SummitOrderExtraQuestionAnswer();
+        $answer->setQuestion($question);
+        $answer->setValue($value);
+        $attendee->addExtraQuestionAnswer($answer);
+        self::$em->persist($attendee);
+        self::$em->flush();
+    }
+
+    /**
+     * @return SummitAttendeeTicket
+     */
+    private function getUnassignedTicket(): SummitAttendeeTicket
+    {
+        foreach (self::$summit->getOrders() as $order) {
+            foreach ($order->getTickets() as $ticket) {
+                if (!$ticket->hasOwner()) return $ticket;
+            }
+        }
+        $this->fail('no unassigned ticket available on test fixture');
+    }
+
+    /**
+     * @return SummitAttendee
+     */
+    private function getDefaultAttendee(): SummitAttendee
+    {
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, self::$defaultMember->getEmail());
+        $this->assertNotNull($attendee);
+        return $attendee;
+    }
+
+    public function testImportTicketDataSetsExtraQuestionAnswerOnNewAttendee()
+    {
+        Queue::fake();
+
+        $question = $this->insertOrderExtraQuestion('Dietary Requirements');
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:Dietary Requirements
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Vegan
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+
+        $this->assertNotNull($attendee);
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Vegan', $answer->getValue());
+    }
+
+    public function testImportTicketDataUpdatesExtraQuestionAnswerOnExistingAttendee()
+    {
+        Queue::fake();
+
+        // background import runs without an authenticated admin, so answer updates
+        // are gated by the summit level setting
+        self::$summit->setAllowUpdateAttendeeExtraQuestions(true);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // SummitAttendee::canChangeAnswerValue caches per attendee id for 60 secs,
+        // drop any stale entry from a previous run ( attendee ids are reused across DB re-seeds )
+        Cache::flush();
+
+        $question = $this->insertOrderExtraQuestion('Dietary Requirements');
+        $attendee = $this->getDefaultAttendee();
+        $this->insertExtraQuestionAnswer($attendee, $question, 'Meat');
+
+        $ticket = $attendee->getTickets()->first();
+
+        $csv_content = <<<CSV
+number,attendee_email,extra_question:Dietary Requirements
+{$ticket->getNumber()},{$attendee->getEmail()},Vegan
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Vegan', $answer->getValue());
+    }
+
+    public function testImportTicketDataSkipsUnknownExtraQuestion()
+    {
+        Queue::fake();
+
+        $this->insertOrderExtraQuestion('Dietary Requirements');
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:Nonexistent Question
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Some Value
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        // row is still processed ( attendee created and ticket assigned ), unknown question is skipped
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+
+        $this->assertNotNull($attendee);
+        $this->assertCount(0, $attendee->getExtraQuestionAnswers());
+    }
+
+    public function testImportTicketDataIgnoresEmptyExtraQuestionValue()
+    {
+        Queue::fake();
+
+        $question = $this->insertOrderExtraQuestion('Dietary Requirements');
+        $attendee = $this->getDefaultAttendee();
+        $this->insertExtraQuestionAnswer($attendee, $question, 'Vegan');
+
+        $ticket = $attendee->getTickets()->first();
+
+        $csv_content = <<<CSV
+number,attendee_email,extra_question:Dietary Requirements
+{$ticket->getNumber()},{$attendee->getEmail()},
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        // former answer is preserved, empty values never clear answers
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Vegan', $answer->getValue());
+    }
+
+    public function testImportTicketDataListQuestionStoresValueIds()
+    {
+        Queue::fake();
+
+        $question = $this->insertOrderExtraQuestion
+        (
+            'T-Shirt Size',
+            ExtraQuestionTypeConstants::CheckBoxListQuestionType,
+            ['Small', 'Large']
+        );
+
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:T-Shirt Size
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Small|Large
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+
+        $this->assertNotNull($attendee);
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+
+        $expected_value = implode(',', [
+            $question->getValueByName('Small')->getId(),
+            $question->getValueByName('Large')->getId(),
+        ]);
+        $this->assertEquals($expected_value, $answer->getValue());
+    }
+
+    public function testImportTicketDataBadgeFeaturesStillClearedAndReSet()
+    {
+        Queue::fake();
+
+        $feature1 = new SummitBadgeFeatureType();
+        $feature1->setName('FEATURE 1');
+        self::$summit->addFeatureType($feature1);
+
+        $feature2 = new SummitBadgeFeatureType();
+        $feature2->setName('FEATURE 2');
+        self::$summit->addFeatureType($feature2);
+
+        $question = $this->insertOrderExtraQuestion('Dietary Requirements');
+
+        $attendee = $this->getDefaultAttendee();
+        $ticket = $attendee->getTickets()->first();
+        $badge = $ticket->getBadge();
+        $badge->addFeature($feature1);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $csv_content = <<<CSV
+number,attendee_email,badge_type_name,FEATURE 1,FEATURE 2,extra_question:Dietary Requirements
+{$ticket->getNumber()},{$attendee->getEmail()},BADGE TYPE1,0,1,Vegan
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        // badge features are cleared and re set from the csv columns
+        $feature_names = [];
+        foreach ($badge->getFeatures() as $feature) {
+            $feature_names[] = $feature->getName();
+        }
+        $this->assertEquals(['FEATURE 2'], $feature_names);
+
+        // extra question answer is set on the same row
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Vegan', $answer->getValue());
     }
 }

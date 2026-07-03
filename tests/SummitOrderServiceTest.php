@@ -683,7 +683,34 @@ CSV;
     {
         Queue::fake();
 
-        $ticket = $this->getUnassignedTicket();
+        // every fixture ticket type carries a badge type, so SummitTicketType::applyTo
+        // auto-creates a badge at setTicketType time — build a ticket from a type with
+        // no badge type to get a genuinely badge-less ticket
+        $ticket_type = new SummitTicketType();
+        $ticket_type->setName('NO BADGE TICKET TYPE');
+        $ticket_type->setCost(100);
+        $ticket_type->setCurrency('USD');
+        $ticket_type->setQuantity2Sell(10);
+        $ticket_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($ticket_type);
+
+        $order = new SummitOrder();
+        $order->setOwner(self::$defaultMember);
+        $order->setSummit(self::$summit);
+        self::$summit->addOrder($order);
+
+        $ticket = new SummitAttendeeTicket();
+        $ticket->setTicketType($ticket_type);
+        $ticket->activate();
+        $order->addTicket($ticket);
+        $order->setPaid();
+        $order->generateNumber();
+        $ticket->generateNumber();
+        $ticket->generateQRCode();
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
         $this->assertFalse($ticket->hasBadge());
 
         $csv_content = <<<CSV

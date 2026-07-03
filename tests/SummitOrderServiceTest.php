@@ -645,29 +645,35 @@ CSV;
 
         $question = $this->insertOrderExtraQuestion('Dietary Requirements');
 
-        $attendee = $this->getDefaultAttendee();
-        $ticket = $attendee->getTickets()->first();
-        $badge = $ticket->getBadge();
-        $badge->addFeature($feature1);
+        // use an unassigned ticket: SummitTicketType::applyTo auto-creates a badge per ticket with
+        // a DB-consistent one-to-one. The fixture's assigned tickets share a single badge entity
+        // whose ticket FK can only point at one of them, and the import re-reads the ticket with
+        // HINT_REFRESH ( getByNumberExclusiveLock ), so DB state is what the service sees.
+        $ticket = $this->getUnassignedTicket();
+        $ticket->getBadge()->addFeature($feature1);
         self::$em->persist(self::$summit);
         self::$em->flush();
 
         $csv_content = <<<CSV
-number,attendee_email,badge_type_name,FEATURE 1,FEATURE 2,extra_question:Dietary Requirements
-{$ticket->getNumber()},{$attendee->getEmail()},BADGE TYPE1,0,1,Vegan
+number,attendee_email,attendee_first_name,attendee_last_name,badge_type_name,FEATURE 1,FEATURE 2,extra_question:Dietary Requirements
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,BADGE TYPE1,0,1,Vegan
 CSV;
 
         $service = $this->buildTicketDataImportService($csv_content);
         $service->processTicketData(self::$summit->getId(), 'tickets.csv');
 
         // badge features are cleared and re set from the csv columns
+        // ( re-read the badge from the ticket, the import may have refreshed the association )
         $feature_names = [];
-        foreach ($badge->getFeatures() as $feature) {
+        foreach ($ticket->getBadge()->getFeatures() as $feature) {
             $feature_names[] = $feature->getName();
         }
         $this->assertEquals(['FEATURE 2'], $feature_names);
 
         // extra question answer is set on the same row
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
         $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
         $this->assertNotNull($answer);
         $this->assertEquals('Vegan', $answer->getValue());

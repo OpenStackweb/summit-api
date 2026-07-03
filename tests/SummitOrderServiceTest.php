@@ -825,6 +825,11 @@ CSV;
         // SummitTicketType::getBadgeType falls back to the summit default, so applyTo
         // always builds a badge at setTicketType time. Use the second fixture summit
         // ( no badge types, hence no default ) — the real world case this covers.
+
+        // the ticket-assignment email dispatched on the reassign path hard-requires a
+        // support email on the summit; summit2's fixture does not set one
+        self::$summit2->setSupportEmail('summit2@test.com');
+
         $badge_type = new SummitBadgeType();
         $badge_type->setName('VIP BADGE');
         $badge_type->setDescription('VIP BADGE');

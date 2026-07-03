@@ -47,6 +47,7 @@ use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeFeatureType;
+use models\summit\SummitBadgeType;
 use models\summit\SummitOrder;
 use models\summit\SummitOrderExtraQuestionAnswer;
 use models\summit\SummitOrderExtraQuestionType;
@@ -820,21 +821,27 @@ CSV;
     {
         Queue::fake();
 
-        // every fixture ticket type carries a badge type, so SummitTicketType::applyTo
-        // auto-creates a badge at setTicketType time — build a ticket from a type with
-        // no badge type to get a genuinely badge-less ticket
+        // on a summit with a default badge type a badge-less ticket can not exist:
+        // SummitTicketType::getBadgeType falls back to the summit default, so applyTo
+        // always builds a badge at setTicketType time. Use the second fixture summit
+        // ( no badge types, hence no default ) — the real world case this covers.
+        $badge_type = new SummitBadgeType();
+        $badge_type->setName('VIP BADGE');
+        $badge_type->setDescription('VIP BADGE');
+        self::$summit2->addBadgeType($badge_type); // deliberately NOT the default
+
         $ticket_type = new SummitTicketType();
         $ticket_type->setName('NO BADGE TICKET TYPE');
         $ticket_type->setCost(100);
         $ticket_type->setCurrency('USD');
         $ticket_type->setQuantity2Sell(10);
         $ticket_type->setAudience(SummitTicketType::Audience_All);
-        self::$summit->addTicketType($ticket_type);
+        self::$summit2->addTicketType($ticket_type);
 
         $order = new SummitOrder();
         $order->setOwner(self::$defaultMember);
-        $order->setSummit(self::$summit);
-        self::$summit->addOrder($order);
+        $order->setSummit(self::$summit2);
+        self::$summit2->addOrder($order);
 
         $ticket = new SummitAttendeeTicket();
         $ticket->setTicketType($ticket_type);
@@ -845,20 +852,20 @@ CSV;
         $ticket->generateNumber();
         $ticket->generateQRCode();
 
-        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit2);
         self::$em->flush();
 
         $this->assertFalse($ticket->hasBadge());
 
         $csv_content = <<<CSV
 number,attendee_email,attendee_first_name,attendee_last_name,badge_type_name
-{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,BADGE TYPE1
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,VIP BADGE
 CSV;
 
         $service = $this->buildTicketDataImportService($csv_content);
-        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+        $service->processTicketData(self::$summit2->getId(), 'tickets.csv');
 
         $this->assertTrue($ticket->hasBadge());
-        $this->assertEquals('BADGE TYPE1', $ticket->getBadge()->getType()->getName());
+        $this->assertEquals('VIP BADGE', $ticket->getBadge()->getType()->getName());
     }
 }

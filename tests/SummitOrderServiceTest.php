@@ -430,14 +430,15 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
     (
         string $name,
         string $type = ExtraQuestionTypeConstants::TextQuestionType,
-        array $values = []
+        array $values = [],
+        string $usage = SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage
     ): SummitOrderExtraQuestionType
     {
         $question = new SummitOrderExtraQuestionType();
         $question->setName($name);
         $question->setLabel($name);
         $question->setType($type);
-        $question->setUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage);
+        $question->setUsage($usage);
 
         foreach ($values as $value_name) {
             $value = new ExtraQuestionTypeValue();
@@ -526,12 +527,12 @@ CSV;
         self::$em->persist(self::$summit);
         self::$em->flush();
 
-        // SummitAttendee::canChangeAnswerValue caches per attendee id for 60 secs,
-        // drop any stale entry from a previous run ( attendee ids are reused across DB re-seeds )
-        Cache::flush();
-
         $question = $this->insertOrderExtraQuestion('Dietary Requirements');
         $attendee = $this->getDefaultAttendee();
+
+        // SummitAttendee::canChangeAnswerValue caches per attendee id for 60 secs,
+        // drop any stale entry from a previous run ( attendee ids are reused across DB re-seeds )
+        Cache::forget(sprintf("SummitAttendee.canChangeAnswerValue.%s", $attendee->getId()));
         $this->insertExtraQuestionAnswer($attendee, $question, 'Meat');
 
         $ticket = $attendee->getTickets()->first();
@@ -679,5 +680,185 @@ CSV;
         $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
         $this->assertNotNull($answer);
         $this->assertEquals('Vegan', $answer->getValue());
+    }
+
+    public function testImportTicketDataBadgeFeatureRestrictedQuestionAnsweredInSameRowAsFeatureGrant()
+    {
+        Queue::fake();
+
+        $feature = new SummitBadgeFeatureType();
+        $feature->setName('VIP');
+        self::$summit->addFeatureType($feature);
+
+        $question = $this->insertOrderExtraQuestion('VIP Perk Choice');
+        $question->addAllowedBadgeFeatureType($feature);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // badge feature and the answer to a question restricted to that same feature,
+        // both set on the same CSV row for a brand new attendee
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,badge_type_name,VIP,extra_question:VIP Perk Choice
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,BADGE TYPE1,1,Yes
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        // the badge feature is granted in this same row
+        $feature_names = [];
+        foreach ($ticket->getBadge()->getFeatures() as $f) {
+            $feature_names[] = $f->getName();
+        }
+        $this->assertEquals(['VIP'], $feature_names);
+
+        // ... so the question restricted to that same feature is answerable too
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Yes', $answer->getValue());
+    }
+
+    public function testImportTicketDataBadgeFeatureRestrictedQuestionSameRowForExistingAttendee()
+    {
+        Queue::fake();
+
+        $feature = new SummitBadgeFeatureType();
+        $feature->setName('VIP');
+        self::$summit->addFeatureType($feature);
+
+        $question = $this->insertOrderExtraQuestion('VIP Perk Choice');
+        $question->addAllowedBadgeFeatureType($feature);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // existing attendee: the badge-features result cache gets warmed pre-grant earlier in the
+        // same row ( updateStatus during the reassign path ), so this exercises the cache eviction
+        $attendee = $this->getDefaultAttendee();
+        $ticket = $attendee->getTickets()->first();
+
+        $csv_content = <<<CSV
+number,attendee_email,badge_type_name,VIP,extra_question:VIP Perk Choice
+{$ticket->getNumber()},{$attendee->getEmail()},BADGE TYPE1,1,Yes
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Yes', $answer->getValue());
+    }
+
+    public function testImportTicketDataSkipsOrderScopedExtraQuestion()
+    {
+        Queue::fake();
+
+        $question = $this->insertOrderExtraQuestion
+        (
+            'Billing Notes',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage
+        );
+
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:Billing Notes
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Some Value
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        // row still processes ( attendee created, ticket assigned ), order-scoped question is skipped
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
+        $this->assertNull($attendee->getExtraQuestionAnswerByQuestion($question));
+        $this->assertCount(0, $attendee->getExtraQuestionAnswers());
+    }
+
+    public function testImportTicketDataPreservesLockedAnswerWhenUpdatesDisallowed()
+    {
+        Queue::fake();
+
+        // no authenticated admin during a queued import, so with the summit setting off
+        // an existing non-empty answer can not be changed
+        self::$summit->setAllowUpdateAttendeeExtraQuestions(false);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $question = $this->insertOrderExtraQuestion('Dietary Requirements');
+        $attendee = $this->getDefaultAttendee();
+        $this->insertExtraQuestionAnswer($attendee, $question, 'Meat');
+
+        Cache::forget(sprintf("SummitAttendee.canChangeAnswerValue.%s", $attendee->getId()));
+
+        $ticket = $attendee->getTickets()->first();
+
+        $csv_content = <<<CSV
+number,attendee_email,extra_question:Dietary Requirements
+{$ticket->getNumber()},{$attendee->getEmail()},Vegan
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        // the locked answer is preserved, the change is skipped
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Meat', $answer->getValue());
+    }
+
+    public function testImportTicketDataCreatesBadgeWhenTicketHasNone()
+    {
+        Queue::fake();
+
+        // every fixture ticket type carries a badge type, so SummitTicketType::applyTo
+        // auto-creates a badge at setTicketType time — build a ticket from a type with
+        // no badge type to get a genuinely badge-less ticket
+        $ticket_type = new SummitTicketType();
+        $ticket_type->setName('NO BADGE TICKET TYPE');
+        $ticket_type->setCost(100);
+        $ticket_type->setCurrency('USD');
+        $ticket_type->setQuantity2Sell(10);
+        $ticket_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($ticket_type);
+
+        $order = new SummitOrder();
+        $order->setOwner(self::$defaultMember);
+        $order->setSummit(self::$summit);
+        self::$summit->addOrder($order);
+
+        $ticket = new SummitAttendeeTicket();
+        $ticket->setTicketType($ticket_type);
+        $ticket->activate();
+        $order->addTicket($ticket);
+        $order->setPaid();
+        $order->generateNumber();
+        $ticket->generateNumber();
+        $ticket->generateQRCode();
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $this->assertFalse($ticket->hasBadge());
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,badge_type_name
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,BADGE TYPE1
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $this->assertTrue($ticket->hasBadge());
+        $this->assertEquals('BADGE TYPE1', $ticket->getBadge()->getType()->getName());
     }
 }

@@ -1342,6 +1342,22 @@ SQL;
         return $native_query->enableResultCache(600 , sprintf("ATTENDEES_%s_BADGE_FEATURES",$this->id))->getResult();
     }
 
+    /**
+     * Drops the getAllowedBadgeFeatures result cache entry for this attendee, so permission
+     * checks that depend on badge features ( isAllowedQuestion ) re-evaluate against current
+     * state after the attendee's badge/features change mid-request.
+     */
+    public function evictAllowedBadgeFeaturesCache(): void
+    {
+        try {
+            $result_cache = $this->getEM()->getConfiguration()->getResultCache();
+            if (!is_null($result_cache))
+                $result_cache->deleteItem(sprintf("ATTENDEES_%s_BADGE_FEATURES", $this->id));
+        } catch (\Exception $ex) {
+            Log::warning($ex);
+        }
+    }
+
     public function buildExtraQuestionAnswer(): ExtraQuestionAnswer
     {
        return new SummitOrderExtraQuestionAnswer();

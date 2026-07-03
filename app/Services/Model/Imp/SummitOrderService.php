@@ -4286,8 +4286,8 @@ final class SummitOrderService
             * ticket_promo_code (optional)
             * badge_type_id (optional)
             * badge_type_name (optional)
-            * one col per feature
-            * extra_question:{question name} (optional, one col per order extra question - Ticket/Both usage)
+            * badge_feature:{feature name} (optional, one col per badge feature; bare feature name accepted for legacy csvs)
+            * extra_question:{question name} (optional, one col per order extra question - Ticket/Both usage; label accepted too)
          */
 
         // validate format with col names
@@ -4630,7 +4630,11 @@ final class SummitOrderService
                         foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
                             $feature_name = $featuresType->getName();
                             Log::debug(sprintf("SummitOrderService::processTicketData processing badge type feature %s for ticket %s", $feature_name, $ticket->getId()));
-                            if (!$reader->hasColumn($feature_name)) {
+                            // canonical namespaced column; bare feature name accepted for legacy csvs
+                            $feature_column = sprintf('%s%s', self::BadgeFeatureColumnPrefix, $feature_name);
+                            if (!$reader->hasColumn($feature_column))
+                                $feature_column = $feature_name;
+                            if (!$reader->hasColumn($feature_column)) {
                                 Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s does not exists as column", $feature_name));
                                 continue;
                             }
@@ -4640,7 +4644,7 @@ final class SummitOrderService
                                 $clearedFeatures = true;
                             }
 
-                            $mustAdd = intval($row[$feature_name]) === 1;
+                            $mustAdd = intval($row[$feature_column]) === 1;
                             if (!$mustAdd) {
                                 Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s not set for ticket %s", $feature_name, $ticket->getId()));
                                 continue;
@@ -4671,10 +4675,10 @@ final class SummitOrderService
     /**
      * Upserts attendee extra question answers from a ticket data import row
      * (one column per question, "extra_question:{question name}" naming convention).
-     * The prefix is deliberate: on this import the bare-name column namespace already belongs to
-     * badge features, and a question named like a feature would be ambiguous at parse time —
-     * additive per-name column families should be namespaced ( badge feature columns stay bare
-     * for backward compatibility with existing CSVs ).
+     * The prefix is deliberate: additive per-name column families are namespaced so their names
+     * can never collide ( badge features use "badge_feature:{name}"; the bare feature name is
+     * still accepted for backward compatibility with existing CSVs ). Questions match by name,
+     * falling back to label — the ticket csv export emits question labels as column names.
      * Unknown question names, order-scoped questions, disallowed questions and empty values are
      * skipped, never fail the row. Mandatory-question completeness is not enforced ( admin bulk load ).
      * Former answers not present on the row are carried over on a best effort basis: the shared
@@ -4781,6 +4785,9 @@ final class SummitOrderService
             }
 
             $question = $summit->getOrderExtraQuestionByName($question_name);
+            // fall back to the label: the ticket csv export emits question labels as column names
+            if (is_null($question))
+                $question = $summit->getOrderExtraQuestionByLabel($question_name);
             if (is_null($question)) {
                 Log::warning
                 (
@@ -4866,7 +4873,7 @@ final class SummitOrderService
     {
         $value_ids = [];
 
-        foreach (explode('|', $value) as $v) {
+        foreach (explode(self::ExtraQuestionValueSeparator, $value) as $v) {
             $v = trim($v);
             if ($v === '') continue;
             $question_value = $question->getValueByName($v);

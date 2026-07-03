@@ -25,8 +25,12 @@ use Illuminate\Http\UploadedFile;
  */
 interface ISummitOrderService extends IProcessPaymentService
 {
-    // ticket data import csv column naming convention for order extra question answers
+    // ticket data csv column naming convention: additive per-name column families are namespaced
+    // so their names can never collide ( import still accepts the bare badge feature name, for legacy csvs )
     const ExtraQuestionColumnPrefix = 'extra_question:';
+    const BadgeFeatureColumnPrefix = 'badge_feature:';
+    // separator for multi-value extra-question csv cells, shared by import and export ( round-trip )
+    const ExtraQuestionValueSeparator = '|';
 
     /**
      * @param Member|null $owner

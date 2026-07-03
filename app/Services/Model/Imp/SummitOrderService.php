@@ -4677,7 +4677,6 @@ final class SummitOrderService
      * @param Summit $summit
      * @param SummitAttendee $attendee
      * @param array $row
-     * @throws ValidationException
      */
     private function upsertAttendeeExtraQuestionAnswers(Summit $summit, SummitAttendee $attendee, array $row): void
     {
@@ -4782,11 +4781,20 @@ final class SummitOrderService
                     );
                     continue;
                 }
+                sort($value_ids);
                 $value = implode(ExtraQuestionType::QuestionChoicesCharSeparator, $value_ids);
             }
 
             $former_answer = $attendee->getExtraQuestionAnswerByQuestion($question);
             $former_value = is_null($former_answer) ? '' : $former_answer->getValue();
+
+            // list answers compare as sets: the same selection in a different order is not a change
+            if ($question->allowsValues() && !empty($former_value)) {
+                $former_value_ids = array_map('intval', explode(ExtraQuestionType::QuestionChoicesCharSeparator, $former_value));
+                sort($former_value_ids);
+                if ($former_value_ids === $value_ids) $value = $former_value;
+            }
+
             if (!empty($former_value) && $former_value != $value && !$attendee->canChangeAnswerValue($question)) {
                 Log::warning
                 (
@@ -4838,7 +4846,21 @@ final class SummitOrderService
             )
         );
 
-        $attendee->hadCompletedExtraQuestions($extra_questions);
+        try {
+            $attendee->hadCompletedExtraQuestions($extra_questions);
+        } catch (ValidationException $ex) {
+            // never abort the import on a bad extra-question payload: the remaining
+            // rows must still be processed ( the queue job does not retry the file )
+            Log::warning
+            (
+                sprintf
+                (
+                    "SummitOrderService::upsertAttendeeExtraQuestionAnswers attendee %s could not persist answers: %s",
+                    $attendee->getEmail(),
+                    $ex->getMessage()
+                )
+            );
+        }
     }
 
     /**

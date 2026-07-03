@@ -609,9 +609,10 @@ CSV;
 
         $ticket = $this->getUnassignedTicket();
 
+        // reversed token order on purpose: stored value ids are normalized ( sorted )
         $csv_content = <<<CSV
 number,attendee_email,attendee_first_name,attendee_last_name,extra_question:T-Shirt Size
-{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Small|Large
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Large|Small
 CSV;
 
         $service = $this->buildTicketDataImportService($csv_content);
@@ -624,11 +625,12 @@ CSV;
         $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
         $this->assertNotNull($answer);
 
-        $expected_value = implode(',', [
+        $expected_value_ids = [
             $question->getValueByName('Small')->getId(),
             $question->getValueByName('Large')->getId(),
-        ]);
-        $this->assertEquals($expected_value, $answer->getValue());
+        ];
+        sort($expected_value_ids);
+        $this->assertEquals(implode(',', $expected_value_ids), $answer->getValue());
     }
 
     public function testImportTicketDataBadgeFeaturesStillClearedAndReSet()

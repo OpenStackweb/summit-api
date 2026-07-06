@@ -4889,6 +4889,11 @@ final class SummitOrderService
             $value_ids[] = $question_value->getId();
         }
 
+        // duplicated tokens ( spreadsheet drag-fill artifacts, or the same choice spelled as
+        // name / label / raw id ) resolve to the same value id — dedupe before the single-value
+        // guard and before building the stored form
+        $value_ids = array_values(array_unique($value_ids));
+
         if (count($value_ids) === 0) return null;
 
         // only CheckBoxList questions admit multiple selected values

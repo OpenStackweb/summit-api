@@ -635,6 +635,70 @@ CSV;
         $this->assertEquals(implode(',', $expected_value_ids), $answer->getValue());
     }
 
+    public function testImportTicketDataDuplicatedTokenOnSingleValueQuestionIsAccepted()
+    {
+        Queue::fake();
+
+        $question = $this->insertOrderExtraQuestion
+        (
+            'Meal Preference',
+            ExtraQuestionTypeConstants::RadioButtonListQuestionType,
+            ['Vegan', 'Meat']
+        );
+
+        $ticket = $this->getUnassignedTicket();
+
+        // duplicated token ( e.g. spreadsheet drag-fill artifact ): one distinct value selected,
+        // must not be rejected by the single-value guard
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:Meal Preference
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Vegan|Vegan
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
+
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals(strval($question->getValueByName('Vegan')->getId()), $answer->getValue());
+    }
+
+    public function testImportTicketDataDuplicatedTokenOnCheckBoxListStoresUniqueValueIds()
+    {
+        Queue::fake();
+
+        $question = $this->insertOrderExtraQuestion
+        (
+            'T-Shirt Size',
+            ExtraQuestionTypeConstants::CheckBoxListQuestionType,
+            ['Small', 'Large']
+        );
+
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:T-Shirt Size
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Large|Large
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
+
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        // stored form is unique value ids: "5,5" would render duplicated labels ( getNiceValue )
+        // and resist later correction under the answer-change lock ( "5,5" != "5" reads as a change )
+        $this->assertEquals(strval($question->getValueByName('Large')->getId()), $answer->getValue());
+    }
+
     public function testImportTicketDataBadgeFeaturesStillClearedAndReSet()
     {
         Queue::fake();

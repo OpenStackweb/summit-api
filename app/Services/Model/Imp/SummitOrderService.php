@@ -4784,10 +4784,28 @@ final class SummitOrderService
                 continue;
             }
 
+            // match by name and by label ( the ticket csv export emits question labels as
+            // column names ); when the two lookups disagree the column is ambiguous — one
+            // question's name is another question's label — skip it rather than silently
+            // filing the answer under the wrong question
             $question = $summit->getOrderExtraQuestionByName($question_name);
-            // fall back to the label: the ticket csv export emits question labels as column names
+            $question_by_label = $summit->getOrderExtraQuestionByLabel($question_name);
+            if (!is_null($question) && !is_null($question_by_label) && $question_by_label->getId() !== $question->getId()) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::resolveExtraQuestionColumns column %s is ambiguous on summit %s ( name of question %s, label of question %s ), skipping it",
+                        $question_name,
+                        $summit->getId(),
+                        $question->getId(),
+                        $question_by_label->getId()
+                    )
+                );
+                continue;
+            }
             if (is_null($question))
-                $question = $summit->getOrderExtraQuestionByLabel($question_name);
+                $question = $question_by_label;
             if (is_null($question)) {
                 Log::warning
                 (

@@ -922,7 +922,8 @@ CSV;
         Queue::fake();
 
         // the ticket csv export emits question labels as column names, so import
-        // matches by name first and falls back to the label
+        // matches by name and by label ( ambiguous name/label collisions are skipped —
+        // see testImportTicketDataSkipsAmbiguousExtraQuestionColumn )
         $question = $this->insertOrderExtraQuestion
         (
             'DIET_REQ',
@@ -948,6 +949,48 @@ CSV;
         $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
         $this->assertNotNull($answer);
         $this->assertEquals('Vegan', $answer->getValue());
+    }
+
+    public function testImportTicketDataSkipsAmbiguousExtraQuestionColumn()
+    {
+        Queue::fake();
+
+        // question A's NAME equals question B's LABEL — the column is ambiguous and must be
+        // skipped, never silently filed under either question
+        $question_a = $this->insertOrderExtraQuestion
+        (
+            'Shirt',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'Question A Label'
+        );
+        $question_b = $this->insertOrderExtraQuestion
+        (
+            'B_INTERNAL_NAME',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'Shirt'
+        );
+
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:Shirt
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Large
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        // row still processes ( attendee created ), the ambiguous column is skipped entirely
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
+        $this->assertNull($attendee->getExtraQuestionAnswerByQuestion($question_a));
+        $this->assertNull($attendee->getExtraQuestionAnswerByQuestion($question_b));
+        $this->assertCount(0, $attendee->getExtraQuestionAnswers());
     }
 
     public function testTicketCSVExportMultiValueAnswerRoundTripsThroughImport()

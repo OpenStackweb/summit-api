@@ -645,11 +645,12 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                     ];
 
                     foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
-                        $allowed_columns[] = $featuresType->getName();
+                        $allowed_columns[] = sprintf('%s%s', ISummitOrderService::BadgeFeatureColumnPrefix, $featuresType->getName());
                     }
 
                     foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question) {
-                        $allowed_columns[] = $question->getLabel();
+                        // must match the serializer-emitted column exactly ( prefixed, sanitized label )
+                        $allowed_columns[] = sprintf('%s%s', ISummitOrderService::ExtraQuestionColumnPrefix, html_entity_decode(strip_tags($question->getLabel())));
                     }
 
                     $columns_param = Request::input("columns", "");

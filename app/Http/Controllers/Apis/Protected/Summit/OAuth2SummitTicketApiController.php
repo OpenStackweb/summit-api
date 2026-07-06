@@ -745,7 +745,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{id}/tickets/csv/template',
         operationId: 'getTicketImportTemplate',
         summary: 'Get ticket import template',
-        description: 'Returns a CSV template for importing ticket data',
+        description: 'Returns a CSV template for importing ticket data. Includes one column per summit badge feature name plus one extra_question:{question name} column per summit order extra question (Ticket/Both usage).',
         security: [['summit_tickets_oauth2' => [
             SummitScopes::WriteSummitData,
             SummitScopes::WriteRegistrationData,
@@ -788,7 +788,8 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
              * ticket_promo_code (optional)
              * badge_type_id (optional)
              * badge_type_name (optional)
-             * badge_features (optional)
+             * badge_features (optional, one col per badge feature name)
+             * extra_question:{question name} (optional, one col per order extra question - Ticket/Both usage)
              */
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->getResourceServerContext())->find($summit_id);
@@ -816,6 +817,11 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
                 $row[$featuresType->getName()] = '';
             }
 
+            // order extra questions for summit ( ticket / attendee scoped ones )
+            foreach ($summit->getOrderExtraQuestionsByUsage(SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage) as $question) {
+                $row[sprintf('%s%s', ISummitOrderService::ExtraQuestionColumnPrefix, $question->getName())] = '';
+            }
+
             $template = [
                 $row
             ];
@@ -835,7 +841,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{id}/tickets/csv',
         operationId: 'importTicketData',
         summary: 'Import ticket data from CSV',
-        description: 'Imports ticket data from a CSV file',
+        description: 'Imports ticket data from a CSV file. Supported columns: id, number, attendee_email, attendee_first_name, attendee_last_name, attendee_tags, attendee_company, attendee_company_id, ticket_type_name, ticket_type_id, promo_code_id, promo_code, ticket_promo_code, badge_type_id, badge_type_name, one column per badge feature name (1/0) and one extra_question:{question name} column per order extra question (Ticket/Both usage; for list type questions use the value name/label, "|" separated for multi value).',
         security: [['summit_tickets_oauth2' => [
             SummitScopes::WriteSummitData,
             SummitScopes::WriteRegistrationData,

@@ -25,6 +25,9 @@ use Illuminate\Http\UploadedFile;
  */
 interface ISummitOrderService extends IProcessPaymentService
 {
+    // ticket data import csv column naming convention for order extra question answers
+    const ExtraQuestionColumnPrefix = 'extra_question:';
+
     /**
      * @param Member|null $owner
      * @param Summit $summit

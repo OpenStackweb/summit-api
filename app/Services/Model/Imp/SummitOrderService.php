@@ -26,6 +26,8 @@ use App\Jobs\ProcessPaymentGatewayRefundJob;
 use App\Jobs\ProcessTicketDataImport;
 use App\Jobs\SendAttendeeInvitationEmail;
 use App\Jobs\Utils\JobDispatcher;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\Factories\SummitOrderFactory;
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Registration\PromoCodes\PromoCodesUtils;
@@ -73,6 +75,7 @@ use models\summit\SummitAttendeeTicketRefundRequest;
 use models\summit\SummitBadgeType;
 use models\summit\SummitBadgeViewType;
 use models\summit\SummitOrder;
+use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\summit\SummitRegistrationInvitation;
 use models\summit\SummitRegistrationPromoCode;
@@ -4284,6 +4287,7 @@ final class SummitOrderService
             * badge_type_id (optional)
             * badge_type_name (optional)
             * one col per feature
+            * extra_question:{question name} (optional, one col per order extra question - Ticket/Both usage)
          */
 
         // validate format with col names
@@ -4583,78 +4587,354 @@ final class SummitOrderService
 
                 Log::debug(sprintf("SummitOrderService::processTicketData - got ticket %s (%s)", $ticket->getId(), $ticket->getNumber()));
 
-                // badge data
-                if (!$badge_data_present) {
-                    Log::warning("SummitOrderService::processTicketData badge data is not present stop current row processing.");
-                    return;
-                }
+                // badge data is processed BEFORE extra questions: the extra-question permission
+                // gates ( SummitAttendee::isAllowedQuestion ) read the attendee badge features
+                // through native SQL, so this row's own badge/feature grants must be applied
+                // ( and flushed, see upsertAttendeeExtraQuestionAnswers ) first
+                if ($badge_data_present) {
 
-                $badge_type = null;
+                    $badge_type = null;
 
-                if ($reader->hasColumn("badge_type_id")) {
-                    Log::debug(sprintf("SummitOrderService::processTicketData trying to get badge type by id %s", $row['badge_type_id']));
-                    $badge_type = $summit->getBadgeTypeById(intval($row['badge_type_id']));
-                }
-
-                if (is_null($badge_type) && $reader->hasColumn("badge_type_name")) {
-                    Log::debug(sprintf("SummitOrderService::processTicketData trying to get badge type by name %s", $row['badge_type_name']));
-                    $badge_type = $summit->getBadgeTypeByName(trim($row['badge_type_name']));
-                }
-
-                if (!is_null($badge_type))
-                    Log::debug(sprintf("SummitOrderService::processTicketData - got badge type %s (%s)", $badge_type->getId(), $badge_type->getName()));
-
-                if (!$ticket->hasBadge()) {
-                    // create it
-                    if (!is_null($badge_type)) {
-                        Log::warning("SummitOrderService::processTicketData badge type is null stop current row processing.");
-                        return;
-                    }
-                    Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) has not badge ... creating it", $ticket->getId(), $ticket->getNumber()));
-                    $badge = SummitBadgeType::buildBadgeFromType($badge_type);
-                    $ticket->setBadge($badge);
-                }
-
-                $badge = $ticket->getBadge();
-
-                if (!is_null($badge_type))
-                    $badge->setType($badge_type);
-
-                $clearedFeatures = false;
-                // check if we are setting any badge feature
-                Log::debug("SummitOrderService::processTicketData processing badge type features");
-                foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
-                    $feature_name = $featuresType->getName();
-                    Log::debug(sprintf("SummitOrderService::processTicketData processing badge type feature %s for ticket %s", $feature_name, $ticket->getId()));
-                    if (!$reader->hasColumn($feature_name)) {
-                        Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s does not exists as column", $feature_name));
-                        continue;
+                    if ($reader->hasColumn("badge_type_id")) {
+                        Log::debug(sprintf("SummitOrderService::processTicketData trying to get badge type by id %s", $row['badge_type_id']));
+                        $badge_type = $summit->getBadgeTypeById(intval($row['badge_type_id']));
                     }
 
-                    if (!$clearedFeatures) {
-                        $badge->clearFeatures();
-                        $clearedFeatures = true;
+                    if (is_null($badge_type) && $reader->hasColumn("badge_type_name")) {
+                        Log::debug(sprintf("SummitOrderService::processTicketData trying to get badge type by name %s", $row['badge_type_name']));
+                        $badge_type = $summit->getBadgeTypeByName(trim($row['badge_type_name']));
                     }
 
-                    $mustAdd = intval($row[$feature_name]) === 1;
-                    if (!$mustAdd) {
-                        Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s not set for ticket %s", $feature_name, $ticket->getId()));
-                        continue;
+                    if (!is_null($badge_type))
+                        Log::debug(sprintf("SummitOrderService::processTicketData - got badge type %s (%s)", $badge_type->getId(), $badge_type->getName()));
+
+                    if (!$ticket->hasBadge() && is_null($badge_type)) {
+                        Log::warning("SummitOrderService::processTicketData ticket has no badge and badge type is null, skipping badge processing.");
+                    } else {
+
+                        if (!$ticket->hasBadge()) {
+                            // create it
+                            Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) has not badge ... creating it", $ticket->getId(), $ticket->getNumber()));
+                            $badge = SummitBadgeType::buildBadgeFromType($badge_type);
+                            $ticket->setBadge($badge);
+                        }
+
+                        $badge = $ticket->getBadge();
+
+                        if (!is_null($badge_type))
+                            $badge->setType($badge_type);
+
+                        $clearedFeatures = false;
+                        // check if we are setting any badge feature
+                        Log::debug("SummitOrderService::processTicketData processing badge type features");
+                        foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
+                            $feature_name = $featuresType->getName();
+                            Log::debug(sprintf("SummitOrderService::processTicketData processing badge type feature %s for ticket %s", $feature_name, $ticket->getId()));
+                            if (!$reader->hasColumn($feature_name)) {
+                                Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s does not exists as column", $feature_name));
+                                continue;
+                            }
+
+                            if (!$clearedFeatures) {
+                                $badge->clearFeatures();
+                                $clearedFeatures = true;
+                            }
+
+                            $mustAdd = intval($row[$feature_name]) === 1;
+                            if (!$mustAdd) {
+                                Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s not set for ticket %s", $feature_name, $ticket->getId()));
+                                continue;
+                            }
+                            Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) - trying to add new features to ticket badge (%s)", $ticket->getId(), $ticket->getNumber(), $feature_name));
+                            $feature = $summit->getFeatureTypeByName(trim($feature_name));
+                            if (is_null($feature)) {
+                                Log::warning(sprintf("SummitOrderService::processTicketData feature %s does not exist on summit %s", $feature, $summit->getId()));
+                                continue;
+                            }
+                            Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s set for ticket %s", $feature_name, $ticket->getId()));
+                            $badge->addFeature($feature);
+                        }
                     }
-                    Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) - trying to add new features to ticket badge (%s)", $ticket->getId(), $ticket->getNumber(), $feature_name));
-                    $feature = $summit->getFeatureTypeByName(trim($feature_name));
-                    if (is_null($feature)) {
-                        Log::warning(sprintf("SummitOrderService::processTicketData feature %s does not exist on summit %s", $feature, $summit->getId()));
-                        continue;
-                    }
-                    Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s set for ticket %s", $feature_name, $ticket->getId()));
-                    $badge->addFeature($feature);
                 }
+
+                // extra questions ( extra_question:{question name} columns )
+                $answers_owner = !is_null($attendee) ? $attendee : ($ticket->hasOwner() ? $ticket->getOwner() : null);
+                if (!is_null($answers_owner))
+                    $this->upsertAttendeeExtraQuestionAnswers($summit, $answers_owner, $row);
             });
         }
 
         Log::debug(sprintf("SummitOrderService::processTicketData deleting file %s from storage %s", $path, $this->download_strategy->getDriver()));
         $this->download_strategy->delete($path);
+    }
+
+    /**
+     * Upserts attendee extra question answers from a ticket data import row
+     * (one column per question, "extra_question:{question name}" naming convention).
+     * The prefix is deliberate: on this import the bare-name column namespace already belongs to
+     * badge features, and a question named like a feature would be ambiguous at parse time —
+     * additive per-name column families should be namespaced ( badge feature columns stay bare
+     * for backward compatibility with existing CSVs ).
+     * Unknown question names, order-scoped questions, disallowed questions and empty values are
+     * skipped, never fail the row. Mandatory-question completeness is not enforced ( admin bulk load ).
+     * Former answers not present on the row are carried over on a best effort basis: the shared
+     * persistence path ( ExtraQuestionAnswerHolder::hadCompletedExtraQuestions ) rebuilds the full
+     * answers set and drops answers whose question no longer exists or is no longer allowed for the
+     * attendee, same as the admin attendee update flow.
+     * @param Summit $summit
+     * @param SummitAttendee $attendee
+     * @param array $row
+     */
+    private function upsertAttendeeExtraQuestionAnswers(Summit $summit, SummitAttendee $attendee, array $row): void
+    {
+        $has_extra_question_columns = false;
+        foreach ($row as $col => $value) {
+            if (str_starts_with(strval($col), self::ExtraQuestionColumnPrefix)) {
+                $has_extra_question_columns = true;
+                break;
+            }
+        }
+        if (!$has_extra_question_columns) return;
+
+        // flush the row's own pending writes ( new attendee / ticket / badge features ) so the
+        // native-SQL permission gates below ( isAllowedQuestion / hasAllowedExtraQuestions ) see
+        // this row's badge/feature grants instead of stale pre-row state; the badge-features
+        // result cache may have been warmed earlier in this same row ( pre-grant ), drop it too
+        $this->attendee_repository->add($attendee, true);
+        $attendee->evictAllowedBadgeFeaturesCache();
+
+        $new_answers = $this->resolveExtraQuestionColumns($summit, $attendee, $row);
+
+        if (count($new_answers) === 0) return;
+
+        if (!$attendee->hasAllowedExtraQuestions()) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "SummitOrderService::upsertAttendeeExtraQuestionAnswers attendee %s does not have allowed extra questions, skipping answers",
+                    $attendee->getEmail()
+                )
+            );
+            return;
+        }
+
+        $extra_questions = $this->mergeWithFormerAnswers($attendee, $new_answers);
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SummitOrderService::upsertAttendeeExtraQuestionAnswers attendee %s answers %s",
+                $attendee->getEmail(),
+                json_encode($extra_questions)
+            )
+        );
+
+        try {
+            $attendee->hadCompletedExtraQuestions($extra_questions);
+        } catch (ValidationException $ex) {
+            // never abort the import on a bad extra-question payload: the remaining
+            // rows must still be processed ( the queue job does not retry the file )
+            Log::warning
+            (
+                sprintf
+                (
+                    "SummitOrderService::upsertAttendeeExtraQuestionAnswers attendee %s could not persist answers: %s",
+                    $attendee->getEmail(),
+                    $ex->getMessage()
+                )
+            );
+        }
+    }
+
+    /**
+     * Resolves the row's extra_question:* columns to [question_id => value], applying the
+     * empty-value, unknown-question, order-scoped, not-allowed and change-lock skips.
+     * @param Summit $summit
+     * @param SummitAttendee $attendee
+     * @param array $row
+     * @return array
+     */
+    private function resolveExtraQuestionColumns(Summit $summit, SummitAttendee $attendee, array $row): array
+    {
+        $new_answers = [];
+
+        foreach ($row as $col => $value) {
+
+            if (!str_starts_with(strval($col), self::ExtraQuestionColumnPrefix)) continue;
+
+            $question_name = trim(substr($col, strlen(self::ExtraQuestionColumnPrefix)));
+            $value = trim(strval($value));
+
+            if ($value === '') {
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::resolveExtraQuestionColumns question %s has an empty value for attendee %s, skipping it",
+                        $question_name,
+                        $attendee->getEmail()
+                    )
+                );
+                continue;
+            }
+
+            $question = $summit->getOrderExtraQuestionByName($question_name);
+            if (is_null($question)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::resolveExtraQuestionColumns question %s does not exist on summit %s, skipping it",
+                        $question_name,
+                        $summit->getId()
+                    )
+                );
+                continue;
+            }
+
+            if ($question->getUsage() === SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::resolveExtraQuestionColumns question %s is order scoped, can not be answered per attendee, skipping it",
+                        $question_name
+                    )
+                );
+                continue;
+            }
+
+            if (!$attendee->isAllowedQuestion($question)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::resolveExtraQuestionColumns question %s is not allowed for attendee %s, skipping it",
+                        $question_name,
+                        $attendee->getEmail()
+                    )
+                );
+                continue;
+            }
+
+            if ($question->allowsValues()) {
+                $value = $this->resolveListQuestionValue($question, $value);
+                if (is_null($value)) continue;
+            }
+
+            $former_answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+            $former_value = is_null($former_answer) ? '' : $former_answer->getValue();
+
+            // list answers compare as sets: the same selection in a different order is not a change
+            if ($question->allowsValues() && !empty($former_value)) {
+                $former_value_ids = array_map('intval', explode(ExtraQuestionType::QuestionChoicesCharSeparator, $former_value));
+                sort($former_value_ids);
+                if (implode(ExtraQuestionType::QuestionChoicesCharSeparator, $former_value_ids) === $value)
+                    $value = $former_value;
+            }
+
+            if (!empty($former_value) && $former_value != $value && !$attendee->canChangeAnswerValue($question)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::resolveExtraQuestionColumns answer for question %s can not be changed by this time for attendee %s, skipping it",
+                        $question_name,
+                        $attendee->getEmail()
+                    )
+                );
+                continue;
+            }
+
+            $new_answers[$question->getId()] = $value;
+        }
+
+        return $new_answers;
+    }
+
+    /**
+     * Resolves a list-question csv cell ( value name / label / raw value id per token, "|" separated
+     * for multi value ) to the stored form: sorted value ids joined by the question-choices separator.
+     * Returns null when no token resolves or when multiple values hit a single-value question.
+     * @param SummitOrderExtraQuestionType $question
+     * @param string $value
+     * @return string|null
+     */
+    private function resolveListQuestionValue(SummitOrderExtraQuestionType $question, string $value): ?string
+    {
+        $value_ids = [];
+
+        foreach (explode('|', $value) as $v) {
+            $v = trim($v);
+            if ($v === '') continue;
+            $question_value = $question->getValueByName($v);
+            if (is_null($question_value))
+                $question_value = $question->getValueByLabel($v);
+            if (is_null($question_value) && ctype_digit($v))
+                $question_value = $question->getValueById(intval($v));
+            if (is_null($question_value)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "SummitOrderService::resolveListQuestionValue value %s does not exist on question %s, skipping it",
+                        $v,
+                        $question->getName()
+                    )
+                );
+                continue;
+            }
+            $value_ids[] = $question_value->getId();
+        }
+
+        // duplicated tokens ( spreadsheet drag-fill artifacts, or the same choice spelled as
+        // name / label / raw id ) resolve to the same value id — dedupe before the single-value
+        // guard and before building the stored form
+        $value_ids = array_values(array_unique($value_ids));
+
+        if (count($value_ids) === 0) return null;
+
+        // only CheckBoxList questions admit multiple selected values
+        if (count($value_ids) > 1 && $question->getType() !== ExtraQuestionTypeConstants::CheckBoxListQuestionType) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "SummitOrderService::resolveListQuestionValue question %s admits a single value, got %s, skipping it",
+                    $question->getName(),
+                    count($value_ids)
+                )
+            );
+            return null;
+        }
+
+        sort($value_ids);
+        return implode(ExtraQuestionType::QuestionChoicesCharSeparator, $value_ids);
+    }
+
+    /**
+     * Carries forward the attendee's former answers not overridden by the csv row ( the persistence
+     * path rebuilds the full answers set ) and appends the new ones, ready for
+     * hadCompletedExtraQuestions(). Carry-over is best effort, see upsertAttendeeExtraQuestionAnswers.
+     * @param SummitAttendee $attendee
+     * @param array $new_answers
+     * @return array
+     */
+    private function mergeWithFormerAnswers(SummitAttendee $attendee, array $new_answers): array
+    {
+        $extra_questions = [];
+
+        foreach ($attendee->getExtraQuestionAnswers() as $former_answer) {
+            $question_id = $former_answer->getQuestionId();
+            if (!array_key_exists($question_id, $new_answers))
+                $extra_questions[] = ['question_id' => $question_id, 'answer' => $former_answer->getValue()];
+        }
+        foreach ($new_answers as $question_id => $value)
+            $extra_questions[] = ['question_id' => $question_id, 'answer' => $value];
+
+        return $extra_questions;
     }
 
     /**

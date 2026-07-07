@@ -4785,28 +4785,20 @@ final class SummitOrderService
             }
 
             // match by name and by label ( the ticket csv export emits question labels as
-            // column names ); when the two lookups disagree the column is ambiguous — one
-            // question's name is another question's label — skip it rather than silently
-            // filing the answer under the wrong question
-            $question = $summit->getOrderExtraQuestionByName($question_name);
-            $question_by_label = $summit->getOrderExtraQuestionByLabel($question_name);
-            if (!is_null($question) && !is_null($question_by_label) && $question_by_label->getId() !== $question->getId()) {
-                Log::warning
-                (
-                    sprintf
-                    (
-                        "SummitOrderService::resolveExtraQuestionColumns column %s is ambiguous on summit %s ( name of question %s, label of question %s ), skipping it",
-                        $question_name,
-                        $summit->getId(),
-                        $question->getId(),
-                        $question_by_label->getId()
-                    )
-                );
-                continue;
+            // column names ); each candidate is vetted for usage / attendee eligibility
+            // before deciding ambiguity, so a question that could never take this answer
+            // ( order scoped or not allowed for the attendee ) can not shadow a legitimate
+            // match; only when two eligible questions remain — one question's name is
+            // another question's label — is the column truly ambiguous and skipped, rather
+            // than silently filing the answer under the wrong question
+            $candidates = [];
+            foreach ([$summit->getOrderExtraQuestionByName($question_name),
+                      $summit->getOrderExtraQuestionByLabel($question_name)] as $candidate) {
+                if (is_null($candidate)) continue;
+                $candidates[$candidate->getId()] = $candidate;
             }
-            if (is_null($question))
-                $question = $question_by_label;
-            if (is_null($question)) {
+
+            if (count($candidates) === 0) {
                 Log::warning
                 (
                     sprintf
@@ -4819,30 +4811,54 @@ final class SummitOrderService
                 continue;
             }
 
-            if ($question->getUsage() === SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage) {
+            $eligible = [];
+            foreach ($candidates as $candidate) {
+                if ($candidate->getUsage() === SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage) {
+                    Log::warning
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::resolveExtraQuestionColumns question %s ( column %s ) is order scoped, can not be answered per attendee, skipping it",
+                            $candidate->getId(),
+                            $question_name
+                        )
+                    );
+                    continue;
+                }
+                if (!$attendee->isAllowedQuestion($candidate)) {
+                    Log::warning
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::resolveExtraQuestionColumns question %s ( column %s ) is not allowed for attendee %s, skipping it",
+                            $candidate->getId(),
+                            $question_name,
+                            $attendee->getEmail()
+                        )
+                    );
+                    continue;
+                }
+                $eligible[$candidate->getId()] = $candidate;
+            }
+
+            if (count($eligible) === 0) continue;
+
+            if (count($eligible) > 1) {
                 Log::warning
                 (
                     sprintf
                     (
-                        "SummitOrderService::resolveExtraQuestionColumns question %s is order scoped, can not be answered per attendee, skipping it",
-                        $question_name
+                        "SummitOrderService::resolveExtraQuestionColumns column %s is ambiguous on summit %s ( name of question %s, label of question %s ), skipping it",
+                        $question_name,
+                        $summit->getId(),
+                        array_keys($eligible)[0],
+                        array_keys($eligible)[1]
                     )
                 );
                 continue;
             }
 
-            if (!$attendee->isAllowedQuestion($question)) {
-                Log::warning
-                (
-                    sprintf
-                    (
-                        "SummitOrderService::resolveExtraQuestionColumns question %s is not allowed for attendee %s, skipping it",
-                        $question_name,
-                        $attendee->getEmail()
-                    )
-                );
-                continue;
-            }
+            $question = reset($eligible);
 
             if ($question->allowsValues()) {
                 $value = $this->resolveListQuestionValue($question, $value);

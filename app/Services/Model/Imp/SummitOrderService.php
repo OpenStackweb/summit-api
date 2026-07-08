@@ -1784,6 +1784,17 @@ final class SummitOrderService
     private $refund_request_repository;
 
     /**
+     * Per-summit lookup index for resolveExtraQuestionColumns, built once per import job
+     * instead of two DB round-trips ( by-name + by-label ) per extra_question column per row
+     * ( order_extra_questions is EXTRA_LAZY, so matching() is a real query, not an in-memory
+     * filter ). Keyed by summit id; each entry maps a comparison key ( name / raw label /
+     * export-sanitized label ) to a question, so a hand-edited CSV using the raw label still
+     * resolves alongside a re-imported export using the sanitized one.
+     * @var array
+     */
+    private $order_extra_questions_index_cache = [];
+
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -4753,6 +4764,41 @@ final class SummitOrderService
     }
 
     /**
+     * Builds ( and caches, per summit, for the lifetime of this service instance ) a lookup
+     * index of the summit's order extra questions, keyed by every string a CSV column could
+     * legitimately match against: exact name, exact ( raw, as-stored ) label, and the
+     * export-sanitized label ( html_entity_decode(strip_tags(...)) — the same transform
+     * SummitAttendeeTicketCSVSerializer applies when building export headers, so a re-imported
+     * export round-trips even when the stored label contains HTML/entities, e.g. Eventbrite-
+     * seeded questions via SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite ).
+     * One pass over the ( EXTRA_LAZY ) collection instead of two DB round-trips per column per row.
+     * @param Summit $summit
+     * @return array{by_key: array<string, SummitOrderExtraQuestionType[]>}
+     */
+    private function getOrderExtraQuestionsIndex(Summit $summit): array
+    {
+        $summit_id = $summit->getId();
+        if (isset($this->order_extra_questions_index_cache[$summit_id]))
+            return $this->order_extra_questions_index_cache[$summit_id];
+
+        $by_key = [];
+        $add = function (?string $key, SummitOrderExtraQuestionType $question) use (&$by_key) {
+            if (empty($key)) return;
+            $by_key[$key][$question->getId()] = $question;
+        };
+
+        foreach ($summit->getOrderExtraQuestions() as $question) {
+            if (!$question instanceof SummitOrderExtraQuestionType) continue;
+            $add(trim($question->getName()), $question);
+            $label = $question->getLabel();
+            $add(trim($label), $question);
+            $add(trim(html_entity_decode(strip_tags($label))), $question);
+        }
+
+        return $this->order_extra_questions_index_cache[$summit_id] = ['by_key' => $by_key];
+    }
+
+    /**
      * Resolves the row's extra_question:* columns to [question_id => value], applying the
      * empty-value, unknown-question, order-scoped, not-allowed and change-lock skips.
      * @param Summit $summit
@@ -4784,19 +4830,16 @@ final class SummitOrderService
                 continue;
             }
 
-            // match by name and by label ( the ticket csv export emits question labels as
-            // column names ); each candidate is vetted for usage / attendee eligibility
-            // before deciding ambiguity, so a question that could never take this answer
-            // ( order scoped or not allowed for the attendee ) can not shadow a legitimate
-            // match; only when two eligible questions remain — one question's name is
-            // another question's label — is the column truly ambiguous and skipped, rather
-            // than silently filing the answer under the wrong question
-            $candidates = [];
-            foreach ([$summit->getOrderExtraQuestionByName($question_name),
-                      $summit->getOrderExtraQuestionByLabel($question_name)] as $candidate) {
-                if (is_null($candidate)) continue;
-                $candidates[$candidate->getId()] = $candidate;
-            }
+            // match by name, by raw label, and by the export-sanitized label ( the ticket csv
+            // export emits html_entity_decode(strip_tags($label)) as the column name, so a
+            // re-imported export must resolve against that sanitized form, not just the raw
+            // stored label — see getOrderExtraQuestionsIndex() ); each candidate is vetted for
+            // usage / attendee eligibility before deciding ambiguity, so a question that could
+            // never take this answer ( order scoped or not allowed for the attendee ) can not
+            // shadow a legitimate match; only when two eligible questions remain — one
+            // question's name is another question's label — is the column truly ambiguous and
+            // skipped, rather than silently filing the answer under the wrong question
+            $candidates = $this->getOrderExtraQuestionsIndex($summit)['by_key'][$question_name] ?? [];
 
             if (count($candidates) === 0) {
                 Log::warning

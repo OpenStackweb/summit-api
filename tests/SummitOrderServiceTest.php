@@ -1036,6 +1036,59 @@ CSV;
         $this->assertNull($attendee->getExtraQuestionAnswerByQuestion($question_b));
     }
 
+    public function testTicketCSVExportHtmlEntityLabelRoundTripsThroughImport()
+    {
+        Queue::fake();
+
+        // label as stored e.g. by the Eventbrite ingestion path
+        // ( SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite )
+        // or by an admin entering basic markup through the normal API ( HTMLPurifier permits
+        // <b>/<i>/<a>/... by default ) — the raw stored label contains an HTML entity, but the
+        // export header is the sanitized ( html_entity_decode(strip_tags(...)) ) form
+        $question = $this->insertOrderExtraQuestion
+        (
+            'DIET_REQ',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'Caf&eacute; Preference'
+        );
+
+        $attendee = $this->getDefaultAttendee();
+        $ticket = $attendee->getTickets()->first();
+
+        // export: header is the sanitized label, not the raw stored one
+        $values = SerializerRegistry::getInstance()
+            ->getSerializer($ticket, SerializerRegistry::SerializerType_CSV)
+            ->serialize(null, [], [], [
+                'ticket_questions' => [$question],
+                'answers_by_owner' => [$attendee->getId() => [$question->getId() => 'Vegan']],
+            ]);
+
+        $question_column = 'extra_question:Café Preference';
+        $this->assertArrayHasKey($question_column, $values);
+        $this->assertEquals('Vegan', $values[$question_column]);
+
+        // re-import the exact exported header + cell, verbatim, for a new attendee — must resolve
+        // against the sanitized label, since getOrderExtraQuestionByLabel()'s raw-label match can
+        // never equal the sanitized exported header
+        $unassigned = $this->getUnassignedTicket();
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,{$question_column}
+{$unassigned->getNumber()},new.attendee@nowhere.com,New,Attendee,Vegan
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $new_attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($new_attendee);
+        $answer = $new_attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer, 'expected the CSV export/import round trip to preserve the answer');
+        $this->assertEquals('Vegan', $answer->getValue());
+    }
+
     public function testTicketCSVExportMultiValueAnswerRoundTripsThroughImport()
     {
         Queue::fake();

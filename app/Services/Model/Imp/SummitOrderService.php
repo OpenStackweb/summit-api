@@ -4351,6 +4351,12 @@ final class SummitOrderService
             return $summit;
         });
 
+        // force a fresh extra-questions index for this job — this service is a singleton
+        // (ModelServicesProvider::class registers ISummitOrderService as such), so a warm queue
+        // worker could otherwise resolve extra_question columns against a stale in-memory index
+        // left over from a previous import job on the same summit
+        $this->getOrderExtraQuestionsIndex($summit, true);
+
         $reader = CSVReader::buildFrom($csv_data);
 
         $ticket_data_present = $reader->hasColumn("id") || $reader->hasColumn("number");
@@ -4764,21 +4770,27 @@ final class SummitOrderService
     }
 
     /**
-     * Builds ( and caches, per summit, for the lifetime of this service instance ) a lookup
-     * index of the summit's order extra questions, keyed by every string a CSV column could
-     * legitimately match against: exact name, exact ( raw, as-stored ) label, and the
-     * export-sanitized label ( html_entity_decode(strip_tags(...)) — the same transform
+     * Builds a lookup index of the summit's order extra questions, keyed by every string a CSV
+     * column could legitimately match against: exact name, exact ( raw, as-stored ) label, and
+     * the export-sanitized label ( html_entity_decode(strip_tags(...)) — the same transform
      * SummitAttendeeTicketCSVSerializer applies when building export headers, so a re-imported
      * export round-trips even when the stored label contains HTML/entities, e.g. Eventbrite-
      * seeded questions via SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite ).
      * One pass over the ( EXTRA_LAZY ) collection instead of two DB round-trips per column per row.
+     *
+     * Cached per summit for the lifetime of this service instance — but `$refresh` MUST be forced
+     * ( see processTicketData() ) at the start of every import job: `ISummitOrderService` is bound
+     * as an application singleton, so on a warm queue worker this instance survives across many
+     * job executions. Without a forced rebuild, a question added/edited between two import jobs
+     * for the same summit would silently resolve against a stale in-memory index.
      * @param Summit $summit
+     * @param bool $refresh force a fresh rebuild even if a cached index exists for this summit
      * @return array{by_key: array<string, SummitOrderExtraQuestionType[]>}
      */
-    private function getOrderExtraQuestionsIndex(Summit $summit): array
+    private function getOrderExtraQuestionsIndex(Summit $summit, bool $refresh = false): array
     {
         $summit_id = $summit->getId();
-        if (isset($this->order_extra_questions_index_cache[$summit_id]))
+        if (!$refresh && isset($this->order_extra_questions_index_cache[$summit_id]))
             return $this->order_extra_questions_index_cache[$summit_id];
 
         $by_key = [];

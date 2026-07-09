@@ -530,6 +530,37 @@ trait InsertSummitTestData
                 $ticket->generateQRCode();
                 $summitAttendeeBadge->generateQRCode();
             }
+
+            // Member-less attendee (SummitAttendee.member is null) with a badge, so the
+            // validateBadge member-less path (D26/D27) has fixture coverage. Looked up in tests
+            // via Summit::getAttendeeByEmailAndMemberNotSet('memberless@test.com').
+            $memberless_attendee = new SummitAttendee();
+            $memberless_attendee->setEmail("memberless@test.com");
+            $memberless_attendee->setFirstName("No");
+            $memberless_attendee->setSurname("Member");
+
+            $memberless_badge = new SummitAttendeeBadge();
+            $memberless_badge->setType(self::$default_badge_type);
+
+            $memberless_order = new SummitOrder();
+            $memberless_order->setOwner(self::$defaultMember);
+            $memberless_order->setSummit(self::$summit);
+
+            $memberless_ticket = new SummitAttendeeTicket();
+            $memberless_ticket->setTicketType(self::$default_ticket_type);
+            $memberless_ticket->setBadge($memberless_badge);
+            $memberless_ticket->activate();
+            $memberless_attendee->addTicket($memberless_ticket);
+            $memberless_order->addTicket($memberless_ticket);
+
+            self::$summit->addAttendee($memberless_attendee);
+            self::$summit->addOrder($memberless_order);
+
+            $memberless_order->setPaid();
+            $memberless_order->generateNumber();
+            $memberless_ticket->generateNumber();
+            $memberless_ticket->generateQRCode();
+            $memberless_badge->generateQRCode();
         }
 
         if (self::$defaultMember2 != null) {

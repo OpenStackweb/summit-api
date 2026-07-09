@@ -1197,19 +1197,48 @@ id,name,start_date,end_date,time_zone_id,time_zone_label,secondary_logo,slug,sup
         $this->assertStringContainsString('there are paid tickets', $content);
     }
 
+    // #40 / D26 augmentation regression: the badge-resolve payload must expose the attendee id
+    // (keys the D27 pre-account request) plus the expanded nested member snapshot (the D15 identity
+    // + name/photo) for member-linked attendees, and must OMIT the member object for member-less
+    // ones. Locks the serializer whitelist so the networking-api connect resolve does not regress.
+
     public function testValidateBadge(){
+        // MEMBER case: a member-linked attendee resolves with the expanded member object.
+        $owner = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($owner);
+        $member = $owner->getMember();
 
-        $badge_repository = EntityManager::getRepository(SummitAttendeeBadge::class);
-        $ticket = self::$summit_orders[0]->getTickets()->first();
-        $badge = $badge_repository->getBadgeByTicketNumber($ticket->getNumber());
-        $badge_qr_code = $badge->generateQRCode();
+        $attendee_badge = $this->callValidateBadge($owner->getFirstTicket()->getBadge());
 
-        //$key = '35NVOF4I5T6AAM28IJPKB8KRUW98KPDO';
+        // attendee id present (D27 keys the pre-account request on it)
+        $this->assertEquals($owner->getId(), $attendee_badge->ticket->owner->id);
 
+        // owner.member is the EXPANDED object carrying the D15 identity + name/photo snapshot
+        $this->assertNotNull($attendee_badge->ticket->owner->member);
+        $this->assertEquals($member->getId(), $attendee_badge->ticket->owner->member->id);
+        $this->assertTrue(isset($attendee_badge->ticket->owner->member->first_name));
+    }
+
+    public function testValidateBadgeMemberLess(){
+        // MEMBER-LESS case (D27): the fixture's member-less attendee resolves with NO member object.
+        $owner = self::$summit->getAttendeeByEmailAndMemberNotSet("memberless@test.com");
+        $this->assertNotNull($owner);
+        $this->assertFalse($owner->hasMember());
+
+        $attendee_badge = $this->callValidateBadge($owner->getFirstTicket()->getBadge());
+
+        // attendee id + email are present (they key the pre-account request and address the email)
+        $this->assertEquals($owner->getId(), $attendee_badge->ticket->owner->id);
+        $this->assertTrue(isset($attendee_badge->ticket->owner->email));
+
+        // no linked member => the expanded member object must be ABSENT
+        $this->assertFalse(isset($attendee_badge->ticket->owner->member));
+    }
+
+    private function callValidateBadge(SummitAttendeeBadge $badge) {
         $params = [
-            'id' => self::$summit->getId(),
-            //'badge' => base64_encode(AES::encrypt($key, $badge_qr_code)),
-            'badge' => base64_encode($badge_qr_code),
+            'id'    => self::$summit->getId(),
+            'badge' => base64_encode($badge->generateQRCode()),
         ];
 
         $response = $this->action(
@@ -1223,8 +1252,9 @@ id,name,start_date,end_date,time_zone_id,time_zone_label,secondary_logo,slug,sup
         );
 
         $this->assertResponseStatus(200);
-        $content = $response->getContent();
-        $attendee_badge = json_decode($content);
+        $attendee_badge = json_decode($response->getContent());
         $this->assertNotNull($attendee_badge);
+        return $attendee_badge;
     }
+
 }

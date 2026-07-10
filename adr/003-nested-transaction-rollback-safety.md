@@ -196,8 +196,7 @@ A follow-up codebase-wide search (same outer/inner shape: method A wrapped in it
 `tx_service->transaction()` calling, with no local `try/catch` around the call, method B which
 is *also* wrapped in its own separate `tx_service->transaction()`) originally found 11
 additional pairs across 8 more services with no test proving the new rollback contract. 8 of
-those 11 are now covered (see Test Coverage Added above,
-`docs/plans/2026-07-10-remaining-nested-tx-coverage.md`). The remaining 3 were verified against
+those 11 are now covered (see Test Coverage Added above). The remaining 3 were verified against
 the real code and found to have **no committed-then-rolled-back proof reachable through their
 specific call site** — the same structural reason a genuine rollback test can't be built for
 them, not merely undiscovered test cases:
@@ -232,7 +231,4 @@ as `SummitService::processRegistrationCompaniesData` above, not a rollback risk:
 (per-CSV-row) → `SpeakerService::addSpeaker`/`updateSpeaker`.
 
 With the 8 testable gaps closed and the remaining 3 confirmed structurally unreachable, this
-codebase-wide sweep for the outer/inner nested-transaction shape is complete (see
-`docs/plans/2026-07-10-nested-tx-other-services-coverage.md`,
-`docs/plans/2026-07-10-summit-order-api-exception-coverage.md`, and
-`docs/plans/2026-07-10-remaining-nested-tx-coverage.md`).
+codebase-wide sweep for the outer/inner nested-transaction shape is complete.

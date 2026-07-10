@@ -39,6 +39,11 @@ use ErrorException;
  *    failure during COMMIT is ambiguous (the server may have already made
  *    the transaction durable), so re-executing the callback could duplicate
  *    every write and side effect
+ *  - when the rollback itself fails (or a commit-phase failure is
+ *    connection-level), the manager/connection pair is discarded and a
+ *    fresh manager is reset into the registry, so direct Registry
+ *    consumers (which have no reconnect path of their own) never keep
+ *    working against a dead handle
  *
  * Nested transaction (called while a DB transaction is already active):
  *  - uses Doctrine DBAL nesting counter (beginTransaction / commit)
@@ -211,13 +216,19 @@ final class DoctrineTransactionService implements ITransactionService
      * @param \Doctrine\DBAL\Connection $conn
      * @param \Throwable $cause
      * @param string $context
+     * @return bool true when the connection is clean (rolled back, or nothing to
+     *              roll back); false when the rollback attempt itself failed and
+     *              the connection state is unknown (dead handle, possibly a stuck
+     *              DBAL rollback-only flag - DBAL zeroes the nesting level before
+     *              the physical rollback and only clears the flag after it succeeds)
      */
-    private function safeRollback($conn, \Throwable $cause, string $context): void
+    private function safeRollback($conn, \Throwable $cause, string $context): bool
     {
         try {
             if ($conn->isTransactionActive()) {
                 $conn->rollBack();
             }
+            return true;
         } catch (\Throwable $rollbackError) {
             Log::warning(sprintf(
                 "DoctrineTransactionService::%s rollback failed after '%s': %s",
@@ -225,6 +236,42 @@ final class DoctrineTransactionService implements ITransactionService
                 $cause->getMessage(),
                 $rollbackError->getMessage()
             ));
+            return false;
+        }
+    }
+
+    /**
+     * Best-effort destructive cleanup for a manager/connection pair left in an
+     * unknown or broken state (failed rollback, connection-level commit failure):
+     * closes the EntityManager, closes the physical connection and swaps a fresh
+     * manager into the registry so subsequent work on this process - including
+     * direct Registry consumers (repositories, serializers, queue jobs) reading
+     * OUTSIDE transaction(), which have no reconnect/retry path of their own -
+     * gets a live pair instead of a dead handle.
+     *
+     * Root-only: never call while an outer transaction still owns this
+     * connection. Never throws - it must not mask the exception that led here.
+     *
+     * @param \Doctrine\ORM\EntityManagerInterface $em
+     */
+    private function discardBrokenManager($em): void
+    {
+        try {
+            if ($em->isOpen()) {
+                $em->clear();
+                $em->close();
+            }
+        } catch (\Throwable $ignore) {
+        }
+
+        try {
+            $em->getConnection()->close();
+        } catch (\Throwable $ignore) {
+        }
+
+        try {
+            Registry::resetManager($this->manager_name);
+        } catch (\Throwable $ignore) {
         }
     }
 
@@ -245,7 +292,8 @@ final class DoctrineTransactionService implements ITransactionService
 
         while ($retry < self::MaxRetries) {
             $em = Registry::getManager($this->manager_name);
-            $commitStarted = false;
+            $commitStarted   = false;
+            $rollbackFailed  = false;
 
             try {
                 if (!$em->isOpen()) {
@@ -269,7 +317,7 @@ final class DoctrineTransactionService implements ITransactionService
                     $conn->commit();
                     return $result;
                 } catch (\Throwable $inner) {
-                    $this->safeRollback($conn, $inner, 'runRootTransaction');
+                    $rollbackFailed = !$this->safeRollback($conn, $inner, 'runRootTransaction');
                     // Root only: discard UnitOfWork state so pending persists/changesets
                     // from the failed callback cannot leak into the next transaction on
                     // this same EntityManager (phantom writes in catch-and-continue loops).
@@ -294,7 +342,11 @@ final class DoctrineTransactionService implements ITransactionService
                         "DoctrineTransactionService::runRootTransaction commit outcome unknown after '%s'; not retrying.",
                         $ex->getMessage()
                     ));
-                    if (!$em->isOpen()) {
+                    if ($rollbackFailed || $this->shouldReconnect($ex)) {
+                        // Connection-level failure: the physical handle is dead (or
+                        // its state unknown). Cleanup only - still never retry.
+                        $this->discardBrokenManager($em);
+                    } elseif (!$em->isOpen()) {
                         Registry::resetManager($this->manager_name);
                     }
                     throw $ex;
@@ -336,7 +388,12 @@ final class DoctrineTransactionService implements ITransactionService
 
                 Log::warning("DoctrineTransactionService::runRootTransaction rolling back TX");
                 Log::warning($ex);
-                if (!$em->isOpen()) {
+                if ($rollbackFailed) {
+                    // The rollback attempt itself failed: the manager/connection pair
+                    // is in an unknown state (dead handle, possibly a stuck DBAL
+                    // rollback-only flag) and would poison direct Registry consumers.
+                    $this->discardBrokenManager($em);
+                } elseif (!$em->isOpen()) {
                     // A failed flush closes the EM (ORM behavior); reset so direct
                     // Registry consumers (serializers, factories, workers) get a live
                     // manager instead of an EntityManagerClosed on their next operation.
@@ -348,7 +405,9 @@ final class DoctrineTransactionService implements ITransactionService
                 // reconnect handling above, which typehints shouldReconnect(\Exception).
                 // They are never retried, but a callback that closed the EM before
                 // throwing one must still leave a live manager in the registry.
-                if (!$em->isOpen()) {
+                if ($rollbackFailed) {
+                    $this->discardBrokenManager($em);
+                } elseif (!$em->isOpen()) {
                     Registry::resetManager($this->manager_name);
                 }
                 throw $throwable;

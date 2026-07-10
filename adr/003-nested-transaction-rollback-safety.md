@@ -216,6 +216,25 @@ a unit test that reproduced the failure first:
    this ADR's own conclusion that DBAL sets `isRollbackOnly` unconditionally, pre-flush or not.
    The message now states that catching a nested `transaction()` failure and continuing is
    never safe and directs the reader to let the failure propagate to the root.
+4. **A failed rollback discards the manager/connection pair** (found by a Codex companion
+   review). `safeRollback()` swallows rollback failures by design (the original exception
+   must never be masked or re-classified as retryable), but the cleanup decision afterwards
+   looked only at the original exception and `$em->isOpen()`. A business exception followed
+   by a rollback failure (connection died mid-callback) therefore left an **open** EM wired
+   to a dead physical handle registered — and DBAL zeroes `transactionNestingLevel` *before*
+   the physical rollback while clearing `isRollbackOnly` only *after* it succeeds, so the
+   flag can also be left stuck. Subsequent `transaction()` calls self-heal via the reconnect
+   path, but direct Registry consumers (repositories, serializers, queue jobs reading
+   outside `transaction()`) have no retry path and would fail in a chain on a long-lived
+   worker. `safeRollback()` now reports success/failure and `runRootTransaction()` discards
+   the broken pair (close EM, close connection, reset a fresh manager into the registry —
+   best-effort, never masking the original exception, never retrying). The same hygiene
+   applies to connection-level commit-phase failures, which previously also left the dead
+   handle registered. Root-only by construction: with savepoints off, a nested `rollBack()`
+   executes no SQL (flag + counter only), so it cannot fail on a dead connection — a dead
+   connection during a nested transaction surfaces as the root's own rollback failing, which
+   this covers. Covered by `testRootTransactionDiscardsManagerWhenRollbackFails` and the
+   extended `testRootTransactionDoesNotRetryWhenCommitFails`.
 
 ## Test Coverage Added
 
@@ -229,7 +248,7 @@ guaranteed behavior end-to-end.
 
 | File | What's covered |
 |---|---|
-| `tests/Unit/Services/DoctrineTransactionServiceTest.php` | 26 tests: root/nested routing, savepoints never enabled/queried, fail-fast on a closed `EntityManager`, no retry after an ambiguous commit failure, refusal of closed-EM re-entry while a transaction is still active, rollback failures never masking the original exception, `\Error` handled alongside `\Exception`, `em->clear()` on root failure. |
+| `tests/Unit/Services/DoctrineTransactionServiceTest.php` | 27 tests: root/nested routing, savepoints never enabled/queried, fail-fast on a closed `EntityManager`, no retry after an ambiguous commit failure, refusal of closed-EM re-entry while a transaction is still active, rollback failures never masking the original exception, broken manager/connection discarded when the rollback itself fails, `\Error` handled alongside `\Exception`, `em->clear()` on root failure. |
 
 ### Business-service outer/inner pairs (functional, real DB)
 

@@ -35,6 +35,10 @@ use ErrorException;
  *  - flushes the EntityManager and issues the real COMMIT
  *  - on failure, rolls back and clears the EntityManager so no
  *    UnitOfWork state leaks into subsequent transactions
+ *  - never retries once the real COMMIT has been attempted: a connection
+ *    failure during COMMIT is ambiguous (the server may have already made
+ *    the transaction durable), so re-executing the callback could duplicate
+ *    every write and side effect
  *
  * Nested transaction (called while a DB transaction is already active):
  *  - uses Doctrine DBAL nesting counter (beginTransaction / commit)
@@ -136,15 +140,34 @@ final class DoctrineTransactionService implements ITransactionService
         $conn = $em->getConnection();
 
         // Detect whether we are already inside a DB transaction. A closed EntityManager
-        // is never treated as nested, even if the connection still reports an active
-        // transaction (e.g. a prior failure whose rollback attempt itself failed):
-        // runNestedTransaction() has no isOpen()-based reset, so routing a closed EM
-        // there would hand the callback a dead EntityManager instead of going through
-        // runRootTransaction()'s existing reset-and-retry path.
-        $isNested = $em->isOpen() && $conn->isTransactionActive();
+        // is never treated as nested: runNestedTransaction() has no isOpen()-based
+        // reset, so routing a closed EM there would hand the callback a dead
+        // EntityManager. Both states are read exactly once so the routing decision
+        // and the refusal check below cannot disagree.
+        $emIsOpen = $em->isOpen();
 
-        if ($isNested) {
+        if ($emIsOpen && $conn->isTransactionActive()) {
             return $this->runNestedTransaction($callback);
+        }
+
+        if (!$emIsOpen && $conn->isTransactionActive()) {
+            // A closed EM whose connection still holds an open transaction means a
+            // nested failure was caught mid-propagation (the outer transaction()
+            // frame has not unwound yet). Routing this into runRootTransaction()
+            // would resetManager() onto a BRAND-NEW connection whose commits are
+            // durable even though the outer, rollback-only transaction on the old
+            // connection rolls back - a split-brain partial commit that escapes the
+            // atomicity guarantee documented above. Refuse instead; the original
+            // nested failure must propagate to the root.
+            // Plain \RuntimeException intentionally - shouldReconnect() does not
+            // match it, so this can never trigger the retry loop.
+            throw new \RuntimeException(
+                'DoctrineTransactionService::transaction the EntityManager was closed while its '
+                . 'connection still has an active transaction (typically a nested failure that was '
+                . 'caught and execution continued); refusing to start an independent root transaction '
+                . 'whose writes would survive the outer rollback. Let the original failure propagate '
+                . 'to the root transaction instead.'
+            );
         }
 
         return $this->runRootTransaction($callback, $isolationLevel);
@@ -169,8 +192,10 @@ final class DoctrineTransactionService implements ITransactionService
             throw new \RuntimeException(sprintf(
                 'DoctrineTransactionService::%s the EntityManager was closed during the callback '
                 . '(typically a nested flush failure that was caught and execution continued); this '
-                . 'transaction cannot be committed. Catching nested errors is only safe for errors '
-                . 'thrown before any flush in this transaction.',
+                . 'transaction cannot be committed. Catching a failure from a nested transaction() '
+                . 'call and continuing is never safe - the nested rollback already marked the '
+                . 'connection rollback-only, so a commit at any level fails. Let the failure '
+                . 'propagate to the root transaction instead.',
                 $context
             ));
         }
@@ -206,6 +231,8 @@ final class DoctrineTransactionService implements ITransactionService
     /**
      * Root (outermost) transaction: may retry on transient connection errors,
      * sets isolation level, flushes, and issues the real COMMIT.
+     * Retries never happen once the real COMMIT has been attempted (ambiguous
+     * outcome - see the class docblock).
      *
      * @param Closure $callback
      * @param int $isolationLevel
@@ -218,6 +245,7 @@ final class DoctrineTransactionService implements ITransactionService
 
         while ($retry < self::MaxRetries) {
             $em = Registry::getManager($this->manager_name);
+            $commitStarted = false;
 
             try {
                 if (!$em->isOpen()) {
@@ -233,6 +261,11 @@ final class DoctrineTransactionService implements ITransactionService
                     $result = $callback($this);
                     $this->failFastIfEntityManagerClosed($em, 'runRootTransaction');
                     $em->flush();
+                    // Anything past this point is the real COMMIT: a connection
+                    // failure here is ambiguous (the server may have already made
+                    // the transaction durable and only the ack was lost), so the
+                    // retry path below must never re-execute the callback.
+                    $commitStarted = true;
                     $conn->commit();
                     return $result;
                 } catch (\Throwable $inner) {
@@ -250,6 +283,22 @@ final class DoctrineTransactionService implements ITransactionService
                 }
             } catch (Exception $ex) {
                 $retry++;
+
+                if ($commitStarted) {
+                    // The COMMIT itself failed after being sent to the server: its
+                    // outcome is unknown, so retrying could duplicate every write
+                    // and side effect of the callback. Propagate instead - callers
+                    // must treat this as "operation state unknown", not as a clean
+                    // failure.
+                    Log::error(sprintf(
+                        "DoctrineTransactionService::runRootTransaction commit outcome unknown after '%s'; not retrying.",
+                        $ex->getMessage()
+                    ));
+                    if (!$em->isOpen()) {
+                        Registry::resetManager($this->manager_name);
+                    }
+                    throw $ex;
+                }
 
                 if ($this->shouldReconnect($ex)) {
                     Log::warning(sprintf(

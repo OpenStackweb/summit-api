@@ -189,6 +189,34 @@ pre-existing bug, out of scope for this hotfix.
   cause was a transient connection blip) — a pre-existing gap this fix reduces one trigger for
   but does not close.
 
+## Post-Review Hardening (same branch)
+
+Three gaps surfaced by the deep review of PR #533 were closed on top of Iteration 2, each with
+a unit test that reproduced the failure first:
+
+1. **Ambiguous commit failures are never retried.** A connection failure during the root's
+   real `COMMIT` is ambiguous — the server may have already made the transaction durable and
+   only the acknowledgment was lost (DBAL decrements its nesting counter in a `finally` even
+   when the physical commit fails, so nothing is left to roll back). The retry loop used to
+   re-execute the entire callback in that state, duplicating every write and side effect up to
+   `MaxRetries` times; `runRootTransaction()` now tracks the commit phase and propagates the
+   failure instead. Callers must treat it as "operation state unknown", not as a clean failure.
+   Covered by `testRootTransactionDoesNotRetryWhenCommitFails`.
+2. **Closed-EM re-entry can no longer escape the atomicity guarantee.** `isRollbackOnly` is a
+   per-connection flag. When a nested flush failure closed the `EntityManager` and an
+   intermediate callback caught it and called `transaction()` again, the closed-EM branch used
+   to `resetManager()` onto a brand-new `EntityManager` **and a brand-new DBAL connection**
+   (`EntityManagerFactory` → `DriverManager::getConnection`) — the "recovered" root's commits
+   were durable even though the outer, rollback-only transaction on the old connection rolled
+   back: a split-brain partial commit. `transaction()` now refuses that state (closed EM while
+   its connection still has an active transaction) with a descriptive `RuntimeException`.
+   Covered by `testTransactionRefusesWhenEntityManagerClosedWithActiveTransaction`.
+3. **The fail-fast message no longer repeats the retracted carve-out.** It used to claim
+   catching nested errors is "only safe for errors thrown before any flush" — contradicting
+   this ADR's own conclusion that DBAL sets `isRollbackOnly` unconditionally, pre-flush or not.
+   The message now states that catching a nested `transaction()` failure and continuing is
+   never safe and directs the reader to let the failure propagate to the root.
+
 ## Test Coverage Added
 
 Two things were proven for every pair below, empirically (real local MySQL, not mocks — DBAL's
@@ -201,7 +229,7 @@ guaranteed behavior end-to-end.
 
 | File | What's covered |
 |---|---|
-| `tests/Unit/Services/DoctrineTransactionServiceTest.php` | 24 tests: root/nested routing, savepoints never enabled/queried, fail-fast on a closed `EntityManager`, rollback failures never masking the original exception, `\Error` handled alongside `\Exception`, `em->clear()` on root failure. |
+| `tests/Unit/Services/DoctrineTransactionServiceTest.php` | 26 tests: root/nested routing, savepoints never enabled/queried, fail-fast on a closed `EntityManager`, no retry after an ambiguous commit failure, refusal of closed-EM re-entry while a transaction is still active, rollback failures never masking the original exception, `\Error` handled alongside `\Exception`, `em->clear()` on root failure. |
 
 ### Business-service outer/inner pairs (functional, real DB)
 

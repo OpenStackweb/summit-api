@@ -36,6 +36,8 @@ use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use libs\utils\ITransactionService;
 use Mockery;
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\main\ITagRepository;
@@ -1040,5 +1042,125 @@ CSV;
         $this->assertNotNull($badge);
         $this->assertEquals($badge_id, $badge->getId());
         $this->assertEquals('NEW BADGE TYPE', $badge->getType()->getName());
+    }
+
+    public function testAddTicketsCommitsAcrossNestedTransaction()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        $order = self::$summit->getOrders()[0];
+        $order_id = $order->getId();
+        $initial_ticket_count = $order->getTickets()->count();
+
+        $result = $service->addTickets(self::$summit, $order_id, [
+            'ticket_type_id' => self::$default_ticket_type->getId(),
+            'ticket_qty' => 2,
+        ]);
+
+        $this->assertEquals($initial_ticket_count + 2, $result->getTickets()->count());
+
+        self::$em->clear();
+
+        $reFetched = self::$em->find(SummitOrder::class, $order_id);
+        $this->assertNotNull($reFetched);
+        $this->assertEquals($initial_ticket_count + 2, $reFetched->getTickets()->count());
+    }
+
+    public function testCreateOfflineOrderCommitsAcrossNestedAndSequentialRootTransactions()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        $owner_email = sprintf('offline-order-%s@test.com', uniqid());
+
+        $payload = [
+            'owner_email' => $owner_email,
+            'owner_first_name' => 'Offline',
+            'owner_last_name' => 'Buyer',
+            'ticket_type_id' => self::$default_ticket_type->getId(),
+            'ticket_qty' => 1,
+        ];
+
+        $order = $service->createOfflineOrder(self::$summit, $payload);
+        $order_id = $order->getId();
+
+        $this->assertTrue($order->isPaid());
+        $this->assertEquals(1, $order->getTickets()->count());
+        $this->assertEquals($owner_email, $order->getFirstTicket()->getOwner()->getEmail());
+
+        self::$em->clear();
+
+        $reFetched = self::$em->find(SummitOrder::class, $order_id);
+        $this->assertNotNull($reFetched);
+        $this->assertTrue($reFetched->isPaid());
+        $this->assertEquals(1, $reFetched->getTickets()->count());
+        $this->assertEquals($owner_email, $reFetched->getFirstTicket()->getOwner()->getEmail());
+    }
+
+    public function testCreateTicketsForOrderRollsBackEntireChainOnInvalidPromoCode()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        $order = self::$summit->getOrders()[0];
+        $order_id = $order->getId();
+        $initial_ticket_count = $order->getTickets()->count();
+        $ticket_type_id = self::$default_ticket_type->getId();
+        $initial_quantity_sold = self::$default_ticket_type->getQuantitySold();
+        $bogus_promo_code = 'DOES-NOT-EXIST-' . uniqid();
+
+        try {
+            $service->addTickets(self::$summit, $order_id, [
+                'ticket_type_id' => $ticket_type_id,
+                'ticket_qty' => 1,
+                'promo_code' => $bogus_promo_code,
+            ]);
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            $this->assertStringContainsString('Promo code', $ex->getMessage());
+        }
+
+        self::$em->clear();
+
+        $reFetched = self::$em->find(SummitOrder::class, $order_id);
+        $this->assertNotNull($reFetched);
+        $this->assertEquals($initial_ticket_count, $reFetched->getTickets()->count());
+
+        // proves the SummitTicketType::sell(1) mutation made before the promo-code
+        // lookup threw was rolled back too, not just the order's ticket collection
+        $reFetchedTicketType = self::$em->find(SummitTicketType::class, $ticket_type_id);
+        $this->assertNotNull($reFetchedTicketType);
+        $this->assertEquals($initial_quantity_sold, $reFetchedTicketType->getQuantitySold());
+    }
+
+    public function testCreateOfflineOrderRollsBackEntireChainOnMissingDefaultBadgeType()
+    {
+        $service = App::make(ISummitOrderService::class);
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        self::$default_badge_type->setIsDefault(false);
+
+        $owner_email = sprintf('offline-order-badge-fail-%s@test.com', uniqid());
+
+        $payload = [
+            'owner_email' => $owner_email,
+            'owner_first_name' => 'Offline',
+            'owner_last_name' => 'BadgeFail',
+            'ticket_type_id' => self::$default_ticket_type->getId(),
+            'ticket_qty' => 1,
+        ];
+
+        try {
+            $service->createOfflineOrder(self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('default badge type', $ex->getMessage());
+        } finally {
+            self::$default_badge_type->setIsDefault(true);
+            self::$em->flush();
+        }
+
+        self::$em->clear();
+
+        $attendee = $attendee_repository->getBySummitAndEmail(self::$summit, $owner_email);
+        $this->assertNull($attendee);
     }
 }

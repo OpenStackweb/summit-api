@@ -81,8 +81,6 @@ class DoctrineTransactionServiceTest extends TestCase
     {
         $conn = Mockery::mock(Connection::class);
         $conn->shouldReceive('isTransactionActive')->andReturn($transactionActive)->byDefault();
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
         $conn->shouldReceive('commit')->byDefault();
@@ -113,8 +111,33 @@ class DoctrineTransactionServiceTest extends TestCase
     {
         [$em, $conn] = $this->buildMocks(transactionActive: false);
 
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
+        $conn->shouldReceive('setTransactionIsolation')
+            ->once()
+            ->with(TransactionIsolationLevel::READ_COMMITTED);
+        $conn->shouldReceive('beginTransaction')->once();
+        $em->shouldReceive('flush')->once();
+        $conn->shouldReceive('commit')->once();
+
+        $service = new DoctrineTransactionService('default');
+        $result = $service->transaction(function () {
+            return 'success';
+        });
+
+        $this->assertSame('success', $result);
+    }
+
+    /**
+     * DBAL savepoints are never enabled: nested transactions rely entirely on
+     * DBAL's native isRollbackOnly propagation (rollBack() at nesting level > 1
+     * without savepoints just marks the connection + decrements the counter;
+     * commit() at ANY level checks isRollbackOnly first) instead of savepoints,
+     * which desynchronize Doctrine's UnitOfWork from the database.
+     */
+    public function testRootTransactionNeverEnablesSavepoints(): void
+    {
+        [$em, $conn] = $this->buildMocks(transactionActive: false);
+
+        $conn->shouldReceive('setNestTransactionsWithSavepoints')->never();
         $conn->shouldReceive('setTransactionIsolation')
             ->once()
             ->with(TransactionIsolationLevel::READ_COMMITTED);
@@ -155,8 +178,6 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testRootTransactionRetriesOnConnectionLost(): void
     {
         $conn = Mockery::mock(Connection::class);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
         $conn->shouldReceive('commit')->byDefault();
@@ -206,8 +227,6 @@ class DoctrineTransactionServiceTest extends TestCase
     {
         $conn = Mockery::mock(Connection::class);
         $conn->shouldReceive('isTransactionActive')->andReturn(false, true, false);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
         $conn->shouldReceive('commit')->byDefault();
@@ -240,6 +259,52 @@ class DoctrineTransactionServiceTest extends TestCase
         $this->assertSame(2, $callCount);
     }
 
+    /**
+     * transaction()'s root-vs-nested routing must not trust conn->isTransactionActive()
+     * alone: a prior failure can leave the EntityManager closed while a failed/skipped
+     * rollback leaves the connection still reporting an active transaction. Routing that
+     * state into runNestedTransaction() (which has no isOpen()-based reset) would hand the
+     * callback a closed EntityManager instead of the clear, actionable reset-and-retry root
+     * path runRootTransaction() already provides.
+     */
+    public function testTransactionRoutesToRootWhenEntityManagerClosedDespiteActiveConnectionFlag(): void
+    {
+        $conn = Mockery::mock(Connection::class);
+        $conn->shouldReceive('isTransactionActive')->andReturn(true);
+        $conn->shouldReceive('setTransactionIsolation')->byDefault();
+        $conn->shouldReceive('beginTransaction')->byDefault();
+        $conn->shouldReceive('commit')->byDefault();
+        $conn->shouldReceive('rollBack')->byDefault();
+        $conn->shouldReceive('close')->byDefault();
+
+        $em = Mockery::mock(EntityManagerInterface::class);
+        $em->shouldReceive('getConnection')->andReturn($conn)->byDefault();
+        $em->shouldReceive('isOpen')->andReturn(false); // closed
+        $em->shouldReceive('flush')->byDefault();
+        $em->shouldReceive('clear')->byDefault();
+        $em->shouldReceive('close')->byDefault();
+
+        $freshEm = Mockery::mock(EntityManagerInterface::class);
+        $freshEm->shouldReceive('getConnection')->andReturn($conn)->byDefault();
+        $freshEm->shouldReceive('isOpen')->andReturn(true);
+        $freshEm->shouldReceive('flush')->once();
+        $freshEm->shouldReceive('clear')->byDefault();
+        $freshEm->shouldReceive('close')->byDefault();
+
+        $registry = Mockery::mock(ManagerRegistry::class);
+        $registry->shouldReceive('getManager')->with('default')->andReturn($em)->byDefault();
+        $registry->shouldReceive('resetManager')->with('default')->once()->andReturn($freshEm);
+
+        $this->container->instance(ManagerRegistry::class, $registry);
+
+        $service = new DoctrineTransactionService('default');
+        $result = $service->transaction(function () {
+            return 'from-fresh-em';
+        });
+
+        $this->assertSame('from-fresh-em', $result);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // NESTED TRANSACTION TESTS
     // ─────────────────────────────────────────────────────────────────────────
@@ -254,6 +319,28 @@ class DoctrineTransactionServiceTest extends TestCase
         $conn->shouldReceive('commit')->once();
         // Must NOT set isolation level in nested mode
         $conn->shouldReceive('setTransactionIsolation')->never();
+
+        $service = new DoctrineTransactionService('default');
+        $result = $service->transaction(function () {
+            return 'nested-result';
+        });
+
+        $this->assertSame('nested-result', $result);
+    }
+
+    /**
+     * Nested transactions never inspect the connection's savepoint flag - the
+     * savepoints-disabled warning mechanism (Finding 2) is removed entirely,
+     * since nested no longer relies on savepoints at all.
+     */
+    public function testNestedTransactionNeverQueriesSavepointsFlag(): void
+    {
+        [$em, $conn] = $this->buildMocks(transactionActive: true);
+
+        $conn->shouldReceive('getNestTransactionsWithSavepoints')->never();
+        $conn->shouldReceive('beginTransaction')->once();
+        $em->shouldReceive('flush')->once();
+        $conn->shouldReceive('commit')->once();
 
         $service = new DoctrineTransactionService('default');
         $result = $service->transaction(function () {
@@ -313,6 +400,40 @@ class DoctrineTransactionServiceTest extends TestCase
         });
     }
 
+    /**
+     * Mirrors testRootTransactionFailsFastWhenCallbackClosedEntityManager for
+     * the nested path (finding #9): with 2+ levels of nesting, a deeper
+     * nested flush failure closes the EntityManager; if a middle callback
+     * catches that and continues, THIS nested transaction must also fail
+     * fast with a clear error - not proceed to flush() and surface an
+     * opaque EntityManagerClosed one level higher than before.
+     *
+     * runNestedTransaction has no retry loop, so there is exactly ONE
+     * isOpen() call after this fix (the post-callback guard) - a single
+     * `false`, not a two-value sequence like the root test.
+     */
+    public function testNestedTransactionFailsFastWhenDeeperNestedFlushClosedEntityManager(): void
+    {
+        [$em, $conn] = $this->buildMocks(transactionActive: true);
+
+        $em->shouldReceive('isOpen')->andReturn(false);
+        $conn->shouldReceive('isTransactionActive')->andReturn(true);
+        $conn->shouldReceive('rollBack')->once();
+        $em->shouldReceive('flush')->never();
+        $conn->shouldReceive('commit')->never();
+
+        $service = new DoctrineTransactionService('default');
+
+        try {
+            $service->transaction(function () {
+                return 'swallowed-deeper-failure';
+            });
+            $this->fail('Expected fail-fast RuntimeException was not thrown');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('EntityManager was closed', $e->getMessage());
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // DIRECT NESTING: inner transaction() inside outer transaction()
     // Simulates the email-send pattern (SummitPromoCodeService, etc.)
@@ -329,8 +450,6 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testDirectNestingInnerRunsAsNested(): void
     {
         $conn = Mockery::mock(Connection::class);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->once(); // only root sets isolation
         $conn->shouldReceive('close')->byDefault();
 
@@ -384,12 +503,19 @@ class DoctrineTransactionServiceTest extends TestCase
      * Direct nesting: inner transaction throws — exception propagates to outer,
      * outer catches and the root handles the full rollback.
      * No EM reset or connection close happens during inner failure.
+     *
+     * This test verifies structural invariants only (no EM reset, no
+     * connection close). It does NOT verify that this outer-catches-and-
+     * continues pattern is safe: on a real DBAL connection, the inner
+     * rollBack() sets isRollbackOnly=true, so the root's eventual commit()
+     * would throw ConnectionException::commitFailedRollbackOnly (or the
+     * ORM's OptimisticLockException wrapping it) instead of silently
+     * succeeding - this mock does not model isRollbackOnly, so it cannot
+     * assert that. See the plan's real-MySQL verification for that proof.
      */
     public function testDirectNestingInnerErrorPropagatesWithoutDestroyingEM(): void
     {
         $conn = Mockery::mock(Connection::class);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('close')->never(); // inner must NOT close connection
 
@@ -447,8 +573,6 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testDirectNestingConnectionErrorInInnerDoesNotDestroyOuterTx(): void
     {
         $conn = Mockery::mock(Connection::class);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
 
         $txActive = false;
@@ -515,8 +639,6 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testIndirectNestingServiceCallRunsAsNested(): void
     {
         $conn = Mockery::mock(Connection::class);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->once(); // only root
         $conn->shouldReceive('close')->byDefault();
 
@@ -571,8 +693,6 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testIndirectNestingInnerFlushGeneratesIds(): void
     {
         $conn = Mockery::mock(Connection::class);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('close')->byDefault();
 
@@ -632,8 +752,6 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testIndirectNestingInnerServiceErrorDoesNotDestroyOuter(): void
     {
         $conn = Mockery::mock(Connection::class);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('close')->byDefault();
 
@@ -691,8 +809,6 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testIndirectNestingMultipleNestedCallsInSequence(): void
     {
         $conn = Mockery::mock(Connection::class);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->once(); // only root
         $conn->shouldReceive('close')->byDefault();
 
@@ -763,8 +879,6 @@ class DoctrineTransactionServiceTest extends TestCase
     {
         $conn = Mockery::mock(Connection::class);
         $conn->shouldReceive('isTransactionActive')->andReturn(false, true);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
         $conn->shouldReceive('commit')->never();
@@ -823,8 +937,6 @@ class DoctrineTransactionServiceTest extends TestCase
     {
         $conn = Mockery::mock(Connection::class);
         $conn->shouldReceive('isTransactionActive')->andReturn(false);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
         $conn->shouldReceive('commit')->byDefault();
@@ -872,8 +984,6 @@ class DoctrineTransactionServiceTest extends TestCase
         $conn = Mockery::mock(Connection::class);
         // false: routing check picks the ROOT path; true: rollback check in the inner catch
         $conn->shouldReceive('isTransactionActive')->andReturn(false, true);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->once();
         $conn->shouldReceive('commit')->never();
@@ -903,43 +1013,6 @@ class DoctrineTransactionServiceTest extends TestCase
     }
 
     /**
-     * When the connection's savepoint flag is OFF (outer transaction started
-     * outside DoctrineTransactionService), the nested path must log a warning
-     * surfacing the rollback-only poisoning risk, while still executing the
-     * transaction normally. Detection only - it must NOT try to enable
-     * savepoints mid-transaction (throws on DBAL 3.9).
-     */
-    public function testNestedTransactionWarnsWhenSavepointsDisabled(): void
-    {
-        [$em, $conn] = $this->buildMocks(transactionActive: true);
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(false);
-
-        $spy = new class {
-            public array $calls = [];
-            public function __call($name, $args) { $this->calls[] = [$name, $args]; }
-        };
-        $this->container->instance('log', $spy);
-        Facade::clearResolvedInstances();
-
-        $service = new DoctrineTransactionService('default');
-        $result = $service->transaction(function () {
-            return 'ok';
-        });
-
-        $this->assertSame('ok', $result, 'Nested transaction must proceed normally despite the warning');
-        $warnings = array_values(array_filter($spy->calls, fn ($c) => $c[0] === 'warning'));
-        $this->assertCount(1, $warnings, 'Exactly one warning must be logged when savepoints are off');
-        $this->assertStringContainsString('savepoints', $warnings[0][1][0]);
-
-        // Warn-once: a second nested call on the same service instance must NOT re-warn
-        $service->transaction(function () {
-            return 'ok-again';
-        });
-        $warnings = array_values(array_filter($spy->calls, fn ($c) => $c[0] === 'warning'));
-        $this->assertCount(1, $warnings, 'The savepoints warning must be emitted once per service instance, not per call');
-    }
-
-    /**
      * A callback that swallowed a nested flush failure returns normally with a
      * CLOSED EntityManager (ORM closes it on any failed flush). The root must
      * fail fast with a clear error BEFORE its own flush - instead of the opaque
@@ -951,8 +1024,6 @@ class DoctrineTransactionServiceTest extends TestCase
         $conn = Mockery::mock(Connection::class);
         // false: routing check picks the ROOT path; true: rollback check in the inner catch
         $conn->shouldReceive('isTransactionActive')->andReturn(false, true);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->once();
         $conn->shouldReceive('commit')->never();
@@ -960,9 +1031,10 @@ class DoctrineTransactionServiceTest extends TestCase
 
         $em = Mockery::mock(EntityManagerInterface::class);
         $em->shouldReceive('getConnection')->andReturn($conn)->byDefault();
-        // true: loop-top open check; false: post-callback fail-fast check (repeats
-        // false so the closed-EM resetManager branch in the outer catch fires too)
-        $em->shouldReceive('isOpen')->andReturn(true, false);
+        // true: transaction() routing check; true: loop-top open check; false: post-callback
+        // fail-fast check (repeats false so the closed-EM resetManager branch in the outer
+        // catch fires too)
+        $em->shouldReceive('isOpen')->andReturn(true, true, false);
         $em->shouldReceive('flush')->never();
         $em->shouldReceive('clear')->byDefault();
 
@@ -1024,8 +1096,6 @@ class DoctrineTransactionServiceTest extends TestCase
         $conn = Mockery::mock(Connection::class);
         // false: routing check picks the ROOT path; true: rollback check in the inner catch
         $conn->shouldReceive('isTransactionActive')->andReturn(false, true);
-        $conn->shouldReceive('setNestTransactionsWithSavepoints')->byDefault();
-        $conn->shouldReceive('getNestTransactionsWithSavepoints')->andReturn(true)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->once();
         $conn->shouldReceive('commit')->never();
@@ -1033,8 +1103,9 @@ class DoctrineTransactionServiceTest extends TestCase
 
         $em = Mockery::mock(EntityManagerInterface::class);
         $em->shouldReceive('getConnection')->andReturn($conn)->byDefault();
-        // true: loop-top check; false: closed-EM recovery check in the outer catch
-        $em->shouldReceive('isOpen')->andReturn(true, false);
+        // true: transaction() routing check; true: loop-top check; false: closed-EM
+        // recovery check in the outer catch
+        $em->shouldReceive('isOpen')->andReturn(true, true, false);
         $em->shouldReceive('flush')->never();
         $em->shouldReceive('clear')->byDefault();
 

@@ -38,7 +38,10 @@ use ErrorException;
  *  - never retries once the real COMMIT has been attempted: a connection
  *    failure during COMMIT is ambiguous (the server may have already made
  *    the transaction durable), so re-executing the callback could duplicate
- *    every write and side effect
+ *    every write and side effect; it surfaces as AmbiguousCommitException
+ *    (driver exception preserved as previous) so callers - queue jobs
+ *    especially - can fail without retrying instead of blind-retrying a
+ *    retryable-looking driver exception
  *  - when the rollback itself fails (or a commit-phase failure is
  *    connection-level), the manager/connection pair is discarded and a
  *    fresh manager is reset into the registry, so direct Registry
@@ -352,9 +355,11 @@ final class DoctrineTransactionService implements ITransactionService
                 if ($commitStarted) {
                     // The COMMIT itself failed after being sent to the server: its
                     // outcome is unknown, so retrying could duplicate every write
-                    // and side effect of the callback. Propagate instead - callers
-                    // must treat this as "operation state unknown", not as a clean
-                    // failure.
+                    // and side effect of the callback. Propagate as a marker type -
+                    // the raw driver exception (e.g. ConnectionLost) looks retryable
+                    // to the layers above (Laravel queue tries, caller-side retries),
+                    // which would re-execute the whole callback anyway; the marker is
+                    // what lets them treat this as "operation state unknown" instead.
                     Log::error(sprintf(
                         "DoctrineTransactionService::runRootTransaction commit outcome unknown after '%s'; not retrying.",
                         $ex->getMessage()
@@ -362,7 +367,15 @@ final class DoctrineTransactionService implements ITransactionService
                     // A connection-level commit failure leaves a dead handle: discard
                     // the pair. Cleanup only - still never retry.
                     $this->restoreRegistryAfterFailure($em, $rollbackFailed || $this->shouldReconnect($ex));
-                    throw $ex;
+                    throw new AmbiguousCommitException(
+                        sprintf(
+                            "DoctrineTransactionService::runRootTransaction commit outcome unknown after '%s'; "
+                            . 'the transaction may or may not be durable - reconcile, do not blind-retry.',
+                            $ex->getMessage()
+                        ),
+                        0,
+                        $ex
+                    );
                 }
 
                 if ($this->shouldReconnect($ex)) {

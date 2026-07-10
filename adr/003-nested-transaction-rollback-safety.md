@@ -200,7 +200,13 @@ a unit test that reproduced the failure first:
    when the physical commit fails, so nothing is left to roll back). The retry loop used to
    re-execute the entire callback in that state, duplicating every write and side effect up to
    `MaxRetries` times; `runRootTransaction()` now tracks the commit phase and propagates the
-   failure instead. Callers must treat it as "operation state unknown", not as a clean failure.
+   failure instead. The failure surfaces as `AmbiguousCommitException` (the driver exception
+   preserved as `previous`) rather than the raw driver exception: without the marker type, the
+   "callers must treat it as operation state unknown" contract is unenforceable — a propagated
+   `ConnectionLost` looks retryable to the layers above (Laravel queue `tries`, caller-side
+   retries), which would re-execute the whole callback anyway. Queue jobs should catch it and
+   `fail()` without retry, then reconcile. It extends plain `\RuntimeException`, so
+   `shouldReconnect()` can never re-classify it as retryable.
    Covered by `testRootTransactionDoesNotRetryWhenCommitFails`.
 2. **Closed-EM re-entry can no longer escape the atomicity guarantee.** `isRollbackOnly` is a
    per-connection flag. When a nested flush failure closed the `EntityManager` and an

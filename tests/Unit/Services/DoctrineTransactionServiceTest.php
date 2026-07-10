@@ -261,48 +261,46 @@ class DoctrineTransactionServiceTest extends TestCase
 
     /**
      * transaction()'s root-vs-nested routing must not trust conn->isTransactionActive()
-     * alone: a prior failure can leave the EntityManager closed while a failed/skipped
-     * rollback leaves the connection still reporting an active transaction. Routing that
-     * state into runNestedTransaction() (which has no isOpen()-based reset) would hand the
-     * callback a closed EntityManager instead of the clear, actionable reset-and-retry root
-     * path runRootTransaction() already provides.
+     * alone: a closed EntityManager while its connection still reports an active
+     * transaction means a nested failure was caught mid-propagation (the outer
+     * transaction() frame has not unwound yet). Routing that state into
+     * runNestedTransaction() would hand the callback a dead EntityManager, and
+     * routing it into runRootTransaction() would be worse: resetManager() builds a
+     * brand-new EntityManager AND a brand-new DBAL connection, so the "recovered"
+     * root would commit durable writes on the fresh connection while the outer,
+     * rollback-only transaction on the old connection rolls back - a split-brain
+     * partial commit. The only safe move is to refuse and let the original nested
+     * failure propagate to the root.
      */
-    public function testTransactionRoutesToRootWhenEntityManagerClosedDespiteActiveConnectionFlag(): void
+    public function testTransactionRefusesWhenEntityManagerClosedWithActiveTransaction(): void
     {
         $conn = Mockery::mock(Connection::class);
         $conn->shouldReceive('isTransactionActive')->andReturn(true);
-        $conn->shouldReceive('setTransactionIsolation')->byDefault();
-        $conn->shouldReceive('beginTransaction')->byDefault();
-        $conn->shouldReceive('commit')->byDefault();
-        $conn->shouldReceive('rollBack')->byDefault();
-        $conn->shouldReceive('close')->byDefault();
+        $conn->shouldReceive('beginTransaction')->never();
 
         $em = Mockery::mock(EntityManagerInterface::class);
         $em->shouldReceive('getConnection')->andReturn($conn)->byDefault();
         $em->shouldReceive('isOpen')->andReturn(false); // closed
-        $em->shouldReceive('flush')->byDefault();
-        $em->shouldReceive('clear')->byDefault();
-        $em->shouldReceive('close')->byDefault();
-
-        $freshEm = Mockery::mock(EntityManagerInterface::class);
-        $freshEm->shouldReceive('getConnection')->andReturn($conn)->byDefault();
-        $freshEm->shouldReceive('isOpen')->andReturn(true);
-        $freshEm->shouldReceive('flush')->once();
-        $freshEm->shouldReceive('clear')->byDefault();
-        $freshEm->shouldReceive('close')->byDefault();
 
         $registry = Mockery::mock(ManagerRegistry::class);
         $registry->shouldReceive('getManager')->with('default')->andReturn($em)->byDefault();
-        $registry->shouldReceive('resetManager')->with('default')->once()->andReturn($freshEm);
+        $registry->shouldReceive('resetManager')->never();
 
         $this->container->instance(ManagerRegistry::class, $registry);
 
+        $callCount = 0;
         $service = new DoctrineTransactionService('default');
-        $result = $service->transaction(function () {
-            return 'from-fresh-em';
-        });
 
-        $this->assertSame('from-fresh-em', $result);
+        try {
+            $service->transaction(function () use (&$callCount) {
+                $callCount++;
+                return 'must-never-run';
+            });
+            $this->fail('Expected refusal when the EM is closed while a transaction is still active');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('refusing to start an independent root transaction', $e->getMessage());
+            $this->assertSame(0, $callCount, 'Callback must never execute in this state');
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -408,15 +406,15 @@ class DoctrineTransactionServiceTest extends TestCase
      * fast with a clear error - not proceed to flush() and surface an
      * opaque EntityManagerClosed one level higher than before.
      *
-     * runNestedTransaction has no retry loop, so there is exactly ONE
-     * isOpen() call after this fix (the post-callback guard) - a single
-     * `false`, not a two-value sequence like the root test.
+     * isOpen() sequence: true (transaction() routing sees the still-open EM,
+     * so this call runs as NESTED), then false (the deeper flush failure has
+     * closed the EM by the time the post-callback guard runs).
      */
     public function testNestedTransactionFailsFastWhenDeeperNestedFlushClosedEntityManager(): void
     {
         [$em, $conn] = $this->buildMocks(transactionActive: true);
 
-        $em->shouldReceive('isOpen')->andReturn(false);
+        $em->shouldReceive('isOpen')->andReturn(true, false);
         $conn->shouldReceive('isTransactionActive')->andReturn(true);
         $conn->shouldReceive('rollBack')->once();
         $em->shouldReceive('flush')->never();
@@ -910,6 +908,40 @@ class DoctrineTransactionServiceTest extends TestCase
         } catch (TestRetryableException $e) {
             // Should have been called MaxRetries times
             $this->assertSame(DoctrineTransactionService::MaxRetries, $callCount);
+        }
+    }
+
+    /**
+     * A connection failure during the root COMMIT itself is ambiguous: the server
+     * may have already made the transaction durable even though the client never
+     * received the acknowledgment (ack-lost scenario). Retrying would re-execute
+     * the whole callback and duplicate every write and side effect (orders,
+     * tickets, emails), so commit-phase failures must bypass the reconnect/retry
+     * path and propagate immediately.
+     */
+    public function testRootTransactionDoesNotRetryWhenCommitFails(): void
+    {
+        [$em, $conn] = $this->buildMocks(transactionActive: false);
+
+        // DBAL decrements the nesting level in a finally block even when the
+        // physical COMMIT fails, so by the time the exception is caught no
+        // transaction is active - buildMocks' byDefault(false) models this.
+        $conn->shouldReceive('commit')
+            ->once()
+            ->andThrow(new TestRetryableException('server has gone away during COMMIT'));
+        $conn->shouldReceive('rollBack')->never();
+
+        $callCount = 0;
+        $service = new DoctrineTransactionService('default');
+
+        try {
+            $service->transaction(function () use (&$callCount) {
+                $callCount++;
+                return 'ok';
+            });
+            $this->fail('Expected the commit-phase failure to propagate');
+        } catch (TestRetryableException $e) {
+            $this->assertSame(1, $callCount, 'Callback must not be re-executed after an ambiguous commit failure');
         }
     }
 

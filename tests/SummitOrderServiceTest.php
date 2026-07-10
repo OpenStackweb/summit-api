@@ -32,6 +32,7 @@ use App\Services\Model\SummitOrderService;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use libs\utils\ITransactionService;
@@ -423,6 +424,24 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             App::make(ITransactionService::class),
             App::make(ILockManagerService::class)
         );
+    }
+
+    private function disableDefaultBadgeType(): int
+    {
+        $badge_type_id = self::$default_badge_type->getId();
+        self::$default_badge_type->setIsDefault(false);
+        return $badge_type_id;
+    }
+
+    private function restoreDefaultBadgeType(int $badge_type_id): void
+    {
+        // The failed transaction's rollback already cleared self::$em, detaching the
+        // original self::$default_badge_type instance - restore via a fresh lookup so
+        // the flush actually persists the flag, instead of silently no-op'ing on a
+        // detached entity.
+        self::$default_badge_type = self::$em->find(SummitBadgeType::class, $badge_type_id);
+        self::$default_badge_type->setIsDefault(true);
+        self::$em->flush();
     }
 
     /**
@@ -1085,7 +1104,11 @@ CSV;
 
         $this->assertTrue($order->isPaid());
         $this->assertEquals(1, $order->getTickets()->count());
-        $this->assertEquals($owner_email, $order->getFirstTicket()->getOwner()->getEmail());
+        $ticket = $order->getFirstTicket();
+        $this->assertNotNull($ticket);
+        $owner = $ticket->getOwner();
+        $this->assertNotNull($owner);
+        $this->assertEquals($owner_email, $owner->getEmail());
 
         self::$em->clear();
 
@@ -1093,7 +1116,11 @@ CSV;
         $this->assertNotNull($reFetched);
         $this->assertTrue($reFetched->isPaid());
         $this->assertEquals(1, $reFetched->getTickets()->count());
-        $this->assertEquals($owner_email, $reFetched->getFirstTicket()->getOwner()->getEmail());
+        $reFetchedTicket = $reFetched->getFirstTicket();
+        $this->assertNotNull($reFetchedTicket);
+        $reFetchedOwner = $reFetchedTicket->getOwner();
+        $this->assertNotNull($reFetchedOwner);
+        $this->assertEquals($owner_email, $reFetchedOwner->getEmail());
     }
 
     public function testCreateTicketsForOrderRollsBackEntireChainOnInvalidPromoCode()
@@ -1136,7 +1163,7 @@ CSV;
         $service = App::make(ISummitOrderService::class);
         $attendee_repository = App::make(ISummitAttendeeRepository::class);
 
-        self::$default_badge_type->setIsDefault(false);
+        $badge_type_id = $this->disableDefaultBadgeType();
 
         $owner_email = sprintf('offline-order-badge-fail-%s@test.com', uniqid());
 
@@ -1154,13 +1181,142 @@ CSV;
         } catch (ValidationException $ex) {
             $this->assertStringContainsString('default badge type', $ex->getMessage());
         } finally {
-            self::$default_badge_type->setIsDefault(true);
-            self::$em->flush();
+            $this->restoreDefaultBadgeType($badge_type_id);
         }
 
         self::$em->clear();
 
         $attendee = $attendee_repository->getBySummitAndEmail(self::$summit, $owner_email);
         $this->assertNull($attendee);
+    }
+
+    /**
+     * processTicketData() runs each CSV row in its OWN independent root transaction (the
+     * summit lookup and each row's tx_service->transaction() call all commit/rollback
+     * separately - not one nested transaction spanning the whole file). Since the loop has
+     * no per-row try/catch, row 1's uncaught failure stops the foreach immediately, so row 2
+     * is never reached. This test therefore proves loop termination, NOT cross-row atomicity:
+     * because both rows fail for the SAME summit-wide reason (missing default badge type),
+     * it cannot distinguish "nothing commits because everything failed" from "an
+     * already-succeeded earlier row would also roll back if a later row failed" - the latter
+     * is FALSE (each row is an independent root transaction; a genuinely-committed earlier
+     * row survives regardless of a later row's failure). That partial-commit risk is real and
+     * separately documented in docs/plans/2026-07-10-summit-order-api-exception-coverage.md's
+     * Out of Scope section, not covered by this test.
+     */
+    public function testProcessTicketDataStopsProcessingRemainingRowsOnNestedTransactionFailure()
+    {
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        $email1 = sprintf('csv-import-row1-%s@test.com', uniqid());
+        $email2 = sprintf('csv-import-row2-%s@test.com', uniqid());
+        $ticket_type_id = self::$default_ticket_type->getId();
+
+        $csv_content = <<<CSV
+attendee_email,attendee_first_name,attendee_last_name,ticket_type_id
+{$email1},CSV,RowOne,{$ticket_type_id}
+{$email2},CSV,RowTwo,{$ticket_type_id}
+CSV;
+
+        $badge_type_id = $this->disableDefaultBadgeType();
+
+        try {
+            $service = $this->buildTicketDataImportService($csv_content);
+            $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('default badge type', $ex->getMessage());
+        } finally {
+            $this->restoreDefaultBadgeType($badge_type_id);
+        }
+
+        self::$em->clear();
+
+        $attendee1 = $attendee_repository->getBySummitAndEmail(self::$summit, $email1);
+        $attendee2 = $attendee_repository->getBySummitAndEmail(self::$summit, $email2);
+        $this->assertNull($attendee1);
+        $this->assertNull($attendee2);
+    }
+
+    public function testAddTicketsRollsBackEntireChainOnMissingDefaultBadgeType()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        $order = self::$summit->getOrders()[0];
+        $order_id = $order->getId();
+        $initial_ticket_count = $order->getTickets()->count();
+
+        $badge_type_id = $this->disableDefaultBadgeType();
+
+        try {
+            $service->addTickets(self::$summit, $order_id, [
+                'ticket_type_id' => self::$default_ticket_type->getId(),
+                'ticket_qty' => 1,
+            ]);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('default badge type', $ex->getMessage());
+        } finally {
+            $this->restoreDefaultBadgeType($badge_type_id);
+        }
+
+        self::$em->clear();
+
+        $reFetched = self::$em->find(SummitOrder::class, $order_id);
+        $this->assertNotNull($reFetched);
+        $this->assertEquals($initial_ticket_count, $reFetched->getTickets()->count());
+    }
+
+    public function testRequestRefundOrderRollsBackEntireChainWhenOneTicketIsFree()
+    {
+        Queue::fake();
+        Config::set('registration.admin_email', 'admin@test.com');
+
+        $service = App::make(ISummitOrderService::class);
+
+        // Summit::canEmitRefundRequests() requires a future refund-request deadline;
+        // InsertSummitTestData does not set one by default.
+        self::$summit->setRegistrationAllowedRefundRequestTillDate(new \DateTime('+1 day', new \DateTimeZone('UTC')));
+
+        $order = self::$summit->getOrders()[0];
+        $order_id = $order->getId();
+        $tickets = $order->getTickets();
+        $this->assertGreaterThanOrEqual(2, $tickets->count());
+
+        $refundableTicket = $tickets[0];
+        $freeTicket = $tickets[1];
+        $refundableTicketId = $refundableTicket->getId();
+        $freeTicketId = $freeTicket->getId();
+
+        // isPaid() is a pure status flag (set by SummitOrder::setPaid() on every ticket),
+        // independent of cost - setRawCost(0.0) makes this ticket free without affecting
+        // its already-paid status, so it still enters requestRefundOrder's loop.
+        $freeTicket->setRawCost(0.0);
+
+        // InsertSummitTestData sets the order's owner via SummitOrder::setOwner() only,
+        // which does not populate Member's inverse summit_registration_orders collection;
+        // requestRefundOrder() looks the order up via that collection with no self-healing
+        // fallback (unlike updateMyOrder()), so add it explicitly.
+        self::$defaultMember->addSummitRegistrationOrder($order);
+
+        self::$em->persist($freeTicket);
+        self::$em->persist(self::$defaultMember);
+        self::$em->flush();
+
+        try {
+            $service->requestRefundOrder(self::$defaultMember, $order_id);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('free', $ex->getMessage());
+        }
+
+        self::$em->clear();
+
+        $reFetchedRefundable = self::$em->find(SummitAttendeeTicket::class, $refundableTicketId);
+        $reFetchedFree = self::$em->find(SummitAttendeeTicket::class, $freeTicketId);
+        $this->assertNotNull($reFetchedRefundable);
+        $this->assertNotNull($reFetchedFree);
+        $this->assertEquals(0, $reFetchedRefundable->getRefundedRequests()->count());
+        $this->assertEquals(0, $reFetchedFree->getRefundedRequests()->count());
     }
 }

@@ -26,10 +26,51 @@ right.
 
 ## Decision Timeline
 
-### Iteration 1 (initial approach) — DBAL savepoints, discarded
+### Baseline (`origin/main`) — no nested-transaction awareness at all
 
-Commit `d88de2ce3` introduced the root/nested split above and, alongside it, called
-`$conn->setNestTransactionsWithSavepoints(true)` on the root transaction. The intent: when a
+Before this branch, `DoctrineTransactionService::transaction()` (`origin/main`, verified at
+`988a6d3e6`) had **no root/nested distinction whatsoever** — every call, whether the outermost
+one or one invoked from inside another already-open `transaction()` call, ran the identical
+retry loop:
+
+```php
+$em->getConnection()->beginTransaction();
+$result = $callback($this);
+$em->flush();
+$em->getConnection()->commit();
+```
+
+And on **any** exception at all — a connection drop, or an ordinary business-rule
+`ValidationException` with no connection problem whatsoever — the catch block did this
+**unconditionally**, regardless of nesting depth or exception type:
+
+```php
+$em->getConnection()->close();
+$em->close();
+if ($em->getConnection()->isTransactionActive()) $em->getConnection()->rollBack();
+Registry::resetManager($this->manager_name);
+```
+
+No `setNestTransactionsWithSavepoints` call exists anywhere in this baseline — savepoints were
+never part of `main`'s design; they were introduced (and later discarded) entirely within this
+branch, see Iteration 1 below.
+
+**Why this is unsafe for nested calls.** Because a nested `transaction()` call is just a normal
+recursive call to this same method, a failure at the INNER level closes the entire physical DB
+connection and the shared `EntityManager` before the exception even propagates back to the
+OUTER call. The outer call's own local `$em` reference now points at an already-closed manager
+— its next `flush()` throws `EntityManagerClosed`, which its own catch block then tears down
+*again* (a second `close()+close()+resetManager()`), on top of whatever work the outer callback
+had pending. This is the mechanism the empirical A/B test later in this document refers to as
+"`main` (old code): ... calls `Registry::resetManager()` **twice**, loses everything." The
+blast radius is total and applies to every nested failure uniformly, not just connection-level
+ones — there is no scoped, partial-rollback concept here at all.
+
+### Iteration 1 — DBAL savepoints, discarded
+
+Commit `d88de2ce3` introduced the root/nested split above (specifically to stop a nested
+failure from destroying the outer `EntityManager`, per that commit's own message) and, alongside
+it, called `$conn->setNestTransactionsWithSavepoints(true)` on the root transaction. The intent: when a
 nested transaction's `rollBack()` runs on a savepoints-enabled connection, DBAL issues
 `ROLLBACK TO SAVEPOINT` instead of rolling back the whole DB transaction — undoing only the
 inner work while leaving the outer transaction free to continue and commit its own writes.

@@ -175,6 +175,13 @@ guaranteed behavior end-to-end.
 | `PresentationService::submitPresentation` | `saveOrUpdatePresentation` | `tests/PresentationServiceTest.php` | Full rollback — nonexistent track |
 | `PresentationService::updatePresentationSubmission` | `saveOrUpdatePresentation` | `tests/PresentationServiceTest.php` | Full rollback — nonexistent track, update never partially applies |
 | `SummitPromoCodeService::addPromoCode` | `addPromoCodeTicketTypeRule` | `tests/SummitPromoCodeServiceTest.php` | **Partial commit, not full rollback** — this is actually two separate, sequential root transactions; the promo code from the first survives even when the second (ticket-type-rules) transaction fails |
+| `SelectionPlanOrderExtraQuestionTypeService::updateExtraQuestionBySelectionPlan` | `updateExtraQuestion` | `tests/SelectionPlanOrderExtraQuestionTypeServiceTest.php` | Full rollback — a question not assigned to the target plan lets the inner label change commit, then the outer's assignment check fails and undoes it |
+| `SpeakerService::updateSpeakerBySummit` | `registerSummitPromoCodeByValue` | `tests/SpeakerServiceRegistrationTest.php` | Full rollback — `updateSpeaker`'s already-committed title change is undone when the registration code is already claimed by another speaker |
+| `SponsorUserSyncService::addSponsorUserToGroup` | `SummitSponsorService::addSponsorUser` | `tests/Unit/Services/SponsorUserPermissionTrackingTest.php` | Full rollback — the eagerly-created `Sponsor_Users` row commits, then an unresolvable `group_slug` undoes it |
+| `SummitScheduleSettingsService::seedDefaults` | `add` (looped) | `tests/SummitScheduleSettingsServiceTest.php` | Full rollback — the loop's first successfully-added default is undone when the second's key already exists |
+| `SummitSelectedPresentationListService::assignPresentationToMyIndividualList` | `createIndividualSelectionList` | `tests/SummitSelectedPresentationListServiceTest.php` | Full rollback — the just-committed new individual list is undone when the presentation lookup afterward fails |
+| `SummitService::unPublishEvents` | `unPublishEvent` (looped) | `tests/SummitServiceTest.php` | Full rollback — an earlier item's already-committed unpublish is undone when a later item's event id doesn't exist |
+| `SummitService::updateAndPublishEvents` | `updateEvent` (looped) | `tests/SummitServiceTest.php` | Full rollback — an earlier item's already-committed update+publish is undone when a later item's `location_id` doesn't exist. **Nuance found during implementation:** the exception actually fires inside `updateEvent()`'s own location check, not `publishEvent()`'s — both do the identical existence check on the same payload, but `updateEvent()` runs first and its check has no `isAllowsLocation()` gate, so `publishEvent()`'s own check is structurally unreachable via this call site for this trigger |
 
 ### API/HTTP-level exception-branch coverage
 
@@ -187,23 +194,33 @@ guaranteed behavior end-to-end.
 
 A follow-up codebase-wide search (same outer/inner shape: method A wrapped in its own
 `tx_service->transaction()` calling, with no local `try/catch` around the call, method B which
-is *also* wrapped in its own separate `tx_service->transaction()`) found **11 additional
-pairs, across 8 more services, that are NOT yet covered by any test** proving the new
-rollback contract:
+is *also* wrapped in its own separate `tx_service->transaction()`) originally found 11
+additional pairs across 8 more services with no test proving the new rollback contract. 8 of
+those 11 are now covered (see Test Coverage Added above,
+`docs/plans/2026-07-10-remaining-nested-tx-coverage.md`). The remaining 3 were verified against
+the real code and found to have **no committed-then-rolled-back proof reachable through their
+specific call site** — the same structural reason a genuine rollback test can't be built for
+them, not merely undiscovered test cases:
 
-| # | Outer → Inner | Realistic trigger |
-|---|---|---|
-| 1 | `SelectionPlanOrderExtraQuestionTypeService::updateExtraQuestionBySelectionPlan` → `updateExtraQuestion` | Duplicate question name/label for the selection plan |
-| 2 | `SpeakerService::updateSpeakerBySummit` → `updateSpeaker` | Member already assigned to another speaker |
-| 3 | `SpeakerService::updateSpeakerBySummit` → `registerSummitPromoCodeByValue` | Promo code already redeemed/assigned to another speaker |
-| 4 | `SponsorUserSyncService::addSponsorUserToGroup` → `SummitSponsorService::addSponsorUser` | Member already a sponsor-user on a date-overlapping summit |
-| 5 | `SummitRSVPInvitationService::acceptInvitationBySummitEventAndToken` → `SummitRSVPService::rsvpEvent` | Attendee has no valid tickets / duplicate RSVP |
-| 6 | `SummitRegistrationInvitationService::add`/`update` → `TagService::addTag` | Duplicate tag race |
-| 7 | `SummitSubmissionInvitationService::add`/`update` → `TagService::addTag` | Same as #6 |
-| 8 | `SummitScheduleSettingsService::seedDefaults` (loop) → `add` | A later default's key already exists — rolls back earlier successfully-added defaults in the same loop too |
-| 9 | `SummitSelectedPresentationListService::getTeamSelectionList`/`getIndividualSelectionList`/`assignPresentationToMyIndividualList` → `createTeamSelectionList`/`createIndividualSelectionList` | TOCTOU re-check failure (`AuthzException`/`EntityNotFoundException`) |
-| 10 | `SummitService::unPublishEvents` (batch loop) → `unPublishEvent` | One bad event id in a batch undoes the whole batch |
-| 11 | `SummitService::updateAndPublishEvents` (batch loop) → `publishEvent` | Validation/entity-not-found failure on one event in a batch undoes the whole batch |
+| Outer → Inner | Why no test is possible here |
+|---|---|
+| `SummitRegistrationInvitationService::add`/`update` → `TagService::addTag` | The outer's own pre-check (`$this->tag_repository->getByTag($tag_value)`) already uses the identical normalized comparison (`UPPER(TRIM(...))`, `DoctrineTagRepository.php:54-63`) that `addTag()`'s own duplicate check uses internally — no case/whitespace gap exists between them for a single synchronous request. `addTag()`'s own `ValidationException("Tag %s already exists!")` can only fire via a genuine concurrent race between two overlapping requests, which cannot be expressed deterministically in a test. |
+| `SummitSubmissionInvitationService::add`/`update` → `TagService::addTag` | Same reason as above. |
+| `SummitRSVPInvitationService::acceptInvitationBySummitEventAndToken` → `SummitRSVPService::rsvpEvent` | The outer method has no write before the nested `rsvpEvent()` call (its own guards, `:312-336`, are pure reads), and its only post-call write (`markAsAcceptedWithRSVP()`, `:343`) runs strictly *after* `rsvpEvent()` returns — so when the inner throws, there is nothing already committed for a rollback to undo. Asserting `isAccepted() === false` afterward would hold identically true with `isRollbackOnly` fully disabled. |
+
+Also dropped as **redundant, not unreachable**: `SpeakerService::updateSpeakerBySummit` →
+`updateSpeaker` via the member-already-assigned trigger. `updateSpeaker`'s check throws before
+any write and is the outer's first operation, so this specific trigger can't prove rollback
+either — but the *same* outer/inner pair is already proven via the `registration_code` trigger
+(`updateSpeaker`'s title change commits first, then `registerSummitPromoCodeByValue` fails and
+rolls it back), so no second test was needed for this production class.
+
+`SummitSelectedPresentationListService::getTeamSelectionList`/`getIndividualSelectionList` →
+`createTeamSelectionList`/`createIndividualSelectionList` were also dropped: both outer methods
+return immediately after the inner create call with no additional outer-side writes, so testing
+them would only re-prove the inner methods' own already-covered nested-transaction mechanism,
+not a distinct outer/inner rollback risk. Only `assignPresentationToMyIndividualList` (which
+does real work — presentation validation — after the nested call) was covered.
 
 Several other call sites share the same *family* (calling a nested-transaction-wrapped method)
 but are already guarded by a local `try/catch` outside the inner closure — the same safe shape
@@ -214,7 +231,8 @@ as `SummitService::processRegistrationCompaniesData` above, not a rollback risk:
 `ScheduleService::publishAll` → `SummitService::publishEvent`; `SummitService::processEventData`
 (per-CSV-row) → `SpeakerService::addSpeaker`/`updateSpeaker`.
 
-None of the 11 gaps above are fixed or tested by this ADR's work — they are recorded here as
-the next candidates for the same test-coverage treatment applied to the 9 pairs already closed
-(see `docs/plans/2026-07-10-nested-tx-other-services-coverage.md` and
-`docs/plans/2026-07-10-summit-order-api-exception-coverage.md`).
+With the 8 testable gaps closed and the remaining 3 confirmed structurally unreachable, this
+codebase-wide sweep for the outer/inner nested-transaction shape is complete (see
+`docs/plans/2026-07-10-nested-tx-other-services-coverage.md`,
+`docs/plans/2026-07-10-summit-order-api-exception-coverage.md`, and
+`docs/plans/2026-07-10-remaining-nested-tx-coverage.md`).

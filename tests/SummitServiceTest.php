@@ -14,6 +14,11 @@
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Storage;
+use models\exceptions\EntityNotFoundException;
+use models\summit\ISummitEventType;
+use models\summit\SummitEvent;
+use models\summit\SummitEventType;
+use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use services\model\ISummitService;
 
 /**
@@ -22,17 +27,58 @@ use services\model\ISummitService;
 final class SummitServiceTest extends BrowserKitTestCase
 {
     use InsertSummitTestData;
+    use InsertMemberTestData;
 
     protected function setUp(): void
     {
         parent::setUp();
+        self::insertMemberTestData(\App\Models\Foundation\Main\IGroup::SuperAdmins);
+        self::$defaultMember = self::$member;
         self::insertSummitTestData();
+
+        // SummitService::saveOrUpdateEvent()/publishEvent() read the current user via the
+        // \App\Facades\ResourceServerContext static facade to stamp created_by/updated_by.
+        // The concrete \models\oauth2\ResourceServerContext is final, so Mockery can't mock
+        // the facade directly - mock the interface instead and rebind it under the facade's
+        // accessor key (established this session in tests/PresentationServiceTest.php).
+        $resource_server_context_mock = \Mockery::mock(\models\oauth2\IResourceServerContext::class);
+        $resource_server_context_mock->shouldReceive('getCurrentUser')->with(false)->andReturn(self::$defaultMember);
+        App::instance('resource_server_context', $resource_server_context_mock);
     }
 
     protected function tearDown(): void
     {
         self::clearSummitTestData();
+        self::clearMemberTestData();
         parent::tearDown();
+        \Mockery::close();
+    }
+
+    /**
+     * self::$defaultEventType has blackout_times='All' (a deliberate InsertSummitTestData
+     * fixture choice meant to conflict with everything else), and a pre-seeded event of that
+     * type already occupies most of the summit's first day - unusable for tests that need to
+     * create their OWN non-conflicting events. Build a dedicated, non-blackout event type.
+     */
+    private function createNonBlackoutEventType(): SummitEventType
+    {
+        $type = new SummitEventType();
+        $type->setType(ISummitEventType::Lunch);
+        $type->setBlackoutTimes(SummitEventTypeConstants::BLACKOUT_TIME_NONE);
+        self::$summit->addEventType($type);
+        self::$em->persist($type);
+        self::$em->flush();
+        return $type;
+    }
+
+    /**
+     * @return \DateTime[] [$start_date, $end_date], both within the summit's date range.
+     */
+    private function nonConflictingEventWindow(): array
+    {
+        $start_date = (clone self::$summit->getBeginDate())->add(new \DateInterval('PT1H'));
+        $end_date = (clone $start_date)->add(new \DateInterval('PT1H'));
+        return [$start_date, $end_date];
     }
 
     /**
@@ -75,5 +121,118 @@ CSV;
 
         $new_company_on_summit = self::$summit->getRegistrationCompanyByName($new_company_name);
         $this->assertNotNull($new_company_on_summit);
+    }
+
+    /**
+     * SummitService::unPublishEvents() (SummitService.php:1467) loops calling
+     * unPublishEvent() (:1034, its own nested transaction) per event id - no try/catch.
+     * The FIRST (valid) id's unpublish commits inside its own nested transaction; a SECOND,
+     * nonexistent id then throws EntityNotFoundException (:1041), rolling back the ENTIRE
+     * batch, including the first id's already-committed unpublish.
+     */
+    public function testUnPublishEventsRollsBackAlreadyCommittedUnpublishOnLaterBadEventId()
+    {
+        $service = App::make(ISummitService::class);
+        $event_type = $this->createNonBlackoutEventType();
+        [$start_date, $end_date] = $this->nonConflictingEventWindow();
+
+        // No location_id set - AbstractPublishService::validateBlackOutTimesAndTimes()
+        // only enforces blackout collisions when the event has a non-null location
+        // (Summit fixture data seeds many published events spanning the whole date
+        // range with blackout_times set, so any located event anywhere would collide).
+        $event = $service->addEvent(self::$summit, [
+            'title' => 'Batch Unpublish Test ' . uniqid(),
+            'type_id' => $event_type->getId(),
+            'start_date' => $start_date->getTimestamp(),
+            'end_date' => $end_date->getTimestamp(),
+        ]);
+        $event_id = $event->getId();
+        $service->publishEvent(self::$summit, $event_id, []);
+
+        try {
+            $service->unPublishEvents(self::$summit, ['events' => [$event_id, 999999999]]);
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            $this->assertStringContainsString('999999999', $ex->getMessage());
+        }
+
+        self::$em->clear();
+        $reFetched = self::$em->find(SummitEvent::class, $event_id);
+        $this->assertNotNull($reFetched);
+        $this->assertTrue($reFetched->isPublished());
+    }
+
+    /**
+     * SummitService::updateAndPublishEvents() (SummitService.php:1488) loops calling
+     * updateEvent() (:620, own nested transaction) then publishEvent() (:966, own nested
+     * transaction) per event - no try/catch. Item 1's update+publish commits fully; item 2's
+     * bad location_id then rolls back the whole call - including item 1's already-committed
+     * update+publish.
+     *
+     * The exception is thrown by updateEvent()'s underlying saveOrUpdateEvent()
+     * (SummitService.php:702-708, "location id %s does not exists!") - NOT by publishEvent()'s
+     * own, textually-identical location check (:999-1008). Since updateAndPublishEvents()
+     * passes the SAME $event_data to both calls and calls updateEvent() first (:1495-1496),
+     * saveOrUpdateEvent()'s unconditional (no isAllowsLocation gate) location-existence check
+     * always preempts publishEvent()'s gated one for any bad location_id in that payload -
+     * confirmed via code review during spec-verify; publishEvent()'s own check is not reachable
+     * through this call site. This still proves the pair's core claim (a batch item's nested-tx
+     * failure rolls back an EARLIER item's already-committed nested-tx work), just via
+     * updateEvent()'s nested transaction rather than publishEvent()'s specifically.
+     */
+    public function testUpdateAndPublishEventsRollsBackAlreadyCommittedFirstItemWhenSecondItemsUpdateEventFailsOnBadLocationId()
+    {
+        $service = App::make(ISummitService::class);
+        $event_type = $this->createNonBlackoutEventType();
+        [$start_date, $end_date] = $this->nonConflictingEventWindow();
+
+        // event1 has no location_id - it gets published within the batch call, and
+        // AbstractPublishService::validateBlackOutTimesAndTimes() only enforces blackout
+        // collisions when the event has a non-null location (see the sibling test above).
+        $original_title_1 = 'Original Title 1 ' . uniqid();
+        $event1 = $service->addEvent(self::$summit, [
+            'title' => $original_title_1,
+            'type_id' => $event_type->getId(),
+            'start_date' => $start_date->getTimestamp(),
+            'end_date' => $end_date->getTimestamp(),
+        ]);
+        $event1_id = $event1->getId();
+
+        $event2 = $service->addEvent(self::$summit, [
+            'title' => 'Event 2 ' . uniqid(),
+            'type_id' => $event_type->getId(),
+            'location_id' => self::$mainVenue->getId(),
+            'start_date' => $start_date->getTimestamp(),
+            'end_date' => $end_date->getTimestamp(),
+        ]);
+        $event2_id = $event2->getId();
+
+        try {
+            $service->updateAndPublishEvents(self::$summit, [
+                'events' => [
+                    [
+                        'id' => $event1_id,
+                        'title' => 'Updated Title Should Not Persist',
+                        'start_date' => $start_date->getTimestamp(),
+                        'end_date' => $end_date->getTimestamp(),
+                    ],
+                    [
+                        'id' => $event2_id,
+                        'start_date' => $start_date->getTimestamp(),
+                        'end_date' => $end_date->getTimestamp(),
+                        'location_id' => 999999999,
+                    ],
+                ],
+            ]);
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            $this->assertStringContainsString('location id', $ex->getMessage());
+        }
+
+        self::$em->clear();
+        $reFetchedEvent1 = self::$em->find(SummitEvent::class, $event1_id);
+        $this->assertNotNull($reFetchedEvent1);
+        $this->assertEquals($original_title_1, $reFetchedEvent1->getTitle());
+        $this->assertFalse($reFetchedEvent1->isPublished());
     }
 }

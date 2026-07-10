@@ -918,10 +918,15 @@ class DoctrineTransactionServiceTest extends TestCase
      * the whole callback and duplicate every write and side effect (orders,
      * tickets, emails), so commit-phase failures must bypass the reconnect/retry
      * path and propagate immediately.
+     *
+     * Because the failure is connection-level, the dead physical handle must not
+     * stay registered either: the manager/connection pair is discarded (closed +
+     * resetManager) so subsequent work on this worker - including direct Registry
+     * reads outside transaction() - gets a live pair. Cleanup only: still no retry.
      */
     public function testRootTransactionDoesNotRetryWhenCommitFails(): void
     {
-        [$em, $conn] = $this->buildMocks(transactionActive: false);
+        [$em, $conn, $registry] = $this->buildMocks(transactionActive: false);
 
         // DBAL decrements the nesting level in a finally block even when the
         // physical COMMIT fails, so by the time the exception is caught no
@@ -930,6 +935,10 @@ class DoctrineTransactionServiceTest extends TestCase
             ->once()
             ->andThrow(new TestRetryableException('server has gone away during COMMIT'));
         $conn->shouldReceive('rollBack')->never();
+        $conn->shouldReceive('close')->once();
+
+        $em->shouldReceive('close')->once();
+        $registry->shouldReceive('resetManager')->with('default')->once()->andReturn($em);
 
         $callCount = 0;
         $service = new DoctrineTransactionService('default');
@@ -943,6 +952,60 @@ class DoctrineTransactionServiceTest extends TestCase
         } catch (TestRetryableException $e) {
             $this->assertSame(1, $callCount, 'Callback must not be re-executed after an ambiguous commit failure');
         }
+    }
+
+    /**
+     * When the ROOT rollback itself fails (typically the connection died during
+     * the callback), safeRollback() must keep the original business exception -
+     * but the manager/connection pair is now in an unknown state: DBAL zeroes the
+     * nesting level before the physical rollback and only clears its rollback-only
+     * flag after it succeeds, so the registry would otherwise keep an open EM
+     * wired to a dead handle. Direct Registry consumers (repositories, serializers,
+     * queue jobs reading outside transaction()) have no retry path and would fail
+     * in a chain on a long-lived worker. The pair must be discarded: EM closed,
+     * connection closed, fresh manager reset into the registry - while the
+     * ORIGINAL exception still propagates and no retry happens.
+     */
+    public function testRootTransactionDiscardsManagerWhenRollbackFails(): void
+    {
+        $conn = Mockery::mock(Connection::class);
+        // false: routing check picks the ROOT path; true: rollback check in the inner catch
+        $conn->shouldReceive('isTransactionActive')->andReturn(false, true);
+        $conn->shouldReceive('setTransactionIsolation')->byDefault();
+        $conn->shouldReceive('beginTransaction')->once();
+        $conn->shouldReceive('commit')->never();
+        $conn->shouldReceive('rollBack')
+            ->once()
+            ->andThrow(new TestRetryableException('connection died during rollback'));
+        $conn->shouldReceive('close')->once();
+
+        $em = Mockery::mock(EntityManagerInterface::class);
+        $em->shouldReceive('getConnection')->andReturn($conn)->byDefault();
+        // Stays open throughout: a business error is not a flush failure
+        $em->shouldReceive('isOpen')->andReturn(true);
+        $em->shouldReceive('flush')->never();
+        $em->shouldReceive('clear')->byDefault();
+        $em->shouldReceive('close')->once();
+
+        $registry = Mockery::mock(ManagerRegistry::class);
+        $registry->shouldReceive('getManager')->with('default')->andReturn($em)->byDefault();
+        $registry->shouldReceive('resetManager')->with('default')->once()->andReturn($em);
+
+        $this->container->instance(ManagerRegistry::class, $registry);
+
+        $callCount = 0;
+        $service = new DoctrineTransactionService('default');
+
+        try {
+            $service->transaction(function () use (&$callCount) {
+                $callCount++;
+                throw new \LogicException('business error with dying connection');
+            });
+            $this->fail('Expected the original business exception to propagate');
+        } catch (\LogicException $e) {
+            $this->assertStringContainsString('business error with dying connection', $e->getMessage());
+        }
+        $this->assertSame(1, $callCount, 'A rollback failure must never trigger the retry loop');
     }
 
     /**

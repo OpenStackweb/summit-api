@@ -518,6 +518,45 @@ class OAuth2AttendeesApiTest extends ProtectedApiTestCase
         return $ticket;
     }
 
+    public function testAddAttendeeTicketFailsOnInvalidPromoCode(){
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $attendee_id = $attendee->getId();
+        $initial_ticket_count = $attendee->getTickets()->count();
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'attendee_id' => $attendee_id,
+        ];
+
+        $data = [
+            'ticket_type_id' => self::$default_ticket_type->getId(),
+            'promo_code'     => 'DOES-NOT-EXIST-' . uniqid(),
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitAttendeesApiController@addAttendeeTicket",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(404);
+        $decoded = json_decode($content);
+        $this->assertNotNull($decoded);
+        $this->assertStringContainsString('Promo code', $decoded->message);
+
+        self::$em->clear();
+        $reFetched = App::make(\models\summit\ISummitAttendeeRepository::class)->getById($attendee_id);
+        $this->assertNotNull($reFetched);
+        $this->assertEquals($initial_ticket_count, $reFetched->getTickets()->count());
+    }
+
     public function testDeleteAttendeeTicket(){
         $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
         $params = [

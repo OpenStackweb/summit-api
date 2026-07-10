@@ -786,10 +786,8 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
     }
 
     public function testCreateSingleTicketOrder(){
-        $this->markTestSkipped('reserve endpoint is public (no auth.user middleware) but SagaFactory::build() requires non-null Member');
-
         $params = [
-            'summit_id' =>  self::$summit->getId()
+            'id' =>  self::$summit->getId()
         ];
 
         $data = [
@@ -797,13 +795,9 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             'owner_last_name' => 'Marcet',
             'owner_email' => 'smarcet@gmail.com',
             'ticket_type_id' => self::$ticketType->getId(),
+            'ticket_qty' => 1,
             "owner_company" => "Pumant",
             //'promo_code' => 'STAFF'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
         ];
 
         $response = $this->action(
@@ -813,7 +807,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -824,11 +818,11 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
         return $order;
     }
 
-    public function testCreateSingleTicketOrderNotComplete(){
-        $this->markTestSkipped('reserve endpoint is public (no auth.user middleware) but SagaFactory::build() requires non-null Member');
+    public function testCreateSingleTicketOrderFailsOnInvalidPromoCode(){
+        $initial_order_count = self::$summit->getOrders()->count();
 
         $params = [
-            'summit_id' =>  self::$summit->getId()
+            'id' =>  self::$summit->getId()
         ];
 
         $data = [
@@ -836,13 +830,9 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             'owner_last_name' => 'Marcet',
             'owner_email' => 'smarcet@gmail.com',
             'ticket_type_id' => self::$ticketType->getId(),
+            'ticket_qty' => 1,
             "owner_company" => "Pumant",
-            //'promo_code' => 'STAFF'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            'promo_code' => 'DOES-NOT-EXIST-' . uniqid(),
         ];
 
         $response = $this->action(
@@ -852,15 +842,19 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $order = json_decode($content);
-        $this->assertTrue(!is_null($order));
-        return $order;
+        $this->assertResponseStatus(404);
+        $decoded = json_decode($content);
+        $this->assertNotNull($decoded);
+        $this->assertStringContainsString('Promo code', $decoded->message);
+
+        self::$em->clear();
+        self::$summit = self::$summit_repository->find(self::$summit->getId());
+        $this->assertEquals($initial_order_count, self::$summit->getOrders()->count());
     }
 
     /**

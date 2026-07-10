@@ -58,6 +58,13 @@ jobs:
                     - { name: "SummitOrderServiceTest", filter: "--filter SummitOrderServiceTest" }
                     - { name: "SummitRSVPServiceTest", filter: "--filter SummitRSVPServiceTest" }
                     - { name: "SummitRSVPInvitationServiceTest", filter: "--filter SummitRSVPInvitationServiceTest" }
+                    - { name: "SummitServiceTest", filter: "--filter SummitServiceTest" }
+                    - { name: "SpeakerServiceRegistrationTest", filter: "--filter SpeakerServiceRegistrationTest" }
+                    - { name: "PresentationServiceTest", filter: "--filter PresentationServiceTest" }
+                    - { name: "SummitPromoCodeServiceTest", filter: "--filter SummitPromoCodeServiceTest" }
+                    - { name: "SummitScheduleSettingsServiceTest", filter: "--filter SummitScheduleSettingsServiceTest" }
+                    - { name: "SummitSelectedPresentationListServiceTest", filter: "--filter SummitSelectedPresentationListServiceTest" }
+                    - { name: "SelectionPlanOrderExtraQuestionTypeServiceTest", filter: "--filter SelectionPlanOrderExtraQuestionTypeServiceTest" }
                     - { name: "EntityModelUnitTests", filter: "tests/Unit/Entities/" }
                     - { name: "AuditUnitTests", filter: "tests/Unit/Audit/" }
                     - { name: "AuditOtlpStrategyTest", filter: "--filter AuditOtlpStrategyTest" }

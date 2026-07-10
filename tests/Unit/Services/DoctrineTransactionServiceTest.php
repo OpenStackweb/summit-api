@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Facade;
 use LaravelDoctrine\ORM\Facades\Registry;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use services\utils\AmbiguousCommitException;
 use services\utils\DoctrineTransactionService;
 
 /**
@@ -923,6 +924,12 @@ class DoctrineTransactionServiceTest extends TestCase
      * stay registered either: the manager/connection pair is discarded (closed +
      * resetManager) so subsequent work on this worker - including direct Registry
      * reads outside transaction() - gets a live pair. Cleanup only: still no retry.
+     *
+     * The failure surfaces as AmbiguousCommitException (original as previous):
+     * the in-service guard alone can't stop the layer above (Laravel queue
+     * tries, caller-side retries) from re-executing the whole callback on a
+     * retryable-looking driver exception - the marker type is what lets a job
+     * handler fail() without retry. It must never match shouldReconnect().
      */
     public function testRootTransactionDoesNotRetryWhenCommitFails(): void
     {
@@ -931,9 +938,10 @@ class DoctrineTransactionServiceTest extends TestCase
         // DBAL decrements the nesting level in a finally block even when the
         // physical COMMIT fails, so by the time the exception is caught no
         // transaction is active - buildMocks' byDefault(false) models this.
+        $original = new TestRetryableException('server has gone away during COMMIT');
         $conn->shouldReceive('commit')
             ->once()
-            ->andThrow(new TestRetryableException('server has gone away during COMMIT'));
+            ->andThrow($original);
         $conn->shouldReceive('rollBack')->never();
         $conn->shouldReceive('close')->once();
 
@@ -949,8 +957,11 @@ class DoctrineTransactionServiceTest extends TestCase
                 return 'ok';
             });
             $this->fail('Expected the commit-phase failure to propagate');
-        } catch (TestRetryableException $e) {
+        } catch (AmbiguousCommitException $e) {
             $this->assertSame(1, $callCount, 'Callback must not be re-executed after an ambiguous commit failure');
+            $this->assertSame($original, $e->getPrevious(), 'The driver exception must be preserved as previous');
+            $this->assertStringContainsString('commit outcome unknown', $e->getMessage());
+            $this->assertFalse($service->shouldReconnect($e), 'The marker type must never classify as retryable');
         }
     }
 

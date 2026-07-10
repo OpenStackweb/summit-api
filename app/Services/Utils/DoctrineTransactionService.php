@@ -33,6 +33,8 @@ use ErrorException;
  *  - owns the connection lifecycle (may retry on transient errors)
  *  - sets isolation level
  *  - flushes the EntityManager and issues the real COMMIT
+ *  - on failure, rolls back and clears the EntityManager so no
+ *    UnitOfWork state leaks into subsequent transactions
  *
  * Nested transaction (called while a DB transaction is already active):
  *  - uses Doctrine DBAL nesting counter (beginTransaction / commit)
@@ -43,8 +45,16 @@ use ErrorException;
  *
  * Savepoints are enabled (setNestTransactionsWithSavepoints) so that
  * nested rollBack() issues ROLLBACK TO SAVEPOINT — undoing only the
- * inner work without poisoning the outer transaction. This allows the
- * "catch inner error and continue" pattern to work correctly.
+ * inner SQL work without poisoning the outer transaction. The "catch
+ * inner error and continue" pattern is safe ONLY for errors thrown
+ * BEFORE the nested flush: if the nested flush itself fails, Doctrine
+ * closes the EntityManager, and the root transaction will fail fast
+ * with a clear RuntimeException before its own flush. In-memory entity
+ * state mutated by the failed inner callback is NOT reverted by the
+ * savepoint rollback; callers that catch a nested error and continue
+ * remain responsible for their own entity-level cleanup.
+ * Nested execution logs a warning when it detects savepoints are off
+ * (outer transaction started outside this service).
  */
 final class DoctrineTransactionService implements ITransactionService
 {
@@ -52,6 +62,11 @@ final class DoctrineTransactionService implements ITransactionService
      * @var string
      */
     private $manager_name;
+
+    /**
+     * @var bool
+     */
+    private $savepoints_warning_emitted = false;
 
     const MaxRetries = 10;
 
@@ -163,12 +178,47 @@ final class DoctrineTransactionService implements ITransactionService
 
                 try {
                     $result = $callback($this);
+                    if (!$em->isOpen()) {
+                        // A nested/inner flush failure closes the EM (ORM behavior);
+                        // reaching this point means the callback caught that error and
+                        // continued. Fail fast with the real cause instead of letting
+                        // the flush below die with an opaque EntityManagerClosed.
+                        // Plain \RuntimeException intentionally - shouldReconnect()
+                        // does not match it, so this can never trigger the retry loop.
+                        throw new \RuntimeException(
+                            'DoctrineTransactionService::runRootTransaction the EntityManager was closed during the callback '
+                            . '(typically a nested flush failure that was caught and execution continued); the transaction '
+                            . 'cannot be committed. Catching nested errors is only safe for errors thrown BEFORE the nested flush.'
+                        );
+                    }
                     $em->flush();
                     $conn->commit();
                     return $result;
                 } catch (\Throwable $inner) {
-                    if ($conn->isTransactionActive()) {
-                        $conn->rollBack();
+                    try {
+                        if ($conn->isTransactionActive()) {
+                            $conn->rollBack();
+                        }
+                    } catch (\Throwable $rollbackError) {
+                        // Never let a rollback failure replace the callback's exception:
+                        // a reconnectable rollback error would misclassify a business
+                        // failure as retryable and re-execute the whole callback.
+                        Log::warning(sprintf(
+                            "DoctrineTransactionService::runRootTransaction rollback failed after '%s': %s",
+                            $inner->getMessage(),
+                            $rollbackError->getMessage()
+                        ));
+                    } finally {
+                        // Root only: discard UnitOfWork state so pending persists/changesets
+                        // from the failed callback cannot leak into the next transaction on
+                        // this same EntityManager (phantom writes in catch-and-continue loops).
+                        // Guarded: an exception thrown in a finally supersedes the in-flight
+                        // one, so a secondary clear() failure must never mask $inner.
+                        // (ORM 3.3's clear() has no isOpen guard - this protects upgrades.)
+                        try {
+                            $em->clear();
+                        } catch (\Throwable $ignore) {
+                        }
                     }
                     throw $inner;
                 }
@@ -211,7 +261,22 @@ final class DoctrineTransactionService implements ITransactionService
 
                 Log::warning("DoctrineTransactionService::runRootTransaction rolling back TX");
                 Log::warning($ex);
+                if (!$em->isOpen()) {
+                    // A failed flush closes the EM (ORM behavior); reset so direct
+                    // Registry consumers (serializers, factories, workers) get a live
+                    // manager instead of an EntityManagerClosed on their next operation.
+                    Registry::resetManager($this->manager_name);
+                }
                 throw $ex;
+            } catch (\Throwable $throwable) {
+                // \Error throwables (TypeError, etc.) are not \Exception and skip the
+                // reconnect handling above, which typehints shouldReconnect(\Exception).
+                // They are never retried, but a callback that closed the EM before
+                // throwing one must still leave a live manager in the registry.
+                if (!$em->isOpen()) {
+                    Registry::resetManager($this->manager_name);
+                }
+                throw $throwable;
             }
         }
 
@@ -233,6 +298,16 @@ final class DoctrineTransactionService implements ITransactionService
         $em   = Registry::getManager($this->manager_name);
         $conn = $em->getConnection();
 
+        // Detection only: the flag cannot be enabled here (DBAL throws when a
+        // transaction is active), so surface the misconfiguration instead of
+        // letting it fail later as an opaque rollback-only error on the root commit.
+        // Warned once per service instance to avoid flooding logs when a bulk
+        // loop nests many calls under the same misconfigured outer transaction.
+        if (!$this->savepoints_warning_emitted && !$conn->getNestTransactionsWithSavepoints()) {
+            $this->savepoints_warning_emitted = true;
+            Log::warning('DoctrineTransactionService::runNestedTransaction savepoints are disabled for this connection (outer transaction not started by this service); a nested rollback will mark the outer transaction rollback-only.');
+        }
+
         $conn->beginTransaction();
 
         try {
@@ -241,8 +316,20 @@ final class DoctrineTransactionService implements ITransactionService
             $conn->commit();
             return $result;
         } catch (\Throwable $ex) {
-            if ($conn->isTransactionActive()) {
-                $conn->rollBack();
+            try {
+                if ($conn->isTransactionActive()) {
+                    $conn->rollBack();
+                }
+            } catch (\Throwable $rollbackError) {
+                // Never let a savepoint-rollback failure replace the callback's
+                // exception: a reconnectable rollback error would otherwise be
+                // reclassified by the root as retryable and re-run the callback,
+                // firing non-idempotent side effects again.
+                Log::warning(sprintf(
+                    "DoctrineTransactionService::runNestedTransaction rollback failed after '%s': %s",
+                    $ex->getMessage(),
+                    $rollbackError->getMessage()
+                ));
             }
             // No resetManager, no close(), no retry — let the root handle recovery.
             throw $ex;

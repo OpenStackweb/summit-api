@@ -433,6 +433,20 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         );
     }
 
+    /**
+     * The seed sets the registration period relative to the summit's (future) begin
+     * date, so reserve() rejects with "registration period is closed" by default.
+     * Open it around NOW for tests exercising the reservation flow.
+     */
+    private function openRegistrationPeriod(): void
+    {
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        self::$summit->setRawRegistrationBeginDate((clone $now)->sub(new \DateInterval('P1D')));
+        self::$summit->setRawRegistrationEndDate((clone $now)->add(new \DateInterval('P30D')));
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+    }
+
     private function disableDefaultBadgeType(): int
     {
         $badge_type_id = self::$default_badge_type->getId();
@@ -522,6 +536,317 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             ->getBySummitAndEmail(self::$summit, self::$defaultMember->getEmail());
         $this->assertNotNull($attendee);
         return $attendee;
+    }
+
+    /**
+     * The reserve endpoint is also exposed on the public API (routes/public_api.php)
+     * with no authenticated member: reserve() accepts ?Member and every saga task
+     * takes ?Member $owner (ReserveOrderTask carries the whole guest branch), so a
+     * null owner must produce a valid guest reservation keyed by owner_email.
+     */
+    public function testReserveAsGuestWithoutMemberCreatesOrder()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $guest_email = sprintf('guest-%s@test.com', uniqid());
+        $payload = [
+            "owner_email" => $guest_email,
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "owner_company" => "Pumant",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+
+        $this->assertNotNull($order);
+        $this->assertEquals($guest_email, $order->getOwnerEmail());
+        $this->assertFalse($order->hasOwner());
+    }
+
+    /**
+     * Guest buyer with more than one ticket: the auto-assign-first-ticket rule
+     * (buyer without paid orders + multi-ticket order) must also work with a null
+     * owner, sourcing the attendee data from the payload's owner_* fields.
+     */
+    public function testReserveAsGuestWithMultipleTicketsAutoAssignsFirstTicket()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $guest_email = sprintf('guest-multi-%s@test.com', uniqid());
+        $payload = [
+            "owner_email" => $guest_email,
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "owner_company" => "Pumant",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+                ["type_id" => self::$default_ticket_type->getId()],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+
+        $this->assertNotNull($order);
+        $this->assertCount(2, $order->getTickets());
+        // exactly the first ticket gets auto-assigned to the guest buyer
+        $assigned = [];
+        foreach ($order->getTickets() as $ticket) {
+            if ($ticket->hasOwner()) $assigned[] = $ticket->getOwnerEmail();
+        }
+        $this->assertEquals([$guest_email], $assigned);
+    }
+
+    /**
+     * ReserveTicketsTask rejects a reservation on a sold-out ticket type, and the
+     * saga compensation leaves no order behind.
+     */
+    public function testReserveFailsWhenTicketTypeSoldOut()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $sold_out_type = new SummitTicketType();
+        $sold_out_type->setName('RESERVE SOLD OUT TICKET TYPE');
+        $sold_out_type->setCost(100);
+        $sold_out_type->setCurrency('USD');
+        $sold_out_type->setQuantity2Sell(1);
+        $sold_out_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($sold_out_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        $sold_out_type->sell(1);
+        self::$em->flush();
+
+        $initial_order_count = self::$summit->getOrders()->count();
+
+        $payload = [
+            "owner_email" => sprintf('guest-soldout-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => $sold_out_type->getId()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('not available', $ex->getMessage());
+        }
+
+        self::$em->clear();
+        self::$summit = self::$summit_repository->find(self::$summit->getId());
+        $this->assertEquals($initial_order_count, self::$summit->getOrders()->count());
+    }
+
+    /**
+     * ReserveTicketsTask rejects orders mixing ticket types of different currencies.
+     */
+    public function testReserveFailsWhenTicketCurrenciesAreMixed()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $eur_type = new SummitTicketType();
+        $eur_type->setName('RESERVE EUR TICKET TYPE');
+        $eur_type->setCost(100);
+        $eur_type->setCurrency('EUR');
+        $eur_type->setQuantity2Sell(10);
+        $eur_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($eur_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $payload = [
+            "owner_email" => sprintf('guest-currency-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+                ["type_id" => $eur_type->getId()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('same currency', $ex->getMessage());
+        }
+    }
+
+    /**
+     * PreOrderValidationTask rejects any reservation outside the summit's
+     * registration period.
+     */
+    public function testReserveFailsWhenRegistrationPeriodClosed()
+    {
+        // explicitly close the period (both dates in the past)
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        self::$summit->setRawRegistrationBeginDate((clone $now)->sub(new \DateInterval('P30D')));
+        self::$summit->setRawRegistrationEndDate((clone $now)->sub(new \DateInterval('P1D')));
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $service = App::make(ISummitOrderService::class);
+
+        $payload = [
+            "owner_email" => sprintf('guest-closed-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('registration period is closed', $ex->getMessage());
+        }
+    }
+
+    /**
+     * checkout() on a free order needs no payment gateway: it must mark the order
+     * paid right away.
+     */
+    public function testCheckoutSetsFreeOrderAsPaid()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $free_type = new SummitTicketType();
+        $free_type->setName('FREE TICKET TYPE');
+        $free_type->setCost(0);
+        $free_type->setCurrency('USD');
+        $free_type->setQuantity2Sell(10);
+        $free_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($free_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $payload = [
+            "owner_email" => sprintf('guest-free-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => $free_type->getId()],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+        $this->assertTrue($order->isFree());
+
+        $order = $service->checkout(self::$summit, $order->getHash(), []);
+
+        $this->assertTrue($order->isPaid());
+    }
+
+    public function testCheckoutFailsWhenOrderNotFound()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        try {
+            $service->checkout(self::$summit, 'non-existent-hash-' . uniqid(), []);
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            $this->assertStringContainsString('Order not found', $ex->getMessage());
+        }
+    }
+
+    /**
+     * A cancelled reservation can not be checked out - the buyer must start over.
+     */
+    public function testCheckoutFailsWhenOrderIsCancelled()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $payload = [
+            "owner_email" => sprintf('guest-cancelled-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+        $hash = $order->getHash();
+
+        $service->cancel(self::$summit, $hash);
+
+        try {
+            $service->checkout(self::$summit, $hash, []);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('canceled', $ex->getMessage());
+        }
+    }
+
+    /**
+     * End-to-end cancel: abandoning a reservation must return the consumed seat to
+     * the ticket type inventory and mark the order cancelled - a bug here means
+     * overselling or phantom capacity.
+     */
+    public function testCancelRestoresTicketAvailabilityAndCancelsOrder()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $capacity_type = new SummitTicketType();
+        $capacity_type->setName('CANCEL CAPACITY TICKET TYPE');
+        $capacity_type->setCost(100);
+        $capacity_type->setCurrency('USD');
+        $capacity_type->setQuantity2Sell(20);
+        $capacity_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($capacity_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        $type_id = $capacity_type->getId();
+
+        $payload = [
+            "owner_email" => sprintf('guest-cancel-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => $type_id],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+        $hash = $order->getHash();
+
+        self::$em->clear();
+        $capacity_type = self::$em->find(SummitTicketType::class, $type_id);
+        $this->assertEquals(1, $capacity_type->getQuantitySold(), 'The reservation must consume one seat');
+
+        self::$summit = self::$summit_repository->find(self::$summit->getId());
+        $cancelled_order = $service->cancel(self::$summit, $hash);
+        $this->assertTrue($cancelled_order->isCancelled());
+
+        self::$em->clear();
+        $capacity_type = self::$em->find(SummitTicketType::class, $type_id);
+        $this->assertEquals(0, $capacity_type->getQuantitySold(), 'Cancelling must return the seat to inventory');
+    }
+
+    public function testCancelFailsWhenOrderHashNotFound()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        try {
+            $service->cancel(self::$summit, 'non-existent-hash-' . uniqid());
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            $this->assertStringContainsString('order not found', $ex->getMessage());
+        }
     }
 
     public function testImportTicketDataSetsExtraQuestionAnswerOnNewAttendee()

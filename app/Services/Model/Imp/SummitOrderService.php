@@ -233,7 +233,7 @@ final class SagaFactory
         $this->tx_service = $tx_service;
     }
 
-    public function build(Member $owner, Summit $summit, array $payload): Saga
+    public function build(?Member $owner, Summit $summit, array $payload): Saga
     {
         Log::debug(sprintf("SagaFactory::build - summit id %s payload %s", $summit->getId(), json_encode($payload)));
 
@@ -256,7 +256,7 @@ final class SagaFactory
         return $this->buildRegularSaga($owner, $summit, $payload);
     }
 
-    private function buildPrePaidSaga(Member $owner, Summit $summit, array $payload): Saga
+    private function buildPrePaidSaga(?Member $owner, Summit $summit, array $payload): Saga
     {
         Log::debug(sprintf("SagaFactory::buildPrePaidSaga - summit id %s", $summit->getId()));
         return Saga::start()
@@ -274,7 +274,7 @@ final class SagaFactory
             ));
     }
 
-    private function buildRegularSaga(Member $owner, Summit $summit, array $payload): Saga
+    private function buildRegularSaga(?Member $owner, Summit $summit, array $payload): Saga
     {
         Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
         return Saga::start()
@@ -444,7 +444,8 @@ final class ReserveOrderTask extends AbstractTask
             }
 
             // auto assign should only happen when the user has not paid any order and the order has more than one ticket....
-            $shouldAutoAssignFirstTicket = !$this->owner->hasPaidRegistrationOrderForSummit($this->summit) && count($tickets) > 1;
+            // a guest buyer (null owner, public api) trivially has no paid orders for this summit
+            $shouldAutoAssignFirstTicket = (is_null($this->owner) || !$this->owner->hasPaidRegistrationOrderForSummit($this->summit)) && count($tickets) > 1;
 
             // try to get invitation
             $invitation = $this->summit->getSummitRegistrationInvitationByEmail($owner_email);
@@ -531,10 +532,11 @@ final class ReserveOrderTask extends AbstractTask
                         )
                     );
 
-                    $attendee_first_name = $this->owner->getFirstName();
-                    $attendee_last_name = $this->owner->getLastName();
-                    $attendee_email = $this->owner->getEmail();
-                    $attendee_company = $this->owner->getCompany();
+                    // guest buyer (null owner): fall back to the payload's owner data
+                    $attendee_first_name = !is_null($this->owner) ? $this->owner->getFirstName() : $owner_first_name;
+                    $attendee_last_name = !is_null($this->owner) ? $this->owner->getLastName() : $owner_last_name;
+                    $attendee_email = !is_null($this->owner) ? $this->owner->getEmail() : $owner_email;
+                    $attendee_company = !is_null($this->owner) ? $this->owner->getCompany() : $owner_company_name;
 
                 } else {
                     // use what we have on payload
@@ -592,7 +594,7 @@ final class ReserveOrderTask extends AbstractTask
                         $attendee = $local_attendees[$attendee_email];
                     }
 
-                    $attendee_owner = $this->owner->getEmail() === $attendee_email ? $this->owner : $this->member_repository->getByEmail($attendee_email);
+                    $attendee_owner = !is_null($this->owner) && $this->owner->getEmail() === $attendee_email ? $this->owner : $this->member_repository->getByEmail($attendee_email);
 
                     if (is_null($attendee)) {
 

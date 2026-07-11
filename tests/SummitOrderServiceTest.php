@@ -1191,51 +1191,53 @@ CSV;
     }
 
     /**
-     * processTicketData() runs each CSV row in its OWN independent root transaction (the
-     * summit lookup and each row's tx_service->transaction() call all commit/rollback
-     * separately - not one nested transaction spanning the whole file). Since the loop has
-     * no per-row try/catch, row 1's uncaught failure stops the foreach immediately, so row 2
-     * is never reached. This test therefore proves loop termination, NOT cross-row atomicity:
-     * because both rows fail for the SAME summit-wide reason (missing default badge type),
-     * it cannot distinguish "nothing commits because everything failed" from "an
-     * already-succeeded earlier row would also roll back if a later row failed" - the latter
-     * is FALSE (each row is an independent root transaction; a genuinely-committed earlier
-     * row survives regardless of a later row's failure). That partial-commit risk is real and
-     * separately documented in docs/plans/2026-07-10-summit-order-api-exception-coverage.md's
-     * Out of Scope section, not covered by this test.
+     * processTicketData() must follow the importer's log-and-skip posture (skills/laravel-api.md
+     * "CSV Import/Export Conventions" in the FN knowledge vault): a bad row is caught, logged, and
+     * skipped, never aborts the rest of the file. Row 1 fails for a row-specific reason (its ticket
+     * type has zero remaining capacity), independent of row 2, which uses a ticket type with normal
+     * capacity. This proves both halves of the contract: the failing row doesn't propagate out of
+     * processTicketData() (no exception), and it doesn't block row 2 from being attempted and
+     * committed - not just that "nothing throws" for the same summit-wide reason.
      */
-    public function testProcessTicketDataStopsProcessingRemainingRowsOnNestedTransactionFailure()
+    public function testProcessTicketDataSkipsFailingRowsAndContinuesProcessingRemainingRows()
     {
         $attendee_repository = App::make(ISummitAttendeeRepository::class);
 
         $email1 = sprintf('csv-import-row1-%s@test.com', uniqid());
         $email2 = sprintf('csv-import-row2-%s@test.com', uniqid());
-        $ticket_type_id = self::$default_ticket_type->getId();
+
+        $exhausted_ticket_type = new SummitTicketType();
+        $exhausted_ticket_type->setName('SOLD OUT TICKET TYPE');
+        $exhausted_ticket_type->setCost(100);
+        $exhausted_ticket_type->setCurrency('USD');
+        $exhausted_ticket_type->setQuantity2Sell(1);
+        $exhausted_ticket_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($exhausted_ticket_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        // consume the only seat so row 1's sell() call fails on capacity, not on a summit-wide toggle
+        $exhausted_ticket_type->sell(1);
+        self::$em->flush();
+
+        $bad_ticket_type_id = $exhausted_ticket_type->getId();
+        $good_ticket_type_id = self::$default_ticket_type->getId();
 
         $csv_content = <<<CSV
 attendee_email,attendee_first_name,attendee_last_name,ticket_type_id
-{$email1},CSV,RowOne,{$ticket_type_id}
-{$email2},CSV,RowTwo,{$ticket_type_id}
+{$email1},CSV,RowOne,{$bad_ticket_type_id}
+{$email2},CSV,RowTwo,{$good_ticket_type_id}
 CSV;
 
-        $badge_type_id = $this->disableDefaultBadgeType();
-
-        try {
-            $service = $this->buildTicketDataImportService($csv_content);
-            $service->processTicketData(self::$summit->getId(), 'tickets.csv');
-            $this->fail('Expected ValidationException was not thrown');
-        } catch (ValidationException $ex) {
-            $this->assertStringContainsString('default badge type', $ex->getMessage());
-        } finally {
-            $this->restoreDefaultBadgeType($badge_type_id);
-        }
+        $service = $this->buildTicketDataImportService($csv_content);
+        // must not throw: a bad row is logged and skipped, not fatal to the whole file
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
 
         self::$em->clear();
 
         $attendee1 = $attendee_repository->getBySummitAndEmail(self::$summit, $email1);
         $attendee2 = $attendee_repository->getBySummitAndEmail(self::$summit, $email2);
         $this->assertNull($attendee1);
-        $this->assertNull($attendee2);
+        $this->assertNotNull($attendee2);
     }
 
     public function testAddTicketsRollsBackEntireChainOnMissingDefaultBadgeType()

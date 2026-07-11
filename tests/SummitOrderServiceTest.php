@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use libs\utils\ITransactionService;
 use Mockery;
+use services\utils\AmbiguousCommitException;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
@@ -391,15 +392,21 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
      * @param string $csv_content
      * @return ISummitOrderService
      */
-    private function buildTicketDataImportService(string $csv_content): ISummitOrderService
+    private function buildTicketDataImportService(
+        string $csv_content,
+        ?ITransactionService $tx_service = null,
+        ?IFileDownloadStrategy $download_strategy = null
+    ): ISummitOrderService
     {
         $upload_strategy = Mockery::mock(IFileUploadStrategy::class);
 
-        $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
-        $download_strategy->shouldReceive('exists')->andReturn(true);
-        $download_strategy->shouldReceive('get')->andReturn($csv_content);
-        $download_strategy->shouldReceive('getDriver')->andReturn('mock');
-        $download_strategy->shouldReceive('delete');
+        if (is_null($download_strategy)) {
+            $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
+            $download_strategy->shouldReceive('exists')->andReturn(true);
+            $download_strategy->shouldReceive('get')->andReturn($csv_content);
+            $download_strategy->shouldReceive('getDriver')->andReturn('mock');
+            $download_strategy->shouldReceive('delete');
+        }
 
         return new SummitOrderService(
             App::make(ISummitTicketTypeRepository::class),
@@ -421,7 +428,7 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             App::make(ISummitRefundRequestRepository::class),
             App::make(ICompanyService::class),
             App::make(ITicketFinderStrategyFactory::class),
-            App::make(ITransactionService::class),
+            $tx_service ?? App::make(ITransactionService::class),
             App::make(ILockManagerService::class)
         );
     }
@@ -1238,6 +1245,63 @@ CSV;
         $attendee2 = $attendee_repository->getBySummitAndEmail(self::$summit, $email2);
         $this->assertNull($attendee1);
         $this->assertNotNull($attendee2);
+    }
+
+    /**
+     * A row whose transaction surfaces AmbiguousCommitException has an UNKNOWN
+     * outcome - it may or may not be durable (see DoctrineTransactionService) - so
+     * the import must not treat it as either processed or failed: remaining rows
+     * still run (they are independent), but the source file must NOT be deleted,
+     * so the unknown-outcome row can be reconciled against the DB.
+     */
+    public function testProcessTicketDataKeepsFileAndContinuesWhenRowCommitOutcomeUnknown()
+    {
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        $email1 = sprintf('csv-ambiguous-row1-%s@test.com', uniqid());
+        $email2 = sprintf('csv-ambiguous-row2-%s@test.com', uniqid());
+        $ticket_type_id = self::$default_ticket_type->getId();
+
+        $csv_content = <<<CSV
+attendee_email,attendee_first_name,attendee_last_name,ticket_type_id
+{$email1},CSV,RowOne,{$ticket_type_id}
+{$email2},CSV,RowTwo,{$ticket_type_id}
+CSV;
+
+        // transaction call #1 is the summit existence check; call #2 is row 1 -
+        // simulate an ambiguous commit there (the callback never runs, mirroring a
+        // commit whose outcome is unknown); every other call delegates for real.
+        $tx_service = new class(App::make(ITransactionService::class)) implements ITransactionService {
+            private $inner;
+            private $calls = 0;
+            public function __construct(ITransactionService $inner) { $this->inner = $inner; }
+            public function transaction(\Closure $callback, int $isolationLevel = 2)
+            {
+                if (++$this->calls === 2)
+                    throw new AmbiguousCommitException('commit outcome unknown (simulated)');
+                return $this->inner->transaction($callback, $isolationLevel);
+            }
+        };
+
+        $file_deleted = false;
+        $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
+        $download_strategy->shouldReceive('exists')->andReturn(true);
+        $download_strategy->shouldReceive('get')->andReturn($csv_content);
+        $download_strategy->shouldReceive('getDriver')->andReturn('mock');
+        $download_strategy->shouldReceive('delete')->andReturnUsing(function () use (&$file_deleted) {
+            $file_deleted = true;
+        });
+
+        $service = $this->buildTicketDataImportService($csv_content, $tx_service, $download_strategy);
+        // must not throw: the unknown-outcome row is recorded, not fatal to the file
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        self::$em->clear();
+
+        // row 2 was still processed - rows are independent
+        $this->assertNotNull($attendee_repository->getBySummitAndEmail(self::$summit, $email2));
+        // the source file survives so row 1 can be reconciled against the DB
+        $this->assertFalse($file_deleted, 'The import file must be kept when any row has an unknown commit outcome');
     }
 
     public function testAddTicketsRollsBackEntireChainOnMissingDefaultBadgeType()

@@ -235,4 +235,111 @@ CSV;
         $this->assertEquals($original_title_1, $reFetchedEvent1->getTitle());
         $this->assertFalse($reFetchedEvent1->isPublished());
     }
+
+    /**
+     * Volume happy path for processEventData(): every row of a 20-row CSV is valid
+     * (existing event type + track, title, description), so all 20 events must exist
+     * afterwards and the source file must be deleted.
+     */
+    public function testProcessEventDataImportsAllRowsWhenEveryRowIsValid()
+    {
+        Storage::fake('swift');
+
+        $service = App::make(ISummitService::class);
+        $summit_id = self::$summit->getId();
+        $type_name = self::$defaultEventType->getType();
+        $track_title = self::$defaultTrack->getTitle();
+
+        $uid = uniqid();
+        $titles = [];
+        $rows = [];
+        for ($i = 1; $i <= 20; $i++) {
+            $title = sprintf('CSV Bulk Event %02d %s', $i, $uid);
+            $titles[] = $title;
+            $rows[] = sprintf('%s,%s,%s,Bulk import row %02d', $type_name, $track_title, $title, $i);
+        }
+        $csv_content = "type,track,title,description\n" . implode("\n", $rows);
+
+        $filename = 'events_all_valid.csv';
+        $path = "tmp/events_imports/{$filename}";
+        Storage::disk('swift')->put($path, $csv_content);
+
+        $service->processEventData($summit_id, $filename, false);
+
+        self::$em->clear();
+
+        foreach ($titles as $title) {
+            $event = self::$em->getRepository(SummitEvent::class)->findOneBy(['title' => $title]);
+            $this->assertNotNull($event, sprintf('Event "%s" should have been imported', $title));
+            $this->assertEquals($summit_id, $event->getSummitId());
+        }
+        $this->assertFalse(
+            Storage::disk('swift')->exists($path),
+            'A fully-processed import must delete its source file'
+        );
+    }
+
+    /**
+     * Volume mixed outcome for processEventData(): 20 rows where 15 carry a
+     * nonexistent event type (the row transaction throws EntityNotFoundException,
+     * the per-row catch logs and skips) interleaved with 5 valid rows. The 5 valid
+     * events must import, the 15 failing rows must leave nothing behind, the import
+     * must not throw, and the file is still deleted.
+     */
+    public function testProcessEventDataImportsOnlyValidRowsWhenMostRowsFail()
+    {
+        Storage::fake('swift');
+
+        $service = App::make(ISummitService::class);
+        $summit_id = self::$summit->getId();
+        $type_name = self::$defaultEventType->getType();
+        $track_title = self::$defaultTrack->getTitle();
+
+        $uid = uniqid();
+        $good_titles = [];
+        $bad_titles = [];
+        $rows = [];
+        for ($i = 1; $i <= 20; $i++) {
+            // every 4th row is valid: failures happen before and after each success
+            $is_good = ($i % 4 === 0);
+            $title = sprintf('CSV Mixed Event %02d %s', $i, $uid);
+            if ($is_good) $good_titles[] = $title; else $bad_titles[] = $title;
+            $rows[] = sprintf(
+                '%s,%s,%s,Mixed import row %02d',
+                $is_good ? $type_name : 'NON EXISTENT EVENT TYPE',
+                $track_title,
+                $title,
+                $i
+            );
+        }
+        $csv_content = "type,track,title,description\n" . implode("\n", $rows);
+
+        $filename = 'events_mixed.csv';
+        $path = "tmp/events_imports/{$filename}";
+        Storage::disk('swift')->put($path, $csv_content);
+
+        // must not throw: failing rows are logged and skipped
+        $service->processEventData($summit_id, $filename, false);
+
+        self::$em->clear();
+
+        $this->assertCount(5, $good_titles);
+        $this->assertCount(15, $bad_titles);
+        foreach ($good_titles as $title) {
+            $this->assertNotNull(
+                self::$em->getRepository(SummitEvent::class)->findOneBy(['title' => $title]),
+                sprintf('Valid row event "%s" should have been imported', $title)
+            );
+        }
+        foreach ($bad_titles as $title) {
+            $this->assertNull(
+                self::$em->getRepository(SummitEvent::class)->findOneBy(['title' => $title]),
+                sprintf('Failing row event "%s" should not exist', $title)
+            );
+        }
+        $this->assertFalse(
+            Storage::disk('swift')->exists($path),
+            'Known per-row failures must not block the source file deletion'
+        );
+    }
 }

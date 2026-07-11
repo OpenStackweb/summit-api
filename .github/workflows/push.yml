@@ -68,6 +68,7 @@ jobs:
                     - { name: "SummitSelectionPlanServiceTest", filter: "--filter SummitSelectionPlanServiceTest" }
                     - { name: "SummitRegistrationInvitationServiceTest", filter: "--filter SummitRegistrationInvitationServiceTest" }
                     - { name: "SummitSubmissionInvitationServiceTest", filter: "--filter SummitSubmissionInvitationServiceTest" }
+                    - { name: "MemberServiceTest", filter: "--filter MemberServiceTest" }
                     - { name: "EntityModelUnitTests", filter: "tests/Unit/Entities/" }
                     - { name: "AuditUnitTests", filter: "tests/Unit/Audit/" }
                     - { name: "AuditOtlpStrategyTest", filter: "--filter AuditOtlpStrategyTest" }

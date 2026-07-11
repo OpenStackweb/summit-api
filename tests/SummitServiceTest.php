@@ -84,10 +84,10 @@ final class SummitServiceTest extends BrowserKitTestCase
     /**
      * SummitService::processRegistrationCompaniesData() (SummitService.php:3586) wraps each
      * CSV row's tx_service->transaction() call in a LOCAL try/catch (:3608-3646), outside the
-     * transaction's own closure - unlike SummitOrderService::processTicketData(), which has no
-     * per-row catch at all. Prove one bad row (a company already attached to the summit,
-     * triggering addCompany()'s ValidationException at SummitService.php:3334) does NOT stop a
-     * later, valid row from being processed.
+     * transaction's own closure - the same log-and-skip shape SummitOrderService::processTicketData()
+     * now also uses. Prove one bad row (a company already attached to the summit, triggering
+     * addCompany()'s ValidationException at SummitService.php:3334) does NOT stop a later, valid
+     * row from being processed.
      */
     public function testProcessRegistrationCompaniesDataSkipsFailingRowButProcessesLaterRows()
     {

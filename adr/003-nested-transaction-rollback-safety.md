@@ -191,7 +191,7 @@ pre-existing bug, out of scope for this hotfix.
 
 ## Post-Review Hardening (same branch)
 
-Three gaps surfaced by the deep review of PR #533 were closed on top of Iteration 2, each with
+Five gaps surfaced by the deep review of PR #533 were closed on top of Iteration 2, each with
 a unit test that reproduced the failure first:
 
 1. **Ambiguous commit failures are never retried.** A connection failure during the root's
@@ -241,6 +241,20 @@ a unit test that reproduced the failure first:
    connection during a nested transaction surfaces as the root's own rollback failing, which
    this covers. Covered by `testRootTransactionDiscardsManagerWhenRollbackFails` and the
    extended `testRootTransactionDoesNotRetryWhenCommitFails`.
+5. **Deterministic client-side commit failures are never classified as ambiguous.** The
+   commit-phase flag used to be set before `$conn->commit()`, but DBAL throws
+   `ConnectionException::commitFailedRollbackOnly()` **client-side — before the COMMIT is
+   ever sent to the server** — whenever a caught-and-continued nested failure left the
+   connection rollback-only and the root `flush()` had an empty changeset
+   (`UnitOfWork::commit()`'s "Nothing to do" early return never touches the connection, so
+   the root's own `commit()` is the first commit call in the chain). That
+   definitively-rolled-back failure surfaced as `AmbiguousCommitException` ("may or may not
+   be durable — reconcile"), sending operators on false reconciliation work and contradicting
+   this ADR's own documented failure surface. `runRootTransaction()` now checks
+   `$conn->isRollbackOnly()` right before entering the commit phase and fails fast with a
+   descriptive plain `\RuntimeException` naming the real cause (a nested failure caught
+   mid-chain); `AmbiguousCommitException` is reserved for a COMMIT that was actually sent to
+   the server. Covered by `testRootTransactionFailsDeterministicallyWhenConnectionIsRollbackOnly`.
 
 ## Test Coverage Added
 
@@ -254,7 +268,7 @@ guaranteed behavior end-to-end.
 
 | File | What's covered |
 |---|---|
-| `tests/Unit/Services/DoctrineTransactionServiceTest.php` | 27 tests: root/nested routing, savepoints never enabled/queried, fail-fast on a closed `EntityManager`, no retry after an ambiguous commit failure, refusal of closed-EM re-entry while a transaction is still active, rollback failures never masking the original exception, broken manager/connection discarded when the rollback itself fails, `\Error` handled alongside `\Exception`, `em->clear()` on root failure. |
+| `tests/Unit/Services/DoctrineTransactionServiceTest.php` | 28 tests: root/nested routing, savepoints never enabled/queried, fail-fast on a closed `EntityManager`, no retry after an ambiguous commit failure, refusal of closed-EM re-entry while a transaction is still active, rollback failures never masking the original exception, broken manager/connection discarded when the rollback itself fails, deterministic rollback-only failure at root commit never misclassified as ambiguous, `\Error` handled alongside `\Exception`, `em->clear()` on root failure. |
 
 ### Business-service outer/inner pairs (functional, real DB)
 
@@ -326,3 +340,27 @@ as `SummitService::processRegistrationCompaniesData` above, not a rollback risk:
 
 With the 8 testable gaps closed and the remaining 3 confirmed structurally unreachable, this
 codebase-wide sweep for the outer/inner nested-transaction shape is complete.
+
+### Broken race recovery in `RegistrationIngestionService::ingestExternalAttendee` (pre-existing, both versions)
+
+The `// race condition lost, try to get it` recovery
+(`RegistrationIngestionService.php:226-244`, and its twin at `:363-381`) catches a failure from
+the nested `MemberService::registerExternalUser()` call — inside the still-open per-attendee
+root transaction — and tries to read the race winner's row instead. That recovery has **never
+once worked when the race actually fires**: the losing worker's unique-constraint violation
+happens at the nested flush (`add($member, true)`, `MemberService.php:334`), which closes the
+`EntityManager` (ORM behavior) and marks the connection rollback-only, so the recovery read
+itself throws `EntityManagerClosed`, gets swallowed by the enclosing `catch` (`:246-248`), and
+the root transaction dies anyway — cleanly here (fail-fast guards, real cause named), and on
+`origin/main` via the double-`EntityManager`-reset/dangling-reference cascade the empirical A/B
+test in Iteration 2 documented. Net effect in both versions: that attendee is skipped
+(`ingestExternalAttendee`'s outer log-and-skip catch, `:630-632`) and picked up by the next
+feed run. Pre-existing bug, independent of this branch.
+
+**Recommended fix (follow-up):** drop the in-transaction recovery and retry at the call site
+instead — let the nested failure propagate out of the per-attendee root transaction and re-run
+`ingestExternalAttendee` once from the ingest loop (`ingestSummit`, `:694-696`). The second
+attempt starts a fresh root transaction whose `getByExternalIdExclusiveLock()` read finds the
+member the winning worker committed, and ingestion succeeds — making the recovery the comment
+promises actually happen for the first time, without catching around a nested `transaction()`
+call (the exact shape this ADR concludes is never safe).

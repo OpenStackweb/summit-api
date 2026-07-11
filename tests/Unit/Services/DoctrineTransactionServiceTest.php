@@ -14,6 +14,7 @@
 
 use Closure;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ConnectionException;
 use Doctrine\DBAL\Exception\RetryableException;
 use Doctrine\DBAL\TransactionIsolationLevel;
 use Doctrine\ORM\EntityManagerInterface;
@@ -84,6 +85,7 @@ class DoctrineTransactionServiceTest extends TestCase
         $conn->shouldReceive('isTransactionActive')->andReturn($transactionActive)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('commit')->byDefault();
         $conn->shouldReceive('rollBack')->byDefault();
         $conn->shouldReceive('close')->byDefault();
@@ -181,6 +183,7 @@ class DoctrineTransactionServiceTest extends TestCase
         $conn = Mockery::mock(Connection::class);
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('commit')->byDefault();
         $conn->shouldReceive('rollBack')->byDefault();
         $conn->shouldReceive('close')->byDefault();
@@ -230,6 +233,7 @@ class DoctrineTransactionServiceTest extends TestCase
         $conn->shouldReceive('isTransactionActive')->andReturn(false, true, false);
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('commit')->byDefault();
         $conn->shouldReceive('rollBack')->byDefault();
         $conn->shouldReceive('close')->byDefault();
@@ -449,6 +453,7 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testDirectNestingInnerRunsAsNested(): void
     {
         $conn = Mockery::mock(Connection::class);
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->once(); // only root sets isolation
         $conn->shouldReceive('close')->byDefault();
 
@@ -515,6 +520,7 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testDirectNestingInnerErrorPropagatesWithoutDestroyingEM(): void
     {
         $conn = Mockery::mock(Connection::class);
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('close')->never(); // inner must NOT close connection
 
@@ -572,6 +578,7 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testDirectNestingConnectionErrorInInnerDoesNotDestroyOuterTx(): void
     {
         $conn = Mockery::mock(Connection::class);
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
 
         $txActive = false;
@@ -638,6 +645,7 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testIndirectNestingServiceCallRunsAsNested(): void
     {
         $conn = Mockery::mock(Connection::class);
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->once(); // only root
         $conn->shouldReceive('close')->byDefault();
 
@@ -692,6 +700,7 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testIndirectNestingInnerFlushGeneratesIds(): void
     {
         $conn = Mockery::mock(Connection::class);
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('close')->byDefault();
 
@@ -751,6 +760,7 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testIndirectNestingInnerServiceErrorDoesNotDestroyOuter(): void
     {
         $conn = Mockery::mock(Connection::class);
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('close')->byDefault();
 
@@ -808,6 +818,7 @@ class DoctrineTransactionServiceTest extends TestCase
     public function testIndirectNestingMultipleNestedCallsInSequence(): void
     {
         $conn = Mockery::mock(Connection::class);
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('setTransactionIsolation')->once(); // only root
         $conn->shouldReceive('close')->byDefault();
 
@@ -966,6 +977,76 @@ class DoctrineTransactionServiceTest extends TestCase
     }
 
     /**
+     * The commit-phase ambiguity guard must not swallow DETERMINISTIC client-side
+     * commit failures. DBAL's Connection::commit() checks its rollback-only flag
+     * FIRST and throws ConnectionException::commitFailedRollbackOnly() before the
+     * COMMIT is ever sent to the server (DBAL 3.9.4, Connection.php) - at that
+     * point the transaction is guaranteed NOT committed, so classifying it as
+     * "outcome unknown" (AmbiguousCommitException) would send callers on false
+     * reconciliation work for a plain, fully-rolled-back failure.
+     *
+     * Reachable when a nested transaction rolled back (marking the connection
+     * rollback-only), an intermediate callback caught the failure and continued,
+     * and the root flush() had an empty changeset (UnitOfWork's "Nothing to do"
+     * early return never touches the connection), so the root commit() is the
+     * first commit call in the whole chain.
+     *
+     * Expected: fail fast BEFORE attempting the real COMMIT, with a plain
+     * \RuntimeException naming the rollback-only cause - never
+     * AmbiguousCommitException, and never a retry.
+     */
+    public function testRootTransactionFailsDeterministicallyWhenConnectionIsRollbackOnly(): void
+    {
+        $conn = Mockery::mock(Connection::class);
+        // false: routing check picks the ROOT path; true: rollback check in the inner catch
+        $conn->shouldReceive('isTransactionActive')->andReturn(false, true);
+        $conn->shouldReceive('setTransactionIsolation')->byDefault();
+        $conn->shouldReceive('beginTransaction')->once();
+        // Poisoned by a nested rollback whose exception was caught mid-chain
+        // (the catch-and-continue anti-pattern documented in ADR-003).
+        $conn->shouldReceive('isRollbackOnly')->andReturn(true);
+        // Without the pre-commit guard, the real commit() throws DBAL's
+        // client-side rollback-only error - model it so the misclassification
+        // reproduces; with the guard in place this is never reached.
+        $conn->shouldReceive('commit')->andThrow(ConnectionException::commitFailedRollbackOnly());
+        // The transaction is still active, so the real ROLLBACK runs and succeeds.
+        $conn->shouldReceive('rollBack')->once();
+
+        $em = Mockery::mock(EntityManagerInterface::class);
+        $em->shouldReceive('getConnection')->andReturn($conn)->byDefault();
+        $em->shouldReceive('isOpen')->andReturn(true);
+        // Empty changeset: flush() returns without touching the connection.
+        $em->shouldReceive('flush')->once();
+        $em->shouldReceive('clear')->once();
+
+        $registry = Mockery::mock(ManagerRegistry::class);
+        $registry->shouldReceive('getManager')->with('default')->andReturn($em)->byDefault();
+        // Deterministic business-level failure on a live pair: no destructive recovery.
+        $registry->shouldReceive('resetManager')->never();
+
+        $this->container->instance(ManagerRegistry::class, $registry);
+
+        $callCount = 0;
+        $service = new DoctrineTransactionService('default');
+
+        try {
+            $service->transaction(function () use (&$callCount) {
+                $callCount++;
+                return 'ok';
+            });
+            $this->fail('Expected the rollback-only failure to propagate');
+        } catch (\RuntimeException $e) {
+            $this->assertNotInstanceOf(
+                AmbiguousCommitException::class,
+                $e,
+                'A client-side rollback-only failure is deterministic (nothing was sent to the server) and must not be classified as ambiguous'
+            );
+            $this->assertStringContainsString('rollback-only', $e->getMessage());
+        }
+        $this->assertSame(1, $callCount, 'A deterministic rollback-only failure must never trigger the retry loop');
+    }
+
+    /**
      * When the ROOT rollback itself fails (typically the connection died during
      * the callback), safeRollback() must keep the original business exception -
      * but the manager/connection pair is now in an unknown state: DBAL zeroes the
@@ -1045,6 +1126,7 @@ class DoctrineTransactionServiceTest extends TestCase
         $conn->shouldReceive('isTransactionActive')->andReturn(false);
         $conn->shouldReceive('setTransactionIsolation')->byDefault();
         $conn->shouldReceive('beginTransaction')->byDefault();
+        $conn->shouldReceive('isRollbackOnly')->andReturn(false)->byDefault();
         $conn->shouldReceive('commit')->byDefault();
         $conn->shouldReceive('rollBack')->byDefault();
         $conn->shouldReceive('close')->byDefault();

@@ -68,6 +68,12 @@ use ErrorException;
  * absorbed into a successful root commit, even if an intermediate callback
  * catches it and continues; the whole business operation succeeds or fails
  * as one atomic unit.
+ *
+ * The root path re-checks that flag itself right before issuing the real
+ * COMMIT: a rollback-only connection fails fast as a deterministic error
+ * (DBAL would throw client-side before the COMMIT ever reaches the server),
+ * so AmbiguousCommitException is reserved for failures of a COMMIT that was
+ * actually sent to the server.
  */
 final class DoctrineTransactionService implements ITransactionService
 {
@@ -329,6 +335,25 @@ final class DoctrineTransactionService implements ITransactionService
                     $result = $callback($this);
                     $this->failFastIfEntityManagerClosed($em, 'runRootTransaction');
                     $em->flush();
+                    // A rollback-only connection can never commit: DBAL throws
+                    // ConnectionException::commitFailedRollbackOnly() client-side,
+                    // BEFORE the COMMIT is ever sent to the server. Reaching this
+                    // point rollback-only means a nested failure was caught and
+                    // execution continued with nothing left to flush (flush() with
+                    // an empty changeset never touches the connection) - a
+                    // deterministic rollback, not an ambiguous commit. Fail with
+                    // the real cause instead of letting the commit below be
+                    // misclassified as ambiguous.
+                    // Plain \RuntimeException intentionally - shouldReconnect()
+                    // does not match it, so this can never trigger the retry loop.
+                    if ($conn->isRollbackOnly()) {
+                        throw new \RuntimeException(
+                            'DoctrineTransactionService::runRootTransaction the connection is marked '
+                            . 'rollback-only (a nested transaction rolled back and its failure was '
+                            . 'caught mid-chain); this transaction was NOT committed and cannot be. '
+                            . 'Let the original nested failure propagate to the root instead.'
+                        );
+                    }
                     // Anything past this point is the real COMMIT: a connection
                     // failure here is ambiguous (the server may have already made
                     // the transaction durable and only the ack was lost), so the

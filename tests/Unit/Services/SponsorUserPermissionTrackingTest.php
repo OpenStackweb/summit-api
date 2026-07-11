@@ -161,6 +161,9 @@ class SponsorUserPermissionTrackingTest extends TestCase
 
         self::$em->clear();
         $this->assertEmpty($this->getPermissions($sponsor_id, $member_id));
+        // getPermissions() returns [] both when the row is gone and when it survived
+        // with an empty Permissions column - verify the INSERT itself was rolled back.
+        $this->assertNoSponsorUsersRowExists($sponsor_id, $member_id);
     }
 
     /**

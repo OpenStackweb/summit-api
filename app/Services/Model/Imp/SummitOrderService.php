@@ -42,6 +42,7 @@ use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
 use Exception;
+use services\utils\AmbiguousCommitException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
@@ -4357,6 +4358,8 @@ final class SummitOrderService
 
         $badge_data_present = $reader->hasColumn("badge_type_id") || $reader->hasColumn("badge_type_name");
 
+        $rows_with_unknown_outcome = [];
+
         foreach ($reader as $idx => $row) {
 
             try {
@@ -4678,9 +4681,29 @@ final class SummitOrderService
                     if (!is_null($answers_owner))
                         $this->upsertAttendeeExtraQuestionAnswers($summit, $answers_owner, $row);
                 });
+            } catch (AmbiguousCommitException $ex) {
+                // The row's COMMIT outcome is unknown - it may or may not be durable
+                // (see DoctrineTransactionService) - so it can be treated as neither
+                // processed nor failed. Record it and keep going: remaining rows are
+                // independent.
+                $rows_with_unknown_outcome[] = $idx;
+                Log::error(sprintf("SummitOrderService::processTicketData row %s commit outcome unknown.", $idx));
+                Log::error($ex);
             } catch (Exception $ex) {
                 Log::warning($ex);
             }
+        }
+
+        if (count($rows_with_unknown_outcome) > 0) {
+            // Reconciliation required: keep the source file so the unknown-outcome rows
+            // can be checked against the DB - deleting it here would record an import
+            // with unverifiable rows as cleanly processed.
+            Log::error(sprintf(
+                "SummitOrderService::processTicketData file %s NOT deleted: row(s) %s have unknown commit outcome; reconcile them against the DB.",
+                $path,
+                implode(',', $rows_with_unknown_outcome)
+            ));
+            return;
         }
 
         Log::debug(sprintf("SummitOrderService::processTicketData deleting file %s from storage %s", $path, $this->download_strategy->getDriver()));

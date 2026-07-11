@@ -364,3 +364,26 @@ attempt starts a fresh root transaction whose `getByExternalIdExclusiveLock()` r
 member the winning worker committed, and ingestion succeeds — making the recovery the comment
 promises actually happen for the first time, without catching around a nested `transaction()`
 call (the exact shape this ADR concludes is never safe).
+
+### `AmbiguousCommitException` has no consumers yet — queue jobs still blind-retry ambiguous commits
+
+The in-service half of the ambiguous-commit protection is delivered: `runRootTransaction()`
+never re-executes the callback once the real COMMIT has been attempted (hardening item 1).
+The caller-side half is not wired up anywhere. The exception's contract directs callers —
+queue jobs especially — to catch it and fail without retry (`$this->fail($e)`), then
+reconcile; as of this branch, **no job or service in `app/` catches it**. Laravel's queue
+does not inspect exception types: any uncaught exception triggers a retry while `tries`
+remain, so for any job configured with `tries > 1` (21 jobs declare `$tries` of 2-5, and the
+~35 top-level jobs in `app/Jobs/` without a `$tries` property inherit the worker's `--tries`
+default) an ambiguous commit still re-runs the whole job — the exact duplicate-writes
+scenario the marker type exists to prevent. The one `catch` that does see it today —
+`SummitOrderService::processTicketData()`'s per-row log-and-skip (`:4673-4675`) — swallows
+it as a generic warning and proceeds to delete the import file, treating an
+unknown-durability row as cleanly processed.
+
+**Recommended fix (follow-up):** wire the consumer side in two places. (1) In
+payment/order-critical queue jobs, catch `AmbiguousCommitException` and fail the job without
+retry, logging it at error level as a reconciliation-required event. (2) In log-and-skip
+loops (the CSV import row loop being the known case), handle it separately from the generic
+`catch (Exception)`: record the row as *unknown outcome* rather than *failed*, and preserve
+the source artifact instead of deleting it, so the row can be reconciled against the DB.

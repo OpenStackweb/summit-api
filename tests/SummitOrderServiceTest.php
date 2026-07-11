@@ -1248,6 +1248,135 @@ CSV;
     }
 
     /**
+     * Volume happy path: every row of a 20-row CSV is valid, so all 20 attendees
+     * (each with its ticket) must exist afterwards and the source file must be
+     * deleted - a fully-processed import leaves nothing to reconcile.
+     */
+    public function testProcessTicketDataImportsAllRowsWhenEveryRowIsValid()
+    {
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        $bulk_type = new SummitTicketType();
+        $bulk_type->setName('BULK OK TICKET TYPE');
+        $bulk_type->setCost(100);
+        $bulk_type->setCurrency('USD');
+        $bulk_type->setQuantity2Sell(50);
+        $bulk_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($bulk_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $uid = uniqid();
+        $emails = [];
+        $rows = [];
+        for ($i = 1; $i <= 20; $i++) {
+            $email = sprintf('csv-bulk-ok-%02d-%s@test.com', $i, $uid);
+            $emails[] = $email;
+            $rows[] = sprintf('%s,CSV,Row%02d,%d', $email, $i, $bulk_type->getId());
+        }
+        $csv_content = "attendee_email,attendee_first_name,attendee_last_name,ticket_type_id\n" . implode("\n", $rows);
+
+        $file_deleted = false;
+        $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
+        $download_strategy->shouldReceive('exists')->andReturn(true);
+        $download_strategy->shouldReceive('get')->andReturn($csv_content);
+        $download_strategy->shouldReceive('getDriver')->andReturn('mock');
+        $download_strategy->shouldReceive('delete')->andReturnUsing(function () use (&$file_deleted) {
+            $file_deleted = true;
+        });
+
+        $service = $this->buildTicketDataImportService($csv_content, null, $download_strategy);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        self::$em->clear();
+
+        foreach ($emails as $email) {
+            $attendee = $attendee_repository->getBySummitAndEmail(self::$summit, $email);
+            $this->assertNotNull($attendee, sprintf('Attendee %s should have been imported', $email));
+            $this->assertCount(1, $attendee->getTickets(), sprintf('Attendee %s should have exactly one ticket', $email));
+        }
+        $this->assertTrue($file_deleted, 'A fully-processed import must delete its source file');
+    }
+
+    /**
+     * Volume mixed outcome: 20 rows where 15 fail (sold-out ticket type - sell()
+     * throws, the row's transaction rolls back fully) interleaved with 5 valid
+     * rows. The 5 valid rows must import with their tickets, the 15 failing rows
+     * must leave no attendee behind, and the file is still deleted: a KNOWN
+     * per-row failure (logged and skipped) is not an unknown outcome, so there
+     * is nothing to reconcile against the DB.
+     */
+    public function testProcessTicketDataImportsOnlyValidRowsWhenMostRowsFail()
+    {
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        $good_type = new SummitTicketType();
+        $good_type->setName('BULK MIXED OK TICKET TYPE');
+        $good_type->setCost(100);
+        $good_type->setCurrency('USD');
+        $good_type->setQuantity2Sell(50);
+        $good_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($good_type);
+
+        $sold_out_type = new SummitTicketType();
+        $sold_out_type->setName('BULK MIXED SOLD OUT TICKET TYPE');
+        $sold_out_type->setCost(100);
+        $sold_out_type->setCurrency('USD');
+        $sold_out_type->setQuantity2Sell(1);
+        $sold_out_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($sold_out_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        // consume the only seat so every row using this type fails on capacity
+        $sold_out_type->sell(1);
+        self::$em->flush();
+
+        $uid = uniqid();
+        $good_emails = [];
+        $bad_emails = [];
+        $rows = [];
+        for ($i = 1; $i <= 20; $i++) {
+            // every 4th row is valid (positions 4, 8, 12, 16, 20): failures happen
+            // both before and after each success, proving order independence
+            $is_good = ($i % 4 === 0);
+            $email = sprintf('csv-bulk-mix-%02d-%s@test.com', $i, $uid);
+            if ($is_good) $good_emails[] = $email; else $bad_emails[] = $email;
+            $rows[] = sprintf('%s,CSV,Row%02d,%d', $email, $i, $is_good ? $good_type->getId() : $sold_out_type->getId());
+        }
+        $csv_content = "attendee_email,attendee_first_name,attendee_last_name,ticket_type_id\n" . implode("\n", $rows);
+
+        $file_deleted = false;
+        $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
+        $download_strategy->shouldReceive('exists')->andReturn(true);
+        $download_strategy->shouldReceive('get')->andReturn($csv_content);
+        $download_strategy->shouldReceive('getDriver')->andReturn('mock');
+        $download_strategy->shouldReceive('delete')->andReturnUsing(function () use (&$file_deleted) {
+            $file_deleted = true;
+        });
+
+        $service = $this->buildTicketDataImportService($csv_content, null, $download_strategy);
+        // must not throw: 15 known failures are logged and skipped
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        self::$em->clear();
+
+        $this->assertCount(5, $good_emails);
+        $this->assertCount(15, $bad_emails);
+        foreach ($good_emails as $email) {
+            $attendee = $attendee_repository->getBySummitAndEmail(self::$summit, $email);
+            $this->assertNotNull($attendee, sprintf('Valid row attendee %s should have been imported', $email));
+            $this->assertCount(1, $attendee->getTickets(), sprintf('Attendee %s should have exactly one ticket', $email));
+        }
+        foreach ($bad_emails as $email) {
+            $this->assertNull(
+                $attendee_repository->getBySummitAndEmail(self::$summit, $email),
+                sprintf('Failing row attendee %s should have been fully rolled back', $email)
+            );
+        }
+        $this->assertTrue($file_deleted, 'Known per-row failures must not block the source file deletion');
+    }
+
+    /**
      * A row whose transaction surfaces AmbiguousCommitException has an UNKNOWN
      * outcome - it may or may not be durable (see DoctrineTransactionService) - so
      * the import must not treat it as either processed or failed: remaining rows

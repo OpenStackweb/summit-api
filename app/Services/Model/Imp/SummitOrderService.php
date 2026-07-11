@@ -594,7 +594,8 @@ final class ReserveOrderTask extends AbstractTask
                         $attendee = $local_attendees[$attendee_email];
                     }
 
-                    $attendee_owner = !is_null($this->owner) && $this->owner->getEmail() === $attendee_email ? $this->owner : $this->member_repository->getByEmail($attendee_email);
+                    // $attendee_email was lowercased above - normalize the owner side too
+                    $attendee_owner = !is_null($this->owner) && strtolower($this->owner->getEmail()) === $attendee_email ? $this->owner : $this->member_repository->getByEmail($attendee_email);
 
                     if (is_null($attendee)) {
 

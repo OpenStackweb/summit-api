@@ -278,7 +278,7 @@ rather than the nested-rollback contract itself.
 |---|---|---|---|
 | `SummitOrderService::createOfflineOrder` | `createTicketsForOrder` | `tests/SummitOrderServiceTest.php` | Full rollback — invalid promo code |
 | `SummitOrderService::addTickets` | `createTicketsForOrder` | `tests/SummitOrderServiceTest.php` | Full rollback — missing default badge type |
-| `SummitOrderService::processTicketData` | `createOfflineOrder` | `tests/SummitOrderServiceTest.php` | Full rollback per CSV row, with per-row isolation: a failing row is logged and skipped, later rows still commit; a row surfacing `AmbiguousCommitException` is recorded as *unknown outcome* and the source file is kept for reconciliation instead of being deleted |
+| `SummitOrderService::processTicketData` | `createOfflineOrder` | `tests/SummitOrderServiceTest.php` | Full rollback per CSV row, with per-row isolation: a failing row is logged and skipped, later rows still commit |
 | `SummitOrderService::requestRefundOrder` | `requestRefundTicket` | `tests/SummitOrderServiceTest.php` | Full rollback — one free ticket in the loop aborts all refund requests |
 | `SummitService::processRegistrationCompaniesData` | `addCompany` | `tests/SummitServiceTest.php` | **Per-row isolation, not full rollback** — this call site has its own local `try/catch` outside the inner transaction's closure, so one bad row does not block later rows |
 | `SpeakerService::addSpeakerBySummit` | `addSpeaker` + `registerSummitPromoCodeByValue` | `tests/SpeakerServiceRegistrationTest.php` | Full rollback — a registration code already claimed by another speaker undoes the just-created speaker too |
@@ -371,12 +371,19 @@ call (the exact shape this ADR concludes is never safe).
 
 The in-service half of the ambiguous-commit protection is delivered: `runRootTransaction()`
 never re-executes the callback once the real COMMIT has been attempted (hardening item 1).
-The log-and-skip import loops are also wired up on this branch:
-`SummitOrderService::processTicketData()`, `SummitService::processEventData()` and
-`SummitService::processRegistrationCompaniesData()` all catch `AmbiguousCommitException`
-separately from their generic per-row `catch`, record the row as *unknown outcome* (error
-level) and keep the source file for reconciliation instead of deleting it — each covered by
-a `KeepsFile*WhenRowCommitOutcomeUnknown` test.
+
+**Deliberate non-decision — CSV import loops.** The per-row log-and-skip importers
+(`SummitOrderService::processTicketData()`, `SummitService::processEventData()`,
+`SummitService::processRegistrationCompaniesData()`) intentionally do NOT special-case
+`AmbiguousCommitException`: their generic per-row `catch (Exception)` logs it (full
+exception, including the marker type name) and moves on, and the source file is deleted at
+the end as usual. Special handling was prototyped on this branch (separate catch, error-level
+row accounting, file preservation for reconciliation) and reverted: the scenario requires a
+connection loss inside a single row's COMMIT window, the preserved file duplicates a source
+the uploading admin already has, re-processing it would duplicate orders for the rows that
+did commit (`createOfflineOrder` is not idempotent), and no operational pipeline consumes
+the error log or the preserved artifact. An unknown-outcome import row is accepted as a
+tolerable, manually-recoverable loss; the admin's own source file is the recovery path.
 
 What remains outstanding is the queue-job side. The exception's contract directs job
 handlers to catch it and fail without retry (`$this->fail($e)`), then reconcile; as of this

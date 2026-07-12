@@ -112,7 +112,6 @@ use models\summit\SummitLeadReportSetting;
 use models\summit\SummitMediaUploadType;
 use models\summit\SummitScheduleEmptySpot;
 use services\apis\IEventbriteAPI;
-use services\utils\AmbiguousCommitException;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
@@ -2872,8 +2871,6 @@ final class SummitService
         $header = $csv->getHeader(); //returns the CSV header record
         $records = $csv->getRecords();
 
-        $rows_with_unknown_outcome = [];
-
         foreach ($records as $idx => $row) {
             try {
                 // variable to store only added speakers to event
@@ -3238,29 +3235,9 @@ final class SummitService
                             ImportEventSpeakerEmail::dispatch($event, $speaker, $setPasswordLink);
                         });
                 }
-            } catch (AmbiguousCommitException $ex) {
-                // The row's COMMIT outcome is unknown - it may or may not be durable
-                // (see DoctrineTransactionService) - so it can be treated as neither
-                // processed nor failed. Record it and keep going: remaining rows are
-                // independent. Mirrors SummitOrderService::processTicketData.
-                $rows_with_unknown_outcome[] = $idx;
-                Log::error(sprintf("SummitService::processEventData row %s commit outcome unknown.", $idx));
-                Log::error($ex);
             } catch (Exception $ex) {
                 Log::warning($ex);
             }
-        }
-
-        if (count($rows_with_unknown_outcome) > 0) {
-            // Reconciliation required: keep the source file so the unknown-outcome rows
-            // can be checked against the DB - deleting it here would record an import
-            // with unverifiable rows as cleanly processed.
-            Log::error(sprintf(
-                "SummitService::processEventData file %s NOT deleted: row(s) %s have unknown commit outcome; reconcile them against the DB.",
-                $path,
-                implode(',', $rows_with_unknown_outcome)
-            ));
-            return;
         }
 
         Log::debug(sprintf("SummitService::processEventData deleting file %s from cloud storage %s", $path, $this->download_strategy->getDriver()));
@@ -3634,8 +3611,6 @@ final class SummitService
         $header = $csv->getHeader(); //returns the CSV header record
         $records = $csv->getRecords();
 
-        $rows_with_unknown_outcome = [];
-
         foreach ($records as $idx => $row) {
             try {
                 $this->tx_service->transaction(function () use ($row, $summit_id) {
@@ -3671,29 +3646,9 @@ final class SummitService
 
                     $this->addCompany($summit_id, $company->getId());
                 });
-            } catch (AmbiguousCommitException $ex) {
-                // The row's COMMIT outcome is unknown - it may or may not be durable
-                // (see DoctrineTransactionService) - so it can be treated as neither
-                // processed nor failed. Record it and keep going: remaining rows are
-                // independent. Mirrors SummitOrderService::processTicketData.
-                $rows_with_unknown_outcome[] = $idx;
-                Log::error(sprintf("SummitService::processRegistrationCompaniesData row %s commit outcome unknown.", $idx));
-                Log::error($ex);
             } catch (Exception $ex) {
                 Log::warning($ex);
             }
-        }
-
-        if (count($rows_with_unknown_outcome) > 0) {
-            // Reconciliation required: keep the source file so the unknown-outcome rows
-            // can be checked against the DB - deleting it here would record an import
-            // with unverifiable rows as cleanly processed.
-            Log::error(sprintf(
-                "SummitService::processRegistrationCompaniesData file %s NOT deleted: row(s) %s have unknown commit outcome; reconcile them against the DB.",
-                $path,
-                implode(',', $rows_with_unknown_outcome)
-            ));
-            return;
         }
 
         Log::debug(sprintf("SummitService::processRegistrationCompaniesData deleting file %s from cloud storage %s", $path, $this->download_strategy->getDriver()));

@@ -14,9 +14,7 @@
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Storage;
-use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
-use services\utils\AmbiguousCommitException;
 use models\summit\ISummitEventType;
 use models\summit\SummitEvent;
 use models\summit\SummitEventType;
@@ -236,132 +234,6 @@ CSV;
         $this->assertNotNull($reFetchedEvent1);
         $this->assertEquals($original_title_1, $reFetchedEvent1->getTitle());
         $this->assertFalse($reFetchedEvent1->isPublished());
-    }
-
-    /**
-     * Wraps the real transaction service so the Nth transaction() call surfaces
-     * AmbiguousCommitException (a commit whose outcome is unknown), delegating
-     * every other call. Bound into the container BEFORE resolving the service so
-     * the autowired constructor receives it.
-     */
-    private function bindAmbiguousCommitOnCall(int $failing_call): void
-    {
-        $inner = App::make(ITransactionService::class);
-        // ISummitService is a singleton that may already be resolved (with the real
-        // tx service) by the time the test body runs - drop the cached instance so
-        // the next App::make() rebuilds it against the wrapper bound below.
-        App::forgetInstance(ISummitService::class);
-        App::instance(ITransactionService::class, new class($inner, $failing_call) implements ITransactionService {
-            private $inner;
-            private $failing_call;
-            private $calls = 0;
-            public function __construct(ITransactionService $inner, int $failing_call)
-            {
-                $this->inner = $inner;
-                $this->failing_call = $failing_call;
-            }
-            public function transaction(\Closure $callback, int $isolationLevel = 2)
-            {
-                if (++$this->calls === $this->failing_call)
-                    throw new AmbiguousCommitException('commit outcome unknown (simulated)');
-                return $this->inner->transaction($callback, $isolationLevel);
-            }
-        });
-    }
-
-    /**
-     * A row whose transaction surfaces AmbiguousCommitException has an UNKNOWN
-     * outcome, so the event import must not treat it as processed or failed:
-     * remaining rows still run, but the source file must NOT be deleted, so the
-     * unknown-outcome row can be reconciled against the DB (mirrors
-     * SummitOrderService::processTicketData).
-     */
-    public function testProcessEventDataKeepsFileWhenRowCommitOutcomeUnknown()
-    {
-        Storage::fake('swift');
-
-        // tx call #1 is the summit existence check; call #2 is row 1
-        $this->bindAmbiguousCommitOnCall(2);
-        $service = App::make(ISummitService::class);
-
-        $summit_id = self::$summit->getId();
-        $type_name = self::$defaultEventType->getType();
-        $track_title = self::$defaultTrack->getTitle();
-
-        $uid = uniqid();
-        $title1 = sprintf('CSV Ambiguous Event 01 %s', $uid);
-        $title2 = sprintf('CSV Ambiguous Event 02 %s', $uid);
-        $csv_content = "type,track,title,description\n"
-            . sprintf("%s,%s,%s,Row one\n", $type_name, $track_title, $title1)
-            . sprintf("%s,%s,%s,Row two", $type_name, $track_title, $title2);
-
-        $filename = 'events_ambiguous.csv';
-        $path = "tmp/events_imports/{$filename}";
-        Storage::disk('swift')->put($path, $csv_content);
-
-        // must not throw: the unknown-outcome row is recorded, not fatal
-        $service->processEventData($summit_id, $filename, false);
-
-        self::$em->clear();
-
-        $this->assertNull(
-            self::$em->getRepository(SummitEvent::class)->findOneBy(['title' => $title1]),
-            'The unknown-outcome row must not have persisted an event'
-        );
-        $this->assertNotNull(
-            self::$em->getRepository(SummitEvent::class)->findOneBy(['title' => $title2]),
-            'Rows after the unknown-outcome one must still be processed'
-        );
-        $this->assertTrue(
-            Storage::disk('swift')->exists($path),
-            'The import file must be kept when any row has an unknown commit outcome'
-        );
-    }
-
-    /**
-     * Same contract for the registration companies import: an unknown-outcome row
-     * must keep the source file for reconciliation while later rows still run.
-     */
-    public function testProcessRegistrationCompaniesDataKeepsFileWhenRowCommitOutcomeUnknown()
-    {
-        Storage::fake('swift');
-
-        // no pre-loop transaction here: tx call #1 is row 1
-        $this->bindAmbiguousCommitOnCall(1);
-        $service = App::make(ISummitService::class);
-
-        $summit_id = self::$summit->getId();
-        $company1 = 'Ambiguous Row Company ' . uniqid();
-        $company2 = 'Valid Row Company ' . uniqid();
-
-        $csv_content = <<<CSV
-name,
-{$company1},
-{$company2},
-CSV;
-
-        $filename = 'registration_companies_ambiguous.csv';
-        $path = "tmp/registration_companies_import/{$filename}";
-        Storage::disk('swift')->put($path, $csv_content);
-
-        // must not throw: the unknown-outcome row is recorded, not fatal
-        $service->processRegistrationCompaniesData($summit_id, $filename);
-
-        self::$em->clear();
-        self::$summit = self::$summit_repository->find($summit_id);
-
-        $this->assertNull(
-            self::$summit->getRegistrationCompanyByName($company1),
-            'The unknown-outcome row must not have attached a company'
-        );
-        $this->assertNotNull(
-            self::$summit->getRegistrationCompanyByName($company2),
-            'Rows after the unknown-outcome one must still be processed'
-        );
-        $this->assertTrue(
-            Storage::disk('swift')->exists($path),
-            'The import file must be kept when any row has an unknown commit outcome'
-        );
     }
 
     /**

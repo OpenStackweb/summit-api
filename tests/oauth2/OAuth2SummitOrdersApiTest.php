@@ -76,6 +76,11 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             'test_publishable_key' => self::$test_public_key,
             'test_secret_key'      => self::$test_secret_key,
             'is_active'            => false,
+            // pre-seed the webhook data so activate()->buildWebHook() never tries to
+            // register a webhook endpoint against the real Stripe API - CI's APP_URL
+            // (localhost) is not publicly routable, so Stripe would reject it
+            'set_webhooks'         => true,
+            'test_web_hook_secret' => env('TEST_STRIPE_WEBHOOK_SECRET', 'whsec_dummy'),
         ]);
 
         // build default badge type

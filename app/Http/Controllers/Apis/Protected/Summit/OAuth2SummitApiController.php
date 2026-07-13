@@ -2554,7 +2554,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
             return $this->ok(SerializerRegistry::getInstance()
                 ->getSerializer($summitAttendeeBadge)
                 ->serialize(
-                    'features,ticket,ticket.owner,ticket.owner',
+                    'features,ticket,ticket.owner,ticket.owner,ticket.owner.member',
                     [
                         'id',
                         'features.id',
@@ -2562,10 +2562,15 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                         'features.description',
                         'ticket.id',
                         'ticket.number',
+                        'ticket.owner.id',
                         'ticket.owner.first_name',
                         'ticket.owner.last_name',
                         'ticket.owner.email',
                         'ticket.owner.company',
+                        'ticket.owner.member.id',
+                        'ticket.owner.member.first_name',
+                        'ticket.owner.member.last_name',
+                        'ticket.owner.member.pic',
                     ]
                 )
             );

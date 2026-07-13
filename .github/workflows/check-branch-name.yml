@@ -12,7 +12,7 @@ jobs:
         run: |
           BRANCH_NAME="${{ github.head_ref }}"
           echo "Checking branch name: $BRANCH_NAME"
-          if [[ ! "$BRANCH_NAME" =~ ^(chore|feature|fix|hotfix|patch|refactor)/[a-z0-9._-]+$ ]]; then
+          if [[ ! "$BRANCH_NAME" =~ ^(chore|feat|feature|fix|hotfix|patch|refactor)/[a-z0-9._-]+$ ]]; then
             echo "❌ Invalid branch name: $BRANCH_NAME"
             echo "✅ Should match: feature/foo-bar, hotfix/issue-123, etc."
             exit 1

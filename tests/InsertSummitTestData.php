@@ -543,7 +543,12 @@ trait InsertSummitTestData
             $memberless_badge->setType(self::$default_badge_type);
 
             $memberless_order = new SummitOrder();
-            $memberless_order->setOwner(self::$defaultMember);
+            // owner email must match the ticket owner's email so the order satisfies
+            // SummitOrder::isSingleOrder() (getMyTicketByOrderHash rejects it otherwise);
+            // first/last name are required by SummitOrder::generateHash()
+            $memberless_order->setOwnerEmail("memberless@test.com");
+            $memberless_order->setOwnerFirstName("No");
+            $memberless_order->setOwnerSurname("Member");
             $memberless_order->setSummit(self::$summit);
 
             $memberless_ticket = new SummitAttendeeTicket();

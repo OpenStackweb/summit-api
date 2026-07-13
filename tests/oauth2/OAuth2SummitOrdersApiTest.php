@@ -644,7 +644,8 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(200);
+        // the endpoint responds with created() (201), not ok()
+        $this->assertResponseStatus(201);
         $ticket = json_decode($content);
         $this->assertTrue(!is_null($ticket));
         return $ticket;

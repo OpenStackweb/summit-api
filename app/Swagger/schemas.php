@@ -35,11 +35,33 @@ class SummitCollection
     schema: 'Owner',
     type: 'object',
     properties: [
+        new OA\Property(property: 'id', type: 'integer'),
         new OA\Property(property: 'first_name', type: 'string'),
         new OA\Property(property: 'last_name', type: 'string'),
+        new OA\Property(property: 'email', type: 'string'),
+        new OA\Property(property: 'company', type: 'string'),
+        new OA\Property(
+            property: 'member',
+            description: 'Present only when the ticket owner has a linked Member account; absent for member-less attendees',
+            allOf: [new OA\Schema(ref: '#/components/schemas/OwnerMember')]
+        ),
     ]
 )]
 class OwnerSchema
+{
+}
+
+#[OA\Schema(
+    schema: 'OwnerMember',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer'),
+        new OA\Property(property: 'first_name', type: 'string'),
+        new OA\Property(property: 'last_name', type: 'string'),
+        new OA\Property(property: 'pic', type: 'string'),
+    ]
+)]
+class OwnerMemberSchema
 {
 }
 

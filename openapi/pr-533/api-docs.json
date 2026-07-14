@@ -88547,10 +88547,44 @@
             },
             "Owner": {
                 "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
                     "first_name": {
                         "type": "string"
                     },
                     "last_name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "company": {
+                        "type": "string"
+                    },
+                    "member": {
+                        "description": "Present only when the ticket owner has a linked Member account; absent for member-less attendees",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OwnerMember"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "OwnerMember": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "first_name": {
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "type": "string"
+                    },
+                    "pic": {
                         "type": "string"
                     }
                 },

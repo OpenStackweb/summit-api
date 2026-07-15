@@ -24576,8 +24576,7 @@
                 "security": [
                     {
                         "summit_events_api_oauth2": [
-                            "http://localhost/summits/read",
-                            "http://localhost/summits/read/all"
+                            "http://localhost/summits/events/overflow/read"
                         ]
                     }
                 ]

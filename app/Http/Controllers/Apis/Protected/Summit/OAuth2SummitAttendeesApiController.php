@@ -150,7 +150,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         path: '/api/v1/summits/{id}/attendees/me',
         operationId: 'getCurrentAttendee',
         summary: 'Get current user attendee profile for a particular summit',
-        description: 'Returns the attendee profile for the currently authenticated user in the specified summit ( regenerates que Badge QR code of the active tickets ) ',
+        description: 'Returns the attendee profile for the currently authenticated user in the specified summit (regenerates the Badge QR code of the active tickets when tickets.badge is expanded)',
         tags: ['Summit Attendees'],
         security: [
             [

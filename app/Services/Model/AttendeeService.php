@@ -17,7 +17,6 @@ use App\Jobs\Emails\Registration\Attendees\SummitAttendeeExcerptEmail;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
-use App\Services\Model\Imp\Traits\ResolvesLockedTicketBadge;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use App\Utils\AES;
 use Illuminate\Support\Facades\Cache;
@@ -421,10 +420,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $ticket->generateQRCode();
             $ticket->generateHash();
 
-            $badge = $this->resolveBadgeForLockedTicket($ticket);
-            if (!is_null($badge)) {
+            if ($ticket->hasBadge()) {
                 try {
-                    $badge->generateQRCode();
+                    $ticket->getBadge()->generateQRCode();
                 } catch (\Exception $ex) {
                     Log::error($ex);
                 }
@@ -546,10 +544,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $ticket->generateHash();
             $new_owner->updateStatus();
 
-            $badge = $this->resolveBadgeForLockedTicket($ticket);
-            if (!is_null($badge)) {
+            if ($ticket->hasBadge()) {
                 try {
-                    $badge->generateQRCode();
+                    $ticket->getBadge()->generateQRCode();
                 } catch (\Exception $ex) {
                     Log::error($ex);
                 }
@@ -612,7 +609,6 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     }
 
     use ParametrizedSendEmails;
-    use ResolvesLockedTicketBadge;
 
     /**
      * @param int $summit_id

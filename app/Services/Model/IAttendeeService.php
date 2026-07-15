@@ -152,4 +152,12 @@ interface IAttendeeService
      * @throws \Exception
      */
     public function processAttendeeCheckStatusUpdate(int $attendee_id):void;
+
+    /**
+     * Generates and persists the badge qr_code for any of the attendee's own active
+     * tickets whose badge does not have one yet (generate-on-first-read).
+     * @param SummitAttendee $attendee
+     * @return void
+     */
+    public function regenerateAttendeeBadgesQRCodes(SummitAttendee $attendee): void;
 }

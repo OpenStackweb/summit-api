@@ -419,6 +419,15 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $ticket->generateQRCode();
             $ticket->generateHash();
+
+            if ($ticket->hasBadge()) {
+                try {
+                    $ticket->getBadge()->generateQRCode();
+                } catch (\Exception $ex) {
+                    Log::error($ex);
+                }
+            }
+
             if ($summit->isRegistrationSendTicketEmailAutomatically())
                 $new_owner->sendInvitationEmail($ticket);
 
@@ -535,6 +544,13 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $ticket->generateHash();
             $new_owner->updateStatus();
 
+            if ($ticket->hasBadge()) {
+                try {
+                    $ticket->getBadge()->generateQRCode();
+                } catch (\Exception $ex) {
+                    Log::error($ex);
+                }
+            }
 
             if ($summit->isRegistrationSendTicketEmailAutomatically()) {
                 Log::debug
@@ -552,6 +568,36 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             return $ticket;
         });
 
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function regenerateAttendeeBadgesQRCodes(SummitAttendee $attendee): void
+    {
+        Log::debug(sprintf("AttendeeService::regenerateAttendeeBadgesQRCodes attendee %s", $attendee->getId()));
+        $badge_ids_to_generate = [];
+        foreach ($attendee->getTickets() as $ticket) {
+            if (!$ticket->isActive()) continue;
+            if (!$ticket->hasBadge()) continue;
+            $badge = $ticket->getBadge();
+            $badge_ids_to_generate[] = $badge->getId();
+        }
+
+        if (empty($badge_ids_to_generate)) return;
+
+        foreach ($badge_ids_to_generate as $badge_id) {
+            $this->tx_service->transaction(function () use ($attendee, $badge_id) {
+                $badge = $this->badge_repository->getByIdExclusiveLock($badge_id);
+                if (!$badge instanceof SummitAttendeeBadge) return;
+                Log::debug(sprintf("AttendeeService::regenerateAttendeeBadgesQRCodes attendee %s badge %s", $attendee->getId(), $badge_id));
+                try {
+                    $badge->generateQRCode();
+                } catch (\Exception $ex) {
+                    Log::error($ex);
+                }
+            });
+        }
     }
 
     /**

@@ -110,5 +110,5 @@ OTEL_INSTRUMENTATION_GUZZLE=true
 docker compose up -d otel-collector elasticsearch
 
 # View traces
-curl http://localhost:55679/debug/tracez
+curl http://localhost:55779/debug/tracez
 ```

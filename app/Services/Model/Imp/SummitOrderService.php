@@ -4027,6 +4027,14 @@ final class SummitOrderService
                 $ticket->generateHash();
                 $new_owner->updateStatus();
                 $shouldSendInvitationEmail = true;
+
+                if ($ticket->hasBadge()) {
+                    try {
+                        $ticket->getBadge()->generateQRCode();
+                    } catch (\Exception $ex) {
+                        Log::error($ex);
+                    }
+                }
             }
 
             if (isset($payload['ticket_type_id'])) {

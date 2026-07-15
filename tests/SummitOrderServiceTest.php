@@ -33,6 +33,7 @@ use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
+use LaravelDoctrine\ORM\Facades\EntityManager;
 use libs\utils\ITransactionService;
 use Mockery;
 use models\main\ICompanyRepository;
@@ -45,6 +46,7 @@ use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitBadgeType;
@@ -936,5 +938,107 @@ CSV;
 
         $this->assertTrue($ticket->hasBadge());
         $this->assertEquals('VIP BADGE', $ticket->getBadge()->getType()->getName());
+    }
+
+    public function testUpdateTicketReassignmentRegeneratesBadgeQRCode(){
+
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $ticket = $attendee->getTickets()->first();
+        $this->assertNotNull($ticket);
+        $this->assertTrue($ticket->hasBadge());
+        $badge_id = $ticket->getBadge()->getId();
+
+        $summit_id        = self::$summit->getId();
+        $member2_email    = self::$member2->getEmail();
+        $member2_first    = self::$member2->getFirstName();
+        $member2_last     = self::$member2->getLastName();
+        $member2_fullname = self::$member2->getFullName();
+        $default_email    = self::$defaultMember->getEmail();
+
+        // clear the identity map so the service performs a genuinely fresh load,
+        // matching how a real HTTP request behaves.
+        EntityManager::clear();
+
+        $summit = EntityManager::getRepository(Summit::class)->find($summit_id);
+
+        // the fixture (InsertSummitTestData) reuses one SummitAttendeeBadge PHP object
+        // across several tickets, so only the LAST ticket it was attached to is the one
+        // actually persisted as this badge's TicketID in the DB - resolve the real
+        // ticket (and its order) via the badge's own association rather than trusting
+        // attendee->getTickets()->first().
+        $real_ticket = EntityManager::getRepository(SummitAttendeeBadge::class)->find($badge_id)->getTicket();
+        $ticket_id   = $real_ticket->getId();
+        $order_id    = $real_ticket->getOrder()->getId();
+
+        $payload = [
+            'attendee_email'      => $member2_email,
+            'attendee_first_name' => $member2_first,
+            'attendee_last_name'  => $member2_last,
+        ];
+
+        $service = App::make(ISummitOrderService::class);
+        $service->updateTicket($summit, $order_id, $ticket_id, $payload);
+
+        EntityManager::clear();
+        $badge = EntityManager::getRepository(SummitAttendeeBadge::class)->find($badge_id);
+        $qr_code = $badge->getQRCode();
+        $this->assertNotEmpty($qr_code);
+        $decoded = SummitAttendeeBadge::parseQRCode(SummitAttendeeBadge::decodeQRCodeFor($summit, $qr_code));
+
+        $this->assertEquals($member2_email, $decoded['owner_email']);
+        $this->assertEquals($member2_fullname, $decoded['owner_fullname']);
+        $this->assertNotEquals($default_email, $decoded['owner_email']);
+    }
+
+    public function testUpdateTicketBadgeTypeChangeDoesNotDuplicateBadge(){
+
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $ticket = $attendee->getTickets()->first();
+        $this->assertNotNull($ticket);
+        $this->assertTrue($ticket->hasBadge());
+        $badge_id = $ticket->getBadge()->getId();
+
+        $new_badge_type = new SummitBadgeType();
+        $new_badge_type->setName('NEW BADGE TYPE');
+        $new_badge_type->setDescription('NEW BADGE TYPE DESCRIPTION');
+        self::$summit->addBadgeType($new_badge_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        $new_badge_type_id = $new_badge_type->getId();
+
+        $summit_id = self::$summit->getId();
+
+        // see comment in testUpdateTicketReassignmentRegeneratesBadgeQRCode: resolve the
+        // real ticket/order via the badge's own association, not collection order.
+        EntityManager::clear();
+        $summit      = EntityManager::getRepository(Summit::class)->find($summit_id);
+        $real_ticket = EntityManager::getRepository(SummitAttendeeBadge::class)->find($badge_id)->getTicket();
+        $ticket_id   = $real_ticket->getId();
+        $ticket_number = $real_ticket->getNumber();
+        $order_id    = $real_ticket->getOrder()->getId();
+
+        $service = App::make(ISummitOrderService::class);
+        $service->updateTicket($summit, $order_id, $ticket_id, ['badge_type_id' => $new_badge_type_id]);
+
+        EntityManager::clear();
+
+        // exactly one badge row for this ticket - the pre-existing badge was reused,
+        // not shadowed by a second inserted row
+        $badge_count = EntityManager::getRepository(SummitAttendeeBadge::class)
+            ->createQueryBuilder('b')
+            ->select('COUNT(b.id)')
+            ->innerJoin('b.ticket', 't')
+            ->where('t.number = :ticket_number')
+            ->setParameter('ticket_number', $ticket_number)
+            ->getQuery()
+            ->getSingleScalarResult();
+        $this->assertEquals(1, $badge_count);
+
+        $badge = EntityManager::getRepository(SummitAttendeeBadge::class)->getBadgeByTicketNumber($ticket_number);
+        $this->assertNotNull($badge);
+        $this->assertEquals($badge_id, $badge->getId());
+        $this->assertEquals('NEW BADGE TYPE', $badge->getType()->getName());
     }
 }

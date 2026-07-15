@@ -149,8 +149,8 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: '/api/v1/summits/{id}/attendees/me',
         operationId: 'getCurrentAttendee',
-        summary: 'Get current user attendee profile',
-        description: 'Returns the attendee profile for the currently authenticated user in the specified summit',
+        summary: 'Get current user attendee profile for a particular summit',
+        description: 'Returns the attendee profile for the currently authenticated user in the specified summit (regenerates the Badge QR code of the active tickets when tickets.badge is expanded)',
         tags: ['Summit Attendees'],
         security: [
             [
@@ -184,8 +184,15 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $type = CheckAttendeeStrategyFactory::Me;
             $attendee = CheckAttendeeStrategyFactory::build($type, $this->resource_server_context)->check('me', $summit);
             if (is_null($attendee)) return $this->error404();
+
+            $expand = SerializerUtils::getExpand();
+            $expand_relations = array_map('trim', explode(',', $expand));
+            if (in_array('tickets.badge', $expand_relations, true)) {
+                $this->attendee_service->regenerateAttendeeBadgesQRCodes($attendee);
+            }
+
             return $this->ok(SerializerRegistry::getInstance()->getSerializer($attendee)->serialize(
-                SerializerUtils::getExpand(),
+                $expand,
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));

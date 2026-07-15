@@ -19,7 +19,7 @@ use utils\FilterParser;
  * Class RetrievePublishedSummitEventsBySummitStrategy
  * @package App\Http\Controllers
  */
-final class RetrievePublishedSummitEventsBySummitStrategy extends RetrieveAllSummitEventsBySummitStrategy
+class RetrievePublishedSummitEventsBySummitStrategy extends RetrieveAllSummitEventsBySummitStrategy
 {
     /**
      * @return array

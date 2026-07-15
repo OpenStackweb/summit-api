@@ -668,6 +668,14 @@ Route::group(array('prefix' => 'summits'), function () {
                 Route::get('/empty-spots', 'OAuth2SummitEventsApiController@getScheduleEmptySpots');
             });
 
+            Route::group(['prefix' => 'all'], function () {
+                Route::group(['prefix' => 'published'], function () {
+                    Route::group(['prefix' => 'occupancy'], function () {
+                        Route::get('overflow', 'OAuth2SummitEventsApiController@getOverflowPublishedEventsEvents');
+                    });
+                });
+            });
+
             Route::post('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitEventsApiController@addEvent']);
             Route::group(['prefix' => '{event_id}'], function () {
 

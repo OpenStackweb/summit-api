@@ -2229,4 +2229,52 @@ CSV;
 
         $this->assertResponseStatus(200);
     }
+
+    public function testGetOverflowPublishedEvents()
+    {
+        $start_date = clone(self::$summit->getBeginDate());
+        $end_date = clone($start_date);
+        $end_date = $end_date->add(new \DateInterval("PT1H"));
+
+        $overflow_event = new SummitEvent();
+        $overflow_event->setTitle(sprintf("Overflow Event %s", str_random(16)));
+        $overflow_event->setAbstract(sprintf("Overflow Event Abstract %s", str_random(16)));
+        $overflow_event->setCategory(self::$defaultTrack);
+        $overflow_event->setType(self::$defaultEventType);
+        self::$summit->addEvent($overflow_event);
+        $overflow_event->setStartDate($start_date);
+        $overflow_event->setEndDate($end_date);
+        $overflow_event->publish();
+        $overflow_event->setOverflow("https://testoverflow.org", true);
+
+        self::$em->persist($overflow_event);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getOverflowPublishedEventsEvents",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+
+        $result = json_decode($response->getContent(), true);
+        $this->assertNotNull($result);
+        $this->assertEquals(1, $result['total']);
+        $this->assertEquals($overflow_event->getId(), $result['data'][0]['id']);
+    }
 }

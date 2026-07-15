@@ -2902,4 +2902,63 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
         });
     }
+
+
+    #[OA\Get(
+        path: '/api/v1/summits/{id}/events/all/published/occupancy/overflow',
+        operationId: 'getOverflowPublishedEventsEvents',
+        summary: 'Get all published overflow events for a summit',
+        description: 'Retrieves a paginated list of all events (published and with occupancy == OVERFLOW) for a specific summit.',
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        tags: ['Summit Events', 'Overflow'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_OK, description: 'Events retrieved successfully', content: new OA\JsonContent(ref: '#/components/schemas/PaginatedSummitEventsResponse')),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: 'Bad Request'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: 'Unauthorized'),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: 'Forbidden'),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Not Found'),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: 'Server Error'),
+        ]
+    )]
+
+    /**
+     * @param $summit_id
+     * @return mixed
+     */
+    public function getOverflowPublishedEventsEvents($summit_id)
+    {
+        $req = request();
+        $req->attributes->set('timing.controller_start', microtime(true));
+        return $this->processRequest(function () use ($summit_id, $req) {
+            $current_user = $this->resource_server_context->getCurrentUser(true);
+            return $this->withReplica(function() use ($summit_id, $current_user, $req) {
+                $strategy = new RetrieveAllOverflowPublishedSummitEventsStrategy($this->repository, $this->event_repository, $this->resource_server_context);
+                $response = $strategy->getEvents(['summit_id' => $summit_id]);
+                $req->attributes->set('timing.serializer_start', microtime(true));
+                $data = $response->toArray
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations(),
+                    [
+                        'current_user' => $current_user
+                    ],
+                    IPresentationSerializerTypes::OverflowStream
+                );
+                $req->attributes->set('timing.serializer_end', microtime(true));
+                $result = $this->ok($data);
+                $req->attributes->set('timing.controller_end', microtime(true));
+                return $result;
+            });
+
+        });
+    }
+
 }

@@ -14,6 +14,8 @@
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Support\Facades\App;
+use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\summit\SummitAttendeeBadge;
 /**
  * Class OAuth2AttendeesApiTest
  * @package Tests
@@ -124,6 +126,88 @@ class OAuth2AttendeesApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
         $attendee = json_decode($content);
         $this->assertTrue(!is_null($attendee));
+    }
+
+    public function testGetOwnAttendeeGeneratesBadgeQRCodeOnFirstRead(){
+
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $ticket = $attendee->getTickets()->first();
+        $this->assertNotNull($ticket);
+        $badge = $ticket->getBadge();
+        $this->assertNotNull($badge);
+        $badge_id = $badge->getId();
+
+        // simulate a never-printed badge (qr_code null) by nulling the private field directly
+        $prop = new \ReflectionProperty(SummitAttendeeBadge::class, 'qr_code');
+        $prop->setAccessible(true);
+        $prop->setValue($badge, null);
+        EntityManager::flush();
+        EntityManager::clear();
+
+        $params = [
+            'id'     => self::$summit->getId(),
+            'expand' => 'tickets,tickets.badge',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getOwnAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $content = json_decode($response->getContent());
+        $this->assertTrue(!is_null($content));
+        $this->assertNotEmpty($content->tickets);
+
+        $ticket_with_badge = null;
+        foreach ($content->tickets as $t) {
+            if (isset($t->badge) && $t->badge->id === $badge_id) {
+                $ticket_with_badge = $t;
+                break;
+            }
+        }
+        $this->assertNotNull($ticket_with_badge, "response did not include the ticket's badge");
+        $this->assertNotEmpty($ticket_with_badge->badge->qr_code);
+        $first_qr_code = $ticket_with_badge->badge->qr_code;
+
+        // persisted, not just computed in-response
+        EntityManager::clear();
+        $reloaded_badge = EntityManager::getRepository(SummitAttendeeBadge::class)->find($badge_id);
+        $this->assertNotEmpty($reloaded_badge->getQRCode());
+
+        // second read is idempotent (identical value, not recomputed)
+        $response2 = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getOwnAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $content2 = json_decode($response2->getContent());
+        $ticket_with_badge2 = null;
+        foreach ($content2->tickets as $t) {
+            if (isset($t->badge) && $t->badge->id === $badge_id) {
+                $ticket_with_badge2 = $t;
+                break;
+            }
+        }
+        $this->assertNotNull($ticket_with_badge2);
+        $this->assertEquals($first_qr_code, $ticket_with_badge2->badge->qr_code);
     }
 
     public function testGetAttendeeByID(){

@@ -17,6 +17,7 @@ use App\Jobs\Emails\Registration\Attendees\SummitAttendeeExcerptEmail;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
+use App\Services\Model\Imp\Traits\ResolvesLockedTicketBadge;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use App\Utils\AES;
 use Illuminate\Support\Facades\Cache;
@@ -419,6 +420,16 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $ticket->generateQRCode();
             $ticket->generateHash();
+
+            $badge = $this->resolveBadgeForLockedTicket($ticket);
+            if (!is_null($badge)) {
+                try {
+                    $badge->generateQRCode();
+                } catch (\Exception $ex) {
+                    Log::error($ex);
+                }
+            }
+
             if ($summit->isRegistrationSendTicketEmailAutomatically())
                 $new_owner->sendInvitationEmail($ticket);
 
@@ -535,6 +546,14 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $ticket->generateHash();
             $new_owner->updateStatus();
 
+            $badge = $this->resolveBadgeForLockedTicket($ticket);
+            if (!is_null($badge)) {
+                try {
+                    $badge->generateQRCode();
+                } catch (\Exception $ex) {
+                    Log::error($ex);
+                }
+            }
 
             if ($summit->isRegistrationSendTicketEmailAutomatically()) {
                 Log::debug
@@ -557,12 +576,43 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     /**
      * @inheritDoc
      */
+    public function regenerateAttendeeBadgesQRCodes(SummitAttendee $attendee): void
+    {
+        Log::debug(sprintf("AttendeeService::regenerateAttendeeBadgesQRCodes attendee %s", $attendee->getId()));
+        $badge_ids_to_generate = [];
+        foreach ($attendee->getTickets() as $ticket) {
+            if (!$ticket->isActive()) continue;
+            if (!$ticket->hasBadge()) continue;
+            $badge = $ticket->getBadge();
+            $badge_ids_to_generate[] = $badge->getId();
+        }
+
+        if (empty($badge_ids_to_generate)) return;
+
+        foreach ($badge_ids_to_generate as $badge_id) {
+            $this->tx_service->transaction(function () use ($attendee, $badge_id) {
+                $badge = $this->badge_repository->getByIdExclusiveLock($badge_id);
+                if (!$badge instanceof SummitAttendeeBadge) return;
+                Log::debug(sprintf("AttendeeService::regenerateAttendeeBadgesQRCodes attendee %s badge %s", $attendee->getId(), $badge_id));
+                try {
+                    $badge->generateQRCode();
+                } catch (\Exception $ex) {
+                    Log::error($ex);
+                }
+            });
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function triggerSend(Summit $summit, array $payload, $filter = null): void
     {
         ProcessAttendeesEmailRequestJob::dispatch($summit, $payload, $filter);
     }
 
     use ParametrizedSendEmails;
+    use ResolvesLockedTicketBadge;
 
     /**
      * @param int $summit_id

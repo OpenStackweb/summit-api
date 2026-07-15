@@ -38,6 +38,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitRefundRequestRepository;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
+use App\Services\Model\Imp\Traits\ResolvesLockedTicketBadge;
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
@@ -1678,6 +1679,8 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
 final class SummitOrderService
     extends AbstractService implements ISummitOrderService
 {
+    use ResolvesLockedTicketBadge;
+
     /**
      * @var IMemberRepository
      */
@@ -4027,6 +4030,15 @@ final class SummitOrderService
                 $ticket->generateHash();
                 $new_owner->updateStatus();
                 $shouldSendInvitationEmail = true;
+
+                $badge = $this->resolveBadgeForLockedTicket($ticket);
+                if (!is_null($badge)) {
+                    try {
+                        $badge->generateQRCode();
+                    } catch (\Exception $ex) {
+                        Log::error($ex);
+                    }
+                }
             }
 
             if (isset($payload['ticket_type_id'])) {
@@ -4048,9 +4060,17 @@ final class SummitOrderService
                 if (is_null($badge_type))
                     throw new EntityNotFoundException("badge type not found");
 
-                $badge = $ticket->hasBadge() ? $ticket->getBadge() : new SummitAttendeeBadge();
+                // $ticket here comes from $order->getTicketById() (a collection match,
+                // not a directly-locked fetch) so hasBadge()/getBadge() are normally
+                // reliable; resolveBadgeForLockedTicket is used anyway for defense in
+                // depth and consistency with the reassignment branch above, since it
+                // doesn't depend on that Doctrine hydration detail holding in the future.
+                $badge = $this->resolveBadgeForLockedTicket($ticket);
+                if (is_null($badge)) {
+                    $badge = new SummitAttendeeBadge();
+                    $ticket->setBadge($badge);
+                }
                 $badge->setType($badge_type);
-                $ticket->setBadge($badge);
             }
 
             return [$ticket, $shouldSendInvitationEmail];

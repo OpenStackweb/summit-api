@@ -20,8 +20,11 @@ use Doctrine\Migrations\AbstractMigration;
  * Seed the get-overflow-published-events endpoint.
  *
  * Adds:
+ * - 1 api_scopes row (ReadOverflowEvents) - dedicated scope so this endpoint's Mux
+ *   playback tokens are not gated by the broad ReadSummitData/ReadAllSummitData scopes
+ *   shared by unrelated read endpoints
  * - 1 api_endpoints row (get-overflow-published-events)
- * - 2 endpoint_api_scopes associations (ReadSummitData, ReadAllSummitData)
+ * - 1 endpoint_api_scopes association (ReadOverflowEvents)
  *
  * All INSERTs are idempotent via WHERE NOT EXISTS.
  */
@@ -35,19 +38,25 @@ final class Version20260715120000 extends AbstractMigration
 
     public function getDescription(): string
     {
-        return 'Seed get-overflow-published-events endpoint with read scopes.';
+        return 'Seed get-overflow-published-events endpoint with a dedicated read scope.';
     }
 
     public function up(Schema $schema): void
     {
+        $this->addSql($this->insertApiScope(
+            self::API_NAME,
+            SummitScopes::ReadOverflowEvents,
+            'Read Summit Overflow Events Data',
+            'Grants read only access to published summit events currently in OVERFLOW occupancy, including overflow streaming URLs and tokens'
+        ));
+
         $this->registerEndpoint(
             self::API_NAME,
             self::ENDPOINT_NAME,
             self::ENDPOINT_ROUTE,
             'GET',
             [
-                SummitScopes::ReadSummitData,
-                SummitScopes::ReadAllSummitData,
+                SummitScopes::ReadOverflowEvents,
             ]
         );
     }
@@ -55,5 +64,6 @@ final class Version20260715120000 extends AbstractMigration
     public function down(Schema $schema): void
     {
         $this->unregisterEndpoint(self::API_NAME, self::ENDPOINT_NAME);
+        $this->addSql($this->deleteApiScopes(self::API_NAME, [SummitScopes::ReadOverflowEvents]));
     }
 }

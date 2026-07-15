@@ -2909,7 +2909,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         operationId: 'getOverflowPublishedEventsEvents',
         summary: 'Get all published overflow events for a summit',
         description: 'Retrieves a paginated list of all events (published and with occupancy == OVERFLOW) for a specific summit.',
-        security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
+        security: [['summit_events_api_oauth2' => [SummitScopes::ReadOverflowEvents]]],
         tags: ['Summit Events', 'Overflow'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),

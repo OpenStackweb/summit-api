@@ -4259,8 +4259,7 @@ class ApiEndpointsSeeder extends Seeder
                 'route' => '/api/v1/summits/{id}/events/all/published/occupancy/overflow',
                 'http_method' => 'GET',
                 'scopes' => [
-                    SummitScopes::ReadSummitData,
-                    SummitScopes::ReadAllSummitData
+                    SummitScopes::ReadOverflowEvents,
                 ],
             ],
             [

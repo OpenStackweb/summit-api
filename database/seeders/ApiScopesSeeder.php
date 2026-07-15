@@ -64,6 +64,11 @@ final class ApiScopesSeeder extends Seeder
                 'description' => 'Grants read only access for All Summits Data',
             ],
             [
+                'name' => SummitScopes::ReadOverflowEvents,
+                'short_description' => 'Read Summit Overflow Events Data',
+                'description' => 'Grants read only access to published summit events currently in OVERFLOW occupancy, including overflow streaming URLs and tokens',
+            ],
+            [
                 'name' => SummitScopes::MeRead,
                 'short_description' => 'Get own summit member data',
                 'description' => 'Grants read only access for our own summit member data',

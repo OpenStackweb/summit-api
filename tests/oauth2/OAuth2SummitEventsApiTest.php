@@ -2247,7 +2247,36 @@ CSV;
         $overflow_event->publish();
         $overflow_event->setOverflow("https://testoverflow.org", true);
 
+        // same summit, overflow occupancy, but NOT published -> must be excluded by the published filter
+        $unpublished_overflow_event = new SummitEvent();
+        $unpublished_overflow_event->setTitle(sprintf("Unpublished Overflow Event %s", str_random(16)));
+        $unpublished_overflow_event->setAbstract(sprintf("Unpublished Overflow Event Abstract %s", str_random(16)));
+        $unpublished_overflow_event->setCategory(self::$defaultTrack);
+        $unpublished_overflow_event->setType(self::$defaultEventType);
+        self::$summit->addEvent($unpublished_overflow_event);
+        $unpublished_overflow_event->setStartDate($start_date);
+        $unpublished_overflow_event->setEndDate($end_date);
+        $unpublished_overflow_event->setOverflow("https://testoverflow-unpublished.org", true);
+
+        // different summit, published, overflow occupancy -> must be excluded by the summit_id filter
+        $other_summit_start_date = clone(self::$summit2->getBeginDate());
+        $other_summit_end_date = clone($other_summit_start_date);
+        $other_summit_end_date = $other_summit_end_date->add(new \DateInterval("PT1H"));
+
+        $other_summit_overflow_event = new SummitEvent();
+        $other_summit_overflow_event->setTitle(sprintf("Other Summit Overflow Event %s", str_random(16)));
+        $other_summit_overflow_event->setAbstract(sprintf("Other Summit Overflow Event Abstract %s", str_random(16)));
+        $other_summit_overflow_event->setCategory(self::$defaultTrack);
+        $other_summit_overflow_event->setType(self::$defaultEventType);
+        self::$summit2->addEvent($other_summit_overflow_event);
+        $other_summit_overflow_event->setStartDate($other_summit_start_date);
+        $other_summit_overflow_event->setEndDate($other_summit_end_date);
+        $other_summit_overflow_event->publish();
+        $other_summit_overflow_event->setOverflow("https://testoverflow-othersummit.org", true);
+
         self::$em->persist($overflow_event);
+        self::$em->persist($unpublished_overflow_event);
+        self::$em->persist($other_summit_overflow_event);
         self::$em->flush();
 
         $params = [

@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 
+use App\ModelSerializers\Summit\SummitEventOverflowStreamingSerializer;
 use models\oauth2\IResourceServerContext;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
+use models\summit\SummitEvent;
 use models\summit\SummitRegistrationPromoCode;
 use ModelSerializers\SerializerDecorator;
 use ModelSerializers\SummitAttendeeAdminSerializer;
@@ -87,5 +89,31 @@ final class SerializerTests extends TestCase
         $values = $serializer->serialize('notes');
         $this->assertTrue(is_array($values));
         $this->assertTrue(isset($values['notes']));
+    }
+
+    public function testOverflowStreamingSerializerReflectsCurrentTokensOnEachCall()
+    {
+        $event = Mockery::mock(SummitEvent::class)->makePartial();
+        $event->shouldReceive('getId')->andReturn(1001);
+        $event->shouldReceive('getTitle')->andReturn('Overflow Event');
+        $event->shouldReceive('getStartDate')->andReturn(new \DateTime('2026-07-15 10:00:00'));
+        $event->shouldReceive('getEndDate')->andReturn(new \DateTime('2026-07-15 11:00:00'));
+        $event->shouldReceive('getOverflowStreamingUrl')->andReturn('https://stream.example.org');
+        $event->shouldReceive('getOverflowStreamIsSecure')->andReturn(true);
+        $event->shouldReceive('getOverflowStreamingTokens')->andReturn(
+            ['playback_token' => 'token-A'],
+            ['playback_token' => 'token-B']
+        );
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new SerializerDecorator(new SummitEventOverflowStreamingSerializer($event, $resource_server_context));
+
+        $first = $serializer->serialize();
+        $second = $serializer->serialize();
+
+        // must not freeze the first computed token set forever - each call reflects
+        // whatever getOverflowStreamingTokens() currently returns.
+        $this->assertEquals('token-A', $first['overflow_tokens']['playback_token']);
+        $this->assertEquals('token-B', $second['overflow_tokens']['playback_token']);
     }
 }

@@ -210,6 +210,62 @@ class OAuth2AttendeesApiTest extends ProtectedApiTestCase
         $this->assertEquals($first_qr_code, $ticket_with_badge2->badge->qr_code);
     }
 
+    public function testGetOwnAttendeeDoesNotGenerateBadgeQRCodeWhenBadgeNotExpanded(){
+
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $ticket = $attendee->getTickets()->first();
+        $this->assertNotNull($ticket);
+        $badge = $ticket->getBadge();
+        $this->assertNotNull($badge);
+        $badge_id = $badge->getId();
+
+        // simulate a never-printed badge (qr_code null) by nulling the private field directly
+        $prop = new \ReflectionProperty(SummitAttendeeBadge::class, 'qr_code');
+        $prop->setAccessible(true);
+        $prop->setValue($badge, null);
+        EntityManager::flush();
+        EntityManager::clear();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        // no 'expand' param at all - badge relation not requested
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getOwnAttendee",
+            ['id' => self::$summit->getId()],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+
+        $badge_after = EntityManager::getRepository(SummitAttendeeBadge::class)->find($badge_id);
+        $this->assertEmpty($badge_after->getQRCode(), "badge QR was generated even though tickets.badge was not expanded");
+
+        // expand=tickets only (no .badge sub-expand) - still must not trigger generation
+        $response2 = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getOwnAttendee",
+            ['id' => self::$summit->getId(), 'expand' => 'tickets'],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+
+        EntityManager::clear();
+        $badge_after2 = EntityManager::getRepository(SummitAttendeeBadge::class)->find($badge_id);
+        $this->assertEmpty($badge_after2->getQRCode(), "badge QR was generated for expand=tickets without .badge");
+    }
+
     public function testGetAttendeeByID(){
 
         $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);

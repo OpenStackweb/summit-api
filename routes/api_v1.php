@@ -671,7 +671,7 @@ Route::group(array('prefix' => 'summits'), function () {
             Route::group(['prefix' => 'all'], function () {
                 Route::group(['prefix' => 'published'], function () {
                     Route::group(['prefix' => 'occupancy'], function () {
-                        Route::get('overflow', 'OAuth2SummitEventsApiController@getOverflowPublishedEventsEvents');
+                        Route::get('overflow', 'OAuth2SummitEventsApiController@getOverflowPublishedEvents');
                     });
                 });
             });

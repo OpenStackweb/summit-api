@@ -2291,7 +2291,7 @@ CSV;
         $response = $this->action
         (
             "GET",
-            "OAuth2SummitEventsApiController@getOverflowPublishedEventsEvents",
+            "OAuth2SummitEventsApiController@getOverflowPublishedEvents",
             $params,
             array(),
             array(),

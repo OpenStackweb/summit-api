@@ -2906,7 +2906,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: '/api/v1/summits/{id}/events/all/published/occupancy/overflow',
-        operationId: 'getOverflowPublishedEventsEvents',
+        operationId: 'getOverflowPublishedEvents',
         summary: 'Get all published overflow events for a summit',
         description: 'Retrieves a paginated list of all events (published and with occupancy == OVERFLOW) for a specific summit.',
         security: [['summit_events_api_oauth2' => [SummitScopes::ReadOverflowEvents]]],
@@ -2915,6 +2915,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
+            new OA\Parameter(name: 'filter[]', in: 'query', required: false, description: 'Filter expressions', style: 'form', explode: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))),
             new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by field(s)', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),
         ],
@@ -2932,7 +2933,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
      * @param $summit_id
      * @return mixed
      */
-    public function getOverflowPublishedEventsEvents($summit_id)
+    public function getOverflowPublishedEvents($summit_id)
     {
         $req = request();
         $req->attributes->set('timing.controller_start', microtime(true));

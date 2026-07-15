@@ -24495,7 +24495,7 @@
                 ],
                 "summary": "Get all published overflow events for a summit",
                 "description": "Retrieves a paginated list of all events (published and with occupancy == OVERFLOW) for a specific summit.",
-                "operationId": "getOverflowPublishedEventsEvents",
+                "operationId": "getOverflowPublishedEvents",
                 "parameters": [
                     {
                         "name": "id",
@@ -24525,6 +24525,20 @@
                             "type": "integer",
                             "default": 10,
                             "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "filter[]",
+                        "in": "query",
+                        "description": "Filter expressions",
+                        "required": false,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     },
                     {

@@ -2229,4 +2229,81 @@ CSV;
 
         $this->assertResponseStatus(200);
     }
+
+    public function testGetOverflowPublishedEvents()
+    {
+        $start_date = clone(self::$summit->getBeginDate());
+        $end_date = clone($start_date);
+        $end_date = $end_date->add(new \DateInterval("PT1H"));
+
+        $overflow_event = new SummitEvent();
+        $overflow_event->setTitle(sprintf("Overflow Event %s", str_random(16)));
+        $overflow_event->setAbstract(sprintf("Overflow Event Abstract %s", str_random(16)));
+        $overflow_event->setCategory(self::$defaultTrack);
+        $overflow_event->setType(self::$defaultEventType);
+        self::$summit->addEvent($overflow_event);
+        $overflow_event->setStartDate($start_date);
+        $overflow_event->setEndDate($end_date);
+        $overflow_event->publish();
+        $overflow_event->setOverflow("https://testoverflow.org", true);
+
+        // same summit, overflow occupancy, but NOT published -> must be excluded by the published filter
+        $unpublished_overflow_event = new SummitEvent();
+        $unpublished_overflow_event->setTitle(sprintf("Unpublished Overflow Event %s", str_random(16)));
+        $unpublished_overflow_event->setAbstract(sprintf("Unpublished Overflow Event Abstract %s", str_random(16)));
+        $unpublished_overflow_event->setCategory(self::$defaultTrack);
+        $unpublished_overflow_event->setType(self::$defaultEventType);
+        self::$summit->addEvent($unpublished_overflow_event);
+        $unpublished_overflow_event->setStartDate($start_date);
+        $unpublished_overflow_event->setEndDate($end_date);
+        $unpublished_overflow_event->setOverflow("https://testoverflow-unpublished.org", true);
+
+        // different summit, published, overflow occupancy -> must be excluded by the summit_id filter
+        $other_summit_start_date = clone(self::$summit2->getBeginDate());
+        $other_summit_end_date = clone($other_summit_start_date);
+        $other_summit_end_date = $other_summit_end_date->add(new \DateInterval("PT1H"));
+
+        $other_summit_overflow_event = new SummitEvent();
+        $other_summit_overflow_event->setTitle(sprintf("Other Summit Overflow Event %s", str_random(16)));
+        $other_summit_overflow_event->setAbstract(sprintf("Other Summit Overflow Event Abstract %s", str_random(16)));
+        $other_summit_overflow_event->setCategory(self::$defaultTrack);
+        $other_summit_overflow_event->setType(self::$defaultEventType);
+        self::$summit2->addEvent($other_summit_overflow_event);
+        $other_summit_overflow_event->setStartDate($other_summit_start_date);
+        $other_summit_overflow_event->setEndDate($other_summit_end_date);
+        $other_summit_overflow_event->publish();
+        $other_summit_overflow_event->setOverflow("https://testoverflow-othersummit.org", true);
+
+        self::$em->persist($overflow_event);
+        self::$em->persist($unpublished_overflow_event);
+        self::$em->persist($other_summit_overflow_event);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getOverflowPublishedEvents",
+            $params,
+            array(),
+            array(),
+            array(),
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+
+        $result = json_decode($response->getContent(), true);
+        $this->assertNotNull($result);
+        $this->assertEquals(1, $result['total']);
+        $this->assertEquals($overflow_event->getId(), $result['data'][0]['id']);
+    }
 }

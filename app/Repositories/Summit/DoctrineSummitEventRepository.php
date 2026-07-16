@@ -135,6 +135,7 @@ final class DoctrineSummitEventRepository
             'review_status' => 'REVIEW_STATUS(e.id)',
             'submission_source' => 'e.submission_source:json_string',
             'rsvp_type' => 'e.rsvp_type:json_string',
+            'occupancy' => 'e.occupancy:json_string',
             'summit_id' =>  "s.id",
             'tags' => "t.tag",
             'is_chair_visible' => Filter::buildBooleanField("c.chair_visible"),

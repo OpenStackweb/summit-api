@@ -710,7 +710,7 @@ SQL,
         $conn = $this->getEntityManager()->getConnection();
         $conn->executeStatement(
             'CREATE TEMPORARY TABLE IF NOT EXISTS `__tmp_mbr_ids`
-             (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY'
+             (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`))'
         );
         $conn->executeStatement('TRUNCATE TABLE `__tmp_mbr_ids`');
 

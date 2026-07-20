@@ -15,7 +15,6 @@
 use App\Repositories\Summit\DoctrineSummitSponsorshipAddOnTypeRepository;
 use Doctrine\ORM\Mapping as ORM;
 use models\utils\SilverstripeBaseModel;
-
 /**
  * @package models\summit
  */
@@ -23,6 +22,18 @@ use models\utils\SilverstripeBaseModel;
 #[ORM\Entity(repositoryClass: DoctrineSummitSponsorshipAddOnTypeRepository::class)]
 class SummitSponsorshipAddOnType extends SilverstripeBaseModel
 {
+    public const Booth_Type = 'Booth';
+    public const Meeting_Room_Type = 'Meeting_Room';
+    public const Schedule_Spot_Type = 'Schedule_Spot';
+    public const Signage_Spot_Type = 'Signage_Spot';
+
+    public const SystemDefined_Types = [
+        self::Booth_Type,
+        self::Meeting_Room_Type,
+        self::Schedule_Spot_Type,
+        self::Signage_Spot_Type,
+    ];
+
     /**
      * @var string
      */
@@ -37,5 +48,10 @@ class SummitSponsorshipAddOnType extends SilverstripeBaseModel
     public function setName(string $name): void
     {
         $this->name = $name;
+    }
+
+    public function isSystemDefined(): bool
+    {
+        return in_array($this->name, self::SystemDefined_Types);
     }
 }

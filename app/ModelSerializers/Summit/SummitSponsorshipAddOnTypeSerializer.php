@@ -22,5 +22,6 @@ final class SummitSponsorshipAddOnTypeSerializer extends SilverStripeSerializer
 {
     protected static $array_mappings = [
         'Name' => 'name:json_string',
+        'SystemDefined' => 'is_system_defined:json_boolean',
     ];
 }

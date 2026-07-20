@@ -76,9 +76,10 @@ final class SummitSponsorshipAddOnTypeService
     {
         return $this->tx_service->transaction(function () use ($type_id, $payload) {
             $type = $this->repository->getById($type_id);
-            if (is_null($type))
+            if (!$type instanceof SummitSponsorshipAddOnType)
                 throw new EntityNotFoundException("AddOnType not found.");
-
+            if($type->isSystemDefined())
+                throw new ValidationException("System Defined Add On Type can not be updated.");
             if (isset($payload['name'])) {
                 $existing = $this->repository->getByName(trim($payload['name']));
                 if (!is_null($existing) && $existing->getId() !== $type->getId())
@@ -96,8 +97,11 @@ final class SummitSponsorshipAddOnTypeService
     {
         $this->tx_service->transaction(function () use ($type_id) {
             $type = $this->repository->getById($type_id);
-            if (is_null($type))
+            if (!$type instanceof SummitSponsorshipAddOnType)
                 throw new EntityNotFoundException("AddOnType not found.");
+
+            if($type->isSystemDefined())
+                throw new ValidationException("System Defined Add On Type can not be deleted.");
 
             if ($this->add_on_repository->countByAddOnType($type_id) > 0)
                 throw new ValidationException(sprintf("AddOnType '%s' is assigned to one or more add-ons and cannot be deleted.", $type->getName()));

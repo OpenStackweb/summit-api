@@ -263,6 +263,49 @@ final class OAuth2SummitSponsorshipAddOnTypesApiControllerTest extends Protected
         $this->assertResponseStatus(404);
     }
 
+    public function testUpdateSystemDefinedTypeFails(): void
+    {
+        $system_type = self::$em->getRepository(SummitSponsorshipAddOnType::class)
+            ->findOneBy(['name' => SummitSponsorshipAddOnType::Booth_Type]);
+        $this->assertNotNull($system_type);
+
+        $params = ['id' => $system_type->getId()];
+
+        $this->action(
+            "PUT",
+            "OAuth2SummitSponsorshipAddOnTypesApiController@update",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['name' => 'Renamed_' . str_random(4)])
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
+    public function testDeleteSystemDefinedTypeFails(): void
+    {
+        $system_type = self::$em->getRepository(SummitSponsorshipAddOnType::class)
+            ->findOneBy(['name' => SummitSponsorshipAddOnType::Meeting_Room_Type]);
+        $this->assertNotNull($system_type);
+
+        $params = ['id' => $system_type->getId()];
+
+        $this->action(
+            "DELETE",
+            "OAuth2SummitSponsorshipAddOnTypesApiController@delete",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(412);
+    }
+
     public function testDelete(): void
     {
         $params = ['id' => self::$default_type->getId()];

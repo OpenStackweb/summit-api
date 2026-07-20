@@ -24,6 +24,8 @@ class SummitSponsorshipAddOnCreatedEventDTO
     private int $sponsorship_type_id;
     private string $sponsorship_type_name;
     private string $type;
+
+    private int $type_id;
     private string $name;
 
     private int $sponsor_id;
@@ -37,6 +39,7 @@ class SummitSponsorshipAddOnCreatedEventDTO
         int    $sponsorship_type_id,
         string $sponsorship_type_name,
         string $type,
+        int $type_id,
         string $name,
         int $sponsor_id,
         int $summit_id,
@@ -48,6 +51,7 @@ class SummitSponsorshipAddOnCreatedEventDTO
         $this->sponsorship_type_id = $sponsorship_type_id;
         $this->sponsorship_type_name = $sponsorship_type_name;
         $this->type = $type;
+        $this->type_id = $type_id;
         $this->name = $name;
         $this->sponsor_id = $sponsor_id;
         $this->summit_id = $summit_id;
@@ -67,6 +71,7 @@ class SummitSponsorshipAddOnCreatedEventDTO
             $sponsorship_type->getId(),
             $sponsorship_type->getName(),
             $add_on->getTypeName() ?? '',
+            $add_on->getTypeId() ?? 0,
             $add_on->getName(),
             $sponsor?->getId() ?? 0,
             $sponsor?->getSummitId() ?? 0,
@@ -78,6 +83,7 @@ class SummitSponsorshipAddOnCreatedEventDTO
         return [
             'id' => $this->id,
             'type' => $this->type,
+            'type_id' => $this->type_id,
             'name' => $this->name,
             'sponsor_id' => $this->sponsor_id,
             'summit_id' => $this->summit_id,

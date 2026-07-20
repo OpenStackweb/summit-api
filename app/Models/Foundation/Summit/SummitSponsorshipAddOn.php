@@ -77,6 +77,11 @@ class SummitSponsorshipAddOn extends SilverstripeBaseModel
         return $this->type?->getName();
     }
 
+    public function getTypeId(): ?int
+    {
+        return $this->type?->getId();
+    }
+
     public function setType(SummitSponsorshipAddOnType $type): void
     {
         $this->type = $type;

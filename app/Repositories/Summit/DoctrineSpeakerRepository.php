@@ -767,7 +767,7 @@ SQL,
         $conn = $this->getEntityManager()->getConnection();
         $conn->executeStatement(
             'CREATE TEMPORARY TABLE IF NOT EXISTS `__tmp_spk_ids`
-             (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY'
+             (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`))'
         );
         $conn->executeStatement('TRUNCATE TABLE `__tmp_spk_ids`');
 
@@ -809,7 +809,7 @@ SQL,
             // same TEMPORARY TABLE more than once per query (error 1137).
             $conn->executeStatement(
                 'CREATE TEMPORARY TABLE IF NOT EXISTS `__tmp_pres_ids`
-                 (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY'
+                 (`id` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`))'
             );
             $conn->executeStatement('TRUNCATE TABLE `__tmp_pres_ids`');
 

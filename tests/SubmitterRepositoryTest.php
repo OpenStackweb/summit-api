@@ -503,6 +503,39 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
     }
 
     // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - MEMORY storage engine disabled
+    // Production MySQL (hardened/managed instances) disables the MEMORY
+    // storage engine (error 3161, "Storage engine MEMORY is disabled").
+    // disabled_storage_engines itself is a restart-only sysvar, so it
+    // can't be toggled live in a test; instead we capture the emitted
+    // DDL via the general query log and assert it never forces
+    // ENGINE=MEMORY, which is the actual contract that breaks in prod.
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitDoesNotForceMemoryStorageEngine(): void
+    {
+        $conn = self::$em->getConnection();
+        $conn->executeStatement("SET GLOBAL log_output = 'TABLE'");
+        $conn->executeStatement("SET GLOBAL general_log = 'ON'");
+        $conn->executeStatement("TRUNCATE TABLE mysql.general_log");
+        try {
+            $repo = EntityManager::getRepository(Member::class);
+            $repo->getUniqueActivitiesCountBySummit(self::$summit);
+
+            $ddl = $conn->fetchOne(
+                "SELECT argument FROM mysql.general_log
+                 WHERE argument LIKE '%CREATE TEMPORARY TABLE%__tmp_mbr_ids%'
+                 ORDER BY event_time LIMIT 1"
+            );
+            $this->assertNotFalse($ddl, 'Expected the __tmp_mbr_ids temp table DDL to appear in the general query log.');
+            $this->assertStringNotContainsStringIgnoringCase('ENGINE=MEMORY', $ddl);
+        } finally {
+            $conn->executeStatement("SET GLOBAL general_log = 'OFF'");
+            $conn->executeStatement("SET GLOBAL log_output = 'FILE'");
+        }
+    }
+
+    // -----------------------------------------------------------------
     // getSubmittersBySummit - multi-page pagination
     // The two-phase refactor uses LIMIT/OFFSET for page > 1.
     // Verifies page 2 is non-empty, disjoint from page 1, and reports

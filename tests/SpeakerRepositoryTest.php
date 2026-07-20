@@ -335,6 +335,38 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
     }
 
     // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - MEMORY storage engine disabled
+    // Production MySQL (hardened/managed instances) disables the MEMORY
+    // storage engine (error 3161, "Storage engine MEMORY is disabled").
+    // disabled_storage_engines itself is a restart-only sysvar, so it
+    // can't be toggled live in a test; instead we capture the emitted
+    // DDL via the general query log and assert it never forces
+    // ENGINE=MEMORY, which is the actual contract that breaks in prod.
+    // -----------------------------------------------------------------
+
+    public function testGetUniqueActivitiesCountBySummitDoesNotForceMemoryStorageEngine(): void
+    {
+        $conn = self::$em->getConnection();
+        $conn->executeStatement("SET GLOBAL log_output = 'TABLE'");
+        $conn->executeStatement("SET GLOBAL general_log = 'ON'");
+        $conn->executeStatement("TRUNCATE TABLE mysql.general_log");
+        try {
+            $this->repo()->getUniqueActivitiesCountBySummit(self::$summit);
+
+            $ddl = $conn->fetchOne(
+                "SELECT argument FROM mysql.general_log
+                 WHERE argument LIKE '%CREATE TEMPORARY TABLE%__tmp_spk_ids%'
+                 ORDER BY event_time LIMIT 1"
+            );
+            $this->assertNotFalse($ddl, 'Expected the __tmp_spk_ids temp table DDL to appear in the general query log.');
+            $this->assertStringNotContainsStringIgnoringCase('ENGINE=MEMORY', $ddl);
+        } finally {
+            $conn->executeStatement("SET GLOBAL general_log = 'OFF'");
+            $conn->executeStatement("SET GLOBAL log_output = 'FILE'");
+        }
+    }
+
+    // -----------------------------------------------------------------
     // getAllByPage - multi-page pagination
     // The two-phase approach uses LIMIT/OFFSET for page > 1.
     // Verifies pages are disjoint and cover the full result set.

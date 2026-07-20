@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\ISponsorUserSyncService;
+use models\exceptions\EntityNotFoundException;
 use Tests\InsertMemberTestData;
 use Tests\InsertSummitTestData;
 use Tests\TestCase;
@@ -89,6 +90,16 @@ class SponsorUserPermissionTrackingTest extends TestCase
         return json_decode($raw, true) ?? [];
     }
 
+    private function assertNoSponsorUsersRowExists(int $sponsor_id, int $member_id): void
+    {
+        $conn = self::$em->getConnection();
+        $exists = $conn->executeQuery(
+            'SELECT COUNT(*) FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        )->fetchOne();
+        $this->assertEquals(0, (int)$exists, 'Pre-condition: no Sponsor_Users row should exist');
+    }
+
     // -------------------------------------------------------------------------
     // addSponsorUserToGroup
     // -------------------------------------------------------------------------
@@ -108,19 +119,51 @@ class SponsorUserPermissionTrackingTest extends TestCase
         $external_id = self::$member->getUserExternalId();
         $summit_id   = self::$summit->getId();
 
-        $conn = self::$em->getConnection();
-
         // Confirm no row exists before the call.
-        $exists = $conn->executeQuery(
-            'SELECT COUNT(*) FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
-            [$sponsor_id, $member_id]
-        )->fetchOne();
-        $this->assertEquals(0, (int)$exists, 'Pre-condition: no Sponsor_Users row should exist');
+        $this->assertNoSponsorUsersRowExists($sponsor_id, $member_id);
 
         $this->getService()->addSponsorUserToGroup($external_id, IGroup::Sponsors, $sponsor_id, $summit_id);
 
         // The row must have been created and the permission written.
         $this->assertContains(IGroup::Sponsors, $this->getPermissions($sponsor_id, $member_id));
+    }
+
+    /**
+     * SponsorUserSyncService::addSponsorUserToGroup() (SponsorUserSyncService.php:147) calls
+     * SummitSponsorService::addSponsorUser() (SummitSponsorService.php:459, its own nested
+     * transaction) at :171 when no Sponsor_Users row exists yet - no try/catch. That nested
+     * call commits a real Sponsor_Users row (same eager-creation path as the test above, this
+     * time with a valid sponsor). If the outer's own subsequent group lookup then fails
+     * (EntityNotFoundException at :191 for an unresolvable group_slug), the entire
+     * addSponsorUserToGroup call rolls back, including the just-committed Sponsor_Users row.
+     */
+    public function testAddSponsorUserToGroupRollsBackAlreadyCommittedSponsorUserRowWhenGroupNotFound(): void
+    {
+        $sponsor_id  = self::$sponsors[1]->getId();
+        $member_id   = self::$member->getId();
+        $external_id = self::$member->getUserExternalId();
+        $summit_id   = self::$summit->getId();
+        $bogus_group_slug = 'no-such-group-' . uniqid();
+
+        $this->assertNoSponsorUsersRowExists($sponsor_id, $member_id);
+
+        try {
+            $this->getService()->addSponsorUserToGroup($external_id, $bogus_group_slug, $sponsor_id, $summit_id);
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            // Assert the specific "Group ... not found" message - addSponsorUserToGroup()
+            // has two OTHER EntityNotFoundException throw sites sharing the same "not found"
+            // substring (member lookup, summit lookup), so a generic substring check can't
+            // distinguish this scenario from those.
+            $this->assertStringContainsString($bogus_group_slug, $ex->getMessage());
+            $this->assertStringContainsString('not found', $ex->getMessage());
+        }
+
+        self::$em->clear();
+        $this->assertEmpty($this->getPermissions($sponsor_id, $member_id));
+        // getPermissions() returns [] both when the row is gone and when it survived
+        // with an empty Permissions column - verify the INSERT itself was rolled back.
+        $this->assertNoSponsorUsersRowExists($sponsor_id, $member_id);
     }
 
     /**

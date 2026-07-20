@@ -62,8 +62,8 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
     protected function setUp():void
     {
         parent::setUp();
-        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY');
-        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY');
+        self::$test_secret_key = env('TEST_STRIPE_SECRET_KEY', 'sk_test_dummy_key');
+        self::$test_public_key = env('TEST_STRIPE_PUBLISHABLE_KEY', 'pk_test_dummy_key');
         self::$live_secret_key = env('LIVE_STRIPE_SECRET_KEY');
         self::$live_public_key = env('LIVE_STRIPE_PUBLISHABLE_KEY');
         self::$defaultMember = self::$member;
@@ -76,6 +76,11 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             'test_publishable_key' => self::$test_public_key,
             'test_secret_key'      => self::$test_secret_key,
             'is_active'            => false,
+            // pre-seed the webhook data so activate()->buildWebHook() never tries to
+            // register a webhook endpoint against the real Stripe API - CI's APP_URL
+            // (localhost) is not publicly routable, so Stripe would reject it
+            'set_webhooks'         => true,
+            'test_web_hook_secret' => env('TEST_STRIPE_WEBHOOK_SECRET', 'whsec_dummy'),
         ]);
 
         // build default badge type
@@ -344,8 +349,26 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
         return $order;
     }
 
-    public function testReserveWithoutActivePaymentProfile(){
-        $this->markTestSkipped('reserve endpoint is public (no auth.user middleware) but SagaFactory::build() requires non-null Member');
+    /**
+     * The seed sets the registration period relative to the summit's (future) begin
+     * date, so reserve() rejects with "registration period is closed" by default.
+     * Open it around NOW for tests exercising the reservation flow.
+     */
+    private function openRegistrationPeriod(): void
+    {
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        self::$summit->setRawRegistrationBeginDate((clone $now)->sub(new \DateInterval('P1D')));
+        self::$summit->setRawRegistrationEndDate((clone $now)->add(new \DateInterval('P30D')));
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+    }
+
+    /**
+     * Reserve does not require an ACTIVE payment profile: the default payment
+     * gateway strategy provides a fallback, so the reservation is created anyway.
+     */
+    public function testReserveSucceedsWithoutActivePaymentProfile(){
+        $this->openRegistrationPeriod();
 
         self::$profile->disable();
         self::$em->persist(self::$profile);
@@ -367,11 +390,6 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             ]
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitOrdersApiController@reserve",
@@ -379,12 +397,11 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
         $content = $response->getContent();
-        //$this->assertResponseStatus(412);
         $this->assertResponseStatus(201);
         $order = json_decode($content);
         $this->assertTrue(!is_null($order));
@@ -392,12 +409,10 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
     }
 
     public function testReserveWithSummit(){
-        $this->markTestSkipped('reserve endpoint is public (no auth.user middleware) but SagaFactory::build() requires non-null Member');
-
-        $res = memory_get_peak_usage(true);
+        $this->openRegistrationPeriod();
 
         $summitId = self::$summit->getId();
-        $companyId = 5;
+        $companyId = self::$companies[0]->getId();
 
         $service = App::make(ISummitService::class);
         $service->addCompany($summitId, $companyId);
@@ -418,11 +433,6 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             ]
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitOrdersApiController@reserve",
@@ -430,7 +440,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -438,12 +448,14 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(201);
         $order = json_decode($content);
         $this->assertTrue(!is_null($order));
-        $res = memory_get_peak_usage(true);
         return $order;
     }
 
     public function testReserveWithActivePaymentProfile(){
-        $this->markTestSkipped('reserve endpoint is public (no auth.user middleware) but SagaFactory::build() requires non-null Member');
+        if (self::$test_secret_key === 'sk_test_dummy_key') {
+            $this->markTestSkipped('Valid Stripe test credentials required (TEST_STRIPE_SECRET_KEY env var).');
+        }
+        $this->openRegistrationPeriod();
 
         self::$profile->activate();
         self::$em->persist(self::$profile);
@@ -465,11 +477,6 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             ]
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
-        ];
-
         $response = $this->action(
             "POST",
             "OAuth2SummitOrdersApiController@reserve",
@@ -477,7 +484,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -489,7 +496,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
     }
 
     public function testReserveFailingPromoCode(){
-        $this->markTestSkipped('reserve endpoint is public (no auth.user middleware) but SagaFactory::build() requires non-null Member');
+        $this->openRegistrationPeriod();
 
         $params = [
             'id' => self::$summit->getId(),
@@ -507,9 +514,40 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             ]
         ];
 
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitOrdersApiController@reserve",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(412);
+    }
+
+    /**
+     * Abandoning a reservation through DELETE .../orders/{hash} must return 204 and
+     * leave the order cancelled.
+     */
+    public function testCancelReservedOrder(){
+        $this->openRegistrationPeriod();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            "owner_email" => "smarcet@gmail.com",
+            "owner_first_name" => "Sebastian",
+            "owner_last_name" => "Marcet",
+            "owner_company" => "Pumant",
+            "tickets" => [
+                ["type_id" => self::$ticketType->getId()],
+            ]
         ];
 
         $response = $this->action(
@@ -519,12 +557,33 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
-        $content = $response->getContent();
-        $this->assertResponseStatus(412);
+        $this->assertResponseStatus(201);
+        $order = json_decode($response->getContent());
+        $this->assertNotEmpty($order->hash);
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitOrdersApiController@cancel",
+            [
+                'id' => self::$summit->getId(),
+                'hash' => $order->hash,
+            ],
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+
+        self::$em->clear();
+        $cancelled_order = self::$em->find(\models\summit\SummitOrder::class, $order->id);
+        $this->assertNotNull($cancelled_order);
+        $this->assertTrue($cancelled_order->isCancelled());
     }
 
     public function testTicketAssignmentWithoutExtraQuestions(){
@@ -786,10 +845,8 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
     }
 
     public function testCreateSingleTicketOrder(){
-        $this->markTestSkipped('reserve endpoint is public (no auth.user middleware) but SagaFactory::build() requires non-null Member');
-
         $params = [
-            'summit_id' =>  self::$summit->getId()
+            'id' =>  self::$summit->getId()
         ];
 
         $data = [
@@ -797,13 +854,9 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             'owner_last_name' => 'Marcet',
             'owner_email' => 'smarcet@gmail.com',
             'ticket_type_id' => self::$ticketType->getId(),
+            'ticket_qty' => 1,
             "owner_company" => "Pumant",
             //'promo_code' => 'STAFF'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
         ];
 
         $response = $this->action(
@@ -813,7 +866,7 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
@@ -824,11 +877,11 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
         return $order;
     }
 
-    public function testCreateSingleTicketOrderNotComplete(){
-        $this->markTestSkipped('reserve endpoint is public (no auth.user middleware) but SagaFactory::build() requires non-null Member');
+    public function testCreateSingleTicketOrderFailsOnInvalidPromoCode(){
+        $initial_order_count = self::$summit->getOrders()->count();
 
         $params = [
-            'summit_id' =>  self::$summit->getId()
+            'id' =>  self::$summit->getId()
         ];
 
         $data = [
@@ -836,13 +889,9 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             'owner_last_name' => 'Marcet',
             'owner_email' => 'smarcet@gmail.com',
             'ticket_type_id' => self::$ticketType->getId(),
+            'ticket_qty' => 1,
             "owner_company" => "Pumant",
-            //'promo_code' => 'STAFF'
-        ];
-
-        $headers = [
-            "HTTP_Authorization" => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json"
+            'promo_code' => 'DOES-NOT-EXIST-' . uniqid(),
         ];
 
         $response = $this->action(
@@ -852,15 +901,19 @@ final class OAuth2SummitOrdersApiTest extends ProtectedApiTestCase
             [],
             [],
             [],
-            $headers,
+            $this->getAuthHeaders(),
             json_encode($data)
         );
 
         $content = $response->getContent();
-        $this->assertResponseStatus(201);
-        $order = json_decode($content);
-        $this->assertTrue(!is_null($order));
-        return $order;
+        $this->assertResponseStatus(404);
+        $decoded = json_decode($content);
+        $this->assertNotNull($decoded);
+        $this->assertStringContainsString('Promo code', $decoded->message);
+
+        self::$em->clear();
+        self::$summit = self::$summit_repository->find(self::$summit->getId());
+        $this->assertEquals($initial_order_count, self::$summit->getOrders()->count());
     }
 
     /**

@@ -2859,11 +2859,10 @@ final class SummitService
             throw new ValidationException(sprintf("file %s does not exists.", $filename));
         }
 
-        $summit = $this->tx_service->transaction(function () use ($summit_id) {
+        $this->tx_service->transaction(function () use ($summit_id) {
             $summit = $this->summit_repository->getById($summit_id);
             if (is_null($summit) || !$summit instanceof Summit)
                 throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
-            return $summit;
         });
 
         $csv = Reader::createFromString($csv_data);
@@ -2877,7 +2876,14 @@ final class SummitService
                 // variable to store only added speakers to event
                 $new_speakers = [];
 
-                $event = $this->tx_service->transaction(function () use ($summit, $row, &$new_speakers) {
+                $event = $this->tx_service->transaction(function () use ($summit_id, $row, &$new_speakers) {
+
+                    // re-fetched per row: a prior row's failed transaction clears the entity
+                    // manager's unit of work, detaching any entity (including $summit) captured
+                    // before the loop started - a later row must not operate on a stale reference
+                    $summit = $this->summit_repository->getById($summit_id);
+                    if (is_null($summit) || !$summit instanceof Summit)
+                        throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
 
                     Log::debug(sprintf("SummitService::processEventData processing row %s", json_encode($row)));
 

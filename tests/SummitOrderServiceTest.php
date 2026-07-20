@@ -32,10 +32,13 @@ use App\Services\Model\SummitOrderService;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use libs\utils\ITransactionService;
 use Mockery;
+use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\main\ITagRepository;
@@ -388,15 +391,20 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
      * @param string $csv_content
      * @return ISummitOrderService
      */
-    private function buildTicketDataImportService(string $csv_content): ISummitOrderService
+    private function buildTicketDataImportService(
+        string $csv_content,
+        ?IFileDownloadStrategy $download_strategy = null
+    ): ISummitOrderService
     {
         $upload_strategy = Mockery::mock(IFileUploadStrategy::class);
 
-        $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
-        $download_strategy->shouldReceive('exists')->andReturn(true);
-        $download_strategy->shouldReceive('get')->andReturn($csv_content);
-        $download_strategy->shouldReceive('getDriver')->andReturn('mock');
-        $download_strategy->shouldReceive('delete');
+        if (is_null($download_strategy)) {
+            $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
+            $download_strategy->shouldReceive('exists')->andReturn(true);
+            $download_strategy->shouldReceive('get')->andReturn($csv_content);
+            $download_strategy->shouldReceive('getDriver')->andReturn('mock');
+            $download_strategy->shouldReceive('delete');
+        }
 
         return new SummitOrderService(
             App::make(ISummitTicketTypeRepository::class),
@@ -421,6 +429,38 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             App::make(ITransactionService::class),
             App::make(ILockManagerService::class)
         );
+    }
+
+    /**
+     * The seed sets the registration period relative to the summit's (future) begin
+     * date, so reserve() rejects with "registration period is closed" by default.
+     * Open it around NOW for tests exercising the reservation flow.
+     */
+    private function openRegistrationPeriod(): void
+    {
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        self::$summit->setRawRegistrationBeginDate((clone $now)->sub(new \DateInterval('P1D')));
+        self::$summit->setRawRegistrationEndDate((clone $now)->add(new \DateInterval('P30D')));
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+    }
+
+    private function disableDefaultBadgeType(): int
+    {
+        $badge_type_id = self::$default_badge_type->getId();
+        self::$default_badge_type->setIsDefault(false);
+        return $badge_type_id;
+    }
+
+    private function restoreDefaultBadgeType(int $badge_type_id): void
+    {
+        // The failed transaction's rollback already cleared self::$em, detaching the
+        // original self::$default_badge_type instance - restore via a fresh lookup so
+        // the flush actually persists the flag, instead of silently no-op'ing on a
+        // detached entity.
+        self::$default_badge_type = self::$em->find(SummitBadgeType::class, $badge_type_id);
+        self::$default_badge_type->setIsDefault(true);
+        self::$em->flush();
     }
 
     /**
@@ -494,6 +534,317 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             ->getBySummitAndEmail(self::$summit, self::$defaultMember->getEmail());
         $this->assertNotNull($attendee);
         return $attendee;
+    }
+
+    /**
+     * The reserve endpoint is also exposed on the public API (routes/public_api.php)
+     * with no authenticated member: reserve() accepts ?Member and every saga task
+     * takes ?Member $owner (ReserveOrderTask carries the whole guest branch), so a
+     * null owner must produce a valid guest reservation keyed by owner_email.
+     */
+    public function testReserveAsGuestWithoutMemberCreatesOrder()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $guest_email = sprintf('guest-%s@test.com', uniqid());
+        $payload = [
+            "owner_email" => $guest_email,
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "owner_company" => "Pumant",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+
+        $this->assertNotNull($order);
+        $this->assertEquals($guest_email, $order->getOwnerEmail());
+        $this->assertFalse($order->hasOwner());
+    }
+
+    /**
+     * Guest buyer with more than one ticket: the auto-assign-first-ticket rule
+     * (buyer without paid orders + multi-ticket order) must also work with a null
+     * owner, sourcing the attendee data from the payload's owner_* fields.
+     */
+    public function testReserveAsGuestWithMultipleTicketsAutoAssignsFirstTicket()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $guest_email = sprintf('guest-multi-%s@test.com', uniqid());
+        $payload = [
+            "owner_email" => $guest_email,
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "owner_company" => "Pumant",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+                ["type_id" => self::$default_ticket_type->getId()],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+
+        $this->assertNotNull($order);
+        $this->assertCount(2, $order->getTickets());
+        // exactly the first ticket gets auto-assigned to the guest buyer
+        $assigned = [];
+        foreach ($order->getTickets() as $ticket) {
+            if ($ticket->hasOwner()) $assigned[] = $ticket->getOwnerEmail();
+        }
+        $this->assertEquals([$guest_email], $assigned);
+    }
+
+    /**
+     * ReserveTicketsTask rejects a reservation on a sold-out ticket type, and the
+     * saga compensation leaves no order behind.
+     */
+    public function testReserveFailsWhenTicketTypeSoldOut()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $sold_out_type = new SummitTicketType();
+        $sold_out_type->setName('RESERVE SOLD OUT TICKET TYPE');
+        $sold_out_type->setCost(100);
+        $sold_out_type->setCurrency('USD');
+        $sold_out_type->setQuantity2Sell(1);
+        $sold_out_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($sold_out_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        $sold_out_type->sell(1);
+        self::$em->flush();
+
+        $initial_order_count = self::$summit->getOrders()->count();
+
+        $payload = [
+            "owner_email" => sprintf('guest-soldout-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => $sold_out_type->getId()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('not available', $ex->getMessage());
+        }
+
+        self::$em->clear();
+        self::$summit = self::$summit_repository->find(self::$summit->getId());
+        $this->assertEquals($initial_order_count, self::$summit->getOrders()->count());
+    }
+
+    /**
+     * ReserveTicketsTask rejects orders mixing ticket types of different currencies.
+     */
+    public function testReserveFailsWhenTicketCurrenciesAreMixed()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $eur_type = new SummitTicketType();
+        $eur_type->setName('RESERVE EUR TICKET TYPE');
+        $eur_type->setCost(100);
+        $eur_type->setCurrency('EUR');
+        $eur_type->setQuantity2Sell(10);
+        $eur_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($eur_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $payload = [
+            "owner_email" => sprintf('guest-currency-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+                ["type_id" => $eur_type->getId()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('same currency', $ex->getMessage());
+        }
+    }
+
+    /**
+     * PreOrderValidationTask rejects any reservation outside the summit's
+     * registration period.
+     */
+    public function testReserveFailsWhenRegistrationPeriodClosed()
+    {
+        // explicitly close the period (both dates in the past)
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        self::$summit->setRawRegistrationBeginDate((clone $now)->sub(new \DateInterval('P30D')));
+        self::$summit->setRawRegistrationEndDate((clone $now)->sub(new \DateInterval('P1D')));
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $service = App::make(ISummitOrderService::class);
+
+        $payload = [
+            "owner_email" => sprintf('guest-closed-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('registration period is closed', $ex->getMessage());
+        }
+    }
+
+    /**
+     * checkout() on a free order needs no payment gateway: it must mark the order
+     * paid right away.
+     */
+    public function testCheckoutSetsFreeOrderAsPaid()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $free_type = new SummitTicketType();
+        $free_type->setName('FREE TICKET TYPE');
+        $free_type->setCost(0);
+        $free_type->setCurrency('USD');
+        $free_type->setQuantity2Sell(10);
+        $free_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($free_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $payload = [
+            "owner_email" => sprintf('guest-free-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => $free_type->getId()],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+        $this->assertTrue($order->isFree());
+
+        $order = $service->checkout(self::$summit, $order->getHash(), []);
+
+        $this->assertTrue($order->isPaid());
+    }
+
+    public function testCheckoutFailsWhenOrderNotFound()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        try {
+            $service->checkout(self::$summit, 'non-existent-hash-' . uniqid(), []);
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            $this->assertStringContainsString('Order not found', $ex->getMessage());
+        }
+    }
+
+    /**
+     * A cancelled reservation can not be checked out - the buyer must start over.
+     */
+    public function testCheckoutFailsWhenOrderIsCancelled()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $payload = [
+            "owner_email" => sprintf('guest-cancelled-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => self::$default_ticket_type->getId()],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+        $hash = $order->getHash();
+
+        $service->cancel(self::$summit, $hash);
+
+        try {
+            $service->checkout(self::$summit, $hash, []);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('canceled', $ex->getMessage());
+        }
+    }
+
+    /**
+     * End-to-end cancel: abandoning a reservation must return the consumed seat to
+     * the ticket type inventory and mark the order cancelled - a bug here means
+     * overselling or phantom capacity.
+     */
+    public function testCancelRestoresTicketAvailabilityAndCancelsOrder()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $capacity_type = new SummitTicketType();
+        $capacity_type->setName('CANCEL CAPACITY TICKET TYPE');
+        $capacity_type->setCost(100);
+        $capacity_type->setCurrency('USD');
+        $capacity_type->setQuantity2Sell(20);
+        $capacity_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($capacity_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        $type_id = $capacity_type->getId();
+
+        $payload = [
+            "owner_email" => sprintf('guest-cancel-%s@test.com', uniqid()),
+            "owner_first_name" => "Guest",
+            "owner_last_name" => "Buyer",
+            "tickets" => [
+                ["type_id" => $type_id],
+            ],
+        ];
+
+        $order = $service->reserve(null, self::$summit, $payload);
+        $hash = $order->getHash();
+
+        self::$em->clear();
+        $capacity_type = self::$em->find(SummitTicketType::class, $type_id);
+        $this->assertEquals(1, $capacity_type->getQuantitySold(), 'The reservation must consume one seat');
+
+        self::$summit = self::$summit_repository->find(self::$summit->getId());
+        $cancelled_order = $service->cancel(self::$summit, $hash);
+        $this->assertTrue($cancelled_order->isCancelled());
+
+        self::$em->clear();
+        $capacity_type = self::$em->find(SummitTicketType::class, $type_id);
+        $this->assertEquals(0, $capacity_type->getQuantitySold(), 'Cancelling must return the seat to inventory');
+    }
+
+    public function testCancelFailsWhenOrderHashNotFound()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        try {
+            $service->cancel(self::$summit, 'non-existent-hash-' . uniqid());
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            $this->assertStringContainsString('order not found', $ex->getMessage());
+        }
     }
 
     public function testImportTicketDataSetsExtraQuestionAnswerOnNewAttendee()
@@ -1040,5 +1391,393 @@ CSV;
         $this->assertNotNull($badge);
         $this->assertEquals($badge_id, $badge->getId());
         $this->assertEquals('NEW BADGE TYPE', $badge->getType()->getName());
+    }
+
+    public function testAddTicketsCommitsAcrossNestedTransaction()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        $order = self::$summit->getOrders()[0];
+        $order_id = $order->getId();
+        $initial_ticket_count = $order->getTickets()->count();
+
+        $result = $service->addTickets(self::$summit, $order_id, [
+            'ticket_type_id' => self::$default_ticket_type->getId(),
+            'ticket_qty' => 2,
+        ]);
+
+        $this->assertEquals($initial_ticket_count + 2, $result->getTickets()->count());
+
+        self::$em->clear();
+
+        $reFetched = self::$em->find(SummitOrder::class, $order_id);
+        $this->assertNotNull($reFetched);
+        $this->assertEquals($initial_ticket_count + 2, $reFetched->getTickets()->count());
+    }
+
+    public function testCreateOfflineOrderCommitsAcrossNestedAndSequentialRootTransactions()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        $owner_email = sprintf('offline-order-%s@test.com', uniqid());
+
+        $payload = [
+            'owner_email' => $owner_email,
+            'owner_first_name' => 'Offline',
+            'owner_last_name' => 'Buyer',
+            'ticket_type_id' => self::$default_ticket_type->getId(),
+            'ticket_qty' => 1,
+        ];
+
+        $order = $service->createOfflineOrder(self::$summit, $payload);
+        $order_id = $order->getId();
+
+        $this->assertTrue($order->isPaid());
+        $this->assertEquals(1, $order->getTickets()->count());
+        $ticket = $order->getFirstTicket();
+        $this->assertNotNull($ticket);
+        $owner = $ticket->getOwner();
+        $this->assertNotNull($owner);
+        $this->assertEquals($owner_email, $owner->getEmail());
+
+        self::$em->clear();
+
+        $reFetched = self::$em->find(SummitOrder::class, $order_id);
+        $this->assertNotNull($reFetched);
+        $this->assertTrue($reFetched->isPaid());
+        $this->assertEquals(1, $reFetched->getTickets()->count());
+        $reFetchedTicket = $reFetched->getFirstTicket();
+        $this->assertNotNull($reFetchedTicket);
+        $reFetchedOwner = $reFetchedTicket->getOwner();
+        $this->assertNotNull($reFetchedOwner);
+        $this->assertEquals($owner_email, $reFetchedOwner->getEmail());
+    }
+
+    public function testCreateTicketsForOrderRollsBackEntireChainOnInvalidPromoCode()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        $order = self::$summit->getOrders()[0];
+        $order_id = $order->getId();
+        $initial_ticket_count = $order->getTickets()->count();
+        $ticket_type_id = self::$default_ticket_type->getId();
+        $initial_quantity_sold = self::$default_ticket_type->getQuantitySold();
+        $bogus_promo_code = 'DOES-NOT-EXIST-' . uniqid();
+
+        try {
+            $service->addTickets(self::$summit, $order_id, [
+                'ticket_type_id' => $ticket_type_id,
+                'ticket_qty' => 1,
+                'promo_code' => $bogus_promo_code,
+            ]);
+            $this->fail('Expected EntityNotFoundException was not thrown');
+        } catch (EntityNotFoundException $ex) {
+            $this->assertStringContainsString('Promo code', $ex->getMessage());
+        }
+
+        self::$em->clear();
+
+        $reFetched = self::$em->find(SummitOrder::class, $order_id);
+        $this->assertNotNull($reFetched);
+        $this->assertEquals($initial_ticket_count, $reFetched->getTickets()->count());
+
+        // proves the SummitTicketType::sell(1) mutation made before the promo-code
+        // lookup threw was rolled back too, not just the order's ticket collection
+        $reFetchedTicketType = self::$em->find(SummitTicketType::class, $ticket_type_id);
+        $this->assertNotNull($reFetchedTicketType);
+        $this->assertEquals($initial_quantity_sold, $reFetchedTicketType->getQuantitySold());
+    }
+
+    public function testCreateOfflineOrderRollsBackEntireChainOnMissingDefaultBadgeType()
+    {
+        $service = App::make(ISummitOrderService::class);
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        $badge_type_id = $this->disableDefaultBadgeType();
+
+        $owner_email = sprintf('offline-order-badge-fail-%s@test.com', uniqid());
+
+        $payload = [
+            'owner_email' => $owner_email,
+            'owner_first_name' => 'Offline',
+            'owner_last_name' => 'BadgeFail',
+            'ticket_type_id' => self::$default_ticket_type->getId(),
+            'ticket_qty' => 1,
+        ];
+
+        try {
+            $service->createOfflineOrder(self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('default badge type', $ex->getMessage());
+        } finally {
+            $this->restoreDefaultBadgeType($badge_type_id);
+        }
+
+        self::$em->clear();
+
+        $attendee = $attendee_repository->getBySummitAndEmail(self::$summit, $owner_email);
+        $this->assertNull($attendee);
+    }
+
+    /**
+     * processTicketData() must follow the importer's log-and-skip posture (skills/laravel-api.md
+     * "CSV Import/Export Conventions" in the FN knowledge vault): a bad row is caught, logged, and
+     * skipped, never aborts the rest of the file. Row 1 fails for a row-specific reason (its ticket
+     * type has zero remaining capacity), independent of row 2, which uses a ticket type with normal
+     * capacity. This proves both halves of the contract: the failing row doesn't propagate out of
+     * processTicketData() (no exception), and it doesn't block row 2 from being attempted and
+     * committed - not just that "nothing throws" for the same summit-wide reason.
+     */
+    public function testProcessTicketDataSkipsFailingRowsAndContinuesProcessingRemainingRows()
+    {
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        $email1 = sprintf('csv-import-row1-%s@test.com', uniqid());
+        $email2 = sprintf('csv-import-row2-%s@test.com', uniqid());
+
+        $exhausted_ticket_type = new SummitTicketType();
+        $exhausted_ticket_type->setName('SOLD OUT TICKET TYPE');
+        $exhausted_ticket_type->setCost(100);
+        $exhausted_ticket_type->setCurrency('USD');
+        $exhausted_ticket_type->setQuantity2Sell(1);
+        $exhausted_ticket_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($exhausted_ticket_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        // consume the only seat so row 1's sell() call fails on capacity, not on a summit-wide toggle
+        $exhausted_ticket_type->sell(1);
+        self::$em->flush();
+
+        $bad_ticket_type_id = $exhausted_ticket_type->getId();
+        $good_ticket_type_id = self::$default_ticket_type->getId();
+
+        $csv_content = <<<CSV
+attendee_email,attendee_first_name,attendee_last_name,ticket_type_id
+{$email1},CSV,RowOne,{$bad_ticket_type_id}
+{$email2},CSV,RowTwo,{$good_ticket_type_id}
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        // must not throw: a bad row is logged and skipped, not fatal to the whole file
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        self::$em->clear();
+
+        $attendee1 = $attendee_repository->getBySummitAndEmail(self::$summit, $email1);
+        $attendee2 = $attendee_repository->getBySummitAndEmail(self::$summit, $email2);
+        $this->assertNull($attendee1);
+        $this->assertNotNull($attendee2);
+    }
+
+    /**
+     * Volume happy path: every row of a 20-row CSV is valid, so all 20 attendees
+     * (each with its ticket) must exist afterwards and the source file must be
+     * deleted - a fully-processed import leaves nothing to reconcile.
+     */
+    public function testProcessTicketDataImportsAllRowsWhenEveryRowIsValid()
+    {
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        $bulk_type = new SummitTicketType();
+        $bulk_type->setName('BULK OK TICKET TYPE');
+        $bulk_type->setCost(100);
+        $bulk_type->setCurrency('USD');
+        $bulk_type->setQuantity2Sell(50);
+        $bulk_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($bulk_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $uid = uniqid();
+        $emails = [];
+        $rows = [];
+        for ($i = 1; $i <= 20; $i++) {
+            $email = sprintf('csv-bulk-ok-%02d-%s@test.com', $i, $uid);
+            $emails[] = $email;
+            $rows[] = sprintf('%s,CSV,Row%02d,%d', $email, $i, $bulk_type->getId());
+        }
+        $csv_content = "attendee_email,attendee_first_name,attendee_last_name,ticket_type_id\n" . implode("\n", $rows);
+
+        $file_deleted = false;
+        $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
+        $download_strategy->shouldReceive('exists')->andReturn(true);
+        $download_strategy->shouldReceive('get')->andReturn($csv_content);
+        $download_strategy->shouldReceive('getDriver')->andReturn('mock');
+        $download_strategy->shouldReceive('delete')->andReturnUsing(function () use (&$file_deleted) {
+            $file_deleted = true;
+        });
+
+        $service = $this->buildTicketDataImportService($csv_content, $download_strategy);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        self::$em->clear();
+
+        foreach ($emails as $email) {
+            $attendee = $attendee_repository->getBySummitAndEmail(self::$summit, $email);
+            $this->assertNotNull($attendee, sprintf('Attendee %s should have been imported', $email));
+            $this->assertCount(1, $attendee->getTickets(), sprintf('Attendee %s should have exactly one ticket', $email));
+        }
+        $this->assertTrue($file_deleted, 'A fully-processed import must delete its source file');
+    }
+
+    /**
+     * Volume mixed outcome: 20 rows where 15 fail (sold-out ticket type - sell()
+     * throws, the row's transaction rolls back fully) interleaved with 5 valid
+     * rows. The 5 valid rows must import with their tickets, the 15 failing rows
+     * must leave no attendee behind, and the file is still deleted: a KNOWN
+     * per-row failure (logged and skipped) is not an unknown outcome, so there
+     * is nothing to reconcile against the DB.
+     */
+    public function testProcessTicketDataImportsOnlyValidRowsWhenMostRowsFail()
+    {
+        $attendee_repository = App::make(ISummitAttendeeRepository::class);
+
+        $good_type = new SummitTicketType();
+        $good_type->setName('BULK MIXED OK TICKET TYPE');
+        $good_type->setCost(100);
+        $good_type->setCurrency('USD');
+        $good_type->setQuantity2Sell(50);
+        $good_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($good_type);
+
+        $sold_out_type = new SummitTicketType();
+        $sold_out_type->setName('BULK MIXED SOLD OUT TICKET TYPE');
+        $sold_out_type->setCost(100);
+        $sold_out_type->setCurrency('USD');
+        $sold_out_type->setQuantity2Sell(1);
+        $sold_out_type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($sold_out_type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        // consume the only seat so every row using this type fails on capacity
+        $sold_out_type->sell(1);
+        self::$em->flush();
+
+        $uid = uniqid();
+        $good_emails = [];
+        $bad_emails = [];
+        $rows = [];
+        for ($i = 1; $i <= 20; $i++) {
+            // every 4th row is valid (positions 4, 8, 12, 16, 20): failures happen
+            // both before and after each success, proving order independence
+            $is_good = ($i % 4 === 0);
+            $email = sprintf('csv-bulk-mix-%02d-%s@test.com', $i, $uid);
+            if ($is_good) $good_emails[] = $email; else $bad_emails[] = $email;
+            $rows[] = sprintf('%s,CSV,Row%02d,%d', $email, $i, $is_good ? $good_type->getId() : $sold_out_type->getId());
+        }
+        $csv_content = "attendee_email,attendee_first_name,attendee_last_name,ticket_type_id\n" . implode("\n", $rows);
+
+        $file_deleted = false;
+        $download_strategy = Mockery::mock(IFileDownloadStrategy::class);
+        $download_strategy->shouldReceive('exists')->andReturn(true);
+        $download_strategy->shouldReceive('get')->andReturn($csv_content);
+        $download_strategy->shouldReceive('getDriver')->andReturn('mock');
+        $download_strategy->shouldReceive('delete')->andReturnUsing(function () use (&$file_deleted) {
+            $file_deleted = true;
+        });
+
+        $service = $this->buildTicketDataImportService($csv_content, $download_strategy);
+        // must not throw: 15 known failures are logged and skipped
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        self::$em->clear();
+
+        $this->assertCount(5, $good_emails);
+        $this->assertCount(15, $bad_emails);
+        foreach ($good_emails as $email) {
+            $attendee = $attendee_repository->getBySummitAndEmail(self::$summit, $email);
+            $this->assertNotNull($attendee, sprintf('Valid row attendee %s should have been imported', $email));
+            $this->assertCount(1, $attendee->getTickets(), sprintf('Attendee %s should have exactly one ticket', $email));
+        }
+        foreach ($bad_emails as $email) {
+            $this->assertNull(
+                $attendee_repository->getBySummitAndEmail(self::$summit, $email),
+                sprintf('Failing row attendee %s should have been fully rolled back', $email)
+            );
+        }
+        $this->assertTrue($file_deleted, 'Known per-row failures must not block the source file deletion');
+    }
+
+    public function testAddTicketsRollsBackEntireChainOnMissingDefaultBadgeType()
+    {
+        $service = App::make(ISummitOrderService::class);
+
+        $order = self::$summit->getOrders()[0];
+        $order_id = $order->getId();
+        $initial_ticket_count = $order->getTickets()->count();
+
+        $badge_type_id = $this->disableDefaultBadgeType();
+
+        try {
+            $service->addTickets(self::$summit, $order_id, [
+                'ticket_type_id' => self::$default_ticket_type->getId(),
+                'ticket_qty' => 1,
+            ]);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('default badge type', $ex->getMessage());
+        } finally {
+            $this->restoreDefaultBadgeType($badge_type_id);
+        }
+
+        self::$em->clear();
+
+        $reFetched = self::$em->find(SummitOrder::class, $order_id);
+        $this->assertNotNull($reFetched);
+        $this->assertEquals($initial_ticket_count, $reFetched->getTickets()->count());
+    }
+
+    public function testRequestRefundOrderRollsBackEntireChainWhenOneTicketIsFree()
+    {
+        Queue::fake();
+        Config::set('registration.admin_email', 'admin@test.com');
+
+        $service = App::make(ISummitOrderService::class);
+
+        // Summit::canEmitRefundRequests() requires a future refund-request deadline;
+        // InsertSummitTestData does not set one by default.
+        self::$summit->setRegistrationAllowedRefundRequestTillDate(new \DateTime('+1 day', new \DateTimeZone('UTC')));
+
+        $order = self::$summit->getOrders()[0];
+        $order_id = $order->getId();
+        $tickets = $order->getTickets();
+        $this->assertGreaterThanOrEqual(2, $tickets->count());
+
+        $refundableTicket = $tickets[0];
+        $freeTicket = $tickets[1];
+        $refundableTicketId = $refundableTicket->getId();
+        $freeTicketId = $freeTicket->getId();
+
+        // isPaid() is a pure status flag (set by SummitOrder::setPaid() on every ticket),
+        // independent of cost - setRawCost(0.0) makes this ticket free without affecting
+        // its already-paid status, so it still enters requestRefundOrder's loop.
+        $freeTicket->setRawCost(0.0);
+
+        // InsertSummitTestData sets the order's owner via SummitOrder::setOwner() only,
+        // which does not populate Member's inverse summit_registration_orders collection;
+        // requestRefundOrder() looks the order up via that collection with no self-healing
+        // fallback (unlike updateMyOrder()), so add it explicitly.
+        self::$defaultMember->addSummitRegistrationOrder($order);
+
+        self::$em->persist($freeTicket);
+        self::$em->persist(self::$defaultMember);
+        self::$em->flush();
+
+        try {
+            $service->requestRefundOrder(self::$defaultMember, $order_id);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('free', $ex->getMessage());
+        }
+
+        self::$em->clear();
+
+        $reFetchedRefundable = self::$em->find(SummitAttendeeTicket::class, $refundableTicketId);
+        $reFetchedFree = self::$em->find(SummitAttendeeTicket::class, $freeTicketId);
+        $this->assertNotNull($reFetchedRefundable);
+        $this->assertNotNull($reFetchedFree);
+        $this->assertEquals(0, $reFetchedRefundable->getRefundedRequests()->count());
+        $this->assertEquals(0, $reFetchedFree->getRefundedRequests()->count());
     }
 }

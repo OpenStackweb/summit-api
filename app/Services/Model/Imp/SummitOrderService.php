@@ -41,6 +41,7 @@ use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
@@ -231,7 +232,7 @@ final class SagaFactory
         $this->tx_service = $tx_service;
     }
 
-    public function build(Member $owner, Summit $summit, array $payload): Saga
+    public function build(?Member $owner, Summit $summit, array $payload): Saga
     {
         Log::debug(sprintf("SagaFactory::build - summit id %s payload %s", $summit->getId(), json_encode($payload)));
 
@@ -254,7 +255,7 @@ final class SagaFactory
         return $this->buildRegularSaga($owner, $summit, $payload);
     }
 
-    private function buildPrePaidSaga(Member $owner, Summit $summit, array $payload): Saga
+    private function buildPrePaidSaga(?Member $owner, Summit $summit, array $payload): Saga
     {
         Log::debug(sprintf("SagaFactory::buildPrePaidSaga - summit id %s", $summit->getId()));
         return Saga::start()
@@ -272,7 +273,7 @@ final class SagaFactory
             ));
     }
 
-    private function buildRegularSaga(Member $owner, Summit $summit, array $payload): Saga
+    private function buildRegularSaga(?Member $owner, Summit $summit, array $payload): Saga
     {
         Log::debug(sprintf("SagaFactory::buildRegularSaga - summit id %s", $summit->getId()));
         return Saga::start()
@@ -442,7 +443,8 @@ final class ReserveOrderTask extends AbstractTask
             }
 
             // auto assign should only happen when the user has not paid any order and the order has more than one ticket....
-            $shouldAutoAssignFirstTicket = !$this->owner->hasPaidRegistrationOrderForSummit($this->summit) && count($tickets) > 1;
+            // a guest buyer (null owner, public api) trivially has no paid orders for this summit
+            $shouldAutoAssignFirstTicket = (is_null($this->owner) || !$this->owner->hasPaidRegistrationOrderForSummit($this->summit)) && count($tickets) > 1;
 
             // try to get invitation
             $invitation = $this->summit->getSummitRegistrationInvitationByEmail($owner_email);
@@ -529,10 +531,11 @@ final class ReserveOrderTask extends AbstractTask
                         )
                     );
 
-                    $attendee_first_name = $this->owner->getFirstName();
-                    $attendee_last_name = $this->owner->getLastName();
-                    $attendee_email = $this->owner->getEmail();
-                    $attendee_company = $this->owner->getCompany();
+                    // guest buyer (null owner): fall back to the payload's owner data
+                    $attendee_first_name = !is_null($this->owner) ? $this->owner->getFirstName() : $owner_first_name;
+                    $attendee_last_name = !is_null($this->owner) ? $this->owner->getLastName() : $owner_last_name;
+                    $attendee_email = !is_null($this->owner) ? $this->owner->getEmail() : $owner_email;
+                    $attendee_company = !is_null($this->owner) ? $this->owner->getCompany() : $owner_company_name;
 
                 } else {
                     // use what we have on payload
@@ -590,7 +593,8 @@ final class ReserveOrderTask extends AbstractTask
                         $attendee = $local_attendees[$attendee_email];
                     }
 
-                    $attendee_owner = $this->owner->getEmail() === $attendee_email ? $this->owner : $this->member_repository->getByEmail($attendee_email);
+                    // $attendee_email was lowercased above - normalize the owner side too
+                    $attendee_owner = !is_null($this->owner) && strtolower($this->owner->getEmail()) === $attendee_email ? $this->owner : $this->member_repository->getByEmail($attendee_email);
 
                     if (is_null($attendee)) {
 
@@ -4341,11 +4345,10 @@ final class SummitOrderService
 
         $csv_data = $this->download_strategy->get($path);
 
-        $summit = $this->tx_service->transaction(function () use ($summit_id) {
+        $this->tx_service->transaction(function () use ($summit_id) {
             $summit = $this->summit_repository->getById($summit_id);
             if (is_null($summit) || !$summit instanceof Summit)
                 throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
-            return $summit;
         });
 
         $reader = CSVReader::buildFrom($csv_data);
@@ -4359,317 +4362,328 @@ final class SummitOrderService
 
         foreach ($reader as $idx => $row) {
 
-            $this->tx_service->transaction(function () use ($summit, $reader, $row, $ticket_data_present, $attendee_data_present, $badge_data_present) {
+            try {
+                $this->tx_service->transaction(function () use ($summit_id, $reader, $row, $ticket_data_present, $attendee_data_present, $badge_data_present) {
 
-                Log::debug(sprintf("SummitOrderService::processTicketData processing row %s", json_encode($row)));
+                    // re-fetched per row: a prior row's failed transaction clears the entity
+                    // manager's unit of work, detaching any entity (including $summit) captured
+                    // before the loop started - a later row must not operate on a stale reference
+                    $summit = $this->summit_repository->getById($summit_id);
+                    if (is_null($summit) || !$summit instanceof Summit)
+                        throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
 
-                $ticket = null;
-                $attendee = null;
-                // process ticket data (try to get an existent ticket)
-                if ($ticket_data_present) {
-                    Log::debug("SummitOrderService::processTicketData - has ticket data present ... trying to get ticket");
+                    Log::debug(sprintf("SummitOrderService::processTicketData processing row %s", json_encode($row)));
 
-                    // edit already existent ticket ( could be assigned or not)
-                    if ($reader->hasColumn("number")) {
-                        Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket by number %s", $row['number']));
-                        $ticket = $this->ticket_repository->getByNumberExclusiveLock($row['number']);
-                    }
+                    $ticket = null;
+                    $attendee = null;
+                    // process ticket data (try to get an existent ticket)
+                    if ($ticket_data_present) {
+                        Log::debug("SummitOrderService::processTicketData - has ticket data present ... trying to get ticket");
 
-                    if (is_null($ticket) && $reader->hasColumn("id")) {
-                        Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket by id %s", $row['id']));
-                        $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($row['id']));
-                    }
+                        // edit already existent ticket ( could be assigned or not)
+                        if ($reader->hasColumn("number")) {
+                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket by number %s", $row['number']));
+                            $ticket = $this->ticket_repository->getByNumberExclusiveLock($row['number']);
+                        }
 
-                    if (!is_null($ticket) && !$ticket->isPaid()) {
-                        Log::warning
-                        (
-                            sprintf
+                        if (is_null($ticket) && $reader->hasColumn("id")) {
+                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket by id %s", $row['id']));
+                            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($row['id']));
+                        }
+
+                        if (!is_null($ticket) && !$ticket->isPaid()) {
+                            Log::warning
                             (
-                                "SummitOrderService::processTicketData - ticket %s is not paid",
-                                $ticket->getId(),
-                            )
-                        );
-                        return;
-                    }
-
-                    if (!is_null($ticket) && !$ticket->isActive()) {
-                        Log::warning
-                        (
-                            sprintf
-                            (
-                                "SummitOrderService::processTicketData - ticket %s is not active",
-                                $ticket->getId()
-                            )
-                        );
-                        return;
-                    }
-
-                    if (!is_null($ticket) && !$ticket->hasOrder()) {
-                        Log::warning
-                        (
-                            sprintf
-                            (
-                                "SummitOrderService::processTicketData - ticket %s does not belongs to an order.",
-                                $ticket->getId()
-                            )
-                        );
-                        return;
-                    }
-
-                    if (!is_null($ticket) && $ticket->getOrder()->getSummitId() != $summit->getId()) {
-                        Log::warning
-                        (
-                            sprintf
-                            (
-                                "SummitOrderService::processTicketData - ticket %s does not belongs to summit %s",
-                                $ticket->getId(),
-                                $summit->getId()
-                            )
-                        );
-                        return;
-                    }
-                }
-                // process attendee data  ( try to get an existent attendee or create a new one)
-                if ($attendee_data_present) {
-                    $attendee_email = $row['attendee_email'] ?? '';
-                    Log::debug(sprintf("SummitOrderService::processTicketData - has attendee data present ... trying to get attendee %s", $attendee_email));
-                    // check if attendee exists
-                    $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
-                    $member = $this->member_repository->getByEmail($attendee_email);
-
-                    if (is_null($attendee) && !empty($attendee_email)) {
-
-                        Log::debug(sprintf("SummitOrderService::processTicketData - attendee %s does not exists", $attendee_email));
-                        // create attendee ( populate payload)
-                        $payload = [
-                            'email' => $attendee_email,
-                            'first_name' => $row['attendee_first_name'],
-                            'last_name' => $row['attendee_last_name'],
-                        ];
-
-                        if ($reader->hasColumn('attendee_company')) {
-                            $payload['company'] = $row['attendee_company'];
-                        }
-
-                        if ($reader->hasColumn('attendee_company_id')) {
-                            $payload['company_id'] = intval($row['attendee_company_id']);
-                        }
-
-                        Log::debug(sprintf("SummitOrderService::processTicketData creating attendee with payload %s", json_encode($payload)));
-
-                        $attendee = SummitAttendeeFactory::build($summit, $payload, $member);
-
-                        if ($reader->hasColumn('attendee_tags')) {
-                            $tags = explode('|', $row['attendee_tags']);
-                            $attendee->clearTags();
-                            foreach ($tags as $tag_val) {
-                                $tag_val = trim($tag_val);
-                                $tag = $this->tags_repository->getByTag($tag_val);
-                                if (is_null($tag)) {
-                                    // create tag
-                                    $tag = new Tag($tag_val);
-                                    $this->tags_repository->add($tag);
-                                }
-                                $attendee->addTag($tag);
-                            }
-                        }
-                        $this->attendee_repository->add($attendee);
-                    }
-                }
-
-                if (!is_null($attendee)) {
-                    if (is_null($ticket)) {
-                        Log::debug(sprintf("SummitOrderService::processTicketData ticket is null, trying to create a new one"));
-
-                        // create ticket
-                        // first try to get ticket type
-                        $ticket_type = null;
-                        $promo_code = null;
-
-                        if ($reader->hasColumn('ticket_type_name')) {
-                            // use summit context
-                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket type by name %s", $row['ticket_type_name']));
-                            $ticket_type = $this->ticket_type_repository->getByType($summit, $row['ticket_type_name']);
-                        }
-
-                        if ($reader->hasColumn('ticket_promo_code')) {
-                            // use summit context
-                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['ticket_promo_code']));
-                            $promo_code = $this->promo_code_repository->getBySummitAndCode($summit, $row['ticket_promo_code']);
-                        }
-
-                        if ($reader->hasColumn('promo_code_id')) {
-                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by id %s", $row['promo_code_id']));
-                            $promo_code = $this->promo_code_repository->getById(intval($row['promo_code_id']));
-                            if ($promo_code instanceof SummitRegistrationPromoCode && $promo_code->getSummitId() != $summit->getId()) {
-                                Log::debug
+                                sprintf
                                 (
-                                    sprintf
-                                    (
-                                        "promo code %s does not belong to summit %s",
-                                        $promo_code->getId(),
-                                        $summit->getId()
-                                    )
-                                );
-                                return;
-                            }
-                        }
-
-                        if (is_null($promo_code) && $reader->hasColumn('promo_code')) {
-                            // use summit context
-                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['promo_code']));
-                            $promo_code = $this->promo_code_repository->getBySummitAndCode($summit, $row['promo_code']);
-                        }
-
-                        if (is_null($ticket_type) && $reader->hasColumn('ticket_type_id')) {
-                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket type by id %s", $row['ticket_type_id']));
-                            $ticket_type = $this->ticket_type_repository->getById(intval($row['ticket_type_id']));
-                            if ($ticket_type instanceof SummitTicketType && $ticket_type->getSummitId() != $summit->getId()) {
-                                Log::debug(
-                                    sprintf
-                                    (
-                                        "ticket type %s does not belong to summit %s",
-                                        $ticket_type->getId(),
-                                        $summit->getId()
-                                    )
-                                );
-                                return;
-                            }
-                        }
-
-                        if (is_null($ticket_type)) {
-                            Log::debug
-                            (
-                                "SummitOrderService::processTicketData - ticket type is not provide, ticket can not be created for attendee"
+                                    "SummitOrderService::processTicketData - ticket %s is not paid",
+                                    $ticket->getId(),
+                                )
                             );
                             return;
                         }
 
-                        $order_payload = [
-                            'ticket_type_id' => $ticket_type->getId(),
-                            'attendee' => $attendee,
-                            'owner_email' => $attendee->getEmail(),
-                            'owner_first_name' => $attendee->getFirstName(),
-                            'owner_last_name' => $attendee->getSurname(),
-                            'owner_company' => $attendee->getCompanyName(),
-                        ];
-
-                        if (!is_null($promo_code)) {
-                            Log::debug(sprintf("SummitOrderService::processTicketData adding promo code by code %s to offline order", $promo_code->getId()));
-                            $order_payload['promo_code'] = $promo_code->getCode();
+                        if (!is_null($ticket) && !$ticket->isActive()) {
+                            Log::warning
+                            (
+                                sprintf
+                                (
+                                    "SummitOrderService::processTicketData - ticket %s is not active",
+                                    $ticket->getId()
+                                )
+                            );
+                            return;
                         }
 
-                        $order = $this->createOfflineOrder($summit, $order_payload);
-
-                        $ticket = $order->getFirstTicket();
-
-                    } else {
-                        // ticket exists try to re assign it
-                        Log::debug(sprintf("SummitOrderService::processTicketData ticket exists. trying to re assign it ..."));
-
-                        if ($ticket->hasOwner() && $ticket->getOwnerEmail() != $attendee->getEmail()) {
-                            Log::debug(sprintf("SummitOrderService::processTicketData - reasigning ticket to attendee %s", $attendee->getEmail()));
-                            $ticket->getOwner()->sendRevocationTicketEmail($ticket);
-
-                            $ticket->getOwner()->removeTicket($ticket);
+                        if (!is_null($ticket) && !$ticket->hasOrder()) {
+                            Log::warning
+                            (
+                                sprintf
+                                (
+                                    "SummitOrderService::processTicketData - ticket %s does not belongs to an order.",
+                                    $ticket->getId()
+                                )
+                            );
+                            return;
                         }
 
-                        Log::debug(sprintf("SummitOrderService::processTicketData assigning ticket %s to attendee %s", $ticket->getNumber(), $attendee->getEmail()));
-
-                        $attendee->addTicket($ticket);
-
-                        $ticket->generateQRCode();
-                        $ticket->generateHash();
-
-                        if ($summit->isRegistrationSendTicketEmailAutomatically()) {
-                            Log::debug(sprintf("SummitOrderService::processTicketData sending invitation email to attendee %s", $attendee->getEmail()));
-                            $attendee->sendInvitationEmail($ticket);
+                        if (!is_null($ticket) && $ticket->getOrder()->getSummitId() != $summit->getId()) {
+                            Log::warning
+                            (
+                                sprintf
+                                (
+                                    "SummitOrderService::processTicketData - ticket %s does not belongs to summit %s",
+                                    $ticket->getId(),
+                                    $summit->getId()
+                                )
+                            );
+                            return;
                         }
                     }
-                }
+                    // process attendee data  ( try to get an existent attendee or create a new one)
+                    if ($attendee_data_present) {
+                        $attendee_email = $row['attendee_email'] ?? '';
+                        Log::debug(sprintf("SummitOrderService::processTicketData - has attendee data present ... trying to get attendee %s", $attendee_email));
+                        // check if attendee exists
+                        $attendee = $this->attendee_repository->getBySummitAndEmail($summit, $attendee_email);
+                        $member = $this->member_repository->getByEmail($attendee_email);
 
-                if (is_null($ticket)) {
-                    Log::warning("SummitOrderService::processTicketData ticket is null stop current row processing.");
-                    return;
-                }
+                        if (is_null($attendee) && !empty($attendee_email)) {
 
-                Log::debug(sprintf("SummitOrderService::processTicketData - got ticket %s (%s)", $ticket->getId(), $ticket->getNumber()));
+                            Log::debug(sprintf("SummitOrderService::processTicketData - attendee %s does not exists", $attendee_email));
+                            // create attendee ( populate payload)
+                            $payload = [
+                                'email' => $attendee_email,
+                                'first_name' => $row['attendee_first_name'],
+                                'last_name' => $row['attendee_last_name'],
+                            ];
 
-                // badge data is processed BEFORE extra questions: the extra-question permission
-                // gates ( SummitAttendee::isAllowedQuestion ) read the attendee badge features
-                // through native SQL, so this row's own badge/feature grants must be applied
-                // ( and flushed, see upsertAttendeeExtraQuestionAnswers ) first
-                if ($badge_data_present) {
+                            if ($reader->hasColumn('attendee_company')) {
+                                $payload['company'] = $row['attendee_company'];
+                            }
 
-                    $badge_type = null;
+                            if ($reader->hasColumn('attendee_company_id')) {
+                                $payload['company_id'] = intval($row['attendee_company_id']);
+                            }
 
-                    if ($reader->hasColumn("badge_type_id")) {
-                        Log::debug(sprintf("SummitOrderService::processTicketData trying to get badge type by id %s", $row['badge_type_id']));
-                        $badge_type = $summit->getBadgeTypeById(intval($row['badge_type_id']));
+                            Log::debug(sprintf("SummitOrderService::processTicketData creating attendee with payload %s", json_encode($payload)));
+
+                            $attendee = SummitAttendeeFactory::build($summit, $payload, $member);
+
+                            if ($reader->hasColumn('attendee_tags')) {
+                                $tags = explode('|', $row['attendee_tags']);
+                                $attendee->clearTags();
+                                foreach ($tags as $tag_val) {
+                                    $tag_val = trim($tag_val);
+                                    $tag = $this->tags_repository->getByTag($tag_val);
+                                    if (is_null($tag)) {
+                                        // create tag
+                                        $tag = new Tag($tag_val);
+                                        $this->tags_repository->add($tag);
+                                    }
+                                    $attendee->addTag($tag);
+                                }
+                            }
+                            $this->attendee_repository->add($attendee);
+                        }
                     }
 
-                    if (is_null($badge_type) && $reader->hasColumn("badge_type_name")) {
-                        Log::debug(sprintf("SummitOrderService::processTicketData trying to get badge type by name %s", $row['badge_type_name']));
-                        $badge_type = $summit->getBadgeTypeByName(trim($row['badge_type_name']));
+                    if (!is_null($attendee)) {
+                        if (is_null($ticket)) {
+                            Log::debug(sprintf("SummitOrderService::processTicketData ticket is null, trying to create a new one"));
+
+                            // create ticket
+                            // first try to get ticket type
+                            $ticket_type = null;
+                            $promo_code = null;
+
+                            if ($reader->hasColumn('ticket_type_name')) {
+                                // use summit context
+                                Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket type by name %s", $row['ticket_type_name']));
+                                $ticket_type = $this->ticket_type_repository->getByType($summit, $row['ticket_type_name']);
+                            }
+
+                            if ($reader->hasColumn('ticket_promo_code')) {
+                                // use summit context
+                                Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['ticket_promo_code']));
+                                $promo_code = $this->promo_code_repository->getBySummitAndCode($summit, $row['ticket_promo_code']);
+                            }
+
+                            if ($reader->hasColumn('promo_code_id')) {
+                                Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by id %s", $row['promo_code_id']));
+                                $promo_code = $this->promo_code_repository->getById(intval($row['promo_code_id']));
+                                if ($promo_code instanceof SummitRegistrationPromoCode && $promo_code->getSummitId() != $summit->getId()) {
+                                    Log::debug
+                                    (
+                                        sprintf
+                                        (
+                                            "promo code %s does not belong to summit %s",
+                                            $promo_code->getId(),
+                                            $summit->getId()
+                                        )
+                                    );
+                                    return;
+                                }
+                            }
+
+                            if (is_null($promo_code) && $reader->hasColumn('promo_code')) {
+                                // use summit context
+                                Log::debug(sprintf("SummitOrderService::processTicketData trying to get promo code by code %s", $row['promo_code']));
+                                $promo_code = $this->promo_code_repository->getBySummitAndCode($summit, $row['promo_code']);
+                            }
+
+                            if (is_null($ticket_type) && $reader->hasColumn('ticket_type_id')) {
+                                Log::debug(sprintf("SummitOrderService::processTicketData trying to get ticket type by id %s", $row['ticket_type_id']));
+                                $ticket_type = $this->ticket_type_repository->getById(intval($row['ticket_type_id']));
+                                if ($ticket_type instanceof SummitTicketType && $ticket_type->getSummitId() != $summit->getId()) {
+                                    Log::debug(
+                                        sprintf
+                                        (
+                                            "ticket type %s does not belong to summit %s",
+                                            $ticket_type->getId(),
+                                            $summit->getId()
+                                        )
+                                    );
+                                    return;
+                                }
+                            }
+
+                            if (is_null($ticket_type)) {
+                                Log::debug
+                                (
+                                    "SummitOrderService::processTicketData - ticket type is not provide, ticket can not be created for attendee"
+                                );
+                                return;
+                            }
+
+                            $order_payload = [
+                                'ticket_type_id' => $ticket_type->getId(),
+                                'attendee' => $attendee,
+                                'owner_email' => $attendee->getEmail(),
+                                'owner_first_name' => $attendee->getFirstName(),
+                                'owner_last_name' => $attendee->getSurname(),
+                                'owner_company' => $attendee->getCompanyName(),
+                            ];
+
+                            if (!is_null($promo_code)) {
+                                Log::debug(sprintf("SummitOrderService::processTicketData adding promo code by code %s to offline order", $promo_code->getId()));
+                                $order_payload['promo_code'] = $promo_code->getCode();
+                            }
+
+                            $order = $this->createOfflineOrder($summit, $order_payload);
+
+                            $ticket = $order->getFirstTicket();
+
+                        } else {
+                            // ticket exists try to re assign it
+                            Log::debug(sprintf("SummitOrderService::processTicketData ticket exists. trying to re assign it ..."));
+
+                            if ($ticket->hasOwner() && $ticket->getOwnerEmail() != $attendee->getEmail()) {
+                                Log::debug(sprintf("SummitOrderService::processTicketData - reasigning ticket to attendee %s", $attendee->getEmail()));
+                                $ticket->getOwner()->sendRevocationTicketEmail($ticket);
+
+                                $ticket->getOwner()->removeTicket($ticket);
+                            }
+
+                            Log::debug(sprintf("SummitOrderService::processTicketData assigning ticket %s to attendee %s", $ticket->getNumber(), $attendee->getEmail()));
+
+                            $attendee->addTicket($ticket);
+
+                            $ticket->generateQRCode();
+                            $ticket->generateHash();
+
+                            if ($summit->isRegistrationSendTicketEmailAutomatically()) {
+                                Log::debug(sprintf("SummitOrderService::processTicketData sending invitation email to attendee %s", $attendee->getEmail()));
+                                $attendee->sendInvitationEmail($ticket);
+                            }
+                        }
                     }
 
-                    if (!is_null($badge_type))
-                        Log::debug(sprintf("SummitOrderService::processTicketData - got badge type %s (%s)", $badge_type->getId(), $badge_type->getName()));
+                    if (is_null($ticket)) {
+                        Log::warning("SummitOrderService::processTicketData ticket is null stop current row processing.");
+                        return;
+                    }
 
-                    if (!$ticket->hasBadge() && is_null($badge_type)) {
-                        Log::warning("SummitOrderService::processTicketData ticket has no badge and badge type is null, skipping badge processing.");
-                    } else {
+                    Log::debug(sprintf("SummitOrderService::processTicketData - got ticket %s (%s)", $ticket->getId(), $ticket->getNumber()));
 
-                        if (!$ticket->hasBadge()) {
-                            // create it
-                            Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) has not badge ... creating it", $ticket->getId(), $ticket->getNumber()));
-                            $badge = SummitBadgeType::buildBadgeFromType($badge_type);
-                            $ticket->setBadge($badge);
+                    // badge data is processed BEFORE extra questions: the extra-question permission
+                    // gates ( SummitAttendee::isAllowedQuestion ) read the attendee badge features
+                    // through native SQL, so this row's own badge/feature grants must be applied
+                    // ( and flushed, see upsertAttendeeExtraQuestionAnswers ) first
+                    if ($badge_data_present) {
+
+                        $badge_type = null;
+
+                        if ($reader->hasColumn("badge_type_id")) {
+                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get badge type by id %s", $row['badge_type_id']));
+                            $badge_type = $summit->getBadgeTypeById(intval($row['badge_type_id']));
                         }
 
-                        $badge = $ticket->getBadge();
+                        if (is_null($badge_type) && $reader->hasColumn("badge_type_name")) {
+                            Log::debug(sprintf("SummitOrderService::processTicketData trying to get badge type by name %s", $row['badge_type_name']));
+                            $badge_type = $summit->getBadgeTypeByName(trim($row['badge_type_name']));
+                        }
 
                         if (!is_null($badge_type))
-                            $badge->setType($badge_type);
+                            Log::debug(sprintf("SummitOrderService::processTicketData - got badge type %s (%s)", $badge_type->getId(), $badge_type->getName()));
 
-                        $clearedFeatures = false;
-                        // check if we are setting any badge feature
-                        Log::debug("SummitOrderService::processTicketData processing badge type features");
-                        foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
-                            $feature_name = $featuresType->getName();
-                            Log::debug(sprintf("SummitOrderService::processTicketData processing badge type feature %s for ticket %s", $feature_name, $ticket->getId()));
-                            if (!$reader->hasColumn($feature_name)) {
-                                Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s does not exists as column", $feature_name));
-                                continue;
-                            }
+                        if (!$ticket->hasBadge() && is_null($badge_type)) {
+                            Log::warning("SummitOrderService::processTicketData ticket has no badge and badge type is null, skipping badge processing.");
+                        } else {
 
-                            if (!$clearedFeatures) {
-                                $badge->clearFeatures();
-                                $clearedFeatures = true;
+                            if (!$ticket->hasBadge()) {
+                                // create it
+                                Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) has not badge ... creating it", $ticket->getId(), $ticket->getNumber()));
+                                $badge = SummitBadgeType::buildBadgeFromType($badge_type);
+                                $ticket->setBadge($badge);
                             }
 
-                            $mustAdd = intval($row[$feature_name]) === 1;
-                            if (!$mustAdd) {
-                                Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s not set for ticket %s", $feature_name, $ticket->getId()));
-                                continue;
+                            $badge = $ticket->getBadge();
+
+                            if (!is_null($badge_type))
+                                $badge->setType($badge_type);
+
+                            $clearedFeatures = false;
+                            // check if we are setting any badge feature
+                            Log::debug("SummitOrderService::processTicketData processing badge type features");
+                            foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
+                                $feature_name = $featuresType->getName();
+                                Log::debug(sprintf("SummitOrderService::processTicketData processing badge type feature %s for ticket %s", $feature_name, $ticket->getId()));
+                                if (!$reader->hasColumn($feature_name)) {
+                                    Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s does not exists as column", $feature_name));
+                                    continue;
+                                }
+
+                                if (!$clearedFeatures) {
+                                    $badge->clearFeatures();
+                                    $clearedFeatures = true;
+                                }
+
+                                $mustAdd = intval($row[$feature_name]) === 1;
+                                if (!$mustAdd) {
+                                    Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s not set for ticket %s", $feature_name, $ticket->getId()));
+                                    continue;
+                                }
+                                Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) - trying to add new features to ticket badge (%s)", $ticket->getId(), $ticket->getNumber(), $feature_name));
+                                $feature = $summit->getFeatureTypeByName(trim($feature_name));
+                                if (is_null($feature)) {
+                                    Log::warning(sprintf("SummitOrderService::processTicketData feature %s does not exist on summit %s", $feature, $summit->getId()));
+                                    continue;
+                                }
+                                Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s set for ticket %s", $feature_name, $ticket->getId()));
+                                $badge->addFeature($feature);
                             }
-                            Log::debug(sprintf("SummitOrderService::processTicketData - ticket %s (%s) - trying to add new features to ticket badge (%s)", $ticket->getId(), $ticket->getNumber(), $feature_name));
-                            $feature = $summit->getFeatureTypeByName(trim($feature_name));
-                            if (is_null($feature)) {
-                                Log::warning(sprintf("SummitOrderService::processTicketData feature %s does not exist on summit %s", $feature, $summit->getId()));
-                                continue;
-                            }
-                            Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s set for ticket %s", $feature_name, $ticket->getId()));
-                            $badge->addFeature($feature);
                         }
                     }
-                }
 
-                // extra questions ( extra_question:{question name} columns )
-                $answers_owner = !is_null($attendee) ? $attendee : ($ticket->hasOwner() ? $ticket->getOwner() : null);
-                if (!is_null($answers_owner))
-                    $this->upsertAttendeeExtraQuestionAnswers($summit, $answers_owner, $row);
-            });
+                    // extra questions ( extra_question:{question name} columns )
+                    $answers_owner = !is_null($attendee) ? $attendee : ($ticket->hasOwner() ? $ticket->getOwner() : null);
+                    if (!is_null($answers_owner))
+                        $this->upsertAttendeeExtraQuestionAnswers($summit, $answers_owner, $row);
+                });
+            } catch (Exception $ex) {
+                Log::warning($ex);
+            }
         }
 
         Log::debug(sprintf("SummitOrderService::processTicketData deleting file %s from storage %s", $path, $this->download_strategy->getDriver()));

@@ -11,6 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Services\Model\ISummitOrderService;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitBadgeFeatureType;
 use models\summit\SummitOrderExtraQuestionType;
@@ -73,7 +75,9 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
             $ticket_features = $ticket->getBadgeFeaturesNames();
             foreach ($params['features_types'] as $features_type) {
                 if (!$features_type instanceof SummitBadgeFeatureType) continue;
-                $values[$features_type->getName()] = in_array($features_type->getName(), $ticket_features) ? '1' : '0';
+                // namespaced column, matches the ticket data import convention ( round-trip )
+                $feature_column = sprintf('%s%s', ISummitOrderService::BadgeFeatureColumnPrefix, $features_type->getName());
+                $values[$feature_column] = in_array($features_type->getName(), $ticket_features) ? '1' : '0';
             }
         }
 
@@ -86,7 +90,9 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
 
                 $question_label = self::$questionLabelCache[$question->getId()]
                     ??= html_entity_decode(strip_tags($question->getLabel()));
-                $values[$question_label] = '';
+                // namespaced column, matches the ticket data import convention ( round-trip )
+                $question_column = sprintf('%s%s', ISummitOrderService::ExtraQuestionColumnPrefix, $question_label);
+                $values[$question_column] = '';
 
                 if (!is_null($ticket_owner)) {
                     $value = $answersByOwner[$ticket_owner->getId()][$question->getId()] ?? null;
@@ -94,9 +100,9 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
 
                     $cacheKey = $question->getId() . '|' . $value;
                     $value = self::$niceValueCache[$cacheKey]
-                        ??= $question->getNiceValue($value);
+                        ??= self::formatAnswerValue($question, $value);
 
-                    $values[$question_label] = $value;
+                    $values[$question_column] = $value;
                 }
             }
         }
@@ -140,5 +146,27 @@ final class SummitAttendeeTicketCSVSerializer extends SilverStripeSerializer
         $values['attendee_tags'] = implode("|", $attendee_tags);
 
         return $values;
+    }
+
+    /**
+     * Multi-value answers are joined with the ticket data import's value separator instead of
+     * getNiceValue's comma, so exported cells re-import as-is ( labels may legitimately contain
+     * commas, which would corrupt a comma-joined cell on re-import ).
+     * @param SummitOrderExtraQuestionType $question
+     * @param string $value
+     * @return string
+     */
+    private static function formatAnswerValue(SummitOrderExtraQuestionType $question, string $value): string
+    {
+        if (!$question->allowsValues())
+            return strval($question->getNiceValue($value));
+
+        $labels = [];
+        foreach (explode(ExtraQuestionType::QuestionChoicesCharSeparator, $value) as $value_id) {
+            $label = $question->getNiceValue(trim($value_id));
+            if (empty($label)) continue;
+            $labels[] = $label;
+        }
+        return implode(ISummitOrderService::ExtraQuestionValueSeparator, $labels);
     }
 }

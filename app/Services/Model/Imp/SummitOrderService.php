@@ -1784,6 +1784,17 @@ final class SummitOrderService
     private $refund_request_repository;
 
     /**
+     * Per-summit lookup index for resolveExtraQuestionColumns, built once per import job
+     * instead of two DB round-trips ( by-name + by-label ) per extra_question column per row
+     * ( order_extra_questions is EXTRA_LAZY, so matching() is a real query, not an in-memory
+     * filter ). Keyed by summit id; each entry maps a comparison key ( name / raw label /
+     * export-sanitized label ) to a question, so a hand-edited CSV using the raw label still
+     * resolves alongside a re-imported export using the sanitized one.
+     * @var array
+     */
+    private $order_extra_questions_index_cache = [];
+
+    /**
      * @param ISummitTicketTypeRepository $ticket_type_repository
      * @param IMemberRepository $member_repository
      * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
@@ -4294,8 +4305,8 @@ final class SummitOrderService
             * ticket_promo_code (optional)
             * badge_type_id (optional)
             * badge_type_name (optional)
-            * one col per feature
-            * extra_question:{question name} (optional, one col per order extra question - Ticket/Both usage)
+            * badge_feature:{feature name} (optional, one col per badge feature; bare feature name accepted for legacy csvs)
+            * extra_question:{question name} (optional, one col per order extra question - Ticket/Both usage; label accepted too)
          */
 
         // validate format with col names
@@ -4347,6 +4358,12 @@ final class SummitOrderService
                 throw new EntityNotFoundException(sprintf("summit %s does not exists.", $summit_id));
             return $summit;
         });
+
+        // force a fresh extra-questions index for this job — this service is a singleton
+        // (ModelServicesProvider::class registers ISummitOrderService as such), so a warm queue
+        // worker could otherwise resolve extra_question columns against a stale in-memory index
+        // left over from a previous import job on the same summit
+        $this->getOrderExtraQuestionsIndex($summit, true);
 
         $reader = CSVReader::buildFrom($csv_data);
 
@@ -4638,7 +4655,11 @@ final class SummitOrderService
                         foreach ($summit->getBadgeFeaturesTypes() as $featuresType) {
                             $feature_name = $featuresType->getName();
                             Log::debug(sprintf("SummitOrderService::processTicketData processing badge type feature %s for ticket %s", $feature_name, $ticket->getId()));
-                            if (!$reader->hasColumn($feature_name)) {
+                            // canonical namespaced column; bare feature name accepted for legacy csvs
+                            $feature_column = sprintf('%s%s', self::BadgeFeatureColumnPrefix, $feature_name);
+                            if (!$reader->hasColumn($feature_column))
+                                $feature_column = $feature_name;
+                            if (!$reader->hasColumn($feature_column)) {
                                 Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s does not exists as column", $feature_name));
                                 continue;
                             }
@@ -4648,7 +4669,7 @@ final class SummitOrderService
                                 $clearedFeatures = true;
                             }
 
-                            $mustAdd = intval($row[$feature_name]) === 1;
+                            $mustAdd = intval($row[$feature_column]) === 1;
                             if (!$mustAdd) {
                                 Log::debug(sprintf("SummitOrderService::processTicketData badge type feature %s not set for ticket %s", $feature_name, $ticket->getId()));
                                 continue;
@@ -4679,10 +4700,10 @@ final class SummitOrderService
     /**
      * Upserts attendee extra question answers from a ticket data import row
      * (one column per question, "extra_question:{question name}" naming convention).
-     * The prefix is deliberate: on this import the bare-name column namespace already belongs to
-     * badge features, and a question named like a feature would be ambiguous at parse time —
-     * additive per-name column families should be namespaced ( badge feature columns stay bare
-     * for backward compatibility with existing CSVs ).
+     * The prefix is deliberate: additive per-name column families are namespaced so their names
+     * can never collide ( badge features use "badge_feature:{name}"; the bare feature name is
+     * still accepted for backward compatibility with existing CSVs ). Questions match by name,
+     * falling back to label — the ticket csv export emits question labels as column names.
      * Unknown question names, order-scoped questions, disallowed questions and empty values are
      * skipped, never fail the row. Mandatory-question completeness is not enforced ( admin bulk load ).
      * Former answers not present on the row are carried over on a best effort basis: the shared
@@ -4757,6 +4778,47 @@ final class SummitOrderService
     }
 
     /**
+     * Builds a lookup index of the summit's order extra questions, keyed by every string a CSV
+     * column could legitimately match against: exact name, exact ( raw, as-stored ) label, and
+     * the export-sanitized label ( html_entity_decode(strip_tags(...)) — the same transform
+     * SummitAttendeeTicketCSVSerializer applies when building export headers, so a re-imported
+     * export round-trips even when the stored label contains HTML/entities, e.g. Eventbrite-
+     * seeded questions via SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite ).
+     * One pass over the ( EXTRA_LAZY ) collection instead of two DB round-trips per column per row.
+     *
+     * Cached per summit for the lifetime of this service instance — but `$refresh` MUST be forced
+     * ( see processTicketData() ) at the start of every import job: `ISummitOrderService` is bound
+     * as an application singleton, so on a warm queue worker this instance survives across many
+     * job executions. Without a forced rebuild, a question added/edited between two import jobs
+     * for the same summit would silently resolve against a stale in-memory index.
+     * @param Summit $summit
+     * @param bool $refresh force a fresh rebuild even if a cached index exists for this summit
+     * @return array{by_key: array<string, SummitOrderExtraQuestionType[]>}
+     */
+    private function getOrderExtraQuestionsIndex(Summit $summit, bool $refresh = false): array
+    {
+        $summit_id = $summit->getId();
+        if (!$refresh && isset($this->order_extra_questions_index_cache[$summit_id]))
+            return $this->order_extra_questions_index_cache[$summit_id];
+
+        $by_key = [];
+        $add = function (?string $key, SummitOrderExtraQuestionType $question) use (&$by_key) {
+            if (empty($key)) return;
+            $by_key[$key][$question->getId()] = $question;
+        };
+
+        foreach ($summit->getOrderExtraQuestions() as $question) {
+            if (!$question instanceof SummitOrderExtraQuestionType) continue;
+            $add(trim($question->getName()), $question);
+            $label = $question->getLabel();
+            $add(trim($label), $question);
+            $add(trim(html_entity_decode(strip_tags($label))), $question);
+        }
+
+        return $this->order_extra_questions_index_cache[$summit_id] = ['by_key' => $by_key];
+    }
+
+    /**
      * Resolves the row's extra_question:* columns to [question_id => value], applying the
      * empty-value, unknown-question, order-scoped, not-allowed and change-lock skips.
      * @param Summit $summit
@@ -4788,8 +4850,18 @@ final class SummitOrderService
                 continue;
             }
 
-            $question = $summit->getOrderExtraQuestionByName($question_name);
-            if (is_null($question)) {
+            // match by name, by raw label, and by the export-sanitized label ( the ticket csv
+            // export emits html_entity_decode(strip_tags($label)) as the column name, so a
+            // re-imported export must resolve against that sanitized form, not just the raw
+            // stored label — see getOrderExtraQuestionsIndex() ); each candidate is vetted for
+            // usage / attendee eligibility before deciding ambiguity, so a question that could
+            // never take this answer ( order scoped or not allowed for the attendee ) can not
+            // shadow a legitimate match; only when two eligible questions remain — one
+            // question's name is another question's label — is the column truly ambiguous and
+            // skipped, rather than silently filing the answer under the wrong question
+            $candidates = $this->getOrderExtraQuestionsIndex($summit)['by_key'][$question_name] ?? [];
+
+            if (count($candidates) === 0) {
                 Log::warning
                 (
                     sprintf
@@ -4802,30 +4874,54 @@ final class SummitOrderService
                 continue;
             }
 
-            if ($question->getUsage() === SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage) {
+            $eligible = [];
+            foreach ($candidates as $candidate) {
+                if ($candidate->getUsage() === SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage) {
+                    Log::warning
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::resolveExtraQuestionColumns question %s ( column %s ) is order scoped, can not be answered per attendee, skipping it",
+                            $candidate->getId(),
+                            $question_name
+                        )
+                    );
+                    continue;
+                }
+                if (!$attendee->isAllowedQuestion($candidate)) {
+                    Log::warning
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::resolveExtraQuestionColumns question %s ( column %s ) is not allowed for attendee %s, skipping it",
+                            $candidate->getId(),
+                            $question_name,
+                            $attendee->getEmail()
+                        )
+                    );
+                    continue;
+                }
+                $eligible[$candidate->getId()] = $candidate;
+            }
+
+            if (count($eligible) === 0) continue;
+
+            if (count($eligible) > 1) {
                 Log::warning
                 (
                     sprintf
                     (
-                        "SummitOrderService::resolveExtraQuestionColumns question %s is order scoped, can not be answered per attendee, skipping it",
-                        $question_name
+                        "SummitOrderService::resolveExtraQuestionColumns column %s is ambiguous on summit %s ( name of question %s, label of question %s ), skipping it",
+                        $question_name,
+                        $summit->getId(),
+                        array_keys($eligible)[0],
+                        array_keys($eligible)[1]
                     )
                 );
                 continue;
             }
 
-            if (!$attendee->isAllowedQuestion($question)) {
-                Log::warning
-                (
-                    sprintf
-                    (
-                        "SummitOrderService::resolveExtraQuestionColumns question %s is not allowed for attendee %s, skipping it",
-                        $question_name,
-                        $attendee->getEmail()
-                    )
-                );
-                continue;
-            }
+            $question = reset($eligible);
 
             if ($question->allowsValues()) {
                 $value = $this->resolveListQuestionValue($question, $value);
@@ -4874,7 +4970,7 @@ final class SummitOrderService
     {
         $value_ids = [];
 
-        foreach (explode('|', $value) as $v) {
+        foreach (explode(self::ExtraQuestionValueSeparator, $value) as $v) {
             $v = trim($v);
             if ($v === '') continue;
             $question_value = $question->getValueByName($v);

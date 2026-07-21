@@ -84,8 +84,8 @@ extends AbstractModelService
                 throw new ValidationException("You can not modify a system defined type.");
 
             if(isset($payload['name'])){
-                $type = $this->repository->getByName(trim($payload['name']));
-                if(!is_null($type) && $type->getId() != $id)
+                $existing_type = $this->repository->getByName(trim($payload['name']));
+                if(!is_null($existing_type) && $existing_type->getId() != $id)
                     throw new ValidationException(sprintf("Name %s already exists.", $payload['name']));
             }
             return SummitMediaFileTypeFactory::populate($type, $payload);

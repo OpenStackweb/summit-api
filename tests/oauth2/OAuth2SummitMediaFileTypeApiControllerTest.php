@@ -44,6 +44,55 @@ class OAuth2SummitMediaFileTypeApiControllerTest
         $this->assertTrue(isset($response['id']));
     }
 
+    public function testUpdateRenameToNewUniqueName(){
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $add_payload = [
+            'name' => str_random(16).'summit_media_file_type',
+            'allowed_extensions' => ['PDF', 'SVG']
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitMediaFileTypeApiController@add",
+            [],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($add_payload)
+        );
+
+        $content = $response->getContent();
+        $response = json_decode($content, true);
+        $this->assertResponseStatus(201);
+        $id = intval($response['id']);
+
+        $update_payload = [
+            'name' => str_random(16).'_renamed_summit_media_file_type',
+            'allowed_extensions' => ['PDF', 'SVG']
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitMediaFileTypeApiController@update",
+            ["id" => $id],
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($update_payload)
+        );
+
+        $content = $response->getContent();
+        $response = json_decode($content, true);
+        $this->assertResponseStatus(201);
+        $this->assertEquals($update_payload['name'], $response['name']);
+    }
+
     public function testGetAll(){
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,

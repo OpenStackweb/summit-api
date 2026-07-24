@@ -27,6 +27,11 @@ class DeletedEventDTO
         return new self($entity->getId());
     }
 
+    public static function fromId(int $id): self
+    {
+        return new self($id);
+    }
+
     public function serialize(): array
     {
         return [

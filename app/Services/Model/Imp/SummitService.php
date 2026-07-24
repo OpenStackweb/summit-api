@@ -1719,7 +1719,7 @@ final class SummitService
         });
 
         PublishSponsorServiceDomainEventsJob::dispatch(
-            DeletedEventDTO::fromEntity($summit)->serialize(), SummitDomainEvents::SummitDeleted);
+            DeletedEventDTO::fromId($summit_id)->serialize(), SummitDomainEvents::SummitDeleted);
     }
 
     /**

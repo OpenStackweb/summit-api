@@ -38,6 +38,9 @@ class SummitAttendeeAuditLogFormatter extends AbstractAuditLogFormatter
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $details = $this->buildChangeDetails($change_set);
+                    if ($details === null) {
+                        return null;
+                    }
                     return sprintf("Attendee (%s) '%s' updated: %s by user %s", $id, $name, $details, $this->getUserInfo());
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:

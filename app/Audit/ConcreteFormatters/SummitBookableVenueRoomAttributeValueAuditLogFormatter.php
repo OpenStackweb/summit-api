@@ -46,6 +46,9 @@ class SummitBookableVenueRoomAttributeValueAuditLogFormatter extends AbstractAud
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Summit Bookable Venue Room Attribute Value (%d) '%s' updated: %s by user %s",
                         $id,

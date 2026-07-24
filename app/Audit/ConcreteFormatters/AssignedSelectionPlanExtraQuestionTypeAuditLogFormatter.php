@@ -53,6 +53,9 @@ class AssignedSelectionPlanExtraQuestionTypeAuditLogFormatter extends AbstractAu
                     $question_type = $subject->getQuestionType();
                     $question_label = $question_type ? ($question_type->getLabel() ?? 'Unknown Question') : 'Unknown Question';
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Assigned Selection Plan Extra Question (%s) '%s' updated: %s by user %s",
                         $id,

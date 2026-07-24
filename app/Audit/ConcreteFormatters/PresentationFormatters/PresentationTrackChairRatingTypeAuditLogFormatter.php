@@ -44,6 +44,9 @@ class PresentationTrackChairRatingTypeAuditLogFormatter extends AbstractAuditLog
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $change_details = $this->buildChangeDetails($change_set);
+                    if ($change_details === null) {
+                        return null;
+                    }
                     return sprintf(
                         "Track Chair Rating Type '%s' updated: %s by user %s",
                         $name,

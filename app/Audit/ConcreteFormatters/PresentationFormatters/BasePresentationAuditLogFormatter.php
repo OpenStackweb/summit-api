@@ -76,7 +76,7 @@ abstract class BasePresentationAuditLogFormatter extends AbstractAuditLogFormatt
 
     abstract protected function formatCreation(array $data): string;
 
-    abstract protected function formatUpdate(array $data, array $change_set): string;
+    abstract protected function formatUpdate(array $data, array $change_set): ?string;
 
     abstract protected function formatDeletion(array $data): string;
 }

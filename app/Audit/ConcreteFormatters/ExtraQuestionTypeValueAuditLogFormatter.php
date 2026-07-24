@@ -39,6 +39,7 @@ class ExtraQuestionTypeValueAuditLogFormatter extends AbstractAuditLogFormatter
                     return sprintf("Extra Question Value '%s' (%s) for Question '%s' created by user %s", $label, $id, $question_label, $this->getUserInfo());
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $details = $this->buildChangeDetails($change_set);
+                    if ($details === null) return null;
                     return sprintf("Extra Question Value '%s' (%s) for Question '%s' updated: %s by user %s", $label, $id, $question_label, $details, $this->getUserInfo());
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Extra Question Value '%s' (%s) for Question '%s' deleted by user %s", $label, $id, $question_label, $this->getUserInfo());

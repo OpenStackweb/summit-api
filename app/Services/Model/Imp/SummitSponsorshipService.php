@@ -113,7 +113,7 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
             SponsorDomainEvents::SponsorUpdated);
 
         PublishSponsorServiceDomainEventsJob::dispatch(
-            DeletedEventDTO::fromEntity($sponsorship)->serialize(),
+            DeletedEventDTO::fromId($sponsorship_id)->serialize(),
             SponsorDomainEvents::SponsorshipRemoved);
     }
 
@@ -253,7 +253,7 @@ final class SummitSponsorshipService extends AbstractService implements ISummitS
             SponsorDomainEvents::SponsorshipUpdated);
 
         PublishSponsorServiceDomainEventsJob::dispatch(
-            DeletedEventDTO::fromEntity($add_on)->serialize(),
+            DeletedEventDTO::fromId($add_on_id)->serialize(),
             SponsorDomainEvents::SponsorshipAddOnRemoved);
     }
 

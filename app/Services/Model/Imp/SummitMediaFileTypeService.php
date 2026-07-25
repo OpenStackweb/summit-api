@@ -117,7 +117,7 @@ extends AbstractModelService
         });
 
         PublishSponsorServiceDomainEventsJob::dispatch(
-            DeletedEventDTO::fromEntity($type)->serialize(),
+            DeletedEventDTO::fromId($id)->serialize(),
             SummitMediaFileTypeDomainEvents::SummitMediaFileTypeDeleted);
     }
 }

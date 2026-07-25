@@ -205,4 +205,31 @@ class SummitSponsorServiceEventDispatchTest extends TestCase
 
         $this->assertLessThan($created_idx, $removed_idx, 'SponsorshipRemoved must be dispatched before SponsorshipCreated');
     }
+
+    // -------------------------------------------------------------------------
+    // deleteSponsor - regression: dispatched id must be the removed sponsor id,
+    // not 0 (Doctrine nulls the identifier after the orphan-removal flush, so
+    // building the DTO from the entity after the transaction closed read a
+    // stale getId(); the fix builds it from the id captured before removal).
+    // -------------------------------------------------------------------------
+
+    public function testDeleteSponsorDispatchesSponsorDeletedWithOriginalId(): void
+    {
+        // Fixture sponsors may have a SponsorSummitRegistrationDiscountCode FK
+        // attached (InsertSummitTestData assigns them randomly), which blocks a
+        // hard delete. Use a fresh, unrelated sponsor instead.
+        $sponsor = $this->getService()->addSponsor(self::$summit, [
+            'company_id'     => self::$companies_without_sponsor[0]->getId(),
+            'sponsorship_id' => self::$default_summit_sponsor_type->getId(),
+        ]);
+        $sponsor_id = $sponsor->getId();
+
+        Queue::fake();
+
+        $this->getService()->deleteSponsor(self::$summit, $sponsor_id);
+
+        $jobs = $this->jobsFor(SponsorDomainEvents::SponsorDeleted);
+        $this->assertCount(1, $jobs, 'Expected 1 SponsorDeleted');
+        $this->assertSame($sponsor_id, $jobs[0]->getPayload()['id'], 'Dispatched id must be the removed sponsor id, not 0');
+    }
 }

@@ -444,7 +444,7 @@ final class SummitSponsorService
         });
 
         PublishSponsorServiceDomainEventsJob::dispatch(
-            DeletedEventDTO::fromEntity($sponsor)->serialize(),
+            DeletedEventDTO::fromId($sponsor_id)->serialize(),
             SponsorDomainEvents::SponsorDeleted);
     }
 

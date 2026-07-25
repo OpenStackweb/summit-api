@@ -213,6 +213,7 @@ abstract class RetrieveSummitEventsStrategy
             'progress' => ['=='],
             'status' => ['=='],
             'rsvp_type'=> ['==', '<>','=@', '@@'],
+            'occupancy' => ['=='],
         ];
     }
 
@@ -273,6 +274,7 @@ abstract class RetrieveSummitEventsStrategy
             'progress' => 'sometimes|integer',
             'status' =>'sometimes|string',
             'rsvp_type' => 'sometimes|string|in:' . implode(',', SummitEvent::AllowedRSVPTypes),
+            'occupancy' => 'sometimes|string|in:' . implode(',', SummitEvent::ValidOccupanciesValues),
         ];
     }
 }

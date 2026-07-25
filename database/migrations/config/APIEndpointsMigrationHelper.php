@@ -231,4 +231,96 @@ WHERE a.name = '{$apiName}'
   AND s.name IN ({$scopeList});
 SQL;
     }
+
+    /**
+     * Register one endpoint plus its scope and authz-group associations, issuing every
+     * addSql() call needed. Unlike the insert/delete builders above (which return a SQL
+     * string for the caller to pass to addSql()), this method has the side effect itself.
+     *
+     * @param string $apiName      API identifier (e.g., 'summits')
+     * @param string $endpointName Endpoint identifier (e.g., 'get-overflow-published-events')
+     * @param string $route        Route pattern, matching the Laravel route exactly (same {param} names)
+     * @param string $httpMethod   'GET', 'POST', 'PUT', 'DELETE', etc.
+     * @param array  $scopes       Scope URIs to associate (e.g. SummitScopes::ReadSummitData)
+     * @param array  $authzGroups  Group slugs to associate (e.g. IGroup::SuperAdmins)
+     * @param bool   $active
+     * @param bool   $allowCors
+     * @param bool   $allowCredentials
+     * @return void
+     */
+    protected function registerEndpoint(
+        string $apiName,
+        string $endpointName,
+        string $route,
+        string $httpMethod,
+        array $scopes = [],
+        array $authzGroups = [],
+        bool $active = true,
+        bool $allowCors = true,
+        bool $allowCredentials = true
+    ): void {
+        $this->addSql($this->insertEndpoint($apiName, $endpointName, $route, $httpMethod, $active, $allowCors, $allowCredentials));
+
+        foreach ($scopes as $scope) {
+            $this->addSql($this->insertEndpointScope($apiName, $endpointName, $scope));
+        }
+
+        foreach ($authzGroups as $group) {
+            $this->addSql($this->insertEndpointAuthzGroup($apiName, $endpointName, $group));
+        }
+    }
+
+    /**
+     * Register a batch of endpoints via registerEndpoint(). Each entry is an assoc array
+     * shaped like ApiEndpointsSeeder's endpoint definitions:
+     * ['name' => ..., 'route' => ..., 'http_method' => ..., 'scopes' => [...], 'authz_groups' => [...]].
+     *
+     * @param string $apiName
+     * @param array  $endpoints
+     * @return void
+     */
+    protected function registerEndpoints(string $apiName, array $endpoints): void
+    {
+        foreach ($endpoints as $endpoint) {
+            $this->registerEndpoint(
+                $apiName,
+                $endpoint['name'],
+                $endpoint['route'],
+                $endpoint['http_method'],
+                $endpoint['scopes'] ?? [],
+                $endpoint['authz_groups'] ?? [],
+                $endpoint['active'] ?? true,
+                $endpoint['allow_cors'] ?? true,
+                $endpoint['allow_credentials'] ?? true
+            );
+        }
+    }
+
+    /**
+     * Remove one endpoint. api_endpoints has ON DELETE CASCADE to endpoint_api_scopes and
+     * endpoint_api_authz_groups (verified against the config DB schema), so deleting the
+     * endpoint row alone is sufficient to remove its associations too.
+     *
+     * @param string $apiName
+     * @param string $endpointName
+     * @return void
+     */
+    protected function unregisterEndpoint(string $apiName, string $endpointName): void
+    {
+        $this->addSql($this->deleteEndpoint($apiName, $endpointName));
+    }
+
+    /**
+     * Remove a batch of endpoints via unregisterEndpoint().
+     *
+     * @param string $apiName
+     * @param array  $endpointNames
+     * @return void
+     */
+    protected function unregisterEndpoints(string $apiName, array $endpointNames): void
+    {
+        foreach ($endpointNames as $endpointName) {
+            $this->unregisterEndpoint($apiName, $endpointName);
+        }
+    }
 }

@@ -57,13 +57,21 @@ class AddSponsorshipRequestSchema {}
 
 #[OA\Schema(
     schema: 'AddAddOnRequest',
-    type: 'object',
-    required: ['name', 'type'],
-    properties: [
-        new OA\Property(property: 'name', type: 'string', example: 'Premium Badge', description: 'Add-on name'),
-        new OA\Property(property: 'type', type: 'string', example: 'badge', description: 'Add-on type'),
-        new OA\Property(property: 'label', type: 'string', example: 'Premium', description: 'Add-on label'),
-        new OA\Property(property: 'size', type: 'string', example: 'large', description: 'Add-on size'),
+    oneOf: [
+        new OA\Schema(
+            required: ['name', 'type'],
+            properties: [
+                new OA\Property(property: 'name', type: 'string', example: 'B1', description: 'Add-on name'),
+                new OA\Property(property: 'type', type: 'string', example: 'Booth', description: 'Add-on Type Name'),
+            ]
+        ),
+        new OA\Schema(
+            required: ['name', 'type_id'],
+            properties: [
+                new OA\Property(property: 'name', type: 'string', example: 'B1 ', description: 'Add-on name'),
+                new OA\Property(property: 'type_id', type: 'integer', example: '123', description: 'Add-on Type Id'),
+            ]
+        )
     ]
 )]
 class AddAddOnRequestSchema {}
@@ -71,11 +79,21 @@ class AddAddOnRequestSchema {}
 #[OA\Schema(
     schema: 'UpdateAddOnRequest',
     type: 'object',
-    properties: [
-        new OA\Property(property: 'name', type: 'string', example: 'Premium Badge', description: 'Add-on name'),
-        new OA\Property(property: 'type', type: 'string', example: 'badge', description: 'Add-on type'),
-        new OA\Property(property: 'label', type: 'string', example: 'Premium', description: 'Add-on label'),
-        new OA\Property(property: 'size', type: 'string', example: 'large', description: 'Add-on size'),
+    oneOf: [
+        new OA\Schema(
+            required: ['name', 'type'],
+            properties: [
+                new OA\Property(property: 'name', type: 'string', example: 'B1', description: 'Add-on name'),
+                new OA\Property(property: 'type', type: 'string', example: 'Booth', description: 'Add-on Type Name'),
+            ]
+        ),
+        new OA\Schema(
+            required: ['name', 'type_id'],
+            properties: [
+                new OA\Property(property: 'name', type: 'string', example: 'B1 ', description: 'Add-on name'),
+                new OA\Property(property: 'type_id', type: 'integer', example: '123', description: 'Add-on Type Id'),
+            ]
+        )
     ]
 )]
 class UpdateAddOnRequestSchema {}

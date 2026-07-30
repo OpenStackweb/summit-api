@@ -274,7 +274,7 @@ class OAuth2AttendeesApiTest extends ProtectedApiTestCase
         $params = [
             'id'          => self::$summit->getId(),
             'attendee_id' => $attendee->getId(),
-            'expand'      => 'member,schedule,tickets,groups,rsvp,all_affiliations'
+            'expand'      => 'member,schedule,tickets,groups,rsvp,all_affiliations,summit'
         ];
 
         $headers = [
@@ -297,7 +297,133 @@ class OAuth2AttendeesApiTest extends ProtectedApiTestCase
         $attendee = json_decode($content);
         $this->assertTrue(!is_null($attendee));
 
+        $this->assertObjectHasProperty('member', $attendee);
+        $this->assertEquals(self::$defaultMember->getId(), $attendee->member->id);
+        $this->assertObjectNotHasProperty('member_id', $attendee);
+
+        $this->assertObjectHasProperty('summit', $attendee);
+        $this->assertEquals(self::$summit->getId(), $attendee->summit->id);
+        $this->assertObjectNotHasProperty('summit_id', $attendee);
+
+        $this->assertIsArray($attendee->tickets);
+        $this->assertNotEmpty($attendee->tickets);
+        foreach ($attendee->tickets as $ticket) {
+            $this->assertObjectHasProperty('id', $ticket);
+        }
+
         return $attendee;
+    }
+
+    public function testGetAttendeeByIDExpandSummitWithNestedFields(){
+
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+
+        $params = [
+            'id'          => self::$summit->getId(),
+            'attendee_id' => $attendee->getId(),
+            'expand'      => 'summit',
+            'fields'      => 'email,summit.name',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $attendee = json_decode($content);
+        $this->assertTrue(!is_null($attendee));
+
+        // top-level `fields` narrows the attendee's own array_mappings attributes ...
+        $this->assertObjectHasProperty('email', $attendee);
+        $this->assertObjectNotHasProperty('first_name', $attendee);
+
+        // ... while the dotted `summit.name` entry narrows the nested expanded summit object,
+        // via AbstractSerializer::filterFieldsByPrefix() stripping the "summit." prefix before
+        // it reaches SummitSerializer::serialize() - so the nested object is filtered down to
+        // JUST 'name' (SilverStripeSerializer's own 'id' array_mapping is fields-gated exactly
+        // like every other attribute, so it does NOT get a free pass here).
+        $this->assertObjectHasProperty('summit', $attendee);
+        $this->assertObjectNotHasProperty('summit_id', $attendee);
+        $this->assertEquals(self::$summit->getName(), $attendee->summit->name);
+        $this->assertObjectNotHasProperty('id', $attendee->summit);
+        $this->assertObjectNotHasProperty('start_date', $attendee->summit);
+    }
+
+    public function testGetAttendeeByIDNotesRelationFallbackAndExpand(){
+
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $this->assertNotEmpty($attendee->getNotes());
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        // relations=notes without expand=notes -> SummitAttendeeAdminSerializer::serialize()'s
+        // id-list fallback (mirrors OpenStackReleaseSerializer::serialize()'s `components`
+        // pattern: "if it's in relations and not expanded, send the ids").
+        $params = [
+            'id'          => self::$summit->getId(),
+            'attendee_id' => $attendee->getId(),
+            'relations'   => 'notes',
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $content = json_decode($response->getContent());
+        $this->assertTrue(!is_null($content));
+        $this->assertObjectHasProperty('notes', $content);
+        $this->assertIsArray($content->notes);
+        $this->assertNotEmpty($content->notes);
+        foreach ($content->notes as $note_id) {
+            $this->assertIsInt($note_id);
+        }
+
+        // expand=notes -> full note objects, overriding the id-list fallback above.
+        $params['expand'] = 'notes';
+
+        $response2 = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getAttendee",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $content2 = json_decode($response2->getContent());
+        $this->assertTrue(!is_null($content2));
+        $this->assertObjectHasProperty('notes', $content2);
+        $this->assertIsArray($content2->notes);
+        $this->assertNotEmpty($content2->notes);
+        foreach ($content2->notes as $note) {
+            $this->assertObjectHasProperty('id', $note);
+        }
     }
 
     public function testGetAttendeeByOrderID(){

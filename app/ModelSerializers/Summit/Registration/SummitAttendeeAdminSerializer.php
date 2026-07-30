@@ -1,5 +1,6 @@
 <?php namespace ModelSerializers;
 use Libs\ModelSerializers\Many2OneExpandSerializer;
+use models\summit\SummitAttendee;
 
 /**
  * Copyright 2016 OpenStack Foundation
@@ -19,11 +20,6 @@ use Libs\ModelSerializers\Many2OneExpandSerializer;
  */
 class SummitAttendeeAdminSerializer extends SummitAttendeeSerializer
 {
-    protected function getMemberSerializer(array $params):string{
-        if(isset($params['serializer_type']))
-            return $params['serializer_type'];
-        return SerializerRegistry::SerializerType_Admin;
-    }
     protected static $array_mappings = [
         'VirtualCheckedIn' => 'has_virtual_check_in:json_boolean',
     ];
@@ -38,5 +34,40 @@ class SummitAttendeeAdminSerializer extends SummitAttendeeSerializer
             'getter' => 'getNotes',
             'should_verify_relation' => true
         ],
+        'member' => [
+            'type' => SummitAttendeeMemberExpandSerializer::class,
+            'original_attribute' => 'member_id',
+            'getter' => 'getMember',
+            'has' => 'hasMember',
+            'serializer_type' => SerializerRegistry::SerializerType_Admin,
+        ],
     ];
+
+    /**
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     */
+    public function serialize($expand = null, array $fields = [], array $relations = [], array $params = [])
+    {
+        $values = parent::serialize($expand, $fields, $relations, $params);
+
+        $attendee = $this->object;
+        if (!$attendee instanceof SummitAttendee) return $values;
+
+        // Same fallback pattern as OpenStackReleaseSerializer::serialize() for `components`:
+        // if `notes` is requested but not expanded, send ids; !isset(...) guards against
+        // clobbering the full-object list the parent's own _expand() pass may have set.
+        if (in_array('notes', $relations) && !isset($values['notes'])) {
+            $notes = [];
+            foreach ($attendee->getNotes() as $note) {
+                $notes[] = $note->getId();
+            }
+            $values['notes'] = $notes;
+        }
+
+        return $values;
+    }
 }

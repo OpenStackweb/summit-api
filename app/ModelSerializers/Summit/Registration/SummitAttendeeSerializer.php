@@ -14,6 +14,8 @@
 
 use App\ModelSerializers\Traits\RequestScopedCache;
 use Libs\ModelSerializers\AbstractSerializer;
+use Libs\ModelSerializers\Many2OneExpandSerializer;
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\SummitAttendee;
 /**
  * Class SummitAttendeeSerializer
@@ -38,12 +40,6 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
         'Status'                  => 'status:json_string',
         'ManagerId'               => 'manager_id:json_int',
     ];
-
-    protected function getMemberSerializer(array $params):string{
-        if(isset($params['serializer_type']))
-           return $params['serializer_type'];
-        return SerializerRegistry::SerializerType_Public;
-    }
 
     protected static $allowed_relations = [
         'extra_questions',
@@ -78,20 +74,21 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
 
             $attendee = $this->object;
             if(!$attendee instanceof SummitAttendee) return [];
-            $serializer_type = SerializerRegistry::SerializerType_Public;
-
-            if(isset($params['serializer_type']))
-                $serializer_type = $params['serializer_type'];
-            $summit         = $attendee->getSummit();
 
             $beginVotingDate = $params['begin_attendee_voting_period_date'] ?? null;
             $endVotingDate   = $params['end_attendee_voting_period_date'] ?? null;
             $track_group_id  = $params['presentation_votes_track_group_id'] ?? null;
+
+            // parent::serialize() already runs _expand() internally (using $expand_mappings),
+            // so a matching expand token sets the full-object key (`tickets`, `member`, ...)
+            // right here, before any of the id-list fallbacks below run. Each fallback below
+            // guards with !isset(...) - same pattern as OpenStackReleaseSerializer::serialize()
+            // - so it only fires when the field wasn't already expanded.
             $values          = parent::serialize($expand, $fields, $relations, $params);
             $member          = null;
             $speaker         = null;
 
-            if (in_array('tickets', $relations)) {
+            if (in_array('tickets', $relations) && !isset($values['tickets'])) {
                 $count = 0;
                 $tickets = [];
                 foreach ($attendee->getTickets() as $t) {
@@ -108,7 +105,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 $values['tickets'] = $tickets;
             }
 
-            if (in_array('extra_questions', $relations)) {
+            if (in_array('extra_questions', $relations) && !isset($values['extra_questions'])) {
                 $extra_question_answers = [];
 
                 foreach ($attendee->getExtraQuestionAnswers() as $answer) {
@@ -117,7 +114,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 $values['extra_questions'] = $extra_question_answers;
             }
 
-            if (in_array('presentation_votes', $relations)) {
+            if (in_array('presentation_votes', $relations) && !isset($values['presentation_votes'])) {
                 $presentation_votes = [];
 
                 foreach ($attendee->getPresentationVotes($beginVotingDate, $endVotingDate, $track_group_id) as $vote) {
@@ -128,10 +125,10 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
 
             if($attendee->hasMember())
             {
-                $member               = $attendee->getMember();
-                $values['member_id']  = $member->getId();
-                $speaker              = $summit->getSpeakerByMember($member);
-                if (!is_null($speaker)) {
+                $member  = $attendee->getMember();
+                $speaker = $attendee->getSummit()->getSpeakerByMember($member);
+                if (!isset($values['member'])) $values['member_id'] = $member->getId();
+                if (!is_null($speaker) && !isset($values['speaker'])) {
                     $values['speaker_id'] = intval($speaker->getId());
                 }
             }
@@ -144,7 +141,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 $values['ticket_types'] = $attendee->getBoughtTicketTypes();
             }
 
-            if (in_array('allowed_access_levels', $relations)) {
+            if (in_array('allowed_access_levels', $relations) && !isset($values['allowed_access_levels'])) {
                 $allowed_access_levels = [];
                 foreach($attendee->getAllowedAccessLevels() as $al){
                     $allowed_access_levels[] = $al->getId();
@@ -152,7 +149,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 $values['allowed_access_levels'] = $allowed_access_levels;
             }
 
-            if (in_array('allowed_features', $relations)) {
+            if (in_array('allowed_features', $relations) && !isset($values['allowed_features'])) {
                 $allowed_features = [];
                 foreach($attendee->getAllowedBadgeFeatures() as $f){
                     $allowed_features[] = $f->getId();
@@ -160,7 +157,7 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 $values['allowed_features'] = $allowed_features;
             }
 
-            if (in_array('tags', $relations)) {
+            if (in_array('tags', $relations) && !isset($values['tags'])) {
                 $tags = [];
                 foreach($attendee->getTags() as $t){
                     $tags[] = $t->getId();
@@ -168,182 +165,80 @@ class SummitAttendeeSerializer extends SilverStripeSerializer
                 $values['tags'] = $tags;
             }
 
-            if (!empty($expand)) {
-                $exp_expand = explode(',', $expand);
-                foreach ($exp_expand as $relation) {
-                    $relation = trim($relation);
-                    switch ($relation) {
-                        case 'tickets': {
-                            if (!in_array('tickets', $relations)) break;
-                            unset($values['tickets']);
-                            $tickets = [];
-                            $count = 0;
-                            foreach($attendee->getTickets() as $t)
-                            {
-                                if (!$t->hasTicketType()) continue;
-                                if ($t->isCancelled()) continue;
-                                if (!$t->isActive()) continue;
-                                $tickets[] = SerializerRegistry::getInstance()->getSerializer($t)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                                $count++;
-                                /*if (AbstractSerializer::MaxCollectionPage < $count) {
-                                    $values['tickets_has_more'] = true;
-                                    break;
-                                }*/
-                            }
-                            $values['tickets'] = $tickets;
-                        }
-                            break;
-                        case 'extra_questions': {
-                            if (!in_array('extra_questions', $relations)) break;
-                            unset($values['extra_questions']);
-                            $extra_question_answers = [];
-                            foreach($attendee->getExtraQuestionAnswers() as $answer)
-                            {
-                                $extra_question_answers[] = SerializerRegistry::getInstance()->getSerializer($answer)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                            $values['extra_questions'] = $extra_question_answers;
-                        }
-                            break;
-                        case 'presentation_votes': {
-                            if (!in_array('presentation_votes', $relations)) break;
-                            unset($values['presentation_votes']);
-                            $presentation_votes = [];
-                            foreach($attendee->getPresentationVotes($beginVotingDate, $endVotingDate, $track_group_id) as $vote)
-                            {
-                                $presentation_votes[] = SerializerRegistry::getInstance()->getSerializer($vote)
-                                    ->serialize(
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        $params
-                                    );
-                            }
-                            $values['presentation_votes'] = $presentation_votes;
-                        }
-                            break;
-                        case 'allowed_features':{
-                            if (!in_array('allowed_features', $relations)) break;
-                            unset($values['allowed_features']);
-                            $allowed_features = [];
-                            foreach($attendee->getAllowedBadgeFeatures() as $f){
-                                $allowed_features[] = SerializerRegistry::getInstance()
-                                    ->getSerializer($f)
-                                    ->serialize(
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        $params
-                                    );
-                            }
-                            $values['allowed_features'] = $allowed_features;
-                        }
-                            break;
-                        case 'allowed_access_levels':{
-                            if (!in_array('allowed_access_levels', $relations)) break;
-                            unset($values['allowed_access_levels']);
-                            $allowed_access_levels = [];
-                            foreach($attendee->getAllowedAccessLevels() as $al){
-                                $allowed_access_levels[] = SerializerRegistry::getInstance()
-                                    ->getSerializer($al)
-                                    ->serialize(
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        $params
-                                    );
-                            }
-                            $values['allowed_access_levels'] = $allowed_access_levels;
-                        }
-                            break;
-                        case 'speaker': {
-                            if (!is_null($speaker))
-                            {
-                                unset($values['speaker_id']);
-                                $values['speaker'] = SerializerRegistry::getInstance()->getSerializer($speaker)->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                        }
-                            break;
-                        case 'member':{
-                            if($attendee->hasMember())
-                            {
-                                unset($values['member_id']);
-                                $values['member']    = SerializerRegistry::getInstance()
-                                    ->getSerializer($attendee->getMember(), $this->getMemberSerializer($params))
-                                    ->serialize(
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        ['summit' => $attendee->getSummit()]);
-                            }
-                        }
-                            break;
-                        case 'company':
-                            {
-
-                                if ($attendee->hasCompany()) {
-                                    unset($values['company_id']);
-                                    $values['company'] = SerializerRegistry::getInstance()->getSerializer($attendee->getCompany())->serialize
-                                    (
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        $params
-                                    );
-                                }
-                            }
-                            break;
-                        case 'manager':{
-                            if($attendee->hasManager()){
-                                unset($values['manager_id']);
-                                $values['manager'] = SerializerRegistry::getInstance()->getSerializer($attendee->getManager())->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                    $params
-                                );
-                            }
-                        }
-                        break;
-                        case 'tags':
-                            if (!in_array('tags', $relations)) break;
-                            unset($values['tags']);
-                            $tags = [];
-                            foreach($attendee->getTags() as $t){
-                                $tags[] = SerializerRegistry::getInstance()
-                                    ->getSerializer($t)
-                                    ->serialize(
-                                        AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                        AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                        $params
-                                    );
-                            }
-                            $values['tags'] = $tags;
-                    }
-                }
-            }
-
             return $values;
         });
 
     }
+
+    public static function shouldSkipTicket($ticket, array $params): bool
+    {
+        if (!$ticket->hasTicketType()) return true;
+        if ($ticket->isCancelled()) return true;
+        if (!$ticket->isActive()) return true;
+        return false;
+    }
+
+    protected static $expand_mappings = [
+        'summit' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'summit_id',
+            'getter' => 'getSummit',
+            'has' => 'hasSummit',
+        ],
+        'company' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'company_id',
+            'getter' => 'getCompany',
+            'has' => 'hasCompany',
+        ],
+        'manager' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'manager_id',
+            'getter' => 'getManager',
+            'has' => 'hasManager',
+        ],
+        'member' => [
+            'type' => SummitAttendeeMemberExpandSerializer::class,
+            'original_attribute' => 'member_id',
+            'getter' => 'getMember',
+            'has' => 'hasMember',
+            'serializer_type' => SerializerRegistry::SerializerType_Public,
+        ],
+        'speaker' => [
+            'type' => SummitAttendeeSpeakerExpandSerializer::class,
+            'original_attribute' => 'speaker_id',
+            'getter' => 'getMember',
+        ],
+        'tickets' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getTickets',
+            'should_verify_relation' => true,
+            'should_skip_rule' => 'ModelSerializers\\SummitAttendeeSerializer::shouldSkipTicket',
+        ],
+        'extra_questions' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getExtraQuestionAnswers',
+            'should_verify_relation' => true,
+        ],
+        'presentation_votes' => [
+            'type' => SummitAttendeePresentationVotesExpandSerializer::class,
+            'getter' => 'getPresentationVotes',
+            'should_verify_relation' => true,
+        ],
+        'allowed_access_levels' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAllowedAccessLevels',
+            'should_verify_relation' => true,
+        ],
+        'allowed_features' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getAllowedBadgeFeatures',
+            'should_verify_relation' => true,
+        ],
+        'tags' => [
+            'type' => Many2OneExpandSerializer::class,
+            'getter' => 'getTags',
+            'should_verify_relation' => true,
+        ],
+    ];
 }

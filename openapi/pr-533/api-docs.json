@@ -88140,58 +88140,89 @@
                 "type": "object"
             },
             "AddAddOnRequest": {
-                "required": [
-                    "name",
-                    "type"
-                ],
-                "properties": {
-                    "name": {
-                        "description": "Add-on name",
-                        "type": "string",
-                        "example": "Premium Badge"
+                "oneOf": [
+                    {
+                        "required": [
+                            "name",
+                            "type"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Add-on name",
+                                "type": "string",
+                                "example": "B1"
+                            },
+                            "type": {
+                                "description": "Add-on Type Name",
+                                "type": "string",
+                                "example": "Booth"
+                            }
+                        },
+                        "type": "object"
                     },
-                    "type": {
-                        "description": "Add-on type",
-                        "type": "string",
-                        "example": "badge"
-                    },
-                    "label": {
-                        "description": "Add-on label",
-                        "type": "string",
-                        "example": "Premium"
-                    },
-                    "size": {
-                        "description": "Add-on size",
-                        "type": "string",
-                        "example": "large"
+                    {
+                        "required": [
+                            "name",
+                            "type_id"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Add-on name",
+                                "type": "string",
+                                "example": "B1 "
+                            },
+                            "type_id": {
+                                "description": "Add-on Type Id",
+                                "type": "integer",
+                                "example": "123"
+                            }
+                        },
+                        "type": "object"
                     }
-                },
-                "type": "object"
+                ]
             },
             "UpdateAddOnRequest": {
-                "properties": {
-                    "name": {
-                        "description": "Add-on name",
-                        "type": "string",
-                        "example": "Premium Badge"
+                "type": "object",
+                "oneOf": [
+                    {
+                        "required": [
+                            "name",
+                            "type"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Add-on name",
+                                "type": "string",
+                                "example": "B1"
+                            },
+                            "type": {
+                                "description": "Add-on Type Name",
+                                "type": "string",
+                                "example": "Booth"
+                            }
+                        },
+                        "type": "object"
                     },
-                    "type": {
-                        "description": "Add-on type",
-                        "type": "string",
-                        "example": "badge"
-                    },
-                    "label": {
-                        "description": "Add-on label",
-                        "type": "string",
-                        "example": "Premium"
-                    },
-                    "size": {
-                        "description": "Add-on size",
-                        "type": "string",
-                        "example": "large"
+                    {
+                        "required": [
+                            "name",
+                            "type_id"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Add-on name",
+                                "type": "string",
+                                "example": "B1 "
+                            },
+                            "type_id": {
+                                "description": "Add-on Type Id",
+                                "type": "integer",
+                                "example": "123"
+                            }
+                        },
+                        "type": "object"
                     }
-                },
-                "type": "object"
+                ]
             },
             "SummitTrackChair": {
                 "description": "Public view of track chair (limited member info without email)",

@@ -239,8 +239,10 @@ class RedisCacheService implements ICacheService
     public function incCounter($counter_name, $ttl = 0)
     {
         return $this->retryOnConnectionError(function ($conn) use ($counter_name, $ttl) {
-            if ($conn->set($counter_name, 1, ['EX' => (int)$ttl, 'NX' => true]) !== null) {
-                return 1;
+            if ($ttl > 0) {
+                if ($conn->set($counter_name, 1, 'EX', (int)$ttl, 'NX') !== null) return 1;
+            } else {
+                if ($conn->set($counter_name, 1, 'NX') !== null) return 1;
             }
             return (int)$conn->incr($counter_name);
         }, 0);

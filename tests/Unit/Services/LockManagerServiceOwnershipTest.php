@@ -137,7 +137,8 @@ class LockManagerServiceOwnershipTest extends TestCase
      * Known failure mode: when deleteIfValueMatches returns false (Redis
      * unavailable), the token is passed to the Lua script but deletion fails
      * silently. The Redis key persists until TTL expiry; there is no
-     * application-level retry path after a failed release.
+     * application-level retry path after a failed release. releaseLock must
+     * surface this as a counter increment so the mismatch is observable.
      */
     public function testReleaseLockWhenRedisDownLeavesKeyUntilTtl(): void
     {
@@ -145,6 +146,7 @@ class LockManagerServiceOwnershipTest extends TestCase
         $cache->shouldReceive('addSingleValue')->once()->andReturn(true);
         // Simulate Redis unavailable — deletion silently fails.
         $cache->shouldReceive('deleteIfValueMatches')->once()->andReturn(false);
+        $cache->shouldReceive('incCounter')->once()->with('lock_manager.release_mismatch');
 
         $service     = new LockManagerService($cache);
         $callbackRan = false;
@@ -157,5 +159,6 @@ class LockManagerServiceOwnershipTest extends TestCase
         // The Redis key was NOT deleted; only TTL expiry can free it.
         // A subsequent acquire attempt on the same resource will fail until the
         // TTL elapses — there is no application-level retry path.
+        // Mockery tearDown verifies the mismatch counter was incremented.
     }
 }

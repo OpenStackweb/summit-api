@@ -76,7 +76,11 @@ final class LockManagerService implements ILockManagerService {
     public function releaseLock(string $name, string $token): void
     {
         Log::debug(sprintf("LockManagerService::releaseLock name %s", $name));
-        $this->cache_service->deleteIfValueMatches($name, $token);
+        $released = $this->cache_service->deleteIfValueMatches($name, $token);
+        if (!$released) {
+            Log::warning(sprintf("LockManagerService::releaseLock name %s token %s lock was not held by this token at release time (expired or stolen).", $name, $token));
+            $this->cache_service->incCounter('lock_manager.release_mismatch');
+        }
     }
 
     /**

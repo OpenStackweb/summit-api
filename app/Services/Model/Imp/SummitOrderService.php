@@ -268,6 +268,7 @@ final class SagaFactory
                 $this->member_repository,
                 $this->attendee_repository,
                 $this->ticket_type_repository,
+                $this->promo_code_repository,
                 $this->tx_service,
                 $this->lock_service
             ));
@@ -1482,6 +1483,11 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
     private $ticket_type_repository;
 
     /**
+     * @var ISummitRegistrationPromoCodeRepository
+     */
+    private $promo_code_repository;
+
+    /**
      * @var ILockManagerService
      */
     private $lock_service;
@@ -1494,19 +1500,21 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
      * @param IMemberRepository $member_repository
      * @param ISummitAttendeeRepository $attendee_repository
      * @param ISummitTicketTypeRepository $ticket_type_repository
+     * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
      */
     public function __construct
     (
-        ?Member                     $owner,
-        Summit                      $summit,
-        array                       $payload,
-        IMemberRepository           $member_repository,
-        ISummitAttendeeRepository   $attendee_repository,
-        ISummitTicketTypeRepository $ticket_type_repository,
-        ITransactionService         $tx_service,
-        ILockManagerService         $lock_service
+        ?Member                                 $owner,
+        Summit                                  $summit,
+        array                                   $payload,
+        IMemberRepository                       $member_repository,
+        ISummitAttendeeRepository               $attendee_repository,
+        ISummitTicketTypeRepository             $ticket_type_repository,
+        ISummitRegistrationPromoCodeRepository  $promo_code_repository,
+        ITransactionService                     $tx_service,
+        ILockManagerService                     $lock_service
     )
     {
         $this->tx_service = $tx_service;
@@ -1517,6 +1525,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
         $this->member_repository = $member_repository;
         $this->attendee_repository = $attendee_repository;
         $this->ticket_type_repository = $ticket_type_repository;
+        $this->promo_code_repository = $promo_code_repository;
     }
 
     public function run(array $formerState): array
@@ -1562,7 +1571,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                     if (empty($attendee_last_name))
                         $attendee_last_name = $this->payload['owner_last_name'] ?? $this->owner->getLastName();
 
-                    $promo_code = $this->summit->getPromoCodeByCode($promo_code_val);
+                    $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $promo_code_val);
                     if (!PromoCodesUtils::isPrePaidPromoCode($promo_code))
                         throw new EntityNotFoundException("Promo code is not found.");
 

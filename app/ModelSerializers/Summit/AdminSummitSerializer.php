@@ -24,7 +24,6 @@ use ModelSerializers\SummitSerializer;
 final class AdminSummitSerializer extends SummitSerializer
 {
     protected static $array_mappings = [
-        'AvailableOnApi' => 'available_on_api:json_boolean',
         'MaxSubmissionAllowedPerUser' => 'max_submission_allowed_per_user:json_int',
         'RegistrationLink' => 'registration_link:json_string',
         'Link' => 'link:json_string',
@@ -70,7 +69,6 @@ final class AdminSummitSerializer extends SummitSerializer
     ];
 
     protected static $allowed_fields = [
-        'available_on_api',
         'max_submission_allowed_per_user',
         'registration_link',
         'link',

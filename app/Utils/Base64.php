@@ -17,9 +17,9 @@ final class Base64
     public static function looksLikeBase64(string $s): bool
     {
         if ($s === '') return false;
-        // Solo alfabeto base64 y '=' de padding
-        if (!preg_match('#^[A-Za-z0-9+/]*={0,2}$#', $s)) return false;
-        // Longitud múltiplo de 4 (permitimos sin padding, lo añadimos abajo)
+        // Standard base64 alphabet (RFC 4648 §4) or URL-safe (§5: '-' and '_'), plus '=' padding
+        if (!preg_match('#^[A-Za-z0-9+/_-]*={0,2}$#', $s)) return false;
+        // Length multiple of 4 (padding may be omitted; it gets added below)
         return (strlen($s) % 4) === 0 || (strlen($s) % 4) === 2 || (strlen($s) % 4) === 3;
     }
 
@@ -31,6 +31,8 @@ final class Base64
 
     public static function tryBase64Decode(string $s): ?string
     {
+        // strict base64_decode rejects the URL-safe alphabet: normalize it first
+        $s = strtr($s, '-_', '+/');
         $padded = self::padBase64($s);
         $decoded = base64_decode($padded, true);
         return ($decoded === false) ? null : $decoded;

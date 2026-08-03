@@ -97,6 +97,7 @@ class SummitSerializer extends SilverStripeSerializer
         'MarketingSiteOauth2ClientScopes' => 'marketing_site_oauth2_client_scopes:json_string',
         'DefaultTicketTypeCurrency' => 'default_ticket_type_currency:json_string',
         'DefaultTicketTypeCurrencySymbol' => 'default_ticket_type_currency_symbol:json_string',
+        'AvailableOnApi' => 'available_on_api:json_boolean',
     ];
 
     protected static $allowed_fields = [
@@ -173,6 +174,7 @@ class SummitSerializer extends SilverStripeSerializer
         'schedule_event_detail_url',
         'page_url',
         'timestamp',
+        'available_on_api',
     ];
 
     protected static $allowed_relations = [

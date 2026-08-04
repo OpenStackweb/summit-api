@@ -14,6 +14,7 @@
 
 use App\Security\SummitScopes;
 use Doctrine\Common\Collections\ArrayCollection;
+use Illuminate\Support\Facades\Cache;
 use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\Presentation;
@@ -122,15 +123,20 @@ final class PresentationMediaUploadsVisibilityTest extends TestCase
     /**
      * @param Presentation $presentation
      * @param IResourceServerContext $context
+     * @param array $params forwarded to serialize(), which is where use_cache is read.
      * @return array the media upload ids this caller receives
      */
-    private function serializeMediaUploadIds(Presentation $presentation, IResourceServerContext $context): array
+    private function serializeMediaUploadIds(
+        Presentation $presentation,
+        IResourceServerContext $context,
+        array $params = []
+    ): array
     {
         $serializer = new PresentationSerializer($presentation, $context);
         // fields is narrowed to id so the attribute-mapping loop in AbstractSerializer only
         // reaches Presentation::getId(); every other mapped getter is irrelevant here and would
         // otherwise have to be stubbed for no gain.
-        $values = $serializer->serialize(null, ['id'], ['media_uploads']);
+        $values = $serializer->serialize(null, ['id'], ['media_uploads'], $params);
 
         $this->assertArrayHasKey('media_uploads', $values);
         return $values['media_uploads'];
@@ -205,5 +211,63 @@ final class PresentationMediaUploadsVisibilityTest extends TestCase
         );
 
         $this->assertSame([self::ApprovedUploadId], $ids);
+    }
+
+    /**
+     * A cached entry that reports as present and then reads back as unavailable must degrade to
+     * a fresh build, not to an error. The entry can expire on its own TTL, be evicted under
+     * memory pressure, or be dropped by a cache flush, and none of that is rare enough on the
+     * voteable-presentation endpoints - the only ones that pass use_cache - to leave unhandled.
+     *
+     * The assertion is on the payload rather than on how the cache was consulted, so it holds
+     * whether the read is one call or two.
+     */
+    public function testUnavailableCachedValueIsTreatedAsAMiss()
+    {
+        Cache::shouldReceive('has')->zeroOrMoreTimes()->andReturn(true);
+        Cache::shouldReceive('get')->zeroOrMoreTimes()->andReturn(null);
+        Cache::shouldReceive('put')->zeroOrMoreTimes()->andReturn(true);
+
+        $context = Mockery::mock(IResourceServerContext::class);
+        $context->shouldReceive('getApplicationType')->andReturn('JS_CLIENT');
+        $context->shouldReceive('getCurrentUser')->andReturn(null);
+
+        $ids = $this->serializeMediaUploadIds(
+            $this->buildPresentation(90107),
+            $context,
+            ['use_cache' => true]
+        );
+
+        $this->assertSame([self::ApprovedUploadId], $ids);
+    }
+
+    /**
+     * The other side of that read: a decodable entry is still served from cache, and the
+     * media_uploads on it are still resolved for the caller asking now rather than taken from
+     * whoever populated the key. Without this the previous test would pass just as well against
+     * a serializer that had stopped reading the cache altogether.
+     */
+    public function testCacheHitIsServedButMediaUploadsAreResolvedFresh()
+    {
+        // A payload as it is stored: media_uploads is absent by construction, and the stale value
+        // is one no unprivileged caller may receive.
+        Cache::shouldReceive('has')->zeroOrMoreTimes()->andReturn(true);
+        Cache::shouldReceive('get')->zeroOrMoreTimes()->andReturn(
+            json_encode(['id' => 90108, 'title' => 'from cache', 'media_uploads' => [self::DraftUploadId]])
+        );
+        Cache::shouldReceive('put')->zeroOrMoreTimes()->andReturn(true);
+
+        $context = Mockery::mock(IResourceServerContext::class);
+        $context->shouldReceive('getApplicationType')->andReturn('JS_CLIENT');
+        $context->shouldReceive('getCurrentUser')->andReturn(null);
+
+        $serializer = new PresentationSerializer($this->buildPresentation(90108), $context);
+        $values = $serializer->serialize(null, ['id'], ['media_uploads'], ['use_cache' => true]);
+
+        // Came off the cached payload: parent::serialize() was never reached, and it does not
+        // produce this field under fields=['id'] anyway.
+        $this->assertSame('from cache', $values['title']);
+        // ...but this one did not.
+        $this->assertSame([self::ApprovedUploadId], $values['media_uploads']);
     }
 }

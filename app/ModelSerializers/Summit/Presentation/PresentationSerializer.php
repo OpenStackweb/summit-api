@@ -224,10 +224,18 @@ class PresentationSerializer extends SummitEventSerializer
 
         $use_cache = $params['use_cache'] ?? false;
 
-        if($use_cache && Cache::has($key)){
-            $values = json_decode(Cache::get($key), true);
-            Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
-            return $this->withMediaUploads($values, $expand, $fields, $relations);
+        if($use_cache){
+            // One read, not Cache::has() followed by Cache::get(): the entry can expire on its
+            // own TTL, be evicted, or be flushed in the window between the two, and the second
+            // call would then hand back null for a key the first call vouched for. Anything that
+            // does not decode to an array - a miss, that race, a truncated write - falls through
+            // and is rebuilt.
+            $cached = Cache::get($key);
+            $values = is_string($cached) ? json_decode($cached, true) : null;
+            if(is_array($values)){
+                Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
+                return $this->withMediaUploads($values, $expand, $fields, $relations);
+            }
         }
 
         $values = parent::serialize($expand, $fields, $relations, $params);

@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
+use models\oauth2\IResourceServerContext;
 use models\summit\Presentation;
 use models\summit\PresentationType;
 
@@ -25,6 +27,14 @@ use models\summit\PresentationType;
 class PresentationSerializer extends SummitEventSerializer
 {
     const CacheTTL = 1200;
+
+    /**
+     * Memo for getMediaUploadsSerializerType(). Instance-scoped on purpose - see that method.
+     * Private rather than protected: the subclasses that override the method answer with a
+     * constant and have nothing to memo.
+     * @var string|null
+     */
+    private ?string $media_uploads_serializer_type = null;
 
     protected static $array_mappings = [
         'CreatorId'               => 'creator_id:json_int',
@@ -79,16 +89,136 @@ class PresentationSerializer extends SummitEventSerializer
     ];
 
     /**
+     * Resolves who is allowed to see every media upload attached to this presentation, approved
+     * or not. The reference point is OAuth2SummitEventsApiController::getSerializerType(), which
+     * decides the serializer type of the presentation itself - where this method is narrower than
+     * that one the presentation is served Private while its uploads are served Public, which is
+     * the bug it used to have for summit admins and for service accounts.
+     *
+     * It is deliberately still narrower in one place. The controller grants Private to any
+     * ApplicationType_Service caller; here a service account additionally has to hold
+     * ReadAllPresentationMediaUploads, because these are unpublished files and the application
+     * type on its own would hand them to every service client. Members are aligned with the
+     * controller exactly.
+     *
+     * Two distinct privileged callers:
+     *
+     * - Service accounts (client_credentials, so getCurrentUser() is null by construction) that
+     *   hold the dedicated snapshot scope. The content pipeline stages files pre-event, so it
+     *   needs unapproved uploads. Gated on the scope and not on ApplicationType_Service alone:
+     *   the application type on its own would hand drafts to every service client.
+     * - Members with an admin-level group, or with edit rights over this presentation
+     *   (creator / moderator / speaker).
+     *
      * @return string
      */
     protected function getMediaUploadsSerializerType():string{
+        // Memoized per serializer instance, which is the correct scope and not merely the
+        // convenient one: memberCanEdit() below is answered against THIS presentation, so a
+        // caller can be a speaker on one and a stranger to the next. A request-wide memo would
+        // hand every presentation the first one's answer. SerializerRegistry builds a fresh
+        // serializer per object and none outlive the request, so per-instance already collapses
+        // the repeated work - this method is called once per media upload plus once per
+        // getVisibleMediaUploads(), and it reaches the member's speaker and this presentation's
+        // speaker collection each time.
+        if (!is_null($this->media_uploads_serializer_type))
+            return $this->media_uploads_serializer_type;
+
+        // && short-circuits, so getCurrentScope() is only reached for service accounts
+        $isSnapshotClient =
+            $this->resource_server_context->getApplicationType() === IResourceServerContext::ApplicationType_Service
+            && in_array
+            (
+                SummitScopes::ReadAllPresentationMediaUploads,
+                $this->resource_server_context->getCurrentScope()
+            );
+
+        if ($isSnapshotClient)
+            return $this->media_uploads_serializer_type = SerializerRegistry::SerializerType_Private;
+
         $serializerType = SerializerRegistry::SerializerType_Public;
         $currentUser = $this->resource_server_context->getCurrentUser();
         $presentation = $this->object;
-        if(!is_null($currentUser) && ( $currentUser->isAdmin() || $presentation->memberCanEdit($currentUser))){
+        if(!is_null($currentUser) && ( $currentUser->isAdmin() || $currentUser->isSummitAdmin() || $presentation->memberCanEdit($currentUser))){
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
-        return $serializerType;
+        return $this->media_uploads_serializer_type = $serializerType;
+    }
+
+    /**
+     * Media uploads visible to the resolved serializer type. A Public caller (no admin/editor
+     * privilege on this presentation) only ever sees uploads marked display_on_site=true — an
+     * uploaded-but-not-yet-approved draft (display_on_site=false, the model's own default) must
+     * never reach an unauthenticated/public response, even via ?expand=media_uploads on the
+     * public events/published endpoints.
+     * @return \Doctrine\Common\Collections\Collection|PresentationMediaUpload[]
+     */
+    protected function getVisibleMediaUploads()
+    {
+        $presentation = $this->object;
+        $mediaUploads = $presentation->getMediaUploads();
+        if ($this->getMediaUploadsSerializerType() === SerializerRegistry::SerializerType_Private) {
+            return $mediaUploads;
+        }
+        return $mediaUploads->filter(function ($mediaUpload) {
+            return $mediaUpload->getDisplayOnSite();
+        });
+    }
+
+    /**
+     * Sets media_uploads on an already-built payload for whoever is asking right now, in the
+     * shape the request asked for: an id list for ?relations=media_uploads, serialized objects
+     * for ?expand=media_uploads, expand winning when both are present.
+     *
+     * This is the only place that decides the value, and it runs on every path - including
+     * after a cache read - because getMediaUploadsSerializerType() resolves per user and per
+     * scope, which nothing in the cache key expresses. Two callers can share a key and still
+     * disagree here: a speaker on the presentation and a plain attendee both serialize through
+     * PresentationSerializer, and a service account holding ReadAllPresentationMediaUploads and
+     * one without it both serialize through AdminPresentationSerializer. Adding the serializer
+     * class to the key would not separate either pair.
+     *
+     * @param array $values
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @return array
+     */
+    private function withMediaUploads(array $values, $expand, array $fields, array $relations): array
+    {
+        // Nothing asked for it: drop whatever a cached payload may be carrying, so a stale
+        // entry can never contribute this field to a response that did not request it.
+        unset($values['media_uploads']);
+
+        if (in_array('media_uploads', $relations)) {
+            $media_uploads = [];
+            foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
+                $media_uploads[] = $mediaUpload->getId();
+            }
+            $values['media_uploads'] = $media_uploads;
+        }
+
+        if (!empty($expand)) {
+            foreach (explode(',', $expand) as $relation) {
+                if (trim($relation) !== 'media_uploads') continue;
+
+                $media_uploads = [];
+                foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
+                    $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
+                    (
+                        $mediaUpload, $this->getMediaUploadsSerializerType()
+                    )->serialize
+                    (
+                        AbstractSerializer::filterExpandByPrefix($expand, 'media_uploads'),
+                        AbstractSerializer::filterFieldsByPrefix($fields, 'media_uploads'),
+                        AbstractSerializer::filterFieldsByPrefix($relations, 'media_uploads'),
+                    );
+                }
+                $values['media_uploads'] = $media_uploads;
+            }
+        }
+
+        return $values;
     }
 
 
@@ -104,50 +234,74 @@ class PresentationSerializer extends SummitEventSerializer
         $presentation = $this->object;
         if(!$presentation instanceof Presentation) return [];
 
-        // Include last_edited timestamp so a presentation update naturally busts the cache
-        // without needing an explicit Cache::forget — the old key just ages out via TTL.
+        // fields and relations are read with in_array() throughout, so their order cannot change
+        // the payload and sorting lets two spellings of one request share an entry. $expand is
+        // deliberately NOT sorted: its relations are dispatched in the order given, and the
+        // speakers and moderator cases both write $values['moderator'] while disagreeing about
+        // moderator_speaker_id, so the order is capable of changing the result.
+        $cache_fields = $fields;
+        $cache_relations = $relations;
+        sort($cache_fields);
+        sort($cache_relations);
+
+        // The digest covers everything that shapes the payload and is not already named in the
+        // readable part of the key. static::class is in it because this method is inherited:
+        // AdminPresentationSerializer and the track-chair and CSV serializers all cache through
+        // here, and their merged $array_mappings add fields the public serializer never emits.
+        //
+        // INVARIANT: anything the payload depends on either appears here or stays out of the
+        // cache. static::class covers audience today only because the remaining differences are
+        // class-determined - the mappings are static, getSerializerType() returns a constant per
+        // class, and media_uploads, the one per-user field, is stripped before Cache::put. A
+        // per-user value added to the mappings, or read before parent::serialize() rather than
+        // after it the way AdminPresentationCSVSerializer and TrackChairPresentationSerializer
+        // do, would silently break that.
+        //
+        // json_encode rather than concatenation: the parts contain "_" and "," themselves
+        // (media_uploads, extra_questions, selection_plan), so joining them on those characters
+        // let distinct requests render one key. sha256 rather than md5 because the parts come
+        // from the query string and a collision here means serving one audience's payload to
+        // another - the exact failure the class component is here to prevent.
+        //
+        // last_edited stays readable so a presentation update naturally busts every entry it has
+        // without an explicit Cache::forget, and so an operator can still scan or drop one
+        // presentation's entries by pattern.
+        // The parts come raw off the query string, and percent-decoding hands them over as
+        // bytes: a malformed sequence like %FF makes json_encode() return false, which hash()
+        // would silently coerce to "" - collapsing class, expand, fields and relations onto one
+        // shared digest per presentation, the exact cross-audience collision the digest exists
+        // to prevent. A request that cannot be keyed unambiguously bypasses the cache entirely.
+        $digest_source = json_encode
+        ([
+            'serializer' => static::class,
+            'expand'     => $expand ?? "",
+            'fields'     => $cache_fields,
+            'relations'  => $cache_relations,
+        ]);
+
         $key =
             sprintf
             (
-                "public_presentation_%s_%s_%s_%s_%s",
+                "presentation_%s_%s_%s",
                 $presentation->getId(),
                 $presentation->getLastEditedUTC()?->getTimestamp() ?? 0,
-                $expand ?? "",
-                implode(",",$fields),
-                implode(",", $relations)
+                hash('sha256', (string) $digest_source)
             );
 
-        $use_cache = $params['use_cache'] ?? false;
+        $use_cache = ($params['use_cache'] ?? false) && $digest_source !== false;
 
-        if($use_cache && Cache::has($key)){
-            $values = json_decode(Cache::get($key), true);
-            Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
-            if (!empty($expand)) {
-                foreach (explode(',', $expand) as $relation) {
-                    $relation = trim($relation);
-                    switch ($relation) {
-                        case 'media_uploads':
-                        {
-                            $media_uploads = [];
-
-                            foreach ($presentation->getMediaUploads() as $mediaUpload) {
-                                $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
-                                (
-                                    $mediaUpload, $this->getMediaUploadsSerializerType()
-                                )->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                );
-                            }
-
-                            $values['media_uploads'] = $media_uploads;
-                        }
-                    }
-                }
+        if($use_cache){
+            // One read, not Cache::has() followed by Cache::get(): the entry can expire on its
+            // own TTL, be evicted, or be flushed in the window between the two, and the second
+            // call would then hand back null for a key the first call vouched for. Anything that
+            // does not decode to an array - a miss, that race, a truncated write - falls through
+            // and is rebuilt.
+            $cached = Cache::get($key);
+            $values = is_string($cached) ? json_decode($cached, true) : null;
+            if(is_array($values)){
+                Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
+                return $this->withMediaUploads($values, $expand, $fields, $relations);
             }
-            return $values;
         }
 
         $values = parent::serialize($expand, $fields, $relations, $params);
@@ -190,16 +344,6 @@ class PresentationSerializer extends SummitEventSerializer
                 $videos[] = $video->getId();
             }
             $values['videos'] = $videos;
-        }
-
-        if(in_array('media_uploads', $relations))
-        {
-            $media_uploads = [];
-            foreach ($presentation->getMediaUploads() as $mediaUpload) {
-                $media_uploads[] = $mediaUpload->getId();
-            }
-
-            $values['media_uploads'] = $media_uploads;
         }
 
         if(in_array('extra_questions', $relations))
@@ -334,24 +478,6 @@ class PresentationSerializer extends SummitEventSerializer
                         $values['videos'] = $videos;
                     }
                     break;
-                    case 'media_uploads':{
-                        $media_uploads = [];
-
-                        foreach ($presentation->getMediaUploads() as $mediaUpload) {
-                            $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $mediaUpload, $this->getMediaUploadsSerializerType()
-                            )->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                            );
-                        }
-
-                        $values['media_uploads'] = $media_uploads;
-                    }
-                    break;
                     case 'extra_questions':{
                         $answers = [];
                         foreach ($presentation->getExtraQuestionAnswers() as $answer) {
@@ -401,9 +527,16 @@ class PresentationSerializer extends SummitEventSerializer
             }
         }
 
-        if($use_cache)
-            Cache::put($key, json_encode($values), self::CacheTTL);
+        if($use_cache) {
+            // media_uploads is deliberately kept out of the stored payload: it is the one field
+            // here whose value depends on who is asking, and the key has no audience component.
+            // Storing it would make correctness depend on every future reader remembering to
+            // recompute it.
+            $cacheable = $values;
+            unset($cacheable['media_uploads']);
+            Cache::put($key, json_encode($cacheable), self::CacheTTL);
+        }
 
-        return $values;
+        return $this->withMediaUploads($values, $expand, $fields, $relations);
     }
 }

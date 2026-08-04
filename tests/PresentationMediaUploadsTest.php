@@ -19,9 +19,9 @@ use Doctrine\Persistence\ObjectRepository;
 use models\summit\Presentation;
 use models\summit\SummitMediaUploadType;
 /**
- * Class PresentationMediaUploadsTests
+ * Class PresentationMediaUploadsTest
  */
-class PresentationMediaUploadsTests
+class PresentationMediaUploadsTest
     extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
@@ -44,17 +44,32 @@ class PresentationMediaUploadsTests
     {
         parent::setUp();
         self::$media_file_type_repository = EntityManager::getRepository(SummitMediaFileType::class);
-        $types = self::$media_file_type_repository->findAll();
         self::insertSummitTestData();
+
+        // Built here rather than read from the repository: insertSummitTestData() opens with
+        // DELETE FROM SummitMediaFileType, so anything fetched before it is a detached row by
+        // the time we flush. It cannot reuse self::$default_media_file_type either - that one
+        // carries ".PDF", and SummitMediaUploadType::isValidExtension() compares
+        // strtoupper($ext) against explode('|', ...), so a leading dot never matches.
+        $media_file_type = new SummitMediaFileType();
+        $media_file_type->setName("PNG_".rand(1, 100));
+        $media_file_type->setDescription("PNG");
+        $media_file_type->setAllowedExtensions("PNG");
+        self::$em->persist($media_file_type);
+
         self::$media_upload_type = new SummitMediaUploadType();
-        self::$media_upload_type->setType($types[0]);
+        self::$media_upload_type->setType($media_file_type);
         self::$media_upload_type->setName('TEST');
         self::$media_upload_type->setDescription("TEST");
         self::$media_upload_type->setMaxSize(2048);
         self::$media_upload_type->setMinUploadsQty(2);
         self::$media_upload_type->setMaxUploadsQty(4);
-        self::$media_upload_type->setPrivateStorageType(\App\Models\Utils\IStorageTypesConstants::DropBox);
-        self::$media_upload_type->setPublicStorageType(\App\Models\Utils\IStorageTypesConstants::Swift);
+        self::$media_upload_type->setPrivateStorageType(\App\Models\Utils\IStorageTypesConstants::Local);
+        // Local, not Swift: serializing public_url builds a download strategy for whatever the
+        // type declares, and the Swift one needs an authUrl that neither this container nor CI
+        // provides. The assertion is about public_url being serialized at all, not about which
+        // backend serves it.
+        self::$media_upload_type->setPublicStorageType(\App\Models\Utils\IStorageTypesConstants::Local);
 
         self::$presentation = new Presentation();
         $event_types = self::$summit->getEventTypes();

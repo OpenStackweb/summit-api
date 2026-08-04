@@ -140,6 +140,62 @@ class PresentationSerializer extends SummitEventSerializer
         });
     }
 
+    /**
+     * Sets media_uploads on an already-built payload for whoever is asking right now, in the
+     * shape the request asked for: an id list for ?relations=media_uploads, serialized objects
+     * for ?expand=media_uploads, expand winning when both are present.
+     *
+     * This is the only place that decides the value, and it runs on every path - including
+     * after a cache read - because getMediaUploadsSerializerType() resolves per user and per
+     * scope, which nothing in the cache key expresses. Two callers can share a key and still
+     * disagree here: a speaker on the presentation and a plain attendee both serialize through
+     * PresentationSerializer, and a service account holding ReadAllPresentationMediaUploads and
+     * one without it both serialize through AdminPresentationSerializer. Adding the serializer
+     * class to the key would not separate either pair.
+     *
+     * @param array $values
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @return array
+     */
+    private function withMediaUploads(array $values, $expand, array $fields, array $relations): array
+    {
+        // Nothing asked for it: drop whatever a cached payload may be carrying, so a stale
+        // entry can never contribute this field to a response that did not request it.
+        unset($values['media_uploads']);
+
+        if (in_array('media_uploads', $relations)) {
+            $media_uploads = [];
+            foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
+                $media_uploads[] = $mediaUpload->getId();
+            }
+            $values['media_uploads'] = $media_uploads;
+        }
+
+        if (!empty($expand)) {
+            foreach (explode(',', $expand) as $relation) {
+                if (trim($relation) !== 'media_uploads') continue;
+
+                $media_uploads = [];
+                foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
+                    $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
+                    (
+                        $mediaUpload, $this->getMediaUploadsSerializerType()
+                    )->serialize
+                    (
+                        AbstractSerializer::filterExpandByPrefix($expand, 'media_uploads'),
+                        AbstractSerializer::filterFieldsByPrefix($fields, 'media_uploads'),
+                        AbstractSerializer::filterFieldsByPrefix($relations, 'media_uploads'),
+                    );
+                }
+                $values['media_uploads'] = $media_uploads;
+            }
+        }
+
+        return $values;
+    }
+
 
     /**
      * @param null $expand
@@ -171,32 +227,7 @@ class PresentationSerializer extends SummitEventSerializer
         if($use_cache && Cache::has($key)){
             $values = json_decode(Cache::get($key), true);
             Log::debug(sprintf("PresentationSerializer::serialize cache hit for presentation %s", $presentation->getId()));
-            if (!empty($expand)) {
-                foreach (explode(',', $expand) as $relation) {
-                    $relation = trim($relation);
-                    switch ($relation) {
-                        case 'media_uploads':
-                        {
-                            $media_uploads = [];
-
-                            foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
-                                $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
-                                (
-                                    $mediaUpload, $this->getMediaUploadsSerializerType()
-                                )->serialize
-                                (
-                                    AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                    AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                                );
-                            }
-
-                            $values['media_uploads'] = $media_uploads;
-                        }
-                    }
-                }
-            }
-            return $values;
+            return $this->withMediaUploads($values, $expand, $fields, $relations);
         }
 
         $values = parent::serialize($expand, $fields, $relations, $params);
@@ -239,16 +270,6 @@ class PresentationSerializer extends SummitEventSerializer
                 $videos[] = $video->getId();
             }
             $values['videos'] = $videos;
-        }
-
-        if(in_array('media_uploads', $relations))
-        {
-            $media_uploads = [];
-            foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
-                $media_uploads[] = $mediaUpload->getId();
-            }
-
-            $values['media_uploads'] = $media_uploads;
         }
 
         if(in_array('extra_questions', $relations))
@@ -383,24 +404,6 @@ class PresentationSerializer extends SummitEventSerializer
                         $values['videos'] = $videos;
                     }
                     break;
-                    case 'media_uploads':{
-                        $media_uploads = [];
-
-                        foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
-                            $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
-                            (
-                                $mediaUpload, $this->getMediaUploadsSerializerType()
-                            )->serialize
-                            (
-                                AbstractSerializer::filterExpandByPrefix($expand, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($fields, $relation),
-                                AbstractSerializer::filterFieldsByPrefix($relations, $relation),
-                            );
-                        }
-
-                        $values['media_uploads'] = $media_uploads;
-                    }
-                    break;
                     case 'extra_questions':{
                         $answers = [];
                         foreach ($presentation->getExtraQuestionAnswers() as $answer) {
@@ -450,9 +453,16 @@ class PresentationSerializer extends SummitEventSerializer
             }
         }
 
-        if($use_cache)
-            Cache::put($key, json_encode($values), self::CacheTTL);
+        if($use_cache) {
+            // media_uploads is deliberately kept out of the stored payload: it is the one field
+            // here whose value depends on who is asking, and the key has no audience component.
+            // Storing it would make correctness depend on every future reader remembering to
+            // recompute it.
+            $cacheable = $values;
+            unset($cacheable['media_uploads']);
+            Cache::put($key, json_encode($cacheable), self::CacheTTL);
+        }
 
-        return $values;
+        return $this->withMediaUploads($values, $expand, $fields, $relations);
     }
 }

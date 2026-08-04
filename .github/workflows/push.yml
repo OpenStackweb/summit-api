@@ -68,7 +68,7 @@ jobs:
                     - { name: "CacheOptimizations", filter: "--filter '(PresentationSpeakerCacheTest|ResourceServerContextTest)'" }
                     # Named by path because no job in this matrix runs the tests/ root, only its
                     # subdirectories - a file added there runs nowhere unless it is listed here.
-                    - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php" }
+                    - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php tests/PresentationSerializerCacheKeyTest.php" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

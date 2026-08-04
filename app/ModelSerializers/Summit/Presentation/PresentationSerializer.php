@@ -209,17 +209,55 @@ class PresentationSerializer extends SummitEventSerializer
         $presentation = $this->object;
         if(!$presentation instanceof Presentation) return [];
 
-        // Include last_edited timestamp so a presentation update naturally busts the cache
-        // without needing an explicit Cache::forget — the old key just ages out via TTL.
+        // fields and relations are read with in_array() throughout, so their order cannot change
+        // the payload and sorting lets two spellings of one request share an entry. $expand is
+        // deliberately NOT sorted: its relations are dispatched in the order given, and the
+        // speakers and moderator cases both write $values['moderator'] while disagreeing about
+        // moderator_speaker_id, so the order is capable of changing the result.
+        $cache_fields = $fields;
+        $cache_relations = $relations;
+        sort($cache_fields);
+        sort($cache_relations);
+
+        // The digest covers everything that shapes the payload and is not already named in the
+        // readable part of the key. static::class is in it because this method is inherited:
+        // AdminPresentationSerializer and the track-chair and CSV serializers all cache through
+        // here, and their merged $array_mappings add fields the public serializer never emits.
+        //
+        // INVARIANT: anything the payload depends on either appears here or stays out of the
+        // cache. static::class covers audience today only because the remaining differences are
+        // class-determined - the mappings are static, getSerializerType() returns a constant per
+        // class, and media_uploads, the one per-user field, is stripped before Cache::put. A
+        // per-user value added to the mappings, or read before parent::serialize() rather than
+        // after it the way AdminPresentationCSVSerializer and TrackChairPresentationSerializer
+        // do, would silently break that.
+        //
+        // json_encode rather than concatenation: the parts contain "_" and "," themselves
+        // (media_uploads, extra_questions, selection_plan), so joining them on those characters
+        // let distinct requests render one key. sha256 rather than md5 because the parts come
+        // from the query string and a collision here means serving one audience's payload to
+        // another - the exact failure the class component is here to prevent.
+        //
+        // last_edited stays readable so a presentation update naturally busts every entry it has
+        // without an explicit Cache::forget, and so an operator can still scan or drop one
+        // presentation's entries by pattern.
         $key =
             sprintf
             (
-                "public_presentation_%s_%s_%s_%s_%s",
+                "presentation_%s_%s_%s",
                 $presentation->getId(),
                 $presentation->getLastEditedUTC()?->getTimestamp() ?? 0,
-                $expand ?? "",
-                implode(",",$fields),
-                implode(",", $relations)
+                hash
+                (
+                    'sha256',
+                    json_encode
+                    ([
+                        'serializer' => static::class,
+                        'expand'     => $expand ?? "",
+                        'fields'     => $cache_fields,
+                        'relations'  => $cache_relations,
+                    ])
+                )
             );
 
         $use_cache = $params['use_cache'] ?? false;

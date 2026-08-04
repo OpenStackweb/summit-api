@@ -266,26 +266,29 @@ class PresentationSerializer extends SummitEventSerializer
         // last_edited stays readable so a presentation update naturally busts every entry it has
         // without an explicit Cache::forget, and so an operator can still scan or drop one
         // presentation's entries by pattern.
+        // The parts come raw off the query string, and percent-decoding hands them over as
+        // bytes: a malformed sequence like %FF makes json_encode() return false, which hash()
+        // would silently coerce to "" - collapsing class, expand, fields and relations onto one
+        // shared digest per presentation, the exact cross-audience collision the digest exists
+        // to prevent. A request that cannot be keyed unambiguously bypasses the cache entirely.
+        $digest_source = json_encode
+        ([
+            'serializer' => static::class,
+            'expand'     => $expand ?? "",
+            'fields'     => $cache_fields,
+            'relations'  => $cache_relations,
+        ]);
+
         $key =
             sprintf
             (
                 "presentation_%s_%s_%s",
                 $presentation->getId(),
                 $presentation->getLastEditedUTC()?->getTimestamp() ?? 0,
-                hash
-                (
-                    'sha256',
-                    json_encode
-                    ([
-                        'serializer' => static::class,
-                        'expand'     => $expand ?? "",
-                        'fields'     => $cache_fields,
-                        'relations'  => $cache_relations,
-                    ])
-                )
+                hash('sha256', (string) $digest_source)
             );
 
-        $use_cache = $params['use_cache'] ?? false;
+        $use_cache = ($params['use_cache'] ?? false) && $digest_source !== false;
 
         if($use_cache){
             // One read, not Cache::has() followed by Cache::get(): the entry can expire on its

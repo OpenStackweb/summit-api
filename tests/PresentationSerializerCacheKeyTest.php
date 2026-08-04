@@ -184,4 +184,32 @@ final class PresentationSerializerCacheKeyTest extends TestCase
 
         $this->assertCount(2, $this->store);
     }
+
+    /**
+     * The digest parts come raw off the query string, and percent-decoding hands them over as
+     * bytes: expand=%FF arrives as "\xFF", which is not valid UTF-8, so json_encode() returns
+     * false - and hash() coerces that false to "" without a warning. Every request carrying any
+     * malformed byte then shares one digest per presentation, serializer class included, which
+     * is exactly the admin-payload-to-public-caller collision the class component exists to
+     * prevent. A request that cannot be keyed unambiguously must not touch the cache at all.
+     */
+    public function testMalformedUtf8RequestsDoNotCollideOnOneEntry()
+    {
+        $presentation = $this->buildPresentation(90205);
+        $context = $this->buildPublicContext();
+
+        $admin = (new AdminPresentationSerializer($presentation, $context))
+            ->serialize(null, ['id', 'rank', "\xFF"], [], ['use_cache' => true]);
+        // Sanity, mirroring testAdminPayloadIsNotServedToAPublicCaller: the admin payload
+        // really carries the field whose leak is asserted below.
+        $this->assertSame(7, $admin['rank']);
+
+        $public = (new PresentationSerializer($presentation, $context))
+            ->serialize(null, ['id', "\xFE"], [], ['use_cache' => true]);
+
+        // Before the guard both digests collapsed to hash("") and this came back with the
+        // admin-shaped payload, rank included.
+        $this->assertArrayNotHasKey('rank', $public);
+        $this->assertSame(90205, $public['id']);
+    }
 }

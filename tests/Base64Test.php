@@ -60,4 +60,18 @@ final class Base64Test extends TestCase
         $this->assertFalse(Base64::looksLikeBase64(""));
         $this->assertNull(Base64::tryBase64Decode("!!!"));
     }
+
+    public function testMalformedPaddingIsRejected()
+    {
+        // padding-only, under-padded and over-padded inputs are not RFC 4648 base64: the data
+        // length (minus padding) decides how much padding is allowed - none, or exactly enough
+        // to reach a multiple of 4
+        $this->assertFalse(Base64::looksLikeBase64("=="));
+        $this->assertFalse(Base64::looksLikeBase64("A="));
+        $this->assertFalse(Base64::looksLikeBase64("QQ="));
+        $this->assertFalse(Base64::looksLikeBase64("QUFB=="));
+        // exact RFC padding stays accepted
+        $this->assertTrue(Base64::looksLikeBase64("QQQ="));
+        $this->assertSame("A\x04", Base64::tryBase64Decode("QQQ="));
+    }
 }

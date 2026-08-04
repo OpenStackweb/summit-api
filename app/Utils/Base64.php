@@ -19,8 +19,13 @@ final class Base64
         if ($s === '') return false;
         // Standard base64 alphabet (RFC 4648 §4) or URL-safe (§5: '-' and '_'), plus '=' padding
         if (!preg_match('#^[A-Za-z0-9+/_-]*={0,2}$#', $s)) return false;
-        // Length multiple of 4 (padding may be omitted; it gets added below)
-        return (strlen($s) % 4) === 0 || (strlen($s) % 4) === 2 || (strlen($s) % 4) === 3;
+        // Padding may be omitted entirely (it gets added below), but when present it must be
+        // exactly what the data length requires (RFC 4648)
+        $unpadded = rtrim($s, '=');
+        $paddingLength = strlen($s) - strlen($unpadded);
+        $remainder = strlen($unpadded) % 4;
+        if ($unpadded === '' || $remainder === 1) return false;
+        return $paddingLength === 0 || $paddingLength === (4 - $remainder);
     }
 
     public static function padBase64(string $s): string

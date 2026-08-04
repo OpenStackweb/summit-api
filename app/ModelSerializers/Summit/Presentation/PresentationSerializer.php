@@ -28,6 +28,14 @@ class PresentationSerializer extends SummitEventSerializer
 {
     const CacheTTL = 1200;
 
+    /**
+     * Memo for getMediaUploadsSerializerType(). Instance-scoped on purpose - see that method.
+     * Private rather than protected: the subclasses that override the method answer with a
+     * constant and have nothing to memo.
+     * @var string|null
+     */
+    private ?string $media_uploads_serializer_type = null;
+
     protected static $array_mappings = [
         'CreatorId'               => 'creator_id:json_int',
         'ModeratorId'             => 'moderator_speaker_id:json_int',
@@ -82,10 +90,16 @@ class PresentationSerializer extends SummitEventSerializer
 
     /**
      * Resolves who is allowed to see every media upload attached to this presentation, approved
-     * or not. Kept aligned with OAuth2SummitEventsApiController::getSerializerType(), which is
-     * what decides the serializer type of the presentation itself - when the two disagree the
-     * presentation is served Private while its uploads are served Public, which is the bug this
-     * method used to have for summit admins and for service accounts.
+     * or not. The reference point is OAuth2SummitEventsApiController::getSerializerType(), which
+     * decides the serializer type of the presentation itself - where this method is narrower than
+     * that one the presentation is served Private while its uploads are served Public, which is
+     * the bug it used to have for summit admins and for service accounts.
+     *
+     * It is deliberately still narrower in one place. The controller grants Private to any
+     * ApplicationType_Service caller; here a service account additionally has to hold
+     * ReadAllPresentationMediaUploads, because these are unpublished files and the application
+     * type on its own would hand them to every service client. Members are aligned with the
+     * controller exactly.
      *
      * Two distinct privileged callers:
      *
@@ -99,6 +113,17 @@ class PresentationSerializer extends SummitEventSerializer
      * @return string
      */
     protected function getMediaUploadsSerializerType():string{
+        // Memoized per serializer instance, which is the correct scope and not merely the
+        // convenient one: memberCanEdit() below is answered against THIS presentation, so a
+        // caller can be a speaker on one and a stranger to the next. A request-wide memo would
+        // hand every presentation the first one's answer. SerializerRegistry builds a fresh
+        // serializer per object and none outlive the request, so per-instance already collapses
+        // the repeated work - this method is called once per media upload plus once per
+        // getVisibleMediaUploads(), and it reaches the member's speaker and this presentation's
+        // speaker collection each time.
+        if (!is_null($this->media_uploads_serializer_type))
+            return $this->media_uploads_serializer_type;
+
         // && short-circuits, so getCurrentScope() is only reached for service accounts
         $isSnapshotClient =
             $this->resource_server_context->getApplicationType() === IResourceServerContext::ApplicationType_Service
@@ -109,7 +134,7 @@ class PresentationSerializer extends SummitEventSerializer
             );
 
         if ($isSnapshotClient)
-            return SerializerRegistry::SerializerType_Private;
+            return $this->media_uploads_serializer_type = SerializerRegistry::SerializerType_Private;
 
         $serializerType = SerializerRegistry::SerializerType_Public;
         $currentUser = $this->resource_server_context->getCurrentUser();
@@ -117,7 +142,7 @@ class PresentationSerializer extends SummitEventSerializer
         if(!is_null($currentUser) && ( $currentUser->isAdmin() || $currentUser->isSummitAdmin() || $presentation->memberCanEdit($currentUser))){
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
-        return $serializerType;
+        return $this->media_uploads_serializer_type = $serializerType;
     }
 
     /**

@@ -19,9 +19,9 @@ use Doctrine\Persistence\ObjectRepository;
 use models\summit\Presentation;
 use models\summit\SummitMediaUploadType;
 /**
- * Class PresentationMediaUploadsTests
+ * Class PresentationMediaUploadsTest
  */
-class PresentationMediaUploadsTests
+class PresentationMediaUploadsTest
     extends ProtectedApiTestCase
 {
     use InsertSummitTestData;

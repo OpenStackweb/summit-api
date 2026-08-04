@@ -59,6 +59,9 @@ final class Base64Test extends TestCase
         $this->assertFalse(Base64::looksLikeBase64("BADGE_X|123|a@b.com|Ada Lovelace"));
         $this->assertFalse(Base64::looksLikeBase64(""));
         $this->assertNull(Base64::tryBase64Decode("!!!"));
+        // tryBase64Decode must agree with looksLikeBase64: base64_decode('', true) "succeeds"
+        // with '' but an empty artifact is not a decodable payload
+        $this->assertNull(Base64::tryBase64Decode(""));
     }
 
     public function testMalformedPaddingIsRejected()
@@ -70,6 +73,9 @@ final class Base64Test extends TestCase
         $this->assertFalse(Base64::looksLikeBase64("A="));
         $this->assertFalse(Base64::looksLikeBase64("QQ="));
         $this->assertFalse(Base64::looksLikeBase64("QUFB=="));
+        // the decode agrees with the sniff: what looksLikeBase64 rejects, tryBase64Decode
+        // rejects too (no silent repair of under-padded input)
+        $this->assertNull(Base64::tryBase64Decode("QQ="));
         // exact RFC padding stays accepted
         $this->assertTrue(Base64::looksLikeBase64("QQQ="));
         $this->assertSame("A\x04", Base64::tryBase64Decode("QQQ="));

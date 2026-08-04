@@ -36,6 +36,9 @@ final class Base64
 
     public static function tryBase64Decode(string $s): ?string
     {
+        // agree with the sniff: base64_decode('', true) "succeeds" with '' and would silently
+        // repair under-padded input, so anything looksLikeBase64 rejects is not decodable here
+        if (!self::looksLikeBase64($s)) return null;
         // strict base64_decode rejects the URL-safe alphabet: normalize it first
         $s = strtr($s, '-_', '+/');
         $padded = self::padBase64($s);

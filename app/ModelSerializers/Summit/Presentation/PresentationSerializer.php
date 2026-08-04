@@ -91,6 +91,26 @@ class PresentationSerializer extends SummitEventSerializer
         return $serializerType;
     }
 
+    /**
+     * Media uploads visible to the resolved serializer type. A Public caller (no admin/editor
+     * privilege on this presentation) only ever sees uploads marked display_on_site=true — an
+     * uploaded-but-not-yet-approved draft (display_on_site=false, the model's own default) must
+     * never reach an unauthenticated/public response, even via ?expand=media_uploads on the
+     * public events/published endpoints.
+     * @return \Doctrine\Common\Collections\Collection|PresentationMediaUpload[]
+     */
+    protected function getVisibleMediaUploads()
+    {
+        $presentation = $this->object;
+        $mediaUploads = $presentation->getMediaUploads();
+        if ($this->getMediaUploadsSerializerType() === SerializerRegistry::SerializerType_Private) {
+            return $mediaUploads;
+        }
+        return $mediaUploads->filter(function ($mediaUpload) {
+            return $mediaUpload->getDisplayOnSite();
+        });
+    }
+
 
     /**
      * @param null $expand
@@ -130,7 +150,7 @@ class PresentationSerializer extends SummitEventSerializer
                         {
                             $media_uploads = [];
 
-                            foreach ($presentation->getMediaUploads() as $mediaUpload) {
+                            foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
                                 $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
                                 (
                                     $mediaUpload, $this->getMediaUploadsSerializerType()
@@ -195,7 +215,7 @@ class PresentationSerializer extends SummitEventSerializer
         if(in_array('media_uploads', $relations))
         {
             $media_uploads = [];
-            foreach ($presentation->getMediaUploads() as $mediaUpload) {
+            foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
                 $media_uploads[] = $mediaUpload->getId();
             }
 
@@ -337,7 +357,7 @@ class PresentationSerializer extends SummitEventSerializer
                     case 'media_uploads':{
                         $media_uploads = [];
 
-                        foreach ($presentation->getMediaUploads() as $mediaUpload) {
+                        foreach ($this->getVisibleMediaUploads() as $mediaUpload) {
                             $media_uploads[] = SerializerRegistry::getInstance()->getSerializer
                             (
                                 $mediaUpload, $this->getMediaUploadsSerializerType()

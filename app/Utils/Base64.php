@@ -17,10 +17,15 @@ final class Base64
     public static function looksLikeBase64(string $s): bool
     {
         if ($s === '') return false;
-        // Solo alfabeto base64 y '=' de padding
-        if (!preg_match('#^[A-Za-z0-9+/]*={0,2}$#', $s)) return false;
-        // Longitud múltiplo de 4 (permitimos sin padding, lo añadimos abajo)
-        return (strlen($s) % 4) === 0 || (strlen($s) % 4) === 2 || (strlen($s) % 4) === 3;
+        // Standard base64 alphabet (RFC 4648 §4) or URL-safe (§5: '-' and '_'), plus '=' padding
+        if (!preg_match('#^[A-Za-z0-9+/_-]*={0,2}$#', $s)) return false;
+        // Padding may be omitted entirely (it gets added below), but when present it must be
+        // exactly what the data length requires (RFC 4648)
+        $unpadded = rtrim($s, '=');
+        $paddingLength = strlen($s) - strlen($unpadded);
+        $remainder = strlen($unpadded) % 4;
+        if ($unpadded === '' || $remainder === 1) return false;
+        return $paddingLength === 0 || $paddingLength === (4 - $remainder);
     }
 
     public static function padBase64(string $s): string
@@ -31,6 +36,11 @@ final class Base64
 
     public static function tryBase64Decode(string $s): ?string
     {
+        // agree with the sniff: base64_decode('', true) "succeeds" with '' and would silently
+        // repair under-padded input, so anything looksLikeBase64 rejects is not decodable here
+        if (!self::looksLikeBase64($s)) return null;
+        // strict base64_decode rejects the URL-safe alphabet: normalize it first
+        $s = strtr($s, '-_', '+/');
         $padded = self::padBase64($s);
         $decoded = base64_decode($padded, true);
         return ($decoded === false) ? null : $decoded;

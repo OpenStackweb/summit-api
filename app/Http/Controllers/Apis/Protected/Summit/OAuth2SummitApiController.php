@@ -2529,7 +2529,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
                 in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
-                description: 'RAW Badge QR scan encoded on BASE 64'
+                description: 'RAW Badge QR scan encoded on BASE 64 (standard RFC 4648 §4 or URL-safe §5 alphabet)'
             )
         ],
         responses: [

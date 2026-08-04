@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Security\SummitScopes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Libs\ModelSerializers\AbstractSerializer;
+use models\oauth2\IResourceServerContext;
 use models\summit\Presentation;
 use models\summit\PresentationType;
 
@@ -79,13 +81,40 @@ class PresentationSerializer extends SummitEventSerializer
     ];
 
     /**
+     * Resolves who is allowed to see every media upload attached to this presentation, approved
+     * or not. Kept aligned with OAuth2SummitEventsApiController::getSerializerType(), which is
+     * what decides the serializer type of the presentation itself - when the two disagree the
+     * presentation is served Private while its uploads are served Public, which is the bug this
+     * method used to have for summit admins and for service accounts.
+     *
+     * Two distinct privileged callers:
+     *
+     * - Service accounts (client_credentials, so getCurrentUser() is null by construction) that
+     *   hold the dedicated snapshot scope. The content pipeline stages files pre-event, so it
+     *   needs unapproved uploads. Gated on the scope and not on ApplicationType_Service alone:
+     *   the application type on its own would hand drafts to every service client.
+     * - Members with an admin-level group, or with edit rights over this presentation
+     *   (creator / moderator / speaker).
+     *
      * @return string
      */
     protected function getMediaUploadsSerializerType():string{
+        // && short-circuits, so getCurrentScope() is only reached for service accounts
+        $isSnapshotClient =
+            $this->resource_server_context->getApplicationType() === IResourceServerContext::ApplicationType_Service
+            && in_array
+            (
+                SummitScopes::ReadAllPresentationMediaUploads,
+                $this->resource_server_context->getCurrentScope()
+            );
+
+        if ($isSnapshotClient)
+            return SerializerRegistry::SerializerType_Private;
+
         $serializerType = SerializerRegistry::SerializerType_Public;
         $currentUser = $this->resource_server_context->getCurrentUser();
         $presentation = $this->object;
-        if(!is_null($currentUser) && ( $currentUser->isAdmin() || $presentation->memberCanEdit($currentUser))){
+        if(!is_null($currentUser) && ( $currentUser->isAdmin() || $currentUser->isSummitAdmin() || $presentation->memberCanEdit($currentUser))){
             $serializerType = SerializerRegistry::SerializerType_Private;
         }
         return $serializerType;

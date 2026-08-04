@@ -22,6 +22,7 @@ final class SummitScopes
     const ReadSummitData = SCOPE_BASE_REALM.'/summits/read';
     const ReadAllSummitData = SCOPE_BASE_REALM.'/summits/read/all';
     const ReadOverflowEvents = SCOPE_BASE_REALM.'/summits/events/overflow/read';
+    const ReadAllPresentationMediaUploads = SCOPE_BASE_REALM.'/summits/presentations/media-uploads/read/all';
 
     // me
     const MeRead = SCOPE_BASE_REALM.'/me/read';

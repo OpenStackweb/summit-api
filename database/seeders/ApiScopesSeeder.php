@@ -69,6 +69,11 @@ final class ApiScopesSeeder extends Seeder
                 'description' => 'Grants read only access to published summit events currently in OVERFLOW occupancy, including overflow streaming URLs and tokens',
             ],
             [
+                'name' => SummitScopes::ReadAllPresentationMediaUploads,
+                'short_description' => 'Read All Presentation Media Uploads',
+                'description' => 'Grants read access to presentation media uploads regardless of display_on_site, for trusted service accounts feeding the content pipeline',
+            ],
+            [
                 'name' => SummitScopes::MeRead,
                 'short_description' => 'Get own summit member data',
                 'description' => 'Grants read only access for our own summit member data',

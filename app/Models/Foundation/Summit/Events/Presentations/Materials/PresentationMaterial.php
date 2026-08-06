@@ -74,6 +74,19 @@ abstract class PresentationMaterial
     }
 
     /**
+     * @return int
+     */
+    public function getSummitId(): int
+    {
+        try {
+            return $this->presentation->getSummitId();
+        }
+        catch (\Throwable $ex){
+            return 0;
+        }
+    }
+
+    /**
      * @return string
      */
     public function getName()

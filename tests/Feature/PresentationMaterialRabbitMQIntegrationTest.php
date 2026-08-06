@@ -51,26 +51,39 @@ class PresentationMaterialRabbitMQIntegrationTest extends TestCase
 
     private ?string $consumer_queue = null;
 
+    /**
+     * @var array<string, mixed>
+     */
+    private array $original_rabbitmq_config = [];
+
     protected function setUp(): void
     {
         parent::setUp();
         self::insertSummitTestData();
 
+        $this->original_rabbitmq_config = Config::get('rabbitmq');
+
         // The default rabbitmq.* config (RABBITMQ_HOST=host.docker.internal:5672)
         // has nothing listening in this environment. Point it at the broker this
-        // container can actually reach, matching the credentials docker-compose
-        // already configures for rabbitmq_sponsor_services.
-        Config::set('rabbitmq.host', 'rabbitmq_sponsor_services');
+        // container can actually reach, reusing the same credentials docker-compose
+        // already configures (as plain env vars, not literals) for rabbitmq_sponsor_services.
+        Config::set('rabbitmq.host', env('DOMAIN_EVENTS_RABBITMQ_HOST', 'rabbitmq_sponsor_services'));
         Config::set('rabbitmq.port', 5672);
-        Config::set('rabbitmq.user', 'admin');
-        Config::set('rabbitmq.password', '1qaz2wsx');
-        Config::set('rabbitmq.vhost', '/');
+        Config::set('rabbitmq.user', env('DOMAIN_EVENTS_RABBITMQ_LOGIN', env('RABBITMQ_LOGIN', 'guest')));
+        Config::set('rabbitmq.password', env('DOMAIN_EVENTS_RABBITMQ_PASSWORD', env('RABBITMQ_PASSWORD', 'guest')));
+        Config::set('rabbitmq.vhost', env('DOMAIN_EVENTS_RABBITMQ_VHOST', '/'));
         // Force IProcessScheduleEntityLifeCycleEventService (a singleton) to
         // rebuild its internal RabbitPublisherService against the config above,
         // in case anything already resolved it with the default (unreachable) host.
         app()->forgetInstance(IProcessScheduleEntityLifeCycleEventService::class);
 
-        $this->consumer_connection = new AMQPStreamConnection('rabbitmq_sponsor_services', 5672, 'admin', '1qaz2wsx', '/');
+        $this->consumer_connection = new AMQPStreamConnection(
+            config('rabbitmq.host'),
+            config('rabbitmq.port'),
+            config('rabbitmq.user'),
+            config('rabbitmq.password'),
+            config('rabbitmq.vhost'),
+        );
         $this->consumer_channel = $this->consumer_connection->channel();
         // Must match the type/durable/auto_delete the real publisher declares with
         // (RabbitPublisherService defaults: fanout, durable=true, auto_delete=false)
@@ -88,6 +101,11 @@ class PresentationMaterialRabbitMQIntegrationTest extends TestCase
         } catch (\Throwable $ex) {
             // best-effort cleanup
         }
+        // Undo the setUp() overrides so later tests in this process see the
+        // original rabbitmq config and a fresh service singleton, not this
+        // test's real-broker configuration.
+        Config::set('rabbitmq', $this->original_rabbitmq_config);
+        app()->forgetInstance(IProcessScheduleEntityLifeCycleEventService::class);
         self::clearSummitTestData();
         parent::tearDown();
     }
@@ -135,19 +153,24 @@ class PresentationMaterialRabbitMQIntegrationTest extends TestCase
         );
         $job->handle(app(IProcessScheduleEntityLifeCycleEventService::class));
 
-        $message = null;
-        for ($i = 0; $i < 30 && is_null($message); $i++) {
+        // The queue is bound to the whole fanout exchange, so it can receive
+        // unrelated messages from other activity on the same broker. Skip past
+        // anything that isn't this update before asserting on it.
+        $payload = null;
+        for ($i = 0; $i < 30 && is_null($payload); $i++) {
             $message = $this->consumer_channel->basic_get($this->consumer_queue, true);
             if (is_null($message)) {
                 usleep(100000);
+                continue;
+            }
+            $candidate = json_decode($message->getBody(), true);
+            if (($candidate['entity_type'] ?? null) === 'PresentationMediaUpload'
+                && ($candidate['entity_id'] ?? null) === $entity_id) {
+                $payload = $candidate;
             }
         }
 
-        $this->assertNotNull($message, 'Expected a message published to the entities-updates-broker exchange');
-        $payload = json_decode($message->getBody(), true);
-
-        $this->assertSame('PresentationMediaUpload', $payload['entity_type']);
-        $this->assertSame($entity_id, $payload['entity_id']);
+        $this->assertNotNull($payload, 'Expected a PresentationMediaUpload message for this entity on the entities-updates-broker exchange');
         $this->assertSame($summit_id, $payload['summit_id'], 'Published summit_id must be the real summit id, not 0');
     }
 }

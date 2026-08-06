@@ -69,6 +69,7 @@ jobs:
                     # Named by path because no job in this matrix runs the tests/ root, only its
                     # subdirectories - a file added there runs nowhere unless it is listed here.
                     - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php tests/PresentationSerializerCacheKeyTest.php" }
+                    - { name: "PresentationMaterialRabbitMQIntegration", filter: "tests/Feature/PresentationMaterialRabbitMQIntegrationTest.php" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing
@@ -118,6 +119,10 @@ jobs:
             REGISTRATION_VALIDATE_TICKET_TYPE_REMOVAL: false
             MEMCACHED_SERVER_HOST: 127.0.0.1
             MEMCACHED_SERVER_PORT: 11211
+            DOMAIN_EVENTS_RABBITMQ_HOST: 127.0.0.1
+            DOMAIN_EVENTS_RABBITMQ_VHOST: /
+            DOMAIN_EVENTS_RABBITMQ_LOGIN: admin
+            DOMAIN_EVENTS_RABBITMQ_PASSWORD: 1qaz2wsx
 
         services:
             mysql_api_model:
@@ -136,6 +141,14 @@ jobs:
                 ports:
                     - 3306:3306
                 options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+            rabbitmq:
+                image: rabbitmq:3-management
+                env:
+                    RABBITMQ_DEFAULT_USER: ${{ env.DOMAIN_EVENTS_RABBITMQ_LOGIN }}
+                    RABBITMQ_DEFAULT_PASS: ${{ env.DOMAIN_EVENTS_RABBITMQ_PASSWORD }}
+                ports:
+                    - 5672:5672
+                options: --health-cmd="rabbitmq-diagnostics check_running" --health-interval=10s --health-timeout=5s --health-retries=10
 
         steps:
             - name: Start Memcached (with larger item size)

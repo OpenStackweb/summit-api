@@ -248,6 +248,10 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\PresentationCategoryGroupAuditLogFormatter::class,
         ],
+        \models\summit\PrivatePresentationCategoryGroup::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationCategoryGroupAuditLogFormatter::class,
+        ],
         \models\summit\PresentationAttendeeVote::class => [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\PresentationAttendeeVoteAuditLogFormatter::class,
@@ -335,6 +339,66 @@ return [
         \models\summit\Sponsor::class => [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\SponsorAuditLogFormatter::class,
+        ],
+        \models\main\Company::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\CompanyAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationCategory::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationCategoryAuditLogFormatter::class,
+        ],
+        \models\summit\PresentationType::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\PresentationTypeAuditLogFormatter::class,
+        ],
+        \models\summit\RSVP::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPInvitation::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPInvitationAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPMemberEmailQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPMemberFirstNameQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPMemberLastNameQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPTextBoxQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPTextAreaQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPCheckBoxListQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPRadioButtonListQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPDropDownQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPLiteralContentQuestionTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPQuestionTemplateAuditLogFormatter::class,
+        ],
+        \App\Models\Foundation\Summit\Events\RSVP\RSVPTemplate::class => [
+            'enabled' => true,
+            'strategy' => \App\Audit\ConcreteFormatters\RSVPTemplateAuditLogFormatter::class,
         ],
         \models\summit\SummitEventType::class => [
             'enabled' => true,

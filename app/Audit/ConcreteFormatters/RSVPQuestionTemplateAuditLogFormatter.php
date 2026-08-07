@@ -51,11 +51,7 @@ class RSVPQuestionTemplateAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    if ($change_details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "%s question '%s' (ID: %s) in RSVP template (ID: %s) updated: %s by user %s",
                         $className,
                         $label,
@@ -63,7 +59,7 @@ class RSVPQuestionTemplateAuditLogFormatter extends AbstractAuditLogFormatter
                         $templateId,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     $order = $subject->getOrder() ?? 0;

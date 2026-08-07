@@ -45,17 +45,13 @@ class SponsorAdAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    if ($details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf(
                         "Sponsor Ad '%s' for Sponsor %s updated: %s by user %s",
                         $text,
                         $sponsor_id,
                         $details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

@@ -67,11 +67,7 @@ class SponsorSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    if ($details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf(
                         "Sponsor Registration Discount Code '%s' (ID: %s) in Summit '%s' updated: %s (current: %s) by user %s",
                         $code,
                         $id,
@@ -79,7 +75,7 @@ class SponsorSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
                         $details,
                         $discount_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

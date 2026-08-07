@@ -45,18 +45,14 @@ class SummitAirportAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    if ($change_details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Summit Airport '%s' (%d) for Summit '%s' updated: %s by user %s",
                         $name,
                         $id,
                         $summit_name,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

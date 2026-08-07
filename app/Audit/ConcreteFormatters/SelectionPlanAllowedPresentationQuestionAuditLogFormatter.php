@@ -47,17 +47,13 @@ class SelectionPlanAllowedPresentationQuestionAuditLogFormatter extends Abstract
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    if ($change_details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Selection Plan Allowed Presentation Question (%s) type '%s' updated: %s by user %s",
                         $id,
                         $type,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

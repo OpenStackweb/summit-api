@@ -39,17 +39,13 @@ class PresentationUserSubmissionAuditLogFormatter extends AbstractAuditLogFormat
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    if ($change_details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Presentation '%s' (%d) updated: %s by user %s",
                         $title,
                         $id,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

@@ -52,17 +52,13 @@ class AssignedSelectionPlanExtraQuestionTypeAuditLogFormatter extends AbstractAu
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $question_type = $subject->getQuestionType();
                     $question_label = $question_type ? ($question_type->getLabel() ?? 'Unknown Question') : 'Unknown Question';
-                    $change_details = $this->buildChangeDetails($change_set);
-                    if ($change_details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Assigned Selection Plan Extra Question (%s) '%s' updated: %s by user %s",
                         $id,
                         $question_label,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     $question_type = $subject->getQuestionType();

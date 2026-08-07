@@ -47,18 +47,14 @@ class SponsorSummitRegistrationPromoCodeAuditLogFormatter extends AbstractAuditL
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    if ($details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf(
                         "Sponsor Registration Promo Code '%s' (ID: %s) in Summit '%s' updated: %s by user %s",
                         $code,
                         $id,
                         $summit_name,
                         $details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

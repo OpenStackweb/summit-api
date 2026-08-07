@@ -39,11 +39,7 @@ class AffiliationAuditLogFormatter extends AbstractAuditLogFormatter
                     return sprintf("Affiliation (%s) for '%s' (%s) created by user %s", $id, $owner_name, $job_title, $this->getUserInfo());
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    if ($details === null) {
-                        return null;
-                    }
-                    return sprintf("Affiliation (%s) for '%s' (%s) updated: %s by user %s", $id, $owner_name, $job_title, $details, $this->getUserInfo());
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf("Affiliation (%s) for '%s' (%s) updated: %s by user %s", $id, $owner_name, $job_title, $details, $this->getUserInfo()));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Affiliation (%s) for '%s' (%s) deleted by user %s", $id, $owner_name, $job_title, $this->getUserInfo());

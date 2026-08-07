@@ -71,11 +71,7 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    if ($change_details === null) {
-                        return null;
-                    }
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Pre-Paid Discount Code '%s' (%d) for Summit '%s' updated: %s (current: %s) by user %s",
                         $code,
                         $id,
@@ -83,7 +79,7 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
                         $change_details,
                         $discount_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

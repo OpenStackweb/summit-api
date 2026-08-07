@@ -45,14 +45,13 @@ class SummitSchedulePreFilterElementConfigAuditLogFormatter extends AbstractAudi
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Schedule Pre-Filter Element Config (%s) for Config '%s' updated: %s by user %s",
                         $id,
                         $config_key,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

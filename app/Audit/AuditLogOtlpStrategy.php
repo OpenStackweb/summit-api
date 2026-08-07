@@ -67,7 +67,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             }
             $description = $formatter->format($subject, $change_set);
             if(is_null($description)){
-                Log::warning("AuditLogOtlpStrategy::audit description is empty");
+                Log::debug("AuditLogOtlpStrategy::audit description is empty");
                 return;
             }
             $auditData = $this->buildAuditLogData($entity, $subject, $change_set, $event_type, $ctx);

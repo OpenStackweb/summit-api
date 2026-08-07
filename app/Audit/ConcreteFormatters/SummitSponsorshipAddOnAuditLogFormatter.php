@@ -38,11 +38,7 @@ class SummitSponsorshipAddOnAuditLogFormatter extends AbstractAuditLogFormatter
                     return sprintf("Sponsorship Add-On (%s) '%s' (%s) created by user %s", $id, $name, $type, $this->getUserInfo());
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    if ($details === null) {
-                        return null;
-                    }
-                    return sprintf("Sponsorship Add-On (%s) '%s' (%s) updated: %s by user %s", $id, $name, $type, $details, $this->getUserInfo());
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf("Sponsorship Add-On (%s) '%s' (%s) updated: %s by user %s", $id, $name, $type, $details, $this->getUserInfo()));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Sponsorship Add-On (%s) '%s' (%s) deleted by user %s", $id, $name, $type, $this->getUserInfo());

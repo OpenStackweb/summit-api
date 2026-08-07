@@ -103,7 +103,7 @@ class SummitEventTypeFormatterTest extends TestCase
         $result = $formatter->format($this->mockSubject, []);
 
         $this->assertNull($result);
-}
+    }
 
     public function testFormatterHandlesNullCompanyAndSummit(): void
     {

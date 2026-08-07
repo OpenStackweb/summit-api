@@ -143,6 +143,6 @@ class SummitTicketTypeAuditLogFormatterTest extends TestCase
         $result = $this->formatter_update->format($ticket_type, []);
 
         $this->assertNull($result);
-}
+    }
 
 }

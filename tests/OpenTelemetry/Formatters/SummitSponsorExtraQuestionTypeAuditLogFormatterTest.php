@@ -102,5 +102,5 @@ class SummitSponsorExtraQuestionTypeAuditLogFormatterTest extends TestCase
         $result = $formatter->format($this->mockSubject, []);
 
         $this->assertNull($result);
-}
+    }
 }

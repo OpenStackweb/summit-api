@@ -99,7 +99,7 @@ class FileAuditLogFormatterTest extends TestCase
         $result = $formatter->format($this->mockSubject, []);
         
         $this->assertNull($result);
-}
+    }
 
     public function testPropertiesExist(): void
     {

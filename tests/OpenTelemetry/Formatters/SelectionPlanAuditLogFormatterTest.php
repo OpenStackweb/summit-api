@@ -139,4 +139,27 @@ class SelectionPlanAuditLogFormatterTest extends TestCase
 
         $this->assertNull($result);
     }
+
+    public function testUpdateWithScalarTypeCoercionIsSuppressed(): void
+    {
+        $plan = $this->createMockPlan();
+
+        $result = $this->formatter_update->format($plan, [
+            'max_submission_allowed_per_user' => [5, "5"], // same value, different type
+        ]);
+
+        $this->assertNull($result);
+    }
+
+    public function testUpdateWithDifferentScalarValueIsNotSuppressed(): void
+    {
+        $plan = $this->createMockPlan();
+
+        $result = $this->formatter_update->format($plan, [
+            'max_submission_allowed_per_user' => [5, 6],
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('updated', $result);
+    }
 }

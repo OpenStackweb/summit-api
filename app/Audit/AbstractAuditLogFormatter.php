@@ -221,15 +221,7 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         }
 
         if ($old_value instanceof \DateTimeInterface && $new_value instanceof \DateTimeInterface) {
-            if ($old_value->getTimestamp() === $new_value->getTimestamp()) {
-                return true;
-            }
-
-            try {
-                return $old_value->format('U.u') === $new_value->format('U.u');
-            } catch (\Throwable $e) {
-                return false;
-            }
+            return $old_value->getTimestamp() === $new_value->getTimestamp();
         }
 
         if ((is_scalar($old_value) || is_null($old_value)) && (is_scalar($new_value) || is_null($new_value))) {

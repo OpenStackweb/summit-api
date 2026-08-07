@@ -164,6 +164,9 @@ class PresentationMaterialRabbitMQIntegrationTest extends TestCase
                 continue;
             }
             $candidate = json_decode($message->getBody(), true);
+            if (!is_array($candidate)) {
+                continue;
+            }
             if (($candidate['entity_type'] ?? null) === 'PresentationMediaUpload'
                 && ($candidate['entity_id'] ?? null) === $entity_id) {
                 $payload = $candidate;

@@ -860,6 +860,15 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
 
+                // submission period (admin-only reopen; authorization is done in the controller,
+                // NOT via auth.user -- that middleware 403s any endpoint with no authz groups)
+                Route::group(['prefix' => 'submission-period'], function () {
+                    Route::group(['prefix' => 'reopen'], function () {
+                        Route::put('', 'OAuth2PresentationApiController@reopenSubmissionPeriod');
+                        Route::delete('', 'OAuth2PresentationApiController@closeSubmissionPeriod');
+                    });
+                });
+
                 // attendees votes
                 Route::group(['prefix' => 'attendee-votes'], function () {
                     Route::get('', ['uses' => 'OAuth2PresentationApiController@getAttendeeVotes']);

@@ -21,6 +21,14 @@ use ModelSerializers\SerializerRegistry;
  */
 class SubmissionPresentationSerializer extends PresentationSerializer
 {
+    protected static $array_mappings = [
+        'SubmissionReopenedUntil' => 'submission_reopened_until:datetime_epoch',
+    ];
+
+    protected static $allowed_fields = [
+        'submission_reopened_until',
+    ];
+
     /**
      * @param string|null $relation
      * @return string

@@ -31,6 +31,7 @@ use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\PresentationSpeaker;
+use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\ISerializerTypeSelector;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISpeakerService;
@@ -2342,7 +2343,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             return $this->ok($response->toArray(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
+                SerializerUtils::getRelations(),
+                [],
+                IPresentationSerializerTypes::Submission
             ));
         });
     }
@@ -2449,7 +2452,9 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             return $this->ok($response->toArray(
                 SerializerUtils::getExpand(),
                 SerializerUtils::getFields(),
-                SerializerUtils::getRelations()
+                SerializerUtils::getRelations(),
+                [],
+                IPresentationSerializerTypes::Submission
             ));
         });
     }

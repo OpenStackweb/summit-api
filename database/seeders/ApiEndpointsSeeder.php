@@ -7090,6 +7090,27 @@ class ApiEndpointsSeeder extends Seeder
                     SummitScopes::WritePresentationSlidesData
                 ],
             ],
+            // submission period reopen (admin-only; authorization enforced in the controller)
+            [
+                'name' => 'reopen-presentation-submission-period',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
+                ],
+            ],
+            [
+                'name' => 'close-presentation-submission-period',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen',
+                'http_method' => 'DELETE',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
+                ],
+            ],
             // presentation speakers
             [
                 'name' => 'add-presentation-speaker',

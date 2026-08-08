@@ -41,6 +41,9 @@ class AdminPresentationSerializer extends PresentationSerializer
         'OverflowStreamIsSecure' => 'overflow_stream_is_secure:json_boolean',
         'OverflowStreamKey' => 'overflow_stream_key:json_string',
         'TrackChairAvgScoresPerRakingType' => 'track_chair_scores_avg:json_string_array',
+        'SubmissionReopenedUntil' => 'submission_reopened_until:datetime_epoch',
+        'SubmissionReopenedById' => 'submission_reopened_by_id:json_int',
+        'SubmissionReopenedByNice' => 'submission_reopened_by:json_string',
     ];
 
     protected static $allowed_fields = [
@@ -64,7 +67,10 @@ class AdminPresentationSerializer extends PresentationSerializer
         'etherpad_link',
         'overflow_streaming_url',
         'overflow_stream_is_secure',
-        'overflow_stream_key'
+        'overflow_stream_key',
+        'submission_reopened_until',
+        'submission_reopened_by_id',
+        'submission_reopened_by',
     ];
 
     /**

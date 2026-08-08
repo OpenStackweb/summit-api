@@ -38,9 +38,16 @@ final class PresentationSubmissionReopenService
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
+            $max = intval(Config::get('cfp.max_reopen_hours', 168));
+
             // whole hours rule in one place: null means "unspecified", so the default is resolved
             // here rather than in the controller, right next to the ceiling it has to respect.
-            $hours = $hours ?? intval(Config::get('cfp.default_reopen_hours', 24));
+            // The resolved default is clamped to the ceiling on purpose: a deployment that
+            // configures default_reopen_hours above max_reopen_hours would otherwise reject every
+            // request that omits hours, which is a config error the caller cannot see or fix.
+            // An explicitly supplied $hours is still validated strictly below, never clamped.
+            if (is_null($hours))
+                $hours = min(intval(Config::get('cfp.default_reopen_hours', 24)), $max);
 
             // The lower bound is currently unreachable over HTTP -- the endpoint validates
             // 'hours' => 'sometimes|integer|min:1' and refuses first -- but it is deliberate, not
@@ -48,7 +55,6 @@ final class PresentationSubmissionReopenService
             // service), and a persisted non-positive value would make
             // Presentation::getSubmissionReopenedUntil() throw on every read, since
             // new \DateInterval('PT-1H') is invalid. Do not remove it as unused.
-            $max = intval(Config::get('cfp.max_reopen_hours', 168));
             if ($hours < 1 || $hours > $max)
                 throw new ValidationException(sprintf("hours must be between 1 and %s.", $max));
 

@@ -203,6 +203,26 @@ class PresentationSubmissionReopenServiceTest extends TestCase
         $this->assertClosureRan();
     }
 
+    /**
+     * A deployment that sets default_reopen_hours above max_reopen_hours would otherwise reject
+     * every request that omits hours, which is a config error the caller can neither see nor fix.
+     * The resolved default is clamped to the ceiling; an explicit out-of-range hours is still
+     * refused (see testReopenAboveTheConfiguredMaxThrowsValidation).
+     */
+    public function testMisconfiguredDefaultAboveMaxIsClampedRatherThanRefused(): void
+    {
+        $this->config->set('cfp.default_reopen_hours', 500);
+        $this->config->set('cfp.max_reopen_hours', 48);
+
+        $service = $this->makeService();
+        $presentation = $this->presentation($this->plan($this->utc('-1 hour')));
+
+        $result = $service->reopen($this->summit($presentation), 1234, null, $this->member());
+
+        $this->assertSame(48, $result->getSubmissionReopenedHours());
+        $this->assertClosureRan();
+    }
+
     public function testReopenAboveTheConfiguredMaxThrowsValidation(): void
     {
         $service = $this->makeService();

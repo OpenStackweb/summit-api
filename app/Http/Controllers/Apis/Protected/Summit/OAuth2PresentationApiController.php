@@ -593,7 +593,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
             // unknown type silently falls back to Public, stripping the reopen fields.
             return $this->updated(SerializerRegistry::getInstance()->getSerializer(
                 $presentation, SerializerRegistry::SerializerType_Private
-            )->serialize());
+            )->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
         });
     }
 

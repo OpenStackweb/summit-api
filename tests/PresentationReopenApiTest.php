@@ -462,9 +462,14 @@ class PresentationReopenApiTest extends ProtectedApiTestCase
     public function testReopenFieldsNeverAppearOnAPublicSerializedResponse()
     {
         $this->reopen(['hours' => 24]);
+        // without this the three absence assertions below hold vacuously: a failed reopen leaves
+        // no grant, so Public would omit the fields whether or not the mappings are Admin-only
+        $this->assertResponseStatus(201);
+        $reloaded = $this->reloadPresentation();
+        $this->assertTrue($reloaded->isSubmissionReopened(), 'grant did not persist');
 
         $payload = SerializerRegistry::getInstance()->getSerializer(
-            $this->reloadPresentation(), SerializerRegistry::SerializerType_Public
+            $reloaded, SerializerRegistry::SerializerType_Public
         )->serialize();
 
         $this->assertArrayNotHasKey('submission_reopened_until', $payload);

@@ -112,31 +112,30 @@ final class SponsorUserSyncService
      */
     public function removeSponsorUser(int $summit_id, int $user_id, ?int $sponsor_id = null): void
     {
-        try {
-            Log::debug(
-                "SponsorUserSyncService::removeSponsorUser summit {$summit_id} sponsor {$sponsor_id} user_id {$user_id}");
+        // Do NOT swallow failures here: a lost removal event silently leaves
+        // the user with access they should have lost. Propagate so the MQ job
+        // (tries = 3) applies its retry / failed_jobs machinery.
+        Log::debug(
+            "SponsorUserSyncService::removeSponsorUser summit {$summit_id} sponsor {$sponsor_id} user_id {$user_id}");
 
-            list($summit, $member) = $this->validateParams($summit_id, $user_id);
+        list($summit, $member) = $this->validateParams($summit_id, $user_id);
 
-            Log::debug(
-                "SponsorUserSyncService::removeSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
+        Log::debug(
+            "SponsorUserSyncService::removeSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
 
-            if (is_null($sponsor_id)) {
-                foreach ($member->getSponsorMemberships() as $sponsor_membership) {
-                    $sponsor_id = $sponsor_membership->getId();
-                    $this->summit_sponsor_service->removeSponsorUser($summit, $sponsor_id, $member->getId());
-
-                    Log::info(
-                        "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from summit {$summit->getId()} for sponsor {$sponsor_id}"
-                    );
-                }
-            } else {
+        if (is_null($sponsor_id)) {
+            foreach ($member->getSponsorMemberships() as $sponsor_membership) {
+                $sponsor_id = $sponsor_membership->getId();
                 $this->summit_sponsor_service->removeSponsorUser($summit, $sponsor_id, $member->getId());
+
                 Log::info(
-                    "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from to summit {$summit_id} for sponsor {$sponsor_id}");
+                    "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from summit {$summit->getId()} for sponsor {$sponsor_id}"
+                );
             }
-        }  catch (\Exception $ex) {
-            Log::error($ex);
+        } else {
+            $this->summit_sponsor_service->removeSponsorUser($summit, $sponsor_id, $member->getId());
+            Log::info(
+                "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from to summit {$summit_id} for sponsor {$sponsor_id}");
         }
     }
 

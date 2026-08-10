@@ -222,6 +222,22 @@ class SponsorUserPermissionTrackingTest extends TestCase
         );
     }
 
+    /**
+     * A swallowed removal failure is worse than a swallowed addition: the user
+     * silently RETAINS access they should have lost. The failure must propagate
+     * so the MQ job's retry / failed_jobs machinery applies.
+     */
+    public function testRemoveSponsorUserPropagatesErrorWhenMemberDoesNotExist(): void
+    {
+        $this->expectException(\models\exceptions\EntityNotFoundException::class);
+
+        $this->getService()->removeSponsorUser(
+            self::$summit->getId(),
+            PHP_INT_MAX, // external user id with no matching Member row
+            self::$sponsors[0]->getId()
+        );
+    }
+
     // -------------------------------------------------------------------------
     // removeSponsorUserFromGroup
     // -------------------------------------------------------------------------

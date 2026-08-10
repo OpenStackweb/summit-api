@@ -1051,6 +1051,12 @@ trait InsertSummitTestData
     protected static function clearSummitTestData(){
         if (!self::$em ->isOpen()) {
             self::$em  = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+            // Same staleness trap as clearMemberTestData: repositories captured
+            // at setup are bound to the closed manager - re-resolve them or the
+            // finds below throw and the whole summit fixture set leaks.
+            self::$summit_repository = self::$em->getRepository(Summit::class);
+            self::$summit_permission_group_repository = self::$em->getRepository(SummitAdministratorPermissionGroup::class);
+            self::$media_file_type_repository = self::$em->getRepository(SummitMediaFileType::class);
         }
         self::$summit = self::$summit_repository->find(self::$summit->getId());
         self::$summit2 = self::$summit_repository->find(self::$summit2->getId());

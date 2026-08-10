@@ -160,6 +160,14 @@ trait InsertMemberTestData
         try {
             if (!self::$em->isOpen()) {
                 self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+                // The repositories captured at setup are bound to the CLOSED
+                // manager (a failed tx_service transaction closes and resets it).
+                // Re-resolve them from the fresh manager or the finds below throw
+                // "EntityManager is closed" and the fixtures LEAK - leaked
+                // duplicate Group rows make getBySlug() resolve a stale row and
+                // turn group removals into silent no-ops on every later run.
+                self::$group_repository = self::$em->getRepository(Group::class);
+                self::$member_repository = self::$em->getRepository(Member::class);
             }
 
             self::$member = self::$member_repository->find(self::$member->getId());
@@ -185,7 +193,12 @@ trait InsertMemberTestData
             self::$em->flush();
 
         } catch (\Exception $ex) {
-
+            // Do NOT let a cleanup failure stay invisible: leaked fixtures
+            // poison the shared test database for every subsequent run.
+            fwrite(STDERR, sprintf(
+                "clearMemberTestData failed - fixtures may have leaked: %s\n",
+                $ex->getMessage()
+            ));
         }
     }
 }

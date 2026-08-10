@@ -83,29 +83,44 @@ final class PresentationSubmissionReopenService
 
     public function closeNow(Summit $summit, int $presentation_id, Member $actor): void
     {
-        $this->tx_service->transaction(function () use ($summit, $presentation_id, $actor) {
+        // closeSubmissionNow() nulls all three columns, the granting actor included, so the audit
+        // fields have to be read before the write and carried out of the closure. The line itself
+        // is emitted only after transaction() returns: flush and commit happen after the closure,
+        // and a retryable failure re-runs it, so logging inside would announce a revocation that
+        // had not happened yet and could announce it more than once.
+        $audit = $this->tx_service->transaction(function () use ($summit, $presentation_id) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
 
-            // closeSubmissionNow() nulls all three columns, the granting actor included, so the
-            // revocation is only auditable if it is recorded BEFORE the write. Both ends of the
-            // privilege go in one line: who granted it and until when, and who revoked it.
             $granted_until = $presentation->getSubmissionReopenedUntil();
-            Log::info(
-                sprintf(
-                    "PresentationSubmissionReopenService::closeNow summit %s presentation %s revoked by member %s (granted by member %s, ran until %s).",
-                    $summit->getId(),
-                    $presentation_id,
-                    $actor->getId(),
-                    $presentation->getSubmissionReopenedById(),
-                    is_null($granted_until) ? 'n/a' : $granted_until->format('Y-m-d H:i:s')
-                )
-            );
+            $granted_by_id = $presentation->getSubmissionReopenedById();
 
             // no plan-state checks on purpose: a stale grant must always be clearable
             $presentation->closeSubmissionNow();
+
+            return [
+                // the accessor returns 0, not null, for an absent relation, and closing with no
+                // active grant is a legitimate no-op rather than a member whose id is zero
+                'granted_by' => $granted_by_id > 0 ? sprintf("member %s", $granted_by_id) : 'no active grant',
+                // stamped UTC on write; normalized again here because Doctrine hydrates datetimes
+                // in the application default timezone
+                'granted_until' => is_null($granted_until)
+                    ? 'n/a'
+                    : $granted_until->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z'),
+            ];
         });
+
+        Log::info(
+            sprintf(
+                "PresentationSubmissionReopenService::closeNow summit %s presentation %s revoked by member %s (granted by %s, ran until %s).",
+                $summit->getId(),
+                $presentation_id,
+                $actor->getId(),
+                $audit['granted_by'],
+                $audit['granted_until']
+            )
+        );
     }
 }

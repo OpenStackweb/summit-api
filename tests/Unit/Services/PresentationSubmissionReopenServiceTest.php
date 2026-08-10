@@ -422,8 +422,7 @@ class PresentationSubmissionReopenServiceTest extends TestCase
 
     /**
      * The revoking actor is only observable through this log line, since closeSubmissionNow()
-     * nulls the actor column. It is also the only thing that catches $actor being dropped from
-     * the transaction closure's use list, which is how it was inert to begin with.
+     * nulls the actor column.
      */
     public function testCloseNowLogsTheRevocationWithBothActors(): void
     {
@@ -440,6 +439,44 @@ class PresentationSubmissionReopenServiceTest extends TestCase
                 && str_contains($message, 'granted by member 7');
         });
         $this->assertClosureRan();
+    }
+
+    /**
+     * getSubmissionReopenedById() returns 0 rather than null for an absent relation, and closing
+     * with nothing granted is a supported no-op, so the audit line must not name "member 0".
+     */
+    public function testCloseNowWithNoGrantLogsNoActiveGrantRatherThanMemberZero(): void
+    {
+        $service = $this->makeService();
+        $presentation = $this->presentation($this->plan($this->utc('-1 hour')));
+
+        $service->closeNow($this->summit($presentation), 1234, $this->member(11));
+
+        $this->log->shouldHaveReceived('info')->once()->withArgs(function (string $message) {
+            return str_contains($message, 'granted by no active grant')
+                && !str_contains($message, 'member 0')
+                && str_contains($message, 'ran until n/a');
+        });
+        $this->assertClosureRan();
+    }
+
+    /**
+     * The line claims a completed revocation, so it must not be emitted for a transaction that
+     * threw: flush and commit run after the closure, and a retryable failure re-runs it.
+     */
+    public function testCloseNowDoesNotLogWhenTheTransactionFails(): void
+    {
+        $tx_service = Mockery::mock(ITransactionService::class);
+        $tx_service->shouldReceive('transaction')->once()->andThrow(new \RuntimeException('deadlock'));
+        $service = new PresentationSubmissionReopenService($tx_service);
+
+        $this->expectException(\RuntimeException::class);
+
+        try {
+            $service->closeNow($this->summit($this->presentation()), 1234, $this->member(11));
+        } finally {
+            $this->log->shouldNotHaveReceived('info');
+        }
     }
 
     public function testCloseNowSucceedsOnADisabledPlan(): void

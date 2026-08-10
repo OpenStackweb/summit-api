@@ -387,6 +387,73 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         }
     }
 
+    public function testAutoAssignPrePaidTicketUsesTicketLevelAttendeeData() {
+
+        // Fixture registration window starts tomorrow (see InsertSummitTestData);
+        // open it now so this test isn't blocked by an unrelated precondition.
+        self::$summit->setRegistrationBeginDate(new \DateTime('-1 day'));
+        self::$summit->setRegistrationEndDate(new \DateTime('+30 days'));
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // Build a dedicated unassigned, paid, offline ticket so this test does not
+        // depend on the base fixture's order #0 (already-assigned attendee / online
+        // payment method, neither of which qualifies for prepaid pickup).
+        $owner = self::$defaultMember;
+
+        $order = new SummitOrder();
+        $order->setSummit(self::$summit);
+        $order->setOwner($owner);
+        $order->setPaymentMethodOffline();
+        $order->generateNumber();
+
+        $ticket = new SummitAttendeeTicket();
+        $ticket->setTicketType(self::$default_ticket_type);
+        $order->addTicket($ticket);
+        $ticket->activate();
+        $ticket->generateNumber();
+        $ticket->generateQRCode();
+
+        self::$summit->addOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $order->setPaid();
+
+        self::$default_prepaid_discount_code->clearTickets();
+        self::$default_prepaid_discount_code->addTicket($ticket);
+        self::$em->persist(self::$default_prepaid_discount_code);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $service = App::make(ISummitOrderService::class);
+
+        $payload = [
+            "owner_email"      => $owner->getEmail(),
+            "owner_first_name" => $owner->getFirstName(),
+            "owner_last_name"  => $owner->getLastName(),
+            "owner_company"    => $owner->getCompany(),
+            "tickets" => [
+                [
+                    "type_id"             => self::$default_ticket_type->getId(),
+                    "promo_code"          => self::$default_prepaid_discount_code->getCode(),
+                    // Attendee is a different person than the order owner -
+                    // this is the scenario AutoAssignPrePaidTicketTask exists for.
+                    "attendee_company"    => "Attendee Co",
+                    "attendee_first_name" => "Jane",
+                    "attendee_last_name"  => "Doe",
+                ],
+            ]
+        ];
+
+        $result_order = $service->reserve($owner, self::$summit, $payload);
+        $attendee     = $result_order->getTickets()->first()->getOwner();
+
+        $this->assertEquals("Attendee Co", $attendee->getCompanyName());
+        $this->assertEquals("Jane", $attendee->getFirstName());
+        $this->assertEquals("Doe", $attendee->getSurname());
+    }
+
     /**
      * @param string $csv_content
      * @return ISummitOrderService

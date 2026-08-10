@@ -1553,7 +1553,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
 
             $type_id = $ticket_dto['type_id'];
             $order = $this->lock_service->lock('ticket_type.' . $type_id . '.promo_code.' . $promo_code_val . '.sell.lock',
-                function () use ($promo_code_val, $type_id) {
+                function () use ($promo_code_val, $type_id, $ticket_dto) {
 
                     $attendee_email = $this->owner->getEmail();
                     // use what we have on payload first

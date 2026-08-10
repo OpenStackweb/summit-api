@@ -206,6 +206,51 @@ final class SponsorServicesMQJobRetryTest extends TestCase
     }
 
     /**
+     * A forged/buggy x_event_type in a FIRST-delivery body must not survive the
+     * release: on first delivery the routing key is authoritative (getEventType
+     * ignores the body), so release() must write the RESOLVED event type over
+     * whatever the body carried - otherwise the retry would run a different
+     * handler than the original delivery did.
+     */
+    public function testReleaseOverwritesAForgedEventTypeWithTheResolvedOne(): void
+    {
+        $queue_name = 'sponsor-users-api-summit-api-badge-scans-queue';
+
+        // Routing key says ADDED_TO_GROUP; the body smuggles a conflicting type.
+        $message = new AMQPMessage(json_encode([
+            'user_external_id' => 1,
+            SponsorServicesMQJob::EventTypeKey => EventTypes::AUTH_USER_REMOVED_FROM_SUMMIT,
+        ]));
+        $message->setDeliveryInfo(1, false, 'sponsor_users', EventTypes::AUTH_USER_ADDED_TO_GROUP);
+
+        $rabbitmq = Mockery::mock(RabbitMQQueue::class);
+        $channel = Mockery::mock(\PhpAmqpLib\Channel\AMQPChannel::class);
+        $rabbitmq->shouldReceive('getChannel')->andReturn($channel);
+        $channel->shouldReceive('queue_declare')->once();
+
+        $republished = null;
+        $channel->shouldReceive('basic_publish')->once()->with(
+            Mockery::on(function ($msg) use (&$republished) {
+                $republished = $msg instanceof AMQPMessage ? $msg->getBody() : null;
+                return $msg instanceof AMQPMessage;
+            }),
+            '',
+            Mockery::any()
+        );
+        $rabbitmq->shouldReceive('ack')->once();
+
+        $job = new SponsorServicesMQJob(app(), $rabbitmq, $message, 'rabbitmq', $queue_name);
+        $job->release(30);
+
+        $body = json_decode($republished, true);
+        $this->assertSame(
+            EventTypes::AUTH_USER_ADDED_TO_GROUP,
+            $body[SponsorServicesMQJob::EventTypeKey] ?? null,
+            'release must overwrite a smuggled x_event_type with the routing-key-resolved event type'
+        );
+    }
+
+    /**
      * A second release (the message already carries the event type from the
      * first one) must keep the ORIGINAL event type, not overwrite it with the
      * redelivered routing key (the queue name).

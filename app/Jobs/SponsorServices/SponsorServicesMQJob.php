@@ -155,10 +155,13 @@ class SponsorServicesMQJob extends BaseJob
             'x-expires'                 => $ttl * 2,
         ]));
 
-        // Preserve the original event type across the redelivery (idempotent:
-        // a second release keeps the value written by the first one).
+        // Preserve the original event type across the redelivery. ALWAYS write
+        // the resolved value: on a first delivery the routing key is
+        // authoritative, so this overwrites any forged/buggy x_event_type the
+        // producer body may have carried; on a redelivery getEventType() already
+        // resolves from the body, so rewriting it is a no-op (idempotent).
         $body = json_decode($this->getRawBody(), true) ?? [];
-        $body[self::EventTypeKey] = $body[self::EventTypeKey] ?? $this->getEventType();
+        $body[self::EventTypeKey] = $this->getEventType();
 
         $channel->basic_publish(
             new AMQPMessage(json_encode($body), [

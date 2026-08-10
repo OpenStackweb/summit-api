@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Config;
 use LaravelDoctrine\ORM\Facades\Registry;
 use ModelSerializers\SerializerRegistry;
 use models\summit\Presentation;
+use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 
 /**
@@ -702,5 +703,262 @@ class PresentationReopenApiTest extends ProtectedApiTestCase
 
         $this->assertRefusedBySubmissionWindow($this->completeSubmission());
         $this->assertFalse($this->reloadPresentation()->isSubmitted());
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Open-window parity (SDS §8, "the acceptance bar"; D7). The SDS states the bar as: while
+    // reopened, the editable surface is exactly what the selection plan defines during the open
+    // window. These tests SAMPLE that bar the way §8 asks -- one prohibited field, one permitted
+    // field, plus the media-upload set -- they do not enumerate the whole surface.
+    //
+    // Parity holds by construction: the diff ORs the time gate in two places
+    // (PresentationService.php:547 for update, :671 for complete) and changes nothing else on those
+    // paths, so curatePayloadByPresentationAllowedQuestions / checkPresentationAllowedEdtiable
+    // Questions (:555-556) still run unconditionally afterwards on the one shared code path. These
+    // tests are a tripwire, so a later change that widens the surface for the reopen case
+    // specifically cannot pass unnoticed.
+    //
+    // Fixture direction, which is the opposite of what it looks like: SelectionPlan::__construct
+    // calls seedAllowedPresentationQuestions() and seedAllowedEditablePresentationQuestions()
+    // (SelectionPlan.php:457-458), so a fresh plan permits EVERY allowed field, both as a question
+    // and as editable. The restrictive case therefore has to be built by removing one, not by adding
+    // one -- hence makeNonEditable() below.
+    //
+    // Run these with the whole file, not as a hand-picked --filter subset. Each of the five passes
+    // on its own, the full file is green (25 tests) and so is the whole push.yml shard (59), which
+    // is what CI runs -- but certain multi-test --filter subsets make the tests that expect a
+    // successful update return 500 instead. Observed failure: PresentationSerializer::
+    // getMediaUploadsSerializerType() (:142) calls isAdmin() on the resource-server context's Member
+    // and Doctrine raises EntityNotFoundException ("Unable to find Proxies\__CG__\models\main\Member
+    // entity identifier associated with the UnitOfWork"). Reproducible for the scalar pair below
+    // when the five are filtered together; not reproducible for any of them alone. The mechanism was
+    // not chased past that, so treat a red hand-picked subset here as unproven rather than as a
+    // regression, and reproduce against the full file before believing it.
+    //
+    // 'links' rather than a scalar for the enforcement pair, on purpose. areFieldsEqual() has two
+    // branches (SelectionPlan.php:1564-1571): the array branch is correct, and the scalar branch
+    // compares html_entity_decode($field1) to itself, so it always reports equal and the guard is
+    // dead for every scalar field. 'links' is array-typed in AllowedEditableFields and in
+    // getSnapshot() (FieldLinks => []), so it takes the working branch and these tests need no fix
+    // to that pre-existing defect. The scalar half of the SDS bullet cannot assert enforcement at
+    // all and is covered as parity only, by the last pair below.
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * Drop one field from the plan's allowed-editable set, leaving the rest of the seeded set intact.
+     *
+     * SelectionPlan exposes no single-question remover -- only clearAllAllowedEditablePresentation
+     * Questions() (:490) -- so this drops the element straight off the collection returned by
+     * getAllowedEditablePresentationQuestions() (:485) rather than clearing and re-adding the other
+     * four. Safe against the DB either way: the association is mapped cascade persist+remove with
+     * orphanRemoval: true (:229), so the removed row is deleted rather than left behind to reappear
+     * on the next read -- which the isAllowedEditablePresentationQuestion() precondition assertion in
+     * each caller checks against a reloaded plan.
+     *
+     * Deliberately leaves the allowed-QUESTION set alone. curatePayloadByPresentationAllowedQuestions()
+     * returns the curated payload by value and both call sites discard the return
+     * (PresentationService.php:360 and :555), so curation is a no-op today. If that discard is ever
+     * fixed, a field missing from the question set would be stripped from the payload,
+     * isset($payload[$field]) would go false, and the editable check would never run -- so
+     * testNonEditableFieldIsRefusedUnderReopen would get a 201 against its asserted 412 and fail,
+     * even though stripping is the correct behavior at that point. Keeping the field an allowed
+     * question keeps these tests pinned on editability, which is what they are about, instead of
+     * making them a spurious casualty of that fix.
+     */
+    private function makeNonEditable(string $field): void
+    {
+        $questions = self::$default_selection_plan->getAllowedEditablePresentationQuestions();
+        foreach ($questions as $question) {
+            if ($question->getType() === $field) {
+                $questions->removeElement($question);
+            }
+        }
+        self::$em->flush();
+    }
+
+    private function updateSubmissionWithLinks(array $links)
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => self::$presentation->getId(),
+        ];
+        $headers = $this->getAuthHeaders(); // includes CONTENT_TYPE: application/json
+
+        return $this->action(
+            "PUT", "OAuth2PresentationApiController@updatePresentationSubmission",
+            $params, [], [], [], $headers,
+            json_encode(array_merge($this->validUpdatePayload(), ['links' => $links]))
+        );
+    }
+
+    /**
+     * The presentation starts with no links, so the snapshot's FieldLinks is [] -- still isset(),
+     * which is what checkPresentationAllowedEdtiableQuestions requires (:1594) -- and a one-element
+     * payload differs by count, so the array branch reports unequal and the guard fires.
+     */
+    public function testNonEditableFieldIsRefusedUnderReopen()
+    {
+        $this->makeNonEditable(Presentation::FieldLinks);
+        $this->grantWindow(24);
+
+        $reloaded = $this->reloadPresentation();
+        $this->assertTrue($reloaded->isSubmissionReopened(), 'grant did not persist');
+        $this->assertTrue(
+            $reloaded->getSelectionPlan()->isAllowedPresentationQuestion(Presentation::FieldLinks),
+            'links must remain an allowed QUESTION, or this test survives a curation fix vacuously'
+        );
+        $this->assertFalse(
+            $reloaded->getSelectionPlan()->isAllowedEditablePresentationQuestion(Presentation::FieldLinks),
+            'fixture did not land: links is still editable, so a 412 below would prove nothing'
+        );
+
+        $response = $this->updateSubmissionWithLinks(['https://example.org/deck']);
+        $this->assertResponseStatus(412);
+        // the PLAN's message, not assertRefusedBySubmissionWindow()'s -- a window refusal here would
+        // mean the gate never opened, which is the opposite of what this test asserts
+        $this->assertErrorsContain(
+            $response,
+            sprintf(
+                'Field %s is not allowed for edition on Selection Plan %s.',
+                Presentation::FieldLinks,
+                self::$default_selection_plan->getName()
+            )
+        );
+
+        $this->assertCount(
+            0,
+            $this->reloadPresentation()->getLinks(),
+            'refused with 412 but the link was written anyway'
+        );
+    }
+
+    /**
+     * The other direction. No fixture change: the constructor already seeds links as editable, and
+     * the assertion below states that rather than assuming it.
+     */
+    public function testEditableFieldStaysEditableUnderReopen()
+    {
+        $this->grantWindow(24);
+
+        $reloaded = $this->reloadPresentation();
+        $this->assertTrue($reloaded->isSubmissionReopened(), 'grant did not persist');
+        $this->assertTrue(
+            $reloaded->getSelectionPlan()->isAllowedEditablePresentationQuestion(Presentation::FieldLinks),
+            'links must BE an allowed editable question here'
+        );
+
+        $this->updateSubmissionWithLinks(['https://example.org/deck']);
+        $this->assertResponseStatus(201);
+
+        // the edit landed -- a 201 alone would also come back if the factory ignored the field
+        $links = [];
+        foreach ($this->reloadPresentation()->getLinks() as $link) {
+            $links[] = $link->getLink();
+        }
+        $this->assertEquals(['https://example.org/deck'], $links);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // The scalar half of the SDS bullet, as parity rather than as enforcement.
+    //
+    // A scalar change to a NON-editable field is accepted, because areFieldsEqual()'s scalar branch
+    // self-compares (SelectionPlan.php:1570). That defect is outside this diff and deliberately not
+    // fixed here, so the only honest assertion available is that reopen behaves exactly as the open
+    // window does -- which is what parity means. Neither test below claims the guard works.
+    //
+    // Two tests rather than one because this suite gets one SUCCESSFUL HTTP write per entity. Not a
+    // general BrowserKit law -- it is this app's wiring: DoctrineMiddleware closes the model entity
+    // manager after each request (app/Http/Middleware/DoctrineMiddleware.php:38-42) while the
+    // presentation service and its repositories are container singletons holding the manager they
+    // first resolved, so the second write mutates an untracked object and flush() persists nothing
+    // while still returning success (see grantWindow()). Doing both windows in one test would make
+    // the second arm assert nothing.
+    //
+    // Named "HandledIdentically", not "IsAccepted": the 201 each arm asserts is the comparator defect
+    // showing through, not a property worth preserving. When the comparator is fixed both arms move
+    // to 412 TOGETHER and both fail together -- that is expected, and the fix should update both. If
+    // only one moves, parity actually broke and that is the signal these two exist to give.
+    // ---------------------------------------------------------------------------------------------
+
+    public function testNonEditableScalarHandledIdenticallyInTheOpenWindow()
+    {
+        $this->makeNonEditable(SummitEvent::FieldTitle);
+        self::$default_selection_plan->setSubmissionEndDate(
+            (new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('P1D'))
+        );
+        self::$em->flush();
+
+        $reloaded = $this->reloadPresentation();
+        $this->assertTrue($reloaded->getSelectionPlan()->isSubmissionOpen(), 'window did not reopen');
+        $this->assertFalse($reloaded->isSubmissionReopened(), 'this arm must NOT ride on a grant');
+        $this->assertFalse(
+            $reloaded->getSelectionPlan()->isAllowedEditablePresentationQuestion(SummitEvent::FieldTitle),
+            'title must be non-editable for this to say anything'
+        );
+
+        $this->updateSubmission(); // validUpdatePayload() changes title
+        $this->assertResponseStatus(201);
+        $this->assertEquals('EDITED DURING REOPEN', $this->reloadPresentation()->getTitle());
+    }
+
+    public function testNonEditableScalarHandledIdenticallyUnderReopen()
+    {
+        $this->makeNonEditable(SummitEvent::FieldTitle);
+        $this->grantWindow(24);
+
+        $reloaded = $this->reloadPresentation();
+        $this->assertFalse(
+            $reloaded->getSelectionPlan()->isSubmissionOpen(),
+            'this arm must run against a CLOSED window, or it is a copy of the one above'
+        );
+        $this->assertTrue($reloaded->isSubmissionReopened(), 'grant did not persist');
+        $this->assertFalse(
+            $reloaded->getSelectionPlan()->isAllowedEditablePresentationQuestion(SummitEvent::FieldTitle),
+            'title must be non-editable for this to say anything'
+        );
+
+        $this->updateSubmission();
+        $this->assertResponseStatus(201);
+        $this->assertEquals('EDITED DURING REOPEN', $this->reloadPresentation()->getTitle());
+    }
+
+    /**
+     * The third assertion of the SDS bullet, recorded as the structural guard it is rather than
+     * presented as coverage it is not.
+     *
+     * getAllowedMediaUploadTypes() (PresentationType.php:413) unconditionally returns the type's
+     * stored collection -- it takes no window, no selection plan and no presentation. The mutation
+     * path agrees: addMediaUploadTo (PresentationService.php:1083-1125) checks the media upload type,
+     * the presentation-type allowance and the max-qty cap, and never consults the submission window
+     * or the plan at all. Media and speaker subresource mutations are ungated in EVERY window -- open,
+     * closed, granted or not; adding that guard is ClickUp 86bba8388 and is out of scope here.
+     *
+     * So this asserts a property that cannot vary with the reopen state, and it would keep passing if
+     * the reopen gate broke entirely. It cannot detect a fixture change either -- both sides derive
+     * from the same fixture and would move together. It is kept only because the SDS bullet names
+     * the assertion explicitly. Do NOT read a green here as evidence that reopen leaves media uploads
+     * alone: what makes that true is 86bba8388 being unimplemented, not this test. It also says
+     * nothing about mutation behavior, only about the advertised set.
+     */
+    public function testAllowedMediaUploadTypesAreUnchangedUnderReopen()
+    {
+        $before = [];
+        foreach (self::$defaultPresentationType->getAllowedMediaUploadTypes() as $type) {
+            $before[] = $type->getId();
+        }
+        sort($before);
+        $this->assertNotEmpty($before, 'fixture attaches no media upload types; the comparison is vacuous');
+
+        $this->grantWindow(24);
+        $reloaded = $this->reloadPresentation();
+        $this->assertTrue($reloaded->isSubmissionReopened(), 'grant did not persist');
+
+        $after = [];
+        foreach ($reloaded->getType()->getAllowedMediaUploadTypes() as $type) {
+            $after[] = $type->getId();
+        }
+        sort($after);
+
+        $this->assertEquals($before, $after);
     }
 }

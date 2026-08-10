@@ -14,6 +14,8 @@
  **/
 
 use Illuminate\Support\Facades\Log;
+use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Jobs\RabbitMQJob as BaseJob;
 
 class SponsorServicesMQJob extends BaseJob
@@ -128,29 +130,47 @@ class SponsorServicesMQJob extends BaseJob
 
         $ttl = $this->secondsUntil($delay) * 1000;
         if ($ttl <= 0) {
-            // laterRaw's ttl<=0 path publishes straight to the consumer exchange
-            // with the queue name as routing key - unroutable (see above). Force
-            // the minimum delay so the delay-queue path is always taken.
-            $delay = 1;
+            // Never skip the delay queue: publishing straight to the consumer
+            // exchange with the queue name as routing key is unroutable (above).
             $ttl = 1000;
         }
+        $delay_queue = $this->queue . '.delay.' . $ttl;
 
-        // Declare the delay queue FIRST: RabbitMQQueue::laterRaw() skips
-        // re-declaring a queue already in its declared-names cache, so these
-        // arguments win over the library defaults.
-        $this->rabbitmq->declareQueue($this->queue . '.delay.' . $ttl, true, false, [
+        // Declare + publish DIRECTLY on the channel, bypassing laterRaw():
+        //  - laterRaw() re-declares the delay queue with its own dead-letter
+        //    arguments, which the broker rejects (PRECONDITION_FAILED,
+        //    inequivalent args) once the queue exists with ours;
+        //  - suppressing that re-declare by priming the declared-names cache
+        //    would mean the queue is declared only once per worker process,
+        //    while x-expires DELETES it when idle - every later release would
+        //    then publish into a deleted queue and be dropped silently.
+        // An unconditional queue_declare per release re-creates the queue when
+        // it expired and is a no-op (equivalent args) when it did not.
+        $channel = $this->rabbitmq->getChannel();
+
+        $channel->queue_declare($delay_queue, false, true, false, false, false, new AMQPTable([
             'x-dead-letter-exchange'    => '',
             'x-dead-letter-routing-key' => $this->queue,
             'x-message-ttl'             => $ttl,
             'x-expires'                 => $ttl * 2,
-        ]);
+        ]));
 
         // Preserve the original event type across the redelivery (idempotent:
         // a second release keeps the value written by the first one).
         $body = json_decode($this->getRawBody(), true) ?? [];
         $body[self::EventTypeKey] = $body[self::EventTypeKey] ?? $this->getEventType();
 
-        $this->rabbitmq->laterRaw($delay, json_encode($body), $this->queue, $this->attempts());
+        $channel->basic_publish(
+            new AMQPMessage(json_encode($body), [
+                'content_type'        => 'application/json',
+                'delivery_mode'       => AMQPMessage::DELIVERY_MODE_PERSISTENT,
+                'correlation_id'      => uniqid('', true),
+                // attempts() reads this header on the next delivery.
+                'application_headers' => new AMQPTable(['laravel' => ['attempts' => $this->attempts()]]),
+            ]),
+            '', // default exchange: routes by queue name, no binding required
+            $delay_queue
+        );
 
         // The retry was republished as a new message; ack the current one.
         $this->rabbitmq->ack($this);

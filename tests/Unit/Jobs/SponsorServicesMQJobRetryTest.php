@@ -152,28 +152,39 @@ final class SponsorServicesMQJobRetryTest extends TestCase
         $message->setDeliveryInfo(1, false, 'sponsor_users', EventTypes::AUTH_USER_ADDED_TO_SPONSOR_AND_SUMMIT);
 
         $rabbitmq = Mockery::mock(RabbitMQQueue::class);
+        $channel = Mockery::mock(\PhpAmqpLib\Channel\AMQPChannel::class);
+        $rabbitmq->shouldReceive('getChannel')->andReturn($channel);
 
-        $rabbitmq->shouldReceive('declareQueue')->once()->with(
+        // Re-declared on EVERY release (x-expires deletes the idle queue), with
+        // dead-lettering through the default exchange - the consumer exchange is
+        // direct and only binds the auth_user_* keys, so anything else drops the
+        // retried message.
+        $channel->shouldReceive('queue_declare')->once()->with(
             $queue_name . '.delay.30000',
+            false,
             true,
             false,
-            [
-                'x-dead-letter-exchange'    => '',
-                'x-dead-letter-routing-key' => $queue_name,
-                'x-message-ttl'             => 30000,
-                'x-expires'                 => 60000,
-            ]
+            false,
+            false,
+            Mockery::on(function ($arguments) use ($queue_name) {
+                return $arguments instanceof \PhpAmqpLib\Wire\AMQPTable
+                    && $arguments->getNativeData() == [
+                        'x-dead-letter-exchange'    => '',
+                        'x-dead-letter-routing-key' => $queue_name,
+                        'x-message-ttl'             => 30000,
+                        'x-expires'                 => 60000,
+                    ];
+            })
         );
 
         $republished = null;
-        $rabbitmq->shouldReceive('laterRaw')->once()->with(
-            30,
-            Mockery::on(function ($payload) use (&$republished) {
-                $republished = $payload;
-                return is_string($payload);
+        $channel->shouldReceive('basic_publish')->once()->with(
+            Mockery::on(function ($msg) use (&$republished) {
+                $republished = $msg instanceof AMQPMessage ? $msg->getBody() : null;
+                return $msg instanceof AMQPMessage;
             }),
-            $queue_name,
-            1 // first attempt
+            '', // default exchange
+            $queue_name . '.delay.30000'
         );
 
         $rabbitmq->shouldReceive('ack')->once();
@@ -211,17 +222,18 @@ final class SponsorServicesMQJobRetryTest extends TestCase
         $message->setDeliveryInfo(1, false, 'sponsor_users', $queue_name);
 
         $rabbitmq = Mockery::mock(RabbitMQQueue::class);
-        $rabbitmq->shouldReceive('declareQueue')->once();
+        $channel = Mockery::mock(\PhpAmqpLib\Channel\AMQPChannel::class);
+        $rabbitmq->shouldReceive('getChannel')->andReturn($channel);
+        $channel->shouldReceive('queue_declare')->once();
 
         $republished = null;
-        $rabbitmq->shouldReceive('laterRaw')->once()->with(
-            120,
-            Mockery::on(function ($payload) use (&$republished) {
-                $republished = $payload;
-                return is_string($payload);
+        $channel->shouldReceive('basic_publish')->once()->with(
+            Mockery::on(function ($msg) use (&$republished) {
+                $republished = $msg instanceof AMQPMessage ? $msg->getBody() : null;
+                return $msg instanceof AMQPMessage;
             }),
-            $queue_name,
-            1
+            '',
+            $queue_name . '.delay.120000'
         );
         $rabbitmq->shouldReceive('ack')->once();
 

@@ -23,6 +23,7 @@ use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
 use models\summit\ISummitRepository;
+use models\summit\Sponsor;
 use models\summit\Summit;
 use models\utils\SilverstripeBaseModel;
 use services\model\ISummitSponsorService;
@@ -109,6 +110,37 @@ final class SponsorUserSyncService
     }
 
     /**
+     * Sponsor::addUser rejects a member that belongs to none of its
+     * AllowedMemberGroups. sponsor-users-api grants that group at the IDP before
+     * publishing the membership event (_sync_user_groups), but summit-api only
+     * learns about it through the IDP's own user-updated event, which races this
+     * one. resolveMember covers the member that does not exist yet - this covers
+     * the member that exists with a stale local group set: re-read it from the
+     * IDP, which is the source of truth, instead of failing.
+     *
+     * Nothing downstream would repair that failure: the producers of
+     * auth_user_added_to_sponsor_and_summit (_import_user, _notify_approval) emit
+     * no companion group event, so no eager-create path ever runs and the access
+     * is lost once the job exhausts its tries.
+     *
+     * @param Member $member
+     * @param int $user_id external (IDP) user id
+     * @return Member the same member, or the refreshed one
+     * @throws \Exception
+     */
+    private function ensureSponsorGroupMembership(Member $member, int $user_id): Member
+    {
+        foreach (Sponsor::AllowedMemberGroups as $group_slug) {
+            if ($member->belongsToGroup($group_slug)) return $member;
+        }
+
+        Log::warning(
+            "SponsorUserSyncService::ensureSponsorGroupMembership member {$member->getId()} belongs to none of the allowed sponsor groups - refreshing groups from the IDP");
+
+        return $this->member_service->registerExternalUserById($user_id);
+    }
+
+    /**
      * @param int $summit_id
      * @return Summit
      * @throws EntityNotFoundException
@@ -148,6 +180,8 @@ final class SponsorUserSyncService
 
         Log::debug(
             "SponsorUserSyncService::addSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
+
+        $member = $this->ensureSponsorGroupMembership($member, $user_id);
 
         $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
 

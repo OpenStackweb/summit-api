@@ -455,6 +455,64 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
+     * The membership event (auth_user_added_to_sponsor_and_summit) is emitted by
+     * sponsor-users-api WITHOUT any companion group event - see _import_user and
+     * _notify_approval, neither of which publishes auth_user_added_to_group. So
+     * nothing downstream repairs a failure here: if Sponsor::addUser rejects the
+     * member for not belonging to an allowed sponsor group, the Sponsor_Users row
+     * is never created and the access is lost for good.
+     *
+     * The producer does add the group at the IDP before publishing, so the IDP is
+     * already correct; it is the local copy that is stale. A member that does not
+     * exist yet is covered by resolveMember's on-demand registration - this covers
+     * the member that DOES exist locally with outdated groups.
+     */
+    public function testAddSponsorUserRefreshesStaleGroupsFromIdp(): void
+    {
+        // member2 belongs only to SummitAdministrators - not an allowed sponsor group.
+        $member_id   = self::$member2->getId();
+        $external_id = self::$member2->getUserExternalId();
+        $sponsor_id  = self::$sponsors[1]->getId(); // no Sponsor_Users row yet
+
+        $this->assertFalse(
+            self::$member_repository->find($member_id)->belongsToGroup(IGroup::Sponsors),
+            'Pre-condition: member must not belong to an allowed sponsor group'
+        );
+        $this->assertFalse($this->hasSponsorUserRow($sponsor_id, $member_id));
+
+        // The IDP already carries the group (the producer syncs it before publishing).
+        $this->mockExternalUserApi([
+            'id'             => $external_id,
+            'email'          => self::$member2->getEmail(),
+            'first_name'     => self::$member2->getFirstName(),
+            'last_name'      => self::$member2->getLastName(),
+            'bio'            => '',
+            'active'         => true,
+            'email_verified' => true,
+            'groups'         => [IGroup::Sponsors],
+            'public_profile_show_photo'            => false,
+            'public_profile_show_fullname'         => false,
+            'public_profile_show_email'            => false,
+            'public_profile_show_telephone_number' => false,
+            'public_profile_show_bio'              => false,
+            'public_profile_show_social_media_info' => false,
+            'public_profile_allow_chat_with_me'    => false,
+        ]);
+
+        $this->getService()->addSponsorUser(
+            self::$summit->getId(),
+            $sponsor_id,
+            $external_id
+        );
+
+        self::$em->clear();
+        $this->assertTrue(
+            $this->hasSponsorUserRow($sponsor_id, $member_id),
+            'the Sponsor_Users row must have been created after refreshing groups from the IDP'
+        );
+    }
+
+    /**
      * A member that was never synced holds no Sponsor_Users row and no group
      * membership, so a revocation event for it has nothing to revoke: it is a
      * no-op, not a failure. Turning it into an exception would burn the job's

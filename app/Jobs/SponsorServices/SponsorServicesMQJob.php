@@ -21,7 +21,24 @@ class SponsorServicesMQJob extends BaseJob
     public int $tries = 3;
 
     /**
+     * Seconds to wait before the 2nd and 3rd attempt, as the comma-separated
+     * string Worker::calculateBackoff() explodes.
+     *
+     * These events race the IDP's own user-updated event, which is what refreshes
+     * a member's groups locally. Retrying immediately loses that race every time;
+     * for auth_user_added_to_sponsor_and_summit that is terminal, because no
+     * companion group event follows to repair the state.
+     */
+    const RetryBackoff = '30,120';
+
+    /**
      * Get the decoded body of the job.
+     *
+     * Note the maxTries/backoff keys: Job::maxTries() and Job::backoff() read the
+     * PAYLOAD, not the properties of the handler class this payload names. Without
+     * them the worker falls back to the command's own options, and the entry point
+     * runs `doctrine:queue:work sponsor_users_sync_consumer` with no flags - so the
+     * defaults of --tries=1 and --backoff=0 apply and a single failure is final.
      *
      * @return array
      */
@@ -47,7 +64,9 @@ class SponsorServicesMQJob extends BaseJob
         }
         return [
             'job' => $job,
-            'data' => json_decode($this->getRawBody(), true)
+            'data' => json_decode($this->getRawBody(), true),
+            'maxTries' => $this->tries,
+            'backoff' => self::RetryBackoff,
         ];
     }
 }

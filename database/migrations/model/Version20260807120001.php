@@ -47,9 +47,22 @@ final class Version20260807120001 extends AbstractMigration
     {
         $table = $schema->getTable(self::TableName);
 
-        // the column is Version20260807120000's job; if it is absent that migration has not run,
-        // and adding the constraint here would fail on a missing column rather than explain itself
-        if (!$table->hasColumn(self::ActorColumn)) return;
+        // The column is Version20260807120000's job. Abort rather than return if it is missing:
+        // a plain return is the ordinary success path, so Doctrine would record THIS migration as
+        // applied and the constraint would never be created, leaving the column with no ON DELETE
+        // SET NULL and no migration left to add it. abortIf() throws AbortMigration, which stops
+        // the run and leaves the version unrecorded, so a repaired schema can re-run it.
+        // skipIf() would be wrong here for the same reason as the plain return: it records.
+        $this->abortIf(
+            !$table->hasColumn(self::ActorColumn),
+            sprintf(
+                'Presentation.%s is missing; Version20260807120000 has not run. Repair it, then re-run.',
+                self::ActorColumn
+            )
+        );
+
+        // already constrained: an idempotent no-op IS the correct outcome, so recording the
+        // version here is right
         if ($table->hasForeignKey(self::FkName)) return;
 
         $this->addSql(<<<SQL

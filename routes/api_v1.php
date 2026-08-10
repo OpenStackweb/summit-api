@@ -860,12 +860,13 @@ Route::group(array('prefix' => 'summits'), function () {
                     });
                 });
 
-                // submission period (admin-only reopen; authorization is done in the controller,
-                // NOT via auth.user -- that middleware 403s any endpoint with no authz groups)
+                // submission period (admin-only reopen). auth.user is the coarse gate -- it checks
+                // GLOBAL membership in the endpoint's authz groups, which the config migration and
+                // the seeder register. The summit-scoped check still happens in the controller.
                 Route::group(['prefix' => 'submission-period'], function () {
                     Route::group(['prefix' => 'reopen'], function () {
-                        Route::put('', 'OAuth2PresentationApiController@reopenSubmissionPeriod');
-                        Route::delete('', 'OAuth2PresentationApiController@closeSubmissionPeriod');
+                        Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@reopenSubmissionPeriod']);
+                        Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@closeSubmissionPeriod']);
                     });
                 });
 

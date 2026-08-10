@@ -7090,7 +7090,8 @@ class ApiEndpointsSeeder extends Seeder
                     SummitScopes::WritePresentationSlidesData
                 ],
             ],
-            // submission period reopen (admin-only; authorization enforced in the controller)
+            // submission period reopen (admin-only; the groups below are the coarse auth.user
+            // gate, the summit-scoped admin check runs in the controller)
             [
                 'name' => 'reopen-presentation-submission-period',
                 'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen',
@@ -7100,6 +7101,11 @@ class ApiEndpointsSeeder extends Seeder
                     SummitScopes::WriteEventData,
                     SummitScopes::WritePresentationData
                 ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
             ],
             [
                 'name' => 'close-presentation-submission-period',
@@ -7110,6 +7116,11 @@ class ApiEndpointsSeeder extends Seeder
                     SummitScopes::WriteEventData,
                     SummitScopes::WritePresentationData
                 ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
             ],
             // presentation speakers
             [

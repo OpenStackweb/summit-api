@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\Main\IGroup;
 use App\Security\SummitScopes;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
@@ -25,8 +26,14 @@ use Doctrine\Migrations\AbstractMigration;
  * needs these rows inserted by migration or the endpoints are unreachable.
  *
  * Scopes are the same OR-trio the sibling submission endpoints use; validation is any-of,
- * so this admits existing Show Admin tokens. No authz_groups: the routes do not use
- * auth.user, and the controller performs the summit-aware admin check itself.
+ * so this admits existing Show Admin tokens.
+ *
+ * The authz groups back the auth.user middleware on both routes, and mirror update-event's list
+ * minus the track-chair roles, which have no business reopening a submission window. They are a
+ * GLOBAL membership check; the summit-scoped admin check still runs in the controller.
+ *
+ * DEPLOY ORDER: this migration must land with or before the application. auth.user reads these
+ * rows, and an endpoint registered without them 403s every authenticated member.
  *
  * Idempotent via WHERE NOT EXISTS inside the helper.
  */
@@ -46,6 +53,11 @@ final class Version20260807130000 extends AbstractMigration
                 SummitScopes::WriteEventData,
                 SummitScopes::WritePresentationData,
             ],
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ],
         ],
         [
             'name' => 'close-presentation-submission-period',
@@ -55,6 +67,11 @@ final class Version20260807130000 extends AbstractMigration
                 SummitScopes::WriteSummitData,
                 SummitScopes::WriteEventData,
                 SummitScopes::WritePresentationData,
+            ],
+            'authz_groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
             ],
         ],
     ];

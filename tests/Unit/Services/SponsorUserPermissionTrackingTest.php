@@ -299,27 +299,35 @@ class SponsorUserPermissionTrackingTest extends TestCase
             'public_profile_allow_chat_with_me'    => false,
         ]);
 
-        $this->getService()->addSponsorUserToGroup(
-            $external_id,
-            IGroup::Sponsors,
-            $sponsor_id,
-            $summit_id
-        );
+        try {
+            $this->getService()->addSponsorUserToGroup(
+                $external_id,
+                IGroup::Sponsors,
+                $sponsor_id,
+                $summit_id
+            );
 
-        // Member must have been registered on demand from the IDP...
-        // (clear first: the in-service instance memoizes a pre-grant
-        // belongsToGroup(false) in its groupMembershipCache)
-        self::$em->clear();
-        $member = self::$member_repository->getByExternalId($external_id);
-        $this->assertNotNull($member, 'Member should have been registered on demand');
+            // Member must have been registered on demand from the IDP...
+            // (clear first: the in-service instance memoizes a pre-grant
+            // belongsToGroup(false) in its groupMembershipCache)
+            self::$em->clear();
+            $member = self::$member_repository->getByExternalId($external_id);
+            $this->assertNotNull($member, 'Member should have been registered on demand');
 
-        // ...with the Sponsor_Users row + permission written and the group granted.
-        $this->assertContains(IGroup::Sponsors, $this->getPermissions($sponsor_id, $member->getId()));
-        $this->assertTrue($member->belongsToGroup(IGroup::Sponsors));
-
-        // Cleanup: this member is created outside the trait's tearDown scope.
-        self::$em->remove($member);
-        self::$em->flush();
+            // ...with the Sponsor_Users row + permission written and the group granted.
+            $this->assertContains(IGroup::Sponsors, $this->getPermissions($sponsor_id, $member->getId()));
+            $this->assertTrue($member->belongsToGroup(IGroup::Sponsors));
+        } finally {
+            // This member is created on demand, outside the trait's tearDown scope,
+            // so it has to be removed here - and in a finally, or a failing assertion
+            // above leaks it into the next test's database. Look it up again instead
+            // of reusing $member: the failure may have happened before it was set.
+            $leftover = self::$member_repository->getByExternalId($external_id);
+            if (!is_null($leftover)) {
+                self::$em->remove($leftover);
+                self::$em->flush();
+            }
+        }
     }
 
     /**

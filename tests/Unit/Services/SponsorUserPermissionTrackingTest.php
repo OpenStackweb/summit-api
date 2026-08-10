@@ -72,6 +72,21 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
+     * Replaces the IDP user API with a mock returning $user_data (null = the
+     * user does not exist at the IDP) and forces the services that may have
+     * been resolved against the real API to rebuild.
+     */
+    private function mockExternalUserApi(?array $user_data): void
+    {
+        $api = \Mockery::mock(\App\Services\Apis\IExternalUserApi::class)
+            ->shouldIgnoreMissing();
+        $api->shouldReceive('getUserById')->andReturn($user_data);
+        $this->app->instance(\App\Services\Apis\IExternalUserApi::class, $api);
+        $this->app->forgetInstance(\App\Services\Model\IMemberService::class);
+        $this->app->forgetInstance(\App\Services\Model\ISponsorUserSyncService::class);
+    }
+
+    /**
      * Returns the decoded Permissions JSON array for a given (SponsorID, MemberID)
      * row in Sponsor_Users, or an empty array when the column is NULL.
      */
@@ -213,6 +228,9 @@ class SponsorUserPermissionTrackingTest extends TestCase
      */
     public function testAddSponsorUserPropagatesErrorWhenMemberDoesNotExist(): void
     {
+        // User does not exist locally NOR at the IDP.
+        $this->mockExternalUserApi(null);
+
         $this->expectException(\models\exceptions\EntityNotFoundException::class);
 
         $this->getService()->addSponsorUser(
@@ -223,12 +241,69 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
+     * Brand-new IDP user whose Member row was never synced to summit-api
+     * (the user never logged in): the sync must register the member on demand
+     * from the IDP instead of failing - otherwise both MQ events exhaust their
+     * retries against a missing member and the access grant is lost for good.
+     */
+    public function testAddSponsorUserToGroupRegistersMemberOnDemandWhenMissing(): void
+    {
+        $external_id = mt_rand(1500000000, 2000000000); // no local Member row
+        $sponsor_id  = self::$sponsors[1]->getId();
+        $summit_id   = self::$summit->getId();
+        $email       = sprintf("smarcet+ondemand_%s@gmail.com", str_random(8));
+
+        $this->mockExternalUserApi([
+            'id'             => $external_id,
+            'email'          => $email,
+            'first_name'     => 'On',
+            'last_name'      => 'Demand',
+            'bio'            => '',
+            'active'         => true,
+            'email_verified' => true,
+            'groups'         => [],
+            'public_profile_show_photo'            => false,
+            'public_profile_show_fullname'         => false,
+            'public_profile_show_email'            => false,
+            'public_profile_show_telephone_number' => false,
+            'public_profile_show_bio'              => false,
+            'public_profile_show_social_media_info' => false,
+            'public_profile_allow_chat_with_me'    => false,
+        ]);
+
+        $this->getService()->addSponsorUserToGroup(
+            $external_id,
+            IGroup::Sponsors,
+            $sponsor_id,
+            $summit_id
+        );
+
+        // Member must have been registered on demand from the IDP...
+        // (clear first: the in-service instance memoizes a pre-grant
+        // belongsToGroup(false) in its groupMembershipCache)
+        self::$em->clear();
+        $member = self::$member_repository->getByExternalId($external_id);
+        $this->assertNotNull($member, 'Member should have been registered on demand');
+
+        // ...with the Sponsor_Users row + permission written and the group granted.
+        $this->assertContains(IGroup::Sponsors, $this->getPermissions($sponsor_id, $member->getId()));
+        $this->assertTrue($member->belongsToGroup(IGroup::Sponsors));
+
+        // Cleanup: this member is created outside the trait's tearDown scope.
+        self::$em->remove($member);
+        self::$em->flush();
+    }
+
+    /**
      * A swallowed removal failure is worse than a swallowed addition: the user
      * silently RETAINS access they should have lost. The failure must propagate
      * so the MQ job's retry / failed_jobs machinery applies.
      */
     public function testRemoveSponsorUserPropagatesErrorWhenMemberDoesNotExist(): void
     {
+        // User does not exist locally NOR at the IDP.
+        $this->mockExternalUserApi(null);
+
         $this->expectException(\models\exceptions\EntityNotFoundException::class);
 
         $this->getService()->removeSponsorUser(

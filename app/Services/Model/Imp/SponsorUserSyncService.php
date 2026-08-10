@@ -13,6 +13,7 @@
  **/
 
 use App\Services\Model\AbstractService;
+use App\Services\Model\IMemberService;
 use App\Services\Model\ISponsorUserSyncService;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\Registry;
@@ -20,6 +21,7 @@ use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\main\IGroupRepository;
 use models\main\IMemberRepository;
+use models\main\Member;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\utils\SilverstripeBaseModel;
@@ -41,12 +43,15 @@ final class SponsorUserSyncService
 
     private ISummitSponsorService $summit_sponsor_service;
 
+    private IMemberService $member_service;
+
     /**
      * SponsorUserSyncService constructor.
      * @param ISummitRepository $summit_repository
      * @param IMemberRepository $member_repository
      * @param IGroupRepository $group_repository
      * @param ISummitSponsorService $summit_sponsor_service
+     * @param IMemberService $member_service
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -55,6 +60,7 @@ final class SponsorUserSyncService
         IMemberRepository $member_repository,
         IGroupRepository $group_repository,
         ISummitSponsorService $summit_sponsor_service,
+        IMemberService $member_service,
         ITransactionService $tx_service
     )
     {
@@ -63,6 +69,28 @@ final class SponsorUserSyncService
         $this->member_repository = $member_repository;
         $this->group_repository = $group_repository;
         $this->summit_sponsor_service = $summit_sponsor_service;
+        $this->member_service = $member_service;
+    }
+
+    /**
+     * Resolves the local Member for an IDP user id, registering it on demand
+     * from the IDP when it was never synced (brand-new user that has not
+     * logged in yet). Throws EntityNotFoundException when the user does not
+     * exist at the IDP either.
+     *
+     * @param int $user_id external (IDP) user id
+     * @return Member
+     * @throws EntityNotFoundException
+     */
+    private function resolveMember(int $user_id): Member
+    {
+        $member = $this->member_repository->getByExternalId($user_id);
+        if (!is_null($member)) return $member;
+
+        Log::warning(
+            "SponsorUserSyncService::resolveMember member with external id {$user_id} not found locally - registering on demand from IDP");
+
+        return $this->member_service->registerExternalUserById($user_id);
     }
 
     /**
@@ -78,10 +106,7 @@ final class SponsorUserSyncService
             throw new EntityNotFoundException("Summit {$summit_id} not found");
         }
 
-        $member = $this->member_repository->getByExternalId($user_id);
-        if (is_null($member)) {
-            throw new EntityNotFoundException("Member with id {$user_id} not found");
-        }
+        $member = $this->resolveMember($user_id);
         return array($summit, $member);
     }
 
@@ -148,10 +173,7 @@ final class SponsorUserSyncService
             Log::debug(
                 "SponsorUserSyncService::addSponsorUserToGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
 
-            $member = $this->member_repository->getByExternalId($user_id);
-            if (is_null($member)) {
-                throw new EntityNotFoundException("Member with id {$user_id} not found");
-            }
+            $member = $this->resolveMember($user_id);
 
             // Grant the global group FIRST: Sponsor::addUser (reached through the
             // eager-create path below) validates the member already belongs to a
@@ -208,10 +230,7 @@ final class SponsorUserSyncService
             Log::debug(
                 "SponsorUserSyncService::removeSponsorUserFromGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
 
-            $member = $this->member_repository->getByExternalId($user_id);
-            if (is_null($member)) {
-                throw new EntityNotFoundException("Member with id {$user_id} not found");
-            }
+            $member = $this->resolveMember($user_id);
 
             // Remove permission entry from JSON and get remaining sponsor count.
             $remaining = $member->removeSponsorPermission($sponsor_id, $group_slug);

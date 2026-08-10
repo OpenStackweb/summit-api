@@ -14,6 +14,7 @@
 
 use App\Services\Model\AbstractService;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
@@ -82,11 +83,26 @@ final class PresentationSubmissionReopenService
 
     public function closeNow(Summit $summit, int $presentation_id, Member $actor): void
     {
-        $this->tx_service->transaction(function () use ($summit, $presentation_id) {
+        $this->tx_service->transaction(function () use ($summit, $presentation_id, $actor) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
                 throw new EntityNotFoundException(sprintf("Presentation %s not found.", $presentation_id));
+
+            // closeSubmissionNow() nulls all three columns, the granting actor included, so the
+            // revocation is only auditable if it is recorded BEFORE the write. Both ends of the
+            // privilege go in one line: who granted it and until when, and who revoked it.
+            $granted_until = $presentation->getSubmissionReopenedUntil();
+            Log::info(
+                sprintf(
+                    "PresentationSubmissionReopenService::closeNow summit %s presentation %s revoked by member %s (granted by member %s, ran until %s).",
+                    $summit->getId(),
+                    $presentation_id,
+                    $actor->getId(),
+                    $presentation->getSubmissionReopenedById(),
+                    is_null($granted_until) ? 'n/a' : $granted_until->format('Y-m-d H:i:s')
+                )
+            );
 
             // no plan-state checks on purpose: a stale grant must always be clearable
             $presentation->closeSubmissionNow();

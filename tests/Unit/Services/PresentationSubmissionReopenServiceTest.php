@@ -26,6 +26,7 @@ use models\summit\Summit;
 use models\summit\SummitEvent;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Psr\Log\LoggerInterface;
 use services\model\PresentationSubmissionReopenService;
 
 /**
@@ -58,6 +59,11 @@ class PresentationSubmissionReopenServiceTest extends TestCase
     private Repository $config;
 
     /**
+     * Spy bound as the Log facade root; see setUp().
+     */
+    private $log;
+
+    /**
      * Number of times the mocked transaction closure actually executed.
      */
     private int $tx_invocations = 0;
@@ -74,6 +80,12 @@ class PresentationSubmissionReopenServiceTest extends TestCase
             ],
         ]);
         $this->app->instance('config', $this->config);
+
+        // closeNow() logs the revocation before clearing the grant, so 'log' has to be bound or
+        // the Log facade has no root. The spy doubles as the assertion surface for that line.
+        $this->log = Mockery::spy(LoggerInterface::class);
+        $this->app->instance('log', $this->log);
+
         Container::setInstance($this->app);
         Facade::setFacadeApplication($this->app);
         $this->tx_invocations = 0;
@@ -145,6 +157,7 @@ class PresentationSubmissionReopenServiceTest extends TestCase
     {
         $summit = Mockery::mock(Summit::class);
         $summit->shouldReceive('getEvent')->with(1234)->andReturn($event);
+        $summit->shouldReceive('getId')->andReturn(99);
         return $summit;
     }
 
@@ -404,6 +417,28 @@ class PresentationSubmissionReopenServiceTest extends TestCase
         $this->assertNull($presentation->getSubmissionReopenedHours());
         $this->assertNull($presentation->getSubmissionReopenedDate());
         $this->assertNull($presentation->getSubmissionReopenedBy());
+        $this->assertClosureRan();
+    }
+
+    /**
+     * The revoking actor is only observable through this log line, since closeSubmissionNow()
+     * nulls the actor column. It is also the only thing that catches $actor being dropped from
+     * the transaction closure's use list, which is how it was inert to begin with.
+     */
+    public function testCloseNowLogsTheRevocationWithBothActors(): void
+    {
+        $service = $this->makeService();
+        $presentation = $this->presentation($this->plan($this->utc('-1 hour')));
+        $presentation->reopenSubmission(24, $this->member(7));
+
+        $service->closeNow($this->summit($presentation), 1234, $this->member(11));
+
+        $this->log->shouldHaveReceived('info')->once()->withArgs(function (string $message) {
+            return str_contains($message, 'summit 99')
+                && str_contains($message, 'presentation 1234')
+                && str_contains($message, 'revoked by member 11')
+                && str_contains($message, 'granted by member 7');
+        });
         $this->assertClosureRan();
     }
 

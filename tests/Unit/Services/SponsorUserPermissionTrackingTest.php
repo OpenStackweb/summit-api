@@ -641,6 +641,33 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
+     * sponsor-users-api's metamodel reconciler emits removal events precisely
+     * when the sponsor no longer exists here (it reaps the sponsors summit-api
+     * stopped returning, routing them through remove_sponsor_show_permissions
+     * so the domain events still fire). A missing sponsor is therefore
+     * nothing-to-revoke - not a failure that burns the job's retries and parks
+     * a permanently unresolvable entry in failed_jobs.
+     */
+    public function testRemoveSponsorUserIsNoOpWhenSponsorNoLongerExists(): void
+    {
+        $member_id  = self::$member->getId();
+        $sponsor_id = self::$sponsors[0]->getId();
+
+        // Pre-condition: the member holds a membership on this summit.
+        $this->assertTrue($this->hasSponsorUserRow($sponsor_id, $member_id));
+
+        // Removal event pointing at a sponsor that no longer exists on the summit.
+        $this->getService()->removeSponsorUser(
+            self::$summit->getId(),
+            self::$member->getUserExternalId(),
+            PHP_INT_MAX
+        );
+
+        // No exception, and the member's existing membership is untouched.
+        $this->assertTrue($this->hasSponsorUserRow($sponsor_id, $member_id));
+    }
+
+    /**
      * Skipping an unknown member must not turn removeSponsorUser into a
      * swallow-everything handler: a genuine failure still has to propagate so
      * the MQ job's retry / failed_jobs machinery applies.

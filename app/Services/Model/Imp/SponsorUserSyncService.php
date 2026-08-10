@@ -232,6 +232,16 @@ final class SponsorUserSyncService
                 );
             }
         } else {
+            // sponsor-users-api's metamodel reconciler emits this event precisely
+            // when the sponsor no longer exists here (it reaps sponsors summit-api
+            // stopped returning, routing them through remove_sponsor_show_permissions
+            // so the domain events still fire). Nothing left to revoke - not a
+            // failure to burn retries on and park in failed_jobs.
+            if (is_null($summit->getSummitSponsorById($sponsor_id))) {
+                Log::warning(
+                    "SponsorUserSyncService::removeSponsorUser sponsor {$sponsor_id} no longer exists on summit {$summit->getId()} - nothing to revoke, skipping");
+                return;
+            }
             $this->summit_sponsor_service->removeSponsorUser($summit, $sponsor_id, $member->getId());
             Log::info(
                 "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from summit {$summit->getId()} for sponsor {$sponsor_id}");

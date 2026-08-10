@@ -32,6 +32,41 @@ class SponsorServicesMQJob extends BaseJob
     const RetryBackoff = '30,120';
 
     /**
+     * Body key that carries the original event type across a release(): a
+     * released message is dead-lettered back through the default exchange, so
+     * it is redelivered with the QUEUE NAME as its routing key and the event
+     * type would otherwise be lost (see release()).
+     */
+    const EventTypeKey = 'x_event_type';
+
+    private const KnownEventTypes = [
+        EventTypes::AUTH_USER_ADDED_TO_GROUP,
+        EventTypes::AUTH_USER_REMOVED_FROM_GROUP,
+        EventTypes::AUTH_USER_ADDED_TO_SPONSOR_AND_SUMMIT,
+        EventTypes::AUTH_USER_REMOVED_FROM_SPONSOR_AND_SUMMIT,
+        EventTypes::AUTH_USER_REMOVED_FROM_SUMMIT,
+    ];
+
+    /**
+     * The event type driving handler selection. On a first delivery it is the
+     * message's routing key; on a redelivery after release() the routing key is
+     * the queue name and the original event type travels in the body. Handlers
+     * that branch on the event type must use this, never the raw routing key.
+     *
+     * @return string
+     */
+    public function getEventType(): string
+    {
+        $routing_key = $this->getRabbitMQMessage()->getRoutingKey();
+        if (in_array($routing_key, self::KnownEventTypes, true)) {
+            return $routing_key;
+        }
+
+        $body = json_decode($this->getRawBody(), true);
+        return $body[self::EventTypeKey] ?? $routing_key;
+    }
+
+    /**
      * Get the decoded body of the job.
      *
      * Note the maxTries/backoff keys: Job::maxTries() and Job::backoff() read the
@@ -44,7 +79,7 @@ class SponsorServicesMQJob extends BaseJob
      */
     public function payload(): array
     {
-        $routing_key = $this->getRabbitMQMessage()->getRoutingKey();
+        $routing_key = $this->getEventType();
 
         switch ($routing_key) {
             case EventTypes::AUTH_USER_ADDED_TO_GROUP:
@@ -68,5 +103,56 @@ class SponsorServicesMQJob extends BaseJob
             'maxTries' => $this->tries,
             'backoff' => self::RetryBackoff,
         ];
+    }
+
+    /**
+     * Release the job back into the queue for a retry.
+     *
+     * The library implementation publishes into a delay queue whose dead-letter
+     * exchange is the consumer exchange (sponsor-users-api-message-broker) and
+     * whose dead-letter routing key is this queue's NAME. That exchange is
+     * direct and only binds the five auth_user_* routing keys, so the expired
+     * retry is unroutable and RabbitMQ silently drops it - the retry policy
+     * would lose every failed event instead of retrying it.
+     *
+     * Dead-letter through the DEFAULT exchange instead: it routes by queue name
+     * with no binding required. Redelivery rewrites the routing key to the queue
+     * name, so the original event type is preserved in the body (EventTypeKey)
+     * for getEventType() to recover.
+     *
+     * @param int $delay
+     */
+    public function release($delay = 0): void
+    {
+        $this->released = true;
+
+        $ttl = $this->secondsUntil($delay) * 1000;
+        if ($ttl <= 0) {
+            // laterRaw's ttl<=0 path publishes straight to the consumer exchange
+            // with the queue name as routing key - unroutable (see above). Force
+            // the minimum delay so the delay-queue path is always taken.
+            $delay = 1;
+            $ttl = 1000;
+        }
+
+        // Declare the delay queue FIRST: RabbitMQQueue::laterRaw() skips
+        // re-declaring a queue already in its declared-names cache, so these
+        // arguments win over the library defaults.
+        $this->rabbitmq->declareQueue($this->queue . '.delay.' . $ttl, true, false, [
+            'x-dead-letter-exchange'    => '',
+            'x-dead-letter-routing-key' => $this->queue,
+            'x-message-ttl'             => $ttl,
+            'x-expires'                 => $ttl * 2,
+        ]);
+
+        // Preserve the original event type across the redelivery (idempotent:
+        // a second release keeps the value written by the first one).
+        $body = json_decode($this->getRawBody(), true) ?? [];
+        $body[self::EventTypeKey] = $body[self::EventTypeKey] ?? $this->getEventType();
+
+        $this->rabbitmq->laterRaw($delay, json_encode($body), $this->queue, $this->attempts());
+
+        // The retry was republished as a new message; ack the current one.
+        $this->rabbitmq->ack($this);
     }
 }

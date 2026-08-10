@@ -82,6 +82,10 @@ jobs:
                     - { name: "Repositories", filter: "--filter tests/Repositories/" }
                     - { name: "Services", filter: "--filter tests/Unit/Services/" }
                     - { name: "Integration", filter: "tests/Integration/" }
+                    # Runs the same suite under PhpRedis - addSingleValue/incCounter's
+                    # SET...NX miss sentinel differs between drivers (null vs false),
+                    # so a driver-agnostic bug there only shows up here.
+                    - { name: "IntegrationPhpRedis", filter: "tests/Integration/", redis_client: "phpredis" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing
@@ -188,6 +192,8 @@ jobs:
                   COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"} }'
 
             - name: Run ${{ matrix.suite.name }}
+              env:
+                  REDIS_CLIENT: ${{ matrix.suite.redis_client || 'predis' }}
               run: |
                   ./update_doctrine.sh
                   php artisan db:create_initial_db --schema=config

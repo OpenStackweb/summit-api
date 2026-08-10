@@ -132,4 +132,20 @@ final class RedisCacheServiceAddSingleValueTest extends TestCase
         $this->assertFalse($released, 'deleteIfValueMatches must return false when the token does not match');
         $this->assertSame($token, $this->redis->get(self::TEST_KEY), 'key must survive a non-matching release attempt');
     }
+
+    /**
+     * incCounter shares the same SET...NX miss-detection as addSingleValue:
+     * the first call must create the counter at 1, and the second call must
+     * increment it rather than mistaking an NX-miss for a fresh creation.
+     */
+    public function testIncCounterIncrementsExistingCounterInsteadOfResetting(): void
+    {
+        $first  = $this->service->incCounter(self::TEST_KEY, self::TTL);
+        $second = $this->service->incCounter(self::TEST_KEY, self::TTL);
+
+        $this->assertSame(1, $first, 'first incCounter call must create the counter at 1');
+        $this->assertSame(2, $second, 'second incCounter call must increment the existing counter, not reset it');
+        $this->assertSame('2', $this->redis->get(self::TEST_KEY));
+        $this->assertGreaterThan(0, (int)$this->redis->ttl(self::TEST_KEY));
+    }
 }

@@ -240,9 +240,9 @@ class RedisCacheService implements ICacheService
     {
         return $this->retryOnConnectionError(function ($conn) use ($counter_name, $ttl) {
             if ($ttl > 0) {
-                if ($conn->set($counter_name, 1, 'EX', (int)$ttl, 'NX') !== null) return 1;
+                if ($this->setNxSucceeded($conn->set($counter_name, 1, 'EX', (int)$ttl, 'NX'))) return 1;
             } else {
-                if ($conn->set($counter_name, 1, 'NX') !== null) return 1;
+                if ($this->setNxSucceeded($conn->set($counter_name, 1, 'NX'))) return 1;
             }
             return (int)$conn->incr($counter_name);
         }, 0);
@@ -308,10 +308,20 @@ class RedisCacheService implements ICacheService
     {
         return $this->retryOnConnectionError(function ($conn) use ($key, $value, $ttl) {
             if ($ttl > 0) {
-                return $conn->set($key, $value, 'EX', (int)$ttl, 'NX') !== null;
+                return $this->setNxSucceeded($conn->set($key, $value, 'EX', (int)$ttl, 'NX'));
             }
-            return $conn->set($key, $value, 'NX') !== null;
+            return $this->setNxSucceeded($conn->set($key, $value, 'NX'));
         }, false);
+    }
+
+    /**
+     * SET ... NX reports a miss as null under Predis but as false under PhpRedis.
+     * Any real success value (a Predis\Response\Status object, or PhpRedis's true/1)
+     * is truthy against both checks.
+     */
+    private function setNxSucceeded($result): bool
+    {
+        return $result !== null && $result !== false;
     }
 
     public function setKeyExpiration($key, $ttl)

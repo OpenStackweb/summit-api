@@ -82,7 +82,8 @@ class PresentationReopenModelTest extends BrowserKitTestCase
         $this->assertFalse(self::$presentation->isSubmissionClosed());
         $this->assertEquals(24, self::$presentation->getSubmissionReopenedHours());
         $this->assertEquals(self::$member->getId(), self::$presentation->getSubmissionReopenedById());
-        $this->assertStringContainsString(self::$member->getEmail(), self::$presentation->getSubmissionReopenedByNice());
+        $this->assertTrue(self::$presentation->hasSubmissionReopenedBy());
+        $this->assertEquals(self::$member->getEmail(), self::$presentation->getSubmissionReopenedBy()->getEmail());
     }
 
     public function testExpiredGrantIsNotReopened()

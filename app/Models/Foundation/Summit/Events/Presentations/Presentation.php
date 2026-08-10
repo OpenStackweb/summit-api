@@ -49,6 +49,23 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
 
     use OrderableChilds;
 
+    /**
+     * Redeclared, not extended: a child property SHADOWS the parent default, so SummitEvent's
+     * created_by/updated_by entries must be repeated here or getCreatedById()/getUpdatedById()
+     * stop resolving through One2ManyPropertyTrait::__call.
+     */
+    protected $getIdMappings = [
+        'getCreatedById' => 'created_by',
+        'getUpdatedById' => 'updated_by',
+        'getSubmissionReopenedById' => 'submission_reopened_by',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasCreatedBy' => 'created_by',
+        'hasUpdatedBy' => 'updated_by',
+        'hasSubmissionReopenedBy' => 'submission_reopened_by',
+    ];
+
     const ClassName = 'Presentation';
 
     const FieldProblemAddressed = 'problem_addressed';
@@ -2564,35 +2581,6 @@ SQL;
     public function getSubmissionReopenedBy(): ?Member
     {
         return $this->submission_reopened_by;
-    }
-
-    public function getSubmissionReopenedById(): int
-    {
-        try {
-            return is_null($this->submission_reopened_by) ? 0 : $this->submission_reopened_by->getId();
-        } catch (\Exception $ex) {
-            return 0;
-        }
-    }
-
-    /**
-     * Preformatted for Show Admin. Serialized as a plain string because an $array_mappings
-     * entry invokes scalar getters only and cannot serialize a Member.
-     *
-     * Yes, this departs from the repo's usual "who did this" idiom (a *_by_id scalar plus an
-     * expand case, e.g. CreatedById on SummitEventSerializer). That idiom was considered and
-     * REJECTED by the signed-off SDS, because the expand switch lives in the base
-     * PresentationSerializer, so a case added there is reachable from the Public and Submission
-     * variants too -- which is the exact leak the Admin-only design exists to prevent. The SDS
-     * mandates this shape ("no expand needed"), and Show Admin reads the field straight off the
-     * getEvent payload. If a relation is ever wanted, the safe mechanism is a subclass-local
-     * $expand_mappings, never a base-class switch case. Do not "correct" this to id+expand.
-     */
-    public function getSubmissionReopenedByNice(): ?string
-    {
-        $member = $this->submission_reopened_by;
-        if (is_null($member)) return null;
-        return sprintf("%s (%s)", $member->getFullName(), $member->getEmail());
     }
 
     /**

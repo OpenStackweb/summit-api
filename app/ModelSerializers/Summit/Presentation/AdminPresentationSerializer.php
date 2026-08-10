@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use Libs\ModelSerializers\One2ManyExpandSerializer;
 use models\summit\Presentation;
 
 /**
@@ -43,7 +44,27 @@ class AdminPresentationSerializer extends PresentationSerializer
         'TrackChairAvgScoresPerRakingType' => 'track_chair_scores_avg:json_string_array',
         'SubmissionReopenedUntil' => 'submission_reopened_until:datetime_epoch',
         'SubmissionReopenedById' => 'submission_reopened_by_id:json_int',
-        'SubmissionReopenedByNice' => 'submission_reopened_by:json_string',
+    ];
+
+    /**
+     * Declared HERE and not on the base PresentationSerializer on purpose. getExpandsMappings()
+     * merges parent into child only, and SubmissionPresentationSerializer is a SIBLING of this
+     * class (both extend PresentationSerializer), so this relation is unreachable from the
+     * Submission and Public variants. A case in the base expand switch would not be -- that is
+     * the leak the Admin-only design exists to prevent, and why the SDS rejected id+expand when
+     * a base-class switch was the only mechanism considered.
+     *
+     * serializer_type is explicit because One2ManyExpandSerializer defaults to Public, which
+     * blanks the actor's email.
+     */
+    protected static $expand_mappings = [
+        'submission_reopened_by' => [
+            'type' => One2ManyExpandSerializer::class,
+            'original_attribute' => 'submission_reopened_by_id',
+            'getter' => 'getSubmissionReopenedBy',
+            'has' => 'hasSubmissionReopenedBy',
+            'serializer_type' => SerializerRegistry::SerializerType_Private,
+        ],
     ];
 
     protected static $allowed_fields = [
@@ -70,6 +91,9 @@ class AdminPresentationSerializer extends PresentationSerializer
         'overflow_stream_key',
         'submission_reopened_until',
         'submission_reopened_by_id',
+    ];
+
+    protected static $allowed_relations = [
         'submission_reopened_by',
     ];
 

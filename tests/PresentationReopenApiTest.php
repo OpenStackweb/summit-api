@@ -432,8 +432,33 @@ class PresentationReopenApiTest extends ProtectedApiTestCase
         // so a presence-only assertion proves nothing about the grant
         $this->assertArrayHasKey('submission_reopened_by_id', $payload);
         $this->assertEquals(self::$member->getId(), $payload['submission_reopened_by_id']);
-        $this->assertArrayHasKey('submission_reopened_by', $payload);
-        $this->assertIsString($payload['submission_reopened_by']);
+        // the actor is a relation, so it is absent until asked for
+        $this->assertArrayNotHasKey('submission_reopened_by', $payload);
+    }
+
+    public function testReopenActorIsExpandableOnTheAdminResponse()
+    {
+        $this->reopen(['hours' => 24]);
+        $this->assertResponseStatus(201);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'event_id' => self::$presentation->getId(),
+            'expand' => 'submission_reopened_by',
+        ];
+
+        $response = $this->action(
+            "GET", "OAuth2SummitEventsApiController@getEvent", $params, [], [], [], $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(200);
+
+        $payload = json_decode($response->getContent(), true);
+        // One2ManyExpandSerializer replaces the scalar with the relation, it does not add alongside
+        $this->assertArrayNotHasKey('submission_reopened_by_id', $payload, $response->getContent());
+        $this->assertArrayHasKey('submission_reopened_by', $payload, $response->getContent());
+        $this->assertEquals(self::$member->getId(), $payload['submission_reopened_by']['id']);
+        // Private, not Public: the admin console needs the actor's email, and Public blanks it
+        $this->assertArrayHasKey('email', $payload['submission_reopened_by']);
     }
 
     public function testByFieldsAreAbsentFromTheSubmissionSerializer()

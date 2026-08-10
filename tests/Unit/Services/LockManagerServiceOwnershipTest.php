@@ -117,11 +117,28 @@ class LockManagerServiceOwnershipTest extends TestCase
     public function testAddSingleValueCalledOnceWithTokenAndLifetime(): void
     {
         $cache = Mockery::mock(ICacheService::class);
+        $token = null;
         $cache->shouldReceive('addSingleValue')
               ->once()
-              ->with('test.lock', Mockery::type('string'), 3600)
+              ->with(
+                  'test.lock',
+                  Mockery::on(function ($value) use (&$token) {
+                      if (!is_string($value) || $value === '') return false;
+                      $token = $value;
+                      return true;
+                  }),
+                  3600
+              )
               ->andReturn(true);
-        $cache->shouldReceive('deleteIfValueMatches')->once()->andReturn(true);
+        // Not an arrow fn: arrow functions capture $token by value at closure-creation
+        // time, when it is still null (addSingleValue's callback hasn't run yet).
+        // A `use (&$token)` closure reads the current value at call time instead.
+        $cache->shouldReceive('deleteIfValueMatches')
+              ->once()
+              ->with('test.lock', Mockery::on(function ($value) use (&$token) {
+                  return $value === $token;
+              }))
+              ->andReturn(true);
 
         $service     = new LockManagerService($cache);
         $callbackRan = false;

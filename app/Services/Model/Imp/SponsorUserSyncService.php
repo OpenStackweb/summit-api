@@ -24,6 +24,7 @@ use models\exceptions\ValidationException;
 use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
+use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use models\summit\ISummitRepository;
 use models\summit\Sponsor;
 use models\summit\Summit;
@@ -50,6 +51,8 @@ final class SponsorUserSyncService
 
     private IExternalUserApi $external_user_api;
 
+    private ISponsorRepository $sponsor_repository;
+
     /**
      * SponsorUserSyncService constructor.
      * @param ISummitRepository $summit_repository
@@ -58,6 +61,7 @@ final class SponsorUserSyncService
      * @param ISummitSponsorService $summit_sponsor_service
      * @param IMemberService $member_service
      * @param IExternalUserApi $external_user_api
+     * @param ISponsorRepository $sponsor_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -68,6 +72,7 @@ final class SponsorUserSyncService
         ISummitSponsorService $summit_sponsor_service,
         IMemberService $member_service,
         IExternalUserApi $external_user_api,
+        ISponsorRepository $sponsor_repository,
         ITransactionService $tx_service
     )
     {
@@ -78,6 +83,7 @@ final class SponsorUserSyncService
         $this->summit_sponsor_service = $summit_sponsor_service;
         $this->member_service = $member_service;
         $this->external_user_api = $external_user_api;
+        $this->sponsor_repository = $sponsor_repository;
     }
 
     /**
@@ -301,6 +307,17 @@ final class SponsorUserSyncService
         // from the IDP as a side effect.
         $this->assertAllowedSponsorGroup($group_slug);
 
+        // The producer derives sponsor_id and summit_id from the same AccessRight,
+        // so a mismatched pair is a forged or buggy event - and a deleted sponsor
+        // leaves nothing to grant onto. Fail here, BEFORE resolveMember (same
+        // no-side-effect rule as above) and loudly (failed_jobs), rather than ever
+        // writing onto another summit's sponsor row.
+        $summit = $this->resolveSummit($summit_id);
+        if (is_null($summit->getSummitSponsorById($sponsor_id))) {
+            throw new ValidationException(
+                "Sponsor {$sponsor_id} does not belong to summit {$summit_id}.");
+        }
+
         // Resolve (and, if needed, register from the IDP) OUTSIDE the transaction below.
         // registerExternalUserById opens its own transaction and dispatches NewMember /
         // MemberDataUpdatedExternally right after it. Those jobs are pushed immediately:
@@ -373,6 +390,19 @@ final class SponsorUserSyncService
             "SponsorUserSyncService::removeSponsorUserFromGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
 
         $this->assertAllowedSponsorGroup($group_slug);
+
+        // Reject only a sponsor that exists on a DIFFERENT summit (forged or buggy
+        // event - the producer derives both ids from the same AccessRight). A
+        // sponsor deleted ENTIRELY must NOT skip: its Sponsor_Users rows are gone,
+        // and running the removal is exactly what recomputes the remaining
+        // permission count and strips the global sponsors group when this was the
+        // member's last sponsor - skipping would leave residual show-admin access.
+        $sponsor = $this->sponsor_repository->getById($sponsor_id);
+        if ($sponsor instanceof Sponsor && $sponsor->getSummitId() !== $summit_id) {
+            Log::warning(
+                "SponsorUserSyncService::removeSponsorUserFromGroup sponsor {$sponsor_id} belongs to summit {$sponsor->getSummitId()}, not event summit {$summit_id} - skipping");
+            return;
+        }
 
         // Revocation must not provision (see findMember): a member that was never
         // synced holds no permission entry and no group membership to remove.

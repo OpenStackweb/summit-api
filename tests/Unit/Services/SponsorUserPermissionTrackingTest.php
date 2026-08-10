@@ -239,6 +239,213 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
+     * Builds a second sponsor belonging to summit2 (a DIFFERENT summit than the
+     * event summit used by these tests). Caller must clean it up with
+     * deleteCrossSummitSponsor() in a finally block.
+     */
+    private function createCrossSummitSponsor(): \models\summit\Sponsor
+    {
+        $summit2 = self::$summit_repository->getById(self::$summit2->getId());
+        $company = self::$em->find(\models\main\Company::class, self::$companies[1]->getId());
+
+        $other_sponsor = new \models\summit\Sponsor();
+        $other_sponsor->setCompany($company);
+        $summit2->addSummitSponsor($other_sponsor);
+        self::$em->persist($other_sponsor);
+        self::$em->flush();
+
+        return $other_sponsor;
+    }
+
+    /**
+     * Removes the cross-summit sponsor THROUGH the EntityManager. A raw-SQL
+     * delete would leave the managed entity dangling in the unit of work,
+     * referencing a Summit the teardown is about to remove - the next flush
+     * then fails with "new entity found through relationship" and the
+     * member/group fixtures leak into the shared test database.
+     */
+    private function deleteCrossSummitSponsor(\models\summit\Sponsor $sponsor): void
+    {
+        $managed = self::$em->find(\models\summit\Sponsor::class, $sponsor->getId());
+        if (!is_null($managed)) {
+            self::$em->remove($managed); // owning side: Sponsor_Users rows go with it
+            self::$em->flush();
+        }
+    }
+
+    /**
+     * The producer derives sponsor_id and summit_id from the same AccessRight,
+     * so a mismatched pair is a forged or buggy event. When the member already
+     * holds a Sponsor_Users row on the foreign sponsor, the permission must NOT
+     * be written onto another summit's sponsor row.
+     */
+    public function testAddSponsorUserToGroupRejectsSponsorFromAnotherSummit(): void
+    {
+        $member = self::$member_repository->find(self::$member->getId());
+        $other_sponsor = $this->createCrossSummitSponsor();
+        $other_sponsor->addUser($member); // row on the FOREIGN sponsor exists
+        self::$em->flush();
+
+        $member_id        = $member->getId();
+        $external_id      = $member->getUserExternalId();
+        $other_sponsor_id = $other_sponsor->getId();
+
+        try {
+            $thrown = null;
+            try {
+                // Event claims the FIRST summit but carries summit2's sponsor.
+                $this->getService()->addSponsorUserToGroup(
+                    $external_id,
+                    IGroup::Sponsors,
+                    $other_sponsor_id,
+                    self::$summit->getId()
+                );
+            } catch (\models\exceptions\ValidationException $ex) {
+                $thrown = $ex;
+            }
+
+            $this->assertNotNull($thrown, 'a sponsor from another summit must be rejected');
+            $this->assertEmpty(
+                $this->getPermissions($other_sponsor_id, $member_id),
+                'no permission may be written onto another summit\'s sponsor row'
+            );
+        } finally {
+            $this->deleteCrossSummitSponsor($other_sponsor);
+        }
+    }
+
+    /**
+     * The ownership gate must run BEFORE resolveMember: a rejected event must
+     * not provision a member from the IDP as a side effect.
+     */
+    public function testAddSponsorUserToGroupRejectedCrossSummitEventDoesNotProvisionMember(): void
+    {
+        $other_sponsor    = $this->createCrossSummitSponsor();
+        $other_sponsor_id = $other_sponsor->getId();
+        $external_id      = mt_rand(1500000000, 2000000000); // no local Member row
+        $email            = sprintf("smarcet+xsummit_%s@gmail.com", str_random(8));
+
+        // The user DOES exist at the IDP - on-demand registration would succeed.
+        $this->mockExternalUserApi([
+            'id'             => $external_id,
+            'email'          => $email,
+            'first_name'     => 'Cross',
+            'last_name'      => 'Summit',
+            'bio'            => '',
+            'active'         => true,
+            'email_verified' => true,
+            'groups'         => [],
+            'public_profile_show_photo'            => false,
+            'public_profile_show_fullname'         => false,
+            'public_profile_show_email'            => false,
+            'public_profile_show_telephone_number' => false,
+            'public_profile_show_bio'              => false,
+            'public_profile_show_social_media_info' => false,
+            'public_profile_allow_chat_with_me'    => false,
+        ]);
+
+        try {
+            $thrown = null;
+            try {
+                $this->getService()->addSponsorUserToGroup(
+                    $external_id,
+                    IGroup::Sponsors,
+                    $other_sponsor_id,
+                    self::$summit->getId()
+                );
+            } catch (\models\exceptions\ValidationException $ex) {
+                $thrown = $ex;
+            }
+
+            $this->assertNotNull($thrown, 'a sponsor from another summit must be rejected');
+            $this->assertNull(
+                self::$member_repository->getByExternalId($external_id),
+                'a rejected event must not provision a member from the IDP'
+            );
+        } finally {
+            $this->deleteCrossSummitSponsor($other_sponsor);
+            $leftover = self::$member_repository->getByExternalId($external_id);
+            if (!is_null($leftover)) {
+                self::$em->remove($leftover);
+                self::$em->flush();
+            }
+        }
+    }
+
+    /**
+     * A removal event carrying a sponsor of ANOTHER summit must be a no-op: it
+     * must neither touch the foreign sponsor's permission entry nor strip the
+     * member's global group.
+     */
+    public function testRemoveSponsorUserFromGroupSkipsSponsorFromAnotherSummit(): void
+    {
+        $member = self::$member_repository->find(self::$member->getId());
+        $other_sponsor = $this->createCrossSummitSponsor();
+        $other_sponsor->addUser($member);
+        self::$em->flush();
+
+        $member_id        = $member->getId();
+        $external_id      = $member->getUserExternalId();
+        $other_sponsor_id = $other_sponsor->getId();
+
+        try {
+            // Legit grant on summit2 writes the permission on the foreign row.
+            $this->getService()->addSponsorUserToGroup(
+                $external_id, IGroup::Sponsors, $other_sponsor_id, self::$summit2->getId());
+            $this->assertContains(IGroup::Sponsors, $this->getPermissions($other_sponsor_id, $member_id));
+
+            // Forged/buggy removal: summit1's event carrying summit2's sponsor.
+            $this->getService()->removeSponsorUserFromGroup(
+                $external_id, IGroup::Sponsors, $other_sponsor_id, self::$summit->getId());
+
+            self::$em->clear();
+            $this->assertContains(
+                IGroup::Sponsors,
+                $this->getPermissions($other_sponsor_id, $member_id),
+                'a cross-summit removal must not touch the foreign sponsor\'s permission entry'
+            );
+            $this->assertTrue(
+                self::$member_repository->find($member_id)->belongsToGroup(IGroup::Sponsors),
+                'a cross-summit removal must not strip the global group'
+            );
+        } finally {
+            $this->deleteCrossSummitSponsor($other_sponsor);
+        }
+    }
+
+    /**
+     * A sponsor deleted ENTIRELY must not skip the removal: its Sponsor_Users
+     * rows are gone, and running the removal is exactly what recomputes the
+     * remaining permission count and strips the global sponsors group when this
+     * was the member's last sponsor. Skipping would leave the member with
+     * residual show-admin access forever.
+     */
+    public function testRemoveSponsorUserFromGroupStillCleansUpWhenSponsorWasDeleted(): void
+    {
+        $member_id   = self::$member->getId();
+        $external_id = self::$member->getUserExternalId();
+
+        // Pre-condition: member holds the global group and NO remaining
+        // permission entries (the fixture row has a NULL Permissions column).
+        $this->assertTrue(
+            self::$member_repository->find($member_id)->belongsToGroup(IGroup::Sponsors)
+        );
+
+        $this->getService()->removeSponsorUserFromGroup(
+            $external_id,
+            IGroup::Sponsors,
+            PHP_INT_MAX, // sponsor no longer exists anywhere
+            self::$summit->getId()
+        );
+
+        self::$em->clear();
+        $this->assertFalse(
+            self::$member_repository->find($member_id)->belongsToGroup(IGroup::Sponsors),
+            'the last-sponsor cleanup must still strip the global group when the sponsor row is gone'
+        );
+    }
+
+    /**
      * The group slug must be written into the Sponsor_Users.Permissions JSON
      * column for the correct (SponsorID, MemberID) row.
      */
@@ -375,16 +582,27 @@ class SponsorUserPermissionTrackingTest extends TestCase
      * transaction and the transaction later rolled back, the Member row would vanish while
      * the already-queued jobs kept pointing at its id - they would fail forever.
      *
-     * Here the sponsor does not exist, so the eager-create path throws inside the
-     * transaction AFTER the member was resolved. The member must still be present
-     * afterwards.
+     * Here the group row for an ALLOWED slug does not exist, so the transaction
+     * throws AFTER the member was resolved (the allowlist and sponsor-ownership
+     * gates both pass, and the missing Group row is only discovered inside the
+     * transaction). The member must still be present afterwards.
      */
     public function testAddSponsorUserToGroupKeepsOnDemandMemberWhenTransactionFails(): void
     {
         $external_id = mt_rand(1500000000, 2000000000); // no local Member row
-        $sponsor_id  = PHP_INT_MAX; // no such sponsor: eager-create throws inside the tx
+        $sponsor_id  = self::$sponsors[1]->getId(); // real sponsor: passes the ownership gate
         $summit_id   = self::$summit->getId();
         $email       = sprintf("smarcet+rollback_%s@gmail.com", str_random(8));
+
+        // Ensure no Group row exists for the allowed slug used below, so the
+        // in-transaction getBySlug lookup fails AFTER resolveMember succeeded.
+        // (Fixtures create their own groups per test, so deleting is safe.)
+        $conn = self::$em->getConnection();
+        $conn->executeStatement(
+            'DELETE gm FROM Group_Members gm INNER JOIN `Group` g ON g.ID = gm.GroupID WHERE g.Code = ?',
+            [IGroup::SponsorExternalUsers]
+        );
+        $conn->executeStatement('DELETE FROM `Group` WHERE Code = ?', [IGroup::SponsorExternalUsers]);
 
         $this->mockExternalUserApi([
             'id'             => $external_id,
@@ -409,15 +627,15 @@ class SponsorUserPermissionTrackingTest extends TestCase
             try {
                 $this->getService()->addSponsorUserToGroup(
                     $external_id,
-                    IGroup::Sponsors,
-                    $sponsor_id, // unknown sponsor: the eager-create makes the transaction throw
+                    IGroup::SponsorExternalUsers, // allowed slug with no Group row: throws inside the tx
+                    $sponsor_id,
                     $summit_id
                 );
             } catch (\models\exceptions\EntityNotFoundException $ex) {
                 $thrown = $ex;
             }
 
-            $this->assertNotNull($thrown, 'The unknown sponsor should have failed the transaction');
+            $this->assertNotNull($thrown, 'The missing group row should have failed the transaction');
 
             // The on-demand member was committed by its own transaction, so the jobs
             // already dispatched for it reference a row that exists.
@@ -752,13 +970,6 @@ class SponsorUserPermissionTrackingTest extends TestCase
         // Write permission first so there is something to remove.
         $service->addSponsorUserToGroup($external_id, IGroup::Sponsors, $sponsor_id, $summit_id);
         $this->assertContains(IGroup::Sponsors, $this->getPermissions($sponsor_id, $member_id));
-
-        // Doctrine ORM 3 EXTRA_LAZY PersistentCollection::removeElement() delegates to
-        // parent::removeElement() on the in-memory ArrayCollection first. If the collection
-        // is still uninitialized (addSponsorUserToGroup leaves it that way), that call
-        // returns false and changed() is never called, so the flush issues no DELETE.
-        // Force-initialize through the same model EM so removeFromGroup works correctly.
-        self::$em->find(\models\main\Member::class, $member_id)->getGroups()->toArray();
 
         // Remove — no other sponsor holds the permission.
         $service->removeSponsorUserFromGroup($external_id, IGroup::Sponsors, $sponsor_id, $summit_id);

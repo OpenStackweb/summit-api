@@ -87,6 +87,22 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
+     * A failed tx_service transaction closes the entity manager and resets it in the
+     * registry (see DoctrineTransactionService::transaction), leaving the static one
+     * captured at setUp time unusable. Returns a usable manager either way.
+     */
+    private static function reopenEntityManager(): \Doctrine\ORM\EntityManagerInterface
+    {
+        if (!self::$em->isOpen()) {
+            return \LaravelDoctrine\ORM\Facades\Registry::resetManager(
+                \models\utils\SilverstripeBaseModel::EntityManager
+            );
+        }
+        self::$em->clear();
+        return self::$em;
+    }
+
+    /**
      * Returns the decoded Permissions JSON array for a given (SponsorID, MemberID)
      * row in Sponsor_Users, or an empty array when the column is NULL.
      */
@@ -292,6 +308,77 @@ class SponsorUserPermissionTrackingTest extends TestCase
         // Cleanup: this member is created outside the trait's tearDown scope.
         self::$em->remove($member);
         self::$em->flush();
+    }
+
+    /**
+     * On-demand registration must happen OUTSIDE addSponsorUserToGroup's transaction.
+     *
+     * registerExternalUserById dispatches NewMember / MemberDataUpdatedExternally, whose
+     * listeners enqueue MemberAssocSummitOrders, UpdateAttendeeInfo and CleanMemberCacheJob.
+     * Those pushes are NOT deferred to commit: afterCommit only works for transactions that
+     * Laravel's DatabaseTransactionsManager can see, and this service opens its transaction
+     * straight on the Doctrine DBAL connection. So if the member were registered inside the
+     * transaction and the transaction later rolled back, the Member row would vanish while
+     * the already-queued jobs kept pointing at its id - they would fail forever.
+     *
+     * Here the group slug does not exist, so the transaction throws AFTER the member was
+     * resolved. The member must still be present afterwards.
+     */
+    public function testAddSponsorUserToGroupKeepsOnDemandMemberWhenTransactionFails(): void
+    {
+        $external_id = mt_rand(1500000000, 2000000000); // no local Member row
+        $sponsor_id  = self::$sponsors[1]->getId();
+        $summit_id   = self::$summit->getId();
+        $email       = sprintf("smarcet+rollback_%s@gmail.com", str_random(8));
+
+        $this->mockExternalUserApi([
+            'id'             => $external_id,
+            'email'          => $email,
+            'first_name'     => 'Roll',
+            'last_name'      => 'Back',
+            'bio'            => '',
+            'active'         => true,
+            'email_verified' => true,
+            'groups'         => [],
+            'public_profile_show_photo'            => false,
+            'public_profile_show_fullname'         => false,
+            'public_profile_show_email'            => false,
+            'public_profile_show_telephone_number' => false,
+            'public_profile_show_bio'              => false,
+            'public_profile_show_social_media_info' => false,
+            'public_profile_allow_chat_with_me'    => false,
+        ]);
+
+        try {
+            $thrown = null;
+            try {
+                $this->getService()->addSponsorUserToGroup(
+                    $external_id,
+                    'non-existent-group-slug-' . str_random(8), // makes the transaction throw
+                    $sponsor_id,
+                    $summit_id
+                );
+            } catch (\models\exceptions\EntityNotFoundException $ex) {
+                $thrown = $ex;
+            }
+
+            $this->assertNotNull($thrown, 'The unknown group slug should have failed the transaction');
+
+            // The on-demand member was committed by its own transaction, so the jobs
+            // already dispatched for it reference a row that exists.
+            self::$em = self::reopenEntityManager();
+            $this->assertNotNull(
+                self::$member_repository->getByExternalId($external_id),
+                'On-demand member must survive the rolled back outer transaction'
+            );
+        } finally {
+            self::$em = self::reopenEntityManager();
+            $leftover = self::$member_repository->getByExternalId($external_id);
+            if (!is_null($leftover)) {
+                self::$em->remove($leftover);
+                self::$em->flush();
+            }
+        }
     }
 
     /**

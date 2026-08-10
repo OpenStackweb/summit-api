@@ -169,11 +169,25 @@ final class SponsorUserSyncService
      */
     public function addSponsorUserToGroup(int $user_id, string $group_slug, int $sponsor_id, int $summit_id): void
     {
-        $this->tx_service->transaction(function () use ($user_id, $group_slug, $sponsor_id, $summit_id) {
-            Log::debug(
-                "SponsorUserSyncService::addSponsorUserToGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
+        Log::debug(
+            "SponsorUserSyncService::addSponsorUserToGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
 
-            $member = $this->resolveMember($user_id);
+        // Resolve (and, if needed, register from the IDP) OUTSIDE the transaction below.
+        // registerExternalUserById opens its own transaction and dispatches NewMember /
+        // MemberDataUpdatedExternally right after it. Those jobs are pushed immediately:
+        // afterCommit only defers dispatch for Eloquent-managed transactions, and this
+        // service uses the Doctrine DBAL connection directly. Keeping the registration
+        // outside guarantees the Member row is committed before any job references its id.
+        $member_id = $this->resolveMember($user_id)->getId();
+
+        $this->tx_service->transaction(function () use ($member_id, $group_slug, $sponsor_id, $summit_id) {
+
+            // Re-load inside the transaction: the tx service may have reset the entity
+            // manager, which would leave an entity resolved outside it detached.
+            $member = $this->member_repository->getById($member_id);
+            if (!$member instanceof Member) {
+                throw new EntityNotFoundException("Member with id {$member_id} not found");
+            }
 
             // Grant the global group FIRST: Sponsor::addUser (reached through the
             // eager-create path below) validates the member already belongs to a
@@ -226,11 +240,21 @@ final class SponsorUserSyncService
      */
     public function removeSponsorUserFromGroup(int $user_id, string $group_slug, int $sponsor_id, int $summit_id): void
     {
-        $this->tx_service->transaction(function () use ($user_id, $group_slug, $sponsor_id, $summit_id) {
-            Log::debug(
-                "SponsorUserSyncService::removeSponsorUserFromGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
+        Log::debug(
+            "SponsorUserSyncService::removeSponsorUserFromGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
 
-            $member = $this->resolveMember($user_id);
+        // See addSponsorUserToGroup: resolve outside the transaction so an on-demand
+        // registration is committed before the jobs it dispatches reference the member id.
+        $member_id = $this->resolveMember($user_id)->getId();
+
+        $this->tx_service->transaction(function () use ($member_id, $group_slug, $sponsor_id, $summit_id) {
+
+            // Re-load inside the transaction: the tx service may have reset the entity
+            // manager, which would leave an entity resolved outside it detached.
+            $member = $this->member_repository->getById($member_id);
+            if (!$member instanceof Member) {
+                throw new EntityNotFoundException("Member with id {$member_id} not found");
+            }
 
             // Remove permission entry from JSON and get remaining sponsor count.
             $remaining = $member->removeSponsorPermission($sponsor_id, $group_slug);

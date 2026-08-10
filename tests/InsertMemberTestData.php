@@ -173,6 +173,12 @@ trait InsertMemberTestData
             self::$group_repository = self::$em->getRepository(Group::class);
             self::$member_repository = self::$em->getRepository(Member::class);
 
+            // Detach whatever the test left in the unit of work: entity unit
+            // tests build unpersisted object graphs hanging off managed
+            // fixtures, and flushing them here throws "non-persisted new
+            // entities found" - the cleanup must only flush its own removals.
+            self::$em->clear();
+
             self::$member = self::$member_repository->find(self::$member->getId());
             self::$group = self::$group_repository->find(self::$group->getId());
 

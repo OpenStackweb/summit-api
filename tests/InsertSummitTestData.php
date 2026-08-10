@@ -1060,6 +1060,10 @@ trait InsertSummitTestData
         self::$summit_permission_group_repository = self::$em->getRepository(SummitAdministratorPermissionGroup::class);
         self::$media_file_type_repository = self::$em->getRepository(SummitMediaFileType::class);
 
+        // Detach whatever the test left in the unit of work (see the note in
+        // clearMemberTestData) - the cleanup must only flush its own removals.
+        self::$em->clear();
+
         self::$summit = self::$summit_repository->find(self::$summit->getId());
         self::$summit2 = self::$summit_repository->find(self::$summit2->getId());
         self::$default_media_file_type = self::$media_file_type_repository->find(self::$default_media_file_type->getId());

@@ -124,6 +124,44 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
+     * Brand-new sponsor user: the member exists but does NOT belong to any
+     * sponsor group yet - the group grant is exactly what this event delivers.
+     * The eager-create path must not fail Sponsor::addUser's group validation
+     * (chicken-and-egg: the validation requires the group this handler grants).
+     */
+    public function testAddSponsorUserToGroupCreatesRowWhenMemberHasNoSponsorGroupYet(): void
+    {
+        // member2 belongs only to SummitAdministrators - no sponsor group,
+        // exactly the state of a brand-new sponsor user's member row.
+        $member_id   = self::$member2->getId();
+        $external_id = self::$member2->getUserExternalId();
+        $sponsor_id  = self::$sponsors[1]->getId(); // no Sponsor_Users row
+        $summit_id   = self::$summit->getId();
+
+        // Pre-condition: the member must NOT belong to any sponsor group.
+        $this->assertFalse(
+            self::$member_repository->find($member_id)->belongsToGroup(IGroup::Sponsors),
+            'Pre-condition: member should not belong to the sponsors group'
+        );
+
+        $this->getService()->addSponsorUserToGroup(
+            $external_id,
+            IGroup::Sponsors,
+            $sponsor_id,
+            $summit_id
+        );
+
+        // Row created + permission written...
+        $this->assertContains(IGroup::Sponsors, $this->getPermissions($sponsor_id, $member_id));
+
+        // ...and the member ended up in the global group.
+        self::$em->clear();
+        $this->assertTrue(
+            self::$member_repository->find($member_id)->belongsToGroup(IGroup::Sponsors)
+        );
+    }
+
+    /**
      * The group slug must be written into the Sponsor_Users.Permissions JSON
      * column for the correct (SponsorID, MemberID) row.
      */
@@ -162,6 +200,26 @@ class SponsorUserPermissionTrackingTest extends TestCase
             fn($p) => $p === IGroup::Sponsors
         );
         $this->assertCount(1, $occurrences);
+    }
+
+    // -------------------------------------------------------------------------
+    // addSponsorUser (membership event)
+    // -------------------------------------------------------------------------
+
+    /**
+     * When the member does not exist yet in summit-api (brand-new IDP user whose
+     * member row has not been synced), the failure must PROPAGATE so the MQ job's
+     * retry/failed_jobs machinery applies - not be swallowed and lost silently.
+     */
+    public function testAddSponsorUserPropagatesErrorWhenMemberDoesNotExist(): void
+    {
+        $this->expectException(\models\exceptions\EntityNotFoundException::class);
+
+        $this->getService()->addSponsorUser(
+            self::$summit->getId(),
+            self::$sponsors[1]->getId(),
+            PHP_INT_MAX // external user id with no matching Member row
+        );
     }
 
     // -------------------------------------------------------------------------

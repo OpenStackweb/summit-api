@@ -90,22 +90,21 @@ final class SponsorUserSyncService
      */
     public function addSponsorUser(int $summit_id, int $sponsor_id, int $user_id): void
     {
-        try {
-            Log::debug(
-                "SponsorUserSyncService::addSponsorUser summit {$summit_id} sponsor {$sponsor_id} user_id {$user_id}");
+        // Do NOT swallow failures here: the MQ job (tries = 3) needs the
+        // exception to apply its retry / failed_jobs machinery. A swallowed
+        // failure loses the membership event silently.
+        Log::debug(
+            "SponsorUserSyncService::addSponsorUser summit {$summit_id} sponsor {$sponsor_id} user_id {$user_id}");
 
-            list($summit, $member) = $this->validateParams($summit_id, $user_id);
+        list($summit, $member) = $this->validateParams($summit_id, $user_id);
 
-            Log::debug(
-                "SponsorUserSyncService::addSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
+        Log::debug(
+            "SponsorUserSyncService::addSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
 
-            $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
+        $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
 
-            Log::info(
-                "SponsorUserSyncService::addSponsorUser member {$member->getId()} successfully added to sponsor {$sponsor_id}");
-        }  catch (\Exception $ex) {
-            Log::error($ex);
-        }
+        Log::info(
+            "SponsorUserSyncService::addSponsorUser member {$member->getId()} successfully added to sponsor {$sponsor_id}");
     }
 
     /**
@@ -155,6 +154,18 @@ final class SponsorUserSyncService
                 throw new EntityNotFoundException("Member with id {$user_id} not found");
             }
 
+            // Grant the global group FIRST: Sponsor::addUser (reached through the
+            // eager-create path below) validates the member already belongs to a
+            // sponsor group, and for a brand-new sponsor user this very event is
+            // what delivers that group.
+            if (!$member->belongsToGroup($group_slug)) {
+                $group = $this->group_repository->getBySlug($group_slug);
+                if (is_null($group)) {
+                    throw new EntityNotFoundException("Group {$group_slug} not found");
+                }
+                $member->add2Group($group);
+            }
+
             // Add permission entry to the Sponsor_Users JSON column for this sponsor-member pair.
             // If the row does not exist yet (MQ ordering race: group event arrived before membership
             // event), create it eagerly so the permission is never silently dropped.
@@ -182,15 +193,6 @@ final class SponsorUserSyncService
                           "for member {$member->getId()} / sponsor {$sponsor_id}"
                       );
                   }
-            }
-
-            // Add to global group only if not already a member.
-            if (!$member->belongsToGroup($group_slug)) {
-                $group = $this->group_repository->getBySlug($group_slug);
-                if (is_null($group)) {
-                    throw new EntityNotFoundException("Group {$group_slug} not found");
-                }
-                $member->add2Group($group);
             }
 
             Log::info(

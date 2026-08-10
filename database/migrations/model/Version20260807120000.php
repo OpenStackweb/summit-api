@@ -14,6 +14,8 @@
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use LaravelDoctrine\Migrations\Schema\Builder;
+use LaravelDoctrine\Migrations\Schema\Table;
 
 /**
  * Per-Activity CFP Reopen: per-presentation, time-boxed submission override.
@@ -21,15 +23,20 @@ use Doctrine\Migrations\AbstractMigration;
  * Stores the raw granted duration plus the stamp date; the window end is derived on read
  * (Presentation::getSubmissionReopenedUntil), never stored, so the two cannot drift.
  *
- * All statements are raw addSql() on purpose. Mixing Builder schema-diff with addSql() in one
- * migration reorders them -- addSql() runs first, the diff last (see Version20260615000001) --
- * which would execute the FK before its column exists.
+ * up() is entirely Builder and down() is entirely addSql(); neither MIXES the two. That matters:
+ * within one migration, addSql() statements all run before the Builder schema diff (see
+ * Version20260615000001), so a mixed up() would execute the FK before its column existed.
+ * Staying on one mechanism per direction removes the ordering question instead of managing it.
  *
  * Presentation is the JOINED-inheritance child table of SummitEvent, so these columns belong
  * on Presentation, not SummitEvent.
  */
 final class Version20260807120000 extends AbstractMigration
 {
+    private const TableName   = 'Presentation';
+    private const ActorColumn = 'SubmissionReopenedByID';
+    private const FkName      = 'FK_Presentation_SubmissionReopenedBy';
+
     public function getDescription(): string
     {
         return 'Add per-presentation CFP reopen override columns to Presentation.';
@@ -37,21 +44,40 @@ final class Version20260807120000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql(<<<SQL
-            ALTER TABLE `Presentation`
-                ADD COLUMN `SubmissionReopenedHours` INT NULL DEFAULT NULL,
-                ADD COLUMN `SubmissionReopenedDate` DATETIME NULL DEFAULT NULL,
-                ADD COLUMN `SubmissionReopenedByID` INT NULL DEFAULT NULL
-        SQL);
+        $builder = new Builder($schema);
+        $current = $schema->getTable(self::TableName);
 
-        $this->addSql('CREATE INDEX `SubmissionReopenedByID` ON `Presentation` (`SubmissionReopenedByID`)');
+        // Each component is guarded on ITSELF, not on the column. DDL does not roll back, so a
+        // run interrupted between the ADD COLUMN and the ADD CONSTRAINT leaves the columns in
+        // place with the migration unrecorded; a column-only guard would then skip straight past
+        // the missing FK and record the migration as complete. Re-running instead repairs.
+        $needs_hours = !$current->hasColumn('SubmissionReopenedHours');
+        $needs_date  = !$current->hasColumn('SubmissionReopenedDate');
+        $needs_actor = !$current->hasColumn(self::ActorColumn);
+        $needs_index = !$current->hasIndex(self::ActorColumn);
+        $needs_fk    = !$current->hasForeignKey(self::FkName);
 
-        $this->addSql(<<<SQL
-            ALTER TABLE `Presentation`
-                ADD CONSTRAINT `FK_Presentation_SubmissionReopenedBy`
-                    FOREIGN KEY (`SubmissionReopenedByID`) REFERENCES `Member` (`ID`)
-                    ON DELETE SET NULL
-        SQL);
+        if (!$needs_hours && !$needs_date && !$needs_actor && !$needs_index && !$needs_fk) return;
+
+        $builder->table(
+            self::TableName,
+            function (Table $table) use ($needs_hours, $needs_date, $needs_actor, $needs_index, $needs_fk) {
+                if ($needs_hours) $table->integer('SubmissionReopenedHours', false, false)->setNotnull(false);
+                if ($needs_date) $table->dateTime('SubmissionReopenedDate')->setNotnull(false);
+                if ($needs_actor) $table->integer(self::ActorColumn, false, false)->setNotnull(false);
+
+                if ($needs_index) $table->index(self::ActorColumn, self::ActorColumn);
+                if ($needs_fk) {
+                    $table->foreign(
+                        'Member',
+                        self::ActorColumn,
+                        'ID',
+                        ['onDelete' => 'SET NULL'],
+                        self::FkName
+                    );
+                }
+            }
+        );
     }
 
     /**
@@ -61,8 +87,9 @@ final class Version20260807120000 extends AbstractMigration
      */
     public function down(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE `Presentation` DROP FOREIGN KEY `FK_Presentation_SubmissionReopenedBy`');
-        $this->addSql('DROP INDEX `SubmissionReopenedByID` ON `Presentation`');
+        // addSql() only, so the drop order (FK, then index, then columns) is the order written.
+        $this->addSql('ALTER TABLE `Presentation` DROP FOREIGN KEY `' . self::FkName . '`');
+        $this->addSql('DROP INDEX `' . self::ActorColumn . '` ON `Presentation`');
         $this->addSql(<<<SQL
             ALTER TABLE `Presentation`
                 DROP COLUMN `SubmissionReopenedHours`,

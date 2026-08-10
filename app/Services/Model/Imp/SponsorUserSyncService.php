@@ -234,7 +234,7 @@ final class SponsorUserSyncService
         } else {
             $this->summit_sponsor_service->removeSponsorUser($summit, $sponsor_id, $member->getId());
             Log::info(
-                "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from to summit {$summit_id} for sponsor {$sponsor_id}");
+                "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from summit {$summit->getId()} for sponsor {$sponsor_id}");
         }
     }
 

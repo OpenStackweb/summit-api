@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
+use models\exceptions\ValidationException;
 use models\main\IGroupRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
@@ -159,6 +160,28 @@ final class SponsorUserSyncService
     }
 
     /**
+     * The MQ payload's group_slug is producer-controlled input arriving over a
+     * broker vhost several services can write to: without this gate a forged or
+     * buggy auth_user_added_to_group / auth_user_removed_from_group event could
+     * grant - or strip - membership of an arbitrary group like administrators.
+     *
+     * @param string $group_slug
+     * @throws ValidationException
+     */
+    private function assertAllowedSponsorGroup(string $group_slug): void
+    {
+        if (!in_array($group_slug, Sponsor::AllowedMemberGroups, true)) {
+            throw new ValidationException(
+                sprintf(
+                    "Group %s is not an allowed sponsor group (%s).",
+                    $group_slug,
+                    implode(', ', Sponsor::AllowedMemberGroups)
+                )
+            );
+        }
+    }
+
+    /**
      * @param int $summit_id
      * @return Summit
      * @throws EntityNotFoundException
@@ -274,6 +297,10 @@ final class SponsorUserSyncService
         Log::debug(
             "SponsorUserSyncService::addSponsorUserToGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
 
+        // Gate BEFORE resolveMember: a rejected slug must not provision a member
+        // from the IDP as a side effect.
+        $this->assertAllowedSponsorGroup($group_slug);
+
         // Resolve (and, if needed, register from the IDP) OUTSIDE the transaction below.
         // registerExternalUserById opens its own transaction and dispatches NewMember /
         // MemberDataUpdatedExternally right after it. Those jobs are pushed immediately:
@@ -344,6 +371,8 @@ final class SponsorUserSyncService
     {
         Log::debug(
             "SponsorUserSyncService::removeSponsorUserFromGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
+
+        $this->assertAllowedSponsorGroup($group_slug);
 
         // Revocation must not provision (see findMember): a member that was never
         // synced holds no permission entry and no group membership to remove.

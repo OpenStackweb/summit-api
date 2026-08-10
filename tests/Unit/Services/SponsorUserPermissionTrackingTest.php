@@ -205,6 +205,40 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
+     * The MQ payload's group_slug is attacker/producer-controlled input: the
+     * shared broker vhost grants write access to several services, so a forged
+     * or buggy auth_user_added_to_group with e.g. 'administrators' must never
+     * be granted. Only Sponsor::AllowedMemberGroups may flow through this sync.
+     */
+    public function testAddSponsorUserToGroupRejectsNonSponsorGroup(): void
+    {
+        $this->expectException(\models\exceptions\ValidationException::class);
+
+        $this->getService()->addSponsorUserToGroup(
+            self::$member->getUserExternalId(),
+            IGroup::Administrators,
+            self::$sponsors[0]->getId(),
+            self::$summit->getId()
+        );
+    }
+
+    /**
+     * Same contract on the removal path: a forged removal event must not be
+     * able to strip a member from an arbitrary group like 'administrators'.
+     */
+    public function testRemoveSponsorUserFromGroupRejectsNonSponsorGroup(): void
+    {
+        $this->expectException(\models\exceptions\ValidationException::class);
+
+        $this->getService()->removeSponsorUserFromGroup(
+            self::$member->getUserExternalId(),
+            IGroup::Administrators,
+            self::$sponsors[0]->getId(),
+            self::$summit->getId()
+        );
+    }
+
+    /**
      * The group slug must be written into the Sponsor_Users.Permissions JSON
      * column for the correct (SponsorID, MemberID) row.
      */
@@ -341,13 +375,14 @@ class SponsorUserPermissionTrackingTest extends TestCase
      * transaction and the transaction later rolled back, the Member row would vanish while
      * the already-queued jobs kept pointing at its id - they would fail forever.
      *
-     * Here the group slug does not exist, so the transaction throws AFTER the member was
-     * resolved. The member must still be present afterwards.
+     * Here the sponsor does not exist, so the eager-create path throws inside the
+     * transaction AFTER the member was resolved. The member must still be present
+     * afterwards.
      */
     public function testAddSponsorUserToGroupKeepsOnDemandMemberWhenTransactionFails(): void
     {
         $external_id = mt_rand(1500000000, 2000000000); // no local Member row
-        $sponsor_id  = self::$sponsors[1]->getId();
+        $sponsor_id  = PHP_INT_MAX; // no such sponsor: eager-create throws inside the tx
         $summit_id   = self::$summit->getId();
         $email       = sprintf("smarcet+rollback_%s@gmail.com", str_random(8));
 
@@ -374,15 +409,15 @@ class SponsorUserPermissionTrackingTest extends TestCase
             try {
                 $this->getService()->addSponsorUserToGroup(
                     $external_id,
-                    'non-existent-group-slug-' . str_random(8), // makes the transaction throw
-                    $sponsor_id,
+                    IGroup::Sponsors,
+                    $sponsor_id, // unknown sponsor: the eager-create makes the transaction throw
                     $summit_id
                 );
             } catch (\models\exceptions\EntityNotFoundException $ex) {
                 $thrown = $ex;
             }
 
-            $this->assertNotNull($thrown, 'The unknown group slug should have failed the transaction');
+            $this->assertNotNull($thrown, 'The unknown sponsor should have failed the transaction');
 
             // The on-demand member was committed by its own transaction, so the jobs
             // already dispatched for it reference a row that exists.

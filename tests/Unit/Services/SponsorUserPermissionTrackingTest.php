@@ -518,6 +518,20 @@ class SponsorUserPermissionTrackingTest extends TestCase
             $this->hasSponsorUserRow($sponsor_id, $member_id),
             'the Sponsor_Users row must have been created after refreshing groups from the IDP'
         );
+
+        $member = self::$member_repository->find($member_id);
+        $this->assertTrue(
+            $member->belongsToGroup(IGroup::Sponsors),
+            'the sponsor group must have been refreshed from the IDP'
+        );
+        // The refresh must be ADDITIVE: this event only ever grants access, and
+        // removals stay owned by the IDP's own user_updated flow. A full
+        // authoritative re-sync here would strip locally-held groups absent
+        // from the IDP payload (like this one) as a side effect.
+        $this->assertTrue(
+            $member->belongsToGroup(IGroup::SummitAdministrators),
+            'unrelated local groups must not be stripped by the refresh'
+        );
     }
 
     /**

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\ISponsorUserSyncService;
@@ -46,6 +47,8 @@ final class SponsorUserSyncService
 
     private IMemberService $member_service;
 
+    private IExternalUserApi $external_user_api;
+
     /**
      * SponsorUserSyncService constructor.
      * @param ISummitRepository $summit_repository
@@ -53,6 +56,7 @@ final class SponsorUserSyncService
      * @param IGroupRepository $group_repository
      * @param ISummitSponsorService $summit_sponsor_service
      * @param IMemberService $member_service
+     * @param IExternalUserApi $external_user_api
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -62,6 +66,7 @@ final class SponsorUserSyncService
         IGroupRepository $group_repository,
         ISummitSponsorService $summit_sponsor_service,
         IMemberService $member_service,
+        IExternalUserApi $external_user_api,
         ITransactionService $tx_service
     )
     {
@@ -71,6 +76,7 @@ final class SponsorUserSyncService
         $this->group_repository = $group_repository;
         $this->summit_sponsor_service = $summit_sponsor_service;
         $this->member_service = $member_service;
+        $this->external_user_api = $external_user_api;
     }
 
     /**
@@ -115,17 +121,23 @@ final class SponsorUserSyncService
      * publishing the membership event (_sync_user_groups), but summit-api only
      * learns about it through the IDP's own user-updated event, which races this
      * one. resolveMember covers the member that does not exist yet - this covers
-     * the member that exists with a stale local group set: re-read it from the
-     * IDP, which is the source of truth, instead of failing.
+     * the member that exists with a stale local group set: re-read the groups
+     * from the IDP, which is the source of truth, instead of failing.
      *
      * Nothing downstream would repair that failure: the producers of
      * auth_user_added_to_sponsor_and_summit (_import_user, _notify_approval) emit
      * no companion group event, so no eager-create path ever runs and the access
      * is lost once the job exhausts its tries.
      *
+     * The sync is ADDITIVE (allow_removals = false) on purpose: this event only
+     * ever GRANTS access, and removals stay owned by the IDP's own user_updated
+     * flow (PublishUserUpdated). A full authoritative re-sync here would strip
+     * locally-held groups absent from the IDP payload as a side effect of a
+     * sponsor-membership event.
+     *
      * @param Member $member
      * @param int $user_id external (IDP) user id
-     * @return Member the same member, or the refreshed one
+     * @return Member the same member, with its groups refreshed when stale
      * @throws \Exception
      */
     private function ensureSponsorGroupMembership(Member $member, int $user_id): Member
@@ -137,7 +149,13 @@ final class SponsorUserSyncService
         Log::warning(
             "SponsorUserSyncService::ensureSponsorGroupMembership member {$member->getId()} belongs to none of the allowed sponsor groups - refreshing groups from the IDP");
 
-        return $this->member_service->registerExternalUserById($user_id);
+        $user_data = $this->external_user_api->getUserById($user_id);
+        if (is_null($user_data)) {
+            throw new EntityNotFoundException(
+                "SponsorUserSyncService::ensureSponsorGroupMembership user {$user_id} does not exist at the IDP");
+        }
+
+        return $this->member_service->synchronizeGroups($member, $user_data['groups'] ?? [], false);
     }
 
     /**

@@ -455,20 +455,137 @@ class SponsorUserPermissionTrackingTest extends TestCase
     }
 
     /**
-     * A swallowed removal failure is worse than a swallowed addition: the user
-     * silently RETAINS access they should have lost. The failure must propagate
-     * so the MQ job's retry / failed_jobs machinery applies.
+     * A member that was never synced holds no Sponsor_Users row and no group
+     * membership, so a revocation event for it has nothing to revoke: it is a
+     * no-op, not a failure. Turning it into an exception would burn the job's
+     * 3 tries and park a permanently unresolvable entry in failed_jobs.
      */
-    public function testRemoveSponsorUserPropagatesErrorWhenMemberDoesNotExist(): void
+    public function testRemoveSponsorUserIsNoOpWhenMemberWasNeverSynced(): void
     {
         // User does not exist locally NOR at the IDP.
         $this->mockExternalUserApi(null);
 
-        $this->expectException(\models\exceptions\EntityNotFoundException::class);
-
         $this->getService()->removeSponsorUser(
             self::$summit->getId(),
             PHP_INT_MAX, // external user id with no matching Member row
+            self::$sponsors[0]->getId()
+        );
+
+        $this->assertNull(self::$member_repository->getByExternalId(PHP_INT_MAX));
+    }
+
+    /**
+     * Revocation must never PROVISION. When the member was never synced but the
+     * user does still exist at the IDP, registering it on demand would create a
+     * Member row, run a full synchronizeGroups and dispatch NewMember /
+     * MemberDataUpdatedExternally jobs - all to then revoke nothing, since a
+     * member that did not exist owns no Sponsor_Users row.
+     */
+    public function testRemoveSponsorUserDoesNotProvisionMemberFromIdp(): void
+    {
+        $external_id = mt_rand(1500000000, 2000000000); // no local Member row
+        $email       = sprintf("smarcet+norevokeprov_%s@gmail.com", str_random(8));
+
+        // The user DOES exist at the IDP - on-demand registration would succeed.
+        $this->mockExternalUserApi([
+            'id'             => $external_id,
+            'email'          => $email,
+            'first_name'     => 'No',
+            'last_name'      => 'Provision',
+            'bio'            => '',
+            'active'         => true,
+            'email_verified' => true,
+            'groups'         => [],
+            'public_profile_show_photo'            => false,
+            'public_profile_show_fullname'         => false,
+            'public_profile_show_email'            => false,
+            'public_profile_show_telephone_number' => false,
+            'public_profile_show_bio'              => false,
+            'public_profile_show_social_media_info' => false,
+            'public_profile_allow_chat_with_me'    => false,
+        ]);
+
+        try {
+            $this->getService()->removeSponsorUser(
+                self::$summit->getId(),
+                $external_id,
+                self::$sponsors[0]->getId()
+            );
+
+            self::$em->clear();
+            $this->assertNull(
+                self::$member_repository->getByExternalId($external_id),
+                'a revocation event must not create a Member row'
+            );
+        } finally {
+            $leftover = self::$member_repository->getByExternalId($external_id);
+            if (!is_null($leftover)) {
+                self::$em->remove($leftover);
+                self::$em->flush();
+            }
+        }
+    }
+
+    /**
+     * Same contract for the group-scoped revocation entry point.
+     */
+    public function testRemoveSponsorUserFromGroupDoesNotProvisionMemberFromIdp(): void
+    {
+        $external_id = mt_rand(1500000000, 2000000000); // no local Member row
+        $email       = sprintf("smarcet+norevokegrp_%s@gmail.com", str_random(8));
+
+        $this->mockExternalUserApi([
+            'id'             => $external_id,
+            'email'          => $email,
+            'first_name'     => 'No',
+            'last_name'      => 'Provision',
+            'bio'            => '',
+            'active'         => true,
+            'email_verified' => true,
+            'groups'         => [],
+            'public_profile_show_photo'            => false,
+            'public_profile_show_fullname'         => false,
+            'public_profile_show_email'            => false,
+            'public_profile_show_telephone_number' => false,
+            'public_profile_show_bio'              => false,
+            'public_profile_show_social_media_info' => false,
+            'public_profile_allow_chat_with_me'    => false,
+        ]);
+
+        try {
+            $this->getService()->removeSponsorUserFromGroup(
+                $external_id,
+                IGroup::Sponsors,
+                self::$sponsors[0]->getId(),
+                self::$summit->getId()
+            );
+
+            self::$em->clear();
+            $this->assertNull(
+                self::$member_repository->getByExternalId($external_id),
+                'a group revocation event must not create a Member row'
+            );
+        } finally {
+            $leftover = self::$member_repository->getByExternalId($external_id);
+            if (!is_null($leftover)) {
+                self::$em->remove($leftover);
+                self::$em->flush();
+            }
+        }
+    }
+
+    /**
+     * Skipping an unknown member must not turn removeSponsorUser into a
+     * swallow-everything handler: a genuine failure still has to propagate so
+     * the MQ job's retry / failed_jobs machinery applies.
+     */
+    public function testRemoveSponsorUserPropagatesErrorWhenSummitDoesNotExist(): void
+    {
+        $this->expectException(\models\exceptions\EntityNotFoundException::class);
+
+        $this->getService()->removeSponsorUser(
+            PHP_INT_MAX, // no such summit
+            self::$member->getUserExternalId(),
             self::$sponsors[0]->getId()
         );
     }

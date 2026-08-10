@@ -94,6 +94,35 @@ final class SponsorUserSyncService
     }
 
     /**
+     * Looks up the local Member WITHOUT registering it on demand. Revocation
+     * paths use this: a member that was never synced owns no Sponsor_Users row
+     * and no group membership, so there is nothing to revoke and provisioning
+     * one from the IDP would be a pure side effect (Member row, full
+     * synchronizeGroups, NewMember / MemberDataUpdatedExternally jobs).
+     *
+     * @param int $user_id external (IDP) user id
+     * @return Member|null null when the member was never synced
+     */
+    private function findMember(int $user_id): ?Member
+    {
+        return $this->member_repository->getByExternalId($user_id);
+    }
+
+    /**
+     * @param int $summit_id
+     * @return Summit
+     * @throws EntityNotFoundException
+     */
+    private function resolveSummit(int $summit_id): Summit
+    {
+        $summit = $this->summit_repository->getById($summit_id);
+        if (!$summit instanceof Summit) {
+            throw new EntityNotFoundException("Summit {$summit_id} not found");
+        }
+        return $summit;
+    }
+
+    /**
      * @param int $summit_id
      * @param int $user_id
      * @return array
@@ -101,13 +130,7 @@ final class SponsorUserSyncService
      */
     public function validateParams(int $summit_id, int $user_id): array
     {
-        $summit = $this->summit_repository->getById($summit_id);
-        if (!$summit instanceof Summit) {
-            throw new EntityNotFoundException("Summit {$summit_id} not found");
-        }
-
-        $member = $this->resolveMember($user_id);
-        return array($summit, $member);
+        return array($this->resolveSummit($summit_id), $this->resolveMember($user_id));
     }
 
     /**
@@ -143,7 +166,18 @@ final class SponsorUserSyncService
         Log::debug(
             "SponsorUserSyncService::removeSponsorUser summit {$summit_id} sponsor {$sponsor_id} user_id {$user_id}");
 
-        list($summit, $member) = $this->validateParams($summit_id, $user_id);
+        $summit = $this->resolveSummit($summit_id);
+
+        // Revocation must not provision (see findMember). Skipping is also what
+        // keeps a deleted IDP user from parking an unresolvable entry in
+        // failed_jobs: sponsor-users-api emits a removal event per access right
+        // when a user is deleted, and by then the local Member is gone too.
+        $member = $this->findMember($user_id);
+        if (is_null($member)) {
+            Log::warning(
+                "SponsorUserSyncService::removeSponsorUser member with external id {$user_id} was never synced - nothing to revoke, skipping");
+            return;
+        }
 
         Log::debug(
             "SponsorUserSyncService::removeSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
@@ -249,9 +283,15 @@ final class SponsorUserSyncService
         Log::debug(
             "SponsorUserSyncService::removeSponsorUserFromGroup user_id {$user_id} group_slug {$group_slug} sponsor_id {$sponsor_id} summit_id {$summit_id}");
 
-        // See addSponsorUserToGroup: resolve outside the transaction so an on-demand
-        // registration is committed before the jobs it dispatches reference the member id.
-        $member_id = $this->resolveMember($user_id)->getId();
+        // Revocation must not provision (see findMember): a member that was never
+        // synced holds no permission entry and no group membership to remove.
+        $member = $this->findMember($user_id);
+        if (is_null($member)) {
+            Log::warning(
+                "SponsorUserSyncService::removeSponsorUserFromGroup member with external id {$user_id} was never synced - nothing to revoke, skipping");
+            return;
+        }
+        $member_id = $member->getId();
 
         $this->tx_service->transaction(function () use ($member_id, $group_slug, $sponsor_id, $summit_id) {
 

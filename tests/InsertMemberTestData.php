@@ -204,6 +204,7 @@ trait InsertMemberTestData
                 "clearMemberTestData failed - fixtures may have leaked: %s\n",
                 $ex->getMessage()
             ));
+            throw $ex;
         }
     }
 }

@@ -149,12 +149,18 @@ final class SponsorUserSyncService
             "SponsorUserSyncService::removeSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
 
         if (is_null($sponsor_id)) {
+            // getSponsorMemberships() is a plain ManyToMany to Sponsor with no summit
+            // scoping, so it also yields sponsors of OTHER summits. Those do not resolve
+            // against $summit and would make removeSponsorUser throw "Sponsor not found.",
+            // aborting the loop and leaving this summit's own memberships un-revoked.
             foreach ($member->getSponsorMemberships() as $sponsor_membership) {
-                $sponsor_id = $sponsor_membership->getId();
-                $this->summit_sponsor_service->removeSponsorUser($summit, $sponsor_id, $member->getId());
+                if ($sponsor_membership->getSummit()->getId() !== $summit->getId()) continue;
+
+                $current_sponsor_id = $sponsor_membership->getId();
+                $this->summit_sponsor_service->removeSponsorUser($summit, $current_sponsor_id, $member->getId());
 
                 Log::info(
-                    "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from summit {$summit->getId()} for sponsor {$sponsor_id}"
+                    "SponsorUserSyncService::removeSponsorUser: member {$member->getId()} successfully removed from summit {$summit->getId()} for sponsor {$current_sponsor_id}"
                 );
             }
         } else {

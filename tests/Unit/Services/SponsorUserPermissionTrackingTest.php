@@ -120,6 +120,18 @@ class SponsorUserPermissionTrackingTest extends TestCase
         return json_decode($raw, true) ?? [];
     }
 
+    /**
+     * Whether a Sponsor_Users row exists for the given (SponsorID, MemberID) pair,
+     * regardless of its Permissions value.
+     */
+    private function hasSponsorUserRow(int $sponsor_id, int $member_id): bool
+    {
+        return (bool)self::$em->getConnection()->executeQuery(
+            'SELECT 1 FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        )->fetchOne();
+    }
+
     // -------------------------------------------------------------------------
     // addSponsorUserToGroup
     // -------------------------------------------------------------------------
@@ -378,6 +390,67 @@ class SponsorUserPermissionTrackingTest extends TestCase
                 self::$em->remove($leftover);
                 self::$em->flush();
             }
+        }
+    }
+
+    /**
+     * removeSponsorUser with a null sponsor_id (the auth_user_removed_from_summit
+     * event, which carries no sponsor_id) must revoke ONLY the memberships that
+     * belong to the summit the event is about.
+     *
+     * Member::getSponsorMemberships() is a plain ManyToMany to Sponsor with no
+     * summit scoping, so it also returns sponsors of other summits. Those do not
+     * resolve against $summit and make SummitSponsorService::removeSponsorUser
+     * throw "Sponsor not found.", aborting the loop and leaving the memberships
+     * of the event's own summit un-revoked.
+     */
+    public function testRemoveSponsorUserWithoutSponsorIdOnlyRevokesTheEventSummit(): void
+    {
+        // setUp() ends with an em->clear(), so the static fixture entities are
+        // detached: re-fetch them or Doctrine treats them as new on persist.
+        $member  = self::$member_repository->find(self::$member->getId());
+        $summit2 = self::$summit_repository->getById(self::$summit2->getId());
+        $company = self::$em->find(\models\main\Company::class, self::$companies[1]->getId());
+
+        // A second sponsor, belonging to a DIFFERENT summit, with the same member.
+        $other_sponsor = new \models\summit\Sponsor();
+        $other_sponsor->setCompany($company);
+        $summit2->addSummitSponsor($other_sponsor);
+        $other_sponsor->addUser($member);
+        self::$em->persist($other_sponsor);
+        self::$em->flush();
+
+        $member_id        = $member->getId();
+        $external_id      = $member->getUserExternalId();
+        $event_sponsor_id = self::$sponsors[0]->getId(); // belongs to self::$summit
+        $other_sponsor_id = $other_sponsor->getId();     // belongs to self::$summit2
+
+        // Pre-condition: the member holds a membership in BOTH summits.
+        $this->assertTrue($this->hasSponsorUserRow($event_sponsor_id, $member_id));
+        $this->assertTrue($this->hasSponsorUserRow($other_sponsor_id, $member_id));
+
+        try {
+            // auth_user_removed_from_summit: no sponsor_id, only the summit.
+            $this->getService()->removeSponsorUser(
+                self::$summit->getId(),
+                $external_id,
+                null
+            );
+
+            self::$em->clear();
+
+            $this->assertFalse(
+                $this->hasSponsorUserRow($event_sponsor_id, $member_id),
+                'the membership of the event summit must have been revoked'
+            );
+            $this->assertTrue(
+                $this->hasSponsorUserRow($other_sponsor_id, $member_id),
+                'the membership of an unrelated summit must be left untouched'
+            );
+        } finally {
+            $conn = self::$em->getConnection();
+            $conn->executeStatement('DELETE FROM Sponsor_Users WHERE SponsorID = ?', [$other_sponsor_id]);
+            $conn->executeStatement('DELETE FROM Sponsor WHERE ID = ?', [$other_sponsor_id]);
         }
     }
 

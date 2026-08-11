@@ -70,6 +70,11 @@ trait InsertMemberTestData
     static $group_repository;
 
     /**
+     * @var \Doctrine\Persistence\ObjectRepository
+     */
+    static $speaker_repository;
+
+    /**
      * @param string $current_group_slug
      */
     protected static function setMemberDefaultGroup(string $current_group_slug)
@@ -162,11 +167,39 @@ trait InsertMemberTestData
                 self::$em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
             }
 
+            // Re-resolve the repositories UNCONDITIONALLY: a failed tx_service
+            // transaction closes and resets the manager mid-test, and a test
+            // finally that already reopened it leaves self::$em fresh and OPEN -
+            // an isOpen() check here would then skip the refresh while the
+            // repositories captured at setup still point at the closed manager,
+            // making the finds below fail and the fixtures LEAK. Leaked duplicate
+            // Group rows make getBySlug() resolve a stale row and turn group
+            // removals into silent no-ops on every later run.
+            self::$group_repository = self::$em->getRepository(Group::class);
+            self::$member_repository = self::$em->getRepository(Member::class);
+            self::$speaker_repository = self::$em->getRepository(PresentationSpeaker::class);
+
+            // Detach whatever the test left in the unit of work: entity unit
+            // tests build unpersisted object graphs hanging off managed
+            // fixtures, and flushing them here throws "non-persisted new
+            // entities found" - the cleanup must only flush its own removals.
+            self::$em->clear();
+
             self::$member = self::$member_repository->find(self::$member->getId());
             self::$group = self::$group_repository->find(self::$group->getId());
 
             self::$member2 = self::$member_repository->find(self::$member2->getId());
             self::$group2 = self::$group_repository->find(self::$group2->getId());
+
+            // self::$speaker holds its own Company ("Tipit LLC") and references self::$member -
+            // it was never removed here, leaking one PresentationSpeaker row per test run and
+            // poisoning every un-scoped company-count query in the suite (OAuth2SummitSpeakersApiTest
+            // / OAuth2MembersApiTest getAllCompanies). Remove it before the member it points to.
+            if (!is_null(self::$speaker)) {
+                self::$speaker = self::$speaker_repository->find(self::$speaker->getId());
+                if (!is_null(self::$speaker))
+                    self::$em->remove(self::$speaker);
+            }
 
             if (!is_null(self::$member))
                 self::$em->remove(self::$member);
@@ -182,10 +215,19 @@ trait InsertMemberTestData
             self::$group = null;
             self::$member2 = null;
             self::$group2 = null;
+            self::$speaker = null;
             self::$em->flush();
 
         } catch (\Exception $ex) {
-
+            // Do NOT let a cleanup failure stay invisible: leaked fixtures
+            // poison the shared test database for every subsequent run (leaked
+            // duplicate Group rows once turned group removals into silent
+            // no-ops suite-wide). Log AND rethrow so the test fails loudly.
+            fwrite(STDERR, sprintf(
+                "clearMemberTestData failed - fixtures may have leaked: %s\n",
+                $ex->getMessage()
+            ));
+            throw $ex;
         }
     }
 }

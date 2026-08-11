@@ -39,9 +39,8 @@ interface IPresentationSubmissionReopenService
     /**
      * Clears any grant. Deliberately tolerant of plan state so a stale grant is always clearable.
      *
-     * $actor is unused by the implementation and is kept because the signed-off SDS specifies it:
-     * clearing nulls the ByID column rather than restamping it, and the caller is already captured
-     * by generic request auditing. Do not "tidy" it away without amending the SDS.
+     * $actor is logged as the revoking member in the audit line this method emits. Removing it
+     * silently drops that attribution from the revocation record.
      *
      * @throws EntityNotFoundException if the presentation is not in $summit
      */

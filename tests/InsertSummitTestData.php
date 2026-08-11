@@ -213,6 +213,11 @@ trait InsertSummitTestData
     static $defaultMember2;
 
     /**
+     * @var PresentationSpeaker
+     */
+    static $defaultSpeaker;
+
+    /**
      * @var array | SummitAccessLevelType[]
      */
     static $access_levels;
@@ -280,6 +285,8 @@ trait InsertSummitTestData
     static $default_media_file_type;
 
     static $media_file_type_repository;
+
+    static $speaker_repository;
 
     static $default_badge_view_type;
 
@@ -779,6 +786,7 @@ trait InsertSummitTestData
         $speaker1->setLastName("Marcet");
         $speaker1->setBio("This is the Bio");
         self::$em->persist($speaker1);
+        self::$defaultSpeaker = $speaker1;
 
         for($i = 0 ; $i < 20; $i++){
             $presentation = new Presentation();
@@ -1059,6 +1067,7 @@ trait InsertSummitTestData
         self::$summit_repository = self::$em->getRepository(Summit::class);
         self::$summit_permission_group_repository = self::$em->getRepository(SummitAdministratorPermissionGroup::class);
         self::$media_file_type_repository = self::$em->getRepository(SummitMediaFileType::class);
+        self::$speaker_repository = self::$em->getRepository(PresentationSpeaker::class);
 
         // Detach whatever the test left in the unit of work (see the note in
         // clearMemberTestData) - the cleanup must only flush its own removals.
@@ -1068,6 +1077,15 @@ trait InsertSummitTestData
         self::$summit2 = self::$summit_repository->find(self::$summit2->getId());
         self::$default_media_file_type = self::$media_file_type_repository->find(self::$default_media_file_type->getId());
         self::$summit_permission_group = self::$summit_permission_group_repository->find(self::$summit_permission_group->getId());
+        // speaker1 is created directly against the shared member/summit fixtures but was never
+        // tracked back to cleanup - it leaked one PresentationSpeaker row (Company falls back to
+        // the member's) per test run, poisoning the un-scoped company-count queries suite-wide.
+        if (!is_null(self::$defaultSpeaker)) {
+            self::$defaultSpeaker = self::$speaker_repository->find(self::$defaultSpeaker->getId());
+            if (!is_null(self::$defaultSpeaker)) {
+                self::$em->remove(self::$defaultSpeaker);
+            }
+        }
         self::$summit->clearOrders();
         self::$summit2->clearOrders();
         self::$summit->clearMetrics();
@@ -1093,6 +1111,7 @@ trait InsertSummitTestData
         // reset static vars
 
         self::$summit = null;
+        self::$defaultSpeaker = null;
         self::$default_badge_type = null;
         self::$summit2 = null;
         self::$default_add_on_type_booth = null;

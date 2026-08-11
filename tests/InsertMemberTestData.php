@@ -70,6 +70,11 @@ trait InsertMemberTestData
     static $group_repository;
 
     /**
+     * @var \Doctrine\Persistence\ObjectRepository
+     */
+    static $speaker_repository;
+
+    /**
      * @param string $current_group_slug
      */
     protected static function setMemberDefaultGroup(string $current_group_slug)
@@ -172,6 +177,7 @@ trait InsertMemberTestData
             // removals into silent no-ops on every later run.
             self::$group_repository = self::$em->getRepository(Group::class);
             self::$member_repository = self::$em->getRepository(Member::class);
+            self::$speaker_repository = self::$em->getRepository(PresentationSpeaker::class);
 
             // Detach whatever the test left in the unit of work: entity unit
             // tests build unpersisted object graphs hanging off managed
@@ -184,6 +190,16 @@ trait InsertMemberTestData
 
             self::$member2 = self::$member_repository->find(self::$member2->getId());
             self::$group2 = self::$group_repository->find(self::$group2->getId());
+
+            // self::$speaker holds its own Company ("Tipit LLC") and references self::$member -
+            // it was never removed here, leaking one PresentationSpeaker row per test run and
+            // poisoning every un-scoped company-count query in the suite (OAuth2SummitSpeakersApiTest
+            // / OAuth2MembersApiTest getAllCompanies). Remove it before the member it points to.
+            if (!is_null(self::$speaker)) {
+                self::$speaker = self::$speaker_repository->find(self::$speaker->getId());
+                if (!is_null(self::$speaker))
+                    self::$em->remove(self::$speaker);
+            }
 
             if (!is_null(self::$member))
                 self::$em->remove(self::$member);
@@ -199,6 +215,7 @@ trait InsertMemberTestData
             self::$group = null;
             self::$member2 = null;
             self::$group2 = null;
+            self::$speaker = null;
             self::$em->flush();
 
         } catch (\Exception $ex) {

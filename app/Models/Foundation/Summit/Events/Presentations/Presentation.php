@@ -49,6 +49,23 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
 
     use OrderableChilds;
 
+    /**
+     * Redeclared, not extended: a child property SHADOWS the parent default, so SummitEvent's
+     * created_by/updated_by entries must be repeated here or getCreatedById()/getUpdatedById()
+     * stop resolving through One2ManyPropertyTrait::__call.
+     */
+    protected $getIdMappings = [
+        'getCreatedById' => 'created_by',
+        'getUpdatedById' => 'updated_by',
+        'getSubmissionReopenedById' => 'submission_reopened_by',
+    ];
+
+    protected $hasPropertyMappings = [
+        'hasCreatedBy' => 'created_by',
+        'hasUpdatedBy' => 'updated_by',
+        'hasSubmissionReopenedBy' => 'submission_reopened_by',
+    ];
+
     const ClassName = 'Presentation';
 
     const FieldProblemAddressed = 'problem_addressed';
@@ -232,6 +249,25 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     protected $custom_order;
 
     /**
+     * @var int|null the raw admin-granted duration; the window end is derived, never stored
+     */
+    #[ORM\Column(name: 'SubmissionReopenedHours', type: 'integer', nullable: true)]
+    protected $submission_reopened_hours = null;
+
+    /**
+     * @var \DateTime|null
+     */
+    #[ORM\Column(name: 'SubmissionReopenedDate', type: 'datetime', nullable: true)]
+    protected $submission_reopened_date = null;
+
+    /**
+     * @var Member|null
+     */
+    #[ORM\JoinColumn(name: 'SubmissionReopenedByID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
+    #[ORM\ManyToOne(targetEntity: \models\main\Member::class, fetch: 'EXTRA_LAZY')]
+    protected $submission_reopened_by = null;
+
+    /**
      * @var PresentationSpeaker
      */
     #[ORM\JoinColumn(name: 'ModeratorID', referencedColumnName: 'ID', onDelete: 'SET NULL')]
@@ -363,6 +399,9 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         $this->attending_media = false;
         $this->will_all_speakers_attend = false;
         $this->disclaimer_accepted_date = null;
+        $this->submission_reopened_hours = null;
+        $this->submission_reopened_date = null;
+        $this->submission_reopened_by = null;
         $this->custom_order = 0;
         $this->track_chairs_scores = new ArrayCollection();
     }
@@ -2524,12 +2563,88 @@ SQL;
         return $review_status;
     }
 
+    public function getSubmissionReopenedHours(): ?int
+    {
+        return $this->submission_reopened_hours;
+    }
+
+    public function getSubmissionReopenedDate(): ?\DateTime
+    {
+        return $this->submission_reopened_date;
+    }
+
+    public function setSubmissionReopenedDate(?\DateTime $date): void
+    {
+        $this->submission_reopened_date = $date;
+    }
+
+    public function getSubmissionReopenedBy(): ?Member
+    {
+        return $this->submission_reopened_by;
+    }
+
+    /**
+     * Derived, never stored — so hours and date cannot drift out of lockstep.
+     */
+    public function getSubmissionReopenedUntil(): ?\DateTime
+    {
+        if (is_null($this->submission_reopened_date) || is_null($this->submission_reopened_hours))
+            return null;
+        return (clone $this->submission_reopened_date)
+            ->add(new \DateInterval(sprintf("PT%dH", $this->submission_reopened_hours)));
+    }
+
+    /**
+     * A grant is only honored on a plan that is assigned, enabled, and whose submission
+     * window has actually ended. Deadline alone would grant edits before the CFP opened,
+     * and (via the isSubmissionClosed() fold) would open speaker deletes on a plan disabled
+     * after the grant — the delete path never re-checks IsEnabled() itself.
+     */
+    public function isSubmissionReopened(): bool
+    {
+        $selection_plan = $this->selection_plan;
+        if (is_null($selection_plan)) return false;
+        if (!$selection_plan->IsEnabled()) return false;
+
+        $submission_end_date = $selection_plan->getSubmissionEndDate();
+        if (is_null($submission_end_date)) return false;
+
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        // window not ended yet (pre-open or still open): there is nothing to reopen
+        if ($now <= $submission_end_date) return false;
+
+        $until = $this->getSubmissionReopenedUntil();
+        return !is_null($until) && $now < $until;
+    }
+
+    public function reopenSubmission(int $hours, Member $actor): void
+    {
+        $this->submission_reopened_hours = $hours;
+        $this->submission_reopened_date = new \DateTime('now', new \DateTimeZone('UTC'));
+        $this->submission_reopened_by = $actor;
+    }
+
+    /**
+     * Deliberately exempt from the invariants above: a stale grant must always be clearable.
+     */
+    public function closeSubmissionNow(): void
+    {
+        $this->submission_reopened_hours = null;
+        $this->submission_reopened_date = null;
+        $this->submission_reopened_by = null;
+    }
+
     /**
      * @return bool
      * @throws \Exception
      */
     public function isSubmissionClosed(): bool
     {
+        // Fold: covers both production callers (PresentationService::deletePresentation and
+        // SummitService) with no change at either call site. Review-status-safe because
+        // getReviewStatus() recomputes submission_closed inline rather than calling this.
+        if ($this->isSubmissionReopened()) return false;
+
         $selection_plan = $this->selection_plan;
         if (is_null($selection_plan)) return false;
 

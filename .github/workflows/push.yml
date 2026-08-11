@@ -59,6 +59,7 @@ jobs:
                     - { name: "SummitRSVPServiceTest", filter: "--filter SummitRSVPServiceTest" }
                     - { name: "SummitRSVPInvitationServiceTest", filter: "--filter SummitRSVPInvitationServiceTest" }
                     - { name: "EntityModelUnitTests", filter: "tests/Unit/Entities/" }
+                    - { name: "ModelUnitTests", filter: "tests/Unit/Models/" }
                     - { name: "AuditUnitTests", filter: "tests/Unit/Audit/" }
                     - { name: "AuditOtlpStrategyTest", filter: "--filter AuditOtlpStrategyTest" }
                     - { name: "AuditEventTypesTest", filter: "--filter AuditEventTypesTest" }
@@ -68,7 +69,7 @@ jobs:
                     - { name: "CacheOptimizations", filter: "--filter '(PresentationSpeakerCacheTest|ResourceServerContextTest)'" }
                     # Named by path because no job in this matrix runs the tests/ root, only its
                     # subdirectories - a file added there runs nowhere unless it is listed here.
-                    - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php tests/PresentationSerializerCacheKeyTest.php" }
+                    - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php tests/PresentationSerializerCacheKeyTest.php tests/PresentationReopenModelTest.php tests/PresentationReopenApiTest.php tests/PresentationReopenAuthzTest.php" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing

@@ -43,6 +43,7 @@ use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
 use OpenApi\Attributes as OA;
 use services\model\IPresentationService;
+use services\model\IPresentationSubmissionReopenService;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
@@ -85,6 +86,11 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     private $presentation_comments_repository;
 
     /**
+     * @var IPresentationSubmissionReopenService
+     */
+    private $presentation_submission_reopen_service;
+
+    /**
      * OAuth2PresentationApiController constructor.
      * @param IPresentationService $presentation_service
      * @param ISummitRepository $summit_repository
@@ -92,6 +98,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
      * @param IMemberRepository $member_repository
      * @param ISummitPresentationCommentRepository $presentation_comments_repository
      * @param IResourceServerContext $resource_server_context
+     * @param IPresentationSubmissionReopenService $presentation_submission_reopen_service
      */
     public function __construct
     (
@@ -100,7 +107,8 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         ISummitEventRepository               $presentation_repository,
         IMemberRepository                    $member_repository,
         ISummitPresentationCommentRepository $presentation_comments_repository,
-        IResourceServerContext               $resource_server_context
+        IResourceServerContext               $resource_server_context,
+        IPresentationSubmissionReopenService  $presentation_submission_reopen_service
     )
     {
         parent::__construct($resource_server_context);
@@ -109,6 +117,7 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
         $this->member_repository = $member_repository;
         $this->summit_repository = $summit_repository;
         $this->presentation_comments_repository = $presentation_comments_repository;
+        $this->presentation_submission_reopen_service = $presentation_submission_reopen_service;
     }
 
     //presentations
@@ -522,6 +531,113 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
                 SerializerUtils::getFields(),
                 SerializerUtils::getRelations()
             ));
+        });
+    }
+
+    #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen",
+        summary: "Admin-only: reopen the submission period for a presentation",
+        operationId: "reopenSubmissionPeriod",
+        security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData, SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'hours', type: 'integer'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_CREATED,
+                description: "Created",
+                content: new OA\JsonContent(ref: "#/components/schemas/Presentation")
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function reopenSubmissionPeriod($summit_id, $presentation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $isAdmin = $current_member->isAdmin()
+                || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if (!$isAdmin) return $this->error403();
+
+            $payload = $this->getJsonPayload(['hours' => 'sometimes|integer|min:1']);
+
+            // null, not the default: the hours rule (default AND ceiling) lives in the service.
+            $presentation = $this->presentation_submission_reopen_service->reopen(
+                $summit,
+                intval($presentation_id),
+                isset($payload['hours']) ? intval($payload['hours']) : null,
+                $current_member
+            );
+
+            // Private, NOT Admin: SerializerRegistry has no Admin key for Presentation and an
+            // unknown type silently falls back to Public, stripping the reopen fields.
+            return $this->updated(SerializerRegistry::getInstance()->getSerializer(
+                $presentation, SerializerRegistry::SerializerType_Private
+            )->serialize(
+                SerializerUtils::getExpand(),
+                SerializerUtils::getFields(),
+                SerializerUtils::getRelations()
+            ));
+        });
+    }
+
+    #[OA\Delete(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen",
+        summary: "Admin-only: close the reopened submission period for a presentation",
+        operationId: "closeSubmissionPeriod",
+        security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData, SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: "No Content"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function closeSubmissionPeriod($summit_id, $presentation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $isAdmin = $current_member->isAdmin()
+                || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if (!$isAdmin) return $this->error403();
+
+            $this->presentation_submission_reopen_service->closeNow(
+                $summit, intval($presentation_id), $current_member
+            );
+
+            return $this->deleted();
         });
     }
 

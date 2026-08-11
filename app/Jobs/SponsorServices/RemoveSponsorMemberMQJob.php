@@ -54,7 +54,9 @@ final class RemoveSponsorMemberMQJob implements ShouldQueue
     public function handle(SponsorServicesMQJob $job): void
     {
         try {
-            $event_type = $job->getRabbitMQMessage()->getRoutingKey();
+            // getEventType, not the raw routing key: a redelivered (released)
+            // message carries the queue name as routing key.
+            $event_type = $job->getEventType();
             $payload = $job->payload();
             $json = json_encode($payload);
             Log::debug("RemoveSponsorMemberMQJob::handle payload {$json}");

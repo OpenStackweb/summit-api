@@ -1411,7 +1411,28 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($speaker));
     }
 
+    // self::$speaker (base member fixture) and speaker1 (created in insertSummitTestData for
+    // self::$defaultMember) both attach to self::$defaultMember. Member::$speaker is a OneToOne
+    // with orphanRemoval=true, so the second attach silently orphan-removes self::$speaker -
+    // it never survives to be counted. Attach a dedicated speaker to self::$defaultMember2
+    // instead (which has no speaker profile) so this test observes 2 real, independent
+    // distinct companies instead of depending on a speaker that gets deleted out from under it.
+    private function createSpeakerCompaniesFixture()
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Company");
+        $speaker->setLastName("Speaker");
+        $speaker->setBio("Speaker used only to provide a distinct company value");
+        $speaker->setMember(self::$defaultMember2);
+        $speaker->setCompany("Tipit LLC");
+        self::$em->persist($speaker);
+        self::$em->flush();
+        return $speaker;
+    }
+
     public function testGetSpeakersCompanies(){
+        $this->createSpeakerCompaniesFixture();
+
         $params = [
 
         ];
@@ -1435,6 +1456,8 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
     }
 
     public function testGetSpeakersCompaniesWithFilterAndOrdering(){
+        $this->createSpeakerCompaniesFixture();
+
         $params = [
             'filter' => ['company=@LLC'],
             'order'  => '+company',

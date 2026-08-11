@@ -18,4 +18,8 @@ return [
     'speaker_change_notification_email' => env('CFP_SPEAKER_CHANGE_NOTIFICATION_EMAIL', null),
     'client_id' => env('CFP_OAUTH2_CLIENT_ID', null),
     'scopes' => env('CFP_OAUTH2_SCOPES', null),
+
+    // ceiling on an admin-granted per-presentation reopen window
+    'max_reopen_hours'     => (int) env('CFP_MAX_REOPEN_HOURS', 168), // 7 days
+    'default_reopen_hours' => (int) env('CFP_DEFAULT_REOPEN_HOURS', 24),
 ];

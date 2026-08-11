@@ -546,7 +546,7 @@ final class PresentationService
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
-            if (!$current_selection_plan->isSubmissionOpen()) {
+            if (!$current_selection_plan->isSubmissionOpen() && !$presentation->isSubmissionReopened()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
@@ -670,7 +670,7 @@ final class PresentationService
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 
-            if (!$current_selection_plan->isSubmissionOpen()) {
+            if (!$current_selection_plan->isSubmissionOpen() && !$presentation->isSubmissionReopened()) {
                 throw new ValidationException(sprintf("Submission Period is Closed."));
             }
 

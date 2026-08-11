@@ -149,6 +149,7 @@ use Illuminate\Support\ServiceProvider;
 use services\model\ChatTeamService;
 use services\model\IChatTeamService;
 use services\model\IPresentationService;
+use services\model\IPresentationSubmissionReopenService;
 use services\model\ISpeakerService;
 use services\model\ISubmitterService;
 use services\model\ISummitAttendeeBadgePrintService;
@@ -156,6 +157,7 @@ use services\model\ISummitPromoCodeService;
 use services\model\ISummitService;
 use services\model\ISummitSponsorService;
 use services\model\PresentationService;
+use services\model\PresentationSubmissionReopenService;
 use services\model\SpeakerService;
 use services\model\SubmitterService;
 use services\model\SummitAttendeeBadgePrintService;
@@ -192,6 +194,8 @@ final class ModelServicesProvider extends ServiceProvider
         App::singleton(ISubmitterService::class, SubmitterService::class);
 
         App::singleton(IPresentationService::class, PresentationService::class);
+
+        App::singleton(IPresentationSubmissionReopenService::class, PresentationSubmissionReopenService::class);
 
         App::singleton(IChatTeamService::class, ChatTeamService::class);
 

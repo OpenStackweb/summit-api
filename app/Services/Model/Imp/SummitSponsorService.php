@@ -465,37 +465,9 @@ final class SummitSponsorService
                 throw new EntityNotFoundException("Sponsor not found.");
 
             $member = $this->member_repository->getById($member_id);
-            $current_summit_begin_date = $summit->getBeginDate();
-            $current_summit_end_date = $summit->getEndDate();
 
             if (is_null($member) || !$member instanceof Member)
                 throw new EntityNotFoundException("Member not found.");
-
-            foreach ($member->getSponsorMemberships() as $former_sponsor) {
-
-                $former_summit = $former_sponsor->getSummit();
-                $former_summit_begin_date = $former_summit->getBeginDate();
-                $former_summit_end_date = $former_summit->getEndDate();
-
-                // check that current summit does not intersect with a former one
-                // due a member could be on 2 diff places at same time ...
-                // (StartA <= EndB)  and  (EndA >= StartB)
-
-                if ($summit->getId() != $former_summit->getId() &&
-                    $current_summit_begin_date <= $former_summit_end_date &&
-                    $current_summit_end_date >= $former_summit_begin_date) {
-                    throw new ValidationException
-                    (
-                        sprintf
-                        (
-                            "You can not add member %s as sponsor user on summit %s bc its already sponsor user on another concurrent summit (%s).",
-                            $member_id,
-                            $summit->getId(),
-                            $former_summit->getId()
-                        )
-                    );
-                }
-            }
 
             $summit_sponsor->addUser($member);
 

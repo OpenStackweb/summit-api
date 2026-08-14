@@ -190,6 +190,11 @@ final class SummitPromoCodeFactory
             $promo_code->setAllowsToReassign(boolval($data['allows_to_reassign']));
 
         switch ($data['class_name']){
+            case SummitRegistrationPromoCode::ClassName:{
+                if(isset($data['quantity_available']))
+                    $promo_code->setQuantityAvailable(intval($data['quantity_available']));
+            }
+            break;
             case SummitRegistrationDiscountCode::ClassName:
             case PrePaidSummitRegistrationDiscountCode::ClassName:{
                 if(isset($data['amount']))

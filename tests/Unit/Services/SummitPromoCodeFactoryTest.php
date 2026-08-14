@@ -14,6 +14,7 @@
 
 use App\Models\Foundation\Summit\Factories\SummitPromoCodeFactory;
 use models\summit\Summit;
+use models\summit\SummitRegistrationPromoCode;
 use models\summit\SummitRegistrationDiscountCode;
 use models\summit\SummitRegistrationDiscountCodeTicketTypeRule;
 use models\summit\SummitTicketType;
@@ -92,5 +93,28 @@ class SummitPromoCodeFactoryTest extends TestCase
 
         $this->assertEquals(25.0, $code->getRate(),
             'flat rate must be applied when the payload carries no ticket_types_rules');
+    }
+
+    /**
+     * Regression: populate()'s per-class switch had no case for the generic
+     * SUMMIT_PROMO_CODE class, so quantity_available was silently dropped on
+     * create and update - codes meant to be limited (one-off, N uses) ended up
+     * with 0 (= unlimited) in the DB.
+     */
+    public function testPopulatePersistsQuantityAvailableForGenericSummitPromoCode(): void
+    {
+        $summit = $this->createMock(Summit::class);
+
+        $code = new SummitRegistrationPromoCode();
+
+        $data = [
+            'class_name'         => SummitRegistrationPromoCode::ClassName,
+            'quantity_available' => 24,
+        ];
+
+        SummitPromoCodeFactory::populate($code, $summit, $data);
+
+        $this->assertEquals(24, $code->getQuantityAvailable(),
+            'quantity_available must be persisted for the generic SUMMIT_PROMO_CODE class');
     }
 }

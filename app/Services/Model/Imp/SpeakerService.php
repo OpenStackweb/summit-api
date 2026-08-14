@@ -1164,9 +1164,12 @@ final class SpeakerService
 
             $speaker = $this->speaker_repository->getById($speaker_id);
 
-            if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) {
-                throw new EntityNotFoundException('speaker not found!');
+            if (!$speaker instanceof PresentationSpeaker) {
+                throw new EntityNotFoundException('Speaker not found.');
             }
+
+            if(!$speaker->hasPhoto())
+                throw new ValidationException("This speaker has no photo override. Please check the associated member's profile photo.");
 
             $speaker->clearPhoto();
 
@@ -1212,9 +1215,13 @@ final class SpeakerService
 
             $speaker = $this->speaker_repository->getById($speaker_id);
 
-            if (is_null($speaker) || !$speaker instanceof PresentationSpeaker) {
+            if (!$speaker instanceof PresentationSpeaker) {
                 throw new EntityNotFoundException('speaker not found!');
             }
+
+            if(!$speaker->hasBigPhoto())
+                throw new ValidationException("This speaker has no photo override. Please check the associated member's profile photo.");
+
 
             $speaker->clearBigPhoto();
         });

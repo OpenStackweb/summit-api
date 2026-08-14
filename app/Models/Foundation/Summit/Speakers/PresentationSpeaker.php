@@ -746,7 +746,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $private_tracks = [];
 
         if ($exclude_privates_tracks) {
-            $private_track_groups = $this->createQuery("SELECT pg from models\summit\PrivatePresentationCategoryGroup pg 
+            $private_track_groups = $this->createQuery("SELECT pg from models\summit\PrivatePresentationCategoryGroup pg
             JOIN pg.summit s
             WHERE s.id = :summit_id")
                 ->setParameter('summit_id', $summit->getId())
@@ -780,7 +780,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("presentations_track_group_id"))
             {
                 $extraWhere .= " AND cat.id IN (
-                    SELECT cat_1.id 
+                    SELECT cat_1.id
                     FROM models\summit\PresentationCategory cat_1
                     JOIN cat_1.groups catg_1
                     WHERE catg_1.id IN (:track_group_id)
@@ -793,7 +793,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("has_media_upload_with_type"))
             {
                 $extraWhere .= " AND EXISTS (
-                    SELECT pmu.id 
+                    SELECT pmu.id
                     FROM models\summit\PresentationMediaUpload pmu
                     JOIN pmu.media_upload_type mut
                     JOIN pmu.presentation p_1
@@ -803,7 +803,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
                 $extraWhere .= " AND NOT EXISTS (
-                    SELECT pmu.id 
+                    SELECT pmu.id
                     FROM models\summit\PresentationMediaUpload pmu
                     JOIN pmu.media_upload_type mut
                     JOIN pmu.presentation p_1
@@ -812,26 +812,26 @@ class PresentationSpeaker extends SilverstripeBaseModel
             }
         }
         if($role == PresentationSpeaker::RoleSpeaker) {
-            $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery(sprintf("SELECT p from models\summit\Presentation p
             JOIN p.summit s
-            JOIN p.speakers sp_presentation 
+            JOIN p.speakers sp_presentation
             JOIN sp_presentation.speaker sp
             LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
-            LEFT JOIN p.selected_presentations ssp 
-            LEFT JOIN ssp.list sspl 
-            WHERE s.id = :summit_id 
+            LEFT JOIN p.selected_presentations ssp
+            LEFT JOIN ssp.list sspl
+            WHERE s.id = :summit_id
             AND sp.id = :speaker_id
-            AND 
+            AND
             (
-                ( 
+                (
                     ssp.order is not null AND
                     ssp.order <= cat.session_count AND
                     ssp.collection = '%s' AND
                     sspl.list_type = '%s' AND sspl.list_class = '%s'
                 )
-                OR p.published = 1 
+                OR p.published = 1
             )
             " . $exclude_category_dql . $extraWhere,
                 SummitSelectedPresentation::CollectionSelected,
@@ -840,26 +840,26 @@ class PresentationSpeaker extends SilverstripeBaseModel
             ));
         } else {
             $query = $this->createQuery(sprintf(
-                "SELECT p from models\summit\Presentation p 
+                "SELECT p from models\summit\Presentation p
             JOIN p.summit s
-            LEFT JOIN p.selection_plan sel_p 
+            LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
             JOIN p.moderator m
-            LEFT JOIN p.selected_presentations ssp 
-            LEFT JOIN ssp.list sspl 
-            WHERE 
-            s.id = :summit_id 
+            LEFT JOIN p.selected_presentations ssp
+            LEFT JOIN ssp.list sspl
+            WHERE
+            s.id = :summit_id
             AND m.id = :speaker_id
-            AND 
+            AND
             (
-                ( 
+                (
                     ssp.order is not null AND
                     ssp.order <= cat.session_count AND
                     ssp.collection = '%s' AND
                     sspl.list_type = '%s' AND sspl.list_class = '%s'
                 )
-                OR p.published = 1 
+                OR p.published = 1
             )
             " . $exclude_category_dql . $extraWhere,
                 SummitSelectedPresentation::CollectionSelected,
@@ -1029,7 +1029,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("presentations_track_group_id"))
             {
                 $extraWhere .= " AND cat.id IN (
-                    SELECT cat_1.id 
+                    SELECT cat_1.id
                     FROM models\summit\PresentationCategory cat_1
                     JOIN cat_1.groups catg_1
                     WHERE catg_1.id IN (:track_group_id)
@@ -1042,7 +1042,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("has_media_upload_with_type"))
             {
                 $extraWhere .= " AND EXISTS (
-                    SELECT pmu.id 
+                    SELECT pmu.id
                     FROM models\summit\PresentationMediaUpload pmu
                     JOIN pmu.media_upload_type mut
                     JOIN pmu.presentation p_1
@@ -1052,7 +1052,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
                 $extraWhere .= " AND NOT EXISTS (
-                    SELECT pmu.id 
+                    SELECT pmu.id
                     FROM models\summit\PresentationMediaUpload pmu
                     JOIN pmu.media_upload_type mut
                     JOIN pmu.presentation p_1
@@ -1062,24 +1062,24 @@ class PresentationSpeaker extends SilverstripeBaseModel
         }
 
         if ($role == PresentationSpeaker::RoleSpeaker) {
-            $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery("SELECT p from models\summit\Presentation p
             JOIN p.summit s
-            JOIN p.speakers sp_presentation 
+            JOIN p.speakers sp_presentation
             JOIN sp_presentation.speaker sp
             LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
-            WHERE s.id = :summit_id 
+            WHERE s.id = :summit_id
             AND p.published = :published
             AND sp.id = :speaker_id" . $exclude_category_dql . $extraWhere);
         } else {
-            $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery("SELECT p from models\summit\Presentation p
             JOIN p.summit s
             LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
-            JOIN p.moderator m 
-            WHERE s.id = :summit_id 
+            JOIN p.moderator m
+            WHERE s.id = :summit_id
             AND p.published = :published
             AND m.id = :speaker_id" . $exclude_category_dql . $extraWhere);
         }
@@ -1299,7 +1299,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         $private_tracks = [];
 
         if ($exclude_privates_tracks) {
-            $private_track_groups = $this->createQuery("SELECT pg from models\summit\PrivatePresentationCategoryGroup pg 
+            $private_track_groups = $this->createQuery("SELECT pg from models\summit\PrivatePresentationCategoryGroup pg
             JOIN pg.summit s
             WHERE s.id = :summit_id")
                 ->setParameter('summit_id', $summit->getId())
@@ -1332,7 +1332,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("presentations_track_group_id"))
             {
                 $extraWhere .= " AND cat.id IN (
-                    SELECT cat_1.id 
+                    SELECT cat_1.id
                     FROM models\summit\PresentationCategory cat_1
                     JOIN cat_1.groups catg_1
                     WHERE catg_1.id IN (:track_group_id)
@@ -1344,7 +1344,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("has_media_upload_with_type"))
             {
                 $extraWhere .= " AND EXISTS (
-                    SELECT pmu.id 
+                    SELECT pmu.id
                     FROM models\summit\PresentationMediaUpload pmu
                     JOIN pmu.media_upload_type mut
                     JOIN pmu.presentation p_1
@@ -1354,7 +1354,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if($filter->hasFilter("has_not_media_upload_with_type"))
             {
                 $extraWhere .= " AND NOT EXISTS (
-                    SELECT pmu.id 
+                    SELECT pmu.id
                     FROM models\summit\PresentationMediaUpload pmu
                     JOIN pmu.media_upload_type mut
                     JOIN pmu.presentation p_1
@@ -1364,24 +1364,24 @@ class PresentationSpeaker extends SilverstripeBaseModel
         }
 
         if ($role == PresentationSpeaker::RoleSpeaker) {
-            $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery("SELECT p from models\summit\Presentation p
             JOIN p.summit s
-            JOIN p.speakers sp_presentation 
+            JOIN p.speakers sp_presentation
             JOIN sp_presentation.speaker sp
             LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
-            WHERE s.id = :summit_id 
+            WHERE s.id = :summit_id
             AND p.published = 0
             AND sp.id = :speaker_id" . $exclude_category_dql . $extraWhere);
         } else {
-            $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery("SELECT p from models\summit\Presentation p
             JOIN p.summit s
             LEFT JOIN p.selection_plan sel_p
             JOIN p.type t
             JOIN p.category cat
-            JOIN p.moderator m 
-            WHERE s.id = :summit_id 
+            JOIN p.moderator m
+            WHERE s.id = :summit_id
             AND p.published = 0
             AND m.id = :speaker_id" . $exclude_category_dql . $extraWhere);
         }
@@ -1478,7 +1478,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
 
         if ($exclude_privates_tracks) {
 
-            $query = $this->createQuery("SELECT ppcg from models\summit\PrivatePresentationCategoryGroup ppcg JOIN ppcg.summit s 
+            $query = $this->createQuery("SELECT ppcg from models\summit\PrivatePresentationCategoryGroup ppcg JOIN ppcg.summit s
             WHERE s.id = :summit_id");
             $private_track_groups = $query
                 ->setParameter('summit_id', $summit->getIdentifier())
@@ -1501,18 +1501,18 @@ class PresentationSpeaker extends SilverstripeBaseModel
         }
 
         if ($role == PresentationSpeaker::RoleSpeaker) {
-            $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery("SELECT p from models\summit\Presentation p
             JOIN p.summit s
-            JOIN p.speakers sp_presentation 
+            JOIN p.speakers sp_presentation
             JOIN sp_presentation.speaker sp
-            WHERE s.id = :summit_id 
+            WHERE s.id = :summit_id
             and sp.id = :speaker_id
             and p.published = 1 and p.type IN (:types)" . $exclude_category_dql);
         } else {
-            $query = $this->createQuery("SELECT p from models\summit\Presentation p 
+            $query = $this->createQuery("SELECT p from models\summit\Presentation p
             JOIN p.summit s
-            JOIN p.moderator m 
-            WHERE s.id = :summit_id 
+            JOIN p.moderator m
+            WHERE s.id = :summit_id
             and m.id = :speaker_id
             and p.published = 1 and p.type IN (:types)" . $exclude_category_dql);
         }
@@ -1885,14 +1885,14 @@ class PresentationSpeaker extends SilverstripeBaseModel
     {
 
         $query = <<<SQL
-SELECT DISTINCT Summit.* FROM SummitEvent 
+SELECT DISTINCT Summit.* FROM SummitEvent
 INNER JOIN Summit ON Summit.ID = SummitEvent.SummitID
 INNER JOIN Presentation ON Presentation.ID = SummitEvent.ID
 WHERE
 SummitEvent.Published = 1
 AND (
-	EXISTS ( 
-		SELECT Presentation_Speakers.ID FROM Presentation_Speakers 
+	EXISTS (
+		SELECT Presentation_Speakers.ID FROM Presentation_Speakers
 		WHERE Presentation_Speakers.PresentationID = Presentation.ID AND
 		Presentation_Speakers.PresentationSpeakerID = :speaker_id
 	) OR
@@ -1923,11 +1923,11 @@ SQL;
     {
 
         $query = <<<SQL
-SELECT DISTINCT Summit.* FROM Presentation_Speakers 
+SELECT DISTINCT Summit.* FROM Presentation_Speakers
 INNER JOIN Presentation ON Presentation.ID = Presentation_Speakers.PresentationID
 INNER JOIN SummitEvent ON SummitEvent.ID = Presentation.ID
 INNER JOIN Summit ON Summit.ID = SummitEvent.SummitID
-WHERE SummitEvent.Published = 1 AND 
+WHERE SummitEvent.Published = 1 AND
 ( Presentation_Speakers.PresentationSpeakerID = :speaker_id OR  Presentation.ModeratorID = :speaker_id )
 SQL;
 
@@ -2345,17 +2345,15 @@ SQL;
             if (empty($photoUrl) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
-            if (empty($photoUrl) && !empty($default_pic))
-                $photoUrl = $default_pic;
-            if (empty($photoUrl))
-                $photoUrl = $this->getGravatarUrl();
-            return $photoUrl;
+
         } catch (\Exception $ex) {
             Log::warning($ex);
         }
-        if (!empty($default_pic))
-            return $default_pic;
-        return $this->getGravatarUrl();
+
+        if (empty($photoUrl) && !empty($default_pic))
+            $photoUrl = $default_pic;
+
+        return $photoUrl;
     }
 
     /**
@@ -2372,28 +2370,14 @@ SQL;
             if (empty($photoUrl) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
-            if (empty($photoUrl) && !empty($default_pic))
-                $photoUrl = $default_pic;
-            if (empty($photoUrl))
-                $photoUrl = $this->getGravatarUrl();
-            return $photoUrl;
         } catch (\Exception $ex) {
             Log::warning($ex);
         }
-        if (!empty($default_pic))
-            return $default_pic;
-        return $this->getGravatarUrl();
 
-    }
+        if (empty($photoUrl) && !empty($default_pic))
+            $photoUrl = $default_pic;
 
-    /**
-     * Get either a Gravatar URL or complete image tag for a specified email address.
-     */
-    private function getGravatarUrl(): string
-    {
-        $url = 'https://www.gravatar.com/avatar/';
-        $url .= md5(strtolower(trim($this->getEmail())));
-        return $url;
+        return $photoUrl;
     }
 
     /**

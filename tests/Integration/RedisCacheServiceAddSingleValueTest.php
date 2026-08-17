@@ -15,7 +15,6 @@
 use Illuminate\Support\Facades\Redis;
 use PHPUnit\Framework\Attributes\Group;
 use services\utils\RedisCacheService;
-use Tests\CreatesApplication;
 use Tests\TestCase;
 
 /**
@@ -44,8 +43,6 @@ use Tests\TestCase;
 #[Group("integration")]
 final class RedisCacheServiceAddSingleValueTest extends TestCase
 {
-    use CreatesApplication;
-
     private const TEST_KEY = 'test:add_single_value:lock';
     private const TTL      = 30;
 

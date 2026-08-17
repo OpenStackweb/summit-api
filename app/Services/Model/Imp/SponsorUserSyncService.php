@@ -16,6 +16,8 @@ use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\ISponsorUserSyncService;
+use App\Services\Utils\Exceptions\UnacquiredLockException;
+use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\Log;
 use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ITransactionService;
@@ -53,6 +55,15 @@ final class SponsorUserSyncService
 
     private ISponsorRepository $sponsor_repository;
 
+    private ILockManagerService $lock_service;
+
+    /**
+     * Lifetime, in seconds, for the sponsor_user.*.ext_*.lock held around
+     * addSponsorUser / addSponsorUserToGroup. Matches the worst-case DB write
+     * time for these paths, not ILockManagerService's 3600s default.
+     */
+    private const SponsorUserLockLifetime = 30;
+
     /**
      * SponsorUserSyncService constructor.
      * @param ISummitRepository $summit_repository
@@ -63,6 +74,7 @@ final class SponsorUserSyncService
      * @param IExternalUserApi $external_user_api
      * @param ISponsorRepository $sponsor_repository
      * @param ITransactionService $tx_service
+     * @param ILockManagerService $lock_service
      */
     public function __construct
     (
@@ -73,7 +85,8 @@ final class SponsorUserSyncService
         IMemberService $member_service,
         IExternalUserApi $external_user_api,
         ISponsorRepository $sponsor_repository,
-        ITransactionService $tx_service
+        ITransactionService $tx_service,
+        ILockManagerService $lock_service
     )
     {
         parent::__construct($tx_service);
@@ -84,6 +97,24 @@ final class SponsorUserSyncService
         $this->member_service = $member_service;
         $this->external_user_api = $external_user_api;
         $this->sponsor_repository = $sponsor_repository;
+        $this->lock_service = $lock_service;
+    }
+
+    /**
+     * Lock key guarding a (sponsor, external user) pair against the two MQ
+     * consumers (AddSponsorMemberMQJob / UpdateSponsorMemberGroupsMQJob) that
+     * can both observe a missing Sponsor_Users row and both insert one.
+     * Built from ids already present on both entry points' signatures - it
+     * must NOT depend on the local MemberID, since resolving that is part of
+     * what the lock protects.
+     *
+     * @param int $sponsor_id
+     * @param int $user_id external (IDP) user id
+     * @return string
+     */
+    private function sponsorUserLockKey(int $sponsor_id, int $user_id): string
+    {
+        return "sponsor_user.{$sponsor_id}.ext_{$user_id}.lock";
     }
 
     /**
@@ -214,26 +245,40 @@ final class SponsorUserSyncService
 
     /**
      * @inheritDoc
+     * @throws UnacquiredLockException propagated on purpose - same as any
+     * other failure here, it must burn one of the MQ job's retries rather
+     * than be swallowed (see the note below).
      */
     public function addSponsorUser(int $summit_id, int $sponsor_id, int $user_id): void
     {
         // Do NOT swallow failures here: the MQ job (tries = 3) needs the
         // exception to apply its retry / failed_jobs machinery. A swallowed
-        // failure loses the membership event silently.
+        // failure loses the membership event silently. This also applies to
+        // UnacquiredLockException from the lock below.
         Log::debug(
             "SponsorUserSyncService::addSponsorUser summit {$summit_id} sponsor {$sponsor_id} user_id {$user_id}");
 
-        list($summit, $member) = $this->validateParams($summit_id, $user_id);
+        // summit_sponsor_service->addSponsorUser already opens and commits its
+        // own transaction, so no transaction is needed at this level: by the
+        // time the lock callback returns, the insert is committed and visible.
+        $this->lock_service->lock(
+            $this->sponsorUserLockKey($sponsor_id, $user_id),
+            function () use ($summit_id, $sponsor_id, $user_id) {
 
-        Log::debug(
-            "SponsorUserSyncService::addSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
+                list($summit, $member) = $this->validateParams($summit_id, $user_id);
 
-        $member = $this->ensureSponsorGroupMembership($member, $user_id);
+                Log::debug(
+                    "SponsorUserSyncService::addSponsorUser summit {$summit->getName()} member {$member->getEmail()}");
 
-        $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
+                $member = $this->ensureSponsorGroupMembership($member, $user_id);
 
-        Log::info(
-            "SponsorUserSyncService::addSponsorUser member {$member->getId()} successfully added to sponsor {$sponsor_id}");
+                $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
+
+                Log::info(
+                    "SponsorUserSyncService::addSponsorUser member {$member->getId()} successfully added to sponsor {$sponsor_id}");
+            },
+            self::SponsorUserLockLifetime
+        );
     }
 
     /**
@@ -297,6 +342,8 @@ final class SponsorUserSyncService
 
     /**
      * @inheritDoc
+     * @throws UnacquiredLockException propagated on purpose, same as any
+     * other failure in this path (see addSponsorUser).
      */
     public function addSponsorUserToGroup(int $user_id, string $group_slug, int $sponsor_id, int $summit_id): void
     {
@@ -318,67 +365,79 @@ final class SponsorUserSyncService
                 "Sponsor {$sponsor_id} does not belong to summit {$summit_id}.");
         }
 
-        // Resolve (and, if needed, register from the IDP) OUTSIDE the transaction below.
-        // registerExternalUserById opens its own transaction and dispatches NewMember /
-        // MemberDataUpdatedExternally right after it. Those jobs are pushed immediately:
-        // afterCommit only defers dispatch for Eloquent-managed transactions, and this
-        // service uses the Doctrine DBAL connection directly. Keeping the registration
-        // outside guarantees the Member row is committed before any job references its id.
-        $member_id = $this->resolveMember($user_id)->getId();
+        // Lock held OUTSIDE the transaction below: releasing it before commit
+        // would let a waiting AddSponsorMemberMQJob/UpdateSponsorMemberGroupsMQJob
+        // observe the row as still-missing and insert its own duplicate.
+        $this->lock_service->lock(
+            $this->sponsorUserLockKey($sponsor_id, $user_id),
+            function () use ($user_id, $group_slug, $sponsor_id, $summit_id) {
 
-        $this->tx_service->transaction(function () use ($member_id, $group_slug, $sponsor_id, $summit_id) {
+                // Resolve (and, if needed, register from the IDP) OUTSIDE the transaction below,
+                // but INSIDE the lock - resolving the local MemberID is part of what the lock
+                // protects. registerExternalUserById opens its own transaction and dispatches
+                // NewMember / MemberDataUpdatedExternally right after it. Those jobs are pushed
+                // immediately: afterCommit only defers dispatch for Eloquent-managed transactions,
+                // and this service uses the Doctrine DBAL connection directly. Keeping the
+                // registration outside the transaction guarantees the Member row is committed
+                // before any job references its id.
+                $member_id = $this->resolveMember($user_id)->getId();
 
-            // Re-load inside the transaction: the tx service may have reset the entity
-            // manager, which would leave an entity resolved outside it detached.
-            $member = $this->member_repository->getById($member_id);
-            if (!$member instanceof Member) {
-                throw new EntityNotFoundException("Member with id {$member_id} not found");
-            }
+                $this->tx_service->transaction(function () use ($member_id, $group_slug, $sponsor_id, $summit_id) {
 
-            // Grant the global group FIRST: Sponsor::addUser (reached through the
-            // eager-create path below) validates the member already belongs to a
-            // sponsor group, and for a brand-new sponsor user this very event is
-            // what delivers that group.
-            if (!$member->belongsToGroup($group_slug)) {
-                $group = $this->group_repository->getBySlug($group_slug);
-                if (is_null($group)) {
-                    throw new EntityNotFoundException("Group {$group_slug} not found");
-                }
-                $member->add2Group($group);
-            }
+                    // Re-load inside the transaction: the tx service may have reset the entity
+                    // manager, which would leave an entity resolved outside it detached.
+                    $member = $this->member_repository->getById($member_id);
+                    if (!$member instanceof Member) {
+                        throw new EntityNotFoundException("Member with id {$member_id} not found");
+                    }
 
-            // Add permission entry to the Sponsor_Users JSON column for this sponsor-member pair.
-            // If the row does not exist yet (MQ ordering race: group event arrived before membership
-            // event), create it eagerly so the permission is never silently dropped.
-            if ($member->addSponsorPermission($sponsor_id, $group_slug) === 0) {
-                Log::warning(
-                    "SponsorUserSyncService::addSponsorUserToGroup no Sponsor_Users row found for " .
-                    "member {$member->getId()} / sponsor {$sponsor_id} — creating it eagerly");
+                    // Grant the global group FIRST: Sponsor::addUser (reached through the
+                    // eager-create path below) validates the member already belongs to a
+                    // sponsor group, and for a brand-new sponsor user this very event is
+                    // what delivers that group.
+                    if (!$member->belongsToGroup($group_slug)) {
+                        $group = $this->group_repository->getBySlug($group_slug);
+                        if (is_null($group)) {
+                            throw new EntityNotFoundException("Group {$group_slug} not found");
+                        }
+                        $member->add2Group($group);
+                    }
 
-                $summit = $this->summit_repository->getById($summit_id);
-                if (!$summit instanceof Summit) {
-                    throw new EntityNotFoundException("Summit {$summit_id} not found");
-                }
+                    // Add permission entry to the Sponsor_Users JSON column for this sponsor-member pair.
+                    // If the row does not exist yet (MQ ordering race: group event arrived before membership
+                    // event), create it eagerly so the permission is never silently dropped.
+                    if ($member->addSponsorPermission($sponsor_id, $group_slug) === 0) {
+                        Log::warning(
+                            "SponsorUserSyncService::addSponsorUserToGroup no Sponsor_Users row found for " .
+                            "member {$member->getId()} / sponsor {$sponsor_id} — creating it eagerly");
 
-                $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
+                        $summit = $this->summit_repository->getById($summit_id);
+                        if (!$summit instanceof Summit) {
+                            throw new EntityNotFoundException("Summit {$summit_id} not found");
+                        }
 
-                // Flush the UoW so the INSERT is visible to the raw SQL retry
-                // on the same connection within the active transaction.
-                Registry::getManager(SilverstripeBaseModel::EntityManager)->flush();
+                        $this->summit_sponsor_service->addSponsorUser($summit, $sponsor_id, $member->getId());
 
-                // Retry now that the row exists.
-                $retryResult = $member->addSponsorPermission($sponsor_id, $group_slug);
-                if ($retryResult === 0) {
-                      throw new \RuntimeException(
-                          "Failed to write permission after eager Sponsor_Users creation " .
-                          "for member {$member->getId()} / sponsor {$sponsor_id}"
-                      );
-                  }
-            }
+                        // Flush the UoW so the INSERT is visible to the raw SQL retry
+                        // on the same connection within the active transaction.
+                        Registry::getManager(SilverstripeBaseModel::EntityManager)->flush();
 
-            Log::info(
-                "SponsorUserSyncService::addSponsorUserToGroup member {$member->getId()} added to group {$group_slug} via sponsor {$sponsor_id}");
-        });
+                        // Retry now that the row exists.
+                        $retryResult = $member->addSponsorPermission($sponsor_id, $group_slug);
+                        if ($retryResult === 0) {
+                            throw new \RuntimeException(
+                                "Failed to write permission after eager Sponsor_Users creation " .
+                                "for member {$member->getId()} / sponsor {$sponsor_id}"
+                            );
+                        }
+                    }
+
+                    Log::info(
+                        "SponsorUserSyncService::addSponsorUserToGroup member {$member->getId()} added to group {$group_slug} via sponsor {$sponsor_id}");
+                });
+            },
+            self::SponsorUserLockLifetime
+        );
     }
 
     /**

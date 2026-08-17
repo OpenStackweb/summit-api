@@ -14,6 +14,8 @@
 
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\ISponsorUserSyncService;
+use App\Services\Utils\Exceptions\UnacquiredLockException;
+use App\Services\Utils\ILockManagerService;
 use Tests\InsertMemberTestData;
 use Tests\InsertSummitTestData;
 use Tests\TestCase;
@@ -1030,5 +1032,80 @@ class SponsorUserPermissionTrackingTest extends TestCase
         self::$em->clear();
         $member = self::$member_repository->find($member_id);
         $this->assertTrue($member->belongsToGroup(IGroup::Sponsors));
+    }
+
+    // -------------------------------------------------------------------------
+    // Concurrency guard (issue #583: duplicate Sponsor_Users rows)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Reproduces the exact race #583 describes: AddSponsorMemberMQJob
+     * (addSponsorUser) and UpdateSponsorMemberGroupsMQJob (addSponsorUserToGroup)
+     * both reaching the same (sponsor, external user) pair concurrently, in
+     * different workers. Acquiring the pair's shared lock manually simulates
+     * one consumer already mid-flight; the other consumer racing in for the
+     * SAME pair must be rejected with UnacquiredLockException rather than
+     * sailing past the unlocked contains() check and inserting a duplicate
+     * row. Once the lock is free, the second consumer proceeds normally and
+     * the pair ends up with exactly one Sponsor_Users row.
+     */
+    public function testAddSponsorUserAndAddSponsorUserToGroupShareTheSameLockForAPair(): void
+    {
+        $sponsor_id  = self::$sponsors[1]->getId(); // no Sponsor_Users row yet
+        $member_id   = self::$member->getId();
+        $external_id = self::$member->getUserExternalId();
+        $summit_id   = self::$summit->getId();
+
+        $lock_service = app(ILockManagerService::class);
+        $key = "sponsor_user.{$sponsor_id}.ext_{$external_id}.lock";
+
+        // Simulate AddSponsorMemberMQJob (addSponsorUser) already mid-flight.
+        $token = $lock_service->acquireLock($key, 30);
+
+        try {
+            $this->expectException(UnacquiredLockException::class);
+            // UpdateSponsorMemberGroupsMQJob (addSponsorUserToGroup) races in for the SAME pair.
+            $this->getService()->addSponsorUserToGroup($external_id, IGroup::Sponsors, $sponsor_id, $summit_id);
+        } finally {
+            $this->assertFalse(
+                $this->hasSponsorUserRow($sponsor_id, $member_id),
+                'the blocked consumer must not have inserted a duplicate row while the lock was held'
+            );
+            $lock_service->releaseLock($key, $token);
+        }
+
+        // Once free, the second consumer proceeds normally.
+        $this->getService()->addSponsorUserToGroup($external_id, IGroup::Sponsors, $sponsor_id, $summit_id);
+
+        $count = (int)self::$em->getConnection()->executeQuery(
+            'SELECT COUNT(*) FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        )->fetchOne();
+        $this->assertEquals(1, $count, 'exactly one Sponsor_Users row must exist for the pair');
+    }
+
+    /**
+     * Same shared-lock contract, exercised from the other entry point:
+     * addSponsorUser racing against a lock already held for the same pair
+     * must also be rejected rather than proceeding.
+     */
+    public function testAddSponsorUserThrowsUnacquiredLockExceptionWhenPairIsAlreadyLocked(): void
+    {
+        $sponsor_id  = self::$sponsors[1]->getId();
+        $member_id   = self::$member->getId();
+        $external_id = self::$member->getUserExternalId();
+        $summit_id   = self::$summit->getId();
+
+        $lock_service = app(ILockManagerService::class);
+        $key = "sponsor_user.{$sponsor_id}.ext_{$external_id}.lock";
+        $token = $lock_service->acquireLock($key, 30);
+
+        try {
+            $this->expectException(UnacquiredLockException::class);
+            $this->getService()->addSponsorUser($summit_id, $sponsor_id, $external_id);
+        } finally {
+            $this->assertFalse($this->hasSponsorUserRow($sponsor_id, $member_id));
+            $lock_service->releaseLock($key, $token);
+        }
     }
 }

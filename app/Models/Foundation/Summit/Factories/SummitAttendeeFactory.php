@@ -98,13 +98,22 @@ final class SummitAttendeeFactory
         }
 
         if(!$email_override) {
+            if (is_null($member) && isset($payload['email']) && !empty($payload['email'])) {
+                // caller did not resolve a member for the submitted email (e.g. it only looked it up by id) ...
+                // resolve it ourselves so we don't clear a link that is actually still valid
+                $member = EntityManager::getRepository(Member::class)->getByEmail(trim($payload['email']));
+            }
+
             if (!is_null($member)) {
                 Log::debug(sprintf("SummitAttendeeFactory::populate setting member %s to attendee %s", $member->getId(), $member->getEmail()));
                 $attendee->setEmail($member->getEmail());
                 $attendee->setMember($member);
-            } else {
+            } else if (isset($payload['email']) && !empty($payload['email'])) {
+                // an email reassignment was explicitly requested and it does not match any known member account
+                Log::debug(sprintf("SummitAttendeeFactory::populate clearing member from attendee %s", $attendee->getId()));
                 $attendee->clearMember();
             }
+            // else: no email/member reassignment was requested, leave the existing member link untouched
         }
 
         // manager setting

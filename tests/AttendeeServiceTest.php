@@ -54,6 +54,23 @@ final class AttendeeServiceTest extends TestCase
         $service->updateRedeemedPromoCodes($summit);
     }
 
+    public function testUpdateAttendeeEmailOnlyLinksExistingMemberAccount() {
+
+        $service = App::make(IAttendeeService::class);
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+
+        // only email is submitted (no member_id), and it belongs to a known member account
+        $payload = [
+            'email' => self::$member2->getEmail(),
+        ];
+
+        $updated = $service->updateAttendee(self::$summit, $attendee->getId(), $payload);
+
+        $this->assertNotNull($updated->getMember());
+        $this->assertEquals(self::$member2->getId(), $updated->getMember()->getId());
+    }
+
     public function testSendAllAttendeeTickets() {
 
         $service = App::make(IAttendeeService::class);

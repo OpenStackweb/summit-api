@@ -1032,7 +1032,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         path: "/api/public/v1/summits/{id}/registration-invitations/{token}",
         operationId: 'getInvitationBySummitAndToken',
         summary: "Get a registration invitation by summit and token (public endpoint)",
-        tags: ["Summit Registration Invitations (Public)"],
+        tags: ["Summit Registration Invitations (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -1085,7 +1085,7 @@ final class OAuth2SummitRegistrationInvitationApiController extends OAuth2Protec
         path: "/api/public/v1/summits/{id}/registration-invitations/{token}/reject",
         operationId: 'rejectInvitationBySummitAndToken',
         summary: "Reject a registration invitation by summit and token (public endpoint)",
-        tags: ["Summit Registration Invitations (Public)"],
+        tags: ["Summit Registration Invitations (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'id',

@@ -41,7 +41,7 @@ final class AppliancesApiController extends AbstractCompanyServiceApiController
         description: "Get all marketplace appliances (OpenStack implementations)",
         summary: 'Get all appliances',
         operationId: 'getAllAppliances',
-        tags: ['Appliances', 'Marketplace'],
+        tags: ['Appliances', 'Marketplace', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'page',

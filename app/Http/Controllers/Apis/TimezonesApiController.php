@@ -34,7 +34,7 @@ final class TimezonesApiController extends JsonController
         path: '/api/public/v1/timezones',
         operationId: 'getTimezones',
         description: 'Retrieve all available timezones',
-        tags: ['Timezones (Public)'],
+        tags: ['Timezones (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'expand',

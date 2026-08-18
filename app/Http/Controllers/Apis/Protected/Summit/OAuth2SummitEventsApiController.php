@@ -301,7 +301,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         operationId: 'getScheduledEventsPublic',
         summary: 'Get all published/scheduled events for a summit',
         description: 'Retrieves a paginated list of all published events for a specific summit.',
-        tags: ['Summit Events (Public)'],
+        tags: ['Summit Events (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -361,7 +361,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         operationId: 'getScheduledEventsTags',
         summary: 'Get all tags from published events for a summit',
         description: 'Retrieves a paginated list of tags used in published events for a specific summit. This is a public endpoint.',
-        tags: ['Summit Events (Public)'],
+        tags: ['Summit Events (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
@@ -889,7 +889,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         operationId: 'getScheduledEventPublic',
         summary: 'Get a specific published/scheduled event by ID',
         description: 'Retrieves a single published event by its ID for a specific summit.',
-        tags: ['Summit Events (Public)'],
+        tags: ['Summit Events (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'event_id', in: 'path', required: true, description: 'Event ID', schema: new OA\Schema(type: 'integer')),
@@ -2670,7 +2670,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         operationId: 'getOverflowStreamingInfo',
         summary: 'Get overflow streaming information (Public)',
         description: 'Retrieves overflow streaming information for published events. This is a public endpoint.',
-        tags: ['Summit Events (Public)'],
+        tags: ['Summit Events (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'k', in: 'query', required: true, description: 'Overflow stream key', schema: new OA\Schema(type: 'string')),

@@ -122,7 +122,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Reserve tickets in an order (Public)',
         description: 'Creates a reservation for tickets. Can be called anonymously or by authenticated users.',
         operationId: 'reservePublic',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
         ],
@@ -249,7 +249,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Checkout a reserved order (Public)',
         description: 'Processes payment and completes an order reservation',
         operationId: 'checkoutPublic',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -343,7 +343,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Get my ticket by order hash (Public)',
         description: 'Returns ticket information for the current user using order hash',
         operationId: 'getMyTicketByOrderHashPublic',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -412,7 +412,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Cancel order by hash (Public)',
         description: 'Cancels an order using its hash',
         operationId: 'cancelPublic',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
@@ -1712,7 +1712,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Get ticket by hash (public endpoint)',
         description: 'Returns ticket information using public hash. No authentication required.',
         operationId: 'getTicketByHash',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Ticket hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1750,7 +1750,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Update ticket by hash (public endpoint)',
         description: 'Updates ticket information using public hash. No authentication required.',
         operationId: 'updateTicketByHash',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Ticket hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1804,7 +1804,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Update tickets by order hash',
         description: 'Updates multiple tickets information using order hash. No authentication required.',
         operationId: 'updateTicketsByOrderHash',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'order_hash', in: 'path', required: true, description: 'Order hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1919,7 +1919,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Regenerate ticket hash',
         description: 'Regenerates the public hash for a ticket. No authentication required.',
         operationId: 'regenerateTicketHash',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Current ticket hash', schema: new OA\Schema(type: 'string')),
         ],
@@ -1947,7 +1947,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         summary: 'Get ticket PDF by hash',
         description: 'Generates and returns ticket PDF using public hash. No authentication required.',
         operationId: 'getTicketPDFByHash',
-        tags: ['Orders (Public)'],
+        tags: ['Orders (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'hash', in: 'path', required: true, description: 'Ticket hash', schema: new OA\Schema(type: 'string')),
         ],

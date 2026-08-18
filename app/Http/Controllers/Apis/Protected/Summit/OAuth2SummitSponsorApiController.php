@@ -347,7 +347,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         description: "Get all sponsors for a summit",
         summary: 'Get Sponsors by Summit ID (Public)',
         operationId: 'getSponsorsV2BySummitPublic',
-        tags: ['Sponsors (Public)'],
+        tags: ['Sponsors (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'id',

@@ -105,7 +105,7 @@ final class PaymentGatewayWebHookController extends JsonController
         summary: "Generic payment gateway webhook confirmation",
         description: "Handles payment gateway webhook callbacks for a given application type.",
         operationId: "genericConfirm",
-        tags: ["Payment Gateway Webhook"],
+        tags: ["Payment Gateway Webhook", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "application_name",
@@ -197,7 +197,7 @@ final class PaymentGatewayWebHookController extends JsonController
         summary: "Summit payment gateway webhook confirmation",
         description: "Handles payment gateway webhook callbacks for a given summit and application type.",
         operationId: "summitConfirm",
-        tags: ["Payment Gateway Webhook"],
+        tags: ["Payment Gateway Webhook", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "id",

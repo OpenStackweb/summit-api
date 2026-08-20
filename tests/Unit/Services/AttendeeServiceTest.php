@@ -12,9 +12,12 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\App;
 use LaravelDoctrine\ORM\Facades\EntityManager;
@@ -51,9 +54,21 @@ final class AttendeeServiceTest extends TestCase
 
     public function testRedeemPromoCodes(){
 
+        // Eventbrite isn't configured in CI, and updateRedeemedPromoCodes makes a real,
+        // unmocked network call with no error handling around it, so replace the API with
+        // a double that fails fast instead of hitting a third-party service from a test.
+        $eventbrite_api = \Mockery::mock(\services\apis\IEventbriteAPI::class);
+        $eventbrite_api->shouldReceive('getAttendees')
+            ->andThrow(new \Exception('Eventbrite API is not available in tests.'));
+        App::singleton(\services\apis\IEventbriteAPI::class, function () use ($eventbrite_api) {
+            return $eventbrite_api;
+        });
+
         $service = App::make(IAttendeeService::class);
         $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $repo->getById(24);
+        $summit = $repo->getById(self::$summit->getId());
+
+        $this->expectException(\Exception::class);
         $service->updateRedeemedPromoCodes($summit);
     }
 
@@ -111,6 +126,8 @@ final class AttendeeServiceTest extends TestCase
 
     public function testReassignAttendeeTicketRegeneratesBadgeQRCode(){
 
+        $this->ensureTicketRevocationEmailTemplateSeeded();
+
         $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
         $this->assertNotNull($attendee);
         $ticket = $attendee->getTickets()->first();
@@ -150,6 +167,8 @@ final class AttendeeServiceTest extends TestCase
 
     public function testReassignAttendeeTicketByMemberRegeneratesBadgeQRCode(){
 
+        $this->ensureTicketRevocationEmailTemplateSeeded();
+
         $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
         $this->assertNotNull($attendee);
         $ticket = $attendee->getTickets()->first();
@@ -178,6 +197,32 @@ final class AttendeeServiceTest extends TestCase
         $this->assertBadgeQRRegeneratedForNewOwner(
             $reassigned_ticket, $badge_id, $summit, $member2_email, $member2_fullname, $default_email
         );
+    }
+
+    /**
+     * reassignAttendeeTicket/reassignAttendeeTicketByMember always dispatch a
+     * RevocationTicketEmail to the previous owner, and its job constructor requires
+     * a resolvable email template identifier. The seeder that normally provides this
+     * catalog entry (SummitEmailFlowTypeSeeder) never runs in CI, so seed the minimal
+     * row here rather than relying on production data.
+     */
+    private function ensureTicketRevocationEmailTemplateSeeded(): void
+    {
+        $existing = EntityManager::getRepository(SummitEmailEventFlowType::class)
+            ->findOneBy(['slug' => RevocationTicketEmail::EVENT_SLUG]);
+        if (!is_null($existing)) return;
+
+        $flow = new SummitEmailFlowType();
+        $flow->setName('Registration');
+
+        $event_type = new SummitEmailEventFlowType();
+        $event_type->setName('Ticket Revocation');
+        $event_type->setSlug(RevocationTicketEmail::EVENT_SLUG);
+        $event_type->setDefaultEmailTemplate(RevocationTicketEmail::DEFAULT_TEMPLATE);
+        $flow->addFlowEventType($event_type);
+
+        EntityManager::persist($flow);
+        EntityManager::flush();
     }
 
     /**

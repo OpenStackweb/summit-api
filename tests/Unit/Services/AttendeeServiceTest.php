@@ -1,4 +1,4 @@
-<?php namespace Tests;
+<?php namespace Tests\Unit\Services;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,9 @@ use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
+use Tests\InsertMemberTestData;
+use Tests\InsertSummitTestData;
+use Tests\TestCase;
 /**
  * Class AttendeeServiceTest
  */

@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
+use App\Jobs\Emails\SummitAttendeeTicketEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
@@ -200,29 +202,43 @@ final class AttendeeServiceTest extends TestCase
     }
 
     /**
-     * reassignAttendeeTicket/reassignAttendeeTicketByMember always dispatch a
-     * RevocationTicketEmail to the previous owner, and its job constructor requires
-     * a resolvable email template identifier. The seeder that normally provides this
-     * catalog entry (SummitEmailFlowTypeSeeder) never runs in CI, so seed the minimal
-     * row here rather than relying on production data.
+     * reassignAttendeeTicket/reassignAttendeeTicketByMember dispatch a RevocationTicketEmail
+     * to the previous owner and, depending on whether the new owner's profile is already
+     * complete, either a SummitAttendeeTicketEmail or an InviteAttendeeTicketEditionMail to
+     * the new one. Each of those job constructors requires a resolvable email template
+     * identifier. The seeder that normally provides this catalog (SummitEmailFlowTypeSeeder)
+     * never runs in CI, so seed the minimal rows here rather than relying on production data.
      */
     private function ensureTicketRevocationEmailTemplateSeeded(): void
     {
-        $existing = EntityManager::getRepository(SummitEmailEventFlowType::class)
-            ->findOneBy(['slug' => RevocationTicketEmail::EVENT_SLUG]);
-        if (!is_null($existing)) return;
+        $slugs = [
+            RevocationTicketEmail::EVENT_SLUG => RevocationTicketEmail::DEFAULT_TEMPLATE,
+            SummitAttendeeTicketEmail::EVENT_SLUG => SummitAttendeeTicketEmail::DEFAULT_TEMPLATE,
+            InviteAttendeeTicketEditionMail::EVENT_SLUG => InviteAttendeeTicketEditionMail::DEFAULT_TEMPLATE,
+        ];
 
-        $flow = new SummitEmailFlowType();
-        $flow->setName('Registration');
+        $repository = EntityManager::getRepository(SummitEmailEventFlowType::class);
+        $flow = null;
 
-        $event_type = new SummitEmailEventFlowType();
-        $event_type->setName('Ticket Revocation');
-        $event_type->setSlug(RevocationTicketEmail::EVENT_SLUG);
-        $event_type->setDefaultEmailTemplate(RevocationTicketEmail::DEFAULT_TEMPLATE);
-        $flow->addFlowEventType($event_type);
+        foreach ($slugs as $slug => $default_template) {
+            if (!is_null($repository->findOneBy(['slug' => $slug]))) continue;
 
-        EntityManager::persist($flow);
-        EntityManager::flush();
+            if (is_null($flow)) {
+                $flow = new SummitEmailFlowType();
+                $flow->setName('Registration');
+            }
+
+            $event_type = new SummitEmailEventFlowType();
+            $event_type->setName($slug);
+            $event_type->setSlug($slug);
+            $event_type->setDefaultEmailTemplate($default_template);
+            $flow->addFlowEventType($event_type);
+        }
+
+        if (!is_null($flow)) {
+            EntityManager::persist($flow);
+            EntityManager::flush();
+        }
     }
 
     /**

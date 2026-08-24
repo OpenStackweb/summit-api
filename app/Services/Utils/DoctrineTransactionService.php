@@ -45,10 +45,10 @@ final class DoctrineTransactionService implements ITransactionService
     }
 
     /**
-     * @param Exception $e
+     * @param \Throwable $e
      * @return bool
      */
-    public function shouldReconnect(\Exception $e):bool
+    public function shouldReconnect(\Throwable $e):bool
     {
         Log::debug
         (
@@ -129,7 +129,7 @@ final class DoctrineTransactionService implements ITransactionService
      * @param Closure $callback
      * @param int $isolationLevel
      * @return mixed|null
-     * @throws Exception
+     * @throws \Throwable
      */
     public function transaction(Closure $callback,  int $isolationLevel = TransactionIsolationLevel::READ_COMMITTED)
     {
@@ -151,7 +151,11 @@ final class DoctrineTransactionService implements ITransactionService
                 $em->getConnection()->commit();
                 $done = true;
             }
-            catch (Exception $ex) {
+            // \Throwable, not \Exception: a \TypeError/\Error thrown inside the callback (e.g. a
+            // repository bug) must still roll back and close the connection - catching only
+            // \Exception let such errors skip cleanup entirely and leave the transaction open,
+            // holding locks indefinitely.
+            catch (\Throwable $ex) {
 
                 $retry++;
                 $em->getConnection()->close();

@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
@@ -38,6 +39,23 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         // Clean up stale edit permission requests from previous test runs/methods
         self::$em->getConnection()->executeStatement('DELETE FROM SpeakerEditPermissionRequest');
         Config::set('cfp.speaker_change_notification_email', 'speaker-changes@test.com');
+    }
+
+    private function collectDispatchedChangeActions(): array
+    {
+        $actions = [];
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, function ($job) use (&$actions) {
+            $ref = new \ReflectionClass($job);
+            $prop = $ref->getProperty('payload');
+            $prop->setAccessible(true);
+            $payload = $prop->getValue($job);
+            $actions[] = [
+                'role' => $payload[IMailTemplatesConstants::activity_change_role],
+                'action' => $payload[IMailTemplatesConstants::activity_change_action],
+            ];
+            return true;
+        });
+        return $actions;
     }
 
     protected function tearDown(): void
@@ -1767,6 +1785,106 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(204);
     }
 
+    public function testAddSpeakerToMyPresentationQueuesChangeNotificationOnPublishedPresentation()
+    {
+        $presentation = self::$presentations[0];
+        $this->assertTrue($presentation->isPublished());
+
+        $new_speaker = new PresentationSpeaker();
+        $new_speaker->setFirstName('New');
+        $new_speaker->setLastName('SpeakerSelfService');
+        $new_speaker->setBio('New speaker bio');
+        self::$em->persist($new_speaker);
+        self::$em->flush();
+
+        $presentation_id = $presentation->getId();
+        $speaker_id = $new_speaker->getId();
+        self::$em->clear();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $params = [
+            'presentation_id' => $presentation_id,
+            'speaker_id' => $speaker_id,
+        ];
+
+        Queue::fake();
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@addSpeakerToMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+
+        // re-adding the same (already assigned) speaker queues nothing additional
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@addSpeakerToMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+    }
+
+    public function testRemoveSpeakerFromMyPresentationQueuesChangeNotificationOnPublishedPresentation()
+    {
+        $ids = $this->testAddSpeakerToMyPresentation();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $params = [
+            'presentation_id' => $ids['presentation_id'],
+            'speaker_id' => $ids['speaker_id'],
+        ];
+
+        Queue::fake();
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitSpeakersApiController@removeSpeakerFromMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+
+        // removing an already-removed speaker queues nothing additional
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitSpeakersApiController@removeSpeakerFromMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(204);
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+    }
+
     public function testAddModeratorToMyPresentation()
     {
         // Create a new speaker to be moderator
@@ -1875,6 +1993,126 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(201);
         Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+    }
+
+    public function testAddModeratorToMyPresentationReassigningSameModeratorQueuesNothing()
+    {
+        $presentation = self::$presentations[0];
+        $this->assertTrue($presentation->isPublished());
+
+        $moderator = new PresentationSpeaker();
+        $moderator->setFirstName('Moderator');
+        $moderator->setLastName('Unchanged');
+        $moderator->setBio('Moderator bio');
+        self::$em->persist($moderator);
+        self::$em->flush();
+
+        $presentation_id = $presentation->getId();
+        $moderator_id = $moderator->getId();
+        self::$em->clear();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $params = [
+            'presentation_id' => $presentation_id,
+            'speaker_id' => $moderator_id,
+        ];
+
+        // first assignment: sets the moderator (not asserted here, exercised elsewhere)
+        $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@addModeratorToMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        Queue::fake();
+
+        // re-assigning the SAME moderator must not queue a notification
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@addModeratorToMyPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+        Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
+    }
+
+    public function testAddModeratorToMyPresentationReplacingModeratorQueuesRemovedAndAdded()
+    {
+        $presentation = self::$presentations[0];
+        $this->assertTrue($presentation->isPublished());
+
+        $old_moderator = new PresentationSpeaker();
+        $old_moderator->setFirstName('Old');
+        $old_moderator->setLastName('ModeratorReplaced');
+        $old_moderator->setBio('Old moderator bio');
+        self::$em->persist($old_moderator);
+
+        $new_moderator = new PresentationSpeaker();
+        $new_moderator->setFirstName('New');
+        $new_moderator->setLastName('ModeratorReplacing');
+        $new_moderator->setBio('New moderator bio');
+        self::$em->persist($new_moderator);
+        self::$em->flush();
+
+        $presentation_id = $presentation->getId();
+        $old_moderator_id = $old_moderator->getId();
+        $new_moderator_id = $new_moderator->getId();
+        self::$em->clear();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        // assign the old moderator first (not asserted here)
+        $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@addModeratorToMyPresentation",
+            [
+                'presentation_id' => $presentation_id,
+                'speaker_id' => $old_moderator_id,
+            ],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        Queue::fake();
+
+        // replace with the new moderator: must queue Removed (old) + Added (new)
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@addModeratorToMyPresentation",
+            [
+                'presentation_id' => $presentation_id,
+                'speaker_id' => $new_moderator_id,
+            ],
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(201);
+
+        $actions = $this->collectDispatchedChangeActions();
+        $this->assertCount(2, $actions);
+        $this->assertContains(['role' => 'Moderator', 'action' => 'Added'], $actions);
+        $this->assertContains(['role' => 'Moderator', 'action' => 'Removed'], $actions);
     }
 
     public function testRemoveModeratorFromMyPresentationQueuesChangeNotificationOnPublishedPresentation()

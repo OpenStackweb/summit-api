@@ -63,6 +63,7 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
 
     public function tearDown():void
     {
+        \Mockery::close();
         self::clearOrdersTestData();
         self::clearSummitTestData();
         parent::tearDown();
@@ -762,6 +763,50 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
         );
 
         $this->assertResponseStatus(200);
+        Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
+    }
+
+    public function testUpdateEventsRollsBackWithoutQueuingChangeNotificationsWhenABatchMemberFails()
+    {
+        $presentation = self::$summit->getPresentations()[3];
+        $this->assertTrue($presentation->isPublished());
+
+        $newSpeaker = new PresentationSpeaker();
+        $newSpeaker->setFirstName('New');
+        $newSpeaker->setLastName('SpeakerBulkRollback');
+        $newSpeaker->setBio('New speaker bio');
+        self::$em->persist($newSpeaker);
+        self::$em->flush();
+
+        $data = [
+            'events' => [
+                [
+                    'id' => $presentation->getId(),
+                    'speakers' => [$newSpeaker->getId()],
+                ],
+                [
+                    // nonexistent event id: forces the whole bulk transaction to roll back
+                    'id' => 999999999,
+                ],
+            ],
+        ];
+
+        Queue::fake();
+
+        $mock_context = \Mockery::mock(\models\oauth2\IResourceServerContext::class);
+        $mock_context->shouldReceive('getCurrentUser')->andReturn(self::$defaultMember2);
+        $this->app->instance('resource_server_context', $mock_context);
+
+        $service = App::make(\services\model\ISummitService::class);
+
+        $threw = false;
+        try {
+            $service->updateEvents(self::$summit, $data, false);
+        } catch (\Throwable $ex) {
+            $threw = true;
+        }
+
+        $this->assertTrue($threw, 'updateEvents was expected to throw for the nonexistent event id in the batch.');
         Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
     }
 

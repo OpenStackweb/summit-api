@@ -33,6 +33,8 @@ class PresentationActivitySpeakerChangeEmail extends AbstractSummitEmailJob
 
     const AllowedActions = [self::Action_Added, self::Action_Removed];
 
+    const RecipientConfigKey = 'cfp.speaker_change_notification_email';
+
     protected function getEmailEventSlug(): string
     {
         return self::EVENT_SLUG;
@@ -69,9 +71,9 @@ class PresentationActivitySpeakerChangeEmail extends AbstractSummitEmailJob
         $payload[IMailTemplatesConstants::activity_change_role] = $role;
         $payload[IMailTemplatesConstants::activity_change_action] = $action;
 
-        $to_email = Config::get('cfp.speaker_change_notification_email');
+        $to_email = Config::get(self::RecipientConfigKey);
         if (empty($to_email))
-            throw new ValidationException('cfp.speaker_change_notification_email is not configured.');
+            throw new ValidationException(sprintf('%s is not configured.', self::RecipientConfigKey));
 
         parent::__construct($summit, $payload, self::DEFAULT_TEMPLATE, $to_email);
     }

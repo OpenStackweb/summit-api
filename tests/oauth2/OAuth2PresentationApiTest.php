@@ -17,6 +17,9 @@ use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\summit\Presentation;
+use models\utils\SilverstripeBaseModel;
 /**
  * Class OAuth2PresentationApiTest
  */
@@ -1293,6 +1296,45 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(201);
         Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+    }
+
+    public function testAddSpeaker2PresentationSucceedsWhenNotificationRecipientNotConfigured()
+    {
+        // the recipient is optional platform config: an unconfigured deployment must still
+        // apply the speaker change, since the write has already committed by the time the
+        // notification is dispatched.
+        Config::set(PresentationActivitySpeakerChangeEmail::RecipientConfigKey, null);
+
+        $presentation = self::$default_selection_plan->getPresentations()[0];
+        $this->assertTrue($presentation->isPublished());
+
+        $params = [
+            'id'              => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'speaker_id'      => self::$speaker->getId(),
+        ];
+
+        Queue::fake();
+
+        $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addSpeaker2Presentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['order' => 1])
+        );
+
+        $this->assertResponseStatus(201);
+        Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
+
+        // the save must have really landed: re-read through a current entity manager, since a
+        // transaction-level reset during the request leaves the fixture's static one stale
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $persisted = $em->find(Presentation::class, $presentation->getId());
+        $this->assertTrue($persisted->isSpeaker(self::$speaker));
     }
 
     public function testRemoveSpeakerFromPresentationQueuesChangeNotificationOnPublishedPresentation()

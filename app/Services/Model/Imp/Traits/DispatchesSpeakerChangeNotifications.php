@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Trait DispatchesSpeakerChangeNotifications
@@ -23,13 +25,40 @@ trait DispatchesSpeakerChangeNotifications
      * Dispatches queued speaker/moderator change notifications only after the caller's
      * enclosing transaction has committed, so a queued notification never outlives a
      * save that ends up rolling back.
+     *
+     * Because the caller's write is already durable by the time we get here, a notification
+     * failure must never propagate: it would surface as an HTTP error on a request that
+     * actually succeeded. The recipient is optional platform config, so an unconfigured
+     * deployment simply logs and sends nothing, and a single failing notification never
+     * cancels the rest of the batch.
+     *
      * @param array $pending_notifications
      * @return void
      */
     private function dispatchSpeakerChangeNotifications(array $pending_notifications): void
     {
+        if (count($pending_notifications) === 0) return;
+
+        if (empty(Config::get(PresentationActivitySpeakerChangeEmail::RecipientConfigKey))) {
+            Log::warning
+            (
+                sprintf
+                (
+                    "DispatchesSpeakerChangeNotifications::dispatchSpeakerChangeNotifications %s is not configured, skipping %s speaker change notification(s).",
+                    PresentationActivitySpeakerChangeEmail::RecipientConfigKey,
+                    count($pending_notifications)
+                )
+            );
+            return;
+        }
+
         foreach ($pending_notifications as $notification) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$notification);
+            try {
+                PresentationActivitySpeakerChangeEmail::dispatch(...$notification);
+            } catch (\Exception $ex) {
+                Log::warning("DispatchesSpeakerChangeNotifications::dispatchSpeakerChangeNotifications failed to dispatch speaker change notification.");
+                Log::warning($ex);
+            }
         }
     }
 }

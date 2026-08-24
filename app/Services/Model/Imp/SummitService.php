@@ -24,6 +24,7 @@ use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
 use App\Jobs\EncryptAllSummitBadgeQRCodes;
 use App\Jobs\ProcessEventDataImport;
@@ -662,7 +663,9 @@ final class SummitService
      */
     private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null, bool $trigger_data_update = true, bool $saveAsIncomplete = false)
     {
-        return $this->tx_service->transaction(function () use ($summit, $data, $event_id, $trigger_data_update, $saveAsIncomplete) {
+        $pending_speaker_changes = [];
+
+        $event = $this->tx_service->transaction(function () use ($summit, $data, $event_id, $trigger_data_update, $saveAsIncomplete, &$pending_speaker_changes) {
 
             Log::debug
             (
@@ -833,7 +836,7 @@ final class SummitService
                 }
             }
 
-            $this->saveOrUpdatePresentationData($event, $event_type, $data, $saveAsIncomplete);
+            $pending_speaker_changes = $this->saveOrUpdatePresentationData($event, $event_type, $data, $saveAsIncomplete);
             $this->saveOrUpdateSummitGroupEventData($event, $event_type, $data);
 
             if (!$event_type->isAllowsLocation())
@@ -861,6 +864,14 @@ final class SummitService
 
             return $event;
         });
+
+        // dispatched only after the transaction above has committed, so a queued notification
+        // never outlives a save that ends up rolling back
+        foreach ($pending_speaker_changes as $change) {
+            PresentationActivitySpeakerChangeEmail::dispatch($event, $change['speaker'], $change['role'], $change['action']);
+        }
+
+        return $event;
     }
 
     private function saveOrUpdateSummitGroupEventData(SummitEvent $event, SummitEventType $event_type, array $data)
@@ -883,16 +894,28 @@ final class SummitService
      * @param SummitEventType $event_type
      * @param array $data
      * @param bool $saveAsIncomplete
+     * @return array list of pending speaker/moderator change notifications, each
+     *               ['speaker' => PresentationSpeaker, 'role' => string, 'action' => string].
+     *               The caller must dispatch these only after its own transaction commits.
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    private function saveOrUpdatePresentationData(SummitEvent $event, SummitEventType $event_type, array $data, bool $saveAsIncomplete = false)
+    private function saveOrUpdatePresentationData(SummitEvent $event, SummitEventType $event_type, array $data, bool $saveAsIncomplete = false): array
     {
-        if (!$event instanceof Presentation) return;
+        if (!$event instanceof Presentation) return [];
 
         Log::debug(sprintf("SummitService::saveOrUpdatePresentationData presentation %s saveAsIncomplete %b", $event->getId(), $saveAsIncomplete));
         if ($saveAsIncomplete && $event->isPublished())
             throw new ValidationException('Cannot save a published event as incomplete.');
+
+        // captured before any mutation below: a published presentation being edited is a
+        // "change", not a creation, so notifications are only considered when this was
+        // already true on entry
+        $was_published = $event->isPublished();
+        $old_speaker_ids = array_map(fn(PresentationSpeaker $s) => $s->getId(), $event->getSpeakers()->toArray());
+        $old_moderator = $event->hasModerator() ? $event->getModerator() : null;
+
+        $pending_changes = [];
 
         if (!$saveAsIncomplete || $event->isNew()) {
             // if we are creating the presentation from admin, then
@@ -929,6 +952,24 @@ final class SummitService
                     $event->addSpeaker($speaker);
                 }
             }
+
+            if ($was_published) {
+                $new_speaker_ids = array_map(fn(PresentationSpeaker $s) => $s->getId(), $event->getSpeakers()->toArray());
+                foreach (array_diff($new_speaker_ids, $old_speaker_ids) as $added_id) {
+                    $pending_changes[] = [
+                        'speaker' => $this->speaker_repository->getById($added_id),
+                        'role' => PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        'action' => PresentationActivitySpeakerChangeEmail::Action_Added
+                    ];
+                }
+                foreach (array_diff($old_speaker_ids, $new_speaker_ids) as $removed_id) {
+                    $pending_changes[] = [
+                        'speaker' => $this->speaker_repository->getById($removed_id),
+                        'role' => PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        'action' => PresentationActivitySpeakerChangeEmail::Action_Removed
+                    ];
+                }
+            }
         }
 
         // moderator
@@ -952,9 +993,34 @@ final class SummitService
                     throw new EntityNotFoundException(sprintf('Moderator %s not found', $moderator_id));
                 $event->setModerator($moderator);
             }
+
+            if ($was_published) {
+                $new_moderator = $event->hasModerator() ? $event->getModerator() : null;
+                $old_moderator_id = is_null($old_moderator) ? null : $old_moderator->getId();
+                $new_moderator_id = is_null($new_moderator) ? null : $new_moderator->getId();
+
+                if ($old_moderator_id !== $new_moderator_id) {
+                    if (!is_null($old_moderator)) {
+                        $pending_changes[] = [
+                            'speaker' => $old_moderator,
+                            'role' => PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                            'action' => PresentationActivitySpeakerChangeEmail::Action_Removed
+                        ];
+                    }
+                    if (!is_null($new_moderator)) {
+                        $pending_changes[] = [
+                            'speaker' => $new_moderator,
+                            'role' => PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                            'action' => PresentationActivitySpeakerChangeEmail::Action_Added
+                        ];
+                    }
+                }
+            }
         }
 
         PresentationFactory::populate($event, $data, true);
+
+        return $pending_changes;
     }
 
     /**
@@ -1833,7 +1899,9 @@ final class SummitService
      */
     public function addModerator2Presentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
+        $pending_notification = null;
+
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, &$pending_notification) {
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
                 throw new EntityNotFoundException(sprintf("Member %s not found.", $current_member_id));
@@ -1864,6 +1932,15 @@ final class SummitService
 
             $presentation->setModerator($speaker);
 
+            if ($presentation->isPublished()) {
+                $pending_notification = [
+                    $presentation,
+                    $speaker,
+                    PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                    PresentationActivitySpeakerChangeEmail::Action_Added
+                ];
+            }
+
             // check is selection plan is private, if so add moderator to allowed members
 
             $selection_plan = $presentation->getSelectionPlan();
@@ -1877,6 +1954,14 @@ final class SummitService
 
             return $presentation;
         });
+
+        // dispatched only after the transaction above has committed, so a queued notification
+        // never outlives a save that ends up rolling back
+        if (!is_null($pending_notification)) {
+            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
+        }
+
+        return $presentation;
     }
 
     /**
@@ -1889,7 +1974,9 @@ final class SummitService
      */
     public function removeModeratorFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
+        $pending_notification = null;
+
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, &$pending_notification) {
 
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
@@ -1919,10 +2006,29 @@ final class SummitService
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
+            $previous_moderator = $presentation->hasModerator() ? $presentation->getModerator() : null;
+
             $presentation->unsetModerator();
+
+            if (!is_null($previous_moderator) && $presentation->isPublished()) {
+                $pending_notification = [
+                    $presentation,
+                    $previous_moderator,
+                    PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                    PresentationActivitySpeakerChangeEmail::Action_Removed
+                ];
+            }
 
             return $presentation;
         });
+
+        // dispatched only after the transaction above has committed, so a queued notification
+        // never outlives a save that ends up rolling back
+        if (!is_null($pending_notification)) {
+            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
+        }
+
+        return $presentation;
     }
 
     /**

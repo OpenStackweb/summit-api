@@ -15,6 +15,7 @@
 return [
     'base_url' => env('CFP_APP_BASE_URL', null),
     'support_email' => env('CFP_SUPPORT_EMAIL', null),
+    'speaker_change_notification_email' => env('CFP_SPEAKER_CHANGE_NOTIFICATION_EMAIL', null),
     'client_id' => env('CFP_OAUTH2_CLIENT_ID', null),
     'scopes' => env('CFP_OAUTH2_SCOPES', null),
 

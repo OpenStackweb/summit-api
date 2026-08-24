@@ -17,6 +17,7 @@ use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
+use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
@@ -1725,7 +1726,9 @@ final class PresentationService
      * @throws \Exception
      */
     public function upsertPresentationSpeaker(Summit $summit, int $presentation_id, int $speaker_id, array $data): Presentation {
-        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data) {
+        $pending_notification = null;
+
+        $presentation = $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data, &$pending_notification) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
@@ -1737,6 +1740,14 @@ final class PresentationService
 
             if (!$presentation->isSpeaker($speaker)) {
                 $presentation->addSpeaker($speaker);
+                if ($presentation->isPublished()) {
+                    $pending_notification = [
+                        $presentation,
+                        $speaker,
+                        PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        PresentationActivitySpeakerChangeEmail::Action_Added
+                    ];
+                }
             }
 
             if (isset($data['order'])) {
@@ -1747,6 +1758,14 @@ final class PresentationService
 
             return $presentation;
         });
+
+        // dispatched only after the transaction above has committed, so a queued notification
+        // never outlives a save that ends up rolling back
+        if (!is_null($pending_notification)) {
+            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
+        }
+
+        return $presentation;
     }
 
     /**
@@ -1758,7 +1777,9 @@ final class PresentationService
      */
     public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void
     {
-         $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id) {
+        $pending_notification = null;
+
+        $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, &$pending_notification) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
@@ -1768,8 +1789,24 @@ final class PresentationService
             if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
                 throw new EntityNotFoundException("Speaker {$speaker_id} not found.");
 
-            $presentation->removeSpeaker($speaker);
+            if ($presentation->isSpeaker($speaker)) {
+                $presentation->removeSpeaker($speaker);
+                if ($presentation->isPublished()) {
+                    $pending_notification = [
+                        $presentation,
+                        $speaker,
+                        PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        PresentationActivitySpeakerChangeEmail::Action_Removed
+                    ];
+                }
+            }
 
         });
+
+        // dispatched only after the transaction above has committed, so a queued notification
+        // never outlives a save that ends up rolling back
+        if (!is_null($pending_notification)) {
+            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
+        }
     }
 }

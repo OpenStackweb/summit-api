@@ -12,9 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Models\Foundation\Main\IGroup;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Queue;
 /**
  * Class OAuth2PresentationApiTest
  */
@@ -36,6 +38,7 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
         self::$current_track_chair = self::$summit->addTrackChair(self::$member, [ self::$defaultTrack ] );
         self::$em->persist(self::$summit);
         self::$em->flush();
+        Config::set('cfp.speaker_change_notification_email', 'speaker-changes@test.com');
     }
 
     protected function tearDown(): void
@@ -1247,6 +1250,145 @@ final class OAuth2PresentationApiTest extends ProtectedApiTestCase
         );
 
         $this->assertResponseStatus(201);
+    }
+
+    public function testAddSpeaker2PresentationQueuesChangeNotificationOnPublishedPresentation()
+    {
+        $presentation = self::$default_selection_plan->getPresentations()[0];
+        $this->assertTrue($presentation->isPublished());
+
+        $params = [
+            'id'              => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'speaker_id'      => self::$speaker->getId(),
+        ];
+
+        Queue::fake();
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addSpeaker2Presentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['order' => 1])
+        );
+
+        $this->assertResponseStatus(201);
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+
+        // re-adding the same (already assigned) speaker is an order-only update: no additional email
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addSpeaker2Presentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['order' => 1])
+        );
+
+        $this->assertResponseStatus(201);
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+    }
+
+    public function testRemoveSpeakerFromPresentationQueuesChangeNotificationOnPublishedPresentation()
+    {
+        $presentation = self::$default_selection_plan->getPresentations()[0];
+        $this->assertTrue($presentation->isPublished());
+
+        $params = [
+            'id'              => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'speaker_id'      => self::$speaker->getId(),
+        ];
+
+        // ensure the speaker is actually assigned first (outside the fake queue window)
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addSpeaker2Presentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['order' => 1])
+        );
+        $this->assertResponseStatus(201);
+
+        Queue::fake();
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@removeSpeakerFromPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+
+        // removing an already-removed (not assigned) speaker queues nothing additional
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@removeSpeakerFromPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, 1);
+    }
+
+    public function testSpeakerChangeEndpointsDoNotQueueChangeNotificationOnNonPublishedPresentation()
+    {
+        $presentation = self::$default_selection_plan->getPresentations()[1];
+        $presentation->unPublish();
+        self::$em->persist($presentation);
+        self::$em->flush();
+        $this->assertFalse($presentation->isPublished());
+
+        $params = [
+            'id'              => self::$summit->getId(),
+            'presentation_id' => $presentation->getId(),
+            'speaker_id'      => self::$speaker->getId(),
+        ];
+
+        Queue::fake();
+
+        $response = $this->action(
+            "POST",
+            "OAuth2PresentationApiController@addSpeaker2Presentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['order' => 1])
+        );
+        $this->assertResponseStatus(201);
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2PresentationApiController@removeSpeakerFromPresentation",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+        $this->assertResponseStatus(204);
+
+        Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
     }
 
     // --- Comments ---

@@ -11,10 +11,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Jobs\Emails\IMailTemplatesConstants;
+use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\ISummitService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Queue;
+use models\summit\PresentationSpeaker;
+use models\summit\PresentationType;
 use models\utils\SilverstripeBaseModel;
 use services\model\IPresentationService;
 use models\summit\Presentation;
@@ -35,6 +41,24 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
         self::$defaultMember2 = self::$member2;
         self::insertSummitTestData();
         self::InsertOrdersTestData();
+        Config::set('cfp.speaker_change_notification_email', 'speaker-changes@test.com');
+    }
+
+    private function collectDispatchedChangeActions(): array
+    {
+        $actions = [];
+        Queue::assertPushed(PresentationActivitySpeakerChangeEmail::class, function ($job) use (&$actions) {
+            $ref = new \ReflectionClass($job);
+            $prop = $ref->getProperty('payload');
+            $prop->setAccessible(true);
+            $payload = $prop->getValue($job);
+            $actions[] = [
+                'role' => $payload[IMailTemplatesConstants::activity_change_role],
+                'action' => $payload[IMailTemplatesConstants::activity_change_action],
+            ];
+            return true;
+        });
+        return $actions;
     }
 
     public function tearDown():void
@@ -478,6 +502,267 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
         $this->assertTrue(count($event->allowed_ticket_types) == 2);
         return $event;
 
+    }
+
+    public function testUpdateEventSpeakersQueuesChangeNotificationOnPublishedPresentation()
+    {
+        $presentation = self::$summit->getPresentations()[0];
+        $this->assertTrue($presentation->isPublished());
+        $old_speaker_id = self::$defaultSpeaker->getId();
+
+        $newSpeaker = new PresentationSpeaker();
+        $newSpeaker->setFirstName('New');
+        $newSpeaker->setLastName('Speaker');
+        $newSpeaker->setBio('New speaker bio');
+        self::$em->persist($newSpeaker);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'event_id' => $presentation->getId(),
+        ];
+
+        $data = [
+            'speakers' => [$newSpeaker->getId()],
+        ];
+
+        Queue::fake();
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitEventsApiController@updateEvent",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+
+        $actions = $this->collectDispatchedChangeActions();
+        $this->assertCount(2, $actions);
+        $this->assertContains(['role' => 'Speaker', 'action' => 'Added'], $actions);
+        $this->assertContains(['role' => 'Speaker', 'action' => 'Removed'], $actions);
+
+        // re-saving the identical speakers array queues nothing additional
+        Queue::fake();
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitEventsApiController@updateEvent",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+        Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
+    }
+
+    public function testUpdateEventModeratorQueuesChangeNotificationOnPublishedPresentation()
+    {
+        $moderatorType = new PresentationType();
+        $moderatorType->setType('TEST MODERATED PRESENTATION TYPE ' . str_random(8));
+        $moderatorType->setMinSpeakers(1);
+        $moderatorType->setMaxSpeakers(3);
+        $moderatorType->setMinModerators(0);
+        $moderatorType->setMaxModerators(1);
+        $moderatorType->setUseSpeakers(true);
+        $moderatorType->setShouldBeAvailableOnCfp(true);
+        $moderatorType->setAreSpeakersMandatory(false);
+        $moderatorType->setUseModerator(true);
+        $moderatorType->setIsModeratorMandatory(false);
+        $moderatorType->setAllowsLocationTimeframeCollision(true);
+        $moderatorType->setAllowsSpeakerEventCollision(true);
+        $moderatorType->setBlackoutTimes('Final');
+        self::$summit->addEventType($moderatorType);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $oldModerator = new PresentationSpeaker();
+        $oldModerator->setFirstName('Old');
+        $oldModerator->setLastName('Moderator');
+        $oldModerator->setBio('Old moderator bio');
+        self::$em->persist($oldModerator);
+
+        $newModerator = new PresentationSpeaker();
+        $newModerator->setFirstName('New');
+        $newModerator->setLastName('Moderator');
+        $newModerator->setBio('New moderator bio');
+        self::$em->persist($newModerator);
+        self::$em->flush();
+
+        $start_date = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end_date = (clone $start_date)->add(new \DateInterval('PT1H'));
+
+        $presentation = new Presentation();
+        self::$summit->addEvent($presentation);
+        $presentation->setTitle('Moderated Presentation ' . str_random(8));
+        $presentation->setAbstract('Moderated presentation abstract');
+        $presentation->setCategory(self::$defaultTrack);
+        $presentation->setType($moderatorType);
+        $presentation->setProgress(Presentation::PHASE_COMPLETE);
+        $presentation->setStatus(Presentation::STATUS_RECEIVED);
+        $presentation->setStartDate($start_date);
+        $presentation->setEndDate($end_date);
+        $presentation->addSpeaker(self::$defaultSpeaker);
+        $presentation->setModerator($oldModerator);
+        self::$em->persist($presentation);
+        self::$em->flush();
+        $presentation->publish();
+        self::$em->persist($presentation);
+        self::$em->flush();
+
+        $this->assertTrue($presentation->isPublished());
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'event_id' => $presentation->getId(),
+        ];
+
+        $data = [
+            'moderator_speaker_id' => $newModerator->getId(),
+        ];
+
+        Queue::fake();
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitEventsApiController@updateEvent",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+
+        $actions = $this->collectDispatchedChangeActions();
+        $this->assertCount(2, $actions);
+        $this->assertContains(['role' => 'Moderator', 'action' => 'Added'], $actions);
+        $this->assertContains(['role' => 'Moderator', 'action' => 'Removed'], $actions);
+    }
+
+    public function testUpdateEventSpeakersDoNotQueueChangeNotificationOnNonPublishedPresentation()
+    {
+        $presentation = self::$summit->getPresentations()[2];
+        $presentation->unPublish();
+        self::$em->persist($presentation);
+        self::$em->flush();
+        $this->assertFalse($presentation->isPublished());
+
+        $newSpeaker = new PresentationSpeaker();
+        $newSpeaker->setFirstName('New');
+        $newSpeaker->setLastName('SpeakerNotPublished');
+        $newSpeaker->setBio('New speaker bio');
+        self::$em->persist($newSpeaker);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'event_id' => $presentation->getId(),
+        ];
+
+        $data = [
+            'speakers' => [$newSpeaker->getId()],
+        ];
+
+        Queue::fake();
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitEventsApiController@updateEvent",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+        Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
+    }
+
+    public function testUpdateEventModeratorDoesNotQueueChangeNotificationOnNonPublishedPresentation()
+    {
+        $moderatorType = new PresentationType();
+        $moderatorType->setType('TEST MODERATED PRESENTATION TYPE NOT PUBLISHED ' . str_random(8));
+        $moderatorType->setMinSpeakers(1);
+        $moderatorType->setMaxSpeakers(3);
+        $moderatorType->setMinModerators(0);
+        $moderatorType->setMaxModerators(1);
+        $moderatorType->setUseSpeakers(true);
+        $moderatorType->setShouldBeAvailableOnCfp(true);
+        $moderatorType->setAreSpeakersMandatory(false);
+        $moderatorType->setUseModerator(true);
+        $moderatorType->setIsModeratorMandatory(false);
+        $moderatorType->setAllowsLocationTimeframeCollision(true);
+        $moderatorType->setAllowsSpeakerEventCollision(true);
+        $moderatorType->setBlackoutTimes('Final');
+        self::$summit->addEventType($moderatorType);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $oldModerator = new PresentationSpeaker();
+        $oldModerator->setFirstName('Old');
+        $oldModerator->setLastName('ModeratorNotPublished');
+        $oldModerator->setBio('Old moderator bio');
+        self::$em->persist($oldModerator);
+
+        $newModerator = new PresentationSpeaker();
+        $newModerator->setFirstName('New');
+        $newModerator->setLastName('ModeratorNotPublished');
+        $newModerator->setBio('New moderator bio');
+        self::$em->persist($newModerator);
+        self::$em->flush();
+
+        $presentation = new Presentation();
+        self::$summit->addEvent($presentation);
+        $presentation->setTitle('Non-Published Moderated Presentation ' . str_random(8));
+        $presentation->setAbstract('Non-published moderated presentation abstract');
+        $presentation->setCategory(self::$defaultTrack);
+        $presentation->setType($moderatorType);
+        $presentation->setProgress(Presentation::PHASE_COMPLETE);
+        $presentation->setStatus(Presentation::STATUS_RECEIVED);
+        $presentation->addSpeaker(self::$defaultSpeaker);
+        $presentation->setModerator($oldModerator);
+        self::$em->persist($presentation);
+        self::$em->flush();
+
+        $this->assertFalse($presentation->isPublished());
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'event_id' => $presentation->getId(),
+        ];
+
+        $data = [
+            'moderator_speaker_id' => $newModerator->getId(),
+        ];
+
+        Queue::fake();
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitEventsApiController@updateEvent",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+        Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
     }
 
     public function testUpdateDraftEventDoesNotCompleteIncompletePresentation()

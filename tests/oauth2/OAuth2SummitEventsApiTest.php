@@ -778,6 +778,8 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
         self::$em->persist($newSpeaker);
         self::$em->flush();
 
+        $otherPresentation = self::$summit->getPresentations()[4];
+
         $data = [
             'events' => [
                 [
@@ -785,8 +787,11 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
                     'speakers' => [$newSpeaker->getId()],
                 ],
                 [
-                    // nonexistent event id: forces the whole bulk transaction to roll back
-                    'id' => 999999999,
+                    // existing event, but a nonexistent track_id: SummitService::saveOrUpdateEvent
+                    // throws a clean EntityNotFoundException here, forcing the whole bulk
+                    // transaction to roll back
+                    'id' => $otherPresentation->getId(),
+                    'track_id' => 999999999,
                 ],
             ],
         ];
@@ -802,11 +807,11 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
         $threw = false;
         try {
             $service->updateEvents(self::$summit, $data, false);
-        } catch (\Throwable $ex) {
+        } catch (\Exception $ex) {
             $threw = true;
         }
 
-        $this->assertTrue($threw, 'updateEvents was expected to throw for the nonexistent event id in the batch.');
+        $this->assertTrue($threw, 'updateEvents was expected to throw for the nonexistent track_id in the batch.');
         Queue::assertNotPushed(PresentationActivitySpeakerChangeEmail::class);
     }
 

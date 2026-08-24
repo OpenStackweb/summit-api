@@ -457,7 +457,7 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
     {
         $em = $this->getEntityManager();
         $res = $em->find($this->getEntityName(), $id, $lockMode, $lockVersion);
-        if($refresh && !is_null($res))
+        if($refresh)
             $em->refresh($res);
         return $res;
     }

@@ -34,6 +34,7 @@ use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
+use App\Services\Model\Imp\Traits\DispatchesSpeakerChangeNotifications;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -69,6 +70,8 @@ final class PresentationService
     extends AbstractService
     implements IPresentationService
 {
+    use DispatchesSpeakerChangeNotifications;
+
     const LocalChunkSize = 1024;
     /**
      * @var ISummitEventRepository
@@ -1726,9 +1729,9 @@ final class PresentationService
      * @throws \Exception
      */
     public function upsertPresentationSpeaker(Summit $summit, int $presentation_id, int $speaker_id, array $data): Presentation {
-        $pending_notification = null;
+        $pending_notifications = [];
 
-        $presentation = $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data, &$pending_notification) {
+        $presentation = $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data, &$pending_notifications) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
@@ -1741,7 +1744,7 @@ final class PresentationService
             if (!$presentation->isSpeaker($speaker)) {
                 $presentation->addSpeaker($speaker);
                 if ($presentation->isPublished()) {
-                    $pending_notification = [
+                    $pending_notifications[] = [
                         $presentation,
                         $speaker,
                         PresentationActivitySpeakerChangeEmail::Role_Speaker,
@@ -1759,11 +1762,7 @@ final class PresentationService
             return $presentation;
         });
 
-        // dispatched only after the transaction above has committed, so a queued notification
-        // never outlives a save that ends up rolling back
-        if (!is_null($pending_notification)) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
-        }
+        $this->dispatchSpeakerChangeNotifications($pending_notifications);
 
         return $presentation;
     }
@@ -1777,9 +1776,9 @@ final class PresentationService
      */
     public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void
     {
-        $pending_notification = null;
+        $pending_notifications = [];
 
-        $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, &$pending_notification) {
+        $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, &$pending_notifications) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
@@ -1792,7 +1791,7 @@ final class PresentationService
             if ($presentation->isSpeaker($speaker)) {
                 $presentation->removeSpeaker($speaker);
                 if ($presentation->isPublished()) {
-                    $pending_notification = [
+                    $pending_notifications[] = [
                         $presentation,
                         $speaker,
                         PresentationActivitySpeakerChangeEmail::Role_Speaker,
@@ -1803,10 +1802,6 @@ final class PresentationService
 
         });
 
-        // dispatched only after the transaction above has committed, so a queued notification
-        // never outlives a save that ends up rolling back
-        if (!is_null($pending_notification)) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
-        }
+        $this->dispatchSpeakerChangeNotifications($pending_notifications);
     }
 }

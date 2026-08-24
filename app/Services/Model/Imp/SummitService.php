@@ -53,6 +53,7 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\AbstractPublishService;
 use App\Services\Model\IMemberService;
+use App\Services\Model\Imp\Traits\DispatchesSpeakerChangeNotifications;
 use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use DateInterval;
 use DateTime;
@@ -127,6 +128,8 @@ use utils\PagingInfo;
 final class SummitService
     extends AbstractPublishService implements ISummitService
 {
+    use DispatchesSpeakerChangeNotifications;
+
     /**
      * @var ISummitEventRepository
      */
@@ -877,9 +880,11 @@ final class SummitService
         } else {
             // standalone call (addEvent/updateEvent used directly): the transaction() call above
             // was the outermost one, so its commit was real and dispatching now is safe
+            $pending_notifications = [];
             foreach ($pending_speaker_changes as $change) {
-                PresentationActivitySpeakerChangeEmail::dispatch($event, $change['speaker'], $change['role'], $change['action']);
+                $pending_notifications[] = [$event, $change['speaker'], $change['role'], $change['action']];
             }
+            $this->dispatchSpeakerChangeNotifications($pending_notifications);
         }
 
         return $event;
@@ -1579,11 +1584,7 @@ final class SummitService
             return true;
         });
 
-        // dispatched only after this (outermost) transaction has committed, so a queued
-        // notification from an earlier item in the batch never outlives a later item's failure
-        foreach ($pending_notifications as $notification) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$notification);
-        }
+        $this->dispatchSpeakerChangeNotifications($pending_notifications);
 
         return $result;
     }
@@ -1613,11 +1614,7 @@ final class SummitService
             return true;
         });
 
-        // dispatched only after this (outermost) transaction has committed, so a queued
-        // notification from an earlier item in the batch never outlives a later item's failure
-        foreach ($pending_notifications as $notification) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$notification);
-        }
+        $this->dispatchSpeakerChangeNotifications($pending_notifications);
 
         return $result;
     }
@@ -1831,9 +1828,9 @@ final class SummitService
      */
     public function addSpeaker2Presentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        $pending_notification = null;
+        $pending_notifications = [];
 
-        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, &$pending_notification) {
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, &$pending_notifications) {
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
                 throw new EntityNotFoundException(sprintf("Member %s not found.", $current_member_id));
@@ -1864,7 +1861,7 @@ final class SummitService
             if (!$presentation->isSpeaker($speaker)) {
                 $presentation->addSpeaker($speaker);
                 if ($presentation->isPublished()) {
-                    $pending_notification = [
+                    $pending_notifications[] = [
                         $presentation,
                         $speaker,
                         PresentationActivitySpeakerChangeEmail::Role_Speaker,
@@ -1887,11 +1884,7 @@ final class SummitService
             return $presentation;
         });
 
-        // dispatched only after the transaction above has committed; addSpeaker2Presentation
-        // has no internal callers in this class, so this call is always the outermost one
-        if (!is_null($pending_notification)) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
-        }
+        $this->dispatchSpeakerChangeNotifications($pending_notifications);
 
         return $presentation;
     }
@@ -1906,9 +1899,9 @@ final class SummitService
      */
     public function removeSpeakerFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        $pending_notification = null;
+        $pending_notifications = [];
 
-        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, &$pending_notification) {
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, &$pending_notifications) {
 
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
@@ -1941,7 +1934,7 @@ final class SummitService
             if ($presentation->isSpeaker($speaker)) {
                 $presentation->removeSpeaker($speaker);
                 if ($presentation->isPublished()) {
-                    $pending_notification = [
+                    $pending_notifications[] = [
                         $presentation,
                         $speaker,
                         PresentationActivitySpeakerChangeEmail::Role_Speaker,
@@ -1953,11 +1946,7 @@ final class SummitService
             return $presentation;
         });
 
-        // dispatched only after the transaction above has committed; removeSpeakerFromPresentation
-        // has no internal callers in this class, so this call is always the outermost one
-        if (!is_null($pending_notification)) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
-        }
+        $this->dispatchSpeakerChangeNotifications($pending_notifications);
 
         return $presentation;
     }
@@ -2039,11 +2028,7 @@ final class SummitService
             return $presentation;
         });
 
-        // dispatched only after the transaction above has committed; addModerator2Presentation
-        // has no internal callers in this class, so this call is always the outermost one
-        foreach ($pending_notifications as $notification) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$notification);
-        }
+        $this->dispatchSpeakerChangeNotifications($pending_notifications);
 
         return $presentation;
     }
@@ -2058,9 +2043,9 @@ final class SummitService
      */
     public function removeModeratorFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        $pending_notification = null;
+        $pending_notifications = [];
 
-        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, &$pending_notification) {
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, &$pending_notifications) {
 
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
@@ -2095,7 +2080,7 @@ final class SummitService
             $presentation->unsetModerator();
 
             if (!is_null($previous_moderator) && $presentation->isPublished()) {
-                $pending_notification = [
+                $pending_notifications[] = [
                     $presentation,
                     $previous_moderator,
                     PresentationActivitySpeakerChangeEmail::Role_Moderator,
@@ -2106,11 +2091,7 @@ final class SummitService
             return $presentation;
         });
 
-        // dispatched only after the transaction above has committed, so a queued notification
-        // never outlives a save that ends up rolling back
-        if (!is_null($pending_notification)) {
-            PresentationActivitySpeakerChangeEmail::dispatch(...$pending_notification);
-        }
+        $this->dispatchSpeakerChangeNotifications($pending_notifications);
 
         return $presentation;
     }

@@ -34,7 +34,7 @@ use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
-use App\Services\Model\Imp\Traits\DispatchesSpeakerChangeNotifications;
+use App\Services\Model\Imp\Notifications\SpeakerChangeNotifications;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -70,8 +70,6 @@ final class PresentationService
     extends AbstractService
     implements IPresentationService
 {
-    use DispatchesSpeakerChangeNotifications;
-
     const LocalChunkSize = 1024;
     /**
      * @var ISummitEventRepository
@@ -1729,9 +1727,9 @@ final class PresentationService
      * @throws \Exception
      */
     public function upsertPresentationSpeaker(Summit $summit, int $presentation_id, int $speaker_id, array $data): Presentation {
-        $pending_notifications = [];
+        $notifications = new SpeakerChangeNotifications();
 
-        $presentation = $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data, &$pending_notifications) {
+        $presentation = $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data, $notifications) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
@@ -1744,12 +1742,13 @@ final class PresentationService
             if (!$presentation->isSpeaker($speaker)) {
                 $presentation->addSpeaker($speaker);
                 if ($presentation->isPublished()) {
-                    $pending_notifications[] = [
+                    $notifications->add
+                    (
                         $presentation,
                         $speaker,
                         PresentationActivitySpeakerChangeEmail::Role_Speaker,
                         PresentationActivitySpeakerChangeEmail::Action_Added
-                    ];
+                    );
                 }
             }
 
@@ -1762,7 +1761,8 @@ final class PresentationService
             return $presentation;
         });
 
-        $this->dispatchSpeakerChangeNotifications($pending_notifications);
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
 
         return $presentation;
     }
@@ -1776,9 +1776,9 @@ final class PresentationService
      */
     public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void
     {
-        $pending_notifications = [];
+        $notifications = new SpeakerChangeNotifications();
 
-        $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, &$pending_notifications) {
+        $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $notifications) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
@@ -1791,17 +1791,19 @@ final class PresentationService
             if ($presentation->isSpeaker($speaker)) {
                 $presentation->removeSpeaker($speaker);
                 if ($presentation->isPublished()) {
-                    $pending_notifications[] = [
+                    $notifications->add
+                    (
                         $presentation,
                         $speaker,
                         PresentationActivitySpeakerChangeEmail::Role_Speaker,
                         PresentationActivitySpeakerChangeEmail::Action_Removed
-                    ];
+                    );
                 }
             }
 
         });
 
-        $this->dispatchSpeakerChangeNotifications($pending_notifications);
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
     }
 }

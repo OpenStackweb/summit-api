@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
+use App\Jobs\Utils\JobDispatcher;
 use App\Services\Model\AbstractService;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -221,8 +222,20 @@ final class PresentationSubmissionReopenService
             }
         );
 
+        // JobDispatcher, not ::dispatch(): a queue-backend failure part-way through this loop would
+        // otherwise abort the request with some recipients already queued, and the operator's retry
+        // would mail them twice. withDbFallback() fails over to the database queue (and runs sync on
+        // a double failure) so the loop completes and the returned count stays true. The job is
+        // constructed here, before any push, so a missing SummitEmailEventFlowType row or
+        // cfp.support_email still fails the request loudly rather than reporting a false "queued".
+        // primaryConnection follows queue.default so this mail is routed like every other
+        // AbstractEmailJob instead of JobDispatcher's hardcoded redis primary.
         foreach ($recipients as $email => $name)
-            PresentationSubmissionReopenedEmail::dispatch($presentation, $email, $name ?? '');
+            JobDispatcher::withDbFallback(
+                job: new PresentationSubmissionReopenedEmail($presentation, $email, $name ?? ''),
+                logContext: ['summit_id' => $summit->getId(), 'presentation_id' => $presentation_id],
+                primaryConnection: Config::get('queue.default')
+            );
 
         // Report queued and skipped, NOT "queued of selected". Selection is counted in rows by the
         // client and in ids by the server, and one merged row (a submitter who is also a speaker)

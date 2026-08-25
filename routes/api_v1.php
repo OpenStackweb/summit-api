@@ -867,6 +867,7 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::group(['prefix' => 'reopen'], function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@reopenSubmissionPeriod']);
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@closeSubmissionPeriod']);
+                        Route::put('notify', ['middleware' => ['auth.user', 'rate.limit:30,60'], 'uses' => 'OAuth2PresentationApiController@notifySubmissionReopened']);
                     });
                 });
 

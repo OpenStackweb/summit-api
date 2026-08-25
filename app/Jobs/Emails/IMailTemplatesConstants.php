@@ -174,6 +174,7 @@ interface IMailTemplatesConstants
     const summit_reassign_ticket_till_date = 'summit_reassign_ticket_till_date';
     const summit_schedule_url = 'summit_schedule_url';
     const summit_site_url = 'summit_site_url';
+    const summit_slug = 'summit_slug';
     const summit_schedule_default_event_detail_url = 'summit_schedule_default_event_detail_url';
     const summit_virtual_site_oauth2_client_id = 'summit_virtual_site_oauth2_client_id';
     const summit_virtual_site_url = 'summit_virtual_site_url';

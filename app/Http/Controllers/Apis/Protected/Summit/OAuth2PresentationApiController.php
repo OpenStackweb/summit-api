@@ -642,6 +642,75 @@ final class OAuth2PresentationApiController extends OAuth2ProtectedController
     }
 
     #[OA\Put(
+        path: "/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen/notify",
+        summary: "Admin-only: notify selected recipients (submitter/speakers/moderator) that the submission period has been reopened",
+        operationId: "notifySubmissionReopened",
+        security: [['summit_presentations_auth' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData, SummitScopes::WritePresentationData]]],
+        tags: ['Presentations'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'presentation_id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'speaker_ids', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(property: 'include_submitter', type: 'boolean'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: "OK",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'recipients', type: 'integer'),
+                        new OA\Property(property: 'skipped', type: 'integer'),
+                    ]
+                )
+            ),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
+        ]
+    )]
+    public function notifySubmissionReopened($summit_id, $presentation_id)
+    {
+        return $this->processRequest(function () use ($summit_id, $presentation_id) {
+
+            $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (is_null($current_member)) return $this->error403();
+
+            $isAdmin = $current_member->isAdmin()
+                || $current_member->hasPermissionForOnGroup($summit, IGroup::SummitAdministrators);
+            if (!$isAdmin) return $this->error403();
+
+            $payload = $this->getJsonPayload([
+                'speaker_ids' => 'sometimes|array',
+                'speaker_ids.*' => 'integer',
+                'include_submitter' => 'sometimes|boolean',
+            ]);
+
+            $result = $this->presentation_submission_reopen_service->notify(
+                $summit,
+                intval($presentation_id),
+                $payload['speaker_ids'] ?? [],
+                boolval($payload['include_submitter'] ?? false),
+                $current_member
+            );
+
+            return $this->ok(['recipients' => $result['queued'], 'skipped' => $result['skipped']]);
+        });
+    }
+
+    #[OA\Put(
         path: "/api/v1/summits/{id}/presentations/{presentation_id}/completed",
         summary: "Mark a presentation submission as completed",
         operationId: "completePresentationSubmission",

@@ -12,9 +12,11 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\ResourceServer\IAccessTokenService;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\summit\Presentation;
 use models\utils\SilverstripeBaseModel;
@@ -353,6 +355,50 @@ class PresentationReopenAuthzTest extends ProtectedApiTestCase
             $this->reload(self::$presentation->getId())->isSubmissionReopened(),
             'refused with 403 but the grant was cleared anyway'
         );
+    }
+
+    /**
+     * Same coarse-gate refusal as reopen/close, exercised on the notify endpoint: a member with no
+     * summit-admin permission never reaches the service, so nothing is queued.
+     */
+    public function testMemberWithNoSummitAdminPermissionCannotNotify()
+    {
+        Queue::fake();
+        $this->grantWindow(self::$presentation);
+
+        $this->action(
+            "PUT", "OAuth2PresentationApiController@notifySubmissionReopened",
+            ['id' => self::$summit->getId(), 'presentation_id' => self::$presentation->getId()],
+            [], [], [], $this->getAuthHeaders(), json_encode(['include_submitter' => true])
+        );
+        $this->assertResponseStatus(403);
+
+        Queue::assertNotPushed(PresentationSubmissionReopenedEmail::class);
+    }
+
+    /**
+     * Persona (b) on the notify endpoint too: being a recipient is not being an operator. The
+     * member is the creator AND an assigned speaker (memberCanEdit() true), and is still refused --
+     * §4 gives no speaker path to the reopen controls, notify included.
+     */
+    public function testSpeakerOnThePresentationStillCannotNotify()
+    {
+        Queue::fake();
+        self::$presentation->addSpeaker(self::$speaker);
+        $this->grantWindow(self::$presentation);
+
+        $reloaded = $this->reload(self::$presentation->getId());
+        $this->assertTrue($reloaded->memberCanEdit(self::$member), 'speaker/creator link did not persist');
+        $this->assertTrue($reloaded->isSubmissionReopened(), 'grant did not persist');
+
+        $this->action(
+            "PUT", "OAuth2PresentationApiController@notifySubmissionReopened",
+            ['id' => self::$summit->getId(), 'presentation_id' => self::$presentation->getId()],
+            [], [], [], $this->getAuthHeaders(), json_encode(['include_submitter' => true])
+        );
+        $this->assertResponseStatus(403);
+
+        Queue::assertNotPushed(PresentationSubmissionReopenedEmail::class);
     }
 
     // ---------------------------------------------------------------------------------------------

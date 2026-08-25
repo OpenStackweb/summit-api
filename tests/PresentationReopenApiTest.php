@@ -12,10 +12,13 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\Registry;
 use ModelSerializers\SerializerRegistry;
 use models\summit\Presentation;
+use models\summit\PresentationSpeaker;
 use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 
@@ -95,6 +98,34 @@ class PresentationReopenApiTest extends ProtectedApiTestCase
             "DELETE", "OAuth2PresentationApiController@closeSubmissionPeriod",
             $params, [], [], [], $headers
         );
+    }
+
+    protected function notify(array $payload)
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => self::$presentation->getId(),
+        ];
+        $headers = $this->getAuthHeaders(); // includes CONTENT_TYPE: application/json
+
+        return $this->action(
+            "PUT", "OAuth2PresentationApiController@notifySubmissionReopened",
+            $params, [], [], [], $headers, json_encode($payload)
+        );
+    }
+
+    /**
+     * A speaker with no linked Member and no registration_request -- PresentationSpeaker::getEmail()
+     * (PresentationSpeaker.php:1953-1969) returns null for both branches, so this is the "no usable
+     * email" fixture the notify tests need without touching the blank@blank.com sentinel path.
+     */
+    private function speakerWithNoEmail(): PresentationSpeaker
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Katherine");
+        $speaker->setLastName("Johnson");
+        self::$em->persist($speaker);
+        return $speaker;
     }
 
     /**
@@ -985,5 +1016,100 @@ class PresentationReopenApiTest extends ProtectedApiTestCase
         sort($after);
 
         $this->assertEquals($before, $after);
+    }
+
+    // -------------------------------------------------------------------------
+    // notify() endpoint
+    // -------------------------------------------------------------------------
+
+    public function testNotifyQueuesSelectedRecipientsAndReturns200WithCounts()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+
+        // self::$speaker is self::$member's own speaker profile (InsertMemberTestData.php:144-149),
+        // so selecting it AND include_submitter=true exercises the submitter+speaker merge --
+        // ONE dispatch, not two -- in the same request as the moderator-accepted assertion below.
+        $this->attachSpeaker();
+        $moderator = $this->speakerWithNoEmail();
+        self::$presentation->setModerator($moderator);
+        self::$em->flush();
+
+        $response = $this->notify([
+            'speaker_ids' => [self::$speaker->getId(), $moderator->getId()],
+            'include_submitter' => true,
+        ]);
+
+        $this->assertResponseStatus(200);
+        $body = json_decode($response->getContent(), true);
+        // submitter + self::$speaker share self::$member's email -> merge into 1; moderator has no
+        // email -> skipped.
+        $this->assertEquals(1, $body['recipients']);
+        $this->assertEquals(1, $body['skipped']);
+        Queue::assertPushed(PresentationSubmissionReopenedEmail::class, 1);
+    }
+
+    public function testNotifyOnlyQueuesTheSelectedRecipientsNotEveryoneOnTheTalk()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+        $this->attachSpeaker();
+        $unselected = $this->speakerWithNoEmail();
+        $unselected->setFirstName("Alan");
+        $unselected->setLastName("Turing");
+        self::$presentation->addSpeaker($unselected);
+        self::$em->flush();
+
+        // only self::$speaker selected -- $unselected must NOT be queued even though it is on the
+        // presentation. Regression test for "falls back to notifying everyone".
+        $response = $this->notify(['speaker_ids' => [self::$speaker->getId()]]);
+
+        $this->assertResponseStatus(200);
+        $body = json_decode($response->getContent(), true);
+        $this->assertEquals(1, $body['recipients']);
+        $this->assertEquals(0, $body['skipped']);
+        Queue::assertPushed(PresentationSubmissionReopenedEmail::class, 1);
+    }
+
+    public function testNotifyBlankEmailRecipientIsSkippedWhileOthersAreDispatched()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+        $this->attachSpeaker();
+        $blank = $this->speakerWithNoEmail();
+        self::$presentation->addSpeaker($blank);
+        self::$em->flush();
+
+        $response = $this->notify([
+            'speaker_ids' => [self::$speaker->getId(), $blank->getId()],
+        ]);
+
+        $this->assertResponseStatus(200);
+        $body = json_decode($response->getContent(), true);
+        $this->assertEquals(1, $body['recipients']);
+        $this->assertEquals(1, $body['skipped']);
+        Queue::assertPushed(PresentationSubmissionReopenedEmail::class, 1);
+    }
+
+    public function testNotifyRejectsASpeakerIdNotOnThisPresentationAndQueuesNothing()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+
+        $response = $this->notify(['speaker_ids' => [999999]]);
+
+        $this->assertResponseStatus(412);
+        Queue::assertNotPushed(PresentationSubmissionReopenedEmail::class);
+    }
+
+    public function testNotifyRejectsAnEmptySelection()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+
+        $response = $this->notify([]);
+
+        $this->assertResponseStatus(412);
+        Queue::assertNotPushed(PresentationSubmissionReopenedEmail::class);
     }
 }

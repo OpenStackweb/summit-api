@@ -14,9 +14,11 @@
 
 use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlow;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
 use Database\Migrations\Model\Version20260824090000;
+use Database\Migrations\Model\Version20260824090001;
 use Doctrine\DBAL\Schema\Schema;
 use models\summit\Presentation;
 use Psr\Log\NullLogger;
@@ -180,6 +182,50 @@ class PresentationSubmissionReopenedEmailTest extends ProtectedApiTestCase
 
         $migration->up(new Schema());
         $this->assertCount(1, $repo->findBy(['slug' => PresentationSubmissionReopenedEmail::EVENT_SLUG]), 'second run must not duplicate the row');
+    }
+
+    /**
+     * The per-summit backfill companion to the type migration above. seedDefaultEmailFlowEvents()
+     * creates a SummitEmailEventFlow only when getEmailEventByType() is null, so this proves both
+     * halves the deploy relies on: the first run gives an existing summit its row for the new event
+     * (what makes it visible on that show's Email Flow Events page), and a second run leaves that
+     * row alone rather than adding a duplicate or replacing an operator's override.
+     */
+    public function testPerSummitBackfillMigrationCreatesTheEventFlowOnceAndDoesNotDuplicateOnRerun()
+    {
+        $type = self::$em->getRepository(SummitEmailEventFlowType::class)
+            ->findOneBy(['slug' => PresentationSubmissionReopenedEmail::EVENT_SLUG]);
+        $this->assertNotNull($type, 'type row must exist (seeded or created by setUp())');
+
+        // deployed precondition: an existing summit with no per-summit row for the new event
+        $existing = self::$summit->getEmailEventByType($type);
+        if (!is_null($existing)) self::$summit->removeEmailEventFlow($existing); // orphanRemoval deletes it
+        self::$em->flush();
+        self::$em->clear();
+
+        $countFor = function () use ($type): int {
+            return count(self::$em->getRepository(SummitEmailEventFlow::class)->findBy([
+                'summit' => self::$summit->getId(),
+                'event_type' => $type->getId(),
+            ]));
+        };
+        $this->assertSame(0, $countFor());
+
+        require_once base_path('database/migrations/model/Version20260824090001.php');
+        $migration = new Version20260824090001(self::$em->getConnection(), new NullLogger());
+        $migration->up(new Schema());
+        self::$em->clear();
+        $this->assertSame(1, $countFor(), 'first run must create the per-summit row');
+
+        $row = self::$em->getRepository(SummitEmailEventFlow::class)->findOneBy([
+            'summit' => self::$summit->getId(),
+            'event_type' => $type->getId(),
+        ]);
+        $this->assertEquals(PresentationSubmissionReopenedEmail::DEFAULT_TEMPLATE, $row->getEmailTemplateIdentifier());
+
+        $migration->up(new Schema());
+        self::$em->clear();
+        $this->assertSame(1, $countFor(), 'second run must not duplicate the per-summit row');
     }
 
     public function testGetEmailTemplateSchemaDeclaresAllKeys()

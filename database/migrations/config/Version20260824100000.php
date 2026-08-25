@@ -29,12 +29,20 @@ use Doctrine\Migrations\AbstractMigration;
  *
  * Rate limiting for this endpoint (unlike reopen/close, which are idempotent state changes,
  * this one sends mail to real people and is re-sendable by design) is enforced via the
- * `rate.limit:30,60` middleware on the route itself (routes/api_v1.php), NOT via the
+ * `rate.limit:30,3600` middleware on the route itself (routes/api_v1.php), NOT via the
  * api_endpoints.rate_limit/rate_limit_decay columns -- RateLimitMiddleware.php's block that
  * would read those columns off the matched endpoint is commented out (dead code), so setting
  * them here would have no runtime effect. Route-level rate.limit is the only mechanism this
  * codebase actually enforces (precedent: routes/api_v1.php's `discover` and
  * `preValidatePromoCode` promo-code routes).
+ *
+ * The `3600` is SECONDS and is deliberate: RateLimitMiddleware overrides handle() and passes its
+ * $decayMinutes argument straight into RateLimiter::hit($key, $decaySeconds), skipping the
+ * `60 * $decayMinutes` conversion Laravel's own ThrottleRequests::handle() performs. So the
+ * second rate.limit argument is effectively seconds in this codebase, and `30,60` -- which is
+ * what "30 per hour" looks like if you trust the parameter name -- would actually cap at 30 per
+ * MINUTE. The two existing `rate.limit:25,1` promo-code routes are 25-per-second for the same
+ * reason.
  *
  * DEPLOY ORDER: this migration must land with or before the application. auth.user reads these
  * rows, and an endpoint registered without them 403s every authenticated member.

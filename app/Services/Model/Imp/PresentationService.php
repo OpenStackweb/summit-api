@@ -17,6 +17,7 @@ use App\Http\Utils\FileSizeUtil;
 use App\Http\Utils\FileUploadInfo;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
+use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Models\Exceptions\AuthzException;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore;
 use App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType;
@@ -33,6 +34,7 @@ use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Filesystem\FileUploadStrategyFactory;
 use App\Services\Model\AbstractService;
 use App\Services\Model\IFolderService;
+use App\Services\Model\Imp\Notifications\SpeakerChangeNotifications;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -1725,7 +1727,9 @@ final class PresentationService
      * @throws \Exception
      */
     public function upsertPresentationSpeaker(Summit $summit, int $presentation_id, int $speaker_id, array $data): Presentation {
-        return $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data) {
+        $notifications = new SpeakerChangeNotifications();
+
+        $presentation = $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $data, $notifications) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
@@ -1737,6 +1741,15 @@ final class PresentationService
 
             if (!$presentation->isSpeaker($speaker)) {
                 $presentation->addSpeaker($speaker);
+                if ($presentation->isPublished()) {
+                    $notifications->add
+                    (
+                        $presentation,
+                        $speaker,
+                        PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        PresentationActivitySpeakerChangeEmail::Action_Added
+                    );
+                }
             }
 
             if (isset($data['order'])) {
@@ -1747,6 +1760,11 @@ final class PresentationService
 
             return $presentation;
         });
+
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
+
+        return $presentation;
     }
 
     /**
@@ -1758,7 +1776,9 @@ final class PresentationService
      */
     public function removeSpeakerFromPresentation(Summit $summit, int $presentation_id, int $speaker_id): void
     {
-         $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id) {
+        $notifications = new SpeakerChangeNotifications();
+
+        $this->tx_service->transaction(function () use ($summit, $presentation_id, $speaker_id, $notifications) {
 
             $presentation = $summit->getEvent($presentation_id);
             if (!$presentation instanceof Presentation)
@@ -1768,8 +1788,22 @@ final class PresentationService
             if (is_null($speaker) || !($speaker instanceof PresentationSpeaker))
                 throw new EntityNotFoundException("Speaker {$speaker_id} not found.");
 
-            $presentation->removeSpeaker($speaker);
+            if ($presentation->isSpeaker($speaker)) {
+                $presentation->removeSpeaker($speaker);
+                if ($presentation->isPublished()) {
+                    $notifications->add
+                    (
+                        $presentation,
+                        $speaker,
+                        PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        PresentationActivitySpeakerChangeEmail::Action_Removed
+                    );
+                }
+            }
 
         });
+
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
     }
 }

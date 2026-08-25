@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
 use Database\Seeders\SummitEmailFlowTypeSeeder;
 use Doctrine\DBAL\Schema\Schema;
@@ -43,6 +44,12 @@ use models\utils\SilverstripeBaseModel;
  * seeders, so the "Presentation Submissions" flow does not exist yet at migration time -- the
  * is_null($flow) guard below simply returns, and SummitEmailFlowTypeSeeder creates both the flow
  * and this event type together afterwards.
+ *
+ * Re-run-safe, unlike the precedent: createEventsTypes() inserts unconditionally and
+ * SummitEmailEventFlowType.Slug has no unique index, so a second execution (migrations:execute
+ * --up, a restored doctrine_migration_versions table) would leave two rows for the slug and the
+ * Email Flow Events page would list the event twice. The slug lookup below makes the second run a
+ * no-op. Regression test: PresentationSubmissionReopenedEmailTest::testModelMigrationInsertsOnce...
  */
 final class Version20260824090000 extends AbstractMigration
 {
@@ -60,6 +67,11 @@ final class Version20260824090000 extends AbstractMigration
             "name" => "Presentation Submissions"
         ]);
         if (is_null($flow)) return;
+
+        $existing = $em->getRepository(SummitEmailEventFlowType::class)->findOneBy([
+            "slug" => PresentationSubmissionReopenedEmail::EVENT_SLUG
+        ]);
+        if (!is_null($existing)) return;
 
         SummitEmailFlowTypeSeeder::createEventsTypes(
             [

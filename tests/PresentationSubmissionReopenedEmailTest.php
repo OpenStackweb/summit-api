@@ -16,7 +16,10 @@ use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
 use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
+use Database\Migrations\Model\Version20260824090000;
+use Doctrine\DBAL\Schema\Schema;
 use models\summit\Presentation;
+use Psr\Log\NullLogger;
 use ReflectionProperty;
 
 /**
@@ -146,6 +149,37 @@ class PresentationSubmissionReopenedEmailTest extends ProtectedApiTestCase
         $until = self::$presentation->getSubmissionReopenedUntil();
         $expected = $until->format('F d, Y g:i a') . ' UTC';
         $this->assertEquals($expected, $payload[IMailTemplatesConstants::until_date]);
+    }
+
+    /**
+     * The deployed-database registration path must be re-run-safe. SummitEmailFlowTypeSeeder::
+     * createEventsTypes() inserts unconditionally and SummitEmailEventFlowType.Slug carries no
+     * unique index, so an unguarded migration executed twice (migrations:execute --up, a restored
+     * doctrine_migration_versions table) leaves two rows for the slug and the Email Flow Events
+     * page lists the event twice. Starts from the deployed precondition (no row for the slug), so
+     * it also proves the first run inserts -- a guard that always returns would fail here too.
+     */
+    public function testModelMigrationInsertsOnceAndDoesNotDuplicateTheEventTypeOnRerun()
+    {
+        $repo = self::$em->getRepository(SummitEmailEventFlowType::class);
+        $flow = self::$em->getRepository(SummitEmailFlowType::class)->findOneBy(['name' => 'Presentation Submissions']);
+        $this->assertNotNull($flow);
+
+        // orphanRemoval on SummitEmailFlowType::$flow_event_types deletes the row through the ORM,
+        // keeping the identity map consistent (a DQL delete would leave a stale managed entity).
+        foreach ($repo->findBy(['slug' => PresentationSubmissionReopenedEmail::EVENT_SLUG]) as $existing)
+            $flow->removeFlowEventType($existing);
+        self::$em->flush();
+        $this->assertCount(0, $repo->findBy(['slug' => PresentationSubmissionReopenedEmail::EVENT_SLUG]));
+
+        // migration classes are discovered by Doctrine's finder, not composer's autoloader
+        require_once base_path('database/migrations/model/Version20260824090000.php');
+        $migration = new Version20260824090000(self::$em->getConnection(), new NullLogger());
+        $migration->up(new Schema());
+        $this->assertCount(1, $repo->findBy(['slug' => PresentationSubmissionReopenedEmail::EVENT_SLUG]), 'first run must insert the row');
+
+        $migration->up(new Schema());
+        $this->assertCount(1, $repo->findBy(['slug' => PresentationSubmissionReopenedEmail::EVENT_SLUG]), 'second run must not duplicate the row');
     }
 
     public function testGetEmailTemplateSchemaDeclaresAllKeys()

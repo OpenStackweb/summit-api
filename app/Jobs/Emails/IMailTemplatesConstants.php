@@ -20,6 +20,8 @@ interface IMailTemplatesConstants
 {
     const accepted_moderated_presentations = 'accepted_moderated_presentations';
     const accepted_presentations = 'accepted_presentations';
+    const activity_change_action = 'activity_change_action';
+    const activity_change_role = 'activity_change_role';
     const admin_ticket_edit_url = 'admin_ticket_edit_url';
     const alternate_moderated_presentations = 'alternate_moderated_presentations';
     const alternate_presentations = 'alternate_presentations';

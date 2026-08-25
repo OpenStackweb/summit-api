@@ -24,6 +24,7 @@ use App\Http\Utils\IFileUploader;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Jobs\Emails\Schedule\ShareEventEmail;
 use App\Jobs\EncryptAllSummitBadgeQRCodes;
 use App\Jobs\ProcessEventDataImport;
@@ -52,6 +53,7 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\AbstractPublishService;
 use App\Services\Model\IMemberService;
+use App\Services\Model\Imp\Notifications\SpeakerChangeNotifications;
 use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use DateInterval;
 use DateTime;
@@ -608,7 +610,11 @@ final class SummitService
      */
     public function addEvent(Summit $summit, array $data)
     {
-        return $this->saveOrUpdateEvent($summit, $data, null);
+        $notifications = new SpeakerChangeNotifications();
+        $event = $this->saveOrUpdateEvent($summit, $data, $notifications, null);
+        // we own the collector, so our transaction() above was the outermost one
+        $notifications->dispatch();
+        return $event;
     }
 
     /**
@@ -619,7 +625,11 @@ final class SummitService
      */
     public function updateEvent(Summit $summit, $event_id, array $data, bool $trigger_data_update = true, bool $saveAsIncomplete = false)
     {
-        return $this->saveOrUpdateEvent($summit, $data, $event_id, $trigger_data_update, $saveAsIncomplete);
+        $notifications = new SpeakerChangeNotifications();
+        $event = $this->saveOrUpdateEvent($summit, $data, $notifications, $event_id, $trigger_data_update, $saveAsIncomplete);
+        // we own the collector, so our transaction() above was the outermost one
+        $notifications->dispatch();
+        return $event;
     }
 
     /**
@@ -660,9 +670,9 @@ final class SummitService
      * @return SummitEvent
      * @throws Exception
      */
-    private function saveOrUpdateEvent(Summit $summit, array $data, $event_id = null, bool $trigger_data_update = true, bool $saveAsIncomplete = false)
+    private function saveOrUpdateEvent(Summit $summit, array $data, SpeakerChangeNotifications $notifications, $event_id = null, bool $trigger_data_update = true, bool $saveAsIncomplete = false)
     {
-        return $this->tx_service->transaction(function () use ($summit, $data, $event_id, $trigger_data_update, $saveAsIncomplete) {
+        return $this->tx_service->transaction(function () use ($summit, $data, $notifications, $event_id, $trigger_data_update, $saveAsIncomplete) {
 
             Log::debug
             (
@@ -833,7 +843,7 @@ final class SummitService
                 }
             }
 
-            $this->saveOrUpdatePresentationData($event, $event_type, $data, $saveAsIncomplete);
+            $this->saveOrUpdatePresentationData($event, $event_type, $data, $notifications, $saveAsIncomplete);
             $this->saveOrUpdateSummitGroupEventData($event, $event_type, $data);
 
             if (!$event_type->isAllowsLocation())
@@ -882,17 +892,27 @@ final class SummitService
      * @param SummitEvent $event
      * @param SummitEventType $event_type
      * @param array $data
+     * @param SpeakerChangeNotifications $notifications collector this method only ever ADDS to;
+     *        dispatching it belongs to whoever constructed it, after its own transaction commits.
      * @param bool $saveAsIncomplete
+     * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    private function saveOrUpdatePresentationData(SummitEvent $event, SummitEventType $event_type, array $data, bool $saveAsIncomplete = false)
+    private function saveOrUpdatePresentationData(SummitEvent $event, SummitEventType $event_type, array $data, SpeakerChangeNotifications $notifications, bool $saveAsIncomplete = false): void
     {
         if (!$event instanceof Presentation) return;
 
         Log::debug(sprintf("SummitService::saveOrUpdatePresentationData presentation %s saveAsIncomplete %b", $event->getId(), $saveAsIncomplete));
         if ($saveAsIncomplete && $event->isPublished())
             throw new ValidationException('Cannot save a published event as incomplete.');
+
+        // captured before any mutation below: a published presentation being edited is a
+        // "change", not a creation, so notifications are only considered when this was
+        // already true on entry
+        $was_published = $event->isPublished();
+        $old_speaker_ids = array_map(fn(PresentationSpeaker $s) => $s->getId(), $event->getSpeakers()->toArray());
+        $old_moderator = $event->hasModerator() ? $event->getModerator() : null;
 
         if (!$saveAsIncomplete || $event->isNew()) {
             // if we are creating the presentation from admin, then
@@ -929,6 +949,28 @@ final class SummitService
                     $event->addSpeaker($speaker);
                 }
             }
+
+            if ($was_published) {
+                $new_speaker_ids = array_map(fn(PresentationSpeaker $s) => $s->getId(), $event->getSpeakers()->toArray());
+                foreach (array_diff($new_speaker_ids, $old_speaker_ids) as $added_id) {
+                    $notifications->add
+                    (
+                        $event,
+                        $this->speaker_repository->getById($added_id),
+                        PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        PresentationActivitySpeakerChangeEmail::Action_Added
+                    );
+                }
+                foreach (array_diff($old_speaker_ids, $new_speaker_ids) as $removed_id) {
+                    $notifications->add
+                    (
+                        $event,
+                        $this->speaker_repository->getById($removed_id),
+                        PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        PresentationActivitySpeakerChangeEmail::Action_Removed
+                    );
+                }
+            }
         }
 
         // moderator
@@ -951,6 +993,33 @@ final class SummitService
                 if (is_null($moderator) || !$moderator instanceof PresentationSpeaker)
                     throw new EntityNotFoundException(sprintf('Moderator %s not found', $moderator_id));
                 $event->setModerator($moderator);
+            }
+
+            if ($was_published) {
+                $new_moderator = $event->hasModerator() ? $event->getModerator() : null;
+                $old_moderator_id = is_null($old_moderator) ? null : $old_moderator->getId();
+                $new_moderator_id = is_null($new_moderator) ? null : $new_moderator->getId();
+
+                if ($old_moderator_id !== $new_moderator_id) {
+                    if (!is_null($old_moderator)) {
+                        $notifications->add
+                        (
+                            $event,
+                            $old_moderator,
+                            PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                            PresentationActivitySpeakerChangeEmail::Action_Removed
+                        );
+                    }
+                    if (!is_null($new_moderator)) {
+                        $notifications->add
+                        (
+                            $event,
+                            $new_moderator,
+                            PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                            PresentationActivitySpeakerChangeEmail::Action_Added
+                        );
+                    }
+                }
             }
         }
 
@@ -1487,17 +1556,27 @@ final class SummitService
      */
     public function updateAndPublishEvents(Summit $summit, array $data)
     {
-        return $this->tx_service->transaction(function () use (
+        $notifications = new SpeakerChangeNotifications();
+
+        $result = $this->tx_service->transaction(function () use (
             $summit,
-            $data
+            $data,
+            $notifications
         ) {
             foreach ($data['events'] as $event_data) {
-                $this->updateEvent($summit, intval($event_data['id']), $event_data);
+                // saveOrUpdateEvent directly, not updateEvent: updateEvent owns its own collector
+                // and would dispatch while this outer transaction is still open
+                $this->saveOrUpdateEvent($summit, $event_data, $notifications, intval($event_data['id']));
                 $this->publishEvent($summit, intval($event_data['id']), $event_data);
             }
 
             return true;
         });
+
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
+
+        return $result;
     }
 
     /**
@@ -1510,17 +1589,27 @@ final class SummitService
      */
     public function updateEvents(Summit $summit, array $data, bool $trigger_data_update = true)
     {
-        return $this->tx_service->transaction(function () use (
+        $notifications = new SpeakerChangeNotifications();
+
+        $result = $this->tx_service->transaction(function () use (
             $summit,
             $data,
-            $trigger_data_update
+            $trigger_data_update,
+            $notifications
         ) {
             foreach ($data['events'] as $event_data) {
-                $this->updateEvent($summit, intval($event_data['id']), $event_data, $trigger_data_update);
+                // saveOrUpdateEvent directly, not updateEvent: updateEvent owns its own collector
+                // and would dispatch while this outer transaction is still open
+                $this->saveOrUpdateEvent($summit, $event_data, $notifications, intval($event_data['id']), $trigger_data_update);
             }
 
             return true;
         });
+
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
+
+        return $result;
     }
 
     /**
@@ -1732,7 +1821,9 @@ final class SummitService
      */
     public function addSpeaker2Presentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
+        $notifications = new SpeakerChangeNotifications();
+
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, $notifications) {
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
                 throw new EntityNotFoundException(sprintf("Member %s not found.", $current_member_id));
@@ -1760,7 +1851,18 @@ final class SummitService
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
-            $presentation->addSpeaker($speaker);
+            if (!$presentation->isSpeaker($speaker)) {
+                $presentation->addSpeaker($speaker);
+                if ($presentation->isPublished()) {
+                    $notifications->add
+                    (
+                        $presentation,
+                        $speaker,
+                        PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        PresentationActivitySpeakerChangeEmail::Action_Added
+                    );
+                }
+            }
 
             // check is selection plan is private, if so add moderator to allowed members
 
@@ -1775,6 +1877,11 @@ final class SummitService
 
             return $presentation;
         });
+
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
+
+        return $presentation;
     }
 
     /**
@@ -1787,7 +1894,9 @@ final class SummitService
      */
     public function removeSpeakerFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
+        $notifications = new SpeakerChangeNotifications();
+
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, $notifications) {
 
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
@@ -1817,10 +1926,26 @@ final class SummitService
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
-            $presentation->removeSpeaker($speaker);
+            if ($presentation->isSpeaker($speaker)) {
+                $presentation->removeSpeaker($speaker);
+                if ($presentation->isPublished()) {
+                    $notifications->add
+                    (
+                        $presentation,
+                        $speaker,
+                        PresentationActivitySpeakerChangeEmail::Role_Speaker,
+                        PresentationActivitySpeakerChangeEmail::Action_Removed
+                    );
+                }
+            }
 
             return $presentation;
         });
+
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
+
+        return $presentation;
     }
 
     /**
@@ -1833,7 +1958,9 @@ final class SummitService
      */
     public function addModerator2Presentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
+        $notifications = new SpeakerChangeNotifications();
+
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, $notifications) {
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
                 throw new EntityNotFoundException(sprintf("Member %s not found.", $current_member_id));
@@ -1862,7 +1989,29 @@ final class SummitService
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
+            $previous_moderator = $presentation->hasModerator() ? $presentation->getModerator() : null;
+            $previous_moderator_id = is_null($previous_moderator) ? null : $previous_moderator->getId();
+
             $presentation->setModerator($speaker);
+
+            if ($presentation->isPublished() && $previous_moderator_id !== $speaker->getId()) {
+                if (!is_null($previous_moderator)) {
+                    $notifications->add
+                    (
+                        $presentation,
+                        $previous_moderator,
+                        PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                        PresentationActivitySpeakerChangeEmail::Action_Removed
+                    );
+                }
+                $notifications->add
+                (
+                    $presentation,
+                    $speaker,
+                    PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                    PresentationActivitySpeakerChangeEmail::Action_Added
+                );
+            }
 
             // check is selection plan is private, if so add moderator to allowed members
 
@@ -1877,6 +2026,11 @@ final class SummitService
 
             return $presentation;
         });
+
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
+
+        return $presentation;
     }
 
     /**
@@ -1889,7 +2043,9 @@ final class SummitService
      */
     public function removeModeratorFromPresentation(int $current_member_id, int $speaker_id, int $presentation_id): Presentation
     {
-        return $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id) {
+        $notifications = new SpeakerChangeNotifications();
+
+        $presentation = $this->tx_service->transaction(function () use ($current_member_id, $speaker_id, $presentation_id, $notifications) {
 
             $current_member = $this->member_repository->getById($current_member_id);
             if (is_null($current_member) || !($current_member instanceof Member))
@@ -1919,10 +2075,27 @@ final class SummitService
             if (!$presentation->isCompleted())
                 $presentation->setProgress(Presentation::PHASE_SPEAKERS);
 
+            $previous_moderator = $presentation->hasModerator() ? $presentation->getModerator() : null;
+
             $presentation->unsetModerator();
+
+            if (!is_null($previous_moderator) && $presentation->isPublished()) {
+                $notifications->add
+                (
+                    $presentation,
+                    $previous_moderator,
+                    PresentationActivitySpeakerChangeEmail::Role_Moderator,
+                    PresentationActivitySpeakerChangeEmail::Action_Removed
+                );
+            }
 
             return $presentation;
         });
+
+        // we own the collector, so nothing goes out until OUR transaction has committed
+        $notifications->dispatch();
+
+        return $presentation;
     }
 
     /**

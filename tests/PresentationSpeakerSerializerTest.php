@@ -26,6 +26,7 @@ final class PresentationSpeakerSerializerTest extends TestCase
     public function tearDown(): void
     {
         Mockery::close();
+        parent::tearDown();
     }
 
     public function testPhoneNumberIsMaskedInPublicContextEvenWhenSpeakerToggleIsOn()

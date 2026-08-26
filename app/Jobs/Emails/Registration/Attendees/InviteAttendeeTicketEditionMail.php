@@ -214,8 +214,10 @@ class InviteAttendeeTicketEditionMail extends AbstractSummitAttendeeTicketEmail
         }
 
         // atomically check if we already sent this same email on the configured threshold
+        // a non positive threshold disables the de-duplication window: Cache::add returns false
+        // for any TTL <= 0 without ever reaching the store, which would suppress every send
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        if(!Cache::add($invite_attendee_ticket_edition_mail_key, $now->getTimestamp(), now()->addMinutes($delay))){
+        if($delay > 0 && !Cache::add($invite_attendee_ticket_edition_mail_key, $now->getTimestamp(), now()->addMinutes($delay))){
             Log::warning(sprintf("InviteAttendeeTicketEditionMail::handle already sent email InviteAttendeeTicketEditionMail to %s", $this->to_email));
             return;
         }

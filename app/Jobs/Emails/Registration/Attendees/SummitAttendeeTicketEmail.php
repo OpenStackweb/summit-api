@@ -223,8 +223,10 @@ class SummitAttendeeTicketEmail extends AbstractSummitAttendeeTicketEmail
         $delay = intval(Config::get("registration.attendee_invitation_email_threshold", 5));
 
         // atomically check if we already sent this same email on the configured threshold
+        // a non positive threshold disables the de-duplication window: Cache::add returns false
+        // for any TTL <= 0 without ever reaching the store, which would suppress every send
         $now = new \DateTime('now', new \DateTimeZone('UTC'));
-        if(!Cache::add($summit_attendee_ticket_email_key, $now->getTimestamp(), now()->addMinutes($delay))){
+        if($delay > 0 && !Cache::add($summit_attendee_ticket_email_key, $now->getTimestamp(), now()->addMinutes($delay))){
             Log::warning(sprintf("SummitAttendeeTicketEmail::handle already sent email SummitAttendeeTicketEmail to %s", $this->to_email));
             return;
         }

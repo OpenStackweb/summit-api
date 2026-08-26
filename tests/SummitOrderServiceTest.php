@@ -55,6 +55,7 @@ use models\summit\SummitOrderExtraQuestionAnswer;
 use models\summit\SummitOrderExtraQuestionType;
 use models\summit\SummitOrderExtraQuestionTypeConstants;
 use models\summit\SummitTicketType;
+use ModelSerializers\SerializerRegistry;
 
 /**
  * Class SummitOrderServiceTest
@@ -434,12 +435,13 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         string $name,
         string $type = ExtraQuestionTypeConstants::TextQuestionType,
         array $values = [],
-        string $usage = SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage
+        string $usage = SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+        ?string $label = null
     ): SummitOrderExtraQuestionType
     {
         $question = new SummitOrderExtraQuestionType();
         $question->setName($name);
-        $question->setLabel($name);
+        $question->setLabel($label ?? $name);
         $question->setType($type);
         $question->setUsage($usage);
 
@@ -881,6 +883,263 @@ CSV;
         $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
         $this->assertNotNull($answer);
         $this->assertEquals('Meat', $answer->getValue());
+    }
+
+    public function testImportTicketDataAcceptsPrefixedBadgeFeatureColumns()
+    {
+        Queue::fake();
+
+        $feature1 = new SummitBadgeFeatureType();
+        $feature1->setName('FEATURE 1');
+        self::$summit->addFeatureType($feature1);
+
+        $feature2 = new SummitBadgeFeatureType();
+        $feature2->setName('FEATURE 2');
+        self::$summit->addFeatureType($feature2);
+
+        $ticket = $this->getUnassignedTicket();
+        $ticket->getBadge()->addFeature($feature1);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        // canonical namespaced feature columns ( the bare-name form stays covered by
+        // testImportTicketDataBadgeFeaturesStillClearedAndReSet )
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,badge_type_name,badge_feature:FEATURE 1,badge_feature:FEATURE 2
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,BADGE TYPE1,0,1
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $feature_names = [];
+        foreach ($ticket->getBadge()->getFeatures() as $feature) {
+            $feature_names[] = $feature->getName();
+        }
+        $this->assertEquals(['FEATURE 2'], $feature_names);
+    }
+
+    public function testImportTicketDataMatchesExtraQuestionByLabel()
+    {
+        Queue::fake();
+
+        // the ticket csv export emits question labels as column names, so import
+        // matches by name and by label ( ambiguous name/label collisions are skipped —
+        // see testImportTicketDataSkipsAmbiguousExtraQuestionColumn )
+        $question = $this->insertOrderExtraQuestion
+        (
+            'DIET_REQ',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'Dietary Requirements'
+        );
+
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:Dietary Requirements
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Vegan
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Vegan', $answer->getValue());
+    }
+
+    public function testImportTicketDataSkipsAmbiguousExtraQuestionColumn()
+    {
+        Queue::fake();
+
+        // question A's NAME equals question B's LABEL — the column is ambiguous and must be
+        // skipped, never silently filed under either question
+        $question_a = $this->insertOrderExtraQuestion
+        (
+            'Shirt',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'Question A Label'
+        );
+        $question_b = $this->insertOrderExtraQuestion
+        (
+            'B_INTERNAL_NAME',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'Shirt'
+        );
+
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:Shirt
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Large
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        // row still processes ( attendee created ), the ambiguous column is skipped entirely
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
+        $this->assertNull($attendee->getExtraQuestionAnswerByQuestion($question_a));
+        $this->assertNull($attendee->getExtraQuestionAnswerByQuestion($question_b));
+        $this->assertCount(0, $attendee->getExtraQuestionAnswers());
+    }
+
+    public function testImportTicketDataIneligibleQuestionDoesNotMakeColumnAmbiguous()
+    {
+        Queue::fake();
+
+        // question A's NAME equals question B's LABEL, but B is order scoped so it was
+        // never a real candidate — the column must resolve to A, not be skipped as
+        // ambiguous ( ambiguity is decided among eligible questions only )
+        $question_a = $this->insertOrderExtraQuestion
+        (
+            'Shirt',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'Question A Label'
+        );
+        $question_b = $this->insertOrderExtraQuestion
+        (
+            'B_INTERNAL_NAME',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::OrderQuestionUsage,
+            'Shirt'
+        );
+
+        $ticket = $this->getUnassignedTicket();
+
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,extra_question:Shirt
+{$ticket->getNumber()},new.attendee@nowhere.com,New,Attendee,Large
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($attendee);
+        $answer = $attendee->getExtraQuestionAnswerByQuestion($question_a);
+        $this->assertNotNull($answer);
+        $this->assertEquals('Large', $answer->getValue());
+        $this->assertNull($attendee->getExtraQuestionAnswerByQuestion($question_b));
+    }
+
+    public function testTicketCSVExportHtmlEntityLabelRoundTripsThroughImport()
+    {
+        Queue::fake();
+
+        // label as stored e.g. by the Eventbrite ingestion path
+        // ( SummitOrderExtraQuestionTypeService::seedSummitOrderExtraQuestionTypesFromEventBrite )
+        // or by an admin entering basic markup through the normal API ( HTMLPurifier permits
+        // <b>/<i>/<a>/... by default ) — the raw stored label contains an HTML entity, but the
+        // export header is the sanitized ( html_entity_decode(strip_tags(...)) ) form
+        $question = $this->insertOrderExtraQuestion
+        (
+            'DIET_REQ',
+            ExtraQuestionTypeConstants::TextQuestionType,
+            [],
+            SummitOrderExtraQuestionTypeConstants::TicketQuestionUsage,
+            'Caf&eacute; Preference'
+        );
+
+        $attendee = $this->getDefaultAttendee();
+        $ticket = $attendee->getTickets()->first();
+
+        // export: header is the sanitized label, not the raw stored one
+        $values = SerializerRegistry::getInstance()
+            ->getSerializer($ticket, SerializerRegistry::SerializerType_CSV)
+            ->serialize(null, [], [], [
+                'ticket_questions' => [$question],
+                'answers_by_owner' => [$attendee->getId() => [$question->getId() => 'Vegan']],
+            ]);
+
+        $question_column = 'extra_question:Café Preference';
+        $this->assertArrayHasKey($question_column, $values);
+        $this->assertEquals('Vegan', $values[$question_column]);
+
+        // re-import the exact exported header + cell, verbatim, for a new attendee — must resolve
+        // against the sanitized label, since getOrderExtraQuestionByLabel()'s raw-label match can
+        // never equal the sanitized exported header
+        $unassigned = $this->getUnassignedTicket();
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,{$question_column}
+{$unassigned->getNumber()},new.attendee@nowhere.com,New,Attendee,Vegan
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $new_attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($new_attendee);
+        $answer = $new_attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer, 'expected the CSV export/import round trip to preserve the answer');
+        $this->assertEquals('Vegan', $answer->getValue());
+    }
+
+    public function testTicketCSVExportMultiValueAnswerRoundTripsThroughImport()
+    {
+        Queue::fake();
+
+        $question = $this->insertOrderExtraQuestion
+        (
+            'T-Shirt Size',
+            ExtraQuestionTypeConstants::CheckBoxListQuestionType,
+            ['Small', 'Large']
+        );
+
+        $small_id = $question->getValueByName('Small')->getId();
+        $large_id = $question->getValueByName('Large')->getId();
+        $stored_value = sprintf('%s,%s', $small_id, $large_id);
+
+        $attendee = $this->getDefaultAttendee();
+        $ticket = $attendee->getTickets()->first();
+
+        // export: headers use the import's column prefix, multi-value cells the import's "|" separator
+        $values = SerializerRegistry::getInstance()
+            ->getSerializer($ticket, SerializerRegistry::SerializerType_CSV)
+            ->serialize(null, [], [], [
+                'ticket_questions' => [$question],
+                'answers_by_owner' => [$attendee->getId() => [$question->getId() => $stored_value]],
+            ]);
+
+        $question_column = 'extra_question:T-Shirt Size';
+        $this->assertArrayHasKey($question_column, $values);
+        $this->assertEquals('Small|Large', $values[$question_column]);
+
+        // ... and the exported cell re-imports as-is for a new attendee
+        $unassigned = $this->getUnassignedTicket();
+        $csv_content = <<<CSV
+number,attendee_email,attendee_first_name,attendee_last_name,{$question_column}
+{$unassigned->getNumber()},new.attendee@nowhere.com,New,Attendee,{$values[$question_column]}
+CSV;
+
+        $service = $this->buildTicketDataImportService($csv_content);
+        $service->processTicketData(self::$summit->getId(), 'tickets.csv');
+
+        $new_attendee = App::make(ISummitAttendeeRepository::class)
+            ->getBySummitAndEmail(self::$summit, 'new.attendee@nowhere.com');
+        $this->assertNotNull($new_attendee);
+        $answer = $new_attendee->getExtraQuestionAnswerByQuestion($question);
+        $this->assertNotNull($answer);
+
+        $expected_value_ids = [$small_id, $large_id];
+        sort($expected_value_ids);
+        $this->assertEquals(implode(',', $expected_value_ids), $answer->getValue());
     }
 
     public function testImportTicketDataCreatesBadgeWhenTicketHasNone()

@@ -394,10 +394,9 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         }
         */
 
-        if(!$speaker->isPublicProfileShowTelephoneNumber())
-        {
-            if(isset($values['phone_number'])) $values['phone_number'] = '';
-        }
+        // phone_number is never public regardless of the target speaker's own account
+        // visibility toggle - see policy/profile-data-handling.md Rule 4.
+        if(isset($values['phone_number'])) $values['phone_number'] = '';
 
         return $values;
     }

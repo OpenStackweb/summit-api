@@ -37,8 +37,7 @@ class SummitAttendeeAuditLogFormatter extends AbstractAuditLogFormatter
                     return sprintf("Attendee (%s) '%s' created by user %s", $id, $name, $this->getUserInfo());
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    return sprintf("Attendee (%s) '%s' updated: %s by user %s", $id, $name, $details, $this->getUserInfo());
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf("Attendee (%s) '%s' updated: %s by user %s", $id, $name, $details, $this->getUserInfo()));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Attendee (%s) '%s' deleted by user %s", $id, $name, $this->getUserInfo());

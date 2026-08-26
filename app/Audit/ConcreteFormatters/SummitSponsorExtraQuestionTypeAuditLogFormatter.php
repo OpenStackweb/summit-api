@@ -47,15 +47,14 @@ class SummitSponsorExtraQuestionTypeAuditLogFormatter extends AbstractAuditLogFo
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf(
                         "Sponsor Extra Question '%s' (ID: %s) for Sponsor %s updated: %s by user %s",
                         $label,
                         $id,
                         $sponsor_info,
                         $details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

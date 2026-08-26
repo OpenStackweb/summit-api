@@ -53,15 +53,14 @@ class SummitTicketTypeAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Ticket Type '%s' (%d) for Summit '%s' updated: %s by user %s",
                         $name,
                         $id,
                         $summit_name,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     $quantity_sold = $subject->getQuantitySold();

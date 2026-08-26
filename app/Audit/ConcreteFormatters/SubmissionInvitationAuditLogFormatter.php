@@ -52,14 +52,13 @@ class SubmissionInvitationAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Submission invitation for '%s' (%s) updated: %s by user %s",
                         $email,
                         $id,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     $sent_status = $is_sent ? 'sent' : 'pending';

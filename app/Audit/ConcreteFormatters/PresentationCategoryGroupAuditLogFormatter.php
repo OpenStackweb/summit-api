@@ -49,15 +49,14 @@ class PresentationCategoryGroupAuditLogFormatter extends AbstractAuditLogFormatt
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Track Group (PresentationCategoryGroup) '%s' (%s) for Summit '%s' updated: %s by user %s",
                         $name,
                         $id,
                         $summit_name,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

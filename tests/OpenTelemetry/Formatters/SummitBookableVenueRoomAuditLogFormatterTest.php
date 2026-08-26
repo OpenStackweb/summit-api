@@ -105,9 +105,8 @@ class SummitBookableVenueRoomAuditLogFormatterTest extends TestCase
         $formatter->setContext(AuditContextBuilder::default()->build());
         $result = $formatter->format($this->mockSubject, []);
         
-        $this->assertNotNull($result);
-        $this->assertStringContainsString('updated', $result);
-    }
+        $this->assertNull($result);
+}
 
     public function testPropertiesExist(): void
     {

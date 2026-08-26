@@ -90,6 +90,15 @@ class SummitScheduleConfigAuditLogFormatterTest extends TestCase
         $this->assertStringContainsString('updated', $result);
     }
 
+    public function testFormatterHandlesEmptyChangeSet(): void
+    {
+        $formatter = new SummitScheduleConfigAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_UPDATE);
+        $formatter->setContext(AuditContextBuilder::default()->build());
+        $result = $formatter->format($this->mockSubject, []);
+
+        $this->assertNull($result);
+    }
+
     public function testSubjectDeletionAuditMessage(): void
     {
         $formatter = new SummitScheduleConfigAuditLogFormatter(IAuditStrategy::EVENT_ENTITY_DELETION);

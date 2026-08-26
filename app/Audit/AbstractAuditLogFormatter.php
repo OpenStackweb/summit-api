@@ -158,7 +158,7 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
     }
 
 
-    protected function buildChangeDetails(array $change_set): string
+    private function buildChangeDetails(array $change_set): ?string
     {
         $changed_fields = [];
         $ignored_fields = $this->getIgnoredFields();
@@ -178,19 +178,57 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         }
 
         if (empty($changed_fields)) {
-            return 'properties without changes registered';
+            return null;
         }
 
         $fields_summary = count($changed_fields) . ' field(s) modified: ';
         return $fields_summary . implode(' | ', $changed_fields);
     }
 
+    /**
+     * The only way to consume buildChangeDetails() for an EVENT_ENTITY_UPDATE message.
+     * Returns null (suppressing the audit entry) whenever nothing meaningful changed,
+     * otherwise hands the non-null details string to $messageBuilder to assemble the
+     * final message. buildChangeDetails() is private specifically so a formatter cannot
+     * bypass this null-check.
+     */
+    final protected function formatUpdateMessage(array $change_set, \Closure $messageBuilder): ?string
+    {
+        $details = $this->buildChangeDetails($change_set);
+        if ($details === null) {
+            return null;
+        }
+        return $messageBuilder($details);
+    }
+
+
     protected function formatFieldChange(string $prop_name, $old_value, $new_value): ?string
     {
+        if ($this->valuesAreEffectivelyEqual($old_value, $new_value)) {
+            return null;
+        }
+
         $old_display = $this->formatChangeValue($old_value);
         $new_display = $this->formatChangeValue($new_value);
 
         return sprintf("Property \"%s\" has changed from \"%s\" to \"%s\"", $prop_name, $old_display, $new_display);
+    }
+
+    protected function valuesAreEffectivelyEqual($old_value, $new_value): bool
+    {
+        if ($old_value === $new_value) {
+            return true;
+        }
+
+        if ($old_value instanceof \DateTimeInterface && $new_value instanceof \DateTimeInterface) {
+            return $old_value->getTimestamp() === $new_value->getTimestamp();
+        }
+
+        if ((is_scalar($old_value) || is_null($old_value)) && (is_scalar($new_value) || is_null($new_value))) {
+            return $this->formatChangeValue($old_value) === $this->formatChangeValue($new_value);
+        }
+
+        return false;
     }
 
     /**

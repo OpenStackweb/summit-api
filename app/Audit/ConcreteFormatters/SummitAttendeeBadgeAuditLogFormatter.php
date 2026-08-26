@@ -38,8 +38,7 @@ class SummitAttendeeBadgeAuditLogFormatter extends AbstractAuditLogFormatter
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf("Attendee Badge (%s) for '%s' created by user %s", $id, $owner_name, $this->getUserInfo());
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    return sprintf("Attendee Badge (%s) for '%s' updated: %s by user %s", $id, $owner_name, $details, $this->getUserInfo());
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf("Attendee Badge (%s) for '%s' updated: %s by user %s", $id, $owner_name, $details, $this->getUserInfo()));
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Attendee Badge (%s) for '%s' deleted by user %s", $id, $owner_name, $this->getUserInfo());
             }

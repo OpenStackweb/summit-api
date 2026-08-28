@@ -22,6 +22,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\Member;
 use models\summit\Presentation;
+use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitEvent;
 use PHPUnit\Framework\TestCase;
@@ -147,6 +148,26 @@ class PresentationSubmissionReopenServiceTest extends TestCase
     {
         $presentation = new Presentation();
         if (!is_null($plan)) $presentation->setSelectionPlan($plan);
+        return $presentation;
+    }
+
+    private function speaker(int $id, string $email = 'speaker@example.com', string $full_name = 'Grace Hopper'): PresentationSpeaker
+    {
+        $speaker = Mockery::mock(PresentationSpeaker::class);
+        $speaker->shouldReceive('getId')->andReturn($id);
+        $speaker->shouldReceive('getEmail')->andReturn($email);
+        $speaker->shouldReceive('getFullName')->andReturn($full_name);
+        return $speaker;
+    }
+
+    /**
+     * A presentation with a live reopen grant, ready for notify() tests. $plan defaults to one
+     * whose submission window already ended (the precondition isSubmissionReopened() also checks).
+     */
+    private function reopenedPresentation(?SelectionPlan $plan = null): Presentation
+    {
+        $presentation = $this->presentation($plan ?? $this->plan($this->utc('-1 hour')));
+        $presentation->reopenSubmission(24, $this->member());
         return $presentation;
     }
 
@@ -554,6 +575,152 @@ class PresentationSubmissionReopenServiceTest extends TestCase
             $this->assertClosureRan();
         }
     }
+
+    // -------------------------------------------------------------------------
+    // notify()
+    // -------------------------------------------------------------------------
+
+    public function testNotifyThrowsEntityNotFoundWhenTheEventDoesNotExistInTheSummit(): void
+    {
+        $service = $this->makeService();
+
+        $this->expectException(EntityNotFoundException::class);
+        $this->expectExceptionMessage('Presentation 1234 not found.');
+
+        try {
+            $service->notify($this->summit(null), 1234, [], true, $this->member());
+        } finally {
+            $this->assertClosureRan();
+        }
+    }
+
+    public function testNotifyThrowsValidationExceptionWhenNoGrantIsActive(): void
+    {
+        $service = $this->makeService();
+        // no reopenSubmission() call -- no grant
+        $presentation = $this->presentation($this->plan($this->utc('-1 hour')));
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Submission is not currently reopened for this presentation.');
+
+        try {
+            $service->notify($this->summit($presentation), 1234, [], true, $this->member());
+        } finally {
+            $this->assertClosureRan();
+        }
+    }
+
+    public function testNotifyThrowsValidationExceptionWhenThePlanWasExtendedPastNow(): void
+    {
+        $service = $this->makeService();
+        // submission_end_date in the FUTURE: the grant exists but is not what is admitting the
+        // speaker anymore -- isSubmissionReopened() must refuse.
+        $presentation = $this->reopenedPresentation($this->plan($this->utc('+1 hour')));
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Submission is not currently reopened for this presentation.');
+
+        try {
+            $service->notify($this->summit($presentation), 1234, [], true, $this->member());
+        } finally {
+            $this->assertClosureRan();
+        }
+    }
+
+    public function testNotifyThrowsValidationExceptionOnEmptySelection(): void
+    {
+        $service = $this->makeService();
+        $presentation = $this->reopenedPresentation();
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Select at least one recipient.');
+
+        try {
+            $service->notify($this->summit($presentation), 1234, [], false, $this->member());
+        } finally {
+            $this->assertClosureRan();
+        }
+    }
+
+    public function testNotifyThrowsValidationExceptionWhenASpeakerIdIsNotOnThisPresentation(): void
+    {
+        // The trust-boundary regression test: id 999 is never added via addSpeaker()/setModerator(),
+        // so it must not resolve to any recipient even though the request names it explicitly.
+        $service = $this->makeService();
+        $presentation = $this->reopenedPresentation();
+        $presentation->addSpeaker($this->speaker(7));
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Speaker(s) 999 are not on this presentation.');
+
+        try {
+            $service->notify($this->summit($presentation), 1234, [999], false, $this->member());
+        } finally {
+            $this->assertClosureRan();
+        }
+    }
+
+    public function testNotifyThrowsValidationExceptionWhenIncludeSubmitterHasNoCreator(): void
+    {
+        $service = $this->makeService();
+        $presentation = $this->reopenedPresentation();
+        // no setCreatedBy() call -- getCreatedBy() returns null
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('This presentation has no submitter to notify.');
+
+        try {
+            $service->notify($this->summit($presentation), 1234, [], true, $this->member());
+        } finally {
+            $this->assertClosureRan();
+        }
+    }
+
+    public function testNotifyThrowsValidationExceptionWhenEverySelectedRecipientIsBlank(): void
+    {
+        $service = $this->makeService();
+        $presentation = $this->reopenedPresentation();
+        $presentation->addSpeaker($this->speaker(7, ''));
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('None of the selected recipients has an email address.');
+
+        try {
+            $service->notify($this->summit($presentation), 1234, [7], false, $this->member());
+        } finally {
+            $this->assertClosureRan();
+        }
+    }
+
+    public function testNotifyAcceptsAModeratorIdEvenThoughTheModeratorIsNotInGetSpeakers(): void
+    {
+        // The moderator is a SEPARATE association from getSpeakers() (Presentation.php:840) --
+        // regression test for the exact failure the SDS calls out: dropping the getModerator()
+        // branch makes every moderator-only id fail the trust-boundary intersect as "not on this
+        // presentation" even though the moderator genuinely is. A blank email on the moderator (not
+        // added via addSpeaker()) still reaches the "no usable email" branch rather than the
+        // trust-boundary one, which is only possible if id 9 was recognized as allowed.
+        $service = $this->makeService();
+        $presentation = $this->reopenedPresentation();
+        $presentation->setModerator($this->speaker(9, ''));
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('None of the selected recipients has an email address.');
+
+        try {
+            $service->notify($this->summit($presentation), 1234, [9], false, $this->member());
+        } finally {
+            $this->assertClosureRan();
+        }
+    }
+
+    // Success-path assertions (queued count, skipped count, "only selected people queued",
+    // moderator/submitter dedup) are NOT tested here: PresentationSubmissionReopenedEmail's
+    // constructor calls Presentation::getSummit() and, via AbstractSummitEmailJob::__construct(),
+    // App::make(ISummitRepository::class) -- a service-locator dependency chain this bare-container
+    // Mockery harness cannot satisfy. Matches the SDS's own placement rationale (per-file docblock
+    // above): queueing assertions live in tests/PresentationReopenApiTest.php, which boots the full
+    // app and can Queue::fake().
 
     // -------------------------------------------------------------------------
     // Guard on the harness itself

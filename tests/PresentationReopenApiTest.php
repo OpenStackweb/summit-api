@@ -12,10 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\Registry;
 use ModelSerializers\SerializerRegistry;
+use models\main\Member;
 use models\summit\Presentation;
+use models\summit\PresentationSpeaker;
 use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 
@@ -95,6 +99,58 @@ class PresentationReopenApiTest extends ProtectedApiTestCase
             "DELETE", "OAuth2PresentationApiController@closeSubmissionPeriod",
             $params, [], [], [], $headers
         );
+    }
+
+    protected function notify(array $payload)
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'presentation_id' => self::$presentation->getId(),
+        ];
+        $headers = $this->getAuthHeaders(); // includes CONTENT_TYPE: application/json
+
+        return $this->action(
+            "PUT", "OAuth2PresentationApiController@notifySubmissionReopened",
+            $params, [], [], [], $headers, json_encode($payload)
+        );
+    }
+
+    /**
+     * A speaker with no linked Member and no registration_request -- PresentationSpeaker::getEmail()
+     * (PresentationSpeaker.php:1953-1969) returns null for both branches, so this is the "no usable
+     * email" fixture the notify tests need without touching the blank@blank.com sentinel path.
+     */
+    private function speakerWithNoEmail(): PresentationSpeaker
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Katherine");
+        $speaker->setLastName("Johnson");
+        self::$em->persist($speaker);
+        return $speaker;
+    }
+
+    /**
+     * A speaker backed by its own Member, so PresentationSpeaker::getEmail() returns a real
+     * address. The local part is randomized on purpose: Member.Email carries a case-insensitive
+     * unique index, and clearSummitTestData() does not remove Members, so a fixed address would
+     * collide with the row left behind by a previous run of this suite against the same database.
+     */
+    private function speakerWithEmail(string $first_name, string $last_name): PresentationSpeaker
+    {
+        $member = new Member();
+        $member->setEmail(sprintf("%s@example.com", strtolower(str_random(16))));
+        $member->setActive(true);
+        $member->setFirstName($first_name);
+        $member->setLastName($last_name);
+        $member->setEmailVerified(true);
+        $member->setUserExternalId(mt_rand());
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setMember($member);
+
+        self::$em->persist($member);
+        self::$em->persist($speaker);
+        return $speaker;
     }
 
     /**
@@ -985,5 +1041,147 @@ class PresentationReopenApiTest extends ProtectedApiTestCase
         sort($after);
 
         $this->assertEquals($before, $after);
+    }
+
+    // -------------------------------------------------------------------------
+    // notify() endpoint
+    // -------------------------------------------------------------------------
+
+    public function testNotifyQueuesSelectedRecipientsAndReturns200WithCounts()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+
+        // self::$speaker is self::$member's own speaker profile (InsertMemberTestData.php:144-149),
+        // so selecting it AND include_submitter=true exercises the submitter+speaker merge --
+        // ONE dispatch, not two -- in the same request as the moderator-accepted assertion below.
+        $this->attachSpeaker();
+        $moderator = $this->speakerWithNoEmail();
+        self::$presentation->setModerator($moderator);
+        self::$em->flush();
+
+        $response = $this->notify([
+            'speaker_ids' => [self::$speaker->getId(), $moderator->getId()],
+            'include_submitter' => true,
+        ]);
+
+        $this->assertResponseStatus(200);
+        $body = json_decode($response->getContent(), true);
+        // submitter + self::$speaker share self::$member's email -> merge into 1; moderator has no
+        // email -> skipped.
+        $this->assertEquals(1, $body['recipients']);
+        $this->assertEquals(1, $body['skipped']);
+        Queue::assertPushed(PresentationSubmissionReopenedEmail::class, 1);
+    }
+
+    public function testNotifyOnlyQueuesTheSelectedRecipientsNotEveryoneOnTheTalk()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+        $this->attachSpeaker();
+        $unselected = $this->speakerWithNoEmail();
+        $unselected->setFirstName("Alan");
+        $unselected->setLastName("Turing");
+        self::$presentation->addSpeaker($unselected);
+        self::$em->flush();
+
+        // only self::$speaker selected -- $unselected must NOT be queued even though it is on the
+        // presentation. Regression test for "falls back to notifying everyone".
+        $response = $this->notify(['speaker_ids' => [self::$speaker->getId()]]);
+
+        $this->assertResponseStatus(200);
+        $body = json_decode($response->getContent(), true);
+        $this->assertEquals(1, $body['recipients']);
+        $this->assertEquals(0, $body['skipped']);
+        Queue::assertPushed(PresentationSubmissionReopenedEmail::class, 1);
+    }
+
+    public function testNotifyBlankEmailRecipientIsSkippedWhileOthersAreDispatched()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+        $this->attachSpeaker();
+        $blank = $this->speakerWithNoEmail();
+        self::$presentation->addSpeaker($blank);
+        self::$em->flush();
+
+        $response = $this->notify([
+            'speaker_ids' => [self::$speaker->getId(), $blank->getId()],
+        ]);
+
+        $this->assertResponseStatus(200);
+        $body = json_decode($response->getContent(), true);
+        $this->assertEquals(1, $body['recipients']);
+        $this->assertEquals(1, $body['skipped']);
+        Queue::assertPushed(PresentationSubmissionReopenedEmail::class, 1);
+    }
+
+    public function testNotifyRejectsASpeakerIdNotOnThisPresentationAndQueuesNothing()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+
+        $response = $this->notify(['speaker_ids' => [999999]]);
+
+        $this->assertResponseStatus(412);
+        Queue::assertNotPushed(PresentationSubmissionReopenedEmail::class);
+    }
+
+    /**
+     * The trust-boundary test proper, and the reason the nonexistent-id case above is not enough
+     * on its own (SDS §10: "Include a same-summit foreign speaker, not just a nonexistent id").
+     *
+     * The regression this guards is a refactor of notify() that resolves $speaker_ids through the
+     * speaker repository instead of intersecting them against the presentation's own people. A
+     * nonexistent id cannot detect that: the repository returns null for it either way, so the
+     * request is refused under both the correct and the broken implementation and the test stays
+     * green. Only a speaker that genuinely resolves separates them -- under a repository lookup
+     * this one would resolve, pass whatever null check replaced the intersect, and BE MAILED,
+     * which is the authenticated-mail-relay failure the trust boundary exists to prevent.
+     *
+     * Same summit and attached to a real sibling presentation, so nothing but "not on THIS
+     * presentation" can be what refuses it.
+     */
+    public function testNotifyRejectsARealSpeakerFromAnotherPresentationInTheSameSummit()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+
+        $foreign = $this->speakerWithEmail("Foreign", "Speaker");
+
+        $sibling = new Presentation();
+        $sibling->setTitle("ANOTHER PRESENTATION IN THIS SUMMIT");
+        $sibling->setType(self::$defaultPresentationType);
+        $sibling->setSelectionPlan(self::$default_selection_plan);
+        $sibling->setCategory(self::$defaultTrack);
+        $sibling->addSpeaker($foreign);
+        self::$summit->addEvent($sibling);
+        self::$em->flush();
+
+        // Preconditions, or the 412 below could be the "no usable email" branch (or a plain
+        // unknown id) rather than the trust boundary actually doing its job.
+        $this->assertNotEmpty($foreign->getId(), 'foreign speaker did not persist');
+        $this->assertNotEmpty($foreign->getEmail(), 'foreign speaker has no email; it would be skipped, not refused');
+        $this->assertNotEquals(
+            self::$presentation->getId(),
+            $sibling->getId(),
+            'the foreign speaker must be on a DIFFERENT presentation'
+        );
+
+        $response = $this->notify(['speaker_ids' => [$foreign->getId()]]);
+
+        $this->assertResponseStatus(412);
+        Queue::assertNotPushed(PresentationSubmissionReopenedEmail::class);
+    }
+
+    public function testNotifyRejectsAnEmptySelection()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+
+        $response = $this->notify([]);
+
+        $this->assertResponseStatus(412);
+        Queue::assertNotPushed(PresentationSubmissionReopenedEmail::class);
     }
 }

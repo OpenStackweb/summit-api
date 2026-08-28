@@ -29,6 +29,7 @@ use App\Jobs\Emails\PresentationSubmissions\Invitations\ReInviteSubmissionEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
@@ -146,6 +147,7 @@ final class EmailTemplatesSchemaSerializerRegistry
         $this->registry[PresentationCreatorNotificationEmail::EVENT_SLUG] = PresentationCreatorNotificationEmail::class;
         $this->registry[PresentationModeratorNotificationEmail::EVENT_SLUG] = PresentationModeratorNotificationEmail::class;
         $this->registry[PresentationSpeakerNotificationEmail::EVENT_SLUG] = PresentationSpeakerNotificationEmail::class;
+        $this->registry[PresentationSubmissionReopenedEmail::EVENT_SLUG] = PresentationSubmissionReopenedEmail::class;
         $this->registry[SpeakerCreationEmail::EVENT_SLUG] = SpeakerCreationEmail::class;
         $this->registry[SpeakerEditPermissionApprovedEmail::EVENT_SLUG] = SpeakerEditPermissionApprovedEmail::class;
         $this->registry[SpeakerEditPermissionRejectedEmail::EVENT_SLUG] = SpeakerEditPermissionRejectedEmail::class;

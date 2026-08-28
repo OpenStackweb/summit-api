@@ -27,6 +27,7 @@ use App\Jobs\Emails\PresentationSubmissions\Invitations\InviteSubmissionEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationCreatorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
+use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedOnlyEmail;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedRejectedEmail;
@@ -342,6 +343,11 @@ final class SummitEmailFlowTypeSeeder extends Seeder
                 'name' => PresentationSpeakerNotificationEmail::EVENT_NAME,
                 'slug' => PresentationSpeakerNotificationEmail::EVENT_SLUG,
                 'default_email_template' => PresentationSpeakerNotificationEmail::DEFAULT_TEMPLATE
+            ],
+            [
+                'name' => PresentationSubmissionReopenedEmail::EVENT_NAME,
+                'slug' => PresentationSubmissionReopenedEmail::EVENT_SLUG,
+                'default_email_template' => PresentationSubmissionReopenedEmail::DEFAULT_TEMPLATE
             ],
             [
                 'name' => PresentationModeratorNotificationEmail::EVENT_NAME,

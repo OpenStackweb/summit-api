@@ -45,4 +45,35 @@ interface IPresentationSubmissionReopenService
      * @throws EntityNotFoundException if the presentation is not in $summit
      */
     public function closeNow(Summit $summit, int $presentation_id, Member $actor): void;
+
+    /**
+     * Queues one reopen-notification email per SELECTED, distinct recipient for the presentation's
+     * CURRENTLY ACTIVE grant.
+     *
+     * The admin chooses who is notified. $speaker_ids names speakers and/or the moderator (the
+     * moderator IS a PresentationSpeaker, so it needs no separate parameter); $include_submitter
+     * covers the submitter -- SummitEvent::getCreatedBy(), a Member with no speaker id. Every id is
+     * verified to belong to THIS presentation -- see the trust-boundary note in the implementation.
+     *
+     * Not a delivery count. PresentationSubmissionReopenedEmail is a ShouldQueue job, so this
+     * returns before any mail has been handed to mailing-api, let alone sent. Delivery outcome
+     * lives in mailing-api's Mail rows.
+     *
+     * Repeatable by design, with a different selection each time if the admin wants: there is no
+     * once-only marker and no persisted selection.
+     *
+     * @return array{queued: int, skipped: int} queued = distinct recipients with a usable email
+     *         that were queued; skipped = selected recipients dropped for a missing email.
+     * @throws EntityNotFoundException if the presentation is not in $summit
+     * @throws ValidationException     if no grant is in force, if the selection is empty, if any id
+     *                                 is not attached to this presentation, or if no selected
+     *                                 recipient has an email
+     */
+    public function notify(
+        Summit $summit,
+        int $presentation_id,
+        array $speaker_ids,
+        bool $include_submitter,
+        Member $actor
+    ): array;
 }

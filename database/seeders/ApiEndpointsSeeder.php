@@ -7122,6 +7122,21 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitAdministrators,
                 ]
             ],
+            [
+                'name' => 'notify-presentation-submission-period',
+                'route' => '/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen/notify',
+                'http_method' => 'PUT',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                    SummitScopes::WriteEventData,
+                    SummitScopes::WritePresentationData
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ],
+            ],
             // presentation speakers
             [
                 'name' => 'add-presentation-speaker',

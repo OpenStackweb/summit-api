@@ -867,6 +867,10 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::group(['prefix' => 'reopen'], function () {
                         Route::put('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@reopenSubmissionPeriod']);
                         Route::delete('', ['middleware' => 'auth.user', 'uses' => 'OAuth2PresentationApiController@closeSubmissionPeriod']);
+                        // 30 sends per hour. The second arg is SECONDS, not minutes: RateLimitMiddleware
+                        // passes it straight into RateLimiter::hit($key, $decaySeconds) without the
+                        // 60x that Laravel's own ThrottleRequests applies. Do not "correct" 3600 to 60.
+                        Route::put('notify', ['middleware' => ['auth.user', 'rate.limit:30,3600'], 'uses' => 'OAuth2PresentationApiController@notifySubmissionReopened']);
                     });
                 });
 

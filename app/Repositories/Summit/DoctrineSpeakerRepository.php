@@ -346,6 +346,33 @@ final class DoctrineSpeakerRepository
 
                     ]
                 ),
+            'has_published_presentations' =>
+                new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        'EXISTS (
+                            SELECT __p15.id FROM models\summit\Presentation __p15
+                            JOIN __p15.speakers __spk15 WITH __spk15.speaker = e.id
+                            WHERE __p15.summit = :summit AND __p15.published = 1
+                        ) OR EXISTS (
+                            SELECT __p16.id FROM models\summit\Presentation __p16
+                            JOIN __p16.moderator __md16 WITH __md16.id = e.id
+                            WHERE __p16.summit = :summit AND __p16.published = 1
+                        )'
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        'NOT EXISTS (
+                            SELECT __p15.id FROM models\summit\Presentation __p15
+                            JOIN __p15.speakers __spk15 WITH __spk15.speaker = e.id
+                            WHERE __p15.summit = :summit AND __p15.published = 1
+                        ) AND NOT EXISTS (
+                            SELECT __p16.id FROM models\summit\Presentation __p16
+                            JOIN __p16.moderator __md16 WITH __md16.id = e.id
+                            WHERE __p16.summit = :summit AND __p16.published = 1
+                        )'
+                    ),
+                ]),
             'has_alternate_presentations' =>
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(

@@ -335,4 +335,54 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $submitters = json_decode($content);
         $this->assertNotNull($submitters);
     }
+
+    public function testGetCurrentSummitSubmittersWithPublishedPresentations()
+    {
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'has_published_presentations==true',
+            ],
+            'order'    => '+id',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSubmittersApiController@getAllBySummit",
+            $params,
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $submitters = json_decode($response->getContent());
+        $this->assertNotNull($submitters);
+    }
+
+    public function testGetCurrentSummitSubmittersActivitiesCountWithPublishedPresentations()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSubmittersApiController@getSubmittersActivitiesCount",
+            ['id' => self::$summit->getId(), 'filter' => ['has_published_presentations==true']],
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $data = json_decode($response->getContent());
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertGreaterThanOrEqual(0, $data->count);
+    }
 }

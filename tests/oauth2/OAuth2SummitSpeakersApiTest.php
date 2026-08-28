@@ -2833,4 +2833,54 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         self::$em->flush();
     }
 
+    public function testGetCurrentSummitSpeakersWithPublishedPresentations()
+    {
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'has_published_presentations==true',
+            ],
+            'order'    => '+id',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $speakers = json_decode($response->getContent());
+        $this->assertNotNull($speakers);
+    }
+
+    public function testGetCurrentSummitSpeakersActivitiesCountWithPublishedPresentations()
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            ['id' => self::$summit->getId(), 'filter' => ['has_published_presentations==true']],
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $data = json_decode($response->getContent());
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertGreaterThanOrEqual(0, $data->count);
+    }
+
 }

@@ -457,6 +457,177 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
     }
 
     // -----------------------------------------------------------------
+    // has_published_presentations filter
+    // Submitters are identified by created_by.
+    // -----------------------------------------------------------------
+
+    public function testGetSubmittersHasPublishedPresentationsTrue(): void
+    {
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        // member2: published presentation
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Published Filter - Published');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate($end);
+        $p1->setCreatedBy($member2);
+        $p1->publish();
+
+        // member: unpublished presentation only
+        $p2 = new Presentation();
+        self::$summit->addEvent($p2);
+        $p2->setTitle('Published Filter - Unpublished');
+        $p2->setAbstract('Abstract');
+        $p2->setCategory(self::$defaultTrack);
+        $p2->setType(self::$defaultPresentationType);
+        $p2->setProgress(Presentation::PHASE_COMPLETE);
+        $p2->setStatus(Presentation::STATUS_RECEIVED);
+        $p2->setStartDate($start);
+        $p2->setEndDate($end);
+        $p2->setCreatedBy($member);
+        // Deliberately NOT calling publish()
+
+        self::$em->flush();
+
+        $repo   = EntityManager::getRepository(Member::class);
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==true'],
+            ['has_published_presentations' => ['==']]
+        );
+        $page = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);
+
+        $ids = array_map(fn($m) => $m->getId(), $page->getItems());
+        self::assertContains($member2->getId(), $ids,
+            'member2 (published presentation) must be included');
+        self::assertNotContains($member->getId(), $ids,
+            'member (unpublished presentation only) must be excluded');
+    }
+
+    public function testGetSubmittersHasPublishedPresentationsFalse(): void
+    {
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        // member: unpublished presentation only
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Published False Filter - Unpublished');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate($end);
+        $p1->setCreatedBy($member);
+
+        // member2: published presentation
+        $p2 = new Presentation();
+        self::$summit->addEvent($p2);
+        $p2->setTitle('Published False Filter - Published');
+        $p2->setAbstract('Abstract');
+        $p2->setCategory(self::$defaultTrack);
+        $p2->setType(self::$defaultPresentationType);
+        $p2->setProgress(Presentation::PHASE_COMPLETE);
+        $p2->setStatus(Presentation::STATUS_RECEIVED);
+        $p2->setStartDate($start);
+        $p2->setEndDate($end);
+        $p2->setCreatedBy($member2);
+        $p2->publish();
+
+        self::$em->flush();
+
+        $repo   = EntityManager::getRepository(Member::class);
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==false'],
+            ['has_published_presentations' => ['==']]
+        );
+        $page = $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null);
+
+        $ids = array_map(fn($m) => $m->getId(), $page->getItems());
+        self::assertContains($member->getId(), $ids,
+            'member (unpublished presentation only) must be included');
+        self::assertNotContains($member2->getId(), $ids,
+            'member2 (published presentation) must be excluded');
+    }
+
+    public function testGetUniqueActivitiesCountBySummitHasPublishedPresentationsTrue(): void
+    {
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Count Published - Published');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate($start);
+        $p->setEndDate($end);
+        $p->setCreatedBy($member2);
+        $p->publish();
+        self::$em->flush();
+
+        $repo   = EntityManager::getRepository(Member::class);
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==true'],
+            ['has_published_presentations' => ['==']]
+        );
+        $count = $repo->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertGreaterThan(0, $count);
+    }
+
+    public function testGetUniqueActivitiesCountBySummitHasPublishedPresentationsFalseIsZeroWhenAllSubmittersHavePublished(): void
+    {
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        // Only a published presentation exists for member2 in this summit.
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Count Published False - Published Only');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate($start);
+        $p->setEndDate($end);
+        $p->setCreatedBy($member2);
+        $p->publish();
+        self::$em->flush();
+
+        $repo   = EntityManager::getRepository(Member::class);
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==false'],
+            ['has_published_presentations' => ['==']]
+        );
+        // member2 has a published presentation so they don't satisfy false;
+        // no submitter in this summit satisfies the filter → count must be 0.
+        $count = $repo->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertEquals(0, $count);
+    }
+
+    // -----------------------------------------------------------------
     // getUniqueActivitiesCountBySummit - presentations_track_group_id
     // The submitter repo and speaker repo share the filter name but use
     // different DQL paths. The speaker repo has this covered; the

@@ -293,6 +293,25 @@ final class DoctrineMemberRepository
                         ),
                     ]
                 ),
+            'has_published_presentations' =>
+                new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        'EXISTS (
+                            SELECT __p15.id FROM models\summit\Presentation __p15
+                            JOIN __p15.created_by __c15 WITH __c15 = e.id
+                            WHERE __p15.summit = :summit AND __p15.published = 1
+                        )'
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        'NOT EXISTS (
+                            SELECT __p15.id FROM models\summit\Presentation __p15
+                            JOIN __p15.created_by __c15 WITH __c15 = e.id
+                            WHERE __p15.summit = :summit AND __p15.published = 1
+                        )'
+                    ),
+                ]),
             'has_alternate_presentations' =>
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(

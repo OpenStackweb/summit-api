@@ -367,6 +367,140 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
     }
 
     // -----------------------------------------------------------------
+    // getSpeakersBySummit / getUniqueActivitiesCountBySummit - has_published_presentations
+    // The filter checks Presentation.published = 1 for both speaker and
+    // moderator roles.
+    // -----------------------------------------------------------------
+
+    public function testGetSpeakersBySummitHasPublishedPresentationsTrueViaModeratorRole(): void
+    {
+        // A speaker who is the moderator (not in speakers collection) of a published
+        // presentation must appear in has_published_presentations==true results.
+        $moderator = new PresentationSpeaker();
+        $moderator->setFirstName('PublishedModerator');
+        $moderator->setLastName('TestSpeaker');
+        self::$em->persist($moderator);
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Moderator Published Presentation');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->setModerator($moderator);
+        $p->publish();
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==true'],
+            ['has_published_presentations' => ['==']]
+        );
+
+        $page = $this->repo()->getSpeakersBySummit(self::$summit, new PagingInfo(1, 100), $filter);
+
+        $ids = array_map(fn($s) => $s->getId(), $page->getItems());
+        $this->assertContains($moderator->getId(), $ids);
+    }
+
+    public function testGetSpeakersBySummitHasPublishedPresentationsFalse(): void
+    {
+        // Create a speaker with an unpublished presentation only.
+        $unpublishedSpeaker = new PresentationSpeaker();
+        $unpublishedSpeaker->setFirstName('UnpublishedOnly');
+        $unpublishedSpeaker->setLastName('TestSpeaker');
+        self::$em->persist($unpublishedSpeaker);
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Unpublished Presentation');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->addSpeaker($unpublishedSpeaker);
+        // Deliberately NOT calling publish() — leaves published = 0.
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==false'],
+            ['has_published_presentations' => ['==']]
+        );
+
+        $page = $this->repo()->getSpeakersBySummit(self::$summit, new PagingInfo(1, 100), $filter);
+
+        $ids = array_map(fn($s) => $s->getId(), $page->getItems());
+        $this->assertContains($unpublishedSpeaker->getId(), $ids,
+            'Speaker with only unpublished presentations must appear in false results');
+        $this->assertNotContains(self::$defaultSpeaker->getId(), $ids,
+            'Speaker with published presentations must not appear in false results');
+    }
+
+    public function testGetSpeakersBySummitHasPublishedPresentationsTrueExcludesUnpublishedOnlySpeaker(): void
+    {
+        // Speaker with no published presentations must be excluded from the true results.
+        $unpublishedSpeaker = new PresentationSpeaker();
+        $unpublishedSpeaker->setFirstName('UnpublishedOnly2');
+        $unpublishedSpeaker->setLastName('TestSpeaker');
+        self::$em->persist($unpublishedSpeaker);
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Unpublished Presentation 2');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->addSpeaker($unpublishedSpeaker);
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==true'],
+            ['has_published_presentations' => ['==']]
+        );
+
+        $page = $this->repo()->getSpeakersBySummit(self::$summit, new PagingInfo(1, 100), $filter);
+
+        $ids = array_map(fn($s) => $s->getId(), $page->getItems());
+        $this->assertContains(self::$defaultSpeaker->getId(), $ids,
+            'Speaker with published presentations must appear in true results');
+        $this->assertNotContains($unpublishedSpeaker->getId(), $ids,
+            'Speaker with only unpublished presentations must not appear in true results');
+    }
+
+    public function testGetUniqueActivitiesCountBySummitHasPublishedPresentationsTrue(): void
+    {
+        // All seeded presentations are published; speaker1 satisfies the filter.
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==true'],
+            ['has_published_presentations' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertGreaterThan(0, $count);
+    }
+
+    public function testGetUniqueActivitiesCountBySummitHasPublishedPresentationsFalseIsZeroWhenAllPublished(): void
+    {
+        // Every presentation in the fixture is published, so no speaker satisfies
+        // has_published_presentations==false — the count of their activities must be 0.
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==false'],
+            ['has_published_presentations' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertEquals(0, $count);
+    }
+
+    // -----------------------------------------------------------------
     // getAllByPage - multi-page pagination
     // The two-phase approach uses LIMIT/OFFSET for page > 1.
     // Verifies pages are disjoint and cover the full result set.

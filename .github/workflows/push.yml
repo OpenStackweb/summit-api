@@ -79,8 +79,8 @@ jobs:
                     # Named by path because no job in this matrix runs the tests/ root, only its
                     # subdirectories - a file added there runs nowhere unless it is listed here.
                     - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php tests/PresentationSerializerCacheKeyTest.php tests/PresentationReopenModelTest.php tests/PresentationReopenApiTest.php tests/PresentationReopenAuthzTest.php tests/PresentationSubmissionReopenedEmailTest.php" }
-                    - { name: "Repositories", filter: "--filter tests/Repositories/" }
-                    - { name: "Services", filter: "--filter tests/Unit/Services/" }
+                    - { name: "Repositories", filter: "tests/Repositories/" }
+                    - { name: "Services", filter: "tests/Unit/Services/" }
                     - { name: "Integration", filter: "tests/Integration/" }
                     # Runs the same suite under PhpRedis - addSingleValue/incCounter's
                     # SET...NX miss sentinel differs between drivers (null vs false),

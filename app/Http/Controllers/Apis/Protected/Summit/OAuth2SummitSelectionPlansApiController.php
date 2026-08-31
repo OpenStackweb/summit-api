@@ -607,7 +607,7 @@ final class OAuth2SummitSelectionPlansApiController extends OAuth2ProtectedContr
         operationId: 'getCurrentSelectionPlanByStatus',
         summary: 'Get current selection plan by status (Public)',
         description: 'Retrieves the current active selection plan for a summit filtered by status. This is a public endpoint.',
-        tags: ['Selection Plans (Public)'],
+        tags: ['Selection Plans (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'id',

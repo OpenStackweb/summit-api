@@ -903,7 +903,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         description: "",
         summary: 'Get RSVP Invitation By Token',
         operationId: 'gettByToken',
-        tags: ['RSVP Invitations (Public)'],
+        tags: ['RSVP Invitations (Public)', 'Public'],
         security: [],
         parameters: [
             new OA\Parameter(
@@ -962,7 +962,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         description: "",
         summary: 'Accept RSVP Invitation',
         operationId: 'acceptByToken',
-        tags: ['RSVP Invitations (Public)'],
+        tags: ['RSVP Invitations (Public)', 'Public'],
         security: [],
         parameters: [
             new OA\Parameter(
@@ -1021,7 +1021,7 @@ class OAuth2RSVPInvitationApiController extends OAuth2ProtectedController
         description: "",
         summary: 'Decline RSVP Invitation',
         operationId: 'rejectByToken',
-        tags: ['RSVP Invitations (Public)'],
+        tags: ['RSVP Invitations (Public)', 'Public'],
         security: [],
         parameters: [
             new OA\Parameter(

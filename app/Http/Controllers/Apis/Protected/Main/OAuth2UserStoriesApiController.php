@@ -53,7 +53,7 @@ final class OAuth2UserStoriesApiController extends OAuth2ProtectedController
         operationId: 'getAllUserStories',
         summary: 'Get all user stories',
         description: 'Retrieves a paginated list of user stories showcasing real-world use cases and success stories from the OpenStack community. User stories highlight how organizations use OpenStack in production. This is a public endpoint that can return different data based on authentication (more details for authenticated users).',
-        tags: ['User Stories (Public)'],
+        tags: ['User Stories (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'page',

@@ -457,7 +457,7 @@ final class OAuth2SummitsEventTypesApiController extends OAuth2ProtectedControll
         path: "/api/public/v1/summits/{id}/event-types/{event_type_id}",
         operationId: "getEventTypeBySummitPublic",
         description: "Get a specific event type by ID",
-        tags: ["Event Types (Public)"],
+        tags: ["Event Types (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "id",

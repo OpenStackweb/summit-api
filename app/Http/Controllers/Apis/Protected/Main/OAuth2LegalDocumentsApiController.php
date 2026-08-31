@@ -50,7 +50,7 @@ final class OAuth2LegalDocumentsApiController extends OAuth2ProtectedController
         path: '/api/public/v1/legal-documents/{id}',
         summary: 'Get a legal document by ID or slug',
         description: 'Retrieves a legal document (privacy policy, terms of service, etc.) by its numeric ID or URL-friendly slug. This is a public endpoint that does not require authentication.',
-        tags: ['Legal Documents'],
+        tags: ['Legal Documents', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'id',

@@ -38,7 +38,7 @@ final class DistributionsApiController extends AbstractCompanyServiceApiControll
         description: "Get all marketplace distributions (OpenStack implementations)",
         summary: 'Get all distributions',
         operationId: 'getAllDistributions',
-        tags: ['Marketplace', 'Marketplace Distributions'],
+        tags: ['Marketplace', 'Marketplace Distributions', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'page',

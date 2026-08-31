@@ -1363,6 +1363,14 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 'irc'        => $current_member->getIrcHandle(),
             ];
 
+            // On create there is nothing to clear yet, so an empty or whitespace-only
+            // submitted value counts as "not sent" and the member default applies.
+            foreach (array_keys($member_defaults) as $key) {
+                if (isset($payload[$key]) && is_string($payload[$key]) && trim($payload[$key]) === '') {
+                    unset($payload[$key]);
+                }
+            }
+
             $payload = array_merge($member_defaults, $payload);
             $payload['member_id'] = $current_member->getId();
 

@@ -2154,4 +2154,73 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         self::$em->flush();
     }
 
+    /**
+     * Boundary case: form clients commonly serialize untouched fields as empty
+     * strings. On create, an empty or whitespace-only bio must count as "not
+     * sent" and fall back to the member bio - not create a speaker with an
+     * empty bio.
+     */
+    public function testCreateMySpeakerEmptyBioFallsBackToMemberBio()
+    {
+        $prefix    = str_random(10);
+        $memberBio = "Bio coming from the FNid member profile.";
+
+        $newMember = new Member();
+        $newMember->setEmail("test_bio_empty_{$prefix}@example.com");
+        $newMember->setFirstName("Bio");
+        $newMember->setLastName("EmptyString");
+        $newMember->setActive(true);
+        $newMember->setEmailVerified(true);
+        $newMember->setUserExternalId(mt_rand());
+        $newMember->setBio($memberBio);
+        self::$em->persist($newMember);
+        self::$em->flush();
+
+        self::$service->setUserId($newMember->getUserExternalId());
+        self::$service->setUserExternalId($newMember->getUserExternalId());
+        self::$service->setUserEmail($newMember->getEmail());
+        self::$service->setUserFirstName($newMember->getFirstName());
+        self::$service->setUserLastName($newMember->getLastName());
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        try {
+            // Whitespace-only bio - must be treated as "not sent"
+            $response = $this->action(
+                "POST",
+                "OAuth2SummitSpeakersApiController@createMySpeaker",
+                [],
+                [],
+                [],
+                [],
+                $headers,
+                json_encode(['bio' => '   ', 'title' => 'Engineer'])
+            );
+        } finally {
+            // Restore authenticated member even if the request blows up,
+            // so the rest of the class does not run impersonated.
+            self::$service->setUserId(self::$member->getUserExternalId());
+            self::$service->setUserExternalId(self::$member->getUserExternalId());
+            self::$service->setUserEmail(self::$member->getEmail());
+            self::$service->setUserFirstName(self::$member->getFirstName());
+            self::$service->setUserLastName(self::$member->getLastName());
+        }
+
+        $this->assertResponseStatus(201);
+        $speaker = json_decode($response->getContent());
+        $this->assertNotNull($speaker);
+        $this->assertEquals($memberBio, $speaker->bio,
+            "An empty/whitespace-only submitted bio must fall back to the member/FNid bio.");
+
+        // Cleanup - EM may have been closed by the BrowserKit HTTP simulation
+        $this->resetEmIfNeeded();
+        $createdSpeaker = self::$em->find(PresentationSpeaker::class, intval($speaker->id));
+        if (!is_null($createdSpeaker)) self::$em->remove($createdSpeaker);
+        self::$em->remove(self::$em->find(Member::class, $newMember->getId()));
+        self::$em->flush();
+    }
+
 }

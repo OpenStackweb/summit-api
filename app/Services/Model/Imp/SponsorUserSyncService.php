@@ -59,10 +59,16 @@ final class SponsorUserSyncService
 
     /**
      * Lifetime, in seconds, for the sponsor_user.*.ext_*.lock held around
-     * addSponsorUser / addSponsorUserToGroup. Matches the worst-case DB write
-     * time for these paths, not ILockManagerService's 3600s default.
+     * addSponsorUser / addSponsorUserToGroup. Both paths resolve the member
+     * INSIDE the lock, which for a brand-new user makes a synchronous IDP
+     * call (registerExternalUserById) bounded by curl.timeout (60s default) -
+     * so the lifetime must exceed that, or a slow IDP dissolves the lock right
+     * as the competing MQ job's first retry lands (RetryBackoff starts at 30s).
+     * It must also stay below the job's LAST retry (+150s with tries=3 and
+     * backoff '30,120'), so a worker killed mid-callback leaves a lock that
+     * expires before the final retry rather than burning it too.
      */
-    private const SponsorUserLockLifetime = 30;
+    private const SponsorUserLockLifetime = 120;
 
     /**
      * SponsorUserSyncService constructor.

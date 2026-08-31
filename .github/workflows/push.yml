@@ -75,12 +75,17 @@ jobs:
                     - { name: "AuditOtlpStrategyTest", filter: "--filter AuditOtlpStrategyTest" }
                     - { name: "AuditEventTypesTest", filter: "--filter AuditEventTypesTest" }
                     - { name: "GuzzleTracingTest", filter: "--filter GuzzleTracingTest" }
-                    - { name: "Repositories", filter: "tests/Repositories/" }
-                    - { name: "Services", filter: "tests/Unit/Services/" }
                     - { name: "CacheOptimizations", filter: "--filter '(PresentationSpeakerCacheTest|ResourceServerContextTest)'" }
                     # Named by path because no job in this matrix runs the tests/ root, only its
                     # subdirectories - a file added there runs nowhere unless it is listed here.
                     - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php tests/PresentationSerializerCacheKeyTest.php tests/PresentationReopenModelTest.php tests/PresentationReopenApiTest.php tests/PresentationReopenAuthzTest.php tests/PresentationSubmissionReopenedEmailTest.php" }
+                    - { name: "Repositories", filter: "tests/Repositories/" }
+                    - { name: "Services", filter: "tests/Unit/Services/" }
+                    - { name: "Integration", filter: "tests/Integration/" }
+                    # Runs the same suite under PhpRedis - addSingleValue/incCounter's
+                    # SET...NX miss sentinel differs between drivers (null vs false),
+                    # so a driver-agnostic bug there only shows up here.
+                    - { name: "IntegrationPhpRedis", filter: "tests/Integration/", redis_client: "phpredis" }
         env:
             OTEL_SERVICE_ENABLED: false
             APP_ENV: testing
@@ -187,6 +192,8 @@ jobs:
                   COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ secrets.COMPOSER_AUTH_TOKEN }}"} }'
 
             - name: Run ${{ matrix.suite.name }}
+              env:
+                  REDIS_CLIENT: ${{ matrix.suite.redis_client || 'predis' }}
               run: |
                   ./update_doctrine.sh
                   php artisan db:create_initial_db --schema=config

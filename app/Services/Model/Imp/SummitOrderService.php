@@ -268,6 +268,7 @@ final class SagaFactory
                 $this->member_repository,
                 $this->attendee_repository,
                 $this->ticket_type_repository,
+                $this->promo_code_repository,
                 $this->tx_service,
                 $this->lock_service
             ));
@@ -834,7 +835,7 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $qty, $owner_email) {
                     $promo_code->addUsage($owner_email, $qty);
-                });
+                }, 30);
 
             });
             // mark a done
@@ -872,7 +873,7 @@ final class ApplyPromoCodeTask extends AbstractTask
 
                 $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $info, $owner_email) {
                     $promo_code->removeUsage(intval($info['qty']), $owner_email);
-                });
+                }, 30);
 
             });
         }
@@ -957,7 +958,7 @@ final class ReserveTicketsTask extends AbstractTask
 
                 $this->lock_service->lock('ticket_type.' . $ticket_type->getId() . '.sell.lock', function () use ($ticket_type, $reservations) {
                     $ticket_type->sell($reservations[$ticket_type->getId()]);
-                });
+                }, 30);
 
             }
         });
@@ -974,7 +975,7 @@ final class ReserveTicketsTask extends AbstractTask
                 if (is_null($ticket_type)) return;
                 $this->lock_service->lock('ticket_type.' . $ticket_type->getId() . '.sell.lock', function () use ($ticket_type, $qty) {
                     $ticket_type->restore($qty);
-                });
+                }, 30);
             });
         }
     }
@@ -1482,6 +1483,11 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
     private $ticket_type_repository;
 
     /**
+     * @var ISummitRegistrationPromoCodeRepository
+     */
+    private $promo_code_repository;
+
+    /**
      * @var ILockManagerService
      */
     private $lock_service;
@@ -1494,19 +1500,21 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
      * @param IMemberRepository $member_repository
      * @param ISummitAttendeeRepository $attendee_repository
      * @param ISummitTicketTypeRepository $ticket_type_repository
+     * @param ISummitRegistrationPromoCodeRepository $promo_code_repository
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
      */
     public function __construct
     (
-        ?Member                     $owner,
-        Summit                      $summit,
-        array                       $payload,
-        IMemberRepository           $member_repository,
-        ISummitAttendeeRepository   $attendee_repository,
-        ISummitTicketTypeRepository $ticket_type_repository,
-        ITransactionService         $tx_service,
-        ILockManagerService         $lock_service
+        ?Member                                 $owner,
+        Summit                                  $summit,
+        array                                   $payload,
+        IMemberRepository                       $member_repository,
+        ISummitAttendeeRepository               $attendee_repository,
+        ISummitTicketTypeRepository             $ticket_type_repository,
+        ISummitRegistrationPromoCodeRepository  $promo_code_repository,
+        ITransactionService                     $tx_service,
+        ILockManagerService                     $lock_service
     )
     {
         $this->tx_service = $tx_service;
@@ -1517,6 +1525,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
         $this->member_repository = $member_repository;
         $this->attendee_repository = $attendee_repository;
         $this->ticket_type_repository = $ticket_type_repository;
+        $this->promo_code_repository = $promo_code_repository;
     }
 
     public function run(array $formerState): array
@@ -1543,8 +1552,8 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
             if (empty($promo_code_val)) throw new ValidationException("Promo code is required.");
 
             $type_id = $ticket_dto['type_id'];
-            $order = $this->lock_service->lock('ticket_type.' . $type_id . 'promo_code.' . $promo_code_val . '.sell.lock',
-                function () use ($promo_code_val, $type_id) {
+            $order = $this->lock_service->lock('ticket_type.' . $type_id . '.promo_code.' . $promo_code_val . '.sell.lock',
+                function () use ($promo_code_val, $type_id, $ticket_dto) {
 
                     $attendee_email = $this->owner->getEmail();
                     // use what we have on payload first
@@ -1562,7 +1571,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
                     if (empty($attendee_last_name))
                         $attendee_last_name = $this->payload['owner_last_name'] ?? $this->owner->getLastName();
 
-                    $promo_code = $this->summit->getPromoCodeByCode($promo_code_val);
+                    $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $promo_code_val);
                     if (!PromoCodesUtils::isPrePaidPromoCode($promo_code))
                         throw new EntityNotFoundException("Promo code is not found.");
 
@@ -1665,7 +1674,7 @@ final class AutoAssignPrePaidTicketTask extends AbstractTask
 
 
                     return $order;
-                });
+                }, 30);
             return ['order' => $order];
         });
     }

@@ -15,7 +15,8 @@
         "/api/public/v1/countries": {
             "get": {
                 "tags": [
-                    "Countries"
+                    "Countries",
+                    "Public"
                 ],
                 "summary": "Get all countries",
                 "description": "Get all countries with ISO codes",
@@ -46,7 +47,8 @@
         "/api/public/v1/languages": {
             "get": {
                 "tags": [
-                    "Languages"
+                    "Languages",
+                    "Public"
                 ],
                 "summary": "Get all languages",
                 "description": "Get all available languages with ISO codes",
@@ -78,7 +80,8 @@
             "get": {
                 "tags": [
                     "Appliances",
-                    "Marketplace"
+                    "Marketplace",
+                    "Public"
                 ],
                 "summary": "Get all appliances",
                 "description": "Get all marketplace appliances (OpenStack implementations)",
@@ -184,7 +187,8 @@
         "/api/public/v1/marketplace/consultants": {
             "get": {
                 "tags": [
-                    "Consultants"
+                    "Consultants",
+                    "Public"
                 ],
                 "summary": "Get all consultants",
                 "description": "Get all marketplace consultants and consulting services",
@@ -270,7 +274,8 @@
             "get": {
                 "tags": [
                     "Marketplace",
-                    "Marketplace Distributions"
+                    "Marketplace Distributions",
+                    "Public"
                 ],
                 "summary": "Get all distributions",
                 "description": "Get all marketplace distributions (OpenStack implementations)",
@@ -377,7 +382,8 @@
             "get": {
                 "tags": [
                     "Marketplace",
-                    "Clouds"
+                    "Clouds",
+                    "Public"
                 ],
                 "summary": "Get all hosted private clouds",
                 "description": "Get all marketplace hosted private cloud services (OpenStack implementations)",
@@ -484,7 +490,8 @@
             "get": {
                 "tags": [
                     "Marketplace",
-                    "Clouds"
+                    "Clouds",
+                    "Public"
                 ],
                 "summary": "Get all public clouds",
                 "description": "Get all marketplace public cloud services (OpenStack implementations)",
@@ -591,7 +598,8 @@
             "get": {
                 "tags": [
                     "Marketplace",
-                    "Clouds"
+                    "Clouds",
+                    "Public"
                 ],
                 "summary": "Get all remotely managed private clouds",
                 "description": "Get all marketplace remotely managed private cloud services (OpenStack implementations)",
@@ -809,7 +817,8 @@
         "/api/public/v1/files/upload": {
             "post": {
                 "tags": [
-                    "Files"
+                    "Files",
+                    "Public"
                 ],
                 "summary": "Upload file with chunked upload support",
                 "description": "Upload files using chunked upload mechanism. Supports large file uploads by splitting them into smaller chunks. The endpoint handles both complete uploads and chunked progress updates.",
@@ -1007,7 +1016,8 @@
         "/api/public/v1/companies": {
             "get": {
                 "tags": [
-                    "Companies (Public)"
+                    "Companies (Public)",
+                    "Public"
                 ],
                 "summary": "Get all companies (Public)",
                 "description": "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
@@ -1264,7 +1274,8 @@
         "/api/public/v1/companies/{id}": {
             "get": {
                 "tags": [
-                    "Companies (Public)"
+                    "Companies (Public)",
+                    "Public"
                 ],
                 "summary": "Get a specific company (Public)",
                 "description": "Returns detailed information about a specific company",
@@ -1719,7 +1730,8 @@
         "/api/public/v1/elections/current": {
             "get": {
                 "tags": [
-                    "Elections (Public)"
+                    "Elections (Public)",
+                    "Public"
                 ],
                 "summary": "Get current election",
                 "description": "Get the current active election",
@@ -1814,7 +1826,8 @@
         "/api/public/v1/elections/current/candidates": {
             "get": {
                 "tags": [
-                    "Elections (Public)"
+                    "Elections (Public)",
+                    "Public"
                 ],
                 "summary": "Get current election candidates",
                 "description": "Get all accepted candidates for the current election. Supports expand parameter to include member and/or election objects",
@@ -1985,7 +1998,8 @@
         "/api/public/v1/elections/current/candidates/gold": {
             "get": {
                 "tags": [
-                    "Elections (Public)"
+                    "Elections (Public)",
+                    "Public"
                 ],
                 "summary": "Get current election gold candidates",
                 "description": "Get all gold (featured) candidates for the current election. Supports expand parameter to include member and/or election objects",
@@ -2399,7 +2413,8 @@
         "/api/public/v1/legal-documents/{id}": {
             "get": {
                 "tags": [
-                    "Legal Documents"
+                    "Legal Documents",
+                    "Public"
                 ],
                 "summary": "Get a legal document by ID or slug",
                 "description": "Retrieves a legal document (privacy policy, terms of service, etc.) by its numeric ID or URL-friendly slug. This is a public endpoint that does not require authentication.",
@@ -2442,7 +2457,8 @@
         "/api/public/v1/members": {
             "get": {
                 "tags": [
-                    "Members (Public)"
+                    "Members (Public)",
+                    "Public"
                 ],
                 "summary": "Get all members",
                 "description": "Returns a paginated list of members with optional filtering, sorting and search capabilities",
@@ -2605,7 +2621,8 @@
         "/api/public/v1/members/all/companies": {
             "get": {
                 "tags": [
-                    "Members (Public)"
+                    "Members (Public)",
+                    "Public"
                 ],
                 "summary": "Get all member companies",
                 "description": "Returns a paginated list of companies from member profiles",
@@ -2766,7 +2783,8 @@
         "/api/public/v1/members/{member_id}": {
             "get": {
                 "tags": [
-                    "Members (Public)"
+                    "Members (Public)",
+                    "Public"
                 ],
                 "summary": "Get member by ID",
                 "description": "Returns a member profile by ID",
@@ -3635,7 +3653,8 @@
         "/api/public/v1/sponsored-projects": {
             "get": {
                 "tags": [
-                    "Sponsored Projects (Public)"
+                    "Sponsored Projects (Public)",
+                    "Public"
                 ],
                 "summary": "Read All Sponsored Projects (Public)",
                 "description": "Get all sponsored projects (public endpoint)",
@@ -3857,7 +3876,8 @@
         "/api/public/v1/sponsored-projects/{id}": {
             "get": {
                 "tags": [
-                    "Sponsored Projects (Public)"
+                    "Sponsored Projects (Public)",
+                    "Public"
                 ],
                 "summary": "Read Sponsored Project (Public)",
                 "description": "Get a specific sponsored project (public endpoint)",
@@ -4084,7 +4104,8 @@
             "get": {
                 "tags": [
                     "Sponsored Projects (Public)",
-                    "Sponsorship Types (Public)"
+                    "Sponsorship Types (Public)",
+                    "Public"
                 ],
                 "summary": "Read All Sponsorship Types (Public)",
                 "description": "Get all sponsorship types for a sponsored project (public endpoint)",
@@ -4345,7 +4366,8 @@
             "get": {
                 "tags": [
                     "Sponsored Projects (Public)",
-                    "Sponsorship Types (Public)"
+                    "Sponsorship Types (Public)",
+                    "Public"
                 ],
                 "summary": "Read Sponsorship Type (Public)",
                 "description": "Get a specific sponsorship type (public endpoint)",
@@ -4611,7 +4633,8 @@
             "get": {
                 "tags": [
                     "Sponsored Projects (Public)",
-                    "Supporting Companies (Public)"
+                    "Supporting Companies (Public)",
+                    "Public"
                 ],
                 "summary": "Read All Supporting Companies (Public)",
                 "description": "Get all supporting companies for a sponsorship type (public endpoint)",
@@ -6271,7 +6294,8 @@
         "/api/public/v1/user-stories": {
             "get": {
                 "tags": [
-                    "User Stories (Public)"
+                    "User Stories (Public)",
+                    "Public"
                 ],
                 "summary": "Get all user stories",
                 "description": "Retrieves a paginated list of user stories showcasing real-world use cases and success stories from the OpenStack community. User stories highlight how organizations use OpenStack in production. This is a public endpoint that can return different data based on authentication (more details for authenticated users).",
@@ -12198,7 +12222,8 @@
         "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}": {
             "get": {
                 "tags": [
-                    "RSVP Invitations (Public)"
+                    "RSVP Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Get RSVP Invitation By Token",
                 "description": "",
@@ -12262,7 +12287,8 @@
         "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}/accept": {
             "put": {
                 "tags": [
-                    "RSVP Invitations (Public)"
+                    "RSVP Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Accept RSVP Invitation",
                 "description": "",
@@ -12326,7 +12352,8 @@
         "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}/decline": {
             "delete": {
                 "tags": [
-                    "RSVP Invitations (Public)"
+                    "RSVP Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Decline RSVP Invitation",
                 "description": "",
@@ -13055,7 +13082,8 @@
         "/api/public/v1/summits": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get summits list (public)",
                 "operationId": "getSummitsPublic",
@@ -13217,7 +13245,8 @@
         "/api/public/v1/summits/all": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get all summits (public)",
                 "operationId": "getAllSummitsPublic",
@@ -13464,7 +13493,8 @@
         "/api/public/v1/summits/{id}": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get summit by ID or slug (public)",
                 "operationId": "getSummitPublic",
@@ -13578,7 +13608,8 @@
         "/api/public/v1/summits/all/current": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get current summit (public)",
                 "operationId": "getAllCurrentSummitPublic",
@@ -13622,7 +13653,8 @@
         "/api/public/v1/summits/all/{id}": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get all summit by ID or Slug (public)",
                 "operationId": "getAllCurrentSummitByIDOrSlugPublic",
@@ -21649,7 +21681,8 @@
         "/api/public/v1/summits/{id}/events/published": {
             "get": {
                 "tags": [
-                    "Summit Events (Public)"
+                    "Summit Events (Public)",
+                    "Public"
                 ],
                 "summary": "Get all published/scheduled events for a summit",
                 "description": "Retrieves a paginated list of all published events for a specific summit.",
@@ -21744,7 +21777,8 @@
         "/api/public/v1/summits/{id}/events/all/published/tags": {
             "get": {
                 "tags": [
-                    "Summit Events (Public)"
+                    "Summit Events (Public)",
+                    "Public"
                 ],
                 "summary": "Get all tags from published events for a summit",
                 "description": "Retrieves a paginated list of tags used in published events for a specific summit. This is a public endpoint.",
@@ -22500,7 +22534,8 @@
         "/api/public/v1/summits/{id}/events/{event_id}/published": {
             "get": {
                 "tags": [
-                    "Summit Events (Public)"
+                    "Summit Events (Public)",
+                    "Public"
                 ],
                 "summary": "Get a specific published/scheduled event by ID",
                 "description": "Retrieves a single published event by its ID for a specific summit.",
@@ -24455,7 +24490,8 @@
         "/api/public/v1/summits/{id}/events/all/published/overflow": {
             "get": {
                 "tags": [
-                    "Summit Events (Public)"
+                    "Summit Events (Public)",
+                    "Public"
                 ],
                 "summary": "Get overflow streaming information (Public)",
                 "description": "Retrieves overflow streaming information for published events. This is a public endpoint.",
@@ -27902,7 +27938,8 @@
         "/api/public/v1/summits/{id}/locations/{location_id}": {
             "get": {
                 "tags": [
-                    "Summit Locations (Public)"
+                    "Summit Locations (Public)",
+                    "Public"
                 ],
                 "summary": "Get a specific location by ID (Public)",
                 "operationId": "getLocationByIdPublic",
@@ -28313,7 +28350,8 @@
         "/api/public/v1/summits/{id}/locations/{location_id}/events/published": {
             "get": {
                 "tags": [
-                    "Summit Locations (Public)"
+                    "Summit Locations (Public)",
+                    "Public"
                 ],
                 "summary": "Get published events for a location (Public)",
                 "operationId": "getLocationPublishedEventsPublic",
@@ -29993,7 +30031,8 @@
         "/api/public/v1/summits/{id}/locations/{location_id}/banners": {
             "get": {
                 "tags": [
-                    "Summit Locations (Public)"
+                    "Summit Locations (Public)",
+                    "Public"
                 ],
                 "summary": "Get all banners for a location",
                 "operationId": "getLocationBannersPublic",
@@ -33305,7 +33344,8 @@
         "/api/public/v1/summits/{id}/members/all/schedule/ics/{cid}": {
             "get": {
                 "tags": [
-                    "Summit Members (Public)"
+                    "Summit Members (Public)",
+                    "Public"
                 ],
                 "description": "Get calendar feed in ICS format for member schedule",
                 "operationId": "getCalendarFeedICS",
@@ -34175,7 +34215,8 @@
         "/api/public/v1/summits/{id}/notifications/sent": {
             "get": {
                 "tags": [
-                    "Summit Notifications (Public)"
+                    "Summit Notifications (Public)",
+                    "Public"
                 ],
                 "summary": "Get all approved push notifications sent to current user",
                 "operationId": "getApprovedNotificationsPublic",
@@ -34838,7 +34879,8 @@
         "/api/public/v1/summits/{id}/order-extra-questions": {
             "get": {
                 "tags": [
-                    "Order Extra Questions (Public)"
+                    "Order Extra Questions (Public)",
+                    "Public"
                 ],
                 "description": "Get all order extra questions for a summit (public endpoint)",
                 "operationId": "getAllOrderExtraQuestionsPublic",
@@ -36076,7 +36118,8 @@
         "/api/public/v1/summits/{id}/orders/reserve": {
             "post": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Reserve tickets in an order (Public)",
                 "description": "Creates a reservation for tickets. Can be called anonymously or by authenticated users.",
@@ -36187,7 +36230,8 @@
         "/api/public/v1/summits/{id}/orders/{hash}/checkout": {
             "put": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Checkout a reserved order (Public)",
                 "description": "Processes payment and completes an order reservation",
@@ -36316,7 +36360,8 @@
         "/api/public/v1/summits/{id}/orders/{hash}/tickets/mine": {
             "get": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Get my ticket by order hash (Public)",
                 "description": "Returns ticket information for the current user using order hash",
@@ -36413,7 +36458,8 @@
         "/api/public/v1/summits/{id}/orders/{hash}": {
             "delete": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Cancel order by hash (Public)",
                 "description": "Cancels an order using its hash",
@@ -37838,7 +37884,8 @@
         "/api/public/v1/summits/all/orders/all/tickets/{hash}": {
             "get": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Get ticket by hash (public endpoint)",
                 "description": "Returns ticket information using public hash. No authentication required.",
@@ -37872,7 +37919,8 @@
             },
             "put": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Update ticket by hash (public endpoint)",
                 "description": "Updates ticket information using public hash. No authentication required.",
@@ -37924,7 +37972,8 @@
         "/api/public/v1/summits/all/orders/{order_hash}/tickets": {
             "put": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Update tickets by order hash",
                 "description": "Updates multiple tickets information using order hash. No authentication required.",
@@ -38041,7 +38090,8 @@
         "/api/public/v1/summits/all/orders/all/tickets/{hash}/regenerate": {
             "put": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Regenerate ticket hash",
                 "description": "Regenerates the public hash for a ticket. No authentication required.",
@@ -38070,7 +38120,8 @@
         "/api/public/v1/summits/all/orders/all/tickets/{hash}/pdf": {
             "get": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Get ticket PDF by hash",
                 "description": "Generates and returns ticket PDF using public hash. No authentication required.",
@@ -44791,7 +44842,8 @@
         "/api/public/v1/summits/{id}/registration-invitations/{token}": {
             "get": {
                 "tags": [
-                    "Summit Registration Invitations (Public)"
+                    "Summit Registration Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Get a registration invitation by summit and token (public endpoint)",
                 "operationId": "getInvitationBySummitAndToken",
@@ -44837,7 +44889,8 @@
         "/api/public/v1/summits/{id}/registration-invitations/{token}/reject": {
             "delete": {
                 "tags": [
-                    "Summit Registration Invitations (Public)"
+                    "Summit Registration Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Reject a registration invitation by summit and token (public endpoint)",
                 "operationId": "rejectInvitationBySummitAndToken",
@@ -46845,7 +46898,8 @@
         "/api/public/v1/summits/{id}/selection-plans/current/{status}": {
             "get": {
                 "tags": [
-                    "Selection Plans (Public)"
+                    "Selection Plans (Public)",
+                    "Public"
                 ],
                 "summary": "Get current selection plan by status (Public)",
                 "description": "Retrieves the current active selection plan for a summit filtered by status. This is a public endpoint.",
@@ -50522,7 +50576,8 @@
         "/api/public/v1/summits/{id}/speakers": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Get all speakers for a summit with filtering and pagination (public)",
                 "operationId": "getSpeakersPublic",
@@ -51316,7 +51371,8 @@
         "/api/public/v1/summits/{id}/speakers/{speaker_id}": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Get a specific speaker by ID for a summit (public)",
                 "operationId": "getSummitSpeakerPublic",
@@ -52667,7 +52723,8 @@
         "/api/public/v1/speakers/{speaker_id}/edit-permission/{token}/approve": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Approve edit permission request for a speaker profile (public endpoint)",
                 "operationId": "approveSpeakerEditPermission",
@@ -52710,7 +52767,8 @@
         "/api/public/v1/speakers/{speaker_id}/edit-permission/{token}/decline": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Decline edit permission request for a speaker profile (public endpoint)",
                 "operationId": "declineSpeakerEditPermission",
@@ -53067,7 +53125,8 @@
         "/api/public/v1/speakers/all/companies": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Get all companies associated with speakers (public endpoint)",
                 "operationId": "getAllSpeakerCompanies",
@@ -53997,7 +54056,8 @@
         "/api/public/v1/summits/all/{id}/sponsors": {
             "get": {
                 "tags": [
-                    "Sponsors (Public)"
+                    "Sponsors (Public)",
+                    "Public"
                 ],
                 "summary": "Get Sponsors by Summit ID (Public)",
                 "description": "Get all sponsors for a summit",
@@ -65676,7 +65736,8 @@
         "/api/public/v1/summits/{id}/tracks/{track_id}": {
             "get": {
                 "tags": [
-                    "Summit Tracks (Public)"
+                    "Summit Tracks (Public)",
+                    "Public"
                 ],
                 "description": "Get a specific track by ID",
                 "operationId": "getTrackBySummitPublic",
@@ -66795,7 +66856,8 @@
         "/api/public/v1/summits/{id}/event-types/{event_type_id}": {
             "get": {
                 "tags": [
-                    "Event Types (Public)"
+                    "Event Types (Public)",
+                    "Public"
                 ],
                 "description": "Get a specific event type by ID",
                 "operationId": "getEventTypeBySummitPublic",
@@ -68468,7 +68530,8 @@
         "/api/public/v1/releases/current": {
             "get": {
                 "tags": [
-                    "Releases (Public)"
+                    "Releases (Public)",
+                    "Public"
                 ],
                 "description": "Retrieve the current OpenStack release",
                 "operationId": "getCurrentRelease",
@@ -68495,7 +68558,8 @@
         "/api/public/v1/timezones": {
             "get": {
                 "tags": [
-                    "Timezones (Public)"
+                    "Timezones (Public)",
+                    "Public"
                 ],
                 "description": "Retrieve all available timezones",
                 "operationId": "getTimezones",
@@ -68565,7 +68629,8 @@
         "/api/public/v1/summits/all/payments/{application_name}/confirm": {
             "post": {
                 "tags": [
-                    "Payment Gateway Webhook"
+                    "Payment Gateway Webhook",
+                    "Public"
                 ],
                 "summary": "Generic payment gateway webhook confirmation",
                 "description": "Handles payment gateway webhook callbacks for a given application type.",
@@ -68610,7 +68675,8 @@
         "/api/public/v1/summits/{id}/payments/{application_name}/confirm": {
             "post": {
                 "tags": [
-                    "Payment Gateway Webhook"
+                    "Payment Gateway Webhook",
+                    "Public"
                 ],
                 "summary": "Summit payment gateway webhook confirmation",
                 "description": "Handles payment gateway webhook callbacks for a given summit and application type.",
@@ -90856,6 +90922,10 @@
         {
             "name": "Countries",
             "description": "Countries"
+        },
+        {
+            "name": "Public",
+            "description": "Public"
         },
         {
             "name": "Languages",

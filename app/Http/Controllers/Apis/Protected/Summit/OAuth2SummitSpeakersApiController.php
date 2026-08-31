@@ -227,7 +227,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         path: '/api/public/v1/summits/{id}/speakers',
         operationId: 'getSpeakersPublic',
         description: 'Get all speakers for a summit with filtering and pagination (public)',
-        tags: ['Summit Speakers (Public)'],
+        tags: ['Summit Speakers (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -1040,7 +1040,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         path: '/api/public/v1/summits/{id}/speakers/{speaker_id}',
         operationId: 'getSummitSpeakerPublic',
         description: 'Get a specific speaker by ID for a summit (public)',
-        tags: ['Summit Speakers (Public)'],
+        tags: ['Summit Speakers (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
@@ -2810,7 +2810,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         path: '/api/public/v1/speakers/{speaker_id}/edit-permission/{token}/approve',
         operationId: 'approveSpeakerEditPermission',
         description: 'Approve edit permission request for a speaker profile (public endpoint)',
-        tags: ['Summit Speakers (Public)'],
+        tags: ['Summit Speakers (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'speaker_id',
@@ -2860,7 +2860,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         path: '/api/public/v1/speakers/{speaker_id}/edit-permission/{token}/decline',
         operationId: 'declineSpeakerEditPermission',
         description: 'Decline edit permission request for a speaker profile (public endpoint)',
-        tags: ['Summit Speakers (Public)'],
+        tags: ['Summit Speakers (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'speaker_id',
@@ -3308,7 +3308,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         path: '/api/public/v1/speakers/all/companies',
         operationId: 'getAllSpeakerCompanies',
         description: 'Get all companies associated with speakers (public endpoint)',
-        tags: ['Summit Speakers (Public)'],
+        tags: ['Summit Speakers (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'page',

@@ -159,7 +159,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
         operationId: "getCurrentElection",
         summary: "Get current election",
         description: "Get the current active election",
-        tags: ["Elections (Public)"],
+        tags: ["Elections (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "expand",
@@ -261,7 +261,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
         operationId: "getCurrentElectionCandidates",
         summary: "Get current election candidates",
         description: "Get all accepted candidates for the current election. Supports expand parameter to include member and/or election objects",
-        tags: ["Elections (Public)"],
+        tags: ["Elections (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "page",
@@ -471,7 +471,7 @@ class OAuth2ElectionsApiController extends OAuth2ProtectedController
         operationId: "getCurrentGoldCandidates",
         summary: "Get current election gold candidates",
         description: "Get all gold (featured) candidates for the current election. Supports expand parameter to include member and/or election objects",
-        tags: ["Elections (Public)"],
+        tags: ["Elections (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "page",

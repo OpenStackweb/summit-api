@@ -40,7 +40,7 @@ final class ConsultantsApiController extends AbstractCompanyServiceApiController
         description: "Get all marketplace consultants and consulting services",
         summary: 'Get all consultants',
         operationId: 'getAllConsultants',
-        tags: ['Consultants'],
+        tags: ['Consultants', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'filter[]',

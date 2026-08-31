@@ -363,7 +363,7 @@ final class OAuth2SummitTracksApiController extends OAuth2ProtectedController
         path: "/api/public/v1/summits/{id}/tracks/{track_id}",
         operationId: "getTrackBySummitPublic",
         description: "Get a specific track by ID",
-        tags: ["Summit Tracks (Public)"],
+        tags: ["Summit Tracks (Public)", 'Public'],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "track_id", description: "Track ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),

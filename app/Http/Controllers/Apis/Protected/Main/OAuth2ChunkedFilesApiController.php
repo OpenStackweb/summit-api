@@ -41,7 +41,7 @@ class OAuth2ChunkedFilesApiController extends UploadController
         description: "Upload files using chunked upload mechanism. Supports large file uploads by splitting them into smaller chunks. The endpoint handles both complete uploads and chunked progress updates.",
         summary: 'Upload file with chunked upload support',
         operationId: 'uploadChunkedFile',
-        tags: ['Files'],
+        tags: ['Files', 'Public'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(

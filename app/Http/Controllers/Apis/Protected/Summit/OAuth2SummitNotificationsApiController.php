@@ -309,7 +309,7 @@ class OAuth2SummitNotificationsApiController extends OAuth2ProtectedController
         path: '/api/public/v1/summits/{id}/notifications/sent',
         operationId: 'getApprovedNotificationsPublic',
         summary: 'Get all approved push notifications sent to current user',
-        tags: ['Summit Notifications (Public)'],
+        tags: ['Summit Notifications (Public)', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'id',

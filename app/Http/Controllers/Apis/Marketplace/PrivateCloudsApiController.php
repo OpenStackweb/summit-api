@@ -37,7 +37,7 @@ final class PrivateCloudsApiController extends AbstractCompanyServiceApiControll
         description: "Get all marketplace hosted private cloud services (OpenStack implementations)",
         summary: 'Get all hosted private clouds',
         operationId: 'getAllHostedPrivateClouds',
-        tags: ['Marketplace', 'Clouds'],
+        tags: ['Marketplace', 'Clouds', 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'page',

@@ -48,7 +48,7 @@ final class ReleasesApiController extends OAuth2ProtectedController
         path: '/api/public/v1/releases/current',
         operationId: 'getCurrentRelease',
         description: 'Retrieve the current OpenStack release',
-        tags: ['Releases (Public)'],
+        tags: ['Releases (Public)', 'Public'],
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,

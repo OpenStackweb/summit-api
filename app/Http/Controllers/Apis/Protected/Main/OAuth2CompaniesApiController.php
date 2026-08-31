@@ -144,7 +144,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         operationId: "getAllCompaniesPublic",
         summary: "Get all companies (Public)",
         description: "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
-        tags: ["Companies (Public)"],
+        tags: ["Companies (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: 'page',
@@ -249,7 +249,7 @@ final class OAuth2CompaniesApiController extends OAuth2ProtectedController
         operationId: "getCompanyPublic",
         summary: "Get a specific company (Public)",
         description: "Returns detailed information about a specific company",
-        tags: ["Companies (Public)"],
+        tags: ["Companies (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "id",

@@ -41,7 +41,7 @@ final class LanguagesApiController extends JsonController
         description: "Get all available languages with ISO codes",
         summary: 'Get all languages',
         operationId: 'getAllLanguages',
-        tags: ['Languages'],
+        tags: ['Languages', 'Public'],
         responses: [
             new OA\Response(
                 response: 200,

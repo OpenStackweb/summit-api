@@ -821,7 +821,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         path: "/api/public/v1/summits/{id}/members/all/schedule/ics/{cid}",
         operationId: "getCalendarFeedICS",
         description: "Get calendar feed in ICS format for member schedule",
-        tags: ["Summit Members (Public)"],
+        tags: ["Summit Members (Public)", 'Public'],
         parameters: [
             new OA\Parameter(name: "id", description: "Summit ID", in: "path", required: true, schema: new OA\Schema(type: "integer")),
             new OA\Parameter(name: "cid", description: "Calendar ID", in: "path", required: true, schema: new OA\Schema(type: "string")),

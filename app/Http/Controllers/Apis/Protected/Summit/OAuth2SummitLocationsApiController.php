@@ -1363,7 +1363,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         path: '/api/public/v1/summits/{id}/locations/{location_id}',
         operationId: 'getLocationByIdPublic',
         summary: 'Get a specific location by ID (Public)',
-        tags: ['Summit Locations (Public)'],
+        tags: ['Summit Locations (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),
@@ -1563,7 +1563,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         path: '/api/public/v1/summits/{id}/locations/{location_id}/events/published',
         operationId: 'getLocationPublishedEventsPublic',
         summary: 'Get published events for a location (Public)',
-        tags: ['Summit Locations (Public)'],
+        tags: ['Summit Locations (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID or "tbd"', schema: new OA\Schema(type: 'string')),
@@ -2999,7 +2999,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
         path: '/api/public/v1/summits/{id}/locations/{location_id}/banners',
         operationId: 'getLocationBannersPublic',
         summary: 'Get all banners for a location',
-        tags: ['Summit Locations (Public)'],
+        tags: ['Summit Locations (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID', schema: new OA\Schema(type: 'integer')),

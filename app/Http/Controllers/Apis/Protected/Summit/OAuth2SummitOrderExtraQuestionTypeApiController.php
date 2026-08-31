@@ -155,7 +155,7 @@ final class OAuth2SummitOrderExtraQuestionTypeApiController
         path: "/api/public/v1/summits/{id}/order-extra-questions",
         operationId: "getAllOrderExtraQuestionsPublic",
         description: "Get all order extra questions for a summit (public endpoint)",
-        tags: ["Order Extra Questions (Public)"],
+        tags: ["Order Extra Questions (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "id",

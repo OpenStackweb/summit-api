@@ -64,7 +64,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         operationId: 'getAllMembersPublic',
         summary: 'Get all members',
         description: 'Returns a paginated list of members with optional filtering, sorting and search capabilities',
-        tags: ['Members (Public)'],
+        tags: ['Members (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
@@ -180,7 +180,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         operationId: 'getAllMemberCompanies',
         summary: 'Get all member companies',
         description: 'Returns a paginated list of companies from member profiles',
-        tags: ['Members (Public)'],
+        tags: ['Members (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10, maximum: 100)),
@@ -341,7 +341,7 @@ final class OAuth2MembersApiController extends OAuth2ProtectedController
         operationId: 'getMemberById',
         summary: 'Get member by ID',
         description: 'Returns a member profile by ID',
-        tags: ['Members (Public)'],
+        tags: ['Members (Public)', 'Public'],
         parameters: [
             new OA\Parameter(name: 'member_id', in: 'path', required: true, description: 'Member ID', schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand relationships', schema: new OA\Schema(type: 'string')),

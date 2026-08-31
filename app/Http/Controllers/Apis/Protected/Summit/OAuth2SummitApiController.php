@@ -189,7 +189,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         path: "/api/public/v1/summits",
         operationId: "getSummitsPublic",
         summary: "Get summits list (public)",
-        tags: ["Summits (Public)"],
+        tags: ["Summits (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "page",
@@ -388,7 +388,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         path: "/api/public/v1/summits/all",
         operationId: "getAllSummitsPublic",
         summary: "Get all summits (public)",
-        tags: ["Summits (Public)"],
+        tags: ["Summits (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "page",
@@ -590,7 +590,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         path: "/api/public/v1/summits/{id}",
         operationId: "getSummitPublic",
         summary: "Get summit by ID or slug (public)",
-        tags: ["Summits (Public)"],
+        tags: ["Summits (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -710,7 +710,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         path: "/api/public/v1/summits/all/current",
         operationId: "getAllCurrentSummitPublic",
         summary: "Get current summit (public)",
-        tags: ["Summits (Public)"],
+        tags: ["Summits (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "relations",
@@ -778,7 +778,7 @@ final class OAuth2SummitApiController extends OAuth2ProtectedController
         path: "/api/public/v1/summits/all/{id}",
         operationId: "getAllCurrentSummitByIDOrSlugPublic",
         summary: "Get all summit by ID or Slug (public)",
-        tags: ["Summits (Public)"],
+        tags: ["Summits (Public)", 'Public'],
         parameters: [
             new OA\Parameter(
                 name: "id",

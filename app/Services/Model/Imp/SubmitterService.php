@@ -143,6 +143,7 @@ final class SubmitterService
                                     'full_name' => ['=@', '@@', '=='],
                                     'member_id' => ['=='],
                                     'member_user_external_id' => ['=='],
+                                    'has_pending_presentations' => ['=='],
                                     'has_accepted_presentations' => ['=='],
                                     'has_alternate_presentations' => ['=='],
                                     'has_rejected_presentations' => ['=='],

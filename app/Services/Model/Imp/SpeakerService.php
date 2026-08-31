@@ -1323,6 +1323,7 @@ final class SpeakerService
                                     'last_name' => ['=@', '@@', '=='],
                                     'email' => ['=@', '@@', '=='],
                                     'full_name' => ['=@', '@@', '=='],
+                                    'has_pending_presentations' => ['=='],
                                     'has_accepted_presentations' => ['=='],
                                     'has_alternate_presentations' => ['=='],
                                     'has_rejected_presentations' => ['=='],

@@ -132,6 +132,16 @@ class SponsorUserPermissionTrackingTest extends TestCase
         )->fetchOne();
     }
 
+    private function assertNoSponsorUsersRowExists(int $sponsor_id, int $member_id): void
+    {
+        $conn = self::$em->getConnection();
+        $exists = $conn->executeQuery(
+            'SELECT COUNT(*) FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
+            [$sponsor_id, $member_id]
+        )->fetchOne();
+        $this->assertEquals(0, (int)$exists, 'Pre-condition: no Sponsor_Users row should exist');
+    }
+
     // -------------------------------------------------------------------------
     // addSponsorUserToGroup
     // -------------------------------------------------------------------------
@@ -151,14 +161,8 @@ class SponsorUserPermissionTrackingTest extends TestCase
         $external_id = self::$member->getUserExternalId();
         $summit_id   = self::$summit->getId();
 
-        $conn = self::$em->getConnection();
-
         // Confirm no row exists before the call.
-        $exists = $conn->executeQuery(
-            'SELECT COUNT(*) FROM Sponsor_Users WHERE SponsorID = ? AND MemberID = ?',
-            [$sponsor_id, $member_id]
-        )->fetchOne();
-        $this->assertEquals(0, (int)$exists, 'Pre-condition: no Sponsor_Users row should exist');
+        $this->assertNoSponsorUsersRowExists($sponsor_id, $member_id);
 
         $this->getService()->addSponsorUserToGroup($external_id, IGroup::Sponsors, $sponsor_id, $summit_id);
 

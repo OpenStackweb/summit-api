@@ -151,6 +151,7 @@ class AccessTokenServiceStub implements IAccessTokenService
             SummitScopes::DeleteRegistrationOrders,
             SummitScopes::UpdateRegistrationOrders,
             SummitScopes::UpdateMyRegistrationOrders,
+            SummitScopes::DeleteMyRegistrationOrders,
             SummitScopes::WriteBadgeScan,
             SummitScopes::ReadBadgeScan,
             SummitScopes::CreateRegistrationOrders,

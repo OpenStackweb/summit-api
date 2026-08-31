@@ -587,6 +587,7 @@ class Member extends SilverstripeBaseModel
     public function setGroups($groups)
     {
         $this->groups = $groups;
+        $this->groupMembershipCache = [];
     }
 
     /**
@@ -2059,6 +2060,7 @@ SQL;
 
     public function clearGroups():void{
         $this->groups->clear();
+        $this->groupMembershipCache = [];
     }
     /**
      * @param Group $group
@@ -2067,6 +2069,9 @@ SQL;
     {
         if ($this->groups->contains($group)) return;
         $this->groups->add($group);
+        // belongsToGroup() memoizes per instance against the DB; a mutation makes
+        // that memo stale (the fresh row/removal becomes visible after flush).
+        $this->groupMembershipCache = [];
     }
 
     public function removeFromGroup(Group $group)
@@ -2074,6 +2079,7 @@ SQL;
         if (!$this->groups->contains($group)) return;
         $this->groups->removeElement($group);
         //$group->removeMember($this);
+        $this->groupMembershipCache = [];
     }
 
     /**

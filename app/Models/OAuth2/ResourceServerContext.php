@@ -423,6 +423,13 @@ final class ResourceServerContext implements IResourceServerContext
                     $member_by_email->getId()
                 ));
                 $member_by_email->setEmail(sprintf("%s-invalid@invalid", $member_by_email->getId()));
+                // Member.Email is unique: flush the invalidation NOW, inside the still-open
+                // transaction, so the resolved member's own email UPDATE below can never be
+                // ordered first by the UnitOfWork and hit the unique index while the former
+                // owner still holds the email. Rolled back with the transaction if anything
+                // later fails. Same flush-now idiom as MemberService::registerExternalUser's
+                // twin guard (add($entity, true)).
+                $this->member_repository->add($member_by_email, true);
             }
             $member->setEmail($user_email);
         }

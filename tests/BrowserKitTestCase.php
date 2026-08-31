@@ -44,23 +44,8 @@ abstract class BrowserKitTestCase extends BaseTestCase {
 
     protected function setUp(): void {
         parent::setUp(); // Don't forget this!
-        // Explicitly rollback any open Doctrine transaction before closing the
-        // connection. close() alone nulls the PDO reference but PHP may not
-        // GC it immediately, leaving InnoDB row locks held. Rolling back first
-        // releases the locks unconditionally, regardless of GC timing.
-        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
-        $conn = $em->getConnection();
-        if ($conn->isTransactionActive()) {
-            $conn->rollBack();
-        }
-        $conn->close();
-        Registry::resetManager(SilverstripeBaseModel::EntityManager);
-        Queue::fake();
         $this->redis = Redis::connection();
         $this->redis->flushall();
-        // Reduce lock wait timeout so orphaned-process lock conflicts fail in
-        // 3 s instead of the default 50 s, keeping stuck test runs tolerable.
-        DB::connection('model')->statement('SET SESSION innodb_lock_wait_timeout = 3');
         $this->prepareForTests();
     }
 

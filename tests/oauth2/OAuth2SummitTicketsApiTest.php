@@ -1594,6 +1594,186 @@ CSV;
         $this->assertTrue(in_array($response->getStatusCode(), [201, 412]));
     }
 
+    public function testUpdateMyTicketByIdWithoutEmailPreservesMemberLink()
+    {
+        // ticket already owned by an attendee linked to the current member,
+        // mirroring a real self-service edit (e.g. answering extra questions)
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $ticket = $attendee->getTickets()->first();
+        $this->assertNotNull($ticket);
+
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $summit_id = self::$summit->getId();
+        $member_id = self::$member->getId();
+
+        $params = [
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        // no attendee_email in the payload, as the attendee app never sends one
+        $data = [
+            'attendee_company' => 'Regression Test Co',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@updateMyTicketById",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+
+        // force a fresh load from the DB, matching how a subsequent request behaves
+        \LaravelDoctrine\ORM\Facades\EntityManager::clear();
+
+        $summit = \LaravelDoctrine\ORM\Facades\EntityManager::getRepository(\models\summit\Summit::class)->find($summit_id);
+        $reloaded_attendee = $summit->getAttendeeByMemberId($member_id);
+        $this->assertNotNull(
+            $reloaded_attendee,
+            "attendee <-> member link must not be cleared by a self-service ticket update that does not touch attendee_email"
+        );
+        $this->assertEquals('Regression Test Co', $reloaded_attendee->getCompanyName());
+
+        // reproduces the reported symptom: GET attendees/me must not 404 right after the update
+        $me_response = $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getOwnAttendee",
+            ['id' => $summit_id],
+            [],
+            [],
+            [],
+            $headers
+        );
+        $this->assertResponseStatus(200);
+    }
+
+    public function testUpdateMyTicketByIdWithUnmatchedEmailClearsMemberLink()
+    {
+        // attendee is linked to the current member, but the member's account email has since
+        // drifted away from the attendee's cached email (e.g. the member updated it elsewhere) ...
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $ticket = $attendee->getTickets()->first();
+        $this->assertNotNull($ticket);
+        $stale_email = $attendee->getEmail();
+
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+        self::$member->setEmail('drifted-' . $stale_email);
+        self::$em->persist($order);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $attendee_id = $attendee->getId();
+
+        $params = [
+            'ticket_id' => $ticket->getId(),
+        ];
+
+        // the attendee app re-sends the (now stale) email it last fetched, unchanged from the
+        // attendee's point of view, but it no longer resolves to any member account
+        $data = [
+            'attendee_email' => $stale_email,
+            'attendee_company' => 'Regression Test Co',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@updateMyTicketById",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+
+        \LaravelDoctrine\ORM\Facades\EntityManager::clear();
+
+        $reloaded_attendee = \LaravelDoctrine\ORM\Facades\EntityManager::getRepository(\models\summit\SummitAttendee::class)->find($attendee_id);
+        $this->assertNotNull($reloaded_attendee);
+        $this->assertNull(
+            $reloaded_attendee->getMember(),
+            "an explicit attendee_email that no longer resolves to any member account must still clear the link"
+        );
+    }
+
+    public function testUpdateTicketByHashWithoutEmailPreservesMemberLink()
+    {
+        // mirrors the self-service "no email in the payload" case, but through the public,
+        // hash-based edit link (updateTicketByHash never includes attendee_email at all)
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $ticket = $attendee->getTickets()->first();
+        $this->assertNotNull($ticket);
+
+        $ticket->generateHash();
+        self::$em->persist($ticket);
+        self::$em->flush();
+
+        $hash = $ticket->getHash();
+        $member_id = self::$defaultMember->getId();
+
+        $params = [
+            'hash' => $hash,
+        ];
+
+        $data = [
+            'attendee_company' => 'Regression Test Co',
+        ];
+
+        $headers = [
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@updateTicketByHash",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+
+        \LaravelDoctrine\ORM\Facades\EntityManager::clear();
+
+        $summit = \LaravelDoctrine\ORM\Facades\EntityManager::getRepository(\models\summit\Summit::class)->find(self::$summit->getId());
+        $reloaded_attendee = $summit->getAttendeeByMemberId($member_id);
+        $this->assertNotNull(
+            $reloaded_attendee,
+            "attendee <-> member link must not be cleared by a hash-based public ticket update that does not touch attendee_email"
+        );
+        $this->assertEquals('Regression Test Co', $reloaded_attendee->getCompanyName());
+    }
+
     public function testDelegateTicket()
     {
         $ticket = self::$summit_orders[0]->getFirstTicket();

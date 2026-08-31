@@ -287,7 +287,6 @@ rather than the nested-rollback contract itself.
 | `SummitPromoCodeService::addPromoCode` | `addPromoCodeTicketTypeRule` | `tests/SummitPromoCodeServiceTest.php` | **Partial commit, not full rollback** — this is actually two separate, sequential root transactions; the promo code from the first survives even when the second (ticket-type-rules) transaction fails |
 | `SelectionPlanOrderExtraQuestionTypeService::updateExtraQuestionBySelectionPlan` | `updateExtraQuestion` | `tests/SelectionPlanOrderExtraQuestionTypeServiceTest.php` | Full rollback — a question not assigned to the target plan lets the inner label change be written (flushed inside the still-open outer transaction), then the outer's assignment check fails and undoes it |
 | `SpeakerService::updateSpeakerBySummit` | `registerSummitPromoCodeByValue` | `tests/SpeakerServiceRegistrationTest.php` | Full rollback — `updateSpeaker`'s already-written title change is undone when the registration code is already claimed by another speaker |
-| `SponsorUserSyncService::addSponsorUserToGroup` | `SummitSponsorService::addSponsorUser` | `tests/Unit/Services/SponsorUserPermissionTrackingTest.php` | Full rollback — the eagerly-created `Sponsor_Users` row is written, then an unresolvable `group_slug` undoes it |
 | `SummitScheduleSettingsService::seedDefaults` | `add` (looped) | `tests/SummitScheduleSettingsServiceTest.php` | Full rollback — the loop's first successfully-added default is undone when the second's key already exists |
 | `SummitSelectedPresentationListService::assignPresentationToMyIndividualList` | `createIndividualSelectionList` | `tests/SummitSelectedPresentationListServiceTest.php` | Full rollback — the just-written new individual list is undone when the presentation lookup afterward fails |
 | `SummitService::unPublishEvents` | `unPublishEvent` (looped) | `tests/SummitServiceTest.php` | Full rollback — an earlier item's already-written unpublish is undone when a later item's event id doesn't exist |
@@ -305,14 +304,15 @@ rather than the nested-rollback contract itself.
 A follow-up codebase-wide search (same outer/inner shape: method A wrapped in its own
 `tx_service->transaction()` calling, with no local `try/catch` around the call, method B which
 is *also* wrapped in its own separate `tx_service->transaction()`) originally found 11
-additional pairs across 8 more services with no test proving the new rollback contract. 8 of
-those 11 are now covered (see Test Coverage Added above). The remaining 3 were verified against
+additional pairs across 8 more services with no test proving the new rollback contract. 7 of
+those 11 are now covered (see Test Coverage Added above). The remaining 4 were verified against
 the real code and found to have **no written-then-rolled-back proof reachable through their
 specific call site** — the same structural reason a genuine rollback test can't be built for
 them, not merely undiscovered test cases:
 
 | Outer → Inner | Why no test is possible here |
 |---|---|
+| `SponsorUserSyncService::addSponsorUserToGroup` → `SummitSponsorService::addSponsorUser` | Originally covered on this branch (the eagerly-created `Sponsor_Users` row was written, then an unresolvable `group_slug` undid it), but main's sponsors-permissions hardening (`0399459d4`, PR #582) invalidated the trigger: `assertAllowedSponsorGroup()` now rejects any slug outside `Sponsor::AllowedMemberGroups` with a `ValidationException` before the transaction even starts, and the group lookup (`getBySlug` → `EntityNotFoundException`) was moved ahead of the nested eager-create call — so every failure path now throws before the nested transaction writes anything, leaving nothing written for a rollback to undo. The test was dropped during the rebase onto that main. |
 | `SummitRegistrationInvitationService::add`/`update` → `TagService::addTag` | The outer's own pre-check (`$this->tag_repository->getByTag($tag_value)`) already uses the identical normalized comparison (`UPPER(TRIM(...))`, `DoctrineTagRepository.php:54-63`) that `addTag()`'s own duplicate check uses internally — no case/whitespace gap exists between them for a single synchronous request. `addTag()`'s own `ValidationException("Tag %s already exists!")` can only fire via a genuine concurrent race between two overlapping requests, which cannot be expressed deterministically in a test. |
 | `SummitSubmissionInvitationService::add`/`update` → `TagService::addTag` | Same reason as above. |
 | `SummitRSVPInvitationService::acceptInvitationBySummitEventAndToken` → `SummitRSVPService::rsvpEvent` | The outer method has no write before the nested `rsvpEvent()` call (its own guards, `:312-336`, are pure reads), and its only post-call write (`markAsAcceptedWithRSVP()`, `:343`) runs strictly *after* `rsvpEvent()` returns — so when the inner throws, there is nothing already written for a rollback to undo. Asserting `isAccepted() === false` afterward would hold identically true with `isRollbackOnly` fully disabled. |
@@ -340,8 +340,9 @@ as `SummitService::processRegistrationCompaniesData` above, not a rollback risk:
 `ScheduleService::publishAll` → `SummitService::publishEvent`; `SummitService::processEventData`
 (per-CSV-row) → `SpeakerService::addSpeaker`/`updateSpeaker`.
 
-With the 8 testable gaps closed and the remaining 3 confirmed structurally unreachable, this
-codebase-wide sweep for the outer/inner nested-transaction shape is complete.
+With the 7 testable gaps closed and the remaining 4 confirmed structurally unreachable (one of
+them — the `SponsorUserSyncService` pair — demoted from covered to unreachable by main's PR #582
+hardening), this codebase-wide sweep for the outer/inner nested-transaction shape is complete.
 
 ### Broken race recovery in `RegistrationIngestionService::ingestExternalAttendee` (pre-existing, both versions)
 

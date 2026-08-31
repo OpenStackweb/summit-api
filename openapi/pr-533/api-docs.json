@@ -7449,6 +7449,227 @@
                 ]
             }
         },
+        "/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen": {
+            "put": {
+                "tags": [
+                    "Presentations"
+                ],
+                "summary": "Admin-only: reopen the submission period for a presentation",
+                "operationId": "reopenSubmissionPeriod",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "presentation_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "hours": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Presentation"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "412": {
+                        "description": "Validation Error"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_presentations_auth": [
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/write-event",
+                            "http://localhost/summits/write-presentation"
+                        ]
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Presentations"
+                ],
+                "summary": "Admin-only: close the reopened submission period for a presentation",
+                "operationId": "closeSubmissionPeriod",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "presentation_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_presentations_auth": [
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/write-event",
+                            "http://localhost/summits/write-presentation"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen/notify": {
+            "put": {
+                "tags": [
+                    "Presentations"
+                ],
+                "summary": "Admin-only: notify selected recipients (submitter/speakers/moderator) that the submission period has been reopened",
+                "operationId": "notifySubmissionReopened",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "presentation_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "speaker_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "include_submitter": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "recipients": {
+                                            "type": "integer"
+                                        },
+                                        "skipped": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "412": {
+                        "description": "Validation Error"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_presentations_auth": [
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/write-event",
+                            "http://localhost/summits/write-presentation"
+                        ]
+                    }
+                ]
+            }
+        },
         "/api/v1/summits/{id}/presentations/{presentation_id}/completed": {
             "put": {
                 "tags": [
@@ -14737,7 +14958,7 @@
                     {
                         "name": "badge",
                         "in": "path",
-                        "description": "RAW Badge QR scan encoded on BASE 64",
+                        "description": "RAW Badge QR scan encoded on BASE 64 (standard RFC 4648 §4 or URL-safe §5 alphabet)",
                         "required": true,
                         "schema": {
                             "type": "string"

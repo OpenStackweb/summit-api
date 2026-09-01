@@ -242,14 +242,18 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
         if(!is_null($filter)){
             $filter->apply2Query($query, $this->getFilterMappings($filter));
         }
-        else if(!is_null($fnDefaultFilter)){
-            $query = call_user_func($fnDefaultFilter, $query);
-        }
 
         $query = $this->applyExtraFilters($query);
 
         if(!is_null($order)){
             $order->apply2Query($query, $this->getOrderMappings($filter));
+        }
+        else if(!is_null($fnDefaultFilter)){
+            // default order fallback, same contract as getParametrizedAllByPage: it applies
+            // whenever no explicit order was given, regardless of the filter. Chaining it to
+            // $filter instead left every filtered page paginated with LIMIT/OFFSET and no
+            // ORDER BY, which MySQL is free to return in a different order per page.
+            $query = call_user_func($fnDefaultFilter, $query);
         }
 
         $query = $query

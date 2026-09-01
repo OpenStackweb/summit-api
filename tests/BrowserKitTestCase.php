@@ -62,7 +62,7 @@ abstract class BrowserKitTestCase extends BaseTestCase {
             // clean up
             DB::setDefaultConnection("model");
             Artisan::call("doctrine:migrations:migrate", ["--em" => "config", "--no-interaction" => true]);
-            Artisan::call("doctrine:migrations:migrate", ["--em" => "model_write", "--no-interaction" => true]);
+            Artisan::call("doctrine:migrations:migrate", ["--em" => "model", "--no-interaction" => true]);
 
             DB::setDefaultConnection("config");
 

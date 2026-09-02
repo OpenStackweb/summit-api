@@ -1289,7 +1289,19 @@ final class SpeakerService
                 // this chunk. Log at error (not warning) so it surfaces to alerting; keep the
                 // loop going so a bad chunk doesn't also block every sibling chunk that would
                 // otherwise succeed.
-                Log::error($ex);
+                Log::error
+                (
+                    sprintf
+                    (
+                        "SpeakerService::triggerSendEmails summit %s: chunk of %s speaker(s) failed every dispatch tier (%s: %s). Unprocessed speaker ids: [%s]",
+                        $summit->getId(),
+                        count($chunk),
+                        get_class($ex),
+                        $ex->getMessage(),
+                        implode(', ', $chunk)
+                    ),
+                    ['summit_id' => $summit->getId(), 'speaker_ids' => $chunk, 'exception' => $ex]
+                );
             }
         }
     }

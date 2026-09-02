@@ -900,7 +900,41 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         // existed on the listing endpoints). This drives the real HTTP action, so it exercises
         // the controller's FilterParser::parse + Filter::validate against the shared
         // ISpeakerFilterFields constants AND the service's id resolution, end to end.
+        //
+        // The fixture summit has a single speaker with presentations (self::$defaultSpeaker),
+        // so on its own an exact-equality assertion would pass for the same reason an
+        // in_array one does. Seed a control speaker - different member, with a presentation
+        // in this summit - so "exactly [defaultSpeaker]" actually proves the filter narrowed.
         Queue::fake();
+
+        $prefix = str_random(10);
+        $control_member = new Member();
+        $control_member->setEmail("send-control+{$prefix}@test.com");
+        $control_member->setActive(true);
+        $control_member->setFirstName("Control");
+        $control_member->setLastName("Member");
+        $control_member->setEmailVerified(true);
+        $control_member->setUserExternalId(mt_rand());
+        self::$em->persist($control_member);
+
+        $control_speaker = new PresentationSpeaker();
+        $control_speaker->setFirstName("Control");
+        $control_speaker->setLastName("Speaker {$prefix}");
+        $control_speaker->setMember($control_member);
+        self::$em->persist($control_speaker);
+
+        $control_presentation = new Presentation();
+        self::$summit->addEvent($control_presentation);
+        $control_presentation->setTitle("Send control presentation {$prefix}");
+        $control_presentation->setAbstract("Abstract {$prefix}");
+        $control_presentation->setCategory(self::$defaultTrack);
+        $control_presentation->setType(self::$defaultPresentationType);
+        $control_presentation->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $control_presentation->setEndDate(new \DateTime('+1 hour', new \DateTimeZone('UTC')));
+        $control_presentation->addSpeaker($control_speaker);
+        self::$em->persist($control_presentation);
+
+        self::$em->flush();
 
         $params = [
             'id' => self::$summit->getId(),
@@ -931,12 +965,21 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
         $this->assertResponseStatus(200);
 
-        Queue::assertPushed(\App\Jobs\Emails\ProcessSpeakersEmailRequestJob::class, function ($job) {
+        Queue::assertPushed(\App\Jobs\Emails\ProcessSpeakersEmailRequestJob::class, 1);
+        Queue::assertPushed(\App\Jobs\Emails\ProcessSpeakersEmailRequestJob::class, function ($job) use ($control_speaker) {
             $ref = new \ReflectionObject($job);
             $prop = $ref->getProperty('payload');
             $prop->setAccessible(true);
             $payload = $prop->getValue($job);
-            return in_array(self::$defaultSpeaker->getId(), $payload['speaker_ids'] ?? []);
+            $this->assertEquals(
+                [self::$defaultSpeaker->getId()],
+                $payload['speaker_ids'] ?? [],
+                sprintf(
+                    'the chunk must contain exactly the speaker of the filtered member, not the control speaker %s',
+                    $control_speaker->getId()
+                )
+            );
+            return true;
         });
     }
 

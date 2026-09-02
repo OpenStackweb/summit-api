@@ -16,13 +16,10 @@ use Database\Seeders\MainDataSeeder;
 use Database\Seeders\SummitEmailFlowTypeSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Laravel\BrowserKitTesting\TestCase as BaseTestCase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use LaravelDoctrine\ORM\Facades\Registry;
-use models\utils\SilverstripeBaseModel;
 
 /**
  * Class TestCase
@@ -62,7 +59,7 @@ abstract class BrowserKitTestCase extends BaseTestCase {
             // clean up
             DB::setDefaultConnection("model");
             Artisan::call("doctrine:migrations:migrate", ["--em" => "config", "--no-interaction" => true]);
-            Artisan::call("doctrine:migrations:migrate", ["--em" => "model", "--no-interaction" => true]);
+            Artisan::call("doctrine:migrations:migrate", ["--em" => "model_write", "--no-interaction" => true]);
 
             DB::setDefaultConnection("config");
 

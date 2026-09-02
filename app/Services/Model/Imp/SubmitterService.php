@@ -146,6 +146,7 @@ final class SubmitterService
                                     'has_accepted_presentations' => ['=='],
                                     'has_alternate_presentations' => ['=='],
                                     'has_rejected_presentations' => ['=='],
+                                    'has_published_presentations' => ['=='],
                                     'presentations_track_id' => ['=='],
                                     'presentations_selection_plan_id' => ['=='],
                                     'presentations_type_id' => ['=='],

@@ -1,5 +1,7 @@
 <?php namespace Tests;
 use App\Models\Foundation\Main\IGroup;
+use models\main\Member;
+use models\summit\Presentation;
 
 /**
  * Copyright 2023 OpenStack Foundation
@@ -338,13 +340,47 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
 
     public function testGetCurrentSummitSubmittersWithPublishedPresentations()
     {
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        // member2: published presentation — must appear.
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Submitter Api Published');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate($end);
+        $p1->setCreatedBy($member2);
+        $p1->publish();
+
+        // member: unpublished presentation only — must NOT appear.
+        $p2 = new Presentation();
+        self::$summit->addEvent($p2);
+        $p2->setTitle('Submitter Api Unpublished');
+        $p2->setAbstract('Abstract');
+        $p2->setCategory(self::$defaultTrack);
+        $p2->setType(self::$defaultPresentationType);
+        $p2->setProgress(Presentation::PHASE_COMPLETE);
+        $p2->setStatus(Presentation::STATUS_RECEIVED);
+        $p2->setStartDate($start);
+        $p2->setEndDate($end);
+        $p2->setCreatedBy($member);
+        // deliberately not published
+
+        self::$em->flush();
+
         $params = [
             'id'       => self::$summit->getId(),
             'page'     => 1,
-            'per_page' => 10,
-            'filter'   => [
-                'has_published_presentations==true',
-            ],
+            'per_page' => 100,
+            'filter'   => ['has_published_presentations==true'],
             'order'    => '+id',
         ];
 
@@ -356,17 +392,39 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $response = $this->action(
             "GET",
             "OAuth2SummitSubmittersApiController@getAllBySummit",
-            $params,
-            [], [], [], $headers
+            $params, [], [], [], $headers
         );
 
         $this->assertResponseStatus(200);
-        $submitters = json_decode($response->getContent());
-        $this->assertNotNull($submitters);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+
+        $this->assertContains($member2->getId(), $ids,
+            'submitter with a published presentation must be returned');
+        $this->assertNotContains($member->getId(), $ids,
+            'submitter with only unpublished presentations must be filtered out');
     }
 
     public function testGetCurrentSummitSubmittersActivitiesCountWithPublishedPresentations()
     {
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        // The fixture sets no created_by on presentations, so the baseline is 0.
+        // Seed exactly one published presentation; the count must equal exactly 1.
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Count Submitter Published Api');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate($start);
+        $p->setEndDate((clone $start)->add(new \DateInterval('PT2H')));
+        $p->setCreatedBy($member2);
+        $p->publish();
+        self::$em->flush();
+
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE"       => "application/json",
@@ -383,6 +441,7 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $data = json_decode($response->getContent());
         $this->assertNotNull($data);
         $this->assertTrue(isset($data->count));
-        $this->assertGreaterThanOrEqual(0, $data->count);
+        $this->assertEquals(1, $data->count,
+            'exactly one published presentation was seeded; count must be 1');
     }
 }

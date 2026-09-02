@@ -2835,13 +2835,31 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
 
     public function testGetCurrentSummitSpeakersWithPublishedPresentations()
     {
+        // Seed a speaker with only an unpublished presentation — must not appear.
+        $unpublishedOnly = new PresentationSpeaker();
+        $unpublishedOnly->setFirstName('UnpublishedOnlyApi');
+        $unpublishedOnly->setLastName('TestSpeaker');
+        self::$em->persist($unpublishedOnly);
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Unpublished Api Presentation');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->addSpeaker($unpublishedOnly);
+        // deliberately not published
+        self::$em->flush();
+
         $params = [
             'id'       => self::$summit->getId(),
             'page'     => 1,
-            'per_page' => 10,
-            'filter'   => [
-                'has_published_presentations==true',
-            ],
+            'per_page' => 100,
+            'filter'   => ['has_published_presentations==true'],
             'order'    => '+id',
         ];
 
@@ -2853,17 +2871,23 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $response = $this->action(
             "GET",
             "OAuth2SummitSpeakersApiController@getSpeakers",
-            $params,
-            [], [], [], $headers
+            $params, [], [], [], $headers
         );
 
         $this->assertResponseStatus(200);
-        $speakers = json_decode($response->getContent());
-        $this->assertNotNull($speakers);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+
+        $this->assertContains(self::$defaultSpeaker->getId(), $ids,
+            'speaker with a published presentation must be returned');
+        $this->assertNotContains($unpublishedOnly->getId(), $ids,
+            'speaker with only unpublished presentations must be filtered out');
     }
 
     public function testGetCurrentSummitSpeakersActivitiesCountWithPublishedPresentations()
     {
+        // The fixture already seeds published presentations for self::$defaultSpeaker,
+        // so a single call is enough to confirm the filter returns a non-zero count.
+        // Inclusion/exclusion correctness is covered by testGetCurrentSummitSpeakersWithPublishedPresentations.
         $headers = [
             "HTTP_Authorization" => " Bearer " . $this->access_token,
             "CONTENT_TYPE"       => "application/json",
@@ -2880,7 +2904,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $data = json_decode($response->getContent());
         $this->assertNotNull($data);
         $this->assertTrue(isset($data->count));
-        $this->assertGreaterThanOrEqual(0, $data->count);
+        $this->assertGreaterThan(0, $data->count);
     }
 
 }

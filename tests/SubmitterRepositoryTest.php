@@ -628,6 +628,70 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
     }
 
     // -----------------------------------------------------------------
+    // has_published_presentations + presentations_track_id combined
+    // Each condition must be satisfied by the SAME presentation.
+    // The defect: a submitter with an unpublished presentation in track A
+    // and a published one in track B satisfies both conditions through
+    // two different presentations and is incorrectly included.
+    // -----------------------------------------------------------------
+
+    public function testHasPublishedPresentationsIsScopedByTrackFilter(): void
+    {
+        $member  = self::$em->find(Member::class, self::$member->getId());
+        $member2 = self::$em->find(Member::class, self::$member2->getId());
+
+        // member satisfies each condition through a DIFFERENT presentation.
+        $this->seedPresentation($member,  self::$defaultTrack,   'Unpublished In Default', false);
+        $this->seedPresentation($member,  self::$secondaryTrack, 'Published In Secondary', true);
+
+        // Positive control: published in the track being filtered.
+        $this->seedPresentation($member2, self::$defaultTrack,   'Published In Default',   true);
+
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            [
+                'has_published_presentations==true',
+                'presentations_track_id==' . self::$defaultTrack->getId(),
+            ],
+            [
+                'has_published_presentations' => ['=='],
+                'presentations_track_id'      => ['=='],
+            ]
+        );
+
+        $repo = EntityManager::getRepository(Member::class);
+        $ids  = array_map(
+            fn($m) => $m->getId(),
+            $repo->getSubmittersBySummit(self::$summit, new PagingInfo(1, 10), $filter, null)->getItems()
+        );
+
+        self::assertNotContains($member->getId(), $ids,
+            'member has no published presentation in defaultTrack');
+        self::assertContains($member2->getId(), $ids,
+            'member2 published in defaultTrack must still be returned');
+    }
+
+    private function seedPresentation(Member $creator, $track, string $title, bool $publish): Presentation
+    {
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle($title);
+        $p->setAbstract('Abstract');
+        $p->setCategory($track);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate($start);
+        $p->setEndDate((clone $start)->add(new \DateInterval('PT2H')));
+        $p->setCreatedBy($creator);
+        if ($publish) $p->publish();
+        return $p;
+    }
+
+    // -----------------------------------------------------------------
     // getUniqueActivitiesCountBySummit - presentations_track_group_id
     // The submitter repo and speaker repo share the filter name but use
     // different DQL paths. The speaker repo has this covered; the

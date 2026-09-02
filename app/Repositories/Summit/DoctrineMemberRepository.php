@@ -300,16 +300,28 @@ final class DoctrineMemberRepository
                         'EXISTS (
                             SELECT __p15.id FROM models\summit\Presentation __p15
                             JOIN __p15.created_by __c15 WITH __c15 = e.id
-                            WHERE __p15.summit = :summit AND __p15.published = 1
-                        )'
+                            JOIN __p15.category __cat15
+                            JOIN __p15.type __t15
+                            LEFT JOIN __p15.selection_plan __sel_plan15
+                            LEFT JOIN models\summit\PresentationMediaUpload __pm15 WITH __pm15.presentation = __p15
+                            LEFT JOIN __pm15.media_upload_type __mut15
+                            WHERE __p15.summit = :summit AND __p15.published = 1 '
+                        .(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '15'): '').
+                        ')'
                     ),
                     'false' => new DoctrineCaseFilterMapping(
                         'false',
                         'NOT EXISTS (
                             SELECT __p15.id FROM models\summit\Presentation __p15
                             JOIN __p15.created_by __c15 WITH __c15 = e.id
-                            WHERE __p15.summit = :summit AND __p15.published = 1
-                        )'
+                            JOIN __p15.category __cat15
+                            JOIN __p15.type __t15
+                            LEFT JOIN __p15.selection_plan __sel_plan15
+                            LEFT JOIN models\summit\PresentationMediaUpload __pm15 WITH __pm15.presentation = __p15
+                            LEFT JOIN __pm15.media_upload_type __mut15
+                            WHERE __p15.summit = :summit AND __p15.published = 1 '
+                        .(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '15'): '').
+                        ')'
                     ),
                 ]),
             'has_alternate_presentations' =>

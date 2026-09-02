@@ -287,4 +287,30 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
             'member_id must select only the speaker belonging to that member, not the default fixture speaker'
         );
     }
+
+    public function testOneChunkFailingAllFallbackTiersDoesNotAbortSiblingChunks(): void
+    {
+        // Per-chunk failure isolation: JobDispatcher::withDbFallback tries the primary
+        // connection, the database fallback, and a synchronous run. When ALL THREE fail
+        // for a chunk, the per-chunk try/catch must log at error level and keep the loop
+        // going, so a bad chunk cannot also block every sibling chunk. Forcing every Bus
+        // dispatch to throw makes all 3 chunks fail through all 3 tiers; one Log::error
+        // per chunk proves the loop reached every chunk instead of aborting on the first.
+        \Illuminate\Support\Facades\Bus::shouldReceive('dispatch')
+            ->andThrow(new \RuntimeException('queue backend down'));
+        \Illuminate\Support\Facades\Bus::shouldReceive('dispatchSync')
+            ->andThrow(new \RuntimeException('sync run failed'));
+        \Illuminate\Support\Facades\Log::spy();
+
+        $payload = $this->basePayload();
+        $payload['speaker_ids'] = range(1, 250); // 3 chunks
+
+        $this->service()->triggerSendEmails(self::$summit, $payload, null);
+
+        // At least one Log::error per chunk (JobDispatcher logs its own on the database
+        // fallback failing, plus the per-chunk catch). If the try/catch moved outside the
+        // loop, only the first chunk would ever be attempted (< 3 errors); if the catch
+        // were removed, the exception would propagate and fail this test outright.
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('error')->atLeast()->times(3);
+    }
 }

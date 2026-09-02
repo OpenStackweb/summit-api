@@ -895,6 +895,51 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!empty($csv));
     }
 
+    public function testSendSpeakersBulkEmailFilteredByMemberUserExternalId() {
+        // member_user_external_id was previously rejected by send()'s own whitelist (it only
+        // existed on the listing endpoints). This drives the real HTTP action, so it exercises
+        // the controller's FilterParser::parse + Filter::validate against the shared
+        // ISpeakerFilterFields constants AND the service's id resolution, end to end.
+        Queue::fake();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => [
+                'member_user_external_id==' . self::$member->getUserExternalId(),
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            'email_flow_event' => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@send",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+
+        Queue::assertPushed(\App\Jobs\Emails\ProcessSpeakersEmailRequestJob::class, function ($job) {
+            $ref = new \ReflectionObject($job);
+            $prop = $ref->getProperty('payload');
+            $prop->setAccessible(true);
+            $payload = $prop->getValue($job);
+            return in_array(self::$defaultSpeaker->getId(), $payload['speaker_ids'] ?? []);
+        });
+    }
+
     public function testSendSpeakersBulkEmail() {
         $params = [
             'id' => self::$summit->getId(),

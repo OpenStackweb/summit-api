@@ -781,7 +781,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         return $this->_getAll(
             function () {
                 // getAll() is summit-independent - only the GLOBAL_* subset is safe here,
-                // see ISpeakerFilterFields::GLOBAL_OPERATORS for why.
+                // see GLOBAL_OPERATORS' docblock on the shared filter-fields interface for why.
                 return \services\model\ISpeakerFilterFields::GLOBAL_OPERATORS;
             },
             function () {

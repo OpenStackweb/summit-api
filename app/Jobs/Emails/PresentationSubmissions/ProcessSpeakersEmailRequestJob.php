@@ -11,13 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
+use App\Services\utils\IEmailExcerptService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
+use models\summit\Summit;
 use services\model\ISpeakerService;
 use utils\FilterParser;
 /**
@@ -82,5 +86,79 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, \services\model\ISpeakerFilterFields::OPERATORS) : null;
 
         $service->sendEmails($this->summit_id, $this->payload, $filter);
+    }
+
+    /**
+     * Invoked by the queue worker once this job is marked failed. With tries = 1 that includes a
+     * chunk whose worker was killed mid-run: the job sits reserved until the connection's
+     * retry_after elapses, is re-served, and is failed without re-running. Nothing else reports
+     * that loss - the outcome excerpt is only sent when sendEmails() runs to completion - so
+     * without this hook a dead chunk leaves no trace beyond a queue_failed_jobs row.
+     *
+     * Log the unprocessed speaker ids at error, and when the operator asked for an outcome
+     * e-mail send one naming them, so the chunk can be re-sent by id. The excerpt dispatch is
+     * best-effort: a failure there must not mask the original failure.
+     *
+     * @param \Throwable $e
+     */
+    public function failed(\Throwable $e): void
+    {
+        $speaker_ids = $this->payload['speaker_ids'] ?? [];
+        $flow_event = $this->payload['email_flow_event'] ?? '';
+        $ids_list = implode(', ', $speaker_ids);
+
+        Log::error
+        (
+            sprintf
+            (
+                "ProcessSpeakersEmailRequestJob::failed summit %s flow_event %s: chunk of %s speaker(s) NOT processed (%s: %s). Unprocessed speaker ids: [%s] filter %s",
+                $this->summit_id,
+                $flow_event,
+                count($speaker_ids),
+                get_class($e),
+                $e->getMessage(),
+                $ids_list,
+                json_encode($this->filter)
+            )
+        );
+
+        $outcome_email_recipient = $this->payload['outcome_email_recipient'] ?? null;
+        if (empty($outcome_email_recipient)) return;
+
+        try {
+            $summit = App::make(ISummitRepository::class)->getById($this->summit_id);
+            if (!$summit instanceof Summit) {
+                Log::warning(sprintf("ProcessSpeakersEmailRequestJob::failed summit %s not found, outcome excerpt not sent", $this->summit_id));
+                return;
+            }
+
+            // Same line types AbstractExcerptEmailJob renders for a completed run, so the
+            // operator's inbox reads the same either way.
+            $report = [
+                [
+                    'type' => IEmailExcerptService::InfoType,
+                    'message' => sprintf("Processing EMAIL %s for Summit %s", $flow_event, $this->summit_id),
+                ],
+                [
+                    'type' => IEmailExcerptService::ErrorType,
+                    'message' => sprintf
+                    (
+                        "Chunk of %s speaker(s) was NOT processed because the job failed (%s). Unprocessed speaker ids: %s",
+                        count($speaker_ids),
+                        $e->getMessage(),
+                        $ids_list
+                    ),
+                ],
+                [
+                    'type' => IEmailExcerptService::InfoType,
+                    'message' => "TOTAL of 0 speaker(s) processed",
+                ],
+            ];
+
+            PresentationSpeakerSelectionProcessExcerptEmail::dispatch($summit, $outcome_email_recipient, $report);
+        }
+        catch (\Throwable $ex) {
+            Log::error($ex);
+        }
     }
 }

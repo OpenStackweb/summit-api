@@ -15,8 +15,10 @@
 use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
 use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Mockery;
 use ReflectionObject;
 
 /**
@@ -129,6 +131,45 @@ class ProcessSpeakersEmailRequestJobFailedHookTest extends ProtectedApiTestCase
             $this->assertStringContainsString('auto-generates promo codes', $errorLines[0], 'a promo_code_spec send must warn that a re-send creates new codes');
             return true;
         });
+    }
+
+    public function testFailedChunkExcerptFailsOverToTheDatabaseQueueWhenThePrimaryDispatchFails(): void
+    {
+        // A chunk lands on the database fallback worker precisely when the redis primary was down
+        // at dispatch time. If that chunk then fails while redis is still down, a bare ::dispatch()
+        // of the excerpt throws, the best-effort catch swallows it, and the operator report is lost
+        // in the one scenario it exists for. The excerpt must take the same failover route as the
+        // chunk itself (JobDispatcher::withDbFallback): primary throws, database gets the job.
+        Log::spy();
+        $captured = [];
+        $excerpt = Mockery::type(PresentationSpeakerSelectionProcessExcerptEmail::class);
+        // Only the excerpt dispatches are scripted (primary throws, fallback captures); every
+        // other dispatch - the fixture teardown queues hundreds - goes to the real dispatcher.
+        $realBus = Bus::getFacadeRoot();
+        Bus::shouldReceive('dispatch')->with($excerpt)->once()->andThrow(new \RuntimeException('redis down'));
+        Bus::shouldReceive('dispatch')->with($excerpt)->once()->andReturnUsing(function ($job) use (&$captured) {
+            $captured[] = $job;
+            return null;
+        });
+        Bus::shouldReceive('dispatch')->andReturnUsing(fn($job) => $realBus->dispatch($job));
+
+        $job = new ProcessSpeakersEmailRequestJob(self::$summit->getId(), [
+            'email_flow_event' => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
+            'speaker_ids' => [11, 22],
+            'outcome_email_recipient' => 'outcome@example.com',
+        ], null);
+
+        $job->failed(new \RuntimeException('worker killed mid-chunk'));
+
+        $this->assertCount(1, $captured, 'after the primary dispatch fails the excerpt must be re-dispatched on the fallback connection, not swallowed');
+        $this->assertInstanceOf(PresentationSpeakerSelectionProcessExcerptEmail::class, $captured[0]);
+        $this->assertSame('database', $captured[0]->connection, 'the retry must target the database fallback connection');
+        $this->assertEquals('outcome@example.com', $this->jobProperty($captured[0], 'to_email'));
+
+        $lines = $this->jobProperty($captured[0], 'payload')[IMailTemplatesConstants::report];
+        $errorLines = array_values(array_filter($lines, fn($l) => str_starts_with($l, 'ERROR')));
+        $this->assertCount(1, $errorLines);
+        $this->assertStringContainsString('11, 22', $errorLines[0], 'the failed-over excerpt must still name every speaker id in the chunk');
     }
 
     public function testFailedChunkWithoutOutcomeRecipientOnlyLogsTheUnprocessedIds(): void

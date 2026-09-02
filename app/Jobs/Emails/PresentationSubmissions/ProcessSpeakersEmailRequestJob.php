@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
+use App\Jobs\Utils\JobDispatcher;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,6 +20,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use models\summit\ISummitRepository;
 use models\summit\Summit;
@@ -101,7 +103,8 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
      * sent" proof for) the speakers before the kill: the ids are an upper bound on what was lost,
      * not confirmed misses, and both messages say so and tell the operator to re-send with
      * should_resend=false so the resend guard skips the speakers that already have a proof. The
-     * excerpt dispatch is best-effort: a failure there must not mask the original failure.
+     * excerpt goes through JobDispatcher::withDbFallback (primary, then the database queue, then
+     * an inline run) and is best-effort: a failure there must not mask the original failure.
      *
      * @param \Throwable $e
      */
@@ -170,7 +173,15 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
                 ],
             ];
 
-            PresentationSpeakerSelectionProcessExcerptEmail::dispatch($summit, $outcome_email_recipient, $report);
+            // Same failover route as the chunk itself (SpeakerService::triggerSendEmails): a chunk
+            // runs on the database fallback worker precisely when the redis primary was down at
+            // dispatch time, so a bare ::dispatch() here would throw into the catch below and lose
+            // the report in the one scenario it exists for.
+            JobDispatcher::withDbFallback(
+                job: new PresentationSpeakerSelectionProcessExcerptEmail($summit, $outcome_email_recipient, $report),
+                logContext: ['summit_id' => $this->summit_id, 'speaker_count' => count($speaker_ids)],
+                primaryConnection: Config::get('queue.default')
+            );
         }
         catch (\Throwable $ex) {
             Log::error($ex);

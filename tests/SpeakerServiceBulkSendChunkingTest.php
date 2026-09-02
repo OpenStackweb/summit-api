@@ -19,6 +19,7 @@ use models\main\Member;
 use models\summit\PresentationSpeaker;
 use ReflectionObject;
 use services\model\ISpeakerService;
+use services\model\SpeakerService;
 
 /**
  * Covers SpeakerService::triggerSendEmails's chunking behaviour: it resolves the full set of
@@ -286,6 +287,58 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
             $chunkPayload['speaker_ids'],
             'member_id must select only the speaker belonging to that member, not the default fixture speaker'
         );
+    }
+
+    public function testFilterBasedSelectionSpanningSeveralPagesCoversEveryMatchedIdExactlyOnce(): void
+    {
+        // The filter-based path is the only one summit-admin drives (it always sends filter[],
+        // never speaker_ids), and it resolves ids by paging getSpeakersIdsBySummit CHUNK_SIZE at
+        // a time. Seed CHUNK_SIZE + 1 speakers sharing a unique first name on one presentation of
+        // this summit, so the resolution has to walk two non-empty pages plus the empty one that
+        // ends the loop. self::$defaultSpeaker (with its own presentations) is the control the
+        // first_name filter must leave out. A page that is skipped, re-read, or overwritten
+        // instead of merged breaks the exact-set assertion below.
+        Queue::fake();
+
+        $firstName = 'PageSeed' . str_random(8);
+
+        $presentation = new \models\summit\Presentation();
+        self::$summit->addEvent($presentation);
+        $presentation->setTitle("Multi-page chunk test {$firstName}");
+        $presentation->setAbstract("Abstract {$firstName}");
+        $presentation->setCategory(self::$defaultTrack);
+        $presentation->setType(self::$defaultPresentationType);
+        $presentation->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $presentation->setEndDate(new \DateTime('+1 hour', new \DateTimeZone('UTC')));
+
+        $seeded = [];
+        for ($i = 0; $i < SpeakerService::CHUNK_SIZE + 1; $i++) {
+            $speaker = new PresentationSpeaker();
+            $speaker->setFirstName($firstName);
+            $speaker->setLastName("Speaker {$i}");
+            self::$em->persist($speaker);
+            $presentation->addSpeaker($speaker);
+            $seeded[] = $speaker;
+        }
+        self::$em->persist($presentation);
+        self::$em->flush();
+
+        $seededIds = array_map(fn($s) => $s->getId(), $seeded);
+        sort($seededIds);
+
+        $this->service()->triggerSendEmails(self::$summit, $this->basePayload(), ["first_name=={$firstName}"]);
+
+        Queue::assertPushed(ProcessSpeakersEmailRequestJob::class, 2);
+
+        $slices = array_map(fn($job) => $this->jobProperty($job, 'payload')['speaker_ids'], $this->pushedJobs());
+        $sizes = array_map('count', $slices);
+        rsort($sizes);
+        $this->assertEquals([SpeakerService::CHUNK_SIZE, 1], $sizes, 'CHUNK_SIZE + 1 matched ids must become one full chunk and one single-id chunk');
+
+        $covered = array_merge(...$slices);
+        sort($covered);
+        $this->assertEquals($seededIds, $covered, 'the chunks together must cover every seeded id exactly once, across both pages');
+        $this->assertNotContains(self::$defaultSpeaker->getId(), $covered, 'the first_name filter must leave the control speaker out');
     }
 
     public function testOneChunkFailingAllFallbackTiersDoesNotAbortSiblingChunks(): void

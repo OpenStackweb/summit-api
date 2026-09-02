@@ -95,9 +95,13 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
      * that loss - the outcome excerpt is only sent when sendEmails() runs to completion - so
      * without this hook a dead chunk leaves no trace beyond a queue_failed_jobs row.
      *
-     * Log the unprocessed speaker ids at error, and when the operator asked for an outcome
-     * e-mail send one naming them, so the chunk can be re-sent by id. The excerpt dispatch is
-     * best-effort: a failure there must not mask the original failure.
+     * Log the chunk's speaker ids at error, and when the operator asked for an outcome e-mail
+     * send one naming them, so the chunk can be re-sent by id. The chunk is processed one speaker
+     * per transaction, so a worker killed mid-run has already e-mailed (and written the "already
+     * sent" proof for) the speakers before the kill: the ids are an upper bound on what was lost,
+     * not confirmed misses, and both messages say so and tell the operator to re-send with
+     * should_resend=false so the resend guard skips the speakers that already have a proof. The
+     * excerpt dispatch is best-effort: a failure there must not mask the original failure.
      *
      * @param \Throwable $e
      */
@@ -107,18 +111,27 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
         $flow_event = $this->payload['email_flow_event'] ?? '';
         $ids_list = implode(', ', $speaker_ids);
 
+        $resend_hint = "Re-send these ids with should_resend=false so the speakers already e-mailed are skipped";
+        if (isset($this->payload['promo_code_spec'])) {
+            // AutomaticMultiSpeakerPromoCodeStrategy::getPromoCode() generates a fresh code on every
+            // call, before the resend guard runs, so should_resend=false does not prevent this one.
+            $resend_hint .= "; this send auto-generates promo codes and a re-send creates a new code for every speaker in the list, including the ones already e-mailed";
+        }
+
         Log::error
         (
             sprintf
             (
-                "ProcessSpeakersEmailRequestJob::failed summit %s flow_event %s: chunk of %s speaker(s) NOT processed (%s: %s). Unprocessed speaker ids: [%s] filter %s",
+                "ProcessSpeakersEmailRequestJob::failed summit %s flow_event %s: chunk of %s speaker(s) failed (%s: %s); up to %s of them may not have been processed. Speaker ids in the chunk: [%s] filter %s. %s.",
                 $this->summit_id,
                 $flow_event,
                 count($speaker_ids),
                 get_class($e),
                 $e->getMessage(),
+                count($speaker_ids),
                 $ids_list,
-                json_encode($this->filter)
+                json_encode($this->filter),
+                $resend_hint
             )
         );
 
@@ -143,15 +156,17 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
                     'type' => IEmailExcerptService::ErrorType,
                     'message' => sprintf
                     (
-                        "Chunk of %s speaker(s) was NOT processed because the job failed (%s). Unprocessed speaker ids: %s",
+                        "Chunk of %s speaker(s) failed (%s); up to %s of them may not have been processed. Speaker ids in the chunk: %s. %s",
                         count($speaker_ids),
                         $e->getMessage(),
-                        $ids_list
+                        count($speaker_ids),
+                        $ids_list,
+                        $resend_hint
                     ),
                 ],
                 [
                     'type' => IEmailExcerptService::InfoType,
-                    'message' => "TOTAL of 0 speaker(s) processed",
+                    'message' => "TOTAL processed for this chunk is unknown, the job did not run to completion",
                 ],
             ];
 

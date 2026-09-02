@@ -18,6 +18,7 @@ use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRequestedEmail;
 use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
+use App\Jobs\Utils\JobDispatcher;
 use App\Jobs\Emails\Registration\PromoCodes\PromoCodeEmailFactory;
 use App\Models\Foundation\Main\CountryCodes;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
@@ -34,6 +35,7 @@ use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
 use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -1263,11 +1265,32 @@ final class SpeakerService
             return;
         }
 
+        // JobDispatcher, not ::dispatch(): a queue-backend failure part-way through this loop
+        // would otherwise abort the request with some chunks already queued and the rest lost,
+        // and an operator retry would re-email the chunks that already went out (should_resend
+        // defaults to true and the admin UI never sends it, so today's re-runs are not
+        // deduplicated). withDbFallback() fails over to the database queue (and runs sync on a
+        // double failure) so the loop completes. Same pattern as
+        // PresentationSubmissionReopenService::notify's per-recipient dispatch loop.
         foreach (array_chunk($ids, self::CHUNK_SIZE) as $chunk) {
             $chunkPayload = $payload;
             $chunkPayload['speaker_ids'] = $chunk;
             unset($chunkPayload['excluded_speaker_ids']);
-            ProcessSpeakersEmailRequestJob::dispatch($summit->getId(), $chunkPayload, $filter);
+            try {
+                JobDispatcher::withDbFallback(
+                    job: new ProcessSpeakersEmailRequestJob($summit->getId(), $chunkPayload, $filter),
+                    logContext: ['summit_id' => $summit->getId(), 'speaker_count' => count($chunk)],
+                    primaryConnection: Config::get('queue.default')
+                );
+            }
+            catch (\Throwable $ex){
+                // withDbFallback already exhausted the primary connection, the database
+                // fallback, and a synchronous run - reaching here means all three failed for
+                // this chunk. Log at error (not warning) so it surfaces to alerting; keep the
+                // loop going so a bad chunk doesn't also block every sibling chunk that would
+                // otherwise succeed.
+                Log::error($ex);
+            }
         }
     }
 

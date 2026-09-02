@@ -303,54 +303,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 
         return $this->_getAll(
             function () {
-                return [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'first_name' => ['=@', '@@', '=='],
-                    'last_name' => ['=@', '@@', '=='],
-                    'email' => ['=@', '@@', '=='],
-                    'full_name' => ['=@', '@@', '=='],
-                    'member_id' => ['=='],
-                    'member_user_external_id' => ['=='],
-                    'has_accepted_presentations' => ['=='],
-                    'has_alternate_presentations' => ['=='],
-                    'has_rejected_presentations' => ['=='],
-                    'presentations_track_id' => ['=='],
-                    'presentations_track_group_id' => ['=='],
-                    'presentations_selection_plan_id' => ['=='],
-                    'presentations_type_id' => ['=='],
-                    'presentations_title' => ['=@', '@@', '=='],
-                    'presentations_abstract' => ['=@', '@@', '=='],
-                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
-                    'presentations_submitter_email' => ['=@', '@@', '=='],
-                    'has_media_upload_with_type' => ['=='],
-                    'has_not_media_upload_with_type' => ['=='],
-                ];
+                return \services\model\ISpeakerFilterFields::OPERATORS;
             },
             function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'not_id' => 'sometimes|integer',
-                    'first_name' => 'sometimes|string',
-                    'last_name' => 'sometimes|string',
-                    'email' => 'sometimes|string',
-                    'full_name' => 'sometimes|string',
-                    'member_id' => 'sometimes|integer',
-                    'member_user_external_id' => 'sometimes|integer',
-                    'has_accepted_presentations' => 'sometimes|string|in:true,false',
-                    'has_alternate_presentations' => 'sometimes|string|in:true,false',
-                    'has_rejected_presentations' => 'sometimes|string|in:true,false',
-                    'presentations_track_id' => 'sometimes|integer',
-                    'presentations_track_group_id' => 'sometimes|integer',
-                    'presentations_selection_plan_id' => 'sometimes|integer',
-                    'presentations_type_id' => 'sometimes|integer',
-                    'presentations_title' => 'sometimes|string',
-                    'presentations_abstract' => 'sometimes|string',
-                    'presentations_submitter_full_name' => 'sometimes|string',
-                    'presentations_submitter_email' => 'sometimes|string',
-                    'has_media_upload_with_type' => 'sometimes|integer',
-                    'has_not_media_upload_with_type' => 'sometimes|integer',
-                ];
+                return \services\model\ISpeakerFilterFields::VALIDATION_RULES;
             },
             function () {
                 return [
@@ -443,55 +399,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             $filter = null;
 
             if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'first_name' => ['=@', '@@', '=='],
-                    'last_name' => ['=@', '@@', '=='],
-                    'email' => ['=@', '@@', '=='],
-                    'full_name' => ['=@', '@@', '=='],
-                    'member_id' => ['=='],
-                    'member_user_external_id' => ['=='],
-                    'has_accepted_presentations' => ['=='],
-                    'has_alternate_presentations' => ['=='],
-                    'has_rejected_presentations' => ['=='],
-                    'presentations_track_id' => ['=='],
-                    'presentations_track_group_id' => ['=='],
-                    'presentations_selection_plan_id' => ['=='],
-                    'presentations_type_id' => ['=='],
-                    'presentations_title' => ['=@', '@@', '=='],
-                    'presentations_abstract' => ['=@', '@@', '=='],
-                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
-                    'presentations_submitter_email' => ['=@', '@@', '=='],
-                    'has_media_upload_with_type' => ['=='],
-                    'has_not_media_upload_with_type' => ['=='],
-                ]);
+                $filter = FilterParser::parse(Request::input('filter'), \services\model\ISpeakerFilterFields::OPERATORS);
             }
 
             if (!is_null($filter)) {
-                $filter->validate([
-                    'id' => 'sometimes|integer',
-                    'not_id' => 'sometimes|integer',
-                    'first_name' => 'sometimes|string',
-                    'last_name' => 'sometimes|string',
-                    'email' => 'sometimes|string',
-                    'full_name' => 'sometimes|string',
-                    'member_id' => 'sometimes|integer',
-                    'member_user_external_id' => 'sometimes|integer',
-                    'has_accepted_presentations' => 'sometimes|string|in:true,false',
-                    'has_alternate_presentations' => 'sometimes|string|in:true,false',
-                    'has_rejected_presentations' => 'sometimes|string|in:true,false',
-                    'presentations_track_id' => 'sometimes|integer',
-                    'presentations_track_group_id' => 'sometimes|integer',
-                    'presentations_selection_plan_id' => 'sometimes|integer',
-                    'presentations_type_id' => 'sometimes|integer',
-                    'presentations_title' => 'sometimes|string',
-                    'presentations_abstract' => 'sometimes|string',
-                    'presentations_submitter_full_name' => 'sometimes|string',
-                    'presentations_submitter_email' => 'sometimes|string',
-                    'has_media_upload_with_type' => 'sometimes|integer',
-                    'has_not_media_upload_with_type' => 'sometimes|integer',
-                ]);
+                $filter->validate(\services\model\ISpeakerFilterFields::VALIDATION_RULES);
             }
 
             $count = $this->speaker_repository->getUniqueActivitiesCountBySummit($summit, $filter);
@@ -584,54 +496,10 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
 
         return $this->_getAllCSV(
             function () {
-                return [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'first_name' => ['=@', '@@', '=='],
-                    'last_name' => ['=@', '@@', '=='],
-                    'email' => ['=@', '@@', '=='],
-                    'full_name' => ['=@', '@@', '=='],
-                    'member_id' => ['=='],
-                    'member_user_external_id' => ['=='],
-                    'has_accepted_presentations' => ['=='],
-                    'has_alternate_presentations' => ['=='],
-                    'has_rejected_presentations' => ['=='],
-                    'presentations_track_id' => ['=='],
-                    'presentations_track_group_id' => ['=='],
-                    'presentations_selection_plan_id' => ['=='],
-                    'presentations_type_id' => ['=='],
-                    'presentations_title' => ['=@', '@@', '=='],
-                    'presentations_abstract' => ['=@', '@@', '=='],
-                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
-                    'presentations_submitter_email' => ['=@', '@@', '=='],
-                    'has_media_upload_with_type' => ['=='],
-                    'has_not_media_upload_with_type' => ['=='],
-                ];
+                return \services\model\ISpeakerFilterFields::OPERATORS;
             },
             function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'not_id' => 'sometimes|integer',
-                    'first_name' => 'sometimes|string',
-                    'last_name' => 'sometimes|string',
-                    'email' => 'sometimes|string',
-                    'full_name' => 'sometimes|string',
-                    'member_id' => 'sometimes|integer',
-                    'member_user_external_id' => 'sometimes|integer',
-                    'has_accepted_presentations' => 'sometimes|string|in:true,false',
-                    'has_alternate_presentations' => 'sometimes|string|in:true,false',
-                    'has_rejected_presentations' => 'sometimes|string|in:true,false',
-                    'presentations_track_id' => 'sometimes|integer',
-                    'presentations_track_group_id' => 'sometimes|integer',
-                    'presentations_selection_plan_id' => 'sometimes|integer',
-                    'presentations_type_id' => 'sometimes|integer',
-                    'presentations_title' => 'sometimes|string',
-                    'presentations_abstract' => 'sometimes|string',
-                    'presentations_submitter_full_name' => 'sometimes|string',
-                    'presentations_submitter_email' => 'sometimes|string',
-                    'has_media_upload_with_type' => 'sometimes|integer',
-                    'has_not_media_upload_with_type' => 'sometimes|integer',
-                ];
+                return \services\model\ISpeakerFilterFields::VALIDATION_RULES;
             },
             function () {
                 return [
@@ -865,7 +733,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             ),
             new OA\Parameter(
                 name: 'filter',
-                description: 'Filter by id, first_name, last_name, email, full_name, member_id',
+                description: 'Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id. This endpoint is not summit-scoped, so presentation-related filter fields (available on the per-summit speaker endpoints) do not apply here.',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string')
@@ -912,29 +780,12 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
     {
         return $this->_getAll(
             function () {
-                return [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'first_name' => ['=@', '==','@@'],
-                    'last_name' => ['=@', '==','@@'],
-                    'email' => ['=@', '==','@@'],
-                    'full_name' => ['=@', '==','@@'],
-                    'member_id' => ['=='],
-                    'member_user_external_id' => ['=='],
-                ];
+                // getAll() is summit-independent - only the GLOBAL_* subset is safe here,
+                // see ISpeakerFilterFields::GLOBAL_OPERATORS for why.
+                return \services\model\ISpeakerFilterFields::GLOBAL_OPERATORS;
             },
             function () {
-                return [
-
-                    'id' => 'sometimes|integer',
-                    'not_id' => 'sometimes|integer',
-                    'first_name' => 'sometimes|string',
-                    'last_name' => 'sometimes|string',
-                    'email' => 'sometimes|string',
-                    'full_name' => 'sometimes|string',
-                    'member_id' => 'sometimes|integer',
-                    'member_user_external_id' => 'sometimes|integer',
-                ];
+                return \services\model\ISpeakerFilterFields::GLOBAL_VALIDATION_RULES;
             },
             function () {
                 return [

@@ -495,6 +495,101 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(count($speakers[0]->accepted_presentations) == 20);
     }
 
+    public function testGetAllSpeakersFilteredByMemberId()
+    {
+        // getAll() is global/non-summit-scoped. Its member_id/member_user_external_id
+        // support predates this change; this proves swapping its inline whitelist for
+        // ISpeakerFilterFields::GLOBAL_OPERATORS/GLOBAL_VALIDATION_RULES didn't break it.
+        //
+        // Widening getAll() to the full ISpeakerFilterFields (like the summit-scoped
+        // endpoints) was attempted and reverted: DoctrineSpeakerRepository::getFilterMappings()
+        // hard-codes a ":summit" bound parameter into every presentations_*/has_*_presentations
+        // DQL template (shared verbatim with the summit-scoped query methods, which bind it on
+        // their own base query). getAllByPage()/getAllIdsByPage() never bind it - reproduced
+        // directly: Doctrine\ORM\Query\QueryException "too few parameters" applying
+        // presentations_track_id to getAllByPage(). Not a silent no-op, a hard 500. See
+        // ISpeakerFilterFields::GLOBAL_OPERATORS's docblock for the full field-by-field
+        // breakdown of what is/isn't summit-independent.
+        $control = new PresentationSpeaker();
+        $control->setFirstName("NoMember");
+        $control->setLastName("Control " . str_random(8));
+        self::$em->persist($control);
+        self::$em->flush();
+
+        $params = [
+            'page' => 1,
+            'per_page' => 100,
+            'filter' => [
+                sprintf('member_id==%s', self::$defaultMember->getId()),
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $speakers_response = json_decode($response->getContent());
+        $this->assertTrue(!is_null($speakers_response));
+        $ids = array_map(fn($s) => $s->id, $speakers_response->data);
+
+        $this->assertContains(
+            self::$defaultSpeaker->getId(),
+            $ids,
+            'the speaker belonging to the filtered member must be included'
+        );
+        $this->assertNotContains(
+            $control->getId(),
+            $ids,
+            'a speaker with no member (or a different one) must not match'
+        );
+    }
+
+    public function testGetAllSpeakersRejectsPresentationScopedFilter()
+    {
+        // getAll() is not summit-scoped and was never wired to accept presentation-related
+        // fields (see ISpeakerFilterFields::GLOBAL_OPERATORS's docblock: those fields hard-code
+        // a :summit bound parameter in the shared repository mapping that a global query can
+        // never bind). This must stay a clean validation error, not a 500.
+        $params = [
+            'page' => 1,
+            'per_page' => 10,
+            'filter' => [
+                sprintf('presentations_track_id==%s', self::$defaultTrack->getId()),
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+        $content = json_decode($response->getContent(), true);
+        $this->assertStringContainsString('presentations_track_id', $content['errors'][0]);
+    }
+
     public function testGetCurrentSummitSpeakersOrderByIDAndFilteredByMediaUploadType()
     {
         $media_upload_ids =array_map(function($v){

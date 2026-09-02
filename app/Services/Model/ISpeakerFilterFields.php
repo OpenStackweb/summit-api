@@ -71,4 +71,45 @@ interface ISpeakerFilterFields
         'has_media_upload_with_type' => 'sometimes|integer',
         'has_not_media_upload_with_type' => 'sometimes|integer',
     ];
+
+    /**
+     * The subset of OPERATORS safe for a summit-independent query (e.g.
+     * OAuth2SummitSpeakersApiController::getAll(), which uses
+     * DoctrineSpeakerRepository::getAllByPage() / getAllIdsByPage()).
+     *
+     * The 13 fields excluded here (has_accepted/alternate/rejected_presentations,
+     * every presentations_* field, has_(not_)media_upload_with_type) all hard-code a
+     * ":summit" bound parameter inside DoctrineSpeakerRepository::getFilterMappings()'s
+     * DQL templates (e.g. "__p41_:i.summit = :summit"), because that method is shared
+     * verbatim by the summit-scoped query methods (getSpeakersBySummit,
+     * getSpeakersIdsBySummit), which bind that parameter on their own base query.
+     * getAllByPage()/getAllIdsByPage() never bind it - there is no single summit to
+     * scope by on a global listing - so applying any of those 13 fields there throws
+     * Doctrine\ORM\Query\QueryException ("too few parameters"), not a silent no-op.
+     * Verified by reproducing the exception directly against getAllByPage() with a
+     * presentations_track_id filter. Removing the hard-coded :summit clause from those
+     * DQL templates would need it to become conditional depending on caller context -
+     * real repository work, out of scope for a filter-whitelist unification.
+     */
+    const GLOBAL_OPERATORS = [
+        'id' => ['=='],
+        'not_id' => ['=='],
+        'first_name' => ['=@', '@@', '=='],
+        'last_name' => ['=@', '@@', '=='],
+        'email' => ['=@', '@@', '=='],
+        'full_name' => ['=@', '@@', '=='],
+        'member_id' => ['=='],
+        'member_user_external_id' => ['=='],
+    ];
+
+    const GLOBAL_VALIDATION_RULES = [
+        'id' => 'sometimes|integer',
+        'not_id' => 'sometimes|integer',
+        'first_name' => 'sometimes|string',
+        'last_name' => 'sometimes|string',
+        'email' => 'sometimes|string',
+        'full_name' => 'sometimes|string',
+        'member_id' => 'sometimes|integer',
+        'member_user_external_id' => 'sometimes|integer',
+    ];
 }

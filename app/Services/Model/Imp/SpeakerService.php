@@ -56,6 +56,7 @@ use models\summit\SpeakerTravelPreference;
 use models\summit\Summit;
 use utils\Filter;
 use utils\FilterParser;
+use utils\PagingInfo;
 
 /**
  * Class SpeakerService
@@ -1227,13 +1228,47 @@ final class SpeakerService
         });
     }
 
+    const CHUNK_SIZE = 100;
+
     /**
      * @inheritDoc
      */
     public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void
     {
         Log::debug(sprintf("SpeakerService::triggerSendEmails summit %s payload %s", $summit->getId(), json_encode($payload)));
-        ProcessSpeakersEmailRequestJob::dispatch($summit->getId(), $payload, $filter);
+
+        if (isset($payload['speaker_ids'])) {
+            $ids = $payload['speaker_ids'];
+        } else {
+            $parsedFilter = !is_null($filter) ? FilterParser::parse($filter, ISpeakerFilterFields::OPERATORS) : null;
+            $ids = [];
+            $page = 1;
+            do {
+                $currentPage = $this->tx_service->transaction(function () use ($summit, $page, $parsedFilter) {
+                    return $this->speaker_repository->getSpeakersIdsBySummit($summit, new PagingInfo($page, self::CHUNK_SIZE), $parsedFilter);
+                });
+                $ids = array_merge($ids, $currentPage);
+                $page++;
+            } while (count($currentPage) > 0);
+        }
+
+        if (isset($payload['excluded_speaker_ids'])) {
+            $ids = array_diff($ids, $payload['excluded_speaker_ids']);
+        }
+
+        $ids = array_values(array_unique($ids));
+
+        if (empty($ids)) {
+            Log::debug(sprintf("SpeakerService::triggerSendEmails summit %s no speakers matched, nothing dispatched", $summit->getId()));
+            return;
+        }
+
+        foreach (array_chunk($ids, self::CHUNK_SIZE) as $chunk) {
+            $chunkPayload = $payload;
+            $chunkPayload['speaker_ids'] = $chunk;
+            unset($chunkPayload['excluded_speaker_ids']);
+            ProcessSpeakersEmailRequestJob::dispatch($summit->getId(), $chunkPayload, $filter);
+        }
     }
 
     /**
@@ -1316,26 +1351,7 @@ final class SpeakerService
                                 );
 
                                 $original_filter = count($original_filter) > 0 ?
-                                    FilterParser::parse($original_filter, [
-                                    'id' => ['=='],
-                                    'not_id' => ['=='],
-                                    'first_name' => ['=@', '@@', '=='],
-                                    'last_name' => ['=@', '@@', '=='],
-                                    'email' => ['=@', '@@', '=='],
-                                    'full_name' => ['=@', '@@', '=='],
-                                    'has_accepted_presentations' => ['=='],
-                                    'has_alternate_presentations' => ['=='],
-                                    'has_rejected_presentations' => ['=='],
-                                    'presentations_track_id' => ['=='],
-                                    'presentations_selection_plan_id' => ['=='],
-                                    'presentations_type_id' => ['=='],
-                                    'presentations_title' => ['=@', '@@', '=='],
-                                    'presentations_abstract' => ['=@', '@@', '=='],
-                                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
-                                    'presentations_submitter_email' => ['=@', '@@', '=='],
-                                    'has_media_upload_with_type' => ['=='],
-                                    'has_not_media_upload_with_type' => ['=='],
-                                ]) : null;
+                                    FilterParser::parse($original_filter, ISpeakerFilterFields::OPERATORS) : null;
                             }
                             catch (\Exception $ex){
                                 Log::warning($ex);

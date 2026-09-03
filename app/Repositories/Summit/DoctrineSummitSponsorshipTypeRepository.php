@@ -42,10 +42,11 @@ final class DoctrineSummitSponsorshipTypeRepository
     protected function getFilterMappings()
     {
         return [
-            'name'  => 't.name:json_string',
-            'label' => 't.label:json_string',
-            'size'  => 't.size:json_string',
+            'name'  =>  Filter::buildStringField('t.name'),
+            'label' =>  Filter::buildStringField('t.label'),
+            'size'  => Filter::buildStringField('t.size'),
             'summit_id' => 's.id',
+            'is_public' =>  Filter::buildBooleanField('e.is_public'),
         ];
     }
 

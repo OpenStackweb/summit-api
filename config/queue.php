@@ -43,7 +43,10 @@ return [
             'driver'   => 'database',
             'table'    => 'queue_jobs',
             'queue'    => 'default',
-            'expire'   => 60,
+            // Same window as the redis primary: this is the failover tier for the same jobs
+            // (JobDispatcher::withDbFallback), so a reserved job must not be re-served before
+            // a chunk-sized job can finish. Laravel 12 ignores the old 'expire' key.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 1800),
         ],
 
         'redis' => [

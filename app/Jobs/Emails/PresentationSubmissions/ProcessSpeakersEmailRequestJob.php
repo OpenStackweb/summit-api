@@ -125,7 +125,7 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
         (
             sprintf
             (
-                "ProcessSpeakersEmailRequestJob::failed summit %s flow_event %s: chunk of %s speaker(s) failed (%s: %s); up to %s of them may not have been processed. Speaker ids in the chunk: [%s] filter %s. %s.",
+                "ProcessSpeakersEmailRequestJob::failed summit %s flow_event %s: chunk of %s speaker(s) failed (%s: %s); up to %s of them may not have been processed. Speaker ids in the chunk: [%s] filter fields %s. %s.",
                 $this->summit_id,
                 $flow_event,
                 count($speaker_ids),
@@ -133,7 +133,7 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
                 $e->getMessage(),
                 count($speaker_ids),
                 $ids_list,
-                json_encode($this->filter),
+                json_encode($this->redactFilterFieldNames($this->filter)),
                 $resend_hint
             )
         );
@@ -186,5 +186,20 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
         catch (\Throwable $ex) {
             Log::error($ex);
         }
+    }
+
+    /**
+     * Reduces a raw filter (["email==foo@bar.com", "presentations_selection_plan_id==78"]) to
+     * just its field names (["email", "presentations_selection_plan_id"]) so error logs never
+     * carry filter values that may be PII - email and full_name are valid filter fields
+     * (ISpeakerFilterFields::OPERATORS).
+     *
+     * @param mixed $filter
+     * @return string[]
+     */
+    private function redactFilterFieldNames($filter): array
+    {
+        if (empty($filter) || !is_array($filter)) return [];
+        return array_map(fn($condition) => preg_replace('/[=<>@!].*/', '', (string)$condition), $filter);
     }
 }

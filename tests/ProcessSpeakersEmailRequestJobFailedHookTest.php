@@ -194,4 +194,27 @@ class ProcessSpeakersEmailRequestJobFailedHookTest extends ProtectedApiTestCase
             ->withArgs(fn($message) => is_string($message) && str_contains($message, '44, 55'))
             ->once();
     }
+
+    public function testFailedChunkLogsFilterFieldNamesButNotTheirValues(): void
+    {
+        // email and full_name are valid speaker filter fields (ISpeakerFilterFields::OPERATORS),
+        // so the raw filter can carry PII. The error log must still say which fields were used
+        // (useful to reproduce the failed send) without writing the PII value itself.
+        Queue::fake();
+        Log::spy();
+
+        $job = new ProcessSpeakersEmailRequestJob(self::$summit->getId(), [
+            'email_flow_event' => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
+            'speaker_ids' => [11, 22],
+        ], ['email==foo@bar.com', 'presentations_selection_plan_id==78']);
+
+        $job->failed(new \RuntimeException('worker killed mid-chunk'));
+
+        Log::shouldHaveReceived('error')
+            ->withArgs(fn($message) => is_string($message)
+                && str_contains($message, 'email')
+                && str_contains($message, 'presentations_selection_plan_id')
+                && !str_contains($message, 'foo@bar.com'))
+            ->once();
+    }
 }

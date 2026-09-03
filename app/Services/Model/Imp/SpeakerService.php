@@ -1243,9 +1243,11 @@ final class SpeakerService
         (
             sprintf
             (
-                "SpeakerService::triggerSendEmails summit %s payload %s process_db_chunk_size %s process_jon_chunk_size %s",
+                "SpeakerService::triggerSendEmails summit %s email_flow_event %s speaker_ids_count %s has_filter %s process_db_chunk_size %s process_jon_chunk_size %s",
                 $summit->getId(),
-                json_encode($payload),
+                $payload['email_flow_event'] ?? '',
+                isset($payload['speaker_ids']) ? count($payload['speaker_ids']) : 0,
+                !is_null($filter) ? 'yes' : 'no',
                 $process_db_chunk_size,
                 $process_jon_chunk_size
             )

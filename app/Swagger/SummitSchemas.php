@@ -424,6 +424,7 @@ class PaginatedSummitSponsorshipTypesResponseSchema {}
         new OA\Property(property: 'name', type: 'string', example: 'platinum'),
         new OA\Property(property: 'label', type: 'string', example: 'Platinum'),
         new OA\Property(property: 'size', type: 'string', example: ISponsorshipTypeConstants::BigSize, enum: ISponsorshipTypeConstants::AllowedSizes),
+        new OA\Property(property: 'is_public', type: 'boolean', example: true),
     ]
 )]
 class SummitSponsorshipTypeCreateRequestSchema {}
@@ -436,6 +437,7 @@ class SummitSponsorshipTypeCreateRequestSchema {}
         new OA\Property(property: 'label', type: 'string', example: 'Platinum'),
         new OA\Property(property: 'size', type: 'string', example: ISponsorshipTypeConstants::BigSize, enum: ISponsorshipTypeConstants::AllowedSizes),
         new OA\Property(property: 'order', type: 'integer', example: 1, minimum: 1),
+        new OA\Property(property: 'is_public', type: 'boolean', example: true),
     ]
 )]
 class SummitSponsorshipTypeUpdateRequestSchema {}

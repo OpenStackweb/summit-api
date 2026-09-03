@@ -81,6 +81,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
             'sponsor_page_use_schedule_widget' => false,
             'sponsor_page_use_banner_widget' => true,
             'type_id' => self::$testSponsorshipType->getId(),
+            'is_public' => false,
         ];
 
         $headers = [
@@ -105,6 +106,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
         $this->assertTrue(!is_null($summit_sponsorship_type));
         $this->assertTrue($summit_sponsorship_type->widget_title === 'test');
         $this->assertTrue(property_exists($summit_sponsorship_type, 'type'));
+        $this->assertTrue($summit_sponsorship_type->is_public === false);
     }
 
     public function testUpdate(){
@@ -146,6 +148,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
         $this->assertTrue(!is_null($summit_sponsorship_type));
         $this->assertTrue($summit_sponsorship_type->widget_title === 'test');
         $this->assertTrue(property_exists($summit_sponsorship_type, 'type'));
+        $this->assertTrue($summit_sponsorship_type->is_public === true);
 
         $params = [
             'id' => self::$summit->getId(),
@@ -155,7 +158,8 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
 
         $data = [
             'widget_title' => 'test update',
-            'order' => 1
+            'order' => 1,
+            'is_public' => false,
         ];
 
         $response = $this->action(
@@ -175,6 +179,7 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
         $this->assertTrue(!is_null($summit_sponsorship_type));
         $this->assertTrue($summit_sponsorship_type->widget_title === 'test update');
         $this->assertTrue($summit_sponsorship_type->order === 1);
+        $this->assertTrue($summit_sponsorship_type->is_public === false);
     }
 
     public function testDelete(){
@@ -330,6 +335,62 @@ final class OAuth2SummitSponsorshipTypeApiControllerTest
         $page = json_decode($content);
         $this->assertTrue(!is_null($page));
         $this->assertNotEmpty($page->data);
+    }
+
+    public function testGetAllBySummitIdFilterByIsPublic(){
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        // the summit fixture already has 2 default sponsorship types, both public by default
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = [
+            'type_id' => self::$testSponsorshipType->getId(),
+            'is_public' => false,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSponsorshipTypeApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+        $new_type = json_decode($response->getContent());
+        $this->assertTrue($new_type->is_public === false);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => 'is_public==false',
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSponsorshipTypeApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+
+        $page = json_decode($content);
+        $this->assertTrue(!is_null($page));
+        $this->assertEquals(1, $page->total);
+        $this->assertEquals($new_type->id, $page->data[0]->id);
     }
 
     public function testAddBadgeImage(){

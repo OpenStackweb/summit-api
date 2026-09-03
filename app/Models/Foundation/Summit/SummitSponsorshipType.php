@@ -188,6 +188,14 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
         $this->is_public = true;
     }
 
+    public function isPublic():bool{
+        return $this->is_public;
+    }
+
+    public function setPublic(bool $is_public):void{
+        $this->is_public = $is_public;
+    }
+
     /**
      * @return int
      */

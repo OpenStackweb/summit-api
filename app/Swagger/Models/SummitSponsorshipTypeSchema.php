@@ -28,6 +28,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'order', type: 'integer', ),
         new OA\Property(property: 'should_display_on_expo_hall_page', type: 'boolean', ),
         new OA\Property(property: 'should_display_on_lobby_page', type: 'boolean', ),
+        new OA\Property(property: 'is_public', type: 'boolean', ),
         new OA\Property(property: 'summit', ref: '#/components/schemas/Summit', description: "Summit object, only available when expanded"),
         new OA\Property(property: 'type', ref: '#/components/schemas/SponsorshipType', description: "SponsorshipType object, only available when expanded"),
     ])

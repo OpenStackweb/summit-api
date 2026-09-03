@@ -71,6 +71,9 @@ final class SummitSponsorshipTypeFactory
         if(isset($payload['should_display_on_expo_hall_page']))
             $type->setShouldDisplayOnExpoHallPage(boolval($payload['should_display_on_expo_hall_page']));
 
+        if(isset($payload['is_public']))
+            $type->setPublic(boolval($payload['is_public']));
+
         return $type;
     }
 }

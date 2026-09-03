@@ -18,6 +18,7 @@ namespace App\Http\Controllers;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipTypeRepository;
 use App\ModelSerializers\SerializerUtils;
+use App\Rules\Boolean;
 use App\Security\SummitScopes;
 use App\Services\Model\ISummitSponsorshipTypeService;
 use Illuminate\Http\Request as LaravelRequest;
@@ -284,6 +285,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             'name' => ['==', '=@'],
             'label' => ['==', '=@'],
             'size' => ['==', '=@'],
+            'is_public' => ['=='],
         ];
     }
 
@@ -296,6 +298,7 @@ final class OAuth2SummitSponsorshipTypeApiController extends OAuth2ProtectedCont
             'name' => 'sometimes|required|string',
             'label' => 'sometimes|required|string',
             'size' => 'sometimes|required|string',
+            'is_public' => ['sometimes', new Boolean],
         ];
     }
 

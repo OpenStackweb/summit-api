@@ -40,6 +40,7 @@ final class SummitSponsorshipTypeSerializer extends AbstractSerializer
         'Order' => 'order:json_int',
         'ShouldDisplayOnExpoHallPage' => 'should_display_on_expo_hall_page:json_boolean',
         'ShouldDisplayOnLobbyPage' => 'should_display_on_lobby_page:json_boolean',
+        'Public' => 'is_public:json_boolean',
     ];
 
     protected static $expand_mappings = [

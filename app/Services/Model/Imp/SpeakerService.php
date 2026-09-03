@@ -1230,14 +1230,26 @@ final class SpeakerService
         });
     }
 
-    const CHUNK_SIZE = 100;
 
     /**
      * @inheritDoc
      */
     public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void
     {
-        Log::debug(sprintf("SpeakerService::triggerSendEmails summit %s payload %s", $summit->getId(), json_encode($payload)));
+        $process_db_chunk_size = intval(Config::get('emails.speakers_process_db_chunk_size', 500));
+        $process_jon_chunk_size = intval(Config::get('emails.speakers_process_job_chunk_size', 200));
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SpeakerService::triggerSendEmails summit %s payload %s process_db_chunk_size %s process_jon_chunk_size %s",
+                $summit->getId(),
+                json_encode($payload),
+                $process_db_chunk_size,
+                $process_jon_chunk_size
+            )
+        );
 
         if (isset($payload['speaker_ids'])) {
             $ids = $payload['speaker_ids'];
@@ -1246,8 +1258,8 @@ final class SpeakerService
             $ids = [];
             $page = 1;
             do {
-                $currentPage = $this->tx_service->transaction(function () use ($summit, $page, $parsedFilter) {
-                    return $this->speaker_repository->getSpeakersIdsBySummit($summit, new PagingInfo($page, self::CHUNK_SIZE), $parsedFilter);
+                $currentPage = $this->tx_service->transaction(function () use ($summit, $page, $parsedFilter, $process_db_chunk_size) {
+                    return $this->speaker_repository->getSpeakersIdsBySummit($summit, new PagingInfo($page, $process_db_chunk_size), $parsedFilter);
                 });
                 $ids = array_merge($ids, $currentPage);
                 $page++;
@@ -1265,6 +1277,8 @@ final class SpeakerService
             return;
         }
 
+        Log::debug(sprintf("SpeakerService::triggerSendEmail got %s speakers to process", count($ids)));
+
         // JobDispatcher, not ::dispatch(): a queue-backend failure part-way through this loop
         // would otherwise abort the request with some chunks already queued and the rest lost,
         // and an operator retry would re-email the chunks that already went out (should_resend
@@ -1272,16 +1286,30 @@ final class SpeakerService
         // deduplicated). withDbFallback() fails over to the database queue (and runs sync on a
         // double failure) so the loop completes. Same pattern as
         // PresentationSubmissionReopenService::notify's per-recipient dispatch loop.
-        foreach (array_chunk($ids, self::CHUNK_SIZE) as $chunk) {
+        $chunk_nbr = 1;
+        foreach (array_chunk($ids, $process_jon_chunk_size) as $chunk) {
             $chunkPayload = $payload;
             $chunkPayload['speaker_ids'] = $chunk;
             unset($chunkPayload['excluded_speaker_ids']);
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SpeakerService::triggerSendEmails sending summit id %s chunk %s speakers count %s",
+                    $summit->getId(),
+                    $chunk_nbr,
+                    count($chunk)
+                )
+            );
+
             try {
                 JobDispatcher::withDbFallback(
                     job: new ProcessSpeakersEmailRequestJob($summit->getId(), $chunkPayload, $filter),
                     logContext: ['summit_id' => $summit->getId(), 'speaker_count' => count($chunk)],
                     primaryConnection: Config::get('queue.default')
                 );
+                $chunk_nbr++;
             }
             catch (\Throwable $ex){
                 // withDbFallback already exhausted the primary connection, the database

@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use Illuminate\Support\Facades\Config;
+use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\PresentationSpeaker;
 use ModelSerializers\PresentationSpeakerSerializer;
@@ -48,5 +50,79 @@ final class PresentationSpeakerSerializerTest extends TestCase
         $values = $serializer->serialize(null, ['phone_number'], ['none']);
 
         $this->assertSame('', $values['phone_number']);
+    }
+
+    public function testBioGatedSpeakerFieldsAreNotMaskedWhenAccountBioToggleIsOff()
+    {
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getGender')->andReturn('Female');
+
+        $speaker = Mockery::mock(PresentationSpeaker::class)->makePartial();
+        $speaker->shouldReceive('hasMember')->andReturn(true);
+        $speaker->shouldReceive('getMember')->andReturn($member);
+        $speaker->shouldReceive('getBio')->andReturn('A speaker bio');
+        $speaker->shouldReceive('getCompany')->andReturn('Acme Corp');
+        $speaker->shouldReceive('getCountry')->andReturn('AR');
+        $speaker->shouldReceive('getTitle')->andReturn('CTO');
+        // the target speaker's own account-level "show bio" toggle is OFF - populated
+        // speaker-profile fields (policy Rule 2) must stay public regardless.
+        $speaker->shouldReceive('isPublicProfileShowBio')->andReturn(false);
+        $speaker->shouldReceive('isPublicProfileShowEmail')->andReturn(true);
+        $speaker->shouldReceive('isPublicProfileShowPhoto')->andReturn(true);
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new PresentationSpeakerSerializer($speaker, $resource_server_context);
+
+        $values = $serializer->serialize(null, ['bio', 'gender', 'company', 'country', 'title'], ['none']);
+
+        $this->assertSame('A speaker bio', $values['bio']);
+        $this->assertSame('Female', $values['gender']);
+        $this->assertSame('Acme Corp', $values['company']);
+        $this->assertSame('AR', $values['country']);
+        $this->assertSame('CTO', $values['title']);
+    }
+
+    public function testSocialMediaFieldsAreNotMaskedWhenAccountSocialToggleIsOff()
+    {
+        $speaker = Mockery::mock(PresentationSpeaker::class)->makePartial();
+        $speaker->shouldReceive('hasMember')->andReturn(false);
+        $speaker->shouldReceive('getIRCHandle')->andReturn('speaker_nick');
+        $speaker->shouldReceive('getTwitterName')->andReturn('@speaker_nick');
+        // the target speaker's own account-level "show social media" toggle is OFF - irc/twitter
+        // are populated speaker-profile fields (policy Rule 2) and must stay public regardless.
+        $speaker->shouldReceive('isPublicProfileShowSocialMediaInfo')->andReturn(false);
+        $speaker->shouldReceive('isPublicProfileShowEmail')->andReturn(true);
+        $speaker->shouldReceive('isPublicProfileShowPhoto')->andReturn(true);
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new PresentationSpeakerSerializer($speaker, $resource_server_context);
+
+        $values = $serializer->serialize(null, ['irc', 'twitter'], ['none']);
+
+        $this->assertSame('speaker_nick', $values['irc']);
+        $this->assertSame('@speaker_nick', $values['twitter']);
+    }
+
+    public function testPhotoFallbackIsStillMaskedWhenAccountPhotoToggleIsOff()
+    {
+        $speaker = Mockery::mock(PresentationSpeaker::class)->makePartial();
+        $speaker->shouldReceive('hasMember')->andReturn(false);
+        $speaker->shouldReceive('getProfilePhotoUrl')->andReturn('https://example.com/pic.jpg');
+        $speaker->shouldReceive('getBigProfilePhotoUrl')->andReturn('https://example.com/big_pic.jpg');
+        // policy Rule 9: a borrowed-from-account photo fallback must still honor the account's
+        // own visibility toggle - unlike Rule 2's populated speaker fields. Fixing that fallback
+        // to stop being unconditional is tracked separately (ClickUp 86bbmbm0f); this masking
+        // must not regress while that sibling ticket is still pending.
+        $speaker->shouldReceive('isPublicProfileShowPhoto')->andReturn(false);
+        $speaker->shouldReceive('isPublicProfileShowEmail')->andReturn(true);
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new PresentationSpeakerSerializer($speaker, $resource_server_context);
+
+        $values = $serializer->serialize(null, ['pic', 'big_pic'], ['none']);
+
+        $default_pic = Config::get("app.default_profile_image", null);
+        $this->assertSame($default_pic, $values['pic']);
+        $this->assertSame($default_pic, $values['big_pic']);
     }
 }

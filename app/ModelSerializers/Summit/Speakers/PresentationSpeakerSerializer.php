@@ -350,34 +350,9 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
     protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
         // permissions check
 
-        if(!$speaker->isPublicProfileShowBio())
-        {
-            if(isset($values['bio'])) $values['bio'] = '';
-            if(isset($values['gender'])) $values['gender'] = '';
-            if(isset($values['company'])) $values['company'] = '';
-            if(isset($values['state'])) $values['state'] = '';
-            if(isset($values['country'])) $values['country'] = '';
-            if(isset($values['title'])) $values['title'] = '';
-
-            if(isset($values['affiliations'])) $values['affiliations'] = [];
-            if(isset($values['languages'])) $values['languages'] = [];
-            if(isset($values['other_presentation_links'])) $values['other_presentation_links'] = [];
-            if(isset($values['areas_of_expertise'])) $values['areas_of_expertise'] = [];
-            if(isset($values['travel_preferences'])) $values['travel_preferences'] = [];
-            if(isset($values['active_involvements'])) $values['active_involvements'] = [];
-            if(isset($values['organizational_roles'])) $values['organizational_roles'] = [];
-            if(isset($values['badge_features'])) $values['badge_features'] = [];
-        }
-
         if(!$speaker->isPublicProfileShowEmail())
         {
             if(isset($values['email'])) $values['email'] = '';
-        }
-
-        if(!$speaker->isPublicProfileShowSocialMediaInfo())
-        {
-            if(isset($values['irc'])) $values['irc'] = '';
-            if(isset($values['twitter'])) $values['twitter'] = '';
         }
 
         if(!$speaker->isPublicProfileShowPhoto())
@@ -385,14 +360,6 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             if(isset($values['pic'])) $values['pic'] = Config::get("app.default_profile_image", null);
             if(isset($values['big_pic'])) $values['big_pic'] = Config::get("app.default_profile_image", null);
         }
-
-        /*
-         * relax full name restriction for signage
-        if(!$speaker->isPublicProfileShowFullname())
-        {
-            if(isset($values['last_name'])) $values['last_name'] = '';
-        }
-        */
 
         // phone_number is never public regardless of the target speaker's own account
         // visibility toggle - see policy/profile-data-handling.md Rule 4.

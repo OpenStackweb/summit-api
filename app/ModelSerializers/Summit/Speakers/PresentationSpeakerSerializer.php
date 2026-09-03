@@ -355,12 +355,6 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             if(isset($values['email'])) $values['email'] = '';
         }
 
-        if(!$speaker->isPublicProfileShowPhoto())
-        {
-            if(isset($values['pic'])) $values['pic'] = Config::get("app.default_profile_image", null);
-            if(isset($values['big_pic'])) $values['big_pic'] = Config::get("app.default_profile_image", null);
-        }
-
         // phone_number is never public regardless of the target speaker's own account
         // visibility toggle - see policy/profile-data-handling.md Rule 4.
         if(isset($values['phone_number'])) $values['phone_number'] = '';

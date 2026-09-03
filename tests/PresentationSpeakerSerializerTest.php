@@ -12,7 +12,6 @@
  * limitations under the License.
  **/
 
-use Illuminate\Support\Facades\Config;
 use models\main\Member;
 use models\oauth2\IResourceServerContext;
 use models\summit\PresentationSpeaker;
@@ -103,16 +102,16 @@ final class PresentationSpeakerSerializerTest extends TestCase
         $this->assertSame('@speaker_nick', $values['twitter']);
     }
 
-    public function testPhotoFallbackIsStillMaskedWhenAccountPhotoToggleIsOff()
+    public function testPhotoUrlsPassThroughSerializerRegardlessOfAccountPhotoToggle()
     {
         $speaker = Mockery::mock(PresentationSpeaker::class)->makePartial();
         $speaker->shouldReceive('hasMember')->andReturn(false);
         $speaker->shouldReceive('getProfilePhotoUrl')->andReturn('https://example.com/pic.jpg');
         $speaker->shouldReceive('getBigProfilePhotoUrl')->andReturn('https://example.com/big_pic.jpg');
-        // policy Rule 9: a borrowed-from-account photo fallback must still honor the account's
-        // own visibility toggle - unlike Rule 2's populated speaker fields. Fixing that fallback
-        // to stop being unconditional is tracked separately (ClickUp 86bbmbm0f); this masking
-        // must not regress while that sibling ticket is still pending.
+        // policy Rule 9: the account-toggle gate on the borrowed-from-account photo fallback now
+        // lives inside getProfilePhotoUrl()/getBigProfilePhotoUrl() themselves (ClickUp 86bbmbm0f),
+        // not in this serializer - so the serializer must pass their result through unmasked even
+        // when the toggle is off, instead of re-applying its own masking on top.
         $speaker->shouldReceive('isPublicProfileShowPhoto')->andReturn(false);
         $speaker->shouldReceive('isPublicProfileShowEmail')->andReturn(true);
 
@@ -121,8 +120,7 @@ final class PresentationSpeakerSerializerTest extends TestCase
 
         $values = $serializer->serialize(null, ['pic', 'big_pic'], ['none']);
 
-        $default_pic = Config::get("app.default_profile_image", null);
-        $this->assertSame($default_pic, $values['pic']);
-        $this->assertSame($default_pic, $values['big_pic']);
+        $this->assertSame('https://example.com/pic.jpg', $values['pic']);
+        $this->assertSame('https://example.com/big_pic.jpg', $values['big_pic']);
     }
 }

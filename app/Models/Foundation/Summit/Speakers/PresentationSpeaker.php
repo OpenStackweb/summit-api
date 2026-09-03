@@ -210,7 +210,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     public function getFirstName():?string
     {
         $res = $this->first_name;
-        if(empty($res) && $this->hasMember()){
+        if(empty($res) && $this->isPublicProfileShowFullname() && $this->hasMember()){
             $res = $this->member->getFirstName();
         }
         return $res;
@@ -230,7 +230,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     public function getLastName():?string
     {
         $res = $this->last_name;
-        if(empty($res) && $this->hasMember()){
+        if(empty($res) && $this->isPublicProfileShowFullname() && $this->hasMember()){
             $res = $this->member->getLastName();
         }
         return $res;
@@ -1801,7 +1801,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
             if (!empty($fullname)) $fullname .= ' ';
             $fullname .= $this->last_name;
         }
-        if (empty($fullname) && $this->hasMember()) {
+        if (empty($fullname) && $this->isPublicProfileShowFullname() && $this->hasMember()) {
             $fullname = $this->member->getFullName();
         }
 
@@ -2342,7 +2342,7 @@ SQL;
             if ($this->hasBigPhoto() && $photo = $this->getBigPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
-            if (empty($photoUrl) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
+            if (empty($photoUrl) && $this->isPublicProfileShowPhoto() && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
 
@@ -2367,7 +2367,7 @@ SQL;
             if ($this->hasPhoto() && $photo = $this->getPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
-            if (empty($photoUrl) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
+            if (empty($photoUrl) && $this->isPublicProfileShowPhoto() && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
         } catch (\Exception $ex) {

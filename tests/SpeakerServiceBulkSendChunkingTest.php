@@ -14,17 +14,17 @@
 
 use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
 use models\main\Member;
 use models\summit\PresentationSpeaker;
 use ReflectionObject;
 use services\model\ISpeakerService;
-use services\model\SpeakerService;
 
 /**
  * Covers SpeakerService::triggerSendEmails's chunking behaviour: it resolves the full set of
  * matched speaker ids synchronously and dispatches one ProcessSpeakersEmailRequestJob per
- * SpeakerService::CHUNK_SIZE-sized group, instead of a single job the trait pages through.
+ * emails.speakers_process_job_chunk_size-sized group, instead of a single job the trait pages through.
  *
  * Most cases use an explicit speaker_ids payload with fabricated ids rather than real, seeded
  * speakers: Queue::fake() intercepts dispatch before the job's handle() ever runs, and the
@@ -81,10 +81,12 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
         return $property->getValue($job);
     }
 
-    public function testDispatchesOneChunkPerHundredIdsWithNoOverlap(): void
+    public function testDispatchesOneChunkPerConfiguredSizeWithNoOverlap(): void
     {
         Queue::fake();
-        $ids = range(1, 250);
+        $chunkSize = intval(Config::get('emails.speakers_process_job_chunk_size', 200));
+        $remainder = 50;
+        $ids = range(1, 2 * $chunkSize + $remainder);
         $payload = $this->basePayload();
         $payload['speaker_ids'] = $ids;
 
@@ -95,9 +97,9 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
         $jobs = $this->pushedJobs();
         $slices = array_map(fn($job) => $this->jobProperty($job, 'payload')['speaker_ids'], $jobs);
 
-        $this->assertCount(100, $slices[0]);
-        $this->assertCount(100, $slices[1]);
-        $this->assertCount(50, $slices[2]);
+        $this->assertCount($chunkSize, $slices[0]);
+        $this->assertCount($chunkSize, $slices[1]);
+        $this->assertCount($remainder, $slices[2]);
 
         $covered = array_merge(...$slices);
         sort($covered);
@@ -107,7 +109,8 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
     public function testDispatchesExactlyOneJobWhenMatchedCountEqualsChunkSize(): void
     {
         Queue::fake();
-        $ids = range(1, 100);
+        $chunkSize = intval(Config::get('emails.speakers_process_job_chunk_size', 200));
+        $ids = range(1, $chunkSize);
         $payload = $this->basePayload();
         $payload['speaker_ids'] = $ids;
 
@@ -168,8 +171,9 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
     public function testExplicitFilterRawValueReachesEveryChunkUnchanged(): void
     {
         Queue::fake();
+        $chunkSize = intval(Config::get('emails.speakers_process_job_chunk_size', 200));
         $payload = $this->basePayload();
-        $payload['speaker_ids'] = range(1, 150);
+        $payload['speaker_ids'] = range(1, $chunkSize + 1);
         $rawFilter = ['first_name=@Test'];
 
         $this->service()->triggerSendEmails(self::$summit, $payload, $rawFilter);
@@ -292,13 +296,14 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
     public function testFilterBasedSelectionSpanningSeveralPagesCoversEveryMatchedIdExactlyOnce(): void
     {
         // The filter-based path is the only one summit-admin drives (it always sends filter[],
-        // never speaker_ids), and it resolves ids by paging getSpeakersIdsBySummit CHUNK_SIZE at
-        // a time. Seed CHUNK_SIZE + 1 speakers sharing a unique first name on one presentation of
-        // this summit, so the resolution has to walk two non-empty pages plus the empty one that
-        // ends the loop. self::$defaultSpeaker (with its own presentations) is the control the
-        // first_name filter must leave out. A page that is skipped, re-read, or overwritten
+        // never speaker_ids). Seed one more speaker than the configured job chunk size sharing a
+        // unique first name on one presentation of this summit, so dispatch has to split them
+        // into two job chunks. self::$defaultSpeaker (with its own presentations) is the control
+        // the first_name filter must leave out. A page that is skipped, re-read, or overwritten
         // instead of merged breaks the exact-set assertion below.
         Queue::fake();
+
+        $chunkSize = intval(Config::get('emails.speakers_process_job_chunk_size', 200));
 
         $firstName = 'PageSeed' . str_random(8);
 
@@ -312,7 +317,7 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
         $presentation->setEndDate(new \DateTime('+1 hour', new \DateTimeZone('UTC')));
 
         $seeded = [];
-        for ($i = 0; $i < SpeakerService::CHUNK_SIZE + 1; $i++) {
+        for ($i = 0; $i < $chunkSize + 1; $i++) {
             $speaker = new PresentationSpeaker();
             $speaker->setFirstName($firstName);
             $speaker->setLastName("Speaker {$i}");
@@ -333,7 +338,7 @@ class SpeakerServiceBulkSendChunkingTest extends ProtectedApiTestCase
         $slices = array_map(fn($job) => $this->jobProperty($job, 'payload')['speaker_ids'], $this->pushedJobs());
         $sizes = array_map('count', $slices);
         rsort($sizes);
-        $this->assertEquals([SpeakerService::CHUNK_SIZE, 1], $sizes, 'CHUNK_SIZE + 1 matched ids must become one full chunk and one single-id chunk');
+        $this->assertEquals([$chunkSize, 1], $sizes, 'chunkSize + 1 matched ids must become one full chunk and one single-id chunk');
 
         $covered = array_merge(...$slices);
         sort($covered);

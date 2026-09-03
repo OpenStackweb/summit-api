@@ -271,9 +271,30 @@ trait SpeakersPromoCodeTrait
         );
 
         try{
-            $existing_owner = $this->owners->filter(function ($e) use($recipient){
-                return strtolower($e->getSpeaker()->getEmail()) == strtolower(trim($recipient)) && !$e->isSent();
-            })->first();
+            $recipient = strtolower(trim($recipient ?? ''));
+
+            if (empty($recipient))
+                throw new ValidationException("Can't mark the promo_code as sent without a recipient.");
+
+            // Resolve the assignment with a targeted query instead of $this->owners->filter():
+            // Collection::filter() initializes the whole collection regardless of the EXTRA_LAZY
+            // mapping and then dereferences ->getSpeaker()->getEmail() on every element, so the
+            // cost of marking one speaker grows with the number of speakers already assigned to
+            // this code - quadratic over a bulk send.
+            // The matching mirrors PresentationSpeaker::getEmail(): the member's e-mail wins, and
+            // the registration request's is only used when the speaker has no member.
+            $query = $this->createQuery("SELECT e from models\summit\AssignedPromoCodeSpeaker e
+            JOIN e.registration_promo_code pc
+            JOIN e.speaker s
+            LEFT JOIN s.member m
+            LEFT JOIN s.registration_request rr
+            WHERE pc.id = :promo_code_id and e.sent is null
+            and ( LOWER(m.email) = :recipient or ( m.id is null and LOWER(rr.email) = :recipient ) )");
+
+            $query->setParameter('promo_code_id', $this->getId());
+            $query->setParameter('recipient', $recipient);
+
+            $existing_owner = $query->setMaxResults(1)->getOneOrNullResult();
 
             if (!$existing_owner instanceof AssignedPromoCodeSpeaker)
                 throw new ValidationException("Can't find an owner with the email {$recipient} for the promo_code.");

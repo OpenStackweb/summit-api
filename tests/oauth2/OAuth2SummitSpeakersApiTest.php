@@ -495,6 +495,101 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(count($speakers[0]->accepted_presentations) == 20);
     }
 
+    public function testGetAllSpeakersFilteredByMemberId()
+    {
+        // getAll() is global/non-summit-scoped. Its member_id/member_user_external_id
+        // support predates this change; this proves swapping its inline whitelist for
+        // ISpeakerFilterFields::GLOBAL_OPERATORS/GLOBAL_VALIDATION_RULES didn't break it.
+        //
+        // Widening getAll() to the full ISpeakerFilterFields (like the summit-scoped
+        // endpoints) was attempted and reverted: DoctrineSpeakerRepository::getFilterMappings()
+        // hard-codes a ":summit" bound parameter into every presentations_*/has_*_presentations
+        // DQL template (shared verbatim with the summit-scoped query methods, which bind it on
+        // their own base query). getAllByPage()/getAllIdsByPage() never bind it - reproduced
+        // directly: Doctrine\ORM\Query\QueryException "too few parameters" applying
+        // presentations_track_id to getAllByPage(). Not a silent no-op, a hard 500. See
+        // ISpeakerFilterFields::GLOBAL_OPERATORS's docblock for the full field-by-field
+        // breakdown of what is/isn't summit-independent.
+        $control = new PresentationSpeaker();
+        $control->setFirstName("NoMember");
+        $control->setLastName("Control " . str_random(8));
+        self::$em->persist($control);
+        self::$em->flush();
+
+        $params = [
+            'page' => 1,
+            'per_page' => 100,
+            'filter' => [
+                sprintf('member_id==%s', self::$defaultMember->getId()),
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $speakers_response = json_decode($response->getContent());
+        $this->assertTrue(!is_null($speakers_response));
+        $ids = array_map(fn($s) => $s->id, $speakers_response->data);
+
+        $this->assertContains(
+            self::$defaultSpeaker->getId(),
+            $ids,
+            'the speaker belonging to the filtered member must be included'
+        );
+        $this->assertNotContains(
+            $control->getId(),
+            $ids,
+            'a speaker with no member (or a different one) must not match'
+        );
+    }
+
+    public function testGetAllSpeakersRejectsPresentationScopedFilter()
+    {
+        // getAll() is not summit-scoped and was never wired to accept presentation-related
+        // fields (see ISpeakerFilterFields::GLOBAL_OPERATORS's docblock: those fields hard-code
+        // a :summit bound parameter in the shared repository mapping that a global query can
+        // never bind). This must stay a clean validation error, not a 500.
+        $params = [
+            'page' => 1,
+            'per_page' => 10,
+            'filter' => [
+                sprintf('presentations_track_id==%s', self::$defaultTrack->getId()),
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getAll",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(412);
+        $content = json_decode($response->getContent(), true);
+        $this->assertStringContainsString('presentations_track_id', $content['errors'][0]);
+    }
+
     public function testGetCurrentSummitSpeakersOrderByIDAndFilteredByMediaUploadType()
     {
         $media_upload_ids =array_map(function($v){
@@ -798,6 +893,94 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $csv = $response->getContent();
         $this->assertResponseStatus(200);
         $this->assertTrue(!empty($csv));
+    }
+
+    public function testSendSpeakersBulkEmailFilteredByMemberUserExternalId() {
+        // member_user_external_id was previously rejected by send()'s own whitelist (it only
+        // existed on the listing endpoints). This drives the real HTTP action, so it exercises
+        // the controller's FilterParser::parse + Filter::validate against the shared
+        // ISpeakerFilterFields constants AND the service's id resolution, end to end.
+        //
+        // The fixture summit has a single speaker with presentations (self::$defaultSpeaker),
+        // so on its own an exact-equality assertion would pass for the same reason an
+        // in_array one does. Seed a control speaker - different member, with a presentation
+        // in this summit - so "exactly [defaultSpeaker]" actually proves the filter narrowed.
+        Queue::fake();
+
+        $prefix = str_random(10);
+        $control_member = new Member();
+        $control_member->setEmail("send-control+{$prefix}@test.com");
+        $control_member->setActive(true);
+        $control_member->setFirstName("Control");
+        $control_member->setLastName("Member");
+        $control_member->setEmailVerified(true);
+        $control_member->setUserExternalId(mt_rand());
+        self::$em->persist($control_member);
+
+        $control_speaker = new PresentationSpeaker();
+        $control_speaker->setFirstName("Control");
+        $control_speaker->setLastName("Speaker {$prefix}");
+        $control_speaker->setMember($control_member);
+        self::$em->persist($control_speaker);
+
+        $control_presentation = new Presentation();
+        self::$summit->addEvent($control_presentation);
+        $control_presentation->setTitle("Send control presentation {$prefix}");
+        $control_presentation->setAbstract("Abstract {$prefix}");
+        $control_presentation->setCategory(self::$defaultTrack);
+        $control_presentation->setType(self::$defaultPresentationType);
+        $control_presentation->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $control_presentation->setEndDate(new \DateTime('+1 hour', new \DateTimeZone('UTC')));
+        $control_presentation->addSpeaker($control_speaker);
+        self::$em->persist($control_presentation);
+
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => [
+                'member_user_external_id==' . self::$member->getUserExternalId(),
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            'email_flow_event' => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@send",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+
+        Queue::assertPushed(\App\Jobs\Emails\ProcessSpeakersEmailRequestJob::class, 1);
+        Queue::assertPushed(\App\Jobs\Emails\ProcessSpeakersEmailRequestJob::class, function ($job) use ($control_speaker) {
+            $ref = new \ReflectionObject($job);
+            $prop = $ref->getProperty('payload');
+            $prop->setAccessible(true);
+            $payload = $prop->getValue($job);
+            $this->assertEquals(
+                [self::$defaultSpeaker->getId()],
+                $payload['speaker_ids'] ?? [],
+                sprintf(
+                    'the chunk must contain exactly the speaker of the filtered member, not the control speaker %s',
+                    $control_speaker->getId()
+                )
+            );
+            return true;
+        });
     }
 
     public function testSendSpeakersBulkEmail() {

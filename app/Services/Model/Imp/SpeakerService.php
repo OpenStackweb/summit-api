@@ -18,6 +18,7 @@ use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRejectedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRequestedEmail;
 use App\Jobs\Emails\ProcessSpeakersEmailRequestJob;
+use App\Jobs\Utils\JobDispatcher;
 use App\Jobs\Emails\Registration\PromoCodes\PromoCodeEmailFactory;
 use App\Models\Foundation\Main\CountryCodes;
 use App\Models\Foundation\Main\Repositories\ILanguageRepository;
@@ -34,6 +35,7 @@ use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\SpeakerActionsEmailStrategy;
 use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -56,6 +58,7 @@ use models\summit\SpeakerTravelPreference;
 use models\summit\Summit;
 use utils\Filter;
 use utils\FilterParser;
+use utils\PagingInfo;
 
 /**
  * Class SpeakerService
@@ -1227,13 +1230,110 @@ final class SpeakerService
         });
     }
 
+
     /**
      * @inheritDoc
      */
     public function triggerSendEmails(Summit $summit, array $payload, $filter = null): void
     {
-        Log::debug(sprintf("SpeakerService::triggerSendEmails summit %s payload %s", $summit->getId(), json_encode($payload)));
-        ProcessSpeakersEmailRequestJob::dispatch($summit->getId(), $payload, $filter);
+        $process_db_chunk_size = intval(Config::get('emails.speakers_process_db_chunk_size', 500));
+        $process_jon_chunk_size = intval(Config::get('emails.speakers_process_job_chunk_size', 200));
+
+        Log::debug
+        (
+            sprintf
+            (
+                "SpeakerService::triggerSendEmails summit %s email_flow_event %s speaker_ids_count %s has_filter %s process_db_chunk_size %s process_jon_chunk_size %s",
+                $summit->getId(),
+                $payload['email_flow_event'] ?? '',
+                isset($payload['speaker_ids']) ? count($payload['speaker_ids']) : 0,
+                !is_null($filter) ? 'yes' : 'no',
+                $process_db_chunk_size,
+                $process_jon_chunk_size
+            )
+        );
+
+        if (isset($payload['speaker_ids'])) {
+            $ids = $payload['speaker_ids'];
+        } else {
+            $parsedFilter = !is_null($filter) ? FilterParser::parse($filter, ISpeakerFilterFields::OPERATORS) : null;
+            $ids = [];
+            $page = 1;
+            do {
+                $currentPage = $this->tx_service->transaction(function () use ($summit, $page, $parsedFilter, $process_db_chunk_size) {
+                    return $this->speaker_repository->getSpeakersIdsBySummit($summit, new PagingInfo($page, $process_db_chunk_size), $parsedFilter);
+                });
+                $ids = array_merge($ids, $currentPage);
+                $page++;
+            } while (count($currentPage) > 0);
+        }
+
+        if (isset($payload['excluded_speaker_ids'])) {
+            $ids = array_diff($ids, $payload['excluded_speaker_ids']);
+        }
+
+        $ids = array_values(array_unique($ids));
+
+        if (empty($ids)) {
+            Log::debug(sprintf("SpeakerService::triggerSendEmails summit %s no speakers matched, nothing dispatched", $summit->getId()));
+            return;
+        }
+
+        Log::debug(sprintf("SpeakerService::triggerSendEmail got %s speakers to process", count($ids)));
+
+        // JobDispatcher, not ::dispatch(): a queue-backend failure part-way through this loop
+        // would otherwise abort the request with some chunks already queued and the rest lost,
+        // and an operator retry would re-email the chunks that already went out (should_resend
+        // defaults to true and the admin UI never sends it, so today's re-runs are not
+        // deduplicated). withDbFallback() fails over to the database queue (and runs sync on a
+        // double failure) so the loop completes. Same pattern as
+        // PresentationSubmissionReopenService::notify's per-recipient dispatch loop.
+        $chunk_nbr = 1;
+        foreach (array_chunk($ids, $process_jon_chunk_size) as $chunk) {
+            $chunkPayload = $payload;
+            $chunkPayload['speaker_ids'] = $chunk;
+            unset($chunkPayload['excluded_speaker_ids']);
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "SpeakerService::triggerSendEmails sending summit id %s chunk %s speakers count %s",
+                    $summit->getId(),
+                    $chunk_nbr,
+                    count($chunk)
+                )
+            );
+
+            try {
+                JobDispatcher::withDbFallback(
+                    job: new ProcessSpeakersEmailRequestJob($summit->getId(), $chunkPayload, $filter),
+                    logContext: ['summit_id' => $summit->getId(), 'speaker_count' => count($chunk)],
+                    primaryConnection: Config::get('queue.default')
+                );
+                $chunk_nbr++;
+            }
+            catch (\Throwable $ex){
+                // withDbFallback already exhausted the primary connection, the database
+                // fallback, and a synchronous run - reaching here means all three failed for
+                // this chunk. Log at error (not warning) so it surfaces to alerting; keep the
+                // loop going so a bad chunk doesn't also block every sibling chunk that would
+                // otherwise succeed.
+                Log::error
+                (
+                    sprintf
+                    (
+                        "SpeakerService::triggerSendEmails summit %s: chunk of %s speaker(s) failed every dispatch tier (%s: %s). Unprocessed speaker ids: [%s]",
+                        $summit->getId(),
+                        count($chunk),
+                        get_class($ex),
+                        $ex->getMessage(),
+                        implode(', ', $chunk)
+                    ),
+                    ['summit_id' => $summit->getId(), 'speaker_ids' => $chunk, 'exception' => $ex]
+                );
+            }
+        }
     }
 
     /**
@@ -1316,26 +1416,7 @@ final class SpeakerService
                                 );
 
                                 $original_filter = count($original_filter) > 0 ?
-                                    FilterParser::parse($original_filter, [
-                                    'id' => ['=='],
-                                    'not_id' => ['=='],
-                                    'first_name' => ['=@', '@@', '=='],
-                                    'last_name' => ['=@', '@@', '=='],
-                                    'email' => ['=@', '@@', '=='],
-                                    'full_name' => ['=@', '@@', '=='],
-                                    'has_accepted_presentations' => ['=='],
-                                    'has_alternate_presentations' => ['=='],
-                                    'has_rejected_presentations' => ['=='],
-                                    'presentations_track_id' => ['=='],
-                                    'presentations_selection_plan_id' => ['=='],
-                                    'presentations_type_id' => ['=='],
-                                    'presentations_title' => ['=@', '@@', '=='],
-                                    'presentations_abstract' => ['=@', '@@', '=='],
-                                    'presentations_submitter_full_name' => ['=@', '@@', '=='],
-                                    'presentations_submitter_email' => ['=@', '@@', '=='],
-                                    'has_media_upload_with_type' => ['=='],
-                                    'has_not_media_upload_with_type' => ['=='],
-                                ]) : null;
+                                    FilterParser::parse($original_filter, ISpeakerFilterFields::OPERATORS) : null;
                             }
                             catch (\Exception $ex){
                                 Log::warning($ex);

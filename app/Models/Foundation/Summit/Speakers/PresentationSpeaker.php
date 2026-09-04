@@ -199,7 +199,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     protected $active_involvements;
 
     /**
-     * @var SpeakerAnnouncementSummitEmail[]
+     * @var \Doctrine\Common\Collections\Collection<int, SpeakerAnnouncementSummitEmail>
      */
     #[ORM\OneToMany(targetEntity: \SpeakerAnnouncementSummitEmail::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $announcement_summit_emails;

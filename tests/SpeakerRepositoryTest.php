@@ -112,6 +112,12 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
 
     public function testGetAllByPageNotIdFilterExcludesSpeaker(): void
     {
+        $second = new PresentationSpeaker();
+        $second->setFirstName('Second');
+        $second->setLastName('Speaker');
+        self::$em->persist($second);
+        self::$em->flush();
+
         $all = $this->repo()->getAllByPage(new PagingInfo(1, 100));
         $this->assertGreaterThan(1, $all->getTotal(), 'Need at least 2 speakers for not_id test');
 
@@ -364,6 +370,294 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
             $conn->executeStatement("SET GLOBAL general_log = 'OFF'");
             $conn->executeStatement("SET GLOBAL log_output = 'FILE'");
         }
+    }
+
+    // -----------------------------------------------------------------
+    // getSpeakersBySummit / getUniqueActivitiesCountBySummit - has_published_presentations
+    // The filter checks Presentation.published = 1 for both speaker and
+    // moderator roles.
+    // -----------------------------------------------------------------
+
+    public function testGetSpeakersBySummitHasPublishedPresentationsTrueViaModeratorRole(): void
+    {
+        // A speaker who is the moderator (not in speakers collection) of a published
+        // presentation must appear in has_published_presentations==true results.
+        $moderator = new PresentationSpeaker();
+        $moderator->setFirstName('PublishedModerator');
+        $moderator->setLastName('TestSpeaker');
+        self::$em->persist($moderator);
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Moderator Published Presentation');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->setModerator($moderator);
+        $p->publish();
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==true'],
+            ['has_published_presentations' => ['==']]
+        );
+
+        $page = $this->repo()->getSpeakersBySummit(self::$summit, new PagingInfo(1, 100), $filter);
+
+        $ids = array_map(fn($s) => $s->getId(), $page->getItems());
+        $this->assertContains($moderator->getId(), $ids);
+    }
+
+    public function testGetSpeakersBySummitHasPublishedPresentationsFalse(): void
+    {
+        // Create a speaker with an unpublished presentation only.
+        $unpublishedSpeaker = new PresentationSpeaker();
+        $unpublishedSpeaker->setFirstName('UnpublishedOnly');
+        $unpublishedSpeaker->setLastName('TestSpeaker');
+        self::$em->persist($unpublishedSpeaker);
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Unpublished Presentation');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->addSpeaker($unpublishedSpeaker);
+        // Deliberately NOT calling publish() — leaves published = 0.
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==false'],
+            ['has_published_presentations' => ['==']]
+        );
+
+        $page = $this->repo()->getSpeakersBySummit(self::$summit, new PagingInfo(1, 100), $filter);
+
+        $ids = array_map(fn($s) => $s->getId(), $page->getItems());
+        $this->assertContains($unpublishedSpeaker->getId(), $ids,
+            'Speaker with only unpublished presentations must appear in false results');
+        $this->assertNotContains(self::$defaultSpeaker->getId(), $ids,
+            'Speaker with published presentations must not appear in false results');
+    }
+
+    public function testGetSpeakersBySummitHasPublishedPresentationsTrueExcludesUnpublishedOnlySpeaker(): void
+    {
+        // Speaker with no published presentations must be excluded from the true results.
+        $unpublishedSpeaker = new PresentationSpeaker();
+        $unpublishedSpeaker->setFirstName('UnpublishedOnly2');
+        $unpublishedSpeaker->setLastName('TestSpeaker');
+        self::$em->persist($unpublishedSpeaker);
+
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Unpublished Presentation 2');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$defaultTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->addSpeaker($unpublishedSpeaker);
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==true'],
+            ['has_published_presentations' => ['==']]
+        );
+
+        $page = $this->repo()->getSpeakersBySummit(self::$summit, new PagingInfo(1, 100), $filter);
+
+        $ids = array_map(fn($s) => $s->getId(), $page->getItems());
+        $this->assertContains(self::$defaultSpeaker->getId(), $ids,
+            'Speaker with published presentations must appear in true results');
+        $this->assertNotContains($unpublishedSpeaker->getId(), $ids,
+            'Speaker with only unpublished presentations must not appear in true results');
+    }
+
+    public function testGetUniqueActivitiesCountBySummitHasPublishedPresentationsTrue(): void
+    {
+        // All seeded presentations are published; speaker1 satisfies the filter.
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==true'],
+            ['has_published_presentations' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertGreaterThan(0, $count);
+    }
+
+    public function testGetUniqueActivitiesCountBySummitHasPublishedPresentationsFalseIsZeroWhenAllPublished(): void
+    {
+        // Every presentation in the fixture is published, so no speaker satisfies
+        // has_published_presentations==false — the count of their activities must be 0.
+        $filter = FilterParser::parse(
+            ['filter' => 'has_published_presentations==false'],
+            ['has_published_presentations' => ['==']]
+        );
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+        $this->assertEquals(0, $count);
+    }
+
+    // -----------------------------------------------------------------
+    // has_published_presentations + presentations_track_id combined
+    // Each condition must be satisfied by the SAME presentation.
+    // The defect: a speaker with an unpublished presentation in track A
+    // and a published one in track B satisfies both conditions through
+    // two different presentations and is incorrectly included.
+    // -----------------------------------------------------------------
+
+    public function testHasPublishedPresentationsIsScopedByTrackFilter(): void
+    {
+        // Speaker satisfies each condition through a DIFFERENT presentation:
+        //   - unpublished in defaultTrack   -> satisfies presentations_track_id
+        //   - published   in secondaryTrack -> satisfies has_published_presentations
+        // Only a mapping that scopes both into one subquery excludes them.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('CrossPresentationMatch');
+        $speaker->setLastName('TestSpeaker');
+        self::$em->persist($speaker);
+
+        $this->seedPresentation($speaker, self::$defaultTrack,   'Unpublished In Default', false);
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'Published In Secondary', true);
+
+        // Positive control: published in the track being filtered.
+        $control = new PresentationSpeaker();
+        $control->setFirstName('PublishedInDefault');
+        $control->setLastName('TestSpeaker');
+        self::$em->persist($control);
+        $this->seedPresentation($control, self::$defaultTrack, 'Published In Default', true);
+
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            [
+                'has_published_presentations==true',
+                'presentations_track_id==' . self::$defaultTrack->getId(),
+            ],
+            [
+                'has_published_presentations' => ['=='],
+                'presentations_track_id'      => ['=='],
+            ]
+        );
+
+        $ids = array_map(
+            fn($s) => $s->getId(),
+            $this->repo()->getSpeakersBySummit(self::$summit, new PagingInfo(1, 100), $filter)->getItems()
+        );
+
+        $this->assertNotContains($speaker->getId(), $ids,
+            'no published presentation exists in defaultTrack for this speaker');
+        $this->assertContains($control->getId(), $ids,
+            'speaker published in defaultTrack must still be returned');
+    }
+
+    private function seedPresentation(
+        PresentationSpeaker $speaker, $track, string $title, bool $publish
+    ): Presentation {
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle($title);
+        $p->setAbstract('Abstract');
+        $p->setCategory($track);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->addSpeaker($speaker);
+        if ($publish) $p->publish();
+        return $p;
+    }
+
+    public function testHasPublishedPresentationsIsScopedByTrackFilterModeratorBranch(): void
+    {
+        // Exercises the OR EXISTS moderator subquery specifically:
+        //   - speaker: moderator of an unpublished presentation in defaultTrack
+        //              AND moderator of a published presentation in secondaryTrack
+        //     -> satisfies each condition through different presentations; must be excluded
+        //   - control: moderator of a published presentation in defaultTrack
+        //     -> must be included (validates the moderator path, not the speaker path)
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('CrossPresentationMod');
+        $speaker->setLastName('TestSpeaker');
+        self::$em->persist($speaker);
+
+        // Unpublished in defaultTrack via moderator role (satisfies presentations_track_id).
+        $pUnpub = new Presentation();
+        self::$summit->addEvent($pUnpub);
+        $pUnpub->setTitle('Mod Unpublished In Default');
+        $pUnpub->setAbstract('Abstract');
+        $pUnpub->setCategory(self::$defaultTrack);
+        $pUnpub->setType(self::$defaultPresentationType);
+        $pUnpub->setProgress(Presentation::PHASE_COMPLETE);
+        $pUnpub->setStatus(Presentation::STATUS_RECEIVED);
+        $pUnpub->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $pUnpub->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $pUnpub->setModerator($speaker);
+
+        // Published in secondaryTrack via moderator role (satisfies has_published_presentations).
+        $p = new Presentation();
+        self::$summit->addEvent($p);
+        $p->setTitle('Mod Published In Secondary');
+        $p->setAbstract('Abstract');
+        $p->setCategory(self::$secondaryTrack);
+        $p->setType(self::$defaultPresentationType);
+        $p->setProgress(Presentation::PHASE_COMPLETE);
+        $p->setStatus(Presentation::STATUS_RECEIVED);
+        $p->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $p->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $p->setModerator($speaker);
+        $p->publish();
+
+        // Positive control: moderator of a published presentation in defaultTrack.
+        $control = new PresentationSpeaker();
+        $control->setFirstName('ModPublishedInDefault');
+        $control->setLastName('TestSpeaker');
+        self::$em->persist($control);
+
+        $pControl = new Presentation();
+        self::$summit->addEvent($pControl);
+        $pControl->setTitle('Mod Control Published In Default');
+        $pControl->setAbstract('Abstract');
+        $pControl->setCategory(self::$defaultTrack);
+        $pControl->setType(self::$defaultPresentationType);
+        $pControl->setProgress(Presentation::PHASE_COMPLETE);
+        $pControl->setStatus(Presentation::STATUS_RECEIVED);
+        $pControl->setStartDate(new \DateTime('now', new \DateTimeZone('UTC')));
+        $pControl->setEndDate((new \DateTime('now', new \DateTimeZone('UTC')))->add(new \DateInterval('PT2H')));
+        $pControl->setModerator($control);
+        $pControl->publish();
+
+        self::$em->flush();
+
+        $filter = FilterParser::parse(
+            [
+                'has_published_presentations==true',
+                'presentations_track_id==' . self::$defaultTrack->getId(),
+            ],
+            [
+                'has_published_presentations' => ['=='],
+                'presentations_track_id'      => ['=='],
+            ]
+        );
+
+        $ids = array_map(
+            fn($s) => $s->getId(),
+            $this->repo()->getSpeakersBySummit(self::$summit, new PagingInfo(1, 100), $filter)->getItems()
+        );
+
+        $this->assertNotContains($speaker->getId(), $ids,
+            'moderator with no published presentation in defaultTrack must be excluded');
+        $this->assertContains($control->getId(), $ids,
+            'moderator of a published presentation in defaultTrack must be returned');
     }
 
     // -----------------------------------------------------------------

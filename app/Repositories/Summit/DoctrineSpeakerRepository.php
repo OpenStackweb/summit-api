@@ -346,6 +346,55 @@ final class DoctrineSpeakerRepository
 
                     ]
                 ),
+            'has_published_presentations' =>
+                new DoctrineSwitchFilterMapping([
+                    'true' => new DoctrineCaseFilterMapping(
+                        'true',
+                        'EXISTS (
+                            SELECT __p15.id FROM models\summit\Presentation __p15
+                            JOIN __p15.speakers __spk15 WITH __spk15.speaker = e.id
+                            JOIN __p15.category __cat15
+                            JOIN __p15.type __t15
+                            LEFT JOIN __p15.selection_plan __sel_plan15
+                            LEFT JOIN models\summit\PresentationMediaUpload __pm15 WITH __pm15.presentation = __p15
+                            LEFT JOIN __pm15.media_upload_type __mut15
+                            WHERE __p15.summit = :summit AND __p15.published = 1 '
+                        .(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '15'): ' ').
+                        ') OR EXISTS (
+                            SELECT __p16.id FROM models\summit\Presentation __p16
+                            JOIN __p16.moderator __md16 WITH __md16.id = e.id
+                            JOIN __p16.category __cat16
+                            JOIN __p16.type __t16
+                            LEFT JOIN __p16.selection_plan __sel_plan16
+                            LEFT JOIN models\summit\PresentationMediaUpload __pm16 WITH __pm16.presentation = __p16
+                            LEFT JOIN __pm16.media_upload_type __mut16
+                            WHERE __p16.summit = :summit AND __p16.published = 1 '
+                        .(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '16'): ' ').')'
+                    ),
+                    'false' => new DoctrineCaseFilterMapping(
+                        'false',
+                        'NOT EXISTS (
+                            SELECT __p15.id FROM models\summit\Presentation __p15
+                            JOIN __p15.speakers __spk15 WITH __spk15.speaker = e.id
+                            JOIN __p15.category __cat15
+                            JOIN __p15.type __t15
+                            LEFT JOIN __p15.selection_plan __sel_plan15
+                            LEFT JOIN models\summit\PresentationMediaUpload __pm15 WITH __pm15.presentation = __p15
+                            LEFT JOIN __pm15.media_upload_type __mut15
+                            WHERE __p15.summit = :summit AND __p15.published = 1 '
+                        .(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '15'): ' ').
+                        ') AND NOT EXISTS (
+                            SELECT __p16.id FROM models\summit\Presentation __p16
+                            JOIN __p16.moderator __md16 WITH __md16.id = e.id
+                            JOIN __p16.category __cat16
+                            JOIN __p16.type __t16
+                            LEFT JOIN __p16.selection_plan __sel_plan16
+                            LEFT JOIN models\summit\PresentationMediaUpload __pm16 WITH __pm16.presentation = __p16
+                            LEFT JOIN __pm16.media_upload_type __mut16
+                            WHERE __p16.summit = :summit AND __p16.published = 1 '
+                        .(!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '16'): ' ').')'
+                    ),
+                ]),
             'has_alternate_presentations' =>
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(

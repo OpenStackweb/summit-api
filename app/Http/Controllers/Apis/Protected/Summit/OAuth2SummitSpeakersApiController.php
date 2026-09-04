@@ -252,7 +252,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             ),
             new OA\Parameter(
                 name: 'filter',
-                description: 'Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).',
+                description: 'Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string')
@@ -368,7 +368,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             ),
             new OA\Parameter(
                 name: 'filter',
-                description: 'Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type.',
+                description: 'Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type.',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string')
@@ -442,7 +442,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             ),
             new OA\Parameter(
                 name: 'filter',
-                description: 'Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).',
+                description: 'Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string')
@@ -3054,7 +3054,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
             ),
             new OA\Parameter(
                 name: 'filter',
-                description: 'Filter speakers by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type',
+                description: 'Filter speakers by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type',
                 in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string')

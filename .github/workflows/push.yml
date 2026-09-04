@@ -79,6 +79,7 @@ jobs:
                     # Named by path because no job in this matrix runs the tests/ root, only its
                     # subdirectories - a file added there runs nowhere unless it is listed here.
                     - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php tests/PresentationSerializerCacheKeyTest.php tests/PresentationReopenModelTest.php tests/PresentationReopenApiTest.php tests/PresentationReopenAuthzTest.php tests/PresentationSubmissionReopenedEmailTest.php" }
+                    - { name: "SpeakerSubmitterPublishedFilter", filter: "tests/ProcessSpeakersEmailRequestJobTest.php tests/ProcessSubmittersEmailRequestJobTest.php tests/SpeakerRepositoryTest.php tests/SubmitterRepositoryTest.php tests/SpeakerServiceOriginalFilterTest.php tests/SubmitterServiceOriginalFilterTest.php" }
                     - { name: "Repositories", filter: "tests/Repositories/" }
                     - { name: "Services", filter: "tests/Unit/Services/" }
                     - { name: "Integration", filter: "tests/Integration/" }

@@ -89,7 +89,11 @@ class ProcessSpeakersEmailRequestJobFailedHookTest extends ProtectedApiTestCase
             // part of it: the line must not present the ids as confirmed misses, and it must tell
             // the operator how to re-send without duplicating those.
             $this->assertStringContainsString('up to 3 of them may not have been processed', $errorLines[0]);
-            $this->assertStringContainsString('should_resend=false', $errorLines[0], 'the ERROR line must tell the operator to re-send with should_resend=false');
+            // Both attempts (the original run plus the automatic resume) are exhausted once this
+            // hook fires - should_resend=false is a warning against silently skipping speakers
+            // from other campaigns, not a blanket instruction, since it carries no date.
+            $this->assertStringContainsString('should_resend=false', $errorLines[0], 'the ERROR line must warn the operator about should_resend=false on a manual re-send');
+            $this->assertStringContainsString('automatic', $errorLines[0], 'the ERROR line must say the automatic resume already ran and also failed');
             $this->assertStringNotContainsString('promo code', $errorLines[0], 'no promo-code caveat when the send carries no promo_code_spec');
             $this->assertEmpty(
                 array_filter($lines, fn($l) => str_starts_with($l, 'Email type')),

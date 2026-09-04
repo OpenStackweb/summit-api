@@ -127,6 +127,23 @@ trait ParametrizedSendEmails
             sprintf("Processing EMAIL %s for %s %s", $flow_event, $getRootEntityName(), $root_entity_id)
         );
 
+        // Set only by ProcessSpeakersEmailRequestJob::handle() on a retry (SpeakerService is the
+        // only caller of _sendEmails whose payload ever carries this key); announces the resume
+        // so the operator's excerpt reads the same as the "already has an email of type" lines it
+        // sits next to. Must stay after the header above - anything added before
+        // EmailExcerpt::clearReport() (top of this method) is wiped.
+        if (isset($payload['resume_since'])) {
+            EmailExcerpt::addInfoMessage
+            (
+                sprintf
+                (
+                    "RETRY: resuming this run; %s already processed since %s are skipped",
+                    $subject,
+                    date('c', $payload['resume_since'])
+                )
+            );
+        }
+
         $root_entity = $this->tx_service->transaction(function () use($root_entity_id, $getRootEntity){
             return $getRootEntity($root_entity_id);
         });

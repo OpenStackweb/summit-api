@@ -80,8 +80,6 @@ final class SpeakerActionsEmailStrategy
     ): void
     {
         try {
-            $type = null;
-
             Log::debug
             (
                 sprintf
@@ -163,35 +161,15 @@ final class SpeakerActionsEmailStrategy
                     )
                 );
 
-            switch ($this->flow_event) {
-                case PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG:
-                    $type = SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
-                    break;
-                case PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG:
-                    $type = SpeakerAnnouncementSummitEmail::TypeAccepted;
-                    break;
-                case PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG:
-                    $type = SpeakerAnnouncementSummitEmail::TypeAcceptedRejected;
-                    break;
-                case PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG:
-                    $type = SpeakerAnnouncementSummitEmail::TypeAlternate;
-                    break;
-                case PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG:
-                    $type = SpeakerAnnouncementSummitEmail::TypeAlternateRejected;
-                    break;
-                case PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG:
-                    $type = SpeakerAnnouncementSummitEmail::TypeRejected;
-                    break;
-                default:
-                    if (!is_null($onSuccess)) {
-                        $onSuccess
-                        (
-                            $speaker->getEmail(),
-                            IEmailExcerptService::EmailLineType,
-                            SpeakerAnnouncementSummitEmail::TypeNone
-                        );
-                    }
-                    break;
+            $type = $this->getAnnouncementType();
+
+            if (is_null($type) && !is_null($onSuccess)) {
+                $onSuccess
+                (
+                    $speaker->getEmail(),
+                    IEmailExcerptService::EmailLineType,
+                    SpeakerAnnouncementSummitEmail::TypeNone
+                );
             }
 
             if (!is_null($type)) {
@@ -278,6 +256,34 @@ final class SpeakerActionsEmailStrategy
             Log::error($ex);
             if(!is_null($onError))
                 $onError($ex->getMessage());
+        }
+    }
+
+    /**
+     * Maps this strategy's flow_event to the SpeakerAnnouncementSummitEmail type it announces, or
+     * null when the flow_event carries no announcement type (process()'s TypeNone branch). Public
+     * so SpeakerService::sendEmails can resolve the type ahead of process() to evaluate a retry's
+     * resume check before any side effect, without duplicating this mapping.
+     *
+     * @return string|null
+     */
+    public function getAnnouncementType(): ?string
+    {
+        switch ($this->flow_event) {
+            case PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG:
+                return SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
+            case PresentationSpeakerSelectionProcessAcceptedOnlyEmail::EVENT_SLUG:
+                return SpeakerAnnouncementSummitEmail::TypeAccepted;
+            case PresentationSpeakerSelectionProcessAcceptedRejectedEmail::EVENT_SLUG:
+                return SpeakerAnnouncementSummitEmail::TypeAcceptedRejected;
+            case PresentationSpeakerSelectionProcessAlternateOnlyEmail::EVENT_SLUG:
+                return SpeakerAnnouncementSummitEmail::TypeAlternate;
+            case PresentationSpeakerSelectionProcessAlternateRejectedEmail::EVENT_SLUG:
+                return SpeakerAnnouncementSummitEmail::TypeAlternateRejected;
+            case PresentationSpeakerSelectionProcessRejectedOnlyEmail::EVENT_SLUG:
+                return SpeakerAnnouncementSummitEmail::TypeRejected;
+            default:
+                return null;
         }
     }
 }

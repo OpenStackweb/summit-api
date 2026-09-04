@@ -118,4 +118,29 @@ class ProcessSpeakersEmailRequestJobResumeTest extends ProtectedApiTestCase
 
         $job->handle($service);
     }
+
+    /**
+     * Regression guard for ResumableChunkJob's core safety argument: the job's own $timeout must
+     * stay strictly below every queue connection's retry_after, or a retried attempt (tries=2)
+     * could be re-served to a second worker while the first is still running it - true concurrent
+     * execution of the same chunk, which the resume_since check cannot protect against. Nothing
+     * else in this test suite asserts this relationship, so a future change to
+     * DB_QUEUE_RETRY_AFTER/REDIS_RETRY_AFTER (or to ResumableChunkJob::$timeout) that violates it
+     * would otherwise go uncaught.
+     */
+    public function testTimeoutStaysStrictlyBelowRetryAfterForEveryQueueConnection(): void
+    {
+        $job = new ProcessSpeakersEmailRequestJob(1, [], null);
+
+        $this->assertLessThan(
+            config('queue.connections.database.retry_after'),
+            $job->timeout,
+            'job timeout must stay strictly below the database queue retry_after, or a retried attempt can run concurrently with a still-live earlier attempt'
+        );
+        $this->assertLessThan(
+            config('queue.connections.redis.retry_after'),
+            $job->timeout,
+            'job timeout must stay strictly below the redis queue retry_after, or a retried attempt can run concurrently with a still-live earlier attempt'
+        );
+    }
 }

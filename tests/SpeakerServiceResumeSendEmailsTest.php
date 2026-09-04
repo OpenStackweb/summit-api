@@ -13,6 +13,7 @@
  **/
 
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessAcceptedAlternateEmail;
+use App\Models\Foundation\Summit\Repositories\IPresentationSpeakerSummitAssistanceConfirmationRequestRepository;
 use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategy;
 use App\Services\Model\Strategies\PromoCodes\IPromoCodeStrategyFactory;
 use App\Services\Utils\Facades\EmailExcerpt;
@@ -88,9 +89,14 @@ class SpeakerServiceResumeSendEmailsTest extends ProtectedApiTestCase
     }
 
     /**
+     * @param string $prefix
+     * @param bool $published when true, publish()es the fixture presentation so
+     * PresentationSpeaker::hasAcceptedPresentations() (p.published = 1 satisfies its DQL OR
+     * clause) returns true for it - needed to make SpeakerService::generateSpeakerAssistance()
+     * proceed past its has_accepted/has_alternate guard instead of short-circuiting to null.
      * @return PresentationSpeaker
      */
-    private function newFixtureSpeaker(string $prefix): PresentationSpeaker
+    private function newFixtureSpeaker(string $prefix, bool $published = false): PresentationSpeaker
     {
         // A member is required so getEmail() (member wins, else registration request, else null)
         // resolves to a distinct, real address per speaker - the pushed job's to_email is how
@@ -122,6 +128,10 @@ class SpeakerServiceResumeSendEmailsTest extends ProtectedApiTestCase
         $presentation->setEndDate(new \DateTime('+1 hour', new \DateTimeZone('UTC')));
         $presentation->addSpeaker($speaker);
         self::$em->persist($presentation);
+
+        if ($published) {
+            $presentation->publish();
+        }
 
         return $speaker;
     }
@@ -279,6 +289,98 @@ class SpeakerServiceResumeSendEmailsTest extends ProtectedApiTestCase
             [$speakerB->getId()],
             $calledWith,
             'getPromoCode() must be called exactly once, for speaker B only - never for the resume-skipped speaker A'
+        );
+    }
+
+    public function testResumeCheckDoesNotSkipWhenFlowEventHasNoAnnouncementType(): void
+    {
+        // getAnnouncementType() returns null for a flow_event outside the six known SLUGs.
+        // hasAnnouncementEmailTypeSentSince(Summit, string $type, ...) takes a non-nullable
+        // string $type - if the "!is_null($announcement_type) &&" short-circuit in the resume
+        // check were ever dropped, this scenario would throw a TypeError (not caught by
+        // SpeakerService::sendEmails' catch (\Exception $ex), since TypeError extends \Error),
+        // failing the whole chunk instead of just skipping one speaker. Proven here by seeding a
+        // speaker with a proof that WOULD trigger a skip if the type resolved, and asserting the
+        // resume check let it through to getPromoCode() instead of returning early.
+        Queue::fake();
+
+        $speaker = $this->newFixtureSpeaker('unmapped-flow-event');
+
+        $dispatchedAt = time() - 600;
+
+        $this->givenSpeakerHasProof($speaker, null); // proof written "now", after dispatch
+
+        self::$em->flush();
+
+        $calledWith = [];
+        $promoCodeStrategy = Mockery::mock(IPromoCodeStrategy::class);
+        $promoCodeStrategy->shouldReceive('getPromoCode')
+            ->andReturnUsing(function (PresentationSpeaker $s) use (&$calledWith) {
+                $calledWith[] = $s->getId();
+                return null;
+            });
+
+        $promoCodeStrategyFactory = Mockery::mock(IPromoCodeStrategyFactory::class);
+        $promoCodeStrategyFactory->shouldReceive('createStrategy')->andReturn($promoCodeStrategy);
+        App::instance(IPromoCodeStrategyFactory::class, $promoCodeStrategyFactory);
+        App::forgetInstance(ISpeakerService::class);
+
+        $this->service()->sendEmails(self::$summit->getId(), [
+            'email_flow_event' => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_SOME_UNMAPPED_EVENT',
+            'speaker_ids'      => [$speaker->getId()],
+            'dispatched_at'    => $dispatchedAt,
+            'resume_since'     => $dispatchedAt,
+            'promo_code_spec'  => ['type' => 'automatic'],
+        ], null);
+
+        $this->assertEquals(
+            [$speaker->getId()],
+            $calledWith,
+            'an unmapped flow_event must not be skipped by the resume check - getAnnouncementType() returning null must short-circuit the check, not crash or silently skip'
+        );
+        Queue::assertNotPushed(PresentationSpeakerSelectionProcessAcceptedAlternateEmail::class);
+    }
+
+    public function testResumeCheckSkipsBeforeGeneratingSpeakerAssistance(): void
+    {
+        Queue::fake();
+
+        // generateSpeakerAssistance() only reaches the assistance repository when the speaker has
+        // an accepted or alternate presentation (SpeakerService.php's has_accepted_presentations /
+        // has_alternate_presentations guard) - published: true is the real production path that
+        // makes hasAcceptedPresentations() true (p.published = 1 satisfies its DQL OR clause).
+        $skippedSpeaker = $this->newFixtureSpeaker('assistance-skipped', published: true);
+        $sentSpeaker = $this->newFixtureSpeaker('assistance-sent', published: true);
+        self::$em->flush();
+
+        $dispatchedAt = time() - 600;
+        $this->givenSpeakerHasProof($skippedSpeaker, null); // proof after dispatch -> resume-skipped
+        // $sentSpeaker has no proof at all -> proceeds normally, reaching generateSpeakerAssistance().
+
+        self::$em->flush();
+
+        $calledWith = [];
+        $assistanceRepository = Mockery::mock(IPresentationSpeakerSummitAssistanceConfirmationRequestRepository::class);
+        $assistanceRepository->shouldReceive('getBySpeaker')
+            ->andReturnUsing(function (PresentationSpeaker $speaker, $summit) use (&$calledWith) {
+                $calledWith[] = $speaker->getId();
+                return null;
+            });
+        $assistanceRepository->shouldReceive('existByHash')->andReturn(false);
+        App::instance(IPresentationSpeakerSummitAssistanceConfirmationRequestRepository::class, $assistanceRepository);
+        App::forgetInstance(ISpeakerService::class);
+
+        $this->service()->sendEmails(self::$summit->getId(), [
+            'email_flow_event' => self::FLOW_EVENT,
+            'speaker_ids'      => [$skippedSpeaker->getId(), $sentSpeaker->getId()],
+            'dispatched_at'    => $dispatchedAt,
+            'resume_since'     => $dispatchedAt,
+        ], null);
+
+        $this->assertEquals(
+            [$sentSpeaker->getId()],
+            $calledWith,
+            'generateSpeakerAssistance() must not run for the resume-skipped speaker - the return happens before it, same as before getPromoCode()'
         );
     }
 }

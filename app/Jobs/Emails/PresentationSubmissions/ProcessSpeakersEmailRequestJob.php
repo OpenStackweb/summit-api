@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
+use App\Jobs\Emails\Traits\ResumableChunkJob;
 use App\Jobs\Utils\JobDispatcher;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Bus\Queueable;
@@ -32,11 +33,10 @@ use utils\FilterParser;
  */
 final class ProcessSpeakersEmailRequestJob implements ShouldQueue
 {
-    public $timeout = 0;
-
-    public $tries = 1;
-
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    // $timeout/$tries/$backoff and the resume-on-retry mechanics come from ResumableChunkJob -
+    // see that trait's doc comment for why timeout must stay below every retry_after / worker
+    // --timeout this job can run under.
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ResumableChunkJob;
 
     /**
      * @var int
@@ -85,24 +85,35 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
             )
         );
 
+        // ResumableChunkJob::activateResumeIfRetrying(): resume, not resend. On a retry it sets
+        // resume_since = dispatched_at in $this->payload so the service skips only the speakers
+        // whose proof for this email type was written by THIS run. should_resend is left exactly
+        // as it arrived - it answers a different question (does the operator want to re-email
+        // speakers with a proof from any earlier campaign?) and the two filters stack.
+        $this->activateResumeIfRetrying();
+
         $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, \services\model\ISpeakerFilterFields::OPERATORS) : null;
 
         $service->sendEmails($this->summit_id, $this->payload, $filter);
     }
 
     /**
-     * Invoked by the queue worker once this job is marked failed. With tries = 1 that includes a
-     * chunk whose worker was killed mid-run: the job sits reserved until the connection's
-     * retry_after elapses, is re-served, and is failed without re-running. Nothing else reports
+     * Invoked by the queue worker once this job is marked failed - with tries = 2 and a resume
+     * check on the retry (see handle()), that means BOTH attempts failed: a chunk whose worker
+     * was merely killed mid-run (rolling deploy, OOM, scale-down) is re-served and automatically
+     * resumed once, skipping only the speakers this run already reached. This hook only fires
+     * when that automatic resume itself also failed to finish the chunk. Nothing else reports
      * that loss - the outcome excerpt is only sent when sendEmails() runs to completion - so
      * without this hook a dead chunk leaves no trace beyond a queue_failed_jobs row.
      *
      * Log the chunk's speaker ids at error, and when the operator asked for an outcome e-mail
      * send one naming them, so the chunk can be re-sent by id. The chunk is processed one speaker
      * per transaction, so a worker killed mid-run has already e-mailed (and written the "already
-     * sent" proof for) the speakers before the kill: the ids are an upper bound on what was lost,
-     * not confirmed misses, and both messages say so and tell the operator to re-send with
-     * should_resend=false so the resend guard skips the speakers that already have a proof. The
+     * sent" proof for) some of the speakers before the kill: the ids are an upper bound on what
+     * was lost, not confirmed misses, and both messages say so. should_resend=false is NOT a
+     * blanket recommendation here: hasAnnouncementEmailTypeSent (the check it gates) carries no
+     * date, so it also skips every speaker with a proof from any EARLIER, unrelated campaign of
+     * the same type - the hint below warns about that rather than recommending it outright. The
      * excerpt goes through JobDispatcher::withDbFallback (primary, then the database queue, then
      * an inline run) and is best-effort: a failure there must not mask the original failure.
      *
@@ -114,7 +125,7 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
         $flow_event = $this->payload['email_flow_event'] ?? '';
         $ids_list = implode(', ', $speaker_ids);
 
-        $resend_hint = "Re-send these ids with should_resend=false so the speakers already e-mailed are skipped";
+        $resend_hint = "Both automatic attempts are exhausted. A manual re-send of these ids with should_resend=false skips any speaker who already has a proof of this email type - not just from this run, but from ANY earlier campaign of the same type - so use it to avoid duplicating what this run already sent, never to re-run a deliberate second campaign, or the first campaign's speakers get silently skipped too";
         if (isset($this->payload['promo_code_spec'])) {
             // AutomaticMultiSpeakerPromoCodeStrategy::getPromoCode() generates a fresh code on every
             // call, before the resend guard runs, so should_resend=false does not prevent this one.

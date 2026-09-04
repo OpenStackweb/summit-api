@@ -199,7 +199,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     protected $active_involvements;
 
     /**
-     * @var SpeakerAnnouncementSummitEmail[]
+     * @var \Doctrine\Common\Collections\Collection<int, SpeakerAnnouncementSummitEmail>
      */
     #[ORM\OneToMany(targetEntity: \SpeakerAnnouncementSummitEmail::class, mappedBy: 'speaker', cascade: ['persist'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $announcement_summit_emails;
@@ -2305,6 +2305,30 @@ SQL;
         $criteria
             ->where(Criteria::expr()->eq('summit', $summit))
             ->andWhere(Criteria::expr()->eq('type', $type));
+
+        return $this->announcement_summit_emails->matching($criteria)->count() > 0;
+    }
+
+    /**
+     * Same criteria as hasAnnouncementEmailTypeSent, additionally bounded to a proof written at
+     * or after $since. Used to resume a retried bulk send: it answers "did THIS run already
+     * reach this speaker" rather than "has this speaker ever received this type", which is what
+     * makes it safe to combine with should_resend on a retry without silently swallowing a
+     * deliberate second campaign of the same type.
+     *
+     * @param Summit $summit
+     * @param string $type
+     * @param \DateTime $since
+     * @return bool
+     */
+    public function hasAnnouncementEmailTypeSentSince(Summit $summit, string $type, \DateTime $since): bool
+    {
+        $criteria = Criteria::create();
+
+        $criteria
+            ->where(Criteria::expr()->eq('summit', $summit))
+            ->andWhere(Criteria::expr()->eq('type', $type))
+            ->andWhere(Criteria::expr()->gte('send_date', $since));
 
         return $this->announcement_summit_emails->matching($criteria)->count() > 0;
     }

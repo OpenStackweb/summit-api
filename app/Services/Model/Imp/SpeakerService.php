@@ -1288,11 +1288,19 @@ final class SpeakerService
         // deduplicated). withDbFallback() fails over to the database queue (and runs sync on a
         // double failure) so the loop completes. Same pattern as
         // PresentationSubmissionReopenService::notify's per-recipient dispatch loop.
+        // Stamped once per run (not per chunk) so every chunk's resume check, if the chunk is
+        // ever retried, compares against the same instant this run started.
+        $dispatched_at = time();
         $chunk_nbr = 1;
         foreach (array_chunk($ids, $process_jon_chunk_size) as $chunk) {
             $chunkPayload = $payload;
             $chunkPayload['speaker_ids'] = $chunk;
+            $chunkPayload['dispatched_at'] = $dispatched_at;
             unset($chunkPayload['excluded_speaker_ids']);
+            // resume_since is set only by ProcessSpeakersEmailRequestJob::handle() on a retry -
+            // getJsonPayload() returns the raw request body and no validation rule declares this
+            // key, so a caller-supplied value must never reach a first-attempt chunk.
+            unset($chunkPayload['resume_since']);
 
             Log::debug
             (
@@ -1385,6 +1393,36 @@ final class SpeakerService
 
                         if (!$speaker instanceof PresentationSpeaker) {
                             throw new EntityNotFoundException('Speaker not found');
+                        }
+
+                        // Resume, not resend: set only by ProcessSpeakersEmailRequestJob::handle()
+                        // on a retry (attempts() > 1). A speaker whose proof for this email type
+                        // was written at or after resume_since was already reached by this run
+                        // before the kill - skip before any side effect (promo code, assistance)
+                        // so a retry never leaves an orphan promo code for a speaker it must not
+                        // re-email. should_resend is independent and evaluated later, unchanged,
+                        // inside SpeakerActionsEmailStrategy::process().
+                        $resume_since = $payload['resume_since'] ?? null;
+                        if (!is_null($resume_since)) {
+                            $announcement_type = $email_strategy->getAnnouncementType();
+                            if
+                            (
+                                !is_null($announcement_type) &&
+                                $speaker->hasAnnouncementEmailTypeSentSince($summit, $announcement_type, new \DateTime('@' . $resume_since))
+                            ) {
+                                if (!is_null($onDispatchInfo)) {
+                                    $onDispatchInfo
+                                    (
+                                        sprintf
+                                        (
+                                            "Speaker %s (%s) already processed by this run before the retry, skipped.",
+                                            $speaker->getEmail(),
+                                            $speaker->getId()
+                                        )
+                                    );
+                                }
+                                return;
+                            }
                         }
 
                         // try to get or auto-build a promo code

@@ -88,7 +88,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
             if(in_array("moderator_id",$fields))
                 $values['moderator_id'] = $presentation->getModerator()->getId();
             if(in_array("moderator_full_name",$fields))
-                $values['moderator_full_name'] = $presentation->getModerator()->getFullName();
+                $values['moderator_full_name'] = $presentation->getModerator()->getFullName(true);
             if(in_array("moderator_email",$fields))
                 $values['moderator_email'] = $presentation->getModerator()->getEmail();
             if(in_array("moderator_title",$fields))
@@ -122,7 +122,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
 
             foreach ($presentation->getSpeakers() as $speaker) {
                 $speaker_ids[] = $speaker->getId();
-                $speaker_fullnames[] = $speaker->getFullName();
+                $speaker_fullnames[] = $speaker->getFullName(true);
                 $speaker_emails[] = $speaker->getEmail();
                 $speaker_titles[] = trim($speaker->getTitle());
                 $speaker_companies[] = trim($speaker->getCompany());
@@ -164,7 +164,7 @@ final class AdminPresentationCSVSerializer extends AdminPresentationSerializer
                 if(in_array("submitter_id",$fields))
                     $values['submitter_id'] = $submitter->getId();
                 if(in_array("submitter_full_name",$fields))
-                    $values['submitter_full_name'] = $submitter->getFullName();
+                    $values['submitter_full_name'] = $submitter->getFullName(true);
                 if(in_array("submitter_email",$fields))
                     $values['submitter_email'] = $submitter->getEmail();
                 if(in_array("submitter_title",$fields))

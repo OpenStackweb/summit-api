@@ -83,23 +83,6 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
 
         $values = parent::serialize($expand, $fields, $relations, $params);
 
-        if (
-            (empty($values['first_name']) || empty($values['last_name']))
-            && in_array('first_name', $fields) && in_array('last_name', $fields)
-        ) {
-
-            $first_name = '';
-            $last_name = '';
-            if ($speaker->hasMember()) {
-                $member = $speaker->getMember();
-                $first_name = $member->getFirstName();
-                $last_name = $member->getLastName();
-            }
-            $values['first_name'] = $first_name;
-            $values['last_name'] = $last_name;
-        }
-
-
         if(in_array("email", $fields)) {
             $application_type = $this->resource_server_context->getApplicationType();
             // choose email serializer depending on user permissions

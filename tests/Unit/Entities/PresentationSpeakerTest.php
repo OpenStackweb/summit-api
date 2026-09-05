@@ -16,7 +16,10 @@ namespace Tests\Unit\Entities;
  **/
 
 use App\Models\Foundation\Main\Language;
+use Illuminate\Support\Facades\Config;
+use Mockery;
 use models\main\File;
+use models\main\Member;
 use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
 use models\summit\SpeakerExpertise;
@@ -42,6 +45,7 @@ class PresentationSpeakerTest extends TestCase
 
     public function tearDown():void
     {
+        Mockery::close();
         self::clearSummitTestData();
         parent::tearDown();
     }
@@ -141,5 +145,101 @@ class PresentationSpeakerTest extends TestCase
         // Test ManyToMany relationship with languages
         $this->assertEmpty($found_speaker->getLanguages()->toArray());
 
+    }
+
+    /**
+     * Policy Rule 9: the name fallback to the linked Member must skip that Member's value
+     * (leaving the speaker's own field blank) when the Member's own visibility toggle is off.
+     */
+    public function testNameFallbackSkipsMemberWhenAccountFullnameToggleIsOff()
+    {
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getId')->andReturn(42);
+        $member->shouldReceive('setSpeaker')->andReturnNull();
+        $member->shouldReceive('isPublicProfileShowFullname')->andReturn(false);
+        // stubbed (not just omitted) so a missing gate surfaces this value instead of an
+        // uncaught Mockery exception, which would falsely look like the gate held.
+        $member->shouldReceive('getFirstName')->andReturn('Ada');
+        $member->shouldReceive('getLastName')->andReturn('Lovelace');
+        $member->shouldReceive('getFullName')->andReturn('Ada Lovelace');
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setMember($member);
+
+        $this->assertEmpty($speaker->getFirstName());
+        $this->assertEmpty($speaker->getLastName());
+        $this->assertEmpty($speaker->getFullName());
+    }
+
+    /**
+     * Policy Rule 9: the name fallback still applies the Member's own value when that
+     * Member's visibility toggle is on.
+     */
+    public function testNameFallbackUsesMemberWhenAccountFullnameToggleIsOn()
+    {
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getId')->andReturn(42);
+        $member->shouldReceive('setSpeaker')->andReturnNull();
+        $member->shouldReceive('isPublicProfileShowFullname')->andReturn(true);
+        $member->shouldReceive('getFirstName')->andReturn('Ada');
+        $member->shouldReceive('getLastName')->andReturn('Lovelace');
+        $member->shouldReceive('getFullName')->andReturn('Ada Lovelace');
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setMember($member);
+
+        $this->assertSame('Ada', $speaker->getFirstName());
+        $this->assertSame('Lovelace', $speaker->getLastName());
+        $this->assertSame('Ada Lovelace', $speaker->getFullName());
+    }
+
+    /**
+     * Policy Rule 9: the photo fallback to the linked Member must skip that Member's photo
+     * (continuing to the configured default image) when the Member's own visibility toggle is off.
+     */
+    public function testPhotoFallbackSkipsMemberWhenAccountPhotoToggleIsOff()
+    {
+        $photo = Mockery::mock(File::class);
+        $photo->shouldReceive('getUrl')->andReturn('https://example.com/member-photo.jpg');
+
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getId')->andReturn(42);
+        $member->shouldReceive('setSpeaker')->andReturnNull();
+        $member->shouldReceive('isPublicProfileShowPhoto')->andReturn(false);
+        // stubbed (not just omitted) so a missing gate surfaces this photo instead of silently
+        // passing: both getProfilePhotoUrl()/getBigProfilePhotoUrl() wrap this branch in a
+        // try/catch that would swallow an unstubbed-call exception and mask a missing gate.
+        $member->shouldReceive('hasPhoto')->andReturn(true);
+        $member->shouldReceive('getPhoto')->andReturn($photo);
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setMember($member);
+
+        $default_pic = Config::get("app.default_profile_image", null);
+        $this->assertSame($default_pic, $speaker->getProfilePhotoUrl());
+        $this->assertSame($default_pic, $speaker->getBigProfilePhotoUrl());
+    }
+
+    /**
+     * Policy Rule 9: the photo fallback still applies the Member's own photo when that
+     * Member's visibility toggle is on.
+     */
+    public function testPhotoFallbackUsesMemberWhenAccountPhotoToggleIsOn()
+    {
+        $photo = Mockery::mock(File::class);
+        $photo->shouldReceive('getUrl')->andReturn('https://example.com/member-photo.jpg');
+
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getId')->andReturn(42);
+        $member->shouldReceive('setSpeaker')->andReturnNull();
+        $member->shouldReceive('isPublicProfileShowPhoto')->andReturn(true);
+        $member->shouldReceive('hasPhoto')->andReturn(true);
+        $member->shouldReceive('getPhoto')->andReturn($photo);
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setMember($member);
+
+        $this->assertSame('https://example.com/member-photo.jpg', $speaker->getProfilePhotoUrl());
+        $this->assertSame('https://example.com/member-photo.jpg', $speaker->getBigProfilePhotoUrl());
     }
 }

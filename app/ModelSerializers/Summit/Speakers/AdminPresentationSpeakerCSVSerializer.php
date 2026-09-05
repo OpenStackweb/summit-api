@@ -48,6 +48,15 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
         if(!$speaker instanceof PresentationSpeaker) return [];
 
         $values = parent::serialize($expand, $fields, $relations, $params);
+
+        if(in_array('first_name', $fields)) {
+            $values['first_name'] = $speaker->getFirstName(true);
+        }
+
+        if(in_array('last_name', $fields)) {
+            $values['last_name'] = $speaker->getLastName(true);
+        }
+
         if(in_array("email", $fields))
             $values['email'] = JsonUtils::toJsonString($speaker->getEmail());
 

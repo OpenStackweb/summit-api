@@ -43,7 +43,7 @@ class SpeakersSummitRegistrationPromoCodeCSVSerializer
         $owner_name = [];
         $owner_email = [];
         foreach($code->getOwners() as $owner){
-            $owner_name[] = $owner->getSpeaker()->getFullName();
+            $owner_name[] = $owner->getSpeaker()->getFullName(true);
             $owner_email[] = $owner->getSpeaker()->getEmail();
 
         }

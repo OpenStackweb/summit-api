@@ -207,10 +207,10 @@ class PresentationSpeaker extends SilverstripeBaseModel
     /**
      * @return string|null
      */
-    public function getFirstName():?string
+    public function getFirstName(bool $override_permission=false):?string
     {
         $res = $this->first_name;
-        if(empty($res) && $this->isPublicProfileShowFullname() && $this->hasMember()){
+        if(empty($res) && ($this->isPublicProfileShowFullname() || $override_permission) && $this->hasMember()){
             $res = $this->member->getFirstName();
         }
         return $res;
@@ -225,12 +225,13 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
+     * @param bool $override_permission
      * @return string|null
      */
-    public function getLastName():?string
+    public function getLastName(bool $override_permission=false):?string
     {
         $res = $this->last_name;
-        if(empty($res) && $this->isPublicProfileShowFullname() && $this->hasMember()){
+        if(empty($res) && ($this->isPublicProfileShowFullname() || $override_permission) && $this->hasMember()){
             $res = $this->member->getLastName();
         }
         return $res;
@@ -1792,16 +1793,17 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
-     * @return string
+     * @param bool $override_permission
+     * @return string|null
      */
-    public function getFullName(): ?string
+    public function getFullName(bool $override_permission=false): ?string
     {
         $fullname = $this->first_name;
         if (!empty($this->last_name)) {
             if (!empty($fullname)) $fullname .= ' ';
             $fullname .= $this->last_name;
         }
-        if (empty($fullname) && $this->isPublicProfileShowFullname() && $this->hasMember()) {
+        if (empty($fullname) && ($this->isPublicProfileShowFullname() || $override_permission) && $this->hasMember()) {
             $fullname = $this->member->getFullName();
         }
 

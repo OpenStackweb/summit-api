@@ -123,4 +123,38 @@ final class PresentationSpeakerSerializerTest extends TestCase
         $this->assertSame('https://example.com/pic.jpg', $values['pic']);
         $this->assertSame('https://example.com/big_pic.jpg', $values['big_pic']);
     }
+
+    /**
+     * Policy Rule 9 regression (PR #597): PresentationSpeakerBaseSerializer::serialize() used to
+     * redo its own Member-name fallback whenever EITHER first_name or last_name came back empty,
+     * overwriting BOTH keys with the Member's names - clobbering an already-populated field. The
+     * flagged scenario: speaker with first_name set, last_name empty, account toggle off. The
+     * getters already gate that fallback (Rule 9, asserted directly in PresentationSpeakerTest);
+     * this asserts the serializer surfaces exactly what they return instead of re-deriving its
+     * own unmasked value from the Member.
+     */
+    public function testFirstAndLastNameComeFromTheGatedGettersNotARedoneMemberFallback()
+    {
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getFirstName')->andReturn('MemberFirst');
+        $member->shouldReceive('getLastName')->andReturn('MemberLast');
+
+        $speaker = Mockery::mock(PresentationSpeaker::class)->makePartial();
+        $speaker->shouldReceive('hasMember')->andReturn(true);
+        $speaker->shouldReceive('getMember')->andReturn($member);
+        // The speaker's own first_name is populated; last_name is empty with the account toggle
+        // off, so the model-level gate has already decided getLastName() returns '' rather than
+        // falling back to the Member's surname.
+        $speaker->shouldReceive('getFirstName')->with()->andReturn('John');
+        $speaker->shouldReceive('getLastName')->with()->andReturn('');
+        $speaker->shouldReceive('isPublicProfileShowEmail')->andReturn(true);
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new PresentationSpeakerSerializer($speaker, $resource_server_context);
+
+        $values = $serializer->serialize(null, ['first_name', 'last_name'], ['none']);
+
+        $this->assertSame('John', $values['first_name']);
+        $this->assertSame('', $values['last_name']);
+    }
 }

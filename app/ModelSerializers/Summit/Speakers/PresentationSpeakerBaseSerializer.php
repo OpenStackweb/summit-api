@@ -94,4 +94,22 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
 
         return $values;
     }
+
+    /**
+     * Policy Rule 9 (policy/profile-data-handling.md Sec 2 Scope): only an Admin/SummitAdmin, or
+     * the speaker viewing/editing their own record, may bypass the account visibility toggle on
+     * the Member name/photo fallback. A submitter who only holds an approved edit-permission
+     * request on someone else's speaker profile (PresentationSpeaker::canBeEditedBy(), which also
+     * resolves to this serializer's SerializerType_Private/Admin) is neither, and must see
+     * exactly what a Public caller sees.
+     * @param PresentationSpeaker $speaker
+     * @return bool
+     */
+    protected function canBypassAccountVisibilityToggle(PresentationSpeaker $speaker): bool
+    {
+        $current_member = $this->resource_server_context->getCurrentUser();
+        if (is_null($current_member)) return false;
+        if ($current_member->isAdmin() || $current_member->isSummitAdmin()) return true;
+        return $speaker->hasMember() && $speaker->getMemberId() == $current_member->getId();
+    }
 }

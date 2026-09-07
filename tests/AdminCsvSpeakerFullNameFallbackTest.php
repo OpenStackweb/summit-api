@@ -54,6 +54,7 @@ final class AdminCsvSpeakerFullNameFallbackTest extends TestCase
         // about track-chair identity.
         $current_user = Mockery::mock(Member::class);
 
+        /** @var IResourceServerContext&\Mockery\MockInterface $context */
         $context = Mockery::mock(IResourceServerContext::class);
         $context->shouldReceive('getApplicationType')->andReturn('JS_CLIENT');
         $context->shouldReceive('getCurrentUser')->andReturn($current_user);
@@ -62,6 +63,7 @@ final class AdminCsvSpeakerFullNameFallbackTest extends TestCase
 
     private function buildSpeaker(string $full_name): PresentationSpeaker
     {
+        /** @var PresentationSpeaker&\Mockery\MockInterface $speaker */
         $speaker = Mockery::mock(PresentationSpeaker::class);
         $speaker->shouldReceive('getFullName')->once()->with(true)->andReturn($full_name);
         $speaker->shouldReceive('getId')->andReturn(1);
@@ -87,6 +89,7 @@ final class AdminCsvSpeakerFullNameFallbackTest extends TestCase
         $summit = Mockery::mock(Summit::class);
         $summit->shouldReceive('getTrackChairByMember')->andReturn(null);
 
+        /** @var Presentation&\Mockery\MockInterface $presentation */
         $presentation = Mockery::mock(Presentation::class);
         $presentation->shouldReceive('getId')->andReturn($id);
         $presentation->shouldReceive('getLastEditedUTC')->andReturn(null);

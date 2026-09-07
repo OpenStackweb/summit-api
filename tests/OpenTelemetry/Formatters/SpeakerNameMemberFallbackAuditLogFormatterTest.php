@@ -78,6 +78,7 @@ final class SpeakerNameMemberFallbackAuditLogFormatterTest extends TestCase
 
     private function buildSummit(): Summit
     {
+        /** @var Summit&\Mockery\MockInterface $summit */
         $summit = Mockery::mock(Summit::class);
         $summit->shouldReceive('getName')->andReturn('Test Summit');
         return $summit;

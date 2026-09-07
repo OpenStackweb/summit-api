@@ -194,6 +194,30 @@ class PresentationSpeakerTest extends TestCase
     }
 
     /**
+     * Policy Rule 9 scope: admin/self-view callers and internal tooling (admin serializers,
+     * merge, audit log, self-addressed emails) are out of scope of the account visibility
+     * toggle, so the name fallback must still surface the Member's name via the
+     * override_permission parameter even when that Member's own toggle is off.
+     */
+    public function testNameFallbackUsesMemberWhenOverridePermissionIsTrueEvenWithToggleOff()
+    {
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getId')->andReturn(42);
+        $member->shouldReceive('setSpeaker')->andReturnNull();
+        $member->shouldReceive('isPublicProfileShowFullname')->andReturn(false);
+        $member->shouldReceive('getFirstName')->andReturn('Ada');
+        $member->shouldReceive('getLastName')->andReturn('Lovelace');
+        $member->shouldReceive('getFullName')->andReturn('Ada Lovelace');
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setMember($member);
+
+        $this->assertSame('Ada', $speaker->getFirstName(true));
+        $this->assertSame('Lovelace', $speaker->getLastName(true));
+        $this->assertSame('Ada Lovelace', $speaker->getFullName(true));
+    }
+
+    /**
      * Policy Rule 9: the photo fallback to the linked Member must skip that Member's photo
      * (continuing to the configured default image) when the Member's own visibility toggle is off.
      */

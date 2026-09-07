@@ -43,6 +43,7 @@ final class AdminPresentationSpeakerSerializerTest extends TestCase
 
     private function buildSpeaker(bool $expectOverride): PresentationSpeaker
     {
+        /** @var PresentationSpeaker&\Mockery\MockInterface $speaker */
         $speaker = Mockery::mock(PresentationSpeaker::class);
         $speaker->shouldReceive('hasMember')->andReturn(true);
         $speaker->shouldReceive('getMember')->andReturn(Mockery::mock(Member::class));
@@ -58,6 +59,7 @@ final class AdminPresentationSpeakerSerializerTest extends TestCase
 
     private function buildContext(Member $current_member): IResourceServerContext
     {
+        /** @var IResourceServerContext&\Mockery\MockInterface $context */
         $context = Mockery::mock(IResourceServerContext::class);
         $context->shouldReceive('getCurrentUser')->andReturn($current_member);
         return $context;

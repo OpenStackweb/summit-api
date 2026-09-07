@@ -130,9 +130,11 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractSummitEm
         }
 
         $speaker_email = $speaker->getEmail();
-        // self-addressed: the recipient is the speaker, so the Member name fallback bypasses the
-        // account visibility toggle (policy/profile-data-handling.md Rule 9 scope)
-        $speaker_full_name = $speaker->getFullName(true);
+        // The Member name fallback may bypass the account visibility toggle only when the delivery
+        // is self-addressed. With submitter copies on, this same payload is CC'd to the creators of
+        // the speaker's presentations - non-admin third parties - so the fallback must honor the
+        // toggle (policy/profile-data-handling.md Rule 9) and the greeting falls back to the email.
+        $speaker_full_name = $speaker->getFullName(count($cc_email) === 0);
 
         // set to email if fullname is empty
         if(empty($speaker_full_name)){

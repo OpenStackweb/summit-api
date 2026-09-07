@@ -70,6 +70,7 @@ final class AdminPresentationSpeakerSerializerTest extends TestCase
         $admin = Mockery::mock(Member::class);
         $admin->shouldReceive('isAdmin')->andReturn(true);
         $admin->shouldReceive('isSummitAdmin')->andReturn(false);
+        $admin->shouldReceive('isRegistrationAdmin')->andReturn(false);
         $admin->shouldReceive('getId')->andReturn(self::OtherMemberId);
 
         $speaker = $this->buildSpeaker(true);
@@ -85,6 +86,7 @@ final class AdminPresentationSpeakerSerializerTest extends TestCase
         $owner = Mockery::mock(Member::class);
         $owner->shouldReceive('isAdmin')->andReturn(false);
         $owner->shouldReceive('isSummitAdmin')->andReturn(false);
+        $owner->shouldReceive('isRegistrationAdmin')->andReturn(false);
         $owner->shouldReceive('getId')->andReturn(self::OwnerMemberId);
 
         $speaker = $this->buildSpeaker(true);
@@ -106,6 +108,7 @@ final class AdminPresentationSpeakerSerializerTest extends TestCase
         $submitter = Mockery::mock(Member::class);
         $submitter->shouldReceive('isAdmin')->andReturn(false);
         $submitter->shouldReceive('isSummitAdmin')->andReturn(false);
+        $submitter->shouldReceive('isRegistrationAdmin')->andReturn(false);
         $submitter->shouldReceive('getId')->andReturn(self::OtherMemberId);
 
         $speaker = $this->buildSpeaker(false);

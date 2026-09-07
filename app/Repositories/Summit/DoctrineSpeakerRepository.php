@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Libs\Utils\Doctrine\DoctrineStatementValueBinder;
 use models\main\Member;
 use models\summit\ISpeakerRepository;
+use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitSelectedPresentation;
@@ -266,7 +267,8 @@ final class DoctrineSpeakerRepository
                                         LEFT JOIN __pm41.media_upload_type __mut41
                                         WHERE
                                         __p41.summit = :summit
-                                        AND __p41.published = 0'.
+                                        AND __p41.published = 0
+                                        AND (__p41.progress != '.Presentation::PHASE_COMPLETE.' OR __p41.status IS NULL OR __p41.status != \''.Presentation::STATUS_RECEIVED.'\')'.
                                         (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '41'): ' ').
                                         'AND NOT EXISTS (
                                             SELECT ___sp41.id
@@ -289,7 +291,8 @@ final class DoctrineSpeakerRepository
                                         LEFT JOIN __pm42.media_upload_type __mut42
                                         WHERE
                                         __p42.summit = :summit
-                                        AND __p42.published = 0'.
+                                        AND __p42.published = 0
+                                        AND (__p42.progress != '.Presentation::PHASE_COMPLETE.' OR __p42.status IS NULL OR __p42.status != \''.Presentation::STATUS_RECEIVED.'\')'.
                                         (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '42'): ' ').
                                         'AND NOT EXISTS (
                                             SELECT ___sp42.id
@@ -315,7 +318,8 @@ final class DoctrineSpeakerRepository
                                         LEFT JOIN __pm41.media_upload_type __mut41
                                         WHERE
                                         __p41.summit = :summit
-                                        AND __p41.published = 0'.
+                                        AND __p41.published = 0
+                                        AND (__p41.progress != '.Presentation::PHASE_COMPLETE.' OR __p41.status IS NULL OR __p41.status != \''.Presentation::STATUS_RECEIVED.'\')'.
                                         (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '41'): ' ').
                                         'AND NOT EXISTS (
                                             SELECT ___sp41.id
@@ -338,7 +342,8 @@ final class DoctrineSpeakerRepository
                                         LEFT JOIN __pm42.media_upload_type __mut42
                                         WHERE
                                         __p42.summit = :summit
-                                        AND __p42.published = 0'.
+                                        AND __p42.published = 0
+                                        AND (__p42.progress != '.Presentation::PHASE_COMPLETE.' OR __p42.status IS NULL OR __p42.status != \''.Presentation::STATUS_RECEIVED.'\')'.
                                         (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '42'): ' ').
                                         'AND NOT EXISTS (
                                             SELECT ___sp42.id

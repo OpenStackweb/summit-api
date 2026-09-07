@@ -749,12 +749,11 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $pres->setAbstract("Abstract");
         $pres->setCategory(self::$defaultTrack);
         $pres->setType(self::$defaultPresentationType);
-        $pres->setProgress(Presentation::PHASE_COMPLETE);
-        $pres->setStatus(Presentation::STATUS_RECEIVED);
         $pres->setStartDate($start);
         $pres->setEndDate($end);
         $pres->addSpeaker($speaker);
-        // Deliberately NOT published and NOT added to any SummitSelectedPresentation group list
+        // Deliberately unfinished (default progress/status), NOT published and NOT
+        // added to any SummitSelectedPresentation group list
         self::$em->flush();
 
         $params = [
@@ -787,6 +786,68 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $speakers = json_decode($content);
         $this->assertTrue(!is_null($speakers));
         $this->assertTrue(count($speakers->data) > 0);
+    }
+
+    /**
+     * Regression test: has_pending_presentations must reflect an unfinished
+     * submission, not merely "not yet selected by a track chair". A speaker
+     * whose presentation is already complete/received must NOT be returned,
+     * even if it is still unpublished and has no selection-list entry.
+     */
+    public function testGetCurrentSummitSpeakersWithPendingPresentationsExcludesCompletedSubmissions()
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Completed");
+        $speaker->setLastName("Speaker");
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Completed Submission Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setProgress(Presentation::PHASE_COMPLETE);
+        $pres->setStatus(Presentation::STATUS_RECEIVED);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->addSpeaker($speaker);
+        // Submission is complete/received, but deliberately NOT published and NOT
+        // added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'has_pending_presentations==true',
+            ],
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+        $this->assertNotContains($speaker->getId(), $ids,
+            'speaker with a completed/received submission must not be treated as pending');
     }
 
     public function testGetCurrentSummitSpeakersFilteredByMemberExternalUserID()
@@ -2710,12 +2771,11 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $pres->setAbstract("Abstract");
         $pres->setCategory(self::$defaultTrack);
         $pres->setType(self::$defaultPresentationType);
-        $pres->setProgress(Presentation::PHASE_COMPLETE);
-        $pres->setStatus(Presentation::STATUS_RECEIVED);
         $pres->setStartDate($start);
         $pres->setEndDate($end);
         $pres->addSpeaker($speaker);
-        // Deliberately NOT published and NOT added to any SummitSelectedPresentation group list
+        // Deliberately unfinished (default progress/status), NOT published and NOT
+        // added to any SummitSelectedPresentation group list
         self::$em->flush();
 
         $headers = [

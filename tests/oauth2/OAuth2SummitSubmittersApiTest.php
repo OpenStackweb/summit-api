@@ -145,12 +145,11 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $pres->setAbstract("Abstract");
         $pres->setCategory(self::$defaultTrack);
         $pres->setType(self::$defaultPresentationType);
-        $pres->setProgress(Presentation::PHASE_COMPLETE);
-        $pres->setStatus(Presentation::STATUS_RECEIVED);
         $pres->setStartDate($start);
         $pres->setEndDate($end);
         $pres->setCreatedBy(self::$defaultMember);
-        // Deliberately NOT published and NOT added to any SummitSelectedPresentation group list
+        // Deliberately unfinished (default progress/status), NOT published and NOT
+        // added to any SummitSelectedPresentation group list
         self::$em->flush();
 
         $params = [
@@ -183,6 +182,65 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $submitters = json_decode($content);
         $this->assertTrue(!is_null($submitters));
         $this->assertTrue(count($submitters->data) > 0);
+    }
+
+    /**
+     * Regression test: has_pending_presentations must reflect an unfinished
+     * submission, not merely "not yet selected by a track chair". A submitter
+     * whose presentation is already complete/received must NOT be returned,
+     * even if it is still unpublished and has no selection-list entry.
+     */
+    public function testGetCurrentSummitSubmittersWithPendingPresentationsExcludesCompletedSubmissions()
+    {
+        $member = self::$em->find(Member::class, self::$defaultMember2->getId());
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Completed Submission Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setProgress(Presentation::PHASE_COMPLETE);
+        $pres->setStatus(Presentation::STATUS_RECEIVED);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->setCreatedBy($member);
+        // Submission is complete/received, but deliberately NOT published and NOT
+        // added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'has_pending_presentations==true',
+            ],
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSubmittersApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+        $this->assertNotContains($member->getId(), $ids,
+            'submitter with a completed/received submission must not be treated as pending');
     }
 
     public function testExportCurrentSummitSubmittersWhoAreSpeakers()

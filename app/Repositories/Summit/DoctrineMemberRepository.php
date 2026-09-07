@@ -23,6 +23,7 @@ use libs\utils\TextUtils;
 use models\main\IMemberRepository;
 use models\main\Member;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\Presentation;
 use models\summit\Summit;
 use models\summit\SummitSelectedPresentation;
 use models\summit\SummitSelectedPresentationList;
@@ -254,7 +255,8 @@ final class DoctrineMemberRepository
                                         LEFT JOIN __pm41.media_upload_type __mut41
                                         WHERE
                                         __p41.summit = :summit
-                                        AND __p41.published = 0 '.
+                                        AND __p41.published = 0
+                                        AND (__p41.progress != '.Presentation::PHASE_COMPLETE.' OR __p41.status IS NULL OR __p41.status != \''.Presentation::STATUS_RECEIVED.'\') '.
                                 (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '41'): ' ').
                                 ' AND NOT EXISTS (
                                             SELECT ___sp41.id
@@ -280,7 +282,8 @@ final class DoctrineMemberRepository
                                         LEFT JOIN __pm41.media_upload_type __mut41
                                         WHERE
                                         __p41.summit = :summit
-                                        AND __p41.published = 0 '.
+                                        AND __p41.published = 0
+                                        AND (__p41.progress != '.Presentation::PHASE_COMPLETE.' OR __p41.status IS NULL OR __p41.status != \''.Presentation::STATUS_RECEIVED.'\') '.
                                 (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '41'): ' ').
                                 ' AND NOT EXISTS (
                                             SELECT ___sp41.id

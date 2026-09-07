@@ -756,10 +756,33 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         // added to any SummitSelectedPresentation group list
         self::$em->flush();
 
+        // Negative control: a speaker with a published presentation must NOT be
+        // returned. Without this control, the assertion below would pass even if
+        // the filter were a complete no-op, since the base query already returns
+        // every speaker with summit activity.
+        $notPendingSpeaker = new PresentationSpeaker();
+        $notPendingSpeaker->setFirstName("NotPending");
+        $notPendingSpeaker->setLastName("Speaker");
+        self::$em->persist($notPendingSpeaker);
+
+        $publishedPres = new Presentation();
+        self::$summit->addEvent($publishedPres);
+        $publishedPres->setTitle("Published Control Presentation");
+        $publishedPres->setAbstract("Abstract");
+        $publishedPres->setCategory(self::$defaultTrack);
+        $publishedPres->setType(self::$defaultPresentationType);
+        $publishedPres->setProgress(Presentation::PHASE_COMPLETE);
+        $publishedPres->setStatus(Presentation::STATUS_RECEIVED);
+        $publishedPres->setStartDate($start);
+        $publishedPres->setEndDate($end);
+        $publishedPres->addSpeaker($notPendingSpeaker);
+        $publishedPres->publish();
+        self::$em->flush();
+
         $params = [
             'id'       => self::$summit->getId(),
             'page'     => 1,
-            'per_page' => 10,
+            'per_page' => 100,
             'filter'   => [
                 'has_pending_presentations==true',
             ],
@@ -781,11 +804,13 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
             $headers
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(200);
-        $speakers = json_decode($content);
-        $this->assertTrue(!is_null($speakers));
-        $this->assertTrue(count($speakers->data) > 0);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+
+        $this->assertContains($speaker->getId(), $ids,
+            'speaker with an unfinished, unpublished, unselected presentation must be returned');
+        $this->assertNotContains($notPendingSpeaker->getId(), $ids,
+            'speaker with a published presentation must not be treated as pending');
     }
 
     /**
@@ -2776,6 +2801,30 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $pres->addSpeaker($speaker);
         // Deliberately unfinished (default progress/status), NOT published and NOT
         // added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        // Negative control: a published presentation must NOT count as pending.
+        // Without this control, baseline + 1 would hold even if the filter were a
+        // complete no-op — getUniqueActivitiesCountBySummit would then just count
+        // "all activities", and one extra presentation always adds exactly 1
+        // regardless of whether the filter actually excludes it.
+        $notPendingSpeaker = new PresentationSpeaker();
+        $notPendingSpeaker->setFirstName("NotPending");
+        $notPendingSpeaker->setLastName("Test");
+        self::$em->persist($notPendingSpeaker);
+
+        $publishedPres = new Presentation();
+        self::$summit->addEvent($publishedPres);
+        $publishedPres->setTitle("Published Control Presentation");
+        $publishedPres->setAbstract("Abstract");
+        $publishedPres->setCategory(self::$defaultTrack);
+        $publishedPres->setType(self::$defaultPresentationType);
+        $publishedPres->setProgress(Presentation::PHASE_COMPLETE);
+        $publishedPres->setStatus(Presentation::STATUS_RECEIVED);
+        $publishedPres->setStartDate($start);
+        $publishedPres->setEndDate($end);
+        $publishedPres->addSpeaker($notPendingSpeaker);
+        $publishedPres->publish();
         self::$em->flush();
 
         $headers = [

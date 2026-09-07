@@ -136,6 +136,9 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
 
     public function testGetCurrentSummitSubmittersWithPendingPresentations()
     {
+        $member  = self::$em->find(Member::class, self::$defaultMember->getId());
+        $member2 = self::$em->find(Member::class, self::$defaultMember2->getId());
+
         $start = new \DateTime('now', new \DateTimeZone('UTC'));
         $end   = (clone $start)->add(new \DateInterval('PT2H'));
 
@@ -147,15 +150,33 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
         $pres->setType(self::$defaultPresentationType);
         $pres->setStartDate($start);
         $pres->setEndDate($end);
-        $pres->setCreatedBy(self::$defaultMember);
+        $pres->setCreatedBy($member);
         // Deliberately unfinished (default progress/status), NOT published and NOT
         // added to any SummitSelectedPresentation group list
+
+        // Negative control: a submitter with a published presentation must NOT be
+        // returned. Without this control, the assertion below would pass even if
+        // the filter were a complete no-op, since the base query already returns
+        // every submitter with summit activity.
+        $publishedPres = new Presentation();
+        self::$summit->addEvent($publishedPres);
+        $publishedPres->setTitle("Published Control Presentation");
+        $publishedPres->setAbstract("Abstract");
+        $publishedPres->setCategory(self::$defaultTrack);
+        $publishedPres->setType(self::$defaultPresentationType);
+        $publishedPres->setProgress(Presentation::PHASE_COMPLETE);
+        $publishedPres->setStatus(Presentation::STATUS_RECEIVED);
+        $publishedPres->setStartDate($start);
+        $publishedPres->setEndDate($end);
+        $publishedPres->setCreatedBy($member2);
+        $publishedPres->publish();
+
         self::$em->flush();
 
         $params = [
             'id'       => self::$summit->getId(),
             'page'     => 1,
-            'per_page' => 10,
+            'per_page' => 100,
             'filter'   => [
                 'has_pending_presentations==true',
             ],
@@ -177,11 +198,13 @@ final class OAuth2SummitSubmittersApiTest extends ProtectedApiTestCase
             $headers
         );
 
-        $content = $response->getContent();
         $this->assertResponseStatus(200);
-        $submitters = json_decode($content);
-        $this->assertTrue(!is_null($submitters));
-        $this->assertTrue(count($submitters->data) > 0);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+
+        $this->assertContains($member->getId(), $ids,
+            'submitter with an unfinished, unpublished, unselected presentation must be returned');
+        $this->assertNotContains($member2->getId(), $ids,
+            'submitter with a published presentation must not be treated as pending');
     }
 
     /**

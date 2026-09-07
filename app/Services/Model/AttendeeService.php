@@ -213,6 +213,25 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         )
                     );
 
+            } else if (!empty($email)) {
+                // no member_id was given, but the email happens to belong to a known member account ...
+                // resolve it so the new attendee is linked to it
+                $member = $this->member_repository->getByEmail(trim($email));
+
+                if (!is_null($member)) {
+                    $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
+
+                    if (!is_null($old_attendee))
+                        throw new ValidationException
+                        (
+                            sprintf
+                            (
+                                "attendee already exist for summit id %s and member id %s",
+                                $summit->getId(),
+                                $member->getIdentifier()
+                            )
+                        );
+                }
             }
 
             if (!empty($email)) {
@@ -301,6 +320,17 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
                 if (!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
                     throw new ValidationException(sprintf("Another attendee (%s) already exist for summit id %s and member id %s.", $old_attendee->getId(), $summit->getId(), $member->getIdentifier()));
+            } else if (!empty($email)) {
+                // no member_id was given, but the email happens to belong to a known member account ...
+                // resolve it so we don't clear a link that is actually still valid, or so an explicit
+                // email reassignment picks up the member it now belongs to
+                $member = $this->member_repository->getByEmail(trim($email));
+
+                if (!is_null($member)) {
+                    $old_attendee = $this->attendee_repository->getBySummitAndMember($summit, $member);
+                    if (!is_null($old_attendee) && $old_attendee->getId() != $attendee->getId())
+                        throw new ValidationException(sprintf("Another attendee (%s) already exist for summit id %s and member id %s.", $old_attendee->getId(), $summit->getId(), $member->getIdentifier()));
+                }
             }
 
             if (!empty($email)) {

@@ -102,9 +102,12 @@ final class SummitAttendeeFactory
                 Log::debug(sprintf("SummitAttendeeFactory::populate setting member %s to attendee %s", $member->getId(), $member->getEmail()));
                 $attendee->setEmail($member->getEmail());
                 $attendee->setMember($member);
-            } else {
+            } else if (isset($payload['email']) && !empty($payload['email'])) {
+                // an email reassignment was explicitly requested and it does not match any known member account
+                Log::debug(sprintf("SummitAttendeeFactory::populate clearing member from attendee %s", $attendee->getId()));
                 $attendee->clearMember();
             }
+            // else: no email/member reassignment was requested, leave the existing member link untouched
         }
 
         // manager setting

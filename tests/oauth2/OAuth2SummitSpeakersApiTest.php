@@ -733,6 +733,148 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($speakers));
     }
 
+    public function testGetCurrentSummitSpeakersWithPendingPresentations()
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Pending");
+        $speaker->setLastName("Speaker");
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Pending Test Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->addSpeaker($speaker);
+        // Deliberately unfinished (default progress/status), NOT published and NOT
+        // added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        // Negative control: a speaker with a published presentation must NOT be
+        // returned. Without this control, the assertion below would pass even if
+        // the filter were a complete no-op, since the base query already returns
+        // every speaker with summit activity.
+        $notPendingSpeaker = new PresentationSpeaker();
+        $notPendingSpeaker->setFirstName("NotPending");
+        $notPendingSpeaker->setLastName("Speaker");
+        self::$em->persist($notPendingSpeaker);
+
+        $publishedPres = new Presentation();
+        self::$summit->addEvent($publishedPres);
+        $publishedPres->setTitle("Published Control Presentation");
+        $publishedPres->setAbstract("Abstract");
+        $publishedPres->setCategory(self::$defaultTrack);
+        $publishedPres->setType(self::$defaultPresentationType);
+        $publishedPres->setProgress(Presentation::PHASE_COMPLETE);
+        $publishedPres->setStatus(Presentation::STATUS_RECEIVED);
+        $publishedPres->setStartDate($start);
+        $publishedPres->setEndDate($end);
+        $publishedPres->addSpeaker($notPendingSpeaker);
+        $publishedPres->publish();
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 100,
+            'filter'   => [
+                'has_pending_presentations==true',
+            ],
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+
+        $this->assertContains($speaker->getId(), $ids,
+            'speaker with an unfinished, unpublished, unselected presentation must be returned');
+        $this->assertNotContains($notPendingSpeaker->getId(), $ids,
+            'speaker with a published presentation must not be treated as pending');
+    }
+
+    /**
+     * Regression test: has_pending_presentations must reflect an unfinished
+     * submission, not merely "not yet selected by a track chair". A speaker
+     * whose presentation is already complete/received must NOT be returned,
+     * even if it is still unpublished and has no selection-list entry.
+     */
+    public function testGetCurrentSummitSpeakersWithPendingPresentationsExcludesCompletedSubmissions()
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Completed");
+        $speaker->setLastName("Speaker");
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Completed Submission Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setProgress(Presentation::PHASE_COMPLETE);
+        $pres->setStatus(Presentation::STATUS_RECEIVED);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->addSpeaker($speaker);
+        // Submission is complete/received, but deliberately NOT published and NOT
+        // added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => [
+                'has_pending_presentations==true',
+            ],
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+        $this->assertNotContains($speaker->getId(), $ids,
+            'speaker with a completed/received submission must not be treated as pending');
+    }
+
     public function testGetCurrentSummitSpeakersFilteredByMemberExternalUserID()
     {
         $params = [
@@ -2575,7 +2717,7 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
     {
         // Get the filtered baseline before seeding so the assertion is exact.
         // A broken filter that returns all results would produce a count far
-        // greater than baseline + 1, causing the assertEquals to fail.        
+        // greater than baseline + 1, causing the assertEquals to fail.
         $baseline = EntityManager::getRepository(PresentationSpeaker::class)
             ->getUniqueActivitiesCountBySummit(
                 self::$summit,
@@ -2619,6 +2761,81 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
             "GET",
             "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
             ['id' => self::$summit->getId(), 'filter' => ['has_accepted_presentations==true']],
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $data = json_decode($response->getContent());
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+        $this->assertEquals($baseline + 1, $data->count);
+    }
+
+    public function testGetCurrentSummitSpeakersActivitiesCountWithPendingPresentations()
+    {
+        $baseline = EntityManager::getRepository(PresentationSpeaker::class)
+            ->getUniqueActivitiesCountBySummit(
+                self::$summit,
+                FilterParser::parse(
+                    ['filter' => 'has_pending_presentations==true'],
+                    ['has_pending_presentations' => ['==']]
+                )
+            );
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName("Pending");
+        $speaker->setLastName("Test");
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Pending Test Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->addSpeaker($speaker);
+        // Deliberately unfinished (default progress/status), NOT published and NOT
+        // added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        // Negative control: a published presentation must NOT count as pending.
+        // Without this control, baseline + 1 would hold even if the filter were a
+        // complete no-op — getUniqueActivitiesCountBySummit would then just count
+        // "all activities", and one extra presentation always adds exactly 1
+        // regardless of whether the filter actually excludes it.
+        $notPendingSpeaker = new PresentationSpeaker();
+        $notPendingSpeaker->setFirstName("NotPending");
+        $notPendingSpeaker->setLastName("Test");
+        self::$em->persist($notPendingSpeaker);
+
+        $publishedPres = new Presentation();
+        self::$summit->addEvent($publishedPres);
+        $publishedPres->setTitle("Published Control Presentation");
+        $publishedPres->setAbstract("Abstract");
+        $publishedPres->setCategory(self::$defaultTrack);
+        $publishedPres->setType(self::$defaultPresentationType);
+        $publishedPres->setProgress(Presentation::PHASE_COMPLETE);
+        $publishedPres->setStatus(Presentation::STATUS_RECEIVED);
+        $publishedPres->setStartDate($start);
+        $publishedPres->setEndDate($end);
+        $publishedPres->addSpeaker($notPendingSpeaker);
+        $publishedPres->publish();
+        self::$em->flush();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            ['id' => self::$summit->getId(), 'filter' => ['has_pending_presentations==true']],
             [], [], [], $headers
         );
 

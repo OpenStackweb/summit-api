@@ -105,7 +105,7 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
      * @param PresentationSpeaker $speaker
      * @return bool
      */
-    protected function canBypassAccountVisibilityToggle(PresentationSpeaker $speaker): bool
+    protected function  canBypassAccountVisibilityToggle(PresentationSpeaker $speaker): bool
     {
         $current_member = $this->resource_server_context->getCurrentUser();
         if (is_null($current_member)) return false;

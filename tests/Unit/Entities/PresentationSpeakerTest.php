@@ -242,4 +242,29 @@ class PresentationSpeakerTest extends TestCase
         $this->assertSame('https://example.com/member-photo.jpg', $speaker->getProfilePhotoUrl());
         $this->assertSame('https://example.com/member-photo.jpg', $speaker->getBigProfilePhotoUrl());
     }
+
+    /**
+     * Policy Rule 9 scope: admin/self-view callers (AdminPresentationSpeakerSerializer and its
+     * CSV sibling) are out of scope of the account visibility toggle, so the photo fallback must
+     * still surface the Member's photo via the override_permission parameter even when that
+     * Member's own toggle is off.
+     */
+    public function testPhotoFallbackUsesMemberWhenOverridePermissionIsTrueEvenWithToggleOff()
+    {
+        $photo = Mockery::mock(File::class);
+        $photo->shouldReceive('getUrl')->andReturn('https://example.com/member-photo.jpg');
+
+        $member = Mockery::mock(Member::class);
+        $member->shouldReceive('getId')->andReturn(42);
+        $member->shouldReceive('setSpeaker')->andReturnNull();
+        $member->shouldReceive('isPublicProfileShowPhoto')->andReturn(false);
+        $member->shouldReceive('hasPhoto')->andReturn(true);
+        $member->shouldReceive('getPhoto')->andReturn($photo);
+
+        $speaker = new PresentationSpeaker();
+        $speaker->setMember($member);
+
+        $this->assertSame('https://example.com/member-photo.jpg', $speaker->getProfilePhotoUrl(true));
+        $this->assertSame('https://example.com/member-photo.jpg', $speaker->getBigProfilePhotoUrl(true));
+    }
 }

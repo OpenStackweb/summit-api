@@ -73,6 +73,14 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
             $values['last_name'] = $speaker->getLastName(true);
         }
 
+        if(in_array('pic', $fields)) {
+            $values['pic'] = $speaker->getProfilePhotoUrl(true);
+        }
+
+        if(in_array('big_pic', $fields)) {
+            $values['big_pic'] = $speaker->getBigProfilePhotoUrl(true);
+        }
+
         if(in_array("email", $fields)) {
             $application_type = $this->resource_server_context->getApplicationType();
             // choose email serializer depending on user permissions

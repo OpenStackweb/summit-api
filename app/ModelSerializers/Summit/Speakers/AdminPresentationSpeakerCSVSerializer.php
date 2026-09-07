@@ -57,6 +57,14 @@ final class AdminPresentationSpeakerCSVSerializer extends PresentationSpeakerBas
             $values['last_name'] = $speaker->getLastName(true);
         }
 
+        if(in_array('pic', $fields)) {
+            $values['pic'] = $speaker->getProfilePhotoUrl(true);
+        }
+
+        if(in_array('big_pic', $fields)) {
+            $values['big_pic'] = $speaker->getBigProfilePhotoUrl(true);
+        }
+
         if(in_array("email", $fields))
             $values['email'] = JsonUtils::toJsonString($speaker->getEmail());
 

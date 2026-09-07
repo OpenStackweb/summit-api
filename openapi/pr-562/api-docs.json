@@ -15,7 +15,8 @@
         "/api/public/v1/countries": {
             "get": {
                 "tags": [
-                    "Countries"
+                    "Countries",
+                    "Public"
                 ],
                 "summary": "Get all countries",
                 "description": "Get all countries with ISO codes",
@@ -46,7 +47,8 @@
         "/api/public/v1/languages": {
             "get": {
                 "tags": [
-                    "Languages"
+                    "Languages",
+                    "Public"
                 ],
                 "summary": "Get all languages",
                 "description": "Get all available languages with ISO codes",
@@ -78,7 +80,8 @@
             "get": {
                 "tags": [
                     "Appliances",
-                    "Marketplace"
+                    "Marketplace",
+                    "Public"
                 ],
                 "summary": "Get all appliances",
                 "description": "Get all marketplace appliances (OpenStack implementations)",
@@ -184,7 +187,8 @@
         "/api/public/v1/marketplace/consultants": {
             "get": {
                 "tags": [
-                    "Consultants"
+                    "Consultants",
+                    "Public"
                 ],
                 "summary": "Get all consultants",
                 "description": "Get all marketplace consultants and consulting services",
@@ -270,7 +274,8 @@
             "get": {
                 "tags": [
                     "Marketplace",
-                    "Marketplace Distributions"
+                    "Marketplace Distributions",
+                    "Public"
                 ],
                 "summary": "Get all distributions",
                 "description": "Get all marketplace distributions (OpenStack implementations)",
@@ -377,7 +382,8 @@
             "get": {
                 "tags": [
                     "Marketplace",
-                    "Clouds"
+                    "Clouds",
+                    "Public"
                 ],
                 "summary": "Get all hosted private clouds",
                 "description": "Get all marketplace hosted private cloud services (OpenStack implementations)",
@@ -484,7 +490,8 @@
             "get": {
                 "tags": [
                     "Marketplace",
-                    "Clouds"
+                    "Clouds",
+                    "Public"
                 ],
                 "summary": "Get all public clouds",
                 "description": "Get all marketplace public cloud services (OpenStack implementations)",
@@ -591,7 +598,8 @@
             "get": {
                 "tags": [
                     "Marketplace",
-                    "Clouds"
+                    "Clouds",
+                    "Public"
                 ],
                 "summary": "Get all remotely managed private clouds",
                 "description": "Get all marketplace remotely managed private cloud services (OpenStack implementations)",
@@ -809,7 +817,8 @@
         "/api/public/v1/files/upload": {
             "post": {
                 "tags": [
-                    "Files"
+                    "Files",
+                    "Public"
                 ],
                 "summary": "Upload file with chunked upload support",
                 "description": "Upload files using chunked upload mechanism. Supports large file uploads by splitting them into smaller chunks. The endpoint handles both complete uploads and chunked progress updates.",
@@ -1007,7 +1016,8 @@
         "/api/public/v1/companies": {
             "get": {
                 "tags": [
-                    "Companies (Public)"
+                    "Companies (Public)",
+                    "Public"
                 ],
                 "summary": "Get all companies (Public)",
                 "description": "Returns a paginated list of companies. Allows ordering, filtering and pagination.",
@@ -1264,7 +1274,8 @@
         "/api/public/v1/companies/{id}": {
             "get": {
                 "tags": [
-                    "Companies (Public)"
+                    "Companies (Public)",
+                    "Public"
                 ],
                 "summary": "Get a specific company (Public)",
                 "description": "Returns detailed information about a specific company",
@@ -1321,7 +1332,7 @@
                     "Companies"
                 ],
                 "summary": "Add company logo",
-                "description": "Uploads a logo image for the company",
+                "description": "Uploads a logo image for the company. Accepts either a multipart file upload or a JSON payload referencing a file already stored in the file API.",
                 "operationId": "addCompanyLogo",
                 "parameters": [
                     {
@@ -1351,6 +1362,43 @@
                                 },
                                 "type": "object"
                             }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "filepath",
+                                    "filename",
+                                    "md5",
+                                    "size"
+                                ],
+                                "properties": {
+                                    "filepath": {
+                                        "description": "Remote storage path of the uploaded file",
+                                        "type": "string"
+                                    },
+                                    "filename": {
+                                        "description": "Original file name",
+                                        "type": "string"
+                                    },
+                                    "md5": {
+                                        "description": "MD5 hash of the file for integrity verification",
+                                        "type": "string"
+                                    },
+                                    "size": {
+                                        "description": "File size in bytes",
+                                        "type": "integer"
+                                    },
+                                    "mime_type": {
+                                        "description": "MIME type of the file",
+                                        "type": "string"
+                                    },
+                                    "source_bucket": {
+                                        "description": "Source storage bucket",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
                 },
@@ -1376,9 +1424,6 @@
                     },
                     "404": {
                         "description": "Company not found"
-                    },
-                    "412": {
-                        "description": "File parameter not set"
                     }
                 },
                 "security": [
@@ -1444,7 +1489,7 @@
                     "Companies"
                 ],
                 "summary": "Add company big logo",
-                "description": "Uploads a big logo image for the company",
+                "description": "Uploads a big logo image for the company. Accepts either a multipart file upload or a JSON payload referencing a file already stored in the file API.",
                 "operationId": "addCompanyBigLogo",
                 "parameters": [
                     {
@@ -1474,6 +1519,43 @@
                                 },
                                 "type": "object"
                             }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "filepath",
+                                    "filename",
+                                    "md5",
+                                    "size"
+                                ],
+                                "properties": {
+                                    "filepath": {
+                                        "description": "Remote storage path of the uploaded file",
+                                        "type": "string"
+                                    },
+                                    "filename": {
+                                        "description": "Original file name",
+                                        "type": "string"
+                                    },
+                                    "md5": {
+                                        "description": "MD5 hash of the file for integrity verification",
+                                        "type": "string"
+                                    },
+                                    "size": {
+                                        "description": "File size in bytes",
+                                        "type": "integer"
+                                    },
+                                    "mime_type": {
+                                        "description": "MIME type of the file",
+                                        "type": "string"
+                                    },
+                                    "source_bucket": {
+                                        "description": "Source storage bucket",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
                 },
@@ -1499,9 +1581,6 @@
                     },
                     "404": {
                         "description": "Company not found"
-                    },
-                    "412": {
-                        "description": "File parameter not set"
                     }
                 },
                 "security": [
@@ -1651,7 +1730,8 @@
         "/api/public/v1/elections/current": {
             "get": {
                 "tags": [
-                    "Elections (Public)"
+                    "Elections (Public)",
+                    "Public"
                 ],
                 "summary": "Get current election",
                 "description": "Get the current active election",
@@ -1746,7 +1826,8 @@
         "/api/public/v1/elections/current/candidates": {
             "get": {
                 "tags": [
-                    "Elections (Public)"
+                    "Elections (Public)",
+                    "Public"
                 ],
                 "summary": "Get current election candidates",
                 "description": "Get all accepted candidates for the current election. Supports expand parameter to include member and/or election objects",
@@ -1917,7 +1998,8 @@
         "/api/public/v1/elections/current/candidates/gold": {
             "get": {
                 "tags": [
-                    "Elections (Public)"
+                    "Elections (Public)",
+                    "Public"
                 ],
                 "summary": "Get current election gold candidates",
                 "description": "Get all gold (featured) candidates for the current election. Supports expand parameter to include member and/or election objects",
@@ -2331,7 +2413,8 @@
         "/api/public/v1/legal-documents/{id}": {
             "get": {
                 "tags": [
-                    "Legal Documents"
+                    "Legal Documents",
+                    "Public"
                 ],
                 "summary": "Get a legal document by ID or slug",
                 "description": "Retrieves a legal document (privacy policy, terms of service, etc.) by its numeric ID or URL-friendly slug. This is a public endpoint that does not require authentication.",
@@ -2374,7 +2457,8 @@
         "/api/public/v1/members": {
             "get": {
                 "tags": [
-                    "Members (Public)"
+                    "Members (Public)",
+                    "Public"
                 ],
                 "summary": "Get all members",
                 "description": "Returns a paginated list of members with optional filtering, sorting and search capabilities",
@@ -2537,7 +2621,8 @@
         "/api/public/v1/members/all/companies": {
             "get": {
                 "tags": [
-                    "Members (Public)"
+                    "Members (Public)",
+                    "Public"
                 ],
                 "summary": "Get all member companies",
                 "description": "Returns a paginated list of companies from member profiles",
@@ -2698,7 +2783,8 @@
         "/api/public/v1/members/{member_id}": {
             "get": {
                 "tags": [
-                    "Members (Public)"
+                    "Members (Public)",
+                    "Public"
                 ],
                 "summary": "Get member by ID",
                 "description": "Returns a member profile by ID",
@@ -3567,7 +3653,8 @@
         "/api/public/v1/sponsored-projects": {
             "get": {
                 "tags": [
-                    "Sponsored Projects (Public)"
+                    "Sponsored Projects (Public)",
+                    "Public"
                 ],
                 "summary": "Read All Sponsored Projects (Public)",
                 "description": "Get all sponsored projects (public endpoint)",
@@ -3789,7 +3876,8 @@
         "/api/public/v1/sponsored-projects/{id}": {
             "get": {
                 "tags": [
-                    "Sponsored Projects (Public)"
+                    "Sponsored Projects (Public)",
+                    "Public"
                 ],
                 "summary": "Read Sponsored Project (Public)",
                 "description": "Get a specific sponsored project (public endpoint)",
@@ -4016,7 +4104,8 @@
             "get": {
                 "tags": [
                     "Sponsored Projects (Public)",
-                    "Sponsorship Types (Public)"
+                    "Sponsorship Types (Public)",
+                    "Public"
                 ],
                 "summary": "Read All Sponsorship Types (Public)",
                 "description": "Get all sponsorship types for a sponsored project (public endpoint)",
@@ -4277,7 +4366,8 @@
             "get": {
                 "tags": [
                     "Sponsored Projects (Public)",
-                    "Sponsorship Types (Public)"
+                    "Sponsorship Types (Public)",
+                    "Public"
                 ],
                 "summary": "Read Sponsorship Type (Public)",
                 "description": "Get a specific sponsorship type (public endpoint)",
@@ -4543,7 +4633,8 @@
             "get": {
                 "tags": [
                     "Sponsored Projects (Public)",
-                    "Supporting Companies (Public)"
+                    "Supporting Companies (Public)",
+                    "Public"
                 ],
                 "summary": "Read All Supporting Companies (Public)",
                 "description": "Get all supporting companies for a sponsorship type (public endpoint)",
@@ -6203,7 +6294,8 @@
         "/api/public/v1/user-stories": {
             "get": {
                 "tags": [
-                    "User Stories (Public)"
+                    "User Stories (Public)",
+                    "Public"
                 ],
                 "summary": "Get all user stories",
                 "description": "Retrieves a paginated list of user stories showcasing real-world use cases and success stories from the OpenStack community. User stories highlight how organizations use OpenStack in production. This is a public endpoint that can return different data based on authentication (more details for authenticated users).",
@@ -7365,6 +7457,227 @@
                     },
                     "404": {
                         "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_presentations_auth": [
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/write-event",
+                            "http://localhost/summits/write-presentation"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen": {
+            "put": {
+                "tags": [
+                    "Presentations"
+                ],
+                "summary": "Admin-only: reopen the submission period for a presentation",
+                "operationId": "reopenSubmissionPeriod",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "presentation_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "hours": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Presentation"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "412": {
+                        "description": "Validation Error"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_presentations_auth": [
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/write-event",
+                            "http://localhost/summits/write-presentation"
+                        ]
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Presentations"
+                ],
+                "summary": "Admin-only: close the reopened submission period for a presentation",
+                "operationId": "closeSubmissionPeriod",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "presentation_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_presentations_auth": [
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/write-event",
+                            "http://localhost/summits/write-presentation"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v1/summits/{id}/presentations/{presentation_id}/submission-period/reopen/notify": {
+            "put": {
+                "tags": [
+                    "Presentations"
+                ],
+                "summary": "Admin-only: notify selected recipients (submitter/speakers/moderator) that the submission period has been reopened",
+                "operationId": "notifySubmissionReopened",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "presentation_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "speaker_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "include_submitter": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "recipients": {
+                                            "type": "integer"
+                                        },
+                                        "skipped": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "412": {
+                        "description": "Validation Error"
                     },
                     "500": {
                         "description": "Server Error"
@@ -11909,7 +12222,8 @@
         "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}": {
             "get": {
                 "tags": [
-                    "RSVP Invitations (Public)"
+                    "RSVP Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Get RSVP Invitation By Token",
                 "description": "",
@@ -11973,7 +12287,8 @@
         "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}/accept": {
             "put": {
                 "tags": [
-                    "RSVP Invitations (Public)"
+                    "RSVP Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Accept RSVP Invitation",
                 "description": "",
@@ -12037,7 +12352,8 @@
         "/api/public/v1/summits/{id}/events/{event_id}/rsvp-invitations/{token}/decline": {
             "delete": {
                 "tags": [
-                    "RSVP Invitations (Public)"
+                    "RSVP Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Decline RSVP Invitation",
                 "description": "",
@@ -12766,7 +13082,8 @@
         "/api/public/v1/summits": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get summits list (public)",
                 "operationId": "getSummitsPublic",
@@ -12928,7 +13245,8 @@
         "/api/public/v1/summits/all": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get all summits (public)",
                 "operationId": "getAllSummitsPublic",
@@ -13175,7 +13493,8 @@
         "/api/public/v1/summits/{id}": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get summit by ID or slug (public)",
                 "operationId": "getSummitPublic",
@@ -13289,7 +13608,8 @@
         "/api/public/v1/summits/all/current": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get current summit (public)",
                 "operationId": "getAllCurrentSummitPublic",
@@ -13333,7 +13653,8 @@
         "/api/public/v1/summits/all/{id}": {
             "get": {
                 "tags": [
-                    "Summits (Public)"
+                    "Summits (Public)",
+                    "Public"
                 ],
                 "summary": "Get all summit by ID or Slug (public)",
                 "operationId": "getAllCurrentSummitByIDOrSlugPublic",
@@ -14669,7 +14990,7 @@
                     {
                         "name": "badge",
                         "in": "path",
-                        "description": "RAW Badge QR scan encoded on BASE 64",
+                        "description": "RAW Badge QR scan encoded on BASE 64 (standard RFC 4648 §4 or URL-safe §5 alphabet)",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -15582,8 +15903,8 @@
                 "tags": [
                     "Summit Attendees"
                 ],
-                "summary": "Get current user attendee profile",
-                "description": "Returns the attendee profile for the currently authenticated user in the specified summit",
+                "summary": "Get current user attendee profile for a particular summit",
+                "description": "Returns the attendee profile for the currently authenticated user in the specified summit (regenerates the Badge QR code of the active tickets when tickets.badge is expanded)",
                 "operationId": "getCurrentAttendee",
                 "parameters": [
                     {
@@ -21360,7 +21681,8 @@
         "/api/public/v1/summits/{id}/events/published": {
             "get": {
                 "tags": [
-                    "Summit Events (Public)"
+                    "Summit Events (Public)",
+                    "Public"
                 ],
                 "summary": "Get all published/scheduled events for a summit",
                 "description": "Retrieves a paginated list of all published events for a specific summit.",
@@ -21455,7 +21777,8 @@
         "/api/public/v1/summits/{id}/events/all/published/tags": {
             "get": {
                 "tags": [
-                    "Summit Events (Public)"
+                    "Summit Events (Public)",
+                    "Public"
                 ],
                 "summary": "Get all tags from published events for a summit",
                 "description": "Retrieves a paginated list of tags used in published events for a specific summit. This is a public endpoint.",
@@ -22211,7 +22534,8 @@
         "/api/public/v1/summits/{id}/events/{event_id}/published": {
             "get": {
                 "tags": [
-                    "Summit Events (Public)"
+                    "Summit Events (Public)",
+                    "Public"
                 ],
                 "summary": "Get a specific published/scheduled event by ID",
                 "description": "Retrieves a single published event by its ID for a specific summit.",
@@ -24166,7 +24490,8 @@
         "/api/public/v1/summits/{id}/events/all/published/overflow": {
             "get": {
                 "tags": [
-                    "Summit Events (Public)"
+                    "Summit Events (Public)",
+                    "Public"
                 ],
                 "summary": "Get overflow streaming information (Public)",
                 "description": "Retrieves overflow streaming information for published events. This is a public endpoint.",
@@ -24414,6 +24739,115 @@
                         "summit_events_api_oauth2": [
                             "http://localhost/summits/read",
                             "http://localhost/summits/read/all"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v1/summits/{id}/events/all/published/occupancy/overflow": {
+            "get": {
+                "tags": [
+                    "Summit Events",
+                    "Overflow"
+                ],
+                "summary": "Get all published overflow events for a summit",
+                "description": "Retrieves a paginated list of all events (published and with occupancy == OVERFLOW) for a specific summit.",
+                "operationId": "getOverflowPublishedEvents",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Summit ID or slug",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "filter[]",
+                        "in": "query",
+                        "description": "Filter expressions",
+                        "required": false,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order by field(s)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "expand",
+                        "in": "query",
+                        "description": "Expand relationships",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Events retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedSummitEventsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_events_api_oauth2": [
+                            "http://localhost/summits/events/overflow/read"
                         ]
                     }
                 ]
@@ -27504,7 +27938,8 @@
         "/api/public/v1/summits/{id}/locations/{location_id}": {
             "get": {
                 "tags": [
-                    "Summit Locations (Public)"
+                    "Summit Locations (Public)",
+                    "Public"
                 ],
                 "summary": "Get a specific location by ID (Public)",
                 "operationId": "getLocationByIdPublic",
@@ -27915,7 +28350,8 @@
         "/api/public/v1/summits/{id}/locations/{location_id}/events/published": {
             "get": {
                 "tags": [
-                    "Summit Locations (Public)"
+                    "Summit Locations (Public)",
+                    "Public"
                 ],
                 "summary": "Get published events for a location (Public)",
                 "operationId": "getLocationPublishedEventsPublic",
@@ -29595,7 +30031,8 @@
         "/api/public/v1/summits/{id}/locations/{location_id}/banners": {
             "get": {
                 "tags": [
-                    "Summit Locations (Public)"
+                    "Summit Locations (Public)",
+                    "Public"
                 ],
                 "summary": "Get all banners for a location",
                 "operationId": "getLocationBannersPublic",
@@ -32907,7 +33344,8 @@
         "/api/public/v1/summits/{id}/members/all/schedule/ics/{cid}": {
             "get": {
                 "tags": [
-                    "Summit Members (Public)"
+                    "Summit Members (Public)",
+                    "Public"
                 ],
                 "description": "Get calendar feed in ICS format for member schedule",
                 "operationId": "getCalendarFeedICS",
@@ -33777,7 +34215,8 @@
         "/api/public/v1/summits/{id}/notifications/sent": {
             "get": {
                 "tags": [
-                    "Summit Notifications (Public)"
+                    "Summit Notifications (Public)",
+                    "Public"
                 ],
                 "summary": "Get all approved push notifications sent to current user",
                 "operationId": "getApprovedNotificationsPublic",
@@ -34440,7 +34879,8 @@
         "/api/public/v1/summits/{id}/order-extra-questions": {
             "get": {
                 "tags": [
-                    "Order Extra Questions (Public)"
+                    "Order Extra Questions (Public)",
+                    "Public"
                 ],
                 "description": "Get all order extra questions for a summit (public endpoint)",
                 "operationId": "getAllOrderExtraQuestionsPublic",
@@ -35678,7 +36118,8 @@
         "/api/public/v1/summits/{id}/orders/reserve": {
             "post": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Reserve tickets in an order (Public)",
                 "description": "Creates a reservation for tickets. Can be called anonymously or by authenticated users.",
@@ -35789,7 +36230,8 @@
         "/api/public/v1/summits/{id}/orders/{hash}/checkout": {
             "put": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Checkout a reserved order (Public)",
                 "description": "Processes payment and completes an order reservation",
@@ -35918,7 +36360,8 @@
         "/api/public/v1/summits/{id}/orders/{hash}/tickets/mine": {
             "get": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Get my ticket by order hash (Public)",
                 "description": "Returns ticket information for the current user using order hash",
@@ -36015,7 +36458,8 @@
         "/api/public/v1/summits/{id}/orders/{hash}": {
             "delete": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Cancel order by hash (Public)",
                 "description": "Cancels an order using its hash",
@@ -37440,7 +37884,8 @@
         "/api/public/v1/summits/all/orders/all/tickets/{hash}": {
             "get": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Get ticket by hash (public endpoint)",
                 "description": "Returns ticket information using public hash. No authentication required.",
@@ -37474,7 +37919,8 @@
             },
             "put": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Update ticket by hash (public endpoint)",
                 "description": "Updates ticket information using public hash. No authentication required.",
@@ -37526,7 +37972,8 @@
         "/api/public/v1/summits/all/orders/{order_hash}/tickets": {
             "put": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Update tickets by order hash",
                 "description": "Updates multiple tickets information using order hash. No authentication required.",
@@ -37643,7 +38090,8 @@
         "/api/public/v1/summits/all/orders/all/tickets/{hash}/regenerate": {
             "put": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Regenerate ticket hash",
                 "description": "Regenerates the public hash for a ticket. No authentication required.",
@@ -37672,7 +38120,8 @@
         "/api/public/v1/summits/all/orders/all/tickets/{hash}/pdf": {
             "get": {
                 "tags": [
-                    "Orders (Public)"
+                    "Orders (Public)",
+                    "Public"
                 ],
                 "summary": "Get ticket PDF by hash",
                 "description": "Generates and returns ticket PDF using public hash. No authentication required.",
@@ -44393,7 +44842,8 @@
         "/api/public/v1/summits/{id}/registration-invitations/{token}": {
             "get": {
                 "tags": [
-                    "Summit Registration Invitations (Public)"
+                    "Summit Registration Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Get a registration invitation by summit and token (public endpoint)",
                 "operationId": "getInvitationBySummitAndToken",
@@ -44439,7 +44889,8 @@
         "/api/public/v1/summits/{id}/registration-invitations/{token}/reject": {
             "delete": {
                 "tags": [
-                    "Summit Registration Invitations (Public)"
+                    "Summit Registration Invitations (Public)",
+                    "Public"
                 ],
                 "summary": "Reject a registration invitation by summit and token (public endpoint)",
                 "operationId": "rejectInvitationBySummitAndToken",
@@ -46447,7 +46898,8 @@
         "/api/public/v1/summits/{id}/selection-plans/current/{status}": {
             "get": {
                 "tags": [
-                    "Selection Plans (Public)"
+                    "Selection Plans (Public)",
+                    "Public"
                 ],
                 "summary": "Get current selection plan by status (Public)",
                 "description": "Retrieves the current active selection plan for a summit filtered by status. This is a public endpoint.",
@@ -49985,7 +50437,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter by id, first_name, last_name, email, full_name, member_id, has_accepted_presentations, etc.",
+                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -50124,7 +50576,8 @@
         "/api/public/v1/summits/{id}/speakers": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Get all speakers for a summit with filtering and pagination (public)",
                 "operationId": "getSpeakersPublic",
@@ -50161,7 +50614,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
+                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -50244,7 +50697,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type.",
+                        "description": "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -50313,7 +50766,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
+                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -50533,7 +50986,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter by id, first_name, last_name, email, full_name, member_id",
+                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id. This endpoint is not summit-scoped, so presentation-related filter fields (available on the per-summit speaker endpoints) do not apply here.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -50918,7 +51371,8 @@
         "/api/public/v1/summits/{id}/speakers/{speaker_id}": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Get a specific speaker by ID for a summit (public)",
                 "operationId": "getSummitSpeakerPublic",
@@ -52269,7 +52723,8 @@
         "/api/public/v1/speakers/{speaker_id}/edit-permission/{token}/approve": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Approve edit permission request for a speaker profile (public endpoint)",
                 "operationId": "approveSpeakerEditPermission",
@@ -52312,7 +52767,8 @@
         "/api/public/v1/speakers/{speaker_id}/edit-permission/{token}/decline": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Decline edit permission request for a speaker profile (public endpoint)",
                 "operationId": "declineSpeakerEditPermission",
@@ -52598,7 +53054,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter speakers by id, first_name, last_name, email, full_name, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type",
+                        "description": "Filter speakers by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -52669,7 +53125,8 @@
         "/api/public/v1/speakers/all/companies": {
             "get": {
                 "tags": [
-                    "Summit Speakers (Public)"
+                    "Summit Speakers (Public)",
+                    "Public"
                 ],
                 "description": "Get all companies associated with speakers (public endpoint)",
                 "operationId": "getAllSpeakerCompanies",
@@ -53599,7 +54056,8 @@
         "/api/public/v1/summits/all/{id}/sponsors": {
             "get": {
                 "tags": [
-                    "Sponsors (Public)"
+                    "Sponsors (Public)",
+                    "Public"
                 ],
                 "summary": "Get Sponsors by Summit ID (Public)",
                 "description": "Get all sponsors for a summit",
@@ -57045,6 +57503,321 @@
                 ]
             }
         },
+        "/api/v1/summits/all/add-on-types": {
+            "get": {
+                "tags": [
+                    "Sponsorship Add-On Types"
+                ],
+                "summary": "Get all sponsorship add-on types",
+                "operationId": "getAddOnTypes",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter query (name==value, name=@value)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order by (+id, -name)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedSummitSponsorshipAddOnTypeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_sponsorship_oauth2": [
+                            "http://localhost/summits/read",
+                            "http://localhost/summits/read/all"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators"
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Sponsorship Add-On Types"
+                ],
+                "summary": "Add a new sponsorship add-on type",
+                "operationId": "addAddOnType",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SummitSponsorshipAddOnType"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "412": {
+                        "description": "Validation Error"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_sponsorship_oauth2": [
+                            "http://localhost/summits/write"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators"
+                ]
+            }
+        },
+        "/api/v1/summits/all/add-on-types/{id}": {
+            "get": {
+                "tags": [
+                    "Sponsorship Add-On Types"
+                ],
+                "summary": "Get a sponsorship add-on type by id",
+                "operationId": "getAddOnType",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Add-on Type ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SummitSponsorshipAddOnType"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_sponsorship_oauth2": [
+                            "http://localhost/summits/read",
+                            "http://localhost/summits/read/all"
+                        ]
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Sponsorship Add-On Types"
+                ],
+                "summary": "Update a sponsorship add-on type",
+                "operationId": "updateAddOnType",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Add-on Type ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SummitSponsorshipAddOnType"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "412": {
+                        "description": "Validation Error"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_sponsorship_oauth2": [
+                            "http://localhost/summits/write"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators"
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Sponsorship Add-On Types"
+                ],
+                "summary": "Delete a sponsorship add-on type",
+                "operationId": "deleteAddOnType",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Add-on Type ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_sponsorship_oauth2": [
+                            "http://localhost/summits/write"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators"
+                ]
+            }
+        },
         "/api/v1/summits/{id}/sponsorships-types": {
             "get": {
                 "tags": [
@@ -59524,7 +60297,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, presentations_track_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, is_speaker, has_media_upload_with_type, has_not_media_upload_with_type.",
+                        "description": "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, is_speaker, has_media_upload_with_type, has_not_media_upload_with_type.",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -61027,7 +61800,7 @@
                     "Tickets"
                 ],
                 "summary": "Import ticket data from CSV",
-                "description": "Imports ticket data from a CSV file",
+                "description": "Imports ticket data from a CSV file. Supported columns: id, number, attendee_email, attendee_first_name, attendee_last_name, attendee_tags, attendee_company, attendee_company_id, ticket_type_name, ticket_type_id, promo_code_id, promo_code, ticket_promo_code, badge_type_id, badge_type_name, one column per badge feature name (1/0) and one extra_question:{question name} column per order extra question (Ticket/Both usage; for list type questions use the value name/label, \"|\" separated for multi value).",
                 "operationId": "importTicketData",
                 "parameters": [
                     {
@@ -61158,7 +61931,7 @@
                     "Tickets"
                 ],
                 "summary": "Get ticket import template",
-                "description": "Returns a CSV template for importing ticket data",
+                "description": "Returns a CSV template for importing ticket data. Includes one column per summit badge feature name plus one extra_question:{question name} column per summit order extra question (Ticket/Both usage).",
                 "operationId": "getTicketImportTemplate",
                 "parameters": [
                     {
@@ -64963,7 +65736,8 @@
         "/api/public/v1/summits/{id}/tracks/{track_id}": {
             "get": {
                 "tags": [
-                    "Summit Tracks (Public)"
+                    "Summit Tracks (Public)",
+                    "Public"
                 ],
                 "description": "Get a specific track by ID",
                 "operationId": "getTrackBySummitPublic",
@@ -66082,7 +66856,8 @@
         "/api/public/v1/summits/{id}/event-types/{event_type_id}": {
             "get": {
                 "tags": [
-                    "Event Types (Public)"
+                    "Event Types (Public)",
+                    "Public"
                 ],
                 "description": "Get a specific event type by ID",
                 "operationId": "getEventTypeBySummitPublic",
@@ -67755,7 +68530,8 @@
         "/api/public/v1/releases/current": {
             "get": {
                 "tags": [
-                    "Releases (Public)"
+                    "Releases (Public)",
+                    "Public"
                 ],
                 "description": "Retrieve the current OpenStack release",
                 "operationId": "getCurrentRelease",
@@ -67782,7 +68558,8 @@
         "/api/public/v1/timezones": {
             "get": {
                 "tags": [
-                    "Timezones (Public)"
+                    "Timezones (Public)",
+                    "Public"
                 ],
                 "description": "Retrieve all available timezones",
                 "operationId": "getTimezones",
@@ -67852,7 +68629,8 @@
         "/api/public/v1/summits/all/payments/{application_name}/confirm": {
             "post": {
                 "tags": [
-                    "Payment Gateway Webhook"
+                    "Payment Gateway Webhook",
+                    "Public"
                 ],
                 "summary": "Generic payment gateway webhook confirmation",
                 "description": "Handles payment gateway webhook callbacks for a given application type.",
@@ -67897,7 +68675,8 @@
         "/api/public/v1/summits/{id}/payments/{application_name}/confirm": {
             "post": {
                 "tags": [
-                    "Payment Gateway Webhook"
+                    "Payment Gateway Webhook",
+                    "Public"
                 ],
                 "summary": "Summit payment gateway webhook confirmation",
                 "description": "Handles payment gateway webhook callbacks for a given summit and application type.",
@@ -68218,6 +68997,24 @@
                         "type": "string",
                         "example": "John Doe, CEO",
                         "nullable": true
+                    },
+                    "logo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Company logo (File API payload)"
+                    },
+                    "big_logo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Company big logo (File API payload)"
                     }
                 },
                 "type": "object"
@@ -68318,6 +69115,24 @@
                         "type": "string",
                         "example": "John Doe, CEO",
                         "nullable": true
+                    },
+                    "logo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Company logo (File API payload)"
+                    },
+                    "big_logo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Company big logo (File API payload)"
                     }
                 },
                 "type": "object"
@@ -68598,6 +69413,50 @@
                         "type": "object"
                     }
                 ]
+            },
+            "FileDTO": {
+                "description": "File metadata payload produced by the File API after a successful upload",
+                "required": [
+                    "filepath",
+                    "filename",
+                    "md5",
+                    "size"
+                ],
+                "properties": {
+                    "filepath": {
+                        "description": "Remote storage path of the uploaded file",
+                        "type": "string",
+                        "example": "companies/1/tmp/logo.png"
+                    },
+                    "filename": {
+                        "description": "Original file name",
+                        "type": "string",
+                        "example": "logo.png"
+                    },
+                    "md5": {
+                        "description": "MD5 hash of the file for integrity verification",
+                        "type": "string",
+                        "example": "d41d8cd98f00b204e9800998ecf8427e"
+                    },
+                    "size": {
+                        "description": "File size in bytes",
+                        "type": "integer",
+                        "example": 204800
+                    },
+                    "mime_type": {
+                        "description": "MIME type of the file",
+                        "type": "string",
+                        "example": "image/png",
+                        "nullable": true
+                    },
+                    "source_bucket": {
+                        "description": "Source storage bucket",
+                        "type": "string",
+                        "example": "my-uploads-bucket",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             },
             "ISOLanguageElementSchema": {
                 "properties": {
@@ -75261,6 +76120,53 @@
                 },
                 "type": "object"
             },
+            "SummitSponsorshipAddOnType": {
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "created": {
+                        "description": "Creation timestamp (Unix epoch)",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "last_edited": {
+                        "description": "Last edit timestamp (Unix epoch)",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Booth"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedSummitSponsorshipAddOnTypeResponse": {
+                "type": "object",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/PaginateDataSchemaResponse"
+                    },
+                    {
+                        "properties": {
+                            "data": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/SummitSponsorshipAddOnType"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
             "SummitSponsorship": {
                 "properties": {
                     "id": {
@@ -75361,6 +76267,9 @@
                         "type": "boolean"
                     },
                     "should_display_on_lobby_page": {
+                        "type": "boolean"
+                    },
+                    "is_public": {
                         "type": "boolean"
                     },
                     "summit": {
@@ -86248,6 +87157,10 @@
                             "Big"
                         ],
                         "example": "Big"
+                    },
+                    "is_public": {
+                        "type": "boolean",
+                        "example": true
                     }
                 },
                 "type": "object"
@@ -86276,6 +87189,10 @@
                         "type": "integer",
                         "minimum": 1,
                         "example": 1
+                    },
+                    "is_public": {
+                        "type": "boolean",
+                        "example": true
                     }
                 },
                 "type": "object"
@@ -87521,58 +88438,89 @@
                 "type": "object"
             },
             "AddAddOnRequest": {
-                "required": [
-                    "name",
-                    "type"
-                ],
-                "properties": {
-                    "name": {
-                        "description": "Add-on name",
-                        "type": "string",
-                        "example": "Premium Badge"
+                "oneOf": [
+                    {
+                        "required": [
+                            "name",
+                            "type"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Add-on name",
+                                "type": "string",
+                                "example": "B1"
+                            },
+                            "type": {
+                                "description": "Add-on Type Name",
+                                "type": "string",
+                                "example": "Booth"
+                            }
+                        },
+                        "type": "object"
                     },
-                    "type": {
-                        "description": "Add-on type",
-                        "type": "string",
-                        "example": "badge"
-                    },
-                    "label": {
-                        "description": "Add-on label",
-                        "type": "string",
-                        "example": "Premium"
-                    },
-                    "size": {
-                        "description": "Add-on size",
-                        "type": "string",
-                        "example": "large"
+                    {
+                        "required": [
+                            "name",
+                            "type_id"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Add-on name",
+                                "type": "string",
+                                "example": "B1 "
+                            },
+                            "type_id": {
+                                "description": "Add-on Type Id",
+                                "type": "integer",
+                                "example": "123"
+                            }
+                        },
+                        "type": "object"
                     }
-                },
-                "type": "object"
+                ]
             },
             "UpdateAddOnRequest": {
-                "properties": {
-                    "name": {
-                        "description": "Add-on name",
-                        "type": "string",
-                        "example": "Premium Badge"
+                "type": "object",
+                "oneOf": [
+                    {
+                        "required": [
+                            "name",
+                            "type"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Add-on name",
+                                "type": "string",
+                                "example": "B1"
+                            },
+                            "type": {
+                                "description": "Add-on Type Name",
+                                "type": "string",
+                                "example": "Booth"
+                            }
+                        },
+                        "type": "object"
                     },
-                    "type": {
-                        "description": "Add-on type",
-                        "type": "string",
-                        "example": "badge"
-                    },
-                    "label": {
-                        "description": "Add-on label",
-                        "type": "string",
-                        "example": "Premium"
-                    },
-                    "size": {
-                        "description": "Add-on size",
-                        "type": "string",
-                        "example": "large"
+                    {
+                        "required": [
+                            "name",
+                            "type_id"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Add-on name",
+                                "type": "string",
+                                "example": "B1 "
+                            },
+                            "type_id": {
+                                "description": "Add-on Type Id",
+                                "type": "integer",
+                                "example": "123"
+                            }
+                        },
+                        "type": "object"
                     }
-                },
-                "type": "object"
+                ]
             },
             "SummitTrackChair": {
                 "description": "Public view of track chair (limited member info without email)",
@@ -88037,10 +88985,44 @@
             },
             "Owner": {
                 "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
                     "first_name": {
                         "type": "string"
                     },
                     "last_name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "company": {
+                        "type": "string"
+                    },
+                    "member": {
+                        "description": "Present only when the ticket owner has a linked Member account; absent for member-less attendees",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OwnerMember"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "OwnerMember": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "first_name": {
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "type": "string"
+                    },
+                    "pic": {
                         "type": "string"
                     }
                 },
@@ -89953,6 +90935,10 @@
             "description": "Countries"
         },
         {
+            "name": "Public",
+            "description": "Public"
+        },
+        {
             "name": "Languages",
             "description": "Languages"
         },
@@ -90169,6 +91155,10 @@
             "description": "Summit Events (Public)"
         },
         {
+            "name": "Overflow",
+            "description": "Overflow"
+        },
+        {
             "name": "Summit Bookable Rooms",
             "description": "Summit Bookable Rooms"
         },
@@ -90299,6 +91289,10 @@
         {
             "name": "Sponsors (Public)",
             "description": "Sponsors (Public)"
+        },
+        {
+            "name": "Sponsorship Add-On Types",
+            "description": "Sponsorship Add-On Types"
         },
         {
             "name": "Summits Sponsorship Types",

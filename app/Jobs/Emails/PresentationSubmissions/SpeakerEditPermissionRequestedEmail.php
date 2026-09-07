@@ -40,7 +40,9 @@ class SpeakerEditPermissionRequestedEmail extends AbstractEmailJob
     {
         $payload = [];
         $payload[IMailTemplatesConstants::requested_by_full_name] = $request->getRequestedBy()->getFullName();
-        $payload[IMailTemplatesConstants::speaker_full_name] = $request->getSpeaker()->getFullName();
+        // self-addressed: the recipient is the speaker, so the Member name fallback bypasses the
+        // account visibility toggle (policy/profile-data-handling.md Rule 9 scope)
+        $payload[IMailTemplatesConstants::speaker_full_name] = $request->getSpeaker()->getFullName(true);
         $payload[IMailTemplatesConstants::token] = $token;
         $payload[IMailTemplatesConstants::link] = $request->getConfirmationLink($request->getSpeaker()->getId(), $token);
         $payload[IMailTemplatesConstants::tenant_name] = Config::get("app.tenant_name");

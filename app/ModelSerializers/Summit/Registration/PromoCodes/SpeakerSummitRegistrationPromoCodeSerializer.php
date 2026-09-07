@@ -64,7 +64,7 @@ class SpeakerSummitRegistrationPromoCodeSerializer
                         break;
                     case 'owner_name': {
                         if($code->hasSpeaker()){
-                            $values['owner_name'] = $code->getSpeaker()->getFullName();
+                            $values['owner_name'] = $code->getSpeaker()->getFullName(true);
                         }
                     }
                         break;

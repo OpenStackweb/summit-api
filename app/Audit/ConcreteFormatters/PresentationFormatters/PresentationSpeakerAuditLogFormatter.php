@@ -29,7 +29,7 @@ class PresentationSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
         }
 
         try {
-            $full_name = sprintf("%s %s", $subject->getFirstName() ?? 'Unknown', $subject->getLastName() ?? 'Unknown');
+            $full_name = sprintf("%s %s", $subject->getFirstName(true) ?? 'Unknown', $subject->getLastName(true) ?? 'Unknown');
             $email = $subject->getEmail() ?? 'unknown';
             $speaker_id = $subject->getId() ?? 'unknown';
 

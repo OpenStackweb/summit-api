@@ -63,7 +63,7 @@ class PresentationActivitySpeakerChangeEmail extends AbstractSummitEmailJob
         $summit = $presentation->getSummit();
 
         $payload = [];
-        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName(" ");
+        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName(true);
         $payload[IMailTemplatesConstants::speaker_email] = $speaker->getEmail();
         $payload[IMailTemplatesConstants::presentation_title] = $presentation->getTitle();
         $payload[IMailTemplatesConstants::presentation_id] = $presentation->getId();

@@ -130,7 +130,9 @@ abstract class PresentationSpeakerSelectionProcessEmail extends AbstractSummitEm
         }
 
         $speaker_email = $speaker->getEmail();
-        $speaker_full_name = $speaker->getFullName();
+        // self-addressed: the recipient is the speaker, so the Member name fallback bypasses the
+        // account visibility toggle (policy/profile-data-handling.md Rule 9 scope)
+        $speaker_full_name = $speaker->getFullName(true);
 
         // set to email if fullname is empty
         if(empty($speaker_full_name)){

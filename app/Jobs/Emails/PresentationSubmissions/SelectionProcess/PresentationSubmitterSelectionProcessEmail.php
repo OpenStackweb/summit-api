@@ -75,7 +75,7 @@ abstract class PresentationSubmitterSelectionProcessEmail extends AbstractSummit
         if(empty($submitter_full_name)){
             // check if we have a first and last name at speaker level
             if($submitter->hasSpeaker()){
-                $submitter_full_name = $submitter->getSpeaker()->getFullName();
+                $submitter_full_name = $submitter->getSpeaker()->getFullName(true);
             }
             if(empty($submitter_full_name)) {
                 // fallback to email

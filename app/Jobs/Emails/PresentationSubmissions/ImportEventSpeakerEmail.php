@@ -80,7 +80,7 @@ class ImportEventSpeakerEmail extends AbstractSummitEmailJob
         }
         $payload[IMailTemplatesConstants::reset_password_link] = sprintf("%s/auth/password/reset", $idp_base_url);
         $payload[IMailTemplatesConstants::support_email] = $support_email;
-        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName(' ');
+        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName(true);
         if(empty($payload[IMailTemplatesConstants::speaker_full_name])){
             $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getEmail();
         }

@@ -1681,6 +1681,11 @@ CSV;
         self::$em->persist(self::$member);
         self::$em->flush();
 
+        // keep the mocked token claims in sync with the drifted email, otherwise
+        // ResourceServerContext::getCurrentUser resets Member.email back to the stale
+        // claim value before the controller runs, undoing the drift this test relies on
+        self::$service->setUserEmail(self::$member->getEmail());
+
         $attendee_id = $attendee->getId();
 
         $params = [

@@ -341,39 +341,32 @@ abstract class DoctrineRepository extends EntityRepository implements IBaseRepos
     }
 
     /**
+     * With no explicit $order, pagination falls back to ORDER BY e.id ASC so paging through a
+     * filtered result set is deterministic - LIMIT/OFFSET with no ORDER BY at all lets MySQL
+     * return a different row order per page, silently skipping or repeating rows across pages.
+     * Routed through getParametrizedAllIdsByPage so every caller (8 services across the
+     * codebase) gets the same join/filter handling as before, plus this one default-order
+     * fallback - the same contract getParametrizedAllByPage below already documents.
+     *
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order
      * @return array
      */
     public function getAllIdsByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null):array {
-
-        $query  = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->distinct(true)
-            ->select("e.id")
-            ->from($this->getBaseEntity(), "e");
-
-        $query = $this->applyExtraJoins($query, $filter, $order);
-
-        $query = $this->applyExtraSelects($query, $filter, $order);
-
-        if(!is_null($filter)){
-            $filter->apply2Query($query, $this->getFilterMappings($filter));
-        }
-
-        $query = $this->applyExtraFilters($query);
-
-        if(!is_null($order)){
-            $order->apply2Query($query, $this->getOrderMappings($filter));
-        }
-
-        $query = $query
-            ->setFirstResult($paging_info->getOffset())
-            ->setMaxResults($paging_info->getPerPage());
-
-        $res = $query->getQuery()->getArrayResult();
-        return array_column($res, 'id');
+        return $this->getParametrizedAllIdsByPage(function () {
+            return $this->getEntityManager()
+                ->createQueryBuilder()
+                ->distinct(true)
+                ->select("e.id")
+                ->from($this->getBaseEntity(), "e");
+        },
+            $paging_info,
+            $filter,
+            $order,
+            function ($query) {
+                return $query->addOrderBy("e.id", 'ASC');
+            });
     }
 
     /**

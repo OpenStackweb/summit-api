@@ -28,9 +28,15 @@ class AuditEventListener
 {
     private const ROUTE_METHOD_SEPARATOR = '|';
     private $em;
+
+    protected function shouldSkipInTest(): bool
+    {
+        return app()->environment('testing');
+    }
+
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
-        if (app()->environment('testing')) {
+        if ($this->shouldSkipInTest()) {
             return;
         }
         $this->em = $eventArgs->getObjectManager();
@@ -83,7 +89,7 @@ class AuditEventListener
     /**
      * Get the appropriate audit strategy based on environment configuration
      */
-    private function getAuditStrategy($em): ?IAuditStrategy
+    protected function getAuditStrategy($em): ?IAuditStrategy
     {
         // Check if OTLP audit is enabled
         if (config('opentelemetry.enabled', false)) {
@@ -102,7 +108,7 @@ class AuditEventListener
         return new AuditLogStrategy($em);
     }
 
-    private function buildAuditContext(): AuditContext
+    protected function buildAuditContext(): AuditContext
     {
         $resourceCtx = app(\models\oauth2\IResourceServerContext::class);
         $userExternalId = $resourceCtx->getCurrentUserId();

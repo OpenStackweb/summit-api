@@ -217,7 +217,7 @@ class SummitAttendee extends SilverstripeBaseModel
     private $tags;
 
     /**
-     * @var SummitAttendeeAnnouncementEmail[]
+     * @var \Doctrine\Common\Collections\Collection<int, SummitAttendeeAnnouncementEmail>
      */
     #[ORM\OneToMany(targetEntity: \models\summit\SummitAttendeeAnnouncementEmail::class, mappedBy: 'attendee', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private $announcement_emails;

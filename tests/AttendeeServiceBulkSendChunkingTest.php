@@ -186,9 +186,17 @@ final class AttendeeServiceBulkSendChunkingTest extends TestCase
         $this->assertArrayNotHasKey('resume_since', $chunkPayload);
     }
 
-    public function testFilterBasedSelectionResolvesRealMatchingAttendeesAndChunks(): void
+    public function testFilterBasedSelectionSpanningSeveralPagesCoversEveryMatchedIdExactlyOnce(): void
     {
+        // The filter-based path is the only one summit-admin drives (it always sends filter[],
+        // never attendees_ids). Force the id-resolution loop's DB page size down to 1 so it must
+        // span several pages even over the fixture's small attendee count - a page that is
+        // skipped, re-read, or overwritten instead of merged breaks the exact-set assertion
+        // below. This is what exercises Task 1's ordering fix end-to-end: without a deterministic
+        // ORDER BY, a 1-row-per-page scan is exactly where duplicate/missing rows would surface.
         Queue::fake();
+        Config::set('emails.attendees_process_db_chunk_size', 1);
+
         $payload = $this->basePayload();
         // no attendees_ids - triggers the paginated getAllIdsByPage path
 
@@ -209,7 +217,8 @@ final class AttendeeServiceBulkSendChunkingTest extends TestCase
         }
         sort($expected);
 
-        $this->assertSame($expected, $ids, 'every fixture attendee must be covered exactly once');
+        $this->assertGreaterThanOrEqual(2, count($expected), 'fixture must seed at least 2 attendees for a 1-per-page scan to span pages');
+        $this->assertSame($expected, $ids, 'every fixture attendee must be covered exactly once, with no id skipped or repeated across pages');
     }
 
     public function testOneChunkFailingAllFallbackTiersDoesNotAbortSiblingChunks(): void

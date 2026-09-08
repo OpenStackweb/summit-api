@@ -610,7 +610,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     public function triggerSend(Summit $summit, array $payload, $filter = null): void
     {
         $process_db_chunk_size = intval(Config::get('emails.attendees_process_db_chunk_size', 2000));
-        $process_job_chunk_size = intval(Config::get('emails.attendees_process_job_chunk_size', 2000));
+        $process_job_chunk_size = intval(Config::get('emails.attendees_process_job_chunk_size', 200));
 
         Log::debug
         (

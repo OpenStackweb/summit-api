@@ -205,6 +205,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $announcement_summit_emails;
 
     /**
+     * @param bool $override_permission
      * @return string|null
      */
     public function getFirstName(bool $override_permission=false):?string

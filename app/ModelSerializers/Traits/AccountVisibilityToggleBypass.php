@@ -22,8 +22,12 @@ use models\summit\PresentationSpeaker;
  * edit-permission request on someone else's profile, an attendee whose ticket carries a speaker's
  * promo code - must see exactly what a Public caller sees.
  *
- * Shared by every serializer that renders that fallback so the caller-identity rule is resolved
- * in exactly one place. Requires the using class to expose $this->resource_server_context
+ * Shared by every serializer that has to resolve the caller at request time, so that rule lives
+ * in exactly one place. Serializers that are only ever reached through an admin-tooling endpoint
+ * (the admin / track-chair CSV exports: AdminPresentationCSVSerializer,
+ * TrackChairPresentationCSVSerializer, the Speakers*PromoCodeCSVSerializer pair) do not use it and
+ * hardcode getFullName(true) instead - track chairs count as admin tooling for those exports by
+ * decision, see 6cb6647f1. Requires the using class to expose $this->resource_server_context
  * (AbstractSerializer does).
  *
  * @package App\ModelSerializers\Traits

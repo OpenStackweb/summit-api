@@ -212,8 +212,11 @@ final class PresentationSubmissionReopenService
                     $add($submitter->getEmail(), $submitter->getFullName(), sprintf('submitter (member %s)', $submitter->getId()));
                 }
 
+                // self-addressed: each name is mailed to that same speaker's own address, so the
+                // Member name fallback bypasses the account visibility toggle
+                // (policy/profile-data-handling.md Rule 9 scope)
                 foreach ($speaker_ids as $id)
-                    $add($allowed[$id]->getEmail(), $allowed[$id]->getFullName(), sprintf('%s %s', $roles[$id], $id));
+                    $add($allowed[$id]->getEmail(), $allowed[$id]->getFullName(true), sprintf('%s %s', $roles[$id], $id));
 
                 if (empty($recipients))
                     throw new ValidationException("None of the selected recipients has an email address.");

@@ -773,6 +773,37 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         if (!$attendee instanceof SummitAttendee)
                             return;
 
+                        // getByIdExclusiveLock is a bare find() by primary key, and nothing upstream
+                        // (route middleware, CurrentSummitFinderStrategy) checks that an explicit
+                        // attendees_ids entry belongs to the summit this send was requested for.
+                        // Skip before any side effect: the email would go out under the wrong
+                        // summit's context and the sent-proof would be stamped with its id.
+                        if ($attendee->getSummitId() !== $summit->getId()) {
+                            Log::warning
+                            (
+                                sprintf
+                                (
+                                    "AttendeeService::send attendee %s belongs to summit %s, not to requested summit %s, skipped",
+                                    $attendee_id,
+                                    $attendee->getSummitId(),
+                                    $summit->getId()
+                                )
+                            );
+                            if (!is_null($onDispatchError)) {
+                                $onDispatchError
+                                (
+                                    sprintf
+                                    (
+                                        "Attendee %s (%s) does not belong to summit %s, skipped.",
+                                        $attendee->getEmail(),
+                                        $attendee_id,
+                                        $summit->getId()
+                                    )
+                                );
+                            }
+                            return;
+                        }
+
                         $emailActionsStrategyFactory = new EmailActionsStrategyFactory();
                         $strategy = $emailActionsStrategyFactory->build($summit, $flow_event);
                         if ($strategy != null) {

@@ -204,6 +204,38 @@ final class AttendeeServiceResumeSendEmailsTest extends TestCase
         $this->assertCount(0, $errorLines, 'a resumed run that only skipped an already-reached attendee must report no errors');
     }
 
+    /**
+     * send() loads each id with getByIdExclusiveLock, a bare find() by primary key. An explicit
+     * attendees_ids payload can therefore name an attendee of a different summit than the one
+     * the request was made for; nothing upstream (route middleware, CurrentSummitFinderStrategy)
+     * checks that. The attendee must be skipped before any side effect: no email dispatched, no
+     * sent-proof written (it would be stamped with the requesting summit's id), and the operator's
+     * excerpt must carry exactly one ERROR line naming the attendee.
+     */
+    public function testSendSkipsAnAttendeeThatDoesNotBelongToTheRequestedSummit(): void
+    {
+        Queue::fake();
+
+        $attendee = self::$summit->getAttendees()->first();
+        $attendee_id = $attendee->getId();
+        $this->assertNotSame(self::$summit->getId(), self::$summit2->getId(), 'fixture must provide a second, distinct summit');
+
+        $this->service()->send(self::$summit2->getId(), [
+            'email_flow_event' => GenericSummitAttendeeEmail::EVENT_SLUG,
+            'attendees_ids'    => [$attendee_id],
+        ]);
+
+        Queue::assertNotPushed(GenericSummitAttendeeEmail::class);
+        $this->assertSame(0, $this->proofCount($attendee_id, GenericSummitAttendeeEmail::EVENT_SLUG), 'no sent-proof may be written for an attendee of another summit');
+
+        $errorLines = array_values(array_filter(
+            EmailExcerpt::getReport(),
+            fn($line) => ($line['type'] ?? null) === IEmailExcerptService::ErrorType
+        ));
+        $this->assertCount(1, $errorLines, 'the excerpt must carry exactly one ERROR line for the foreign attendee');
+        $this->assertStringContainsString(sprintf('(%s)', $attendee_id), $errorLines[0]['message'], 'the ERROR line must name the skipped attendee');
+    }
+
     public function testResumedRunStillProcessesAttendeeWithProofBeforeDispatch(): void
     {
         Queue::fake();

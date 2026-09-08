@@ -31,7 +31,7 @@ class SpeakerRegistrationRequestAuditLogFormatter extends AbstractAuditLogFormat
         try {
             $email = $subject->getEmail() ?? 'unknown';
             $speaker = $subject->getSpeaker();
-            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName() ?? '', $speaker->getLastName() ?? '') : 'Unknown';
+            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName(true) ?? '', $speaker->getLastName(true) ?? '') : 'Unknown';
             $speaker_name = trim($speaker_name) ?: 'Unknown';
             $is_confirmed = $subject->isConfirmed();
 

@@ -639,15 +639,16 @@ final class SpeakerService
             $speaker_id = intval($data['bio']);
             $speaker_to->setBio($speaker_id == $speaker_from->getId() ? $speaker_from->getBio() : $speaker_to->getBio());
 
-            // first_name
+            // first_name / last_name: admin tooling, out of scope of the account visibility toggle
+            // (policy/profile-data-handling.md Sec 2) - persist the Member fallback the admin picked
             if (!isset($data['first_name'])) throw new ValidationException("first_name field is required");
             $speaker_id = intval($data['first_name']);
-            $speaker_to->setFirstName($speaker_id == $speaker_from->getId() ? $speaker_from->getFirstName() : $speaker_to->getFirstName());
+            $speaker_to->setFirstName($speaker_id == $speaker_from->getId() ? $speaker_from->getFirstName(true) : $speaker_to->getFirstName(true));
 
             // last_name
             if (!isset($data['last_name'])) throw new ValidationException("last_name field is required");
             $speaker_id = intval($data['last_name']);
-            $speaker_to->setLastName($speaker_id == $speaker_from->getId() ? $speaker_from->getLastName() : $speaker_to->getLastName());
+            $speaker_to->setLastName($speaker_id == $speaker_from->getId() ? $speaker_from->getLastName(true) : $speaker_to->getLastName(true));
 
             // title
             if (!isset($data['title'])) throw new ValidationException("title field is required");

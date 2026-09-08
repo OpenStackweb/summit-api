@@ -30,7 +30,7 @@ class SpeakerAssistanceAuditLogFormatter extends AbstractAuditLogFormatter
 
         try {
             $speaker = $subject->getSpeaker();
-            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName() ?? '', $speaker->getLastName() ?? '') : 'Unknown';
+            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName(true) ?? '', $speaker->getLastName(true) ?? '') : 'Unknown';
             $speaker_email = $speaker ? ($speaker->getEmail() ?? 'unknown') : 'unknown';
             $speaker_name = trim($speaker_name) ?: $speaker_email;
             $speaker_id = $speaker ? ($speaker->getId() ?? 'unknown') : 'unknown';

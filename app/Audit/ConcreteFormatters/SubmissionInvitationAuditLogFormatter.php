@@ -35,7 +35,7 @@ class SubmissionInvitationAuditLogFormatter extends AbstractAuditLogFormatter
             $full_name = trim(sprintf("%s %s", $first_name, $last_name)) ?: 'Unknown';
             $is_sent = $subject->isSent();
             $speaker = $subject->getSpeaker();
-            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName() ?? '', $speaker->getLastName() ?? '') : 'None';
+            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName(true) ?? '', $speaker->getLastName(true) ?? '') : 'None';
             $speaker_name = trim($speaker_name) ?: 'None';
             $id = $subject->getId() ?? 'unknown';
 

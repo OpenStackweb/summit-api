@@ -41,6 +41,9 @@ class SpeakerEditPermissionApprovedEmail extends AbstractEmailJob
     {
         $payload = [];
         $payload[IMailTemplatesConstants::requested_by_full_name] = $request->getRequestedBy()->getFullName();
+        // the recipient is the requester (a non-admin third party), so the speaker's Member name
+        // fallback must honor the account visibility toggle (policy/profile-data-handling.md
+        // Rule 9). Deliberately NOT passing override_permission.
         $payload[IMailTemplatesConstants::speaker_full_name] = $request->getSpeaker()->getFullName();
         $payload[IMailTemplatesConstants::speaker_management_link] = EmailUtils::getSpeakerManagementLink();
         $payload[IMailTemplatesConstants::tenant_name] = Config::get("app.tenant_name");

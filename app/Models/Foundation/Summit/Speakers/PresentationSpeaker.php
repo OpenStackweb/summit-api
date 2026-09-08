@@ -205,12 +205,13 @@ class PresentationSpeaker extends SilverstripeBaseModel
     private $announcement_summit_emails;
 
     /**
+     * @param bool $override_permission
      * @return string|null
      */
-    public function getFirstName():?string
+    public function getFirstName(bool $override_permission=false):?string
     {
         $res = $this->first_name;
-        if(empty($res) && $this->hasMember()){
+        if(empty($res) && ($this->isPublicProfileShowFullname() || $override_permission) && $this->hasMember()){
             $res = $this->member->getFirstName();
         }
         return $res;
@@ -225,12 +226,13 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
+     * @param bool $override_permission
      * @return string|null
      */
-    public function getLastName():?string
+    public function getLastName(bool $override_permission=false):?string
     {
         $res = $this->last_name;
-        if(empty($res) && $this->hasMember()){
+        if(empty($res) && ($this->isPublicProfileShowFullname() || $override_permission) && $this->hasMember()){
             $res = $this->member->getLastName();
         }
         return $res;
@@ -1792,16 +1794,17 @@ class PresentationSpeaker extends SilverstripeBaseModel
     }
 
     /**
-     * @return string
+     * @param bool $override_permission
+     * @return string|null
      */
-    public function getFullName(): ?string
+    public function getFullName(bool $override_permission=false): ?string
     {
         $fullname = $this->first_name;
         if (!empty($this->last_name)) {
             if (!empty($fullname)) $fullname .= ' ';
             $fullname .= $this->last_name;
         }
-        if (empty($fullname) && $this->hasMember()) {
+        if (empty($fullname) && ($this->isPublicProfileShowFullname() || $override_permission) && $this->hasMember()) {
             $fullname = $this->member->getFullName();
         }
 
@@ -2356,9 +2359,10 @@ SQL;
     }
 
     /**
+     * @param bool $override_permission
      * @return string|null
      */
-    public function getBigProfilePhotoUrl(): ?string
+    public function getBigProfilePhotoUrl(bool $override_permission = false): ?string
     {
         $default_pic = Config::get("app.default_profile_image", null);
         try {
@@ -2366,7 +2370,7 @@ SQL;
             if ($this->hasBigPhoto() && $photo = $this->getBigPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
-            if (empty($photoUrl) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
+            if (empty($photoUrl) && ($this->isPublicProfileShowPhoto() || $override_permission) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
 
@@ -2381,9 +2385,10 @@ SQL;
     }
 
     /**
+     * @param bool $override_permission
      * @return string|null
      */
-    public function getProfilePhotoUrl(): ?string
+    public function getProfilePhotoUrl(bool $override_permission = false): ?string
     {
         $default_pic = Config::get("app.default_profile_image", null);
         try {
@@ -2391,7 +2396,7 @@ SQL;
             if ($this->hasPhoto() && $photo = $this->getPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
-            if (empty($photoUrl) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
+            if (empty($photoUrl) && ($this->isPublicProfileShowPhoto() || $override_permission) && $this->hasMember() && $this->member->hasPhoto() && $photo = $this->member->getPhoto()) {
                 $photoUrl = $photo->getUrl();
             }
         } catch (\Exception $ex) {

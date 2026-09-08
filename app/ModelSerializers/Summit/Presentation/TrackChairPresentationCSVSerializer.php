@@ -95,7 +95,7 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
 
         if ($presentation->hasModerator()) {
             $values['moderator_id'] = $presentation->getModerator()->getId();
-            $values['moderator_full_name'] = $presentation->getModerator()->getFullName();
+            $values['moderator_full_name'] = $presentation->getModerator()->getFullName(true);
             $values['moderator_email'] = $presentation->getModerator()->getEmail();
             $values['moderator_title'] = trim($presentation->getModerator()->getTitle());
             $values['moderator_company'] = trim($presentation->getModerator()->getCompany());
@@ -119,7 +119,7 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
 
             foreach ($presentation->getSpeakers() as $speaker) {
                 $speaker_ids[] = $speaker->getId();
-                $speaker_fullnames[] = $speaker->getFullName();
+                $speaker_fullnames[] = $speaker->getFullName(true);
                 $speaker_emails[] = $speaker->getEmail();
                 $speaker_titles[] = trim($speaker->getTitle());
                 $speaker_companies[] = trim($speaker->getCompany());
@@ -145,7 +145,7 @@ final class TrackChairPresentationCSVSerializer extends TrackChairPresentationSe
             if ($creator->hasSpeaker()) {
                 $submitter = $creator->getSpeaker();
                 $values['submitter_id'] = $submitter->getId();
-                $values['submitter_full_name'] = $submitter->getFullName();
+                $values['submitter_full_name'] = $submitter->getFullName(true);
                 $values['submitter_email'] = $submitter->getEmail();
                 $values['submitter_title'] = $submitter->getTitle();
                 $values['submitter_company'] = $submitter->getCompany();

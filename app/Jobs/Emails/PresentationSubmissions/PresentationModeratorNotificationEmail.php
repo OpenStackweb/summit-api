@@ -64,7 +64,7 @@ class PresentationModeratorNotificationEmail extends AbstractSummitEmailJob
 
         $payload = [];
 
-        $payload[IMailTemplatesConstants::speaker_full_name] = $moderator->getFullName(" ");
+        $payload[IMailTemplatesConstants::speaker_full_name] = $moderator->getFullName(true);
         $payload[IMailTemplatesConstants::speaker_email] = $moderator->getEmail();
         $payload[IMailTemplatesConstants::creator_full_name] = $creator->getFullName();
         $payload[IMailTemplatesConstants::creator_email] = $creator->getEmail();

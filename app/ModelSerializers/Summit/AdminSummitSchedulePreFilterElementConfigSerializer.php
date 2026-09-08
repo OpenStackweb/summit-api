@@ -77,8 +77,8 @@ final class AdminSummitSchedulePreFilterElementConfigSerializer extends SilverSt
                                     if(is_null($speaker)) continue;
                                     $res[] = [
                                         'id' => $speaker->getId(),
-                                        'first_name' => $speaker->getFirstName(),
-                                        'last_name' => $speaker->getLastName(),
+                                        'first_name' => $speaker->getFirstName(true),
+                                        'last_name' => $speaker->getLastName(true),
                                         'email' => $speaker->getEmail(),
                                     ];
                                 }

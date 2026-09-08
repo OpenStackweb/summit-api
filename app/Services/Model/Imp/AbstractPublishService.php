@@ -361,7 +361,7 @@ abstract class AbstractPublishService extends AbstractService
                                             $publishable_event->getSummitEventId(),
                                             $publishable_event->getStartDateNice(),
                                             $publishable_event->getEndDateNice(),
-                                            $current_speaker->getFullName(),
+                                            $current_speaker->getFullName(true),
                                             $current_speaker->getId(),
                                             $c_event->getLocationName(),
                                             $c_event->getSummitEventId(),

@@ -56,7 +56,7 @@ class SpeakerSummitRegistrationPromoCode
     public function getOwnerFullname(): string
     {
         if(!$this->hasOwner()) return '';
-        return  $this->getSpeaker()->getFullName();
+        return  $this->getSpeaker()->getFullName(true);
     }
 
     public function getOwnerEmail(): string

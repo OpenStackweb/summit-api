@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\ModelSerializers\Traits\AccountVisibilityToggleBypass;
 use libs\utils\JsonUtils;
 use models\oauth2\IResourceServerContext;
 use models\summit\PresentationSpeaker;
@@ -22,6 +23,8 @@ use models\summit\PresentationSpeaker;
  */
 abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
 {
+    use AccountVisibilityToggleBypass;
+
     protected static $array_mappings = [
         'FirstName' => 'first_name:json_string',
         'LastName' => 'last_name:json_string',
@@ -82,23 +85,6 @@ abstract class PresentationSpeakerBaseSerializer extends SilverStripeSerializer
         if (!$speaker instanceof PresentationSpeaker) return [];
 
         $values = parent::serialize($expand, $fields, $relations, $params);
-
-        if (
-            (empty($values['first_name']) || empty($values['last_name']))
-            && in_array('first_name', $fields) && in_array('last_name', $fields)
-        ) {
-
-            $first_name = '';
-            $last_name = '';
-            if ($speaker->hasMember()) {
-                $member = $speaker->getMember();
-                $first_name = $member->getFirstName();
-                $last_name = $member->getLastName();
-            }
-            $values['first_name'] = $first_name;
-            $values['last_name'] = $last_name;
-        }
-
 
         if(in_array("email", $fields)) {
             $application_type = $this->resource_server_context->getApplicationType();

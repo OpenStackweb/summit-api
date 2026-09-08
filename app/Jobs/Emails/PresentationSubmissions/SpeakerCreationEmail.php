@@ -52,7 +52,7 @@ class SpeakerCreationEmail extends AbstractEmailJob
             throw new \InvalidArgumentException('cfp.support_email is null.');
 
         $payload = [];
-        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName();
+        $payload[IMailTemplatesConstants::speaker_full_name] = $speaker->getFullName(true);
         $payload[IMailTemplatesConstants::speaker_email] = $speaker->getEmail();
         $payload[IMailTemplatesConstants::speaker_management_link] = $speaker_management_base_url;
         $bio_edit_link = sprintf("%s/app/profile", $speaker_management_base_url);

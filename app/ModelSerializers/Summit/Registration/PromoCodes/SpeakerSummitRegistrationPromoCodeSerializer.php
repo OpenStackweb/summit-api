@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\ModelSerializers\Traits\AccountVisibilityToggleBypass;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\summit\SpeakerSummitRegistrationPromoCode;
 /**
@@ -21,6 +22,8 @@ use models\summit\SpeakerSummitRegistrationPromoCode;
 class SpeakerSummitRegistrationPromoCodeSerializer
     extends SummitRegistrationPromoCodeSerializer
 {
+    use AccountVisibilityToggleBypass;
+
     protected static $array_mappings = [
         'Type'      => 'type:json_string',
         'SpeakerId' => 'speaker_id:json_int',
@@ -64,7 +67,11 @@ class SpeakerSummitRegistrationPromoCodeSerializer
                         break;
                     case 'owner_name': {
                         if($code->hasSpeaker()){
-                            $values['owner_name'] = $code->getSpeaker()->getFullName();
+                            // admin tooling or the owner themself may bypass the account
+                            // visibility toggle on the Member name fallback; anyone else who
+                            // reaches this serializer indirectly must not (policy Rule 9)
+                            $speaker = $code->getSpeaker();
+                            $values['owner_name'] = $speaker->getFullName($this->canBypassAccountVisibilityToggle($speaker));
                         }
                     }
                         break;

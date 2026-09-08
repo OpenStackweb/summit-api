@@ -39,7 +39,7 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
         'summit_assistance',
         'registration_code',
     ];
-    
+
     protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
         return $values;
     }
@@ -63,6 +63,23 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
 
         $values          = parent::serialize($expand, $fields, $relations, $params);
         $summit          = isset($params['summit'])? $params['summit']:null;
+        $bypass_toggle   = $this->canBypassAccountVisibilityToggle($speaker);
+
+        if(in_array('first_name', $fields)) {
+            $values['first_name'] = $speaker->getFirstName($bypass_toggle);
+        }
+
+        if(in_array('last_name', $fields)) {
+            $values['last_name'] = $speaker->getLastName($bypass_toggle);
+        }
+
+        if(in_array('pic', $fields)) {
+            $values['pic'] = $speaker->getProfilePhotoUrl($bypass_toggle);
+        }
+
+        if(in_array('big_pic', $fields)) {
+            $values['big_pic'] = $speaker->getBigProfilePhotoUrl($bypass_toggle);
+        }
 
         if(in_array("email", $fields)) {
             $application_type = $this->resource_server_context->getApplicationType();

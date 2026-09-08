@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSubmissionReopenedEmail;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
@@ -1114,6 +1115,31 @@ class PresentationReopenApiTest extends ProtectedApiTestCase
         $this->assertEquals(1, $body['recipients']);
         $this->assertEquals(1, $body['skipped']);
         Queue::assertPushed(PresentationSubmissionReopenedEmail::class, 1);
+    }
+
+    /**
+     * Policy Rule 9 scope: the reopen notification is mailed to the speaker's own address, so a
+     * speaker with no name of their own must still be greeted by the linked Member's name even
+     * when that Member's public_profile_show_fullname toggle is off. speakerWithEmail() builds
+     * exactly that fixture: the name lives on the Member only.
+     */
+    public function testNotifyGreetsASpeakerRelyingOnTheMemberNameFallbackEvenWithTheToggleOff()
+    {
+        Queue::fake();
+        $this->grantWindow(24);
+        $speaker = $this->speakerWithEmail("Ada", "Lovelace");
+        $speaker->getMember()->setPublicProfileShowFullname(false);
+        self::$presentation->addSpeaker($speaker);
+        self::$em->flush();
+
+        $response = $this->notify(['speaker_ids' => [$speaker->getId()]]);
+
+        $this->assertResponseStatus(200);
+        Queue::assertPushed(PresentationSubmissionReopenedEmail::class, function (PresentationSubmissionReopenedEmail $job) {
+            $prop = new \ReflectionProperty($job, 'payload');
+            $prop->setAccessible(true);
+            return $prop->getValue($job)[IMailTemplatesConstants::full_name] === 'Ada Lovelace';
+        });
     }
 
     public function testNotifyRejectsASpeakerIdNotOnThisPresentationAndQueuesNothing()

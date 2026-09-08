@@ -132,7 +132,7 @@ class EntityUpdateAuditLogFormatter extends AbstractAuditLogFormatter
                     });
                 } else if ($old_value instanceof PresentationSpeaker || $new_value instanceof PresentationSpeaker) {
                     $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {
-                        return " \"{$value->getFullName()} ({$value->getEmail()})\" ";
+                        return " \"{$value->getFullName(true)} ({$value->getEmail()})\" ";
                     });
                 } else if ($old_value instanceof File || $new_value instanceof File) {
                     $res[] = self::formatEntity($class_name, $prop_name, $old_value, $new_value, function ($value) {

@@ -32,7 +32,7 @@ class PresentationSpeakerSummitAssistanceConfirmationAuditLogFormatter extends A
             $id = $subject->getId() ?? 'unknown';
             
             $speaker = $subject->getSpeaker();
-            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName() ?? '', $speaker->getLastName() ?? '') : 'Unknown Speaker';
+            $speaker_name = $speaker ? sprintf("%s %s", $speaker->getFirstName(true) ?? '', $speaker->getLastName(true) ?? '') : 'Unknown Speaker';
             $speaker_email = $speaker ? ($speaker->getEmail() ?? 'unknown') : 'unknown';
             $speaker_name = trim($speaker_name) ?: $speaker_email;
             

@@ -56,6 +56,11 @@ final class SpeakerPresentationEmailSerializer extends SilverStripeSerializer
             ];
         }
 
+        // Co-speaker / moderator names below are rendered to non-admin recipients (the submitter
+        // and the other speakers of this presentation), so the Member name fallback must honor the
+        // account visibility toggle here (policy/profile-data-handling.md Rule 9), exactly as the
+        // CFP portal's public serializer does for the same speaker (Rule 5). Deliberately NOT
+        // passing override_permission to getFullName().
         $speakers = [];
         foreach ($presentation->getSpeakers() as $speaker){
             $speakers[] = [

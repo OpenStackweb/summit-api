@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Jobs\Emails\Traits\ResumableChunkJob;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,6 +20,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use models\summit\Summit;
+use services\model\IAttendeeEmailFilterFields;
 use utils\FilterParser;
 /**
  * Class ProcessAttendeesEmailRequestJob
@@ -26,11 +28,10 @@ use utils\FilterParser;
  */
 final class ProcessAttendeesEmailRequestJob implements ShouldQueue
 {
-    public $timeout = 0;
-
-    public $tries = 1;
-
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    // $timeout/$tries/$backoff and the resume-on-retry mechanics come from ResumableChunkJob -
+    // see that trait's doc comment for why timeout must stay below every retry_after / worker
+    // --timeout this job can run under.
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ResumableChunkJob;
 
     private $summit_id;
 
@@ -63,42 +64,13 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
             )
         );
 
-        $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, [
-            'id' => ['=='],
-            'not_id' => ['=='],
-            'first_name' => ['=@', '=='],
-            'last_name' => ['=@', '=='],
-            'full_name' => ['=@', '=='],
-            'company' => ['=@', '=='],
-            'has_company' => ['=='],
-            'email' => ['=@', '=='],
-            'external_order_id' => ['=@', '=='],
-            'external_attendee_id' => ['=@', '=='],
-            'member_id' => ['==', '>'],
-            'ticket_type' => ['=@', '==', '@@'],
-            'ticket_type_id' => ['=='],
-            'badge_type' => ['=@', '==', '@@'],
-            'badge_type_id' => ['=='],
-            'features' => ['=@', '==', '@@'],
-            'features_id' => ['=='],
-            'access_levels' => ['=@', '==', '@@'],
-            'access_levels_id' => ['=='],
-            'status' => ['=@', '=='],
-            'has_member' => ['=='],
-            'has_tickets' => ['=='],
-            'has_virtual_checkin' => ['=='],
-            'has_checkin' => ['=='],
-            'tickets_count' => ['==', '>=', '<=', '>', '<'],
-            'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
-            'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
-            'presentation_votes_track_group_id' => ['=='],
-            'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
-            'tags' => ['=@', '==', '@@'],
-            'tags_id' => ['=='],
-            'notes' => ['=@', '@@'],
-            'has_notes' => ['=='],
-            'has_manager' => ['==']
-        ]) : null;
+        // ResumableChunkJob::activateResumeIfRetrying(): resume, not resend. On a retry it sets
+        // resume_since = dispatched_at in $this->payload so AttendeeService::send skips only the
+        // attendees (or, for the ticket flow event, attendee+ticket pairs) whose proof for this
+        // run was written by THIS run.
+        $this->activateResumeIfRetrying();
+
+        $filter = !is_null($this->filter) ? FilterParser::parse($this->filter, IAttendeeEmailFilterFields::OPERATORS) : null;
 
         $service->send($this->summit_id, $this->payload, $filter);
     }

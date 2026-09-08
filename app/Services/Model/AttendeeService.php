@@ -14,12 +14,14 @@
 
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Jobs\Emails\Registration\Attendees\SummitAttendeeExcerptEmail;
+use App\Jobs\Utils\JobDispatcher;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory;
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use App\Utils\AES;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -42,8 +44,10 @@ use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeNote;
 use models\summit\SummitAttendeeTicket;
 use services\apis\IEventbriteAPI;
+use services\model\IAttendeeEmailFilterFields;
 use utils\Filter;
 use utils\FilterElement;
+use utils\FilterParser;
 use utils\PagingInfo;
 
 /**
@@ -605,7 +609,111 @@ final class AttendeeService extends AbstractService implements IAttendeeService
      */
     public function triggerSend(Summit $summit, array $payload, $filter = null): void
     {
-        ProcessAttendeesEmailRequestJob::dispatch($summit, $payload, $filter);
+        $process_db_chunk_size = intval(Config::get('emails.attendees_process_db_chunk_size', 2000));
+        $process_job_chunk_size = intval(Config::get('emails.attendees_process_job_chunk_size', 2000));
+
+        Log::debug
+        (
+            sprintf
+            (
+                "AttendeeService::triggerSend summit %s email_flow_event %s attendees_ids_count %s has_filter %s process_db_chunk_size %s process_job_chunk_size %s",
+                $summit->getId(),
+                $payload['email_flow_event'] ?? '',
+                isset($payload['attendees_ids']) ? count($payload['attendees_ids']) : 0,
+                !is_null($filter) ? 'yes' : 'no',
+                $process_db_chunk_size,
+                $process_job_chunk_size
+            )
+        );
+
+        if (isset($payload['attendees_ids'])) {
+            $ids = $payload['attendees_ids'];
+        } else {
+            $parsedFilter = !is_null($filter) ? FilterParser::parse($filter, IAttendeeEmailFilterFields::OPERATORS) : new Filter();
+            if (!$parsedFilter->hasFilter("summit_id"))
+                $parsedFilter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+            $ids = [];
+            $page = 1;
+            do {
+                $currentPage = $this->tx_service->transaction(function () use ($page, $parsedFilter, $process_db_chunk_size) {
+                    return $this->attendee_repository->getAllIdsByPage(new PagingInfo($page, $process_db_chunk_size), $parsedFilter);
+                });
+                $ids = array_merge($ids, $currentPage);
+                $page++;
+            } while (count($currentPage) > 0);
+        }
+
+        if (isset($payload['excluded_attendees_ids'])) {
+            $ids = array_diff($ids, $payload['excluded_attendees_ids']);
+        }
+
+        $ids = array_values(array_unique($ids));
+
+        if (empty($ids)) {
+            Log::debug(sprintf("AttendeeService::triggerSend summit %s no attendees matched, nothing dispatched", $summit->getId()));
+            return;
+        }
+
+        Log::debug(sprintf("AttendeeService::triggerSend got %s attendees to process", count($ids)));
+
+        // JobDispatcher, not ::dispatch(): a queue-backend failure part-way through this loop
+        // would otherwise abort the request with some chunks already queued and the rest lost,
+        // and an operator retry would re-email the chunks that already went out. withDbFallback()
+        // fails over to the database queue (and runs sync on a double failure) so the loop
+        // completes. Same pattern as SpeakerService::triggerSendEmails.
+        // Stamped once per run (not per chunk) so every chunk's resume check, if the chunk is
+        // ever retried, compares against the same instant this run started.
+        $dispatched_at = time();
+        $chunk_nbr = 1;
+        foreach (array_chunk($ids, $process_job_chunk_size) as $chunk) {
+            $chunkPayload = $payload;
+            $chunkPayload['attendees_ids'] = $chunk;
+            $chunkPayload['dispatched_at'] = $dispatched_at;
+            unset($chunkPayload['excluded_attendees_ids']);
+            // resume_since is set only by ProcessAttendeesEmailRequestJob::handle() on a retry -
+            // a caller-supplied value must never reach a first-attempt chunk.
+            unset($chunkPayload['resume_since']);
+
+            Log::debug
+            (
+                sprintf
+                (
+                    "AttendeeService::triggerSend sending summit id %s chunk %s attendees count %s",
+                    $summit->getId(),
+                    $chunk_nbr,
+                    count($chunk)
+                )
+            );
+
+            try {
+                JobDispatcher::withDbFallback(
+                    job: new ProcessAttendeesEmailRequestJob($summit, $chunkPayload, $filter),
+                    logContext: ['summit_id' => $summit->getId(), 'attendee_count' => count($chunk)],
+                    primaryConnection: Config::get('queue.default')
+                );
+                $chunk_nbr++;
+            }
+            catch (\Throwable $ex){
+                // withDbFallback already exhausted the primary connection, the database
+                // fallback, and a synchronous run - reaching here means all three failed for
+                // this chunk. Log at error (not warning) so it surfaces to alerting; keep the
+                // loop going so a bad chunk doesn't also block every sibling chunk that would
+                // otherwise succeed.
+                Log::error
+                (
+                    sprintf
+                    (
+                        "AttendeeService::triggerSend summit %s: chunk of %s attendee(s) failed every dispatch tier (%s: %s). Unprocessed attendee ids: [%s]",
+                        $summit->getId(),
+                        count($chunk),
+                        get_class($ex),
+                        $ex->getMessage(),
+                        implode(', ', $chunk)
+                    ),
+                    ['summit_id' => $summit->getId(), 'attendee_ids' => $chunk, 'exception' => $ex]
+                );
+            }
+        }
     }
 
     use ParametrizedSendEmails;

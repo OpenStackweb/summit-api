@@ -16,5 +16,9 @@ return [
     // size of the chunk of db processing for speakers email
     'speakers_process_db_chunk_size' => env('EMAILS_SPEAKERS_PROCESS_DB_CHUNK', 500),
     // size of the chunk of job processing for speakers email
-    'speakers_process_job_chunk_size' => env('EMAILS_SPEAKERS_PROCESS_JOB_CHUNK', 200)
+    'speakers_process_job_chunk_size' => env('EMAILS_SPEAKERS_PROCESS_JOB_CHUNK', 200),
+    // size of the chunk of db processing for attendees email
+    'attendees_process_db_chunk_size' => env('EMAILS_ATTENDEES_PROCESS_DB_CHUNK', 2000),
+    // size of the chunk of job processing for attendees email
+    'attendees_process_job_chunk_size' => env('EMAILS_ATTENDEES_PROCESS_JOB_CHUNK', 200)
 ];

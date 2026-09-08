@@ -639,8 +639,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 $announcement_email_config,
                 $filter,
                 $onDispatchSuccess,
+                $onDispatchInfo,
                 $onDispatchError) use ($payload) {
                 try {
+                    $resume_since = $payload['resume_since'] ?? null;
                     $this->tx_service->transaction(function () use (
                         $summit,
                         $flow_event,
@@ -648,7 +650,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         $test_email_recipient,
                         $filter,
                         $onDispatchSuccess,
+                        $onDispatchInfo,
                         $onDispatchError,
+                        $resume_since,
                         $payload
                     ) {
                         Log::debug(sprintf("AttendeeService::send processing attendee id  %s", $attendee_id));
@@ -658,9 +662,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                             return;
 
                         $emailActionsStrategyFactory = new EmailActionsStrategyFactory();
-                        $strategy = $emailActionsStrategyFactory->build($flow_event);
+                        $strategy = $emailActionsStrategyFactory->build($summit, $flow_event);
                         if ($strategy != null) {
-                            $strategy->process($attendee, $test_email_recipient, $onDispatchSuccess, $onDispatchError);
+                            $strategy->process($attendee, $test_email_recipient, $onDispatchSuccess, $onDispatchInfo, $onDispatchError, $resume_since);
                         }
                     });
                 } catch (\Exception $ex) {

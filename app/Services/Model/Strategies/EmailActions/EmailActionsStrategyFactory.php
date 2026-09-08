@@ -17,6 +17,7 @@ use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
+use models\summit\Summit;
 
 /**
  * Class IEmailActionsStrategyFactory
@@ -25,20 +26,21 @@ use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 final class EmailActionsStrategyFactory implements IEmailActionsStrategyFactory
 {
     /**
+     * @param Summit $summit
      * @param String $flow_event
      * @return AbstractEmailAction|null
      */
-    public function build(String $flow_event): ?AbstractEmailAction {
+    public function build(Summit $summit, String $flow_event): ?AbstractEmailAction {
         switch ($flow_event) {
             case SummitAttendeeTicketRegenerateHashEmail::EVENT_SLUG:
             case InviteAttendeeTicketEditionMail::EVENT_SLUG:
-                return new SummitAttendeeTicketEmailStrategy($flow_event);
+                return new SummitAttendeeTicketEmailStrategy($summit, $flow_event);
             case SummitAttendeeAllTicketsEditionEmail::EVENT_SLUG:
-                return new SummitAttendeeAllCurrentTicketsEmailStrategy($flow_event);
+                return new SummitAttendeeAllCurrentTicketsEmailStrategy($summit, $flow_event);
             case SummitAttendeeRegistrationIncompleteReminderEmail::EVENT_SLUG:
-                return new SummitAttendeeRegistrationIncompleteReminderStrategy($flow_event);
+                return new SummitAttendeeRegistrationIncompleteReminderStrategy($summit, $flow_event);
             case GenericSummitAttendeeEmail::EVENT_SLUG:
-                return new SummitAttendeeGenericEmailStrategy($flow_event);
+                return new SummitAttendeeGenericEmailStrategy($summit, $flow_event);
             default:
                 return null;
         }

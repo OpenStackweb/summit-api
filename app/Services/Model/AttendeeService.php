@@ -746,9 +746,13 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 $test_email_recipient,
                 $announcement_email_config,
                 $filter,
+                // Positional contract with ParametrizedSendEmails::_sendEmails: it invokes
+                // processCurrentId with (success, error, info) - same order SpeakerService
+                // declares. Swapping the last two routes every resume-skip notice into the
+                // excerpt as an ERROR line and every strategy error as an INFO line.
                 $onDispatchSuccess,
-                $onDispatchInfo,
-                $onDispatchError) use ($payload) {
+                $onDispatchError,
+                $onDispatchInfo) use ($payload) {
                 try {
                     $resume_since = $payload['resume_since'] ?? null;
                     $this->tx_service->transaction(function () use (
@@ -758,8 +762,8 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                         $test_email_recipient,
                         $filter,
                         $onDispatchSuccess,
-                        $onDispatchInfo,
                         $onDispatchError,
+                        $onDispatchInfo,
                         $resume_since,
                         $payload
                     ) {

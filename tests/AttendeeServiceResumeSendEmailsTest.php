@@ -16,6 +16,8 @@ use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IAttendeeService;
+use App\Services\utils\IEmailExcerptService;
+use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\Registry;
@@ -154,6 +156,52 @@ final class AttendeeServiceResumeSendEmailsTest extends TestCase
         Queue::assertNotPushed(GenericSummitAttendeeEmail::class);
         // still exactly one proof (the pre-existing one) - the resume check did not duplicate it
         $this->assertSame(1, $this->proofCount($attendee_id, GenericSummitAttendeeEmail::EVENT_SLUG));
+    }
+
+    /**
+     * The resume-skip notice is informational: it must reach the outcome excerpt through the
+     * INFO callback, never the ERROR one. ParametrizedSendEmails::_sendEmails hands
+     * processCurrentId its callbacks positionally as (success, error, info), so a closure that
+     * declares them in a different order silently routes every skip into
+     * EmailExcerpt::addErrorMessage and the operator's report shows a wall of errors for a run
+     * that did exactly what it should.
+     */
+    public function testResumedRunReportsTheSkipAsAnInfoLineNotAnError(): void
+    {
+        Queue::fake();
+
+        $attendee = self::$summit->getAttendees()->first();
+        $attendee_id = $attendee->getId();
+        $attendee_email = $attendee->getEmail();
+
+        $dispatchedAt = time() - 600;
+
+        $this->givenAttendeeHasProof($attendee_id, GenericSummitAttendeeEmail::EVENT_SLUG, null);
+
+        $this->service()->send(self::$summit->getId(), [
+            'email_flow_event' => GenericSummitAttendeeEmail::EVENT_SLUG,
+            'attendees_ids'    => [$attendee_id],
+            'dispatched_at'    => $dispatchedAt,
+            'resume_since'     => $dispatchedAt,
+        ]);
+
+        Queue::assertNotPushed(GenericSummitAttendeeEmail::class);
+
+        $report = EmailExcerpt::getReport();
+
+        $skipLines = array_values(array_filter(
+            $report,
+            fn($line) => str_contains($line['message'] ?? '', $attendee_email)
+        ));
+        $this->assertCount(1, $skipLines, 'exactly one excerpt line must name the resume-skipped attendee');
+        $this->assertSame(
+            IEmailExcerptService::InfoType,
+            $skipLines[0]['type'],
+            'the resume-skip notice must be an INFO line, not an ERROR line'
+        );
+
+        $errorLines = array_filter($report, fn($line) => ($line['type'] ?? null) === IEmailExcerptService::ErrorType);
+        $this->assertCount(0, $errorLines, 'a resumed run that only skipped an already-reached attendee must report no errors');
     }
 
     public function testResumedRunStillProcessesAttendeeWithProofBeforeDispatch(): void

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Presentation;
+use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSpeaker;
 use utils\FilterParser;
 use models\summit\SpeakersSummitRegistrationPromoCode;
@@ -2907,4 +2908,133 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertGreaterThan(0, $data->count);
     }
 
+    // -----------------------------------------------------------------
+    // GET /api/v1/summits/{id}/speakers/all/events/count
+    // The count must describe the presentations that satisfy the request
+    // filter, not every presentation of the matched speakers.
+    // -----------------------------------------------------------------
+
+    /**
+     * P1 - defaultTrack,   defaultPresentationType,    published,   media upload of type M
+     * P2 - secondaryTrack, defaultPresentationType,    published,   no media upload
+     * P3 - defaultTrack,   allow2VotePresentationType, unpublished, no media upload
+     *
+     * The fixture speaker owns 40 other presentations, so the assertions below filter
+     * by this speaker's id to get exact counts.
+     */
+    private function seedActivitiesCountScenario(): PresentationSpeaker
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ApiActivitiesScenario');
+        $speaker->setLastName('TestSpeaker');
+        self::$em->persist($speaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+
+        $p1 = new Presentation();
+        self::$summit->addEvent($p1);
+        $p1->setTitle('Api Count P1 Published Default Track');
+        $p1->setAbstract('Abstract');
+        $p1->setCategory(self::$defaultTrack);
+        $p1->setType(self::$defaultPresentationType);
+        $p1->setProgress(Presentation::PHASE_COMPLETE);
+        $p1->setStatus(Presentation::STATUS_RECEIVED);
+        $p1->setStartDate($start);
+        $p1->setEndDate((clone $start)->add(new \DateInterval('PT2H')));
+        $p1->addSpeaker($speaker);
+        $p1->publish();
+
+        $media_upload = new PresentationMediaUpload();
+        $media_upload->setName('Api Count P1 Media Upload');
+        $media_upload->setDescription('Api Count P1 Media Upload Description');
+        $media_upload->setFilename('p1.pdf');
+        $media_upload->setMediaUploadType(self::$media_uploads_types[0]);
+        $p1->addMediaUpload($media_upload);
+
+        $p2 = new Presentation();
+        self::$summit->addEvent($p2);
+        $p2->setTitle('Api Count P2 Published Secondary Track');
+        $p2->setAbstract('Abstract');
+        $p2->setCategory(self::$secondaryTrack);
+        $p2->setType(self::$defaultPresentationType);
+        $p2->setProgress(Presentation::PHASE_COMPLETE);
+        $p2->setStatus(Presentation::STATUS_RECEIVED);
+        $p2->setStartDate($start);
+        $p2->setEndDate((clone $start)->add(new \DateInterval('PT2H')));
+        $p2->addSpeaker($speaker);
+        $p2->publish();
+
+        // allow2VotePresentationType does not allow a publishing period: no start/end dates.
+        $p3 = new Presentation();
+        self::$summit->addEvent($p3);
+        $p3->setTitle('Api Count P3 Unpublished Default Track Other Type');
+        $p3->setAbstract('Abstract');
+        $p3->setCategory(self::$defaultTrack);
+        $p3->setType(self::$allow2VotePresentationType);
+        $p3->setProgress(Presentation::PHASE_COMPLETE);
+        $p3->setStatus(Presentation::STATUS_RECEIVED);
+        $p3->addSpeaker($speaker);
+
+        self::$em->flush();
+
+        return $speaker;
+    }
+
+    private function getActivitiesCount(array $filter): int
+    {
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json",
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakersActivitiesCount",
+            ['id' => self::$summit->getId(), 'filter' => $filter],
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $data = json_decode($response->getContent());
+        $this->assertNotNull($data);
+        $this->assertTrue(isset($data->count));
+
+        return (int) $data->count;
+    }
+
+    public function testGetSpeakersActivitiesCountIsScopedByThePresentationFilters()
+    {
+        $speaker = $this->seedActivitiesCountScenario();
+        $id = 'id==' . $speaker->getId();
+
+        // no presentation-level filter: every presentation of the speaker
+        $this->assertEquals(3, $this->getActivitiesCount([$id]));
+
+        // P1 and P3 are in defaultTrack
+        $this->assertEquals(2, $this->getActivitiesCount([
+            $id, 'presentations_track_id==' . self::$defaultTrack->getId(),
+        ]));
+
+        // only P3 uses allow2VotePresentationType
+        $this->assertEquals(1, $this->getActivitiesCount([
+            $id, 'presentations_type_id==' . self::$allow2VotePresentationType->getId(),
+        ]));
+
+        // P1 and P2 are published
+        $this->assertEquals(2, $this->getActivitiesCount([
+            $id, 'has_published_presentations==true',
+        ]));
+
+        // only P1 carries a media upload of that type
+        $this->assertEquals(1, $this->getActivitiesCount([
+            $id, 'has_media_upload_with_type==' . self::$media_uploads_types[0]->getId(),
+        ]));
+
+        // only P1 is both published and in defaultTrack
+        $this->assertEquals(1, $this->getActivitiesCount([
+            $id,
+            'has_published_presentations==true',
+            'presentations_track_id==' . self::$defaultTrack->getId(),
+        ]));
+    }
 }

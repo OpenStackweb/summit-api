@@ -14,6 +14,7 @@
 
 use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
+use App\Repositories\Summit\Traits\ActivitiesCountFilterMappingsTrait;
 use App\Http\Utils\Filters\SQL\SQLInFilterMapping;
 use App\Http\Utils\Filters\SQL\SQLNotInFilterMapping;
 use App\libs\Utils\PunnyCodeHelper;
@@ -43,6 +44,8 @@ final class DoctrineMemberRepository
     extends SilverStripeDoctrineRepository
     implements IMemberRepository
 {
+    use ActivitiesCountFilterMappingsTrait;
+
     /**
      * @return string
      */
@@ -773,15 +776,20 @@ SQL,
             } while (count($chunk) === $chunkSize);
 
             // Phase 2: count distinct presentations whose creator is in the matched set.
+            // The presentation-level filters of the request scope phase 2 too: we count
+            // only the presentations that both belong to a matched submitter and satisfy
+            // the filter, so that "N Submitters | M Activities" describes one same set.
+            [$extra_filters, $bindings] = $this->buildActivitiesCountFilter($filter, $summit->getId());
+
             $sql = <<<SQL
                 SELECT COUNT(DISTINCT E.ID)
                 FROM SummitEvent E
                 INNER JOIN Presentation P ON P.ID = E.ID
                 INNER JOIN `__tmp_mbr_ids` T ON T.id = E.CreatedByID
-                WHERE E.SummitID = ?
+                WHERE E.SummitID = :summit_id{$extra_filters}
             SQL;
 
-            return (int) $conn->fetchOne($sql, [$summit->getId()]);
+            return (int) $conn->fetchOne($sql, $bindings);
         } finally {
             $conn->executeStatement('DROP TEMPORARY TABLE IF EXISTS `__tmp_mbr_ids`');
         }

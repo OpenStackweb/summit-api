@@ -14,6 +14,7 @@
 
 use App\Http\Utils\Filters\DoctrineInFilterMapping;
 use App\Http\Utils\Filters\DoctrineNotInFilterMapping;
+use App\Repositories\Summit\Traits\ActivitiesCountFilterMappingsTrait;
 use App\libs\Utils\PunnyCodeHelper;
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
@@ -41,6 +42,8 @@ final class DoctrineSpeakerRepository
     extends SilverStripeDoctrineRepository
     implements ISpeakerRepository
 {
+    use ActivitiesCountFilterMappingsTrait;
+
     /**
      * @return array
      */
@@ -862,14 +865,20 @@ SQL,
             );
             $conn->executeStatement('TRUNCATE TABLE `__tmp_pres_ids`');
 
+            // The presentation-level filters of the request scope phase 2 too: we count
+            // only the presentations that both belong to a matched speaker and satisfy
+            // the filter, so that "N Speakers | M Activities" describes one same set.
+            [$extra_filters, $bindings] = $this->buildActivitiesCountFilter($filter, $summit->getId());
+
             $conn->executeStatement(
                 'INSERT IGNORE INTO `__tmp_pres_ids` (id)
                  SELECT DISTINCT E.ID
                  FROM SummitEvent E
+                 INNER JOIN Presentation P ON P.ID = E.ID
                  INNER JOIN Presentation_Speakers PS ON PS.PresentationID = E.ID
                  INNER JOIN `__tmp_spk_ids` T ON T.id = PS.PresentationSpeakerID
-                 WHERE E.SummitID = ?',
-                [$summit->getId()]
+                 WHERE E.SummitID = :summit_id' . $extra_filters,
+                $bindings
             );
 
             $conn->executeStatement(
@@ -878,8 +887,8 @@ SQL,
                  FROM SummitEvent E
                  INNER JOIN Presentation P ON P.ID = E.ID
                  INNER JOIN `__tmp_spk_ids` T ON T.id = P.ModeratorID
-                 WHERE E.SummitID = ?',
-                [$summit->getId()]
+                 WHERE E.SummitID = :summit_id' . $extra_filters,
+                $bindings
             );
 
             return (int) $conn->fetchOne('SELECT COUNT(*) FROM `__tmp_pres_ids`');

@@ -129,6 +129,11 @@ final class SummitService
     extends AbstractPublishService implements ISummitService
 {
     /**
+     * Base wait (minutes) between attempts of a pending media upload; doubles per attempt: 5, 10, 20, 40 ...
+     */
+    const PendingMediaUploadRetryBaseMinutes = 5;
+
+    /**
      * @var ISummitEventRepository
      */
     private $event_repository;
@@ -4389,7 +4394,7 @@ final class SummitService
      * @param int $max_retries
      * @return array
      */
-    public function processPendingMediaUploads(int $max_retries = 3): array
+    public function processPendingMediaUploads(int $max_retries = 5): array
     {
         Log::debug(sprintf(
             "SummitService::processPendingMediaUploads max_retries %s",
@@ -4422,14 +4427,28 @@ final class SummitService
                 $upload_id = $pending_upload->getId();
                 Log::debug(sprintf("SummitService::processPendingMediaUploads processing upload ID %s", $upload_id));
 
+                $attempts = $pending_upload->getAttempts();
+
                 // Check retry limit
-                if ($pending_upload->getAttempts() >= $max_retries) {
+                if ($attempts >= $max_retries) {
                     $this->tx_service->transaction(function () use ($pending_upload) {
                         $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
                         $pending_upload->setErrorMessage('Max retries exceeded');
                     });
                     $stats['errors']++;
-                    Log::warning(sprintf("SummitService::processPendingMediaUploads upload ID %s exceeded max retries", $upload_id));
+                    // Permanent Error transition: error level so it survives LOG_LEVEL=error in production
+                    Log::error(sprintf("SummitService::processPendingMediaUploads upload ID %s exceeded max retries (%s), marked as Error", $upload_id, $max_retries));
+                    continue;
+                }
+
+                // Exponential backoff between attempts (5, 10, 20, 40 ... minutes since the last failed attempt)
+                if ($attempts > 0 && !self::isPendingMediaUploadRetryDue($pending_upload, $attempts)) {
+                    Log::debug(sprintf(
+                        "SummitService::processPendingMediaUploads upload ID %s skipped, backoff not elapsed (attempts %s, retry %s minutes after the last attempt)",
+                        $upload_id,
+                        $attempts,
+                        self::getPendingMediaUploadRetryDelayMinutes($attempts)
+                    ));
                     continue;
                 }
 
@@ -4529,22 +4548,30 @@ final class SummitService
                 } catch (\Exception $ex) {
                     // On failure, status remains at whatever partial state was reached
                     // Set error message and mark as ERROR only if max retries exhausted
-                    $this->tx_service->transaction(function () use ($pending_upload, $ex, $max_retries) {
+                    $attempts = $pending_upload->getAttempts();
+                    $exhausted = $attempts >= $max_retries;
+                    $this->tx_service->transaction(function () use ($pending_upload, $ex, $exhausted) {
                         $pending_upload->setErrorMessage($ex->getMessage());
-                        if ($pending_upload->getAttempts() >= $max_retries) {
+                        if ($exhausted) {
                             $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
                         }
                         // else: leave at current status (Pending, PublicStorageUploaded, or PrivateStorageUploaded) for retry
                     });
 
                     $stats['errors']++;
-                    Log::warning(sprintf(
+                    $message = sprintf(
                         "SummitService::processPendingMediaUploads upload ID %s failed (attempt %s/%s): %s",
                         $upload_id,
-                        $pending_upload->getAttempts(),
+                        $attempts,
                         $max_retries,
                         $ex->getMessage()
-                    ));
+                    );
+                    // Permanent Error transition: error level so it survives LOG_LEVEL=error in production
+                    if ($exhausted) {
+                        Log::error($message . ' - max retries exhausted, marked as Error');
+                    } else {
+                        Log::warning($message);
+                    }
                 }
             }
 
@@ -4572,5 +4599,34 @@ final class SummitService
         ));
 
         return $stats;
+    }
+
+    /**
+     * Exponential backoff between attempts of a pending media upload: a row that already failed
+     * $attempts times is due again PendingMediaUploadRetryBaseMinutes * 2^(attempts - 1) minutes
+     * after its LastEdited (the time of the last failed attempt): 5, 10, 20, 40 ...
+     * @param PendingMediaUpload $pending_upload
+     * @param int $attempts
+     * @return bool
+     */
+    private static function isPendingMediaUploadRetryDue(PendingMediaUpload $pending_upload, int $attempts): bool
+    {
+        // LastEdited is stored as DefaultTimeZone wall-clock and hydrated by Doctrine in the app
+        // timezone (UTC), so the raw getLastEdited() is off by the zone offset; getLastEditedUTC()
+        // re-interprets it correctly. Compare instants in UTC.
+        $last_edited = $pending_upload->getLastEditedUTC();
+        if (is_null($last_edited)) return true;
+        $next_retry_at = (clone $last_edited)->modify(sprintf('+%d minutes', self::getPendingMediaUploadRetryDelayMinutes($attempts)));
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        return $next_retry_at <= $now;
+    }
+
+    /**
+     * @param int $attempts failed attempts so far (>= 1)
+     * @return int minutes to wait after the last attempt: 5, 10, 20, 40 ...
+     */
+    private static function getPendingMediaUploadRetryDelayMinutes(int $attempts): int
+    {
+        return self::PendingMediaUploadRetryBaseMinutes * (2 ** max($attempts - 1, 0));
     }
 }

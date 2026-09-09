@@ -183,4 +183,29 @@ final class ProcessAttendeesEmailRequestJobFailedHookTest extends TestCase
             })
             ->once();
     }
+
+    /**
+     * FiltersParams::getFilterParam() hands the job whatever the request carried: summit-admin
+     * always sends filter[] (an array), but a direct API caller can send filter= as a bare string,
+     * which FilterParser::parse accepts by wrapping it. The redaction must accept the same shape,
+     * or the failed-chunk log silently drops the field names it exists to print.
+     */
+    public function testFailedChunkLogsFilterFieldNamesForAScalarFilterToo(): void
+    {
+        Queue::fake();
+        Log::spy();
+
+        $job = new ProcessAttendeesEmailRequestJob(self::$summit, [
+            'email_flow_event' => 'SUMMIT_REGISTRATION_GENERIC_ATTENDEE_EMAIL',
+            'attendees_ids' => [1],
+        ], 'email==someone-private@example.com');
+
+        $job->failed(new \RuntimeException('boom'));
+
+        Log::shouldHaveReceived('error')
+            ->withArgs(fn($message) => is_string($message)
+                && str_contains($message, 'filter fields ["email"]')
+                && !str_contains($message, 'someone-private@example.com'))
+            ->once();
+    }
 }

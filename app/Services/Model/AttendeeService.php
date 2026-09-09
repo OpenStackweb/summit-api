@@ -830,6 +830,11 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     });
                 } catch (\Exception $ex) {
                     Log::warning($ex);
+                    // Same as SpeakerService::send: an attendee this chunk could not process must
+                    // show in the operator's outcome excerpt as an ERROR line, not only in the log,
+                    // or a run that silently skipped an attendee reads exactly like a clean one.
+                    if (!is_null($onDispatchError))
+                        $onDispatchError($ex->getMessage());
                 }
             },
             function($summit, $outcome_email_recipient, $report){

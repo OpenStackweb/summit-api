@@ -368,4 +368,39 @@ final class AttendeeServiceResumeSendEmailsTest extends TestCase
             );
         }
     }
+
+    /**
+     * An attendee this chunk could not process must show in the operator's outcome excerpt as an
+     * ERROR line: the excerpt is the only signal the operator gets, and SpeakerService::send
+     * already reports it that way. Previously the exception was only logged, so the excerpt of a
+     * run that silently skipped an attendee read exactly like a clean one.
+     */
+    public function testAFailingAttendeeIsReportedAsAnErrorLineInTheExcerpt(): void
+    {
+        $dispatched = [];
+        $this->givenTheFirstGenericEmailDispatchFails($dispatched);
+
+        $ids = $this->fixtureAttendeeIds();
+        $this->assertGreaterThanOrEqual(2, count($ids), 'fixture must seed at least 2 attendees on the summit');
+
+        $this->service()->send(self::$summit->getId(), [
+            'email_flow_event' => GenericSummitAttendeeEmail::EVENT_SLUG,
+            'attendees_ids'    => $ids,
+        ]);
+
+        $report = EmailExcerpt::getReport();
+
+        $errorLines = array_values(array_filter(
+            $report,
+            fn($line) => ($line['type'] ?? null) === IEmailExcerptService::ErrorType
+        ));
+        $this->assertCount(1, $errorLines, 'exactly one ERROR line, for the attendee whose dispatch failed');
+        $this->assertStringContainsString(self::SimulatedDispatchFailure, $errorLines[0]['message'], 'the ERROR line must carry the failure reason');
+
+        $emailLines = array_filter(
+            $report,
+            fn($line) => ($line['type'] ?? null) === IEmailExcerptService::EmailLineType
+        );
+        $this->assertCount(count($ids) - 1, $emailLines, 'every other attendee must still be reported as sent');
+    }
 }

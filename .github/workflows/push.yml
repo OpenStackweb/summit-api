@@ -80,6 +80,8 @@ jobs:
                     # subdirectories - a file added there runs nowhere unless it is listed here.
                     - { name: "PresentationMediaUploads", filter: "tests/PresentationMediaUploadsTest.php tests/PresentationMediaUploadsVisibilityTest.php tests/PresentationSerializerCacheKeyTest.php tests/PresentationReopenModelTest.php tests/PresentationReopenApiTest.php tests/PresentationReopenAuthzTest.php tests/PresentationSubmissionReopenedEmailTest.php" }
                     - { name: "SpeakerSubmitterPublishedFilter", filter: "tests/ProcessSpeakersEmailRequestJobTest.php tests/ProcessSubmittersEmailRequestJobTest.php tests/SpeakerRepositoryTest.php tests/SubmitterRepositoryTest.php tests/SpeakerServiceOriginalFilterTest.php tests/SubmitterServiceOriginalFilterTest.php" }
+                    - { name: "SpeakerBulkEmailChunkResume", filter: "tests/SpeakerServiceBulkSendChunkingTest.php tests/SpeakerServiceResumeSendEmailsTest.php tests/ProcessSpeakersEmailRequestJobResumeTest.php tests/ProcessSpeakersEmailRequestJobFailedHookTest.php" }
+                    - { name: "AttendeeBulkEmailChunkResume", filter: "tests/AttendeeServiceBulkSendChunkingTest.php tests/AttendeeServiceResumeSendEmailsTest.php tests/ProcessAttendeesEmailRequestJobResumeTest.php tests/ProcessAttendeesEmailRequestJobFailedHookTest.php tests/SummitAttendeeAnnouncementEmailTest.php tests/DoctrineSummitAttendeeRepositoryTest.php tests/SummitExtraQuestionsMemoizationTest.php" }
                     - { name: "Repositories", filter: "tests/Repositories/" }
                     - { name: "Services", filter: "tests/Unit/Services/" }
                     - { name: "Integration", filter: "tests/Integration/" }

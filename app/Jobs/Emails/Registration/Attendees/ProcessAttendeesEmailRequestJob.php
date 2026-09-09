@@ -185,6 +185,9 @@ final class ProcessAttendeesEmailRequestJob implements ShouldQueue
         // scalar, so the redaction accepts the same shape instead of dropping the field names.
         if (!is_array($filter)) $filter = [$filter];
         $conditions = array_filter($filter, 'is_scalar');
-        return array_values(array_map(fn($condition) => preg_replace('/[=<>@!].*/', '', (string)$condition), $conditions));
+        // Cut at the first character of ANY operator FilterParser::filterExpresion recognizes
+        // (==, =@, @@, <>, <, >, <=, >=, [] range, () set) - [ and ( included, or a range/set
+        // condition's operands are logged verbatim.
+        return array_values(array_map(fn($condition) => preg_replace('/[=<>@!\[(].*/', '', (string)$condition), $conditions));
     }
 }

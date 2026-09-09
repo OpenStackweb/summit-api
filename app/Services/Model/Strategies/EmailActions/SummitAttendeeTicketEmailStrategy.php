@@ -16,6 +16,7 @@ use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
+use models\summit\Summit;
 use models\summit\SummitAttendee;
 
 /**
@@ -26,18 +27,21 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
 {
     /**
      * SummitAttendeeTicketEmailStrategy constructor.
+     * @param Summit $summit
      * @param String $flow_event
      */
-    public function __construct(String $flow_event)
+    public function __construct(Summit $summit, String $flow_event)
     {
-        parent::__construct($flow_event);
+        parent::__construct($summit, $flow_event);
     }
 
     /**
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
      * @param callable|null $onSuccess
+     * @param callable|null $onInfo
      * @param callable|null $onError
+     * @param int|null $resume_since
      * @return void
      */
     public function process
@@ -45,13 +49,39 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
         SummitAttendee $attendee,
         ?string $test_email_recipient = null,
         callable $onSuccess = null,
-        callable $onError = null
+        callable $onInfo = null,
+        callable $onError = null,
+        ?int $resume_since = null
     )
     {
+        // Captured once, before the loop, and used for every ticket's resume-check and proof -
+        // never $this->flow_event read mid-loop, which the complete-branch below transiently
+        // mutates to a different value. Sending resumes/records against the flow event the
+        // caller actually requested, not whichever mail class ended up dispatched for a given
+        // ticket.
+        $requested_flow_event = $this->flow_event;
+
         foreach ($attendee->getTickets() as $ticket) {
             try {
                 if(!$ticket->isActive()) continue;
                 if(!$ticket->isPaid()) continue;
+
+                if ($this->alreadySentSince($attendee, $resume_since, $ticket, $requested_flow_event)) {
+                    if (!is_null($onInfo)) {
+                        $onInfo
+                        (
+                            sprintf
+                            (
+                                "Attendee %s (%s) ticket %s already processed by this run before the retry, skipped.",
+                                $attendee->getEmail(),
+                                $attendee->getId(),
+                                $ticket->getId()
+                            )
+                        );
+                    }
+                    continue;
+                }
+
                 $is_complete = $attendee->isComplete();
                 $original_flow_event = $this->flow_event;
                 Log::debug
@@ -87,6 +117,7 @@ class SummitAttendeeTicketEmailStrategy extends AbstractEmailAction
                     $attendee->sendInvitationEmail($ticket, true, [], $test_email_recipient);
                 }
                 $this->flow_event = $original_flow_event;
+                $this->recordSent($attendee, $ticket, $requested_flow_event);
 
                 if (!is_null($onSuccess)) {
                     $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);

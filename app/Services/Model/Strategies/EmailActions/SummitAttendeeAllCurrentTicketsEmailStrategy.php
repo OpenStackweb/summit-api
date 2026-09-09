@@ -15,6 +15,7 @@
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Services\utils\IEmailExcerptService;
 use Illuminate\Support\Facades\Log;
+use models\summit\Summit;
 use models\summit\SummitAttendee;
 
 /**
@@ -25,18 +26,21 @@ final class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAc
 {
     /**
      * SummitAttendeeAllCurrentTicketsEmailStrategy constructor.
+     * @param Summit $summit
      * @param String $flow_event
      */
-    public function __construct(String $flow_event)
+    public function __construct(Summit $summit, string $flow_event)
     {
-        parent::__construct($flow_event);
+        parent::__construct($summit, $flow_event);
     }
 
     /**
      * @param SummitAttendee $attendee
      * @param string|null $test_email_recipient
      * @param callable|null $onSuccess
+     * @param callable|null $onInfo
      * @param callable|null $onError
+     * @param int|null $resume_since
      * @return void
      */
     public function process
@@ -44,9 +48,26 @@ final class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAc
         SummitAttendee $attendee,
         ?string $test_email_recipient = null,
         callable $onSuccess = null,
-        callable $onError = null
+        callable $onInfo = null,
+        callable $onError = null,
+        ?int $resume_since = null
     )
     {
+        if ($this->alreadySentSince($attendee, $resume_since)) {
+            if (!is_null($onInfo)) {
+                $onInfo
+                (
+                    sprintf
+                    (
+                        "Attendee %s (%s) already processed by this run before the retry, skipped.",
+                        $attendee->getEmail(),
+                        $attendee->getId()
+                    )
+                );
+            }
+            return;
+        }
+
         Log::debug
         (
             sprintf
@@ -57,6 +78,7 @@ final class SummitAttendeeAllCurrentTicketsEmailStrategy extends AbstractEmailAc
             )
         );
         SummitAttendeeAllTicketsEditionEmail::dispatch($attendee, $test_email_recipient);
+        $this->recordSent($attendee);
 
         if (!is_null($onSuccess)) {
             $onSuccess($attendee->getEmail(), IEmailExcerptService::EmailLineType, $this->flow_event);

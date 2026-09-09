@@ -48,6 +48,7 @@ use services\model\ISummitService;
 use utils\Filter;
 use utils\FilterElement;
 use Illuminate\Support\Facades\Validator;
+use services\model\IAttendeeEmailFilterFields;
 use utils\FilterParser;
 
 /**
@@ -1485,42 +1486,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $filter = null;
 
             if (Request::has('filter')) {
-                $filter = FilterParser::parse(Request::input('filter'), [
-                    'id' => ['=='],
-                    'not_id' => ['=='],
-                    'first_name' => ['=@', '=='],
-                    'last_name' => ['=@', '=='],
-                    'full_name' => ['=@', '=='],
-                    'company' => ['=@', '=='],
-                    'has_company' => ['=='],
-                    'email' => ['=@', '=='],
-                    'external_order_id' => ['=@', '=='],
-                    'external_attendee_id' => ['=@', '=='],
-                    'member_id' => ['==', '>'],
-                    'ticket_type' => ['=@', '==', '@@'],
-                    'ticket_type_id' => ['=='],
-                    'badge_type' => ['=@', '==', '@@'],
-                    'badge_type_id' => ['=='],
-                    'features' => ['=@', '==', '@@'],
-                    'features_id' => ['=='],
-                    'access_levels' => ['=@', '==', '@@'],
-                    'access_levels_id' => ['=='],
-                    'status' => ['=@', '=='],
-                    'has_member' => ['=='],
-                    'has_tickets' => ['=='],
-                    'has_virtual_checkin' => ['=='],
-                    'has_checkin' => ['=='],
-                    'tickets_count' => ['==', '>=', '<=', '>', '<'],
-                    'presentation_votes_date' => ['==', '>=', '<=', '>', '<'],
-                    'presentation_votes_count' => ['==', '>=', '<=', '>', '<'],
-                    'presentation_votes_track_group_id' => ['=='],
-                    'summit_hall_checked_in_date' => ['==', '>=', '<=', '>', '<','[]'],
-                    'tags' => ['=@', '==', '@@'],
-                    'tags_id' => ['=='],
-                    'notes' => ['=@', '@@'],
-                    'has_notes' => ['=='],
-                    'has_manager' => ['=='],
-                ]);
+                $filter = FilterParser::parse(Request::input('filter'), IAttendeeEmailFilterFields::OPERATORS);
             }
 
             if (is_null($filter))

@@ -49,6 +49,9 @@ class SpeakerServiceResumeSendEmailsTest extends ProtectedApiTestCase
     private const FLOW_EVENT = PresentationSpeakerSelectionProcessAcceptedAlternateEmail::EVENT_SLUG;
     private const EMAIL_TYPE = SpeakerAnnouncementSummitEmail::TypeAcceptedAlternate;
 
+    // max signed INT: PresentationSpeaker.ID is an auto-increment INT, so no row can carry it
+    private const MissingSpeakerId = 2147483647;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -382,5 +385,44 @@ class SpeakerServiceResumeSendEmailsTest extends ProtectedApiTestCase
             $calledWith,
             'generateSpeakerAssistance() must not run for the resume-skipped speaker - the return happens before it, same as before getPromoCode()'
         );
+    }
+
+    private function proofCount(PresentationSpeaker $speaker): int
+    {
+        return (int) self::$em->createQueryBuilder()
+            ->select('COUNT(p.id)')
+            ->from(SpeakerAnnouncementSummitEmail::class, 'p')
+            ->where('p.speaker = :speaker_id')
+            ->andWhere('p.summit = :summit_id')
+            ->andWhere('p.type = :type')
+            ->setParameter('speaker_id', $speaker->getId())
+            ->setParameter('summit_id', self::$summit->getId())
+            ->setParameter('type', self::EMAIL_TYPE)
+            ->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Regression: the per-speaker transaction built its strategy, resume check, promo code
+     * strategy and assistance with the root Summit that _sendEmails fetches once, outside the
+     * transaction. After any speaker's transaction failed - a speaker id that no longer exists
+     * throws EntityNotFoundException right there - DoctrineTransactionService cleared the
+     * EntityManager, that Summit became detached, and every later speaker's proof failed at flush
+     * ("A new entity was found through the relationship ...#summit") AFTER its email had already
+     * been dispatched, so a retried chunk re-emailed everyone processed after the failure.
+     */
+    public function testAFailingSpeakerDoesNotPreventProofRecordingForTheRestOfTheChunk(): void
+    {
+        Queue::fake();
+
+        $speaker = $this->newFixtureSpeaker('after-failure');
+        self::$em->flush();
+
+        $this->service()->sendEmails(self::$summit->getId(), [
+            'email_flow_event' => self::FLOW_EVENT,
+            'speaker_ids'      => [self::MissingSpeakerId, $speaker->getId()],
+        ], null);
+
+        $this->assertSame(1, $this->proofCount($speaker), 'the speaker processed after the failure must have exactly one proof');
+        Queue::assertPushed(PresentationSpeakerSelectionProcessAcceptedAlternateEmail::class, 1);
     }
 }

@@ -20,6 +20,7 @@ use App\Services\Apis\ExternalRegistrationFeeds\IExternalRegistrationFeedFactory
 use App\Services\Model\Imp\Traits\ParametrizedSendEmails;
 use App\Services\Model\Strategies\EmailActions\EmailActionsStrategyFactory;
 use App\Utils\AES;
+use Doctrine\DBAL\TransactionIsolationLevel;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
@@ -632,15 +633,21 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $parsedFilter = !is_null($filter) ? FilterParser::parse($filter, IAttendeeEmailFilterFields::OPERATORS) : new Filter();
             if (!$parsedFilter->hasFilter("summit_id"))
                 $parsedFilter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-            $ids = [];
-            $page = 1;
-            do {
-                $currentPage = $this->tx_service->transaction(function () use ($page, $parsedFilter, $process_db_chunk_size) {
-                    return $this->attendee_repository->getAllIdsByPage(new PagingInfo($page, $process_db_chunk_size), $parsedFilter);
-                });
-                $ids = array_merge($ids, $currentPage);
-                $page++;
-            } while (count($currentPage) > 0);
+            // One root transaction at REPEATABLE READ around the whole scan, not one per page: every
+            // LIMIT/OFFSET page then reads the same InnoDB snapshot, so an attendee that is deleted or
+            // stops matching the filter while the loop runs cannot shift later rows and silently drop
+            // one id. READ COMMITTED (the transaction service default) takes a fresh snapshot per
+            // statement and would leave that cross-page drift in place. Reads only - no locks held.
+            $ids = $this->tx_service->transaction(function () use ($parsedFilter, $process_db_chunk_size) {
+                $ids = [];
+                $page = 1;
+                do {
+                    $currentPage = $this->attendee_repository->getAllIdsByPage(new PagingInfo($page, $process_db_chunk_size), $parsedFilter);
+                    $ids = array_merge($ids, $currentPage);
+                    $page++;
+                } while (count($currentPage) > 0);
+                return $ids;
+            }, TransactionIsolationLevel::REPEATABLE_READ);
         }
 
         if (isset($payload['excluded_attendees_ids'])) {

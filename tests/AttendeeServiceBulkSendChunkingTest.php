@@ -15,9 +15,12 @@
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IAttendeeService;
+use Doctrine\DBAL\Logging\SQLLogger;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
 use ReflectionObject;
 
 /**
@@ -247,5 +250,72 @@ final class AttendeeServiceBulkSendChunkingTest extends TestCase
         // loop, only the first chunk would ever be attempted (< 3 errors); if the catch
         // were removed, the exception would propagate and fail this test outright.
         \Illuminate\Support\Facades\Log::shouldHaveReceived('error')->atLeast()->times(3);
+    }
+
+    /**
+     * The id-resolution loop pages with LIMIT/OFFSET. If each page were read in its own
+     * transaction - or in one READ COMMITTED transaction, where every statement takes a fresh
+     * snapshot - a attendee that is deleted or stops matching the filter between two page reads
+     * shifts every later row left by one and exactly one attendee is silently skipped. Every
+     * page must therefore be read from the same InnoDB snapshot: one root transaction, opened at
+     * REPEATABLE READ before the first page. Asserted on the SQL the connection actually issues
+     * (the same technique the ORDER BY regression test uses): a concurrent-writer reproduction
+     * would need a second DB session and a seam between pages the service deliberately does not
+     * expose.
+     */
+    public function testFilterBasedIdResolutionReadsEveryPageInsideOneRepeatableReadTransaction(): void
+    {
+        Queue::fake();
+        Config::set('emails.attendees_process_db_chunk_size', 1);
+
+        $captured_sql = [];
+        $logger = new class($captured_sql) implements SQLLogger {
+            private array $sink;
+
+            public function __construct(array &$sink)
+            {
+                $this->sink = &$sink;
+            }
+
+            public function startQuery($sql, ?array $params = null, ?array $types = null)
+            {
+                $this->sink[] = $sql;
+            }
+
+            public function stopQuery()
+            {
+            }
+        };
+
+        $connection = Registry::getManager(SilverstripeBaseModel::EntityManager)->getConnection();
+        $previous_logger = $connection->getConfiguration()->getSQLLogger();
+        $connection->getConfiguration()->setSQLLogger($logger);
+
+        try {
+            $this->service()->triggerSend(self::$summit, $this->basePayload(), null);
+        } finally {
+            $connection->getConfiguration()->setSQLLogger($previous_logger);
+        }
+
+        $page_selects = array_keys(array_filter(
+            $captured_sql,
+            fn($sql) => stripos($sql, 'SELECT') === 0 && stripos($sql, 'LIMIT') !== false
+        ));
+        $this->assertGreaterThanOrEqual(2, count($page_selects), 'a 1-row-per-page scan over the fixture must issue several page SELECTs');
+
+        $begins = array_keys(array_filter($captured_sql, fn($sql) => stripos($sql, 'START TRANSACTION') !== false));
+        $this->assertCount(
+            1,
+            $begins,
+            sprintf('every id page must be read inside ONE transaction; captured SQL: %s', implode(' | ', $captured_sql))
+        );
+        $this->assertLessThan(min($page_selects), $begins[0], 'the transaction must be opened before the first page is read');
+
+        $repeatable_reads = array_keys(array_filter(
+            $captured_sql,
+            fn($sql) => stripos($sql, 'TRANSACTION ISOLATION LEVEL REPEATABLE READ') !== false
+        ));
+        $this->assertCount(1, $repeatable_reads, 'the id-resolution transaction must run at REPEATABLE READ so every page reads the same snapshot');
+        $this->assertLessThan($begins[0], $repeatable_reads[0], 'the isolation level must be set before the transaction starts');
     }
 }

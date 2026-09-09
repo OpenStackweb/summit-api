@@ -208,4 +208,29 @@ final class ProcessAttendeesEmailRequestJobFailedHookTest extends TestCase
                 && !str_contains($message, 'someone-private@example.com'))
             ->once();
     }
+
+    /**
+     * FilterParser::filterExpresion also recognizes the range ([]) and set (()) operators, and
+     * summit_hall_checked_in_date accepts [] (IAttendeeEmailFilterFields::OPERATORS). The
+     * redaction must cut at those operators too, or the range bounds are logged verbatim.
+     */
+    public function testFailedChunkLogsFilterFieldNamesButNotRangeOperatorValues(): void
+    {
+        Queue::fake();
+        Log::spy();
+
+        $job = new ProcessAttendeesEmailRequestJob(self::$summit, [
+            'email_flow_event' => 'SUMMIT_REGISTRATION_GENERIC_ATTENDEE_EMAIL',
+            'attendees_ids' => [1],
+        ], ['summit_hall_checked_in_date[]1700000000&&1700003600', 'tags_id()7||9']);
+
+        $job->failed(new \RuntimeException('boom'));
+
+        Log::shouldHaveReceived('error')
+            ->withArgs(fn($message) => is_string($message)
+                && str_contains($message, 'filter fields ["summit_hall_checked_in_date","tags_id"]')
+                && !str_contains($message, '1700000000')
+                && !str_contains($message, '7||9'))
+            ->once();
+    }
 }

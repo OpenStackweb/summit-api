@@ -246,4 +246,29 @@ class ProcessSpeakersEmailRequestJobFailedHookTest extends ProtectedApiTestCase
                 && !str_contains($message, 'someone-private@example.com'))
             ->once();
     }
+
+    /**
+     * FilterParser::filterExpresion also recognizes the range ([]) and set (()) operators. The
+     * redaction runs on the raw request filter, before any whitelist check, so it must cut at
+     * those operators too or the operands are logged verbatim.
+     */
+    public function testFailedChunkLogsFilterFieldNamesButNotRangeOperatorValues(): void
+    {
+        Queue::fake();
+        Log::spy();
+
+        $job = new ProcessSpeakersEmailRequestJob(self::$summit->getId(), [
+            'email_flow_event' => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
+            'speaker_ids' => [1],
+        ], ['created[]1700000000&&1700003600', 'id()7||9']);
+
+        $job->failed(new \RuntimeException('boom'));
+
+        Log::shouldHaveReceived('error')
+            ->withArgs(fn($message) => is_string($message)
+                && str_contains($message, 'filter fields ["created","id"]')
+                && !str_contains($message, '1700000000')
+                && !str_contains($message, '7||9'))
+            ->once();
+    }
 }

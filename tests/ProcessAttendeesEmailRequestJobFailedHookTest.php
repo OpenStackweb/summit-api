@@ -15,7 +15,6 @@
 use App\Jobs\Emails\IMailTemplatesConstants;
 use App\Jobs\Emails\ProcessAttendeesEmailRequestJob;
 use App\Jobs\Emails\Registration\Attendees\SummitAttendeeExcerptEmail;
-use App\Models\Foundation\Main\IGroup;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
@@ -36,16 +35,13 @@ use ReflectionObject;
  *
  * Class ProcessAttendeesEmailRequestJobFailedHookTest
  */
-final class ProcessAttendeesEmailRequestJobFailedHookTest extends TestCase
+final class ProcessAttendeesEmailRequestJobFailedHookTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
-
-    use InsertMemberTestData;
 
     protected function setUp(): void
     {
         parent::setUp();
-        self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::insertSummitTestData();
     }
@@ -53,7 +49,6 @@ final class ProcessAttendeesEmailRequestJobFailedHookTest extends TestCase
     protected function tearDown(): void
     {
         self::clearSummitTestData();
-        self::clearMemberTestData();
         parent::tearDown();
     }
 

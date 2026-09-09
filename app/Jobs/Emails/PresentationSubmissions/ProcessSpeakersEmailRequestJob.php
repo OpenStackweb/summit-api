@@ -210,7 +210,12 @@ final class ProcessSpeakersEmailRequestJob implements ShouldQueue
      */
     private function redactFilterFieldNames($filter): array
     {
-        if (empty($filter) || !is_array($filter)) return [];
-        return array_map(fn($condition) => preg_replace('/[=<>@!].*/', '', (string)$condition), $filter);
+        if (empty($filter)) return [];
+        // FiltersParams::getFilterParam() passes the raw request value through: filter[] arrives
+        // as an array, a bare filter= as a string. FilterParser::parse accepts both by wrapping the
+        // scalar, so the redaction accepts the same shape instead of dropping the field names.
+        if (!is_array($filter)) $filter = [$filter];
+        $conditions = array_filter($filter, 'is_scalar');
+        return array_values(array_map(fn($condition) => preg_replace('/[=<>@!].*/', '', (string)$condition), $conditions));
     }
 }

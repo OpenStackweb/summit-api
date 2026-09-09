@@ -14,7 +14,6 @@
 
 use App\Jobs\Emails\Registration\Attendees\GenericSummitAttendeeEmail;
 use App\Jobs\Emails\SummitAttendeeTicketRegenerateHashEmail;
-use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IAttendeeService;
 use App\Services\utils\IEmailExcerptService;
 use App\Services\Utils\Facades\EmailExcerpt;
@@ -36,17 +35,14 @@ use ReflectionProperty;
  *
  * Class AttendeeServiceResumeSendEmailsTest
  */
-final class AttendeeServiceResumeSendEmailsTest extends TestCase
+final class AttendeeServiceResumeSendEmailsTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
-
-    use InsertMemberTestData;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::insertSummitTestData();
     }
@@ -54,7 +50,6 @@ final class AttendeeServiceResumeSendEmailsTest extends TestCase
     protected function tearDown(): void
     {
         self::clearSummitTestData();
-        self::clearMemberTestData();
         parent::tearDown();
     }
 

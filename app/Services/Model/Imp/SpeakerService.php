@@ -1393,6 +1393,22 @@ final class SpeakerService
                         $onDispatchInfo,
                         $payload
                     ) {
+                        // $summit is the root entity _sendEmails fetched once, outside this
+                        // transaction. After an earlier speaker's transaction failed (a missing
+                        // speaker id throws EntityNotFoundException below; a queue push or a
+                        // retryable DB error can throw too), DoctrineTransactionService cleared or
+                        // replaced the EntityManager and that instance is detached: every write
+                        // below that references it - the sent-proof, an auto-generated promo code,
+                        // a speaker assistance - would then fail at flush ("A new entity was found
+                        // through the relationship ...#summit") AFTER the email was dispatched, and
+                        // a retried chunk would re-email everyone processed after the failure.
+                        // Re-resolve it from the current EntityManager: an identity-map hit on the
+                        // normal path, one query only after a clear.
+                        $summit = $this->summit_repository->getById($summit->getId());
+                        if (!$summit instanceof Summit) {
+                            throw new EntityNotFoundException('Summit not found');
+                        }
+
                         $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
 
                         Log::debug(sprintf("SpeakerService::send processing speaker id %s payload %s", $speaker_id, json_encode($payload)));

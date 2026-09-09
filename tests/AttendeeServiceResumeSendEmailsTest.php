@@ -19,6 +19,7 @@ use App\Services\Model\IAttendeeService;
 use App\Services\utils\IEmailExcerptService;
 use App\Services\Utils\Facades\EmailExcerpt;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\summit\SummitAttendeeAnnouncementEmail;
@@ -296,6 +297,74 @@ final class AttendeeServiceResumeSendEmailsTest extends TestCase
                 1,
                 $this->proofCount($attendee_id, $type, $ticket_ids[$i]),
                 sprintf('ticket %s (not the resume-skipped one) must still have been processed', $ticket_ids[$i])
+            );
+        }
+    }
+
+    const SimulatedDispatchFailure = 'simulated transient queue push failure';
+
+    /**
+     * @return int[] every attendee of the fixture summit, in the order send() will process them
+     */
+    private function fixtureAttendeeIds(): array
+    {
+        $ids = [];
+        foreach (self::$summit->getAttendees() as $attendee) {
+            $ids[] = $attendee->getId();
+        }
+        return $ids;
+    }
+
+    /**
+     * Fails the FIRST GenericSummitAttendeeEmail push with a transient queue error and lets every
+     * later push succeed. The strategies dispatch mail jobs with a bare ::dispatch(), so the
+     * failure surfaces inside that attendee's own send() transaction - exactly where a redis
+     * outage would surface in production.
+     *
+     * @param array $dispatched receives the class name of every job dispatched, in order
+     */
+    private function givenTheFirstGenericEmailDispatchFails(array &$dispatched): void
+    {
+        Bus::shouldReceive('dispatch')->andReturnUsing(function ($job) use (&$dispatched) {
+            $dispatched[] = get_class($job);
+            $generic = count(array_filter($dispatched, fn($class) => $class === GenericSummitAttendeeEmail::class));
+            if ($job instanceof GenericSummitAttendeeEmail && $generic === 1) {
+                throw new \RuntimeException(self::SimulatedDispatchFailure);
+            }
+            return null;
+        });
+    }
+
+    /**
+     * Regression: the strategy used to be built with the root Summit that _sendEmails fetches once,
+     * outside the per-attendee transaction. After any attendee's transaction failed,
+     * DoctrineTransactionService cleared the EntityManager, that Summit became detached, and every
+     * later attendee's proof failed at flush ("A new entity was found through the relationship
+     * ...#summit") AFTER its email had already been dispatched - so a retried chunk re-emailed
+     * everyone processed after the failure while the excerpt reported them as sent.
+     */
+    public function testAFailingAttendeeDoesNotPreventProofRecordingForTheRestOfTheChunk(): void
+    {
+        $dispatched = [];
+        $this->givenTheFirstGenericEmailDispatchFails($dispatched);
+
+        $ids = $this->fixtureAttendeeIds();
+        $this->assertGreaterThanOrEqual(2, count($ids), 'fixture must seed at least 2 attendees on the summit');
+
+        $this->service()->send(self::$summit->getId(), [
+            'email_flow_event' => GenericSummitAttendeeEmail::EVENT_SLUG,
+            'attendees_ids'    => $ids,
+        ]);
+
+        $generic_dispatches = count(array_filter($dispatched, fn($class) => $class === GenericSummitAttendeeEmail::class));
+        $this->assertSame(count($ids), $generic_dispatches, 'every attendee must still be attempted after the failure');
+
+        $this->assertSame(0, $this->proofCount($ids[0], GenericSummitAttendeeEmail::EVENT_SLUG), 'the attendee whose dispatch failed must have no proof');
+        foreach (array_slice($ids, 1) as $id) {
+            $this->assertSame(
+                1,
+                $this->proofCount($id, GenericSummitAttendeeEmail::EVENT_SLUG),
+                sprintf('attendee %s, processed after the failure, must have exactly one proof', $id)
             );
         }
     }

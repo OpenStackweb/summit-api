@@ -811,8 +811,19 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                             return;
                         }
 
+                        // The strategy records the sent-proof against the Summit it is built with.
+                        // $summit is the root entity _sendEmails fetched once, outside this
+                        // transaction: after any earlier attendee's transaction failed,
+                        // DoctrineTransactionService cleared (or replaced) the EntityManager and
+                        // that instance is detached, so a proof referencing it fails at flush
+                        // ("A new entity was found through the relationship ...#summit") AFTER
+                        // the email was already dispatched - a retried chunk would then re-email
+                        // everyone processed after the failure. $attendee->getSummit() is the
+                        // managed association of the attendee this transaction just loaded (same
+                        // id, the guard above enforces it), so the proof always references a live
+                        // entity of the current EntityManager.
                         $emailActionsStrategyFactory = new EmailActionsStrategyFactory();
-                        $strategy = $emailActionsStrategyFactory->build($summit, $flow_event);
+                        $strategy = $emailActionsStrategyFactory->build($attendee->getSummit(), $flow_event);
                         if ($strategy != null) {
                             $strategy->process($attendee, $test_email_recipient, $onDispatchSuccess, $onDispatchInfo, $onDispatchError, $resume_since);
                         }

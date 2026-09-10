@@ -16,7 +16,7 @@ use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISponsorUserInfoGrantService;
-use App\Utils\AES;
+use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -59,11 +59,17 @@ final class SponsorUserInfoGrantService
     private $sponsor_repository;
 
     /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    /**
      * @param ISponsorUserInfoGrantRepository $repository
      * @param ISummitAttendeeRepository $attendee_repository
      * @param ISummitAttendeeBadgeRepository $badge_repository
      * @param ISponsorRepository $sponsor_repository
      * @param ITransactionService $tx_service
+     * @param ILockManagerService $lock_service
      */
     public function __construct
     (
@@ -71,7 +77,8 @@ final class SponsorUserInfoGrantService
         ISummitAttendeeRepository $attendee_repository,
         ISummitAttendeeBadgeRepository $badge_repository,
         ISponsorRepository $sponsor_repository,
-        ITransactionService $tx_service
+        ITransactionService $tx_service,
+        ILockManagerService $lock_service
     )
     {
         parent::__construct($tx_service);
@@ -79,6 +86,7 @@ final class SponsorUserInfoGrantService
         $this->attendee_repository = $attendee_repository;
         $this->badge_repository = $badge_repository;
         $this->sponsor_repository =  $sponsor_repository;
+        $this->lock_service = $lock_service;
     }
 
     /**
@@ -113,6 +121,17 @@ final class SponsorUserInfoGrantService
     }
 
     /**
+     * Redis TTL (seconds) for the per-(sponsor, badge, scan_date) dedup lock
+     * below - a crash-safety ceiling (a process that dies mid-critical-section
+     * without releasing must not wedge that scan forever), not the
+     * acquire-contention timeout, which ILockManagerService governs on its
+     * own (LockManagerService::MaxRetries with backoff). Matches the
+     * lifetime SummitOrderService already uses for its own short-lived
+     * per-entity locks.
+     */
+    private const BADGE_SCAN_LOCK_LIFETIME_SECONDS = 30;
+
+    /**
      * @param Summit $summit
      * @param Member $current_member
      * @param array $data
@@ -121,137 +140,215 @@ final class SponsorUserInfoGrantService
      */
     public function addBadgeScan(Summit $summit, Member $current_member, array $data): SponsorBadgeScan
     {
-        return $this->tx_service->transaction(function() use($summit, $current_member, $data){
-            $raw_qr_code = $data['qr_code'] ?? null;
-            $raw_attendee_email = $data['attendee_email'] ?? null;
-            if(empty($raw_qr_code) && empty($raw_attendee_email))
-                throw new ValidationException("Missing required parameters (qr_code or attendee_email).");
-            $ticket_number = null;
-            $qr_code = null;
-            $source = null;
-            if(!empty($raw_qr_code)) {
-                $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $raw_qr_code);
-                $fields = SummitAttendeeBadge::parseQRCode($qr_code);
-                $prefix = $fields['prefix'];
-                if($summit->getBadgeQRPrefix() != $prefix)
-                    throw new ValidationException
+        // Phase 1: parse the request and resolve the ticket/badge/sponsor it
+        // refers to. Entirely read-only (nothing is persisted here), so it
+        // runs outside any transaction - which is what lets the dedup lock
+        // below be acquired, keyed by (sponsor, badge, scan_date), BEFORE
+        // the transaction that actually creates the scan ever opens.
+        $raw_qr_code = $data['qr_code'] ?? null;
+        $raw_attendee_email = $data['attendee_email'] ?? null;
+        if(empty($raw_qr_code) && empty($raw_attendee_email))
+            throw new ValidationException("Missing required parameters (qr_code or attendee_email).");
+        $ticket_number = null;
+        $qr_code = null;
+        $source = null;
+        if(!empty($raw_qr_code)) {
+            $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $raw_qr_code);
+            $fields = SummitAttendeeBadge::parseQRCode($qr_code);
+            $prefix = $fields['prefix'];
+            if($summit->getBadgeQRPrefix() != $prefix)
+                throw new ValidationException
+                (
+                    sprintf
                     (
-                        sprintf
-                        (
-                            "%s qr code is not valid for summit %s.",
-                            $qr_code,
-                            $summit->getId()
-                        )
-                    );
-                $ticket_number = $fields['ticket_number'];
-                $source = SponsorBadgeScan::Source_QR;
+                        "%s qr code is not valid for summit %s.",
+                        $qr_code,
+                        $summit->getId()
+                    )
+                );
+            $ticket_number = $fields['ticket_number'];
+            $source = SponsorBadgeScan::Source_QR;
+        }
+        else if(!empty($raw_attendee_email)) {
+            $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($raw_attendee_email));
+            if(is_null($attendee)){
+                throw new EntityNotFoundException("Attendee not found.");
             }
-            else if(!empty($raw_attendee_email)) {
-                $attendee = $this->attendee_repository->getBySummitAndEmail($summit, trim($raw_attendee_email));
-                if(is_null($attendee)){
-                    throw new EntityNotFoundException("Attendee not found.");
-                }
-                $ticket = null;
-                foreach ($attendee->getTickets() as $t) {
-                    if ($t->isActive() && $t->hasBadge()) { $ticket = $t; break; }
-                }
-
-                if(is_null($ticket)){
-                    throw new EntityNotFoundException("Ticket not found.");
-                }
-                $ticket_number = $ticket->getNumber();
-                $badge = $ticket->getBadge();
-                // generate QR code on-demand if missing
-                $qr_code = $badge->generateQRCode();
-                $qr_code = base64_encode($qr_code);
-                // normalize qr code
-                $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $qr_code);
-                $source = SponsorBadgeScan::Source_Attendee_Email;
+            $ticket = null;
+            foreach ($attendee->getTickets() as $t) {
+                if ($t->isActive() && $t->hasBadge()) { $ticket = $t; break; }
             }
 
-            $scan_date_epoch = intval($data['scan_date']);
-            $scan_date       = new \DateTime("@$scan_date_epoch");
-            $begin_date      = $summit->getBeginDate();
-            $end_date        = $summit->getEndDate();
-
-            /*
-            if(!($scan_date >= $begin_date && $scan_date <= $end_date))
-                throw new ValidationException("scan_date does not belong to summit period.");
-            */
-            if(empty($ticket_number)){
-                throw new ValidationException("Ticket not found.");
+            if(is_null($ticket)){
+                throw new EntityNotFoundException("Ticket not found.");
             }
+            $ticket_number = $ticket->getNumber();
+            $badge = $ticket->getBadge();
+            // generate QR code on-demand if missing
+            $qr_code = $badge->generateQRCode();
+            $qr_code = base64_encode($qr_code);
+            // normalize qr code
+            $qr_code = SummitAttendeeBadge::decodeQRCodeFor($summit, $qr_code);
+            $source = SponsorBadgeScan::Source_Attendee_Email;
+        }
 
-            $badge = $this->badge_repository->getBadgeByTicketNumber($ticket_number);
+        $scan_date_epoch = intval($data['scan_date']);
+        $scan_date       = new \DateTime("@$scan_date_epoch");
 
-            if(is_null($badge))
-                throw new EntityNotFoundException("badge not found.");
+        /*
+        $begin_date      = $summit->getBeginDate();
+        $end_date        = $summit->getEndDate();
 
-            // if we are and admin / show admin , then we need to provide the sponsor id
-            if($current_member->isAuthzFor($summit)){
+        if(!($scan_date >= $begin_date && $scan_date <= $end_date))
+            throw new ValidationException("scan_date does not belong to summit period.");
+        */
+        if(empty($ticket_number)){
+            throw new ValidationException("Ticket not found.");
+        }
 
-                Log::debug("SponsorUserInfoGrantService::addBadgeScan current member is an admin");
+        $badge = $this->badge_repository->getBadgeByTicketNumber($ticket_number);
+
+        if(is_null($badge))
+            throw new EntityNotFoundException("badge not found.");
+
+        // if we are and admin / show admin , then we need to provide the sponsor id
+        if($current_member->isAuthzFor($summit)){
+
+            Log::debug("SponsorUserInfoGrantService::addBadgeScan current member is an admin");
+
+            if (empty($data['sponsor_id']))
+                throw new ValidationException("sponsor_id is required when current member is an admin.");
+            $sponsor_id = intval($data['sponsor_id']);
+            $sponsor = $this->sponsor_repository->getById($sponsor_id);
+            if(!$sponsor instanceof Sponsor){
+                throw new EntityNotFoundException("Sponsor not found.");
+            }
+            if($sponsor->getSummitId() !== $summit->getId()){
+                throw new ValidationException("Sponsor does not belong to this summit.");
+            }
+            Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (admin provided).", $sponsor->getId()));
+        }
+        else {
+            $member_sponsors = $current_member->getAccessibleSponsorsBySummit($summit);
+
+            if ($member_sponsors->isEmpty())
+                throw new ValidationException("Current member does not have badge scan permissions for any sponsor of this summit.");
+
+            if ($member_sponsors->count() === 1) {
+                $sponsor = $member_sponsors->first();
+                Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (first).", $sponsor->getId()));
+            } else {
+                Log::debug("SponsorUserInfoGrantService::addBadgeScan current member is associated to multiple sponsors.");
 
                 if (empty($data['sponsor_id']))
-                    throw new ValidationException("sponsor_id is required when current member is an admin.");
+                    throw new ValidationException("sponsor_id is required when the member belongs to multiple sponsors.");
+
                 $sponsor_id = intval($data['sponsor_id']);
-                $sponsor = $this->sponsor_repository->getById($sponsor_id);
-                if(!$sponsor instanceof Sponsor){
-                    throw new EntityNotFoundException("Sponsor not found.");
-                }
-                if($sponsor->getSummitId() !== $summit->getId()){
-                    throw new ValidationException("Sponsor does not belong to this summit.");
-                }
-                Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (admin provided).", $sponsor->getId()));
+                $sponsor = $member_sponsors->filter(fn($s) => $s->getId() === $sponsor_id)->first();
+
+                if ($sponsor === false)
+                    throw new ValidationException("Current member does not belong to the selected summit sponsor.");
+
+                Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (multiple).", $sponsor->getId()));
+
             }
-            else {
-                $member_sponsors = $current_member->getAccessibleSponsorsBySummit($summit);
+        }
 
-                if ($member_sponsors->isEmpty())
-                    throw new ValidationException("Current member does not have badge scan permissions for any sponsor of this summit.");
+        // Phase 2: create the scan, guarded against a concurrent duplicate
+        // for this same (sponsor, badge, scan_date) - see addBadgeScanLocked.
+        return $this->addBadgeScanLocked($sponsor, $badge, $scan_date, $scan_date_epoch, $qr_code, $source, $current_member, $data);
+    }
 
-                if ($member_sponsors->count() === 1) {
-                    $sponsor = $member_sponsors->first();
-                    Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (first).", $sponsor->getId()));
-                } else {
-                    Log::debug("SponsorUserInfoGrantService::addBadgeScan current member is associated to multiple sponsors.");
+    /**
+     * Creates (or, on a retry of the same scan, returns) the SponsorBadgeScan
+     * for the given (sponsor, badge, scan_date). SUP-86b9fp53j: the scanning
+     * app retries an upload whenever its own client-side timeout elapses,
+     * with no guarantee the original request didn't already reach this far
+     * and commit - two such requests reading "no existing scan yet" before
+     * either INSERTs is exactly how one physical badge scan ended up as two
+     * rows. A plain existence check right before the INSERT doesn't close
+     * that window under READ_COMMITTED (the isolation level
+     * ITransactionService::transaction defaults to): two concurrent
+     * transactions can both run the check before either commits.
+     *
+     * ILockManagerService (Redis-backed; see SummitOrderService for other
+     * callers) keyed by the same tuple serializes them - and, critically,
+     * the lock wraps the whole transaction() call below, held past its
+     * COMMIT rather than released as soon as the row is attached in-memory:
+     * releasing any earlier would let a second request's existence check
+     * run (and find nothing) before the first request's INSERT is actually
+     * durable and visible to it.
+     *
+     * A lock the retries inside ILockManagerService::acquireLock can't get
+     * throws UnacquiredLockException, deliberately left to propagate (same
+     * as SponsorUserSyncService's own lock usage) rather than turned into a
+     * ValidationException: the scanning app's SyncService treats a non-4xx
+     * failure as transient and retries the scan on its own, which is the
+     * right outcome for lock contention - a ValidationException would mark
+     * it a permanent client error instead and stop retrying it.
+     * @param Sponsor $sponsor
+     * @param SummitAttendeeBadge $badge
+     * @param \DateTime $scan_date
+     * @param int $scan_date_epoch
+     * @param string $qr_code
+     * @param string $source
+     * @param Member $current_member
+     * @param array $data
+     * @return SponsorBadgeScan
+     * @throws \Exception
+     */
+    private function addBadgeScanLocked(
+        Sponsor $sponsor,
+        SummitAttendeeBadge $badge,
+        \DateTime $scan_date,
+        int $scan_date_epoch,
+        string $qr_code,
+        string $source,
+        Member $current_member,
+        array $data
+    ): SponsorBadgeScan
+    {
+        $lock_name = sprintf('badge_scan.%d.%d.%d.lock', $sponsor->getId(), $badge->getId(), $scan_date_epoch);
 
-                    if (empty($data['sponsor_id']))
-                        throw new ValidationException("sponsor_id is required when the member belongs to multiple sponsors.");
-
-                    $sponsor_id = intval($data['sponsor_id']);
-                    $sponsor = $member_sponsors->filter(fn($s) => $s->getId() === $sponsor_id)->first();
-
-                    if ($sponsor === false)
-                        throw new ValidationException("Current member does not belong to the selected summit sponsor.");
-
-                    Log::debug(sprintf("SponsorUserInfoGrantService::addBadgeScan selected sponsor %s (multiple).", $sponsor->getId()));
-
+        return $this->lock_service->lock($lock_name, function() use($sponsor, $badge, $scan_date, $qr_code, $source, $current_member, $data){
+            return $this->tx_service->transaction(function() use($sponsor, $badge, $scan_date, $qr_code, $source, $current_member, $data){
+                $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
+                if(!is_null($existing)){
+                    Log::warning(
+                        sprintf(
+                            "SponsorUserInfoGrantService::addBadgeScan duplicate scan detected for sponsor %s badge %s scan_date %s - returning existing scan %s",
+                            $sponsor->getId(),
+                            $badge->getId(),
+                            $scan_date->getTimestamp(),
+                            $existing->getId()
+                        )
+                    );
+                    return $existing;
                 }
-            }
 
-            $scan = new SponsorBadgeScan();
-            $scan->setScanDate($scan_date);
-            $scan->setQRCode($qr_code);
-            $scan->setUser($current_member);
-            $scan->setBadge($badge);
-            $scan->setSource($source);
-            $scan->setNotes(isset($data['notes'])? trim($data['notes']): "");
+                $scan = new SponsorBadgeScan();
+                $scan->setScanDate($scan_date);
+                $scan->setQRCode($qr_code);
+                $scan->setUser($current_member);
+                $scan->setBadge($badge);
+                $scan->setSource($source);
+                $scan->setNotes(isset($data['notes'])? trim($data['notes']): "");
 
-            $sponsor->addUserInfoGrant($scan);
+                $sponsor->addUserInfoGrant($scan);
 
-            // extra questions
-            $extra_questions = $data['extra_questions'] ?? [];
+                // extra questions
+                $extra_questions = $data['extra_questions'] ?? [];
 
-            if (count($extra_questions)) {
-                $res = $scan->hadCompletedExtraQuestions($extra_questions);
-                if (!$res) {
-                    throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+                if (count($extra_questions)) {
+                    $res = $scan->hadCompletedExtraQuestions($extra_questions);
+                    if (!$res) {
+                        throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+                    }
                 }
-            }
 
-            return $scan;
-        });
+                return $scan;
+            });
+        }, self::BADGE_SCAN_LOCK_LIFETIME_SECONDS);
     }
 
     /**

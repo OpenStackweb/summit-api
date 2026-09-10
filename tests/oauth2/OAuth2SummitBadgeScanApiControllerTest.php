@@ -14,6 +14,11 @@
 
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
+use App\Services\Model\ISponsorUserInfoGrantService;
+use App\Services\Utils\Exceptions\UnacquiredLockException;
+use App\Services\Utils\ILockManagerService;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\App;
 use Libs\ModelSerializers\AbstractSerializer;
 use models\main\Group;
 use models\summit\Sponsor;
@@ -168,6 +173,199 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertEquals(\models\summit\SponsorBadgeScan::Source_QR, $scan->source);
         $this->assertEquals($sponsor->getId(), $scan->sponsor_id);
         return $scan;
+    }
+
+    /**
+     * SUP-86b9fp53j: the scanning app retries an upload whenever its own
+     * client-side timeout elapses, with no guarantee the original request
+     * didn't already reach the server and commit - the retry carries the
+     * exact same qr_code/scan_date/sponsor_id as the first attempt, since
+     * the app never changes a scan's captured timestamp between attempts.
+     * Two POSTs of that identical payload must produce exactly one
+     * SponsorBadgeScan, with the second response returning the same one
+     * the first created (not a validation error, and not a second row).
+     */
+    public function testAddBadgeScanIsIdempotentOnRetry(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+
+        // Generated once and reused across both requests: a real retry
+        // resends the exact same body, it doesn't re-derive the QR code.
+        $data = [
+            'qr_code'    => $badge->generateQRCode(),
+            'scan_date'  => 1572019200,
+            'sponsor_id' => $sponsor->getId(),
+        ];
+        $body = json_encode($data);
+
+        $first_response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            $body
+        );
+
+        $this->assertResponseStatus(201);
+        $first_scan = json_decode($first_response->getContent());
+        $this->assertTrue(!is_null($first_scan));
+
+        $second_response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            $body
+        );
+
+        $this->assertResponseStatus(201);
+        $second_scan = json_decode($second_response->getContent());
+        $this->assertTrue(!is_null($second_scan));
+
+        $this->assertEquals($first_scan->id, $second_scan->id,
+            "a retry of the identical scan must return the same entity, not create a new one");
+
+        $count = self::$em->getRepository(\models\summit\SponsorBadgeScan::class)
+            ->count(['sponsor' => $sponsor, 'badge' => $badge]);
+        $this->assertEquals(1, $count,
+            "exactly one SponsorBadgeScan row must exist for this sponsor+badge+scan_date, not two");
+    }
+
+    /**
+     * A different scan_date for the same sponsor+badge must NOT be
+     * deduplicated - it's a genuine second scan (e.g. the sponsor scanned
+     * this attendee again later), not a retry of the same attempt.
+     */
+    public function testAddBadgeScanWithDifferentScanDateIsNotDeduplicated(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+        $qr_code = $badge->generateQRCode();
+
+        $first_response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['qr_code' => $qr_code, 'scan_date' => 1572019200, 'sponsor_id' => $sponsor->getId()])
+        );
+        $this->assertResponseStatus(201);
+        $first_scan = json_decode($first_response->getContent());
+
+        $second_response = $this->action(
+            "POST",
+            "OAuth2SummitBadgeScanApiController@add",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['qr_code' => $qr_code, 'scan_date' => 1572019260, 'sponsor_id' => $sponsor->getId()])
+        );
+        $this->assertResponseStatus(201);
+        $second_scan = json_decode($second_response->getContent());
+
+        $this->assertNotEquals($first_scan->id, $second_scan->id,
+            "a genuinely later scan of the same badge must not be collapsed into the earlier one");
+    }
+
+    /**
+     * The two tests above prove the end result (one row survives two
+     * identical POSTs), but a plain "check then insert" with no locking at
+     * all would pass them too, since PHPUnit calls are strictly sequential -
+     * they never actually overlap two in-flight requests. This test proves
+     * the lock itself is what SponsorUserInfoGrantService::addBadgeScan
+     * acquires: holding the exact lock name it should use externally, then
+     * calling the real service directly (bypassing HTTP, so the thrown
+     * exception type is visible), and asserting it fails to acquire the
+     * lock and gives up - the concurrency-closing mechanism this fix
+     * actually depends on for a genuine race, not just the happy path.
+     */
+    public function testAddBadgeScanBlocksOnAConcurrentLockHolder(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+        $qr_code = $badge->generateQRCode();
+        $scan_date_epoch = 1572019200;
+
+        // Same construction as SponsorUserInfoGrantService::addBadgeScanLocked's
+        // $lock_name - deliberately duplicated (not called via a shared
+        // constant) so this test also catches a future change to that
+        // format silently no longer matching what's held here.
+        $lock_name = sprintf('badge_scan.%d.%d.%d.lock', $sponsor->getId(), $badge->getId(), $scan_date_epoch);
+
+        $lock_service = App::make(ILockManagerService::class);
+        $held_token = $lock_service->acquireLock($lock_name, 10);
+
+        $data = [
+            'qr_code'    => $qr_code,
+            'scan_date'  => $scan_date_epoch,
+            'sponsor_id' => $sponsor->getId(),
+        ];
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+
+        $threw = false;
+        try {
+            $service->addBadgeScan(self::$summit, self::$member, $data);
+        } catch (UnacquiredLockException $ex) {
+            $threw = true;
+        } finally {
+            $lock_service->releaseLock($lock_name, $held_token);
+        }
+        $this->assertTrue($threw,
+            "addBadgeScan must fail to acquire a lock already held under the exact name this test holds - ".
+            "either it isn't locking on (sponsor, badge, scan_date) at all, or the name format drifted");
+
+        // With the external holder gone, the same call now succeeds.
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $data);
+        $this->assertNotNull($scan);
+        $this->assertEquals($sponsor->getId(), $scan->getSponsor()->getId());
     }
 
     public function testAddBadgeScanByAttendeeEmail(){
@@ -863,5 +1061,94 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $content = $response->getContent();
         $this->assertResponseStatus(200);
         $this->assertNotEmpty($content);
+    }
+
+    /**
+     * The dedup lock cannot guarantee one row per scan on its own - it has a
+     * TTL, no renewal and no fencing token, so it can lapse while the
+     * transaction it wraps is still running. The SponsorBadgeScan.ScanDedupKey
+     * UNIQUE index is what does, so this asserts the index is actually there
+     * and rejecting: two rows carrying the same key must not both persist,
+     * whatever the service layer above happens to do.
+     */
+    public function testScanDedupKeyUniqueIndexRejectsADuplicateRow(){
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+        $scan_date = new \DateTime("@1572019200");
+
+        $dedup_key = \models\summit\SponsorBadgeScan::buildDedupKey($sponsor, $badge, $scan_date);
+
+        $first = new \models\summit\SponsorBadgeScan();
+        $first->setScanDate($scan_date);
+        $first->setQRCode('dedup-index-test');
+        $first->setUser(self::$member);
+        $first->setBadge($badge);
+        $first->setNotes('');
+        $first->setScanDedupKey($dedup_key);
+        $sponsor->addUserInfoGrant($first);
+        self::$em->persist($first);
+        self::$em->flush();
+
+        // Byte-identical key, which is the whole point: a second physical row for
+        // one scan is what the production bug produced and what the index forbids.
+        $second = new \models\summit\SponsorBadgeScan();
+        $second->setScanDate($scan_date);
+        $second->setQRCode('dedup-index-test');
+        $second->setUser(self::$member);
+        $second->setBadge($badge);
+        $second->setNotes('');
+        $second->setScanDedupKey($dedup_key);
+        $sponsor->addUserInfoGrant($second);
+        self::$em->persist($second);
+
+        $threw = false;
+        try {
+            self::$em->flush();
+        } catch (UniqueConstraintViolationException $ex) {
+            $threw = true;
+        }
+
+        $this->assertTrue($threw,
+            "SponsorBadgeScan_ScanDedupKey must reject a second row with the same dedup key - ".
+            "without that index the lock's TTL is the only thing preventing duplicates, which it cannot be");
+    }
+
+    /**
+     * The index above only protects rows that actually carry a key, so this
+     * asserts the service populates it: a scan created through the real
+     * addBadgeScan path must come out with the ScanDedupKey its
+     * (sponsor, badge, scan_date) tuple implies. If this regressed, every new
+     * row would go in with NULL - which MySQL allows without limit in a UNIQUE
+     * index - and the duplicate protection would silently be gone.
+     */
+    public function testAddBadgeScanPopulatesTheScanDedupKey(){
+        self::$member->clearGroups();
+        self::$member->add2Group($this->sponsor_group);
+        self::$em->persist(self::$member);
+        self::$em->flush();
+
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+        $scan_date_epoch = 1572019200;
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $scan = $service->addBadgeScan(self::$summit, self::$member, [
+            'qr_code'    => $badge->generateQRCode(),
+            'scan_date'  => $scan_date_epoch,
+            'sponsor_id' => $sponsor->getId(),
+        ]);
+
+        $this->assertNotNull($scan);
+        $this->assertEquals(
+            sprintf('%d:%d:%d', $sponsor->getId(), $badge->getId(), $scan_date_epoch),
+            $scan->getScanDedupKey(),
+            "addBadgeScan must stamp the dedup key on the new scan, otherwise the UNIQUE index protects nothing"
+        );
     }
 }

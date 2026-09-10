@@ -93,6 +93,32 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     private $source;
 
     /**
+     * Denormalized "<sponsor>:<badge>:<scan_date epoch>" identity of the physical
+     * scan this row represents, carrying a UNIQUE index (see the migration that
+     * adds SponsorBadgeScan_ScanDedupKey). That index - not the Redis dedup lock
+     * in SponsorUserInfoGrantService::addBadgeScanLocked - is what actually makes
+     * addBadgeScan idempotent: a lock with a TTL and no renewal cannot guarantee
+     * mutual exclusion (it can expire mid-transaction, and LockManagerService
+     * only logs the mismatch at release time), so the database has to be the
+     * authority on "one row per scan".
+     *
+     * The column has to live here rather than being an index over the tuple
+     * itself: SponsorUserInfoGrant/SponsorBadgeScan is a JOINED inheritance pair
+     * with SponsorID on the parent table and BadgeID/ScanDate on this one, and a
+     * UNIQUE index cannot span both tables.
+     *
+     * Nullable on purpose, and rows created before that migration keep NULL:
+     * MySQL allows any number of NULLs in a UNIQUE index, so pre-existing
+     * duplicates (which this bug already produced in production) neither block
+     * the index creation nor need deleting. Those historical rows stay covered by
+     * the explicit findExistingBadgeScan() check, which matches on the real
+     * columns; every new row gets a key and is covered by the index too.
+     * @var string|null
+     */
+    #[ORM\Column(name: 'ScanDedupKey', type: 'string', nullable: true)]
+    private $scan_dedup_key;
+
+    /**
      * @var SponsorBadgeScanExtraQuestionAnswer[]
      */
     #[ORM\OneToMany(targetEntity: \SponsorBadgeScanExtraQuestionAnswer::class, mappedBy: 'badge_scan', cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -167,6 +193,38 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     public function setScanDate(\DateTime $scan_date): void
     {
         $this->scan_date = $scan_date;
+    }
+
+    /**
+     * Builds the value for the ScanDedupKey UNIQUE index from the tuple that
+     * identifies one physical scan. Uses the scan_date's epoch so the key is
+     * insensitive to how the DateTime was constructed (timezone, sub-second
+     * precision the DATETIME column would drop anyway) - the scanning app
+     * sends the timestamp as epoch seconds and resends it unchanged on a retry.
+     * @param Sponsor $sponsor
+     * @param SummitAttendeeBadge $badge
+     * @param \DateTime $scan_date
+     * @return string
+     */
+    public static function buildDedupKey(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date): string
+    {
+        return sprintf('%d:%d:%d', $sponsor->getId(), $badge->getId(), $scan_date->getTimestamp());
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getScanDedupKey(): ?string
+    {
+        return $this->scan_dedup_key;
+    }
+
+    /**
+     * @param string $scan_dedup_key
+     */
+    public function setScanDedupKey(string $scan_dedup_key): void
+    {
+        $this->scan_dedup_key = $scan_dedup_key;
     }
 
     public function getAttendeeFirstName():?string{

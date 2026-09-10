@@ -17,6 +17,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Services\Model\AbstractService;
 use App\Services\Model\ISponsorUserInfoGrantService;
 use App\Services\Utils\ILockManagerService;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
@@ -125,9 +126,20 @@ final class SponsorUserInfoGrantService
      * below - a crash-safety ceiling (a process that dies mid-critical-section
      * without releasing must not wedge that scan forever), not the
      * acquire-contention timeout, which ILockManagerService governs on its
-     * own (LockManagerService::MaxRetries with backoff). Matches the
-     * lifetime SummitOrderService already uses for its own short-lived
-     * per-entity locks.
+     * own (LockManagerService::MaxRetries with backoff).
+     *
+     * This value is deliberately NOT a correctness parameter, and is kept
+     * short so an orphaned lock frees that scan quickly (acquireLock only
+     * waits ~0.7s before giving up, so a long-lived orphan would turn every
+     * retry of that one scan into a failure). It can't be one: the lock has
+     * no renewal and no fencing token, so it can expire while the transaction
+     * it wraps is still running - DoctrineTransactionService retries a root
+     * transaction up to MaxRetries = 10 on reconnectable errors with no
+     * backoff bounding the wall clock, and LockManagerService::releaseLock
+     * only logs 'lock was not held by this token at release time' when the
+     * TTL already lapsed. The SponsorBadgeScan.ScanDedupKey UNIQUE index is
+     * what actually guarantees one row per scan; the lock just keeps the
+     * common case from doing wasted work.
      */
     private const BADGE_SCAN_LOCK_LIFETIME_SECONDS = 30;
 
@@ -271,13 +283,31 @@ final class SponsorUserInfoGrantService
      * ITransactionService::transaction defaults to): two concurrent
      * transactions can both run the check before either commits.
      *
-     * ILockManagerService (Redis-backed; see SummitOrderService for other
-     * callers) keyed by the same tuple serializes them - and, critically,
-     * the lock wraps the whole transaction() call below, held past its
-     * COMMIT rather than released as soon as the row is attached in-memory:
-     * releasing any earlier would let a second request's existence check
-     * run (and find nothing) before the first request's INSERT is actually
-     * durable and visible to it.
+     * The invariant is enforced in two layers, and only the second one is
+     * authoritative:
+     *
+     * 1. ILockManagerService (Redis-backed; see SponsorUserSyncService and
+     *    SummitOrderService for other callers) keyed by the same tuple
+     *    serializes the common case, with the lock wrapping the whole
+     *    transaction() call below and held past its COMMIT rather than
+     *    released as soon as the row is attached in-memory - releasing any
+     *    earlier would let a second request's existence check run (and find
+     *    nothing) before the first request's INSERT is durable. This is an
+     *    optimization: it keeps a retry from doing wasted work and from
+     *    provoking the exception path below.
+     *
+     * 2. The SponsorBadgeScan.ScanDedupKey UNIQUE index is what actually
+     *    guarantees one row per scan. The lock cannot: it has a TTL, no
+     *    renewal and no fencing token, so it can lapse while the transaction
+     *    it wraps is still running (DoctrineTransactionService retries a root
+     *    transaction up to MaxRetries = 10 on reconnectable errors, with no
+     *    backoff bounding the wall clock) and LockManagerService::releaseLock
+     *    merely logs that it was no longer held. When that happens the INSERT
+     *    is rejected by the index and the UniqueConstraintViolationException
+     *    handler below resolves the retry to the row that won the race.
+     *
+     * Rows predating that index keep a NULL ScanDedupKey and are covered by
+     * the explicit existence check alone - see the column's own docblock.
      *
      * A lock the retries inside ILockManagerService::acquireLock can't get
      * throws UnacquiredLockException, deliberately left to propagate (same
@@ -309,46 +339,84 @@ final class SponsorUserInfoGrantService
     ): SponsorBadgeScan
     {
         $lock_name = sprintf('badge_scan.%d.%d.%d.lock', $sponsor->getId(), $badge->getId(), $scan_date_epoch);
+        $dedup_key = SponsorBadgeScan::buildDedupKey($sponsor, $badge, $scan_date);
 
-        return $this->lock_service->lock($lock_name, function() use($sponsor, $badge, $scan_date, $qr_code, $source, $current_member, $data){
-            return $this->tx_service->transaction(function() use($sponsor, $badge, $scan_date, $qr_code, $source, $current_member, $data){
-                $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
-                if(!is_null($existing)){
-                    Log::warning(
-                        sprintf(
-                            "SponsorUserInfoGrantService::addBadgeScan duplicate scan detected for sponsor %s badge %s scan_date %s - returning existing scan %s",
-                            $sponsor->getId(),
-                            $badge->getId(),
-                            $scan_date->getTimestamp(),
-                            $existing->getId()
-                        )
-                    );
-                    return $existing;
-                }
-
-                $scan = new SponsorBadgeScan();
-                $scan->setScanDate($scan_date);
-                $scan->setQRCode($qr_code);
-                $scan->setUser($current_member);
-                $scan->setBadge($badge);
-                $scan->setSource($source);
-                $scan->setNotes(isset($data['notes'])? trim($data['notes']): "");
-
-                $sponsor->addUserInfoGrant($scan);
-
-                // extra questions
-                $extra_questions = $data['extra_questions'] ?? [];
-
-                if (count($extra_questions)) {
-                    $res = $scan->hadCompletedExtraQuestions($extra_questions);
-                    if (!$res) {
-                        throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+        try {
+            return $this->lock_service->lock($lock_name, function() use($sponsor, $badge, $scan_date, $dedup_key, $qr_code, $source, $current_member, $data){
+                return $this->tx_service->transaction(function() use($sponsor, $badge, $scan_date, $dedup_key, $qr_code, $source, $current_member, $data){
+                    $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
+                    if(!is_null($existing)){
+                        Log::warning(
+                            sprintf(
+                                "SponsorUserInfoGrantService::addBadgeScan duplicate scan detected for sponsor %s badge %s scan_date %s - returning existing scan %s",
+                                $sponsor->getId(),
+                                $badge->getId(),
+                                $scan_date->getTimestamp(),
+                                $existing->getId()
+                            )
+                        );
+                        return $existing;
                     }
-                }
 
-                return $scan;
+                    $scan = new SponsorBadgeScan();
+                    $scan->setScanDate($scan_date);
+                    $scan->setQRCode($qr_code);
+                    $scan->setUser($current_member);
+                    $scan->setBadge($badge);
+                    $scan->setSource($source);
+                    $scan->setNotes(isset($data['notes'])? trim($data['notes']): "");
+                    // Populates the column carrying the UNIQUE index, which is what
+                    // actually rejects a duplicate if the lock above failed to serialize
+                    // this request - the check right above only closes the window it can see.
+                    $scan->setScanDedupKey($dedup_key);
+
+                    $sponsor->addUserInfoGrant($scan);
+
+                    // extra questions
+                    $extra_questions = $data['extra_questions'] ?? [];
+
+                    if (count($extra_questions)) {
+                        $res = $scan->hadCompletedExtraQuestions($extra_questions);
+                        if (!$res) {
+                            throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+                        }
+                    }
+
+                    return $scan;
+                });
+            }, self::BADGE_SCAN_LOCK_LIFETIME_SECONDS);
+        }
+        catch(UniqueConstraintViolationException $ex){
+            // SponsorBadgeScan_ScanDedupKey rejected the INSERT: another request for
+            // this same physical scan committed first, so the existence check above
+            // ran before that row was visible - either because the dedup lock's TTL
+            // lapsed mid-transaction (it has no renewal, and releaseLock only logs
+            // the mismatch) or because the two requests never contended on it at all.
+            // Either way the retry is satisfied by returning the row that won.
+            //
+            // Caught out here rather than inside the closures on purpose: a failed
+            // flush leaves the EntityManager closed and the connection rollback-only,
+            // so the winning row can only be re-read in a fresh transaction. Same
+            // placement as SummitService::addEventToMemberSchedule's own handling.
+            // DoctrineTransactionService::shouldReconnect() does not treat this as
+            // reconnectable, so it reaches us instead of being retried.
+            Log::warning(
+                sprintf(
+                    "SponsorUserInfoGrantService::addBadgeScan unique violation on dedup key %s - a concurrent request won the race, resolving to the committed scan.",
+                    $dedup_key
+                )
+            );
+
+            return $this->tx_service->transaction(function() use($sponsor, $badge, $scan_date, $ex){
+                $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
+                if(is_null($existing)){
+                    // Not our tuple - some other unique index on the scan or its answers
+                    // rejected the write, and swallowing that would hide a real failure.
+                    throw $ex;
+                }
+                return $existing;
             });
-        }, self::BADGE_SCAN_LOCK_LIFETIME_SECONDS);
+        }
     }
 
     /**

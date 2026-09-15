@@ -875,6 +875,164 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
             'speaker with a completed/received submission must not be treated as pending');
     }
 
+    /**
+     * Regression test: has_pending_presentations==false is a hand-assembled
+     * NOT EXISTS (...) AND NOT EXISTS (...) DQL string with no prior coverage.
+     * Assert the complement of the ==true behaviour: a speaker whose only
+     * submission is complete/received must be returned, while a speaker with
+     * a genuinely unfinished submission must be excluded.
+     */
+    public function testGetCurrentSummitSpeakersWithPendingPresentationsFalse()
+    {
+        $completeSpeaker = new PresentationSpeaker();
+        $completeSpeaker->setFirstName("Complete");
+        $completeSpeaker->setLastName("Speaker");
+        self::$em->persist($completeSpeaker);
+
+        $pendingSpeaker = new PresentationSpeaker();
+        $pendingSpeaker->setFirstName("Pending");
+        $pendingSpeaker->setLastName("Speaker");
+        self::$em->persist($pendingSpeaker);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $completePres = new Presentation();
+        self::$summit->addEvent($completePres);
+        $completePres->setTitle("Complete Submission Presentation");
+        $completePres->setAbstract("Abstract");
+        $completePres->setCategory(self::$defaultTrack);
+        $completePres->setType(self::$defaultPresentationType);
+        $completePres->setProgress(Presentation::PHASE_COMPLETE);
+        $completePres->setStatus(Presentation::STATUS_RECEIVED);
+        $completePres->setStartDate($start);
+        $completePres->setEndDate($end);
+        $completePres->addSpeaker($completeSpeaker);
+        // Complete/received, but deliberately NOT published and NOT added to any
+        // SummitSelectedPresentation group list
+        self::$em->flush();
+
+        $pendingPres = new Presentation();
+        self::$summit->addEvent($pendingPres);
+        $pendingPres->setTitle("Pending Submission Presentation");
+        $pendingPres->setAbstract("Abstract");
+        $pendingPres->setCategory(self::$defaultTrack);
+        $pendingPres->setType(self::$defaultPresentationType);
+        $pendingPres->setStartDate($start);
+        $pendingPres->setEndDate($end);
+        $pendingPres->addSpeaker($pendingSpeaker);
+        // Deliberately unfinished (default progress/status), NOT published and NOT
+        // added to any SummitSelectedPresentation group list
+        self::$em->flush();
+
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 100,
+            'filter'   => [
+                'has_pending_presentations==false',
+            ],
+            'order'    => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $ids = array_map(fn($s) => $s->id, json_decode($response->getContent())->data);
+
+        $this->assertContains($completeSpeaker->getId(), $ids,
+            'speaker whose only submission is complete/received must be returned for ==false');
+        $this->assertNotContains($pendingSpeaker->getId(), $ids,
+            'speaker with a genuinely unfinished submission must not be returned for ==false');
+    }
+
+    /**
+     * Regression test: the moderator EXISTS subquery (__p42 in
+     * DoctrineSpeakerRepository) is a separate OR/AND branch from the
+     * speaker-role subquery (__p41) and has no dedicated coverage. Seed a
+     * presentation whose only link to the speaker is setModerator(), so a
+     * broken moderator branch (e.g. dropped or mis-joined) cannot be masked
+     * by the speaker-role branch.
+     */
+    public function testGetCurrentSummitSpeakersWithPendingPresentationsModeratorOnly()
+    {
+        $moderator = new PresentationSpeaker();
+        $moderator->setFirstName("Moderator");
+        $moderator->setLastName("Only");
+        self::$em->persist($moderator);
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pres = new Presentation();
+        self::$summit->addEvent($pres);
+        $pres->setTitle("Moderator Only Pending Presentation");
+        $pres->setAbstract("Abstract");
+        $pres->setCategory(self::$defaultTrack);
+        $pres->setType(self::$defaultPresentationType);
+        $pres->setStartDate($start);
+        $pres->setEndDate($end);
+        $pres->setModerator($moderator);
+        // Deliberately unfinished (default progress/status), NOT published and NOT
+        // added to any SummitSelectedPresentation group list. $moderator is NOT
+        // added as a speaker, only as the moderator.
+        self::$em->flush();
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $trueResponse = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            [
+                'id'       => self::$summit->getId(),
+                'page'     => 1,
+                'per_page' => 100,
+                'filter'   => ['has_pending_presentations==true'],
+                'order'    => '+id'
+            ],
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $trueIds = array_map(fn($s) => $s->id, json_decode($trueResponse->getContent())->data);
+        $this->assertContains($moderator->getId(), $trueIds,
+            'speaker whose only link to an unfinished presentation is being its moderator must be returned for ==true');
+
+        $falseResponse = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSpeakers",
+            [
+                'id'       => self::$summit->getId(),
+                'page'     => 1,
+                'per_page' => 100,
+                'filter'   => ['has_pending_presentations==false'],
+                'order'    => '+id'
+            ],
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $falseIds = array_map(fn($s) => $s->id, json_decode($falseResponse->getContent())->data);
+        $this->assertNotContains($moderator->getId(), $falseIds,
+            'speaker whose only link to an unfinished presentation is being its moderator must not be returned for ==false');
+    }
+
     public function testGetCurrentSummitSpeakersFilteredByMemberExternalUserID()
     {
         $params = [
@@ -1119,6 +1277,105 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
                 sprintf(
                     'the chunk must contain exactly the speaker of the filtered member, not the control speaker %s',
                     $control_speaker->getId()
+                )
+            );
+            return true;
+        });
+    }
+
+    /**
+     * Regression test: the ticket's stated goal is the reminder email through
+     * PUT .../speakers/all/send, yet nothing previously asserted the chunk
+     * handed to ProcessSpeakersEmailRequestJob is actually narrowed by
+     * has_pending_presentations. All fixture presentations for
+     * self::$defaultSpeaker/self::$speaker are published, so they can never
+     * satisfy has_pending_presentations==true; only $pending_speaker below can.
+     */
+    public function testSendSpeakersBulkEmailFilteredByHasPendingPresentations() {
+        Queue::fake();
+
+        $start = new \DateTime('now', new \DateTimeZone('UTC'));
+        $end   = (clone $start)->add(new \DateInterval('PT2H'));
+
+        $pending_speaker = new PresentationSpeaker();
+        $pending_speaker->setFirstName("Pending");
+        $pending_speaker->setLastName("Send Speaker");
+        self::$em->persist($pending_speaker);
+
+        $pending_presentation = new Presentation();
+        self::$summit->addEvent($pending_presentation);
+        $pending_presentation->setTitle("Pending Send Presentation");
+        $pending_presentation->setAbstract("Abstract");
+        $pending_presentation->setCategory(self::$defaultTrack);
+        $pending_presentation->setType(self::$defaultPresentationType);
+        $pending_presentation->setStartDate($start);
+        $pending_presentation->setEndDate($end);
+        $pending_presentation->addSpeaker($pending_speaker);
+        // Deliberately unfinished (default progress/status), NOT published and NOT
+        // added to any SummitSelectedPresentation group list
+
+        // Negative control: a speaker whose submission is already complete/received
+        // must NOT be in the dispatched chunk, even though it is also unpublished.
+        $complete_speaker = new PresentationSpeaker();
+        $complete_speaker->setFirstName("Complete");
+        $complete_speaker->setLastName("Send Speaker");
+        self::$em->persist($complete_speaker);
+
+        $complete_presentation = new Presentation();
+        self::$summit->addEvent($complete_presentation);
+        $complete_presentation->setTitle("Complete Send Presentation");
+        $complete_presentation->setAbstract("Abstract");
+        $complete_presentation->setCategory(self::$defaultTrack);
+        $complete_presentation->setType(self::$defaultPresentationType);
+        $complete_presentation->setProgress(Presentation::PHASE_COMPLETE);
+        $complete_presentation->setStatus(Presentation::STATUS_RECEIVED);
+        $complete_presentation->setStartDate($start);
+        $complete_presentation->setEndDate($end);
+        $complete_presentation->addSpeaker($complete_speaker);
+
+        self::$em->flush();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'filter' => [
+                'has_pending_presentations==true',
+            ],
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $data = [
+            'email_flow_event' => 'SUMMIT_SUBMISSIONS_PRESENTATION_SPEAKER_ACCEPTED_ALTERNATE',
+        ];
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitSpeakersApiController@send",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(200);
+
+        Queue::assertPushed(\App\Jobs\Emails\ProcessSpeakersEmailRequestJob::class, 1);
+        Queue::assertPushed(\App\Jobs\Emails\ProcessSpeakersEmailRequestJob::class, function ($job) use ($pending_speaker, $complete_speaker) {
+            $ref = new \ReflectionObject($job);
+            $prop = $ref->getProperty('payload');
+            $prop->setAccessible(true);
+            $payload = $prop->getValue($job);
+            $this->assertEquals(
+                [$pending_speaker->getId()],
+                $payload['speaker_ids'] ?? [],
+                sprintf(
+                    'the chunk must contain exactly the speaker with a pending submission, not the complete/received control speaker %s',
+                    $complete_speaker->getId()
                 )
             );
             return true;

@@ -13,6 +13,7 @@
  * limitations under the License.
  **/
 
+use models\summit\Summit;
 
 /**
  * Interface IEmailActionsStrategyFactory
@@ -21,8 +22,9 @@
 interface IEmailActionsStrategyFactory
 {
     /**
+     * @param Summit $summit
      * @param String $flow_event
      * @return AbstractEmailAction|null
      */
-    public function build(String $flow_event): ?AbstractEmailAction;
+    public function build(Summit $summit, String $flow_event): ?AbstractEmailAction;
 }

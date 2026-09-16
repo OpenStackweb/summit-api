@@ -13,6 +13,7 @@
  **/
 
 use App\Http\Utils\IFileUploader;
+use Doctrine\DBAL\TransactionIsolationLevel;
 use App\Jobs\Emails\PresentationSubmissions\SelectionProcess\PresentationSpeakerSelectionProcessExcerptEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionApprovedEmail;
 use App\Jobs\Emails\PresentationSubmissions\SpeakerEditPermissionRejectedEmail;
@@ -1258,15 +1259,21 @@ final class SpeakerService
             $ids = $payload['speaker_ids'];
         } else {
             $parsedFilter = !is_null($filter) ? FilterParser::parse($filter, ISpeakerFilterFields::OPERATORS) : null;
-            $ids = [];
-            $page = 1;
-            do {
-                $currentPage = $this->tx_service->transaction(function () use ($summit, $page, $parsedFilter, $process_db_chunk_size) {
-                    return $this->speaker_repository->getSpeakersIdsBySummit($summit, new PagingInfo($page, $process_db_chunk_size), $parsedFilter);
-                });
-                $ids = array_merge($ids, $currentPage);
-                $page++;
-            } while (count($currentPage) > 0);
+            // One root transaction at REPEATABLE READ around the whole scan, not one per page: every
+            // LIMIT/OFFSET page then reads the same InnoDB snapshot, so a speaker that is deleted or
+            // stops matching the filter while the loop runs cannot shift later rows and silently drop
+            // one id. READ COMMITTED (the transaction service default) takes a fresh snapshot per
+            // statement and would leave that cross-page drift in place. Reads only - no locks held.
+            $ids = $this->tx_service->transaction(function () use ($summit, $parsedFilter, $process_db_chunk_size) {
+                $ids = [];
+                $page = 1;
+                do {
+                    $currentPage = $this->speaker_repository->getSpeakersIdsBySummit($summit, new PagingInfo($page, $process_db_chunk_size), $parsedFilter);
+                    $ids = array_merge($ids, $currentPage);
+                    $page++;
+                } while (count($currentPage) > 0);
+                return $ids;
+            }, TransactionIsolationLevel::REPEATABLE_READ);
         }
 
         if (isset($payload['excluded_speaker_ids'])) {
@@ -1386,6 +1393,22 @@ final class SpeakerService
                         $onDispatchInfo,
                         $payload
                     ) {
+                        // $summit is the root entity _sendEmails fetched once, outside this
+                        // transaction. After an earlier speaker's transaction failed (a missing
+                        // speaker id throws EntityNotFoundException below; a queue push or a
+                        // retryable DB error can throw too), DoctrineTransactionService cleared or
+                        // replaced the EntityManager and that instance is detached: every write
+                        // below that references it - the sent-proof, an auto-generated promo code,
+                        // a speaker assistance - would then fail at flush ("A new entity was found
+                        // through the relationship ...#summit") AFTER the email was dispatched, and
+                        // a retried chunk would re-email everyone processed after the failure.
+                        // Re-resolve it from the current EntityManager: an identity-map hit on the
+                        // normal path, one query only after a clear.
+                        $summit = $this->summit_repository->getById($summit->getId());
+                        if (!$summit instanceof Summit) {
+                            throw new EntityNotFoundException('Summit not found');
+                        }
+
                         $email_strategy = new SpeakerActionsEmailStrategy($summit, $flow_event);
 
                         Log::debug(sprintf("SpeakerService::send processing speaker id %s payload %s", $speaker_id, json_encode($payload)));

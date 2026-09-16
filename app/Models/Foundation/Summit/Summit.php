@@ -4476,11 +4476,27 @@ SQL;
     }
 
     /**
+     * Instance-level memo keyed by $usage. Not initialized in the constructor - Doctrine
+     * proxies may not run it - so the inline default is what guarantees this is always an
+     * array. getMainOrderExtraQuestionsByUsage() has exactly one caller in the codebase
+     * (SummitAttendee::getExtraQuestions()), and the same Summit PHP instance is reused for
+     * every attendee in a bulk email send's do-while loop (ParametrizedSendEmails::_sendEmails
+     * fetches the root entity once), so this turns N identical queries per chunk into 1.
+     *
+     * @var array
+     */
+    private $main_order_extra_questions_cache = [];
+
+    /**
      * @param string $usage
      * @return array
      */
     public function getMainOrderExtraQuestionsByUsage(string $usage): array
     {
+        if (isset($this->main_order_extra_questions_cache[$usage])) {
+            return $this->main_order_extra_questions_cache[$usage];
+        }
+
         $dql = <<<DQL
 SELECT q from models\summit\SummitOrderExtraQuestionType q
 JOIN q.summit s
@@ -4490,11 +4506,15 @@ AND not exists (select r from App\Models\Foundation\Main\ExtraQuestions\SubQuest
 DQL;
 
         $query = $this->createQuery($dql);
-        return $query
+        $result = $query
             ->setParameter('summit_id', $this->getIdentifier())
             ->setParameter('usage1', $usage)
             ->setParameter('usage2', SummitOrderExtraQuestionTypeConstants::BothQuestionUsage)
             ->getResult();
+
+        $this->main_order_extra_questions_cache[$usage] = $result;
+
+        return $result;
     }
 
     /**

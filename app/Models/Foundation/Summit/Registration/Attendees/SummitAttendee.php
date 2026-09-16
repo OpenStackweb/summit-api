@@ -217,6 +217,12 @@ class SummitAttendee extends SilverstripeBaseModel
     private $tags;
 
     /**
+     * @var \Doctrine\Common\Collections\Collection<int, SummitAttendeeAnnouncementEmail>
+     */
+    #[ORM\OneToMany(targetEntity: \models\summit\SummitAttendeeAnnouncementEmail::class, mappedBy: 'attendee', cascade: ['persist', 'remove'], orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    private $announcement_emails;
+
+    /**
      * @param bool $summit_hall_checked_in
      */
     public function setSummitHallCheckedIn(bool $summit_hall_checked_in): void
@@ -297,6 +303,51 @@ class SummitAttendee extends SilverstripeBaseModel
         return $this->tickets->first();
     }
 
+    public function addAnnouncementEmail(SummitAttendeeAnnouncementEmail $announcementEmail)
+    {
+        if ($this->announcement_emails->contains($announcementEmail)) return;
+        $this->announcement_emails->add($announcementEmail);
+        $announcementEmail->setAttendee($this);
+    }
+
+    public function removeAnnouncementEmail(SummitAttendeeAnnouncementEmail $announcementEmail)
+    {
+        if (!$this->announcement_emails->contains($announcementEmail)) return;
+        $this->announcement_emails->removeElement($announcementEmail);
+        $announcementEmail->clearAttendee();
+    }
+
+    /**
+     * Per-recipient, per-email-type, timestamped proof check backing the bulk-send resume
+     * predicate (AbstractEmailAction::alreadySentSince). Bounded matching() query on the
+     * EXTRA_LAZY announcement_emails collection - does not hydrate it. $ticket distinguishes
+     * SummitAttendeeTicketEmailStrategy's per-ticket proofs (one email per active paid ticket)
+     * from every other strategy's single per-attendee proof (ticket left null).
+     *
+     * @param Summit $summit
+     * @param string $type
+     * @param \DateTime $since
+     * @param SummitAttendeeTicket|null $ticket
+     * @return bool
+     */
+    public function hasAnnouncementEmailTypeSentSince(Summit $summit, string $type, \DateTime $since, ?SummitAttendeeTicket $ticket = null): bool
+    {
+        $criteria = Criteria::create();
+
+        $criteria
+            ->where(Criteria::expr()->eq('summit', $summit))
+            ->andWhere(Criteria::expr()->eq('type', $type))
+            ->andWhere(Criteria::expr()->gte('send_date', $since));
+
+        if (!is_null($ticket)) {
+            $criteria->andWhere(Criteria::expr()->eq('ticket', $ticket));
+        } else {
+            $criteria->andWhere(Criteria::expr()->isNull('ticket'));
+        }
+
+        return $this->announcement_emails->matching($criteria)->count() > 0;
+    }
+
     /**
      * @param SummitAttendeeTicket $ticket
      */
@@ -349,6 +400,7 @@ class SummitAttendee extends SilverstripeBaseModel
         $this->managed_attendees = new ArrayCollection();
         $this->manager = null;
         $this->rsvp_invitations = new ArrayCollection();
+        $this->announcement_emails = new ArrayCollection();
     }
 
     public function isVirtualCheckedIn(): bool

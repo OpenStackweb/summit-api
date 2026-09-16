@@ -23,6 +23,7 @@ use libs\utils\TextUtils;
 use models\main\IMemberRepository;
 use models\main\Member;
 use App\Repositories\SilverStripeDoctrineRepository;
+use models\summit\Presentation;
 use models\summit\Summit;
 use models\summit\SummitSelectedPresentation;
 use models\summit\SummitSelectedPresentationList;
@@ -240,6 +241,63 @@ final class DoctrineMemberRepository
                               __p10_1.summit = :summit AND
                               LOWER(__c10.email) :operator LOWER(:value) )"
             ),
+            'has_pending_presentations' =>
+                new DoctrineSwitchFilterMapping([
+                        'true' => new DoctrineCaseFilterMapping(
+                            'true',
+                            sprintf('EXISTS (
+                                        SELECT __p41.id FROM models\summit\Presentation __p41
+                                        JOIN __p41.created_by __c41 WITH __c41 = e.id
+                                        JOIN __p41.category __cat41
+                                        JOIN __p41.type __t41
+                                        LEFT JOIN __p41.selection_plan __sel_plan41
+                                        LEFT JOIN models\summit\PresentationMediaUpload __pm41 WITH __pm41.presentation = __p41
+                                        LEFT JOIN __pm41.media_upload_type __mut41
+                                        WHERE
+                                        __p41.summit = :summit
+                                        AND __p41.published = 0
+                                        AND (__p41.progress != '.Presentation::PHASE_COMPLETE.' OR __p41.status IS NULL OR __p41.status != \''.Presentation::STATUS_RECEIVED.'\') '.
+                                (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '41'): ' ').
+                                ' AND NOT EXISTS (
+                                            SELECT ___sp41.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp41
+                                            JOIN ___sp41.presentation ___p41
+                                            JOIN ___sp41.list ___spl41 WITH ___spl41.list_type = \'%1$s\' AND ___spl41.list_class = \'%2$s\'
+                                            WHERE ___p41.id = __p41.id
+                                        ))',
+                                SummitSelectedPresentationList::Group,
+                                SummitSelectedPresentationList::Session
+                            )
+                        ),
+                        'false' => new DoctrineCaseFilterMapping(
+                            'false',
+                            sprintf('
+                                     NOT EXISTS (
+                                        SELECT __p41.id FROM models\summit\Presentation __p41
+                                        JOIN __p41.created_by __c41 WITH __c41 = e.id
+                                        JOIN __p41.category __cat41
+                                        JOIN __p41.type __t41
+                                        LEFT JOIN __p41.selection_plan __sel_plan41
+                                        LEFT JOIN models\summit\PresentationMediaUpload __pm41 WITH __pm41.presentation = __p41
+                                        LEFT JOIN __pm41.media_upload_type __mut41
+                                        WHERE
+                                        __p41.summit = :summit
+                                        AND __p41.published = 0
+                                        AND (__p41.progress != '.Presentation::PHASE_COMPLETE.' OR __p41.status IS NULL OR __p41.status != \''.Presentation::STATUS_RECEIVED.'\') '.
+                                (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '41'): ' ').
+                                ' AND NOT EXISTS (
+                                            SELECT ___sp41.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp41
+                                            JOIN ___sp41.presentation ___p41
+                                            JOIN ___sp41.list ___spl41 WITH ___spl41.list_type = \'%1$s\' AND ___spl41.list_class = \'%2$s\'
+                                            WHERE ___p41.id = __p41.id
+                                        ))',
+                                SummitSelectedPresentationList::Group,
+                                SummitSelectedPresentationList::Session
+                            )
+                        ),
+                    ]
+                ),
             'has_accepted_presentations' =>
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(

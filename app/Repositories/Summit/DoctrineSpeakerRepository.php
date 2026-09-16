@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Libs\Utils\Doctrine\DoctrineStatementValueBinder;
 use models\main\Member;
 use models\summit\ISpeakerRepository;
+use models\summit\Presentation;
 use models\summit\PresentationSpeaker;
 use models\summit\Summit;
 use models\summit\SummitSelectedPresentation;
@@ -252,6 +253,111 @@ final class DoctrineSpeakerRepository
                               WHERE 
                               __p10_2.summit = :summit AND
                               LOWER(__cb10_2.email) :operator LOWER(:value) )"),
+            'has_pending_presentations' =>
+                new DoctrineSwitchFilterMapping([
+                        'true' => new DoctrineCaseFilterMapping(
+                            'true',
+                            sprintf('EXISTS (
+                                        SELECT __p41.id FROM models\summit\Presentation __p41
+                                        JOIN __p41.speakers __spk41 WITH __spk41.speaker = e.id
+                                        JOIN __p41.category __cat41
+                                        JOIN __p41.type __t41
+                                        LEFT JOIN __p41.selection_plan __sel_plan41
+                                        LEFT JOIN models\summit\PresentationMediaUpload __pm41 WITH __pm41.presentation = __p41
+                                        LEFT JOIN __pm41.media_upload_type __mut41
+                                        WHERE
+                                        __p41.summit = :summit
+                                        AND __p41.published = 0
+                                        AND (__p41.progress != '.Presentation::PHASE_COMPLETE.' OR __p41.status IS NULL OR __p41.status != \''.Presentation::STATUS_RECEIVED.'\')'.
+                                        (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '41'): ' ').
+                                        'AND NOT EXISTS (
+                                            SELECT ___sp41.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp41
+                                            JOIN ___sp41.presentation ___p41
+                                            JOIN ___sp41.list ___spl41 WITH ___spl41.list_type = \'%1$s\' AND ___spl41.list_class = \'%2$s\'
+                                            WHERE ___p41.id = __p41.id
+                                        ))',
+                                SummitSelectedPresentationList::Group,
+                                       SummitSelectedPresentationList::Session
+                                    ).
+                                     ' OR '.
+                                    sprintf('EXISTS (
+                                        SELECT __p42.id FROM models\summit\Presentation __p42
+                                        JOIN __p42.moderator __md42 WITH __md42.id = e.id
+                                        JOIN __p42.category __cat42
+                                        JOIN __p42.type __t42
+                                        LEFT JOIN __p42.selection_plan __sel_plan42
+                                        LEFT JOIN models\summit\PresentationMediaUpload __pm42 WITH __pm42.presentation = __p42
+                                        LEFT JOIN __pm42.media_upload_type __mut42
+                                        WHERE
+                                        __p42.summit = :summit
+                                        AND __p42.published = 0
+                                        AND (__p42.progress != '.Presentation::PHASE_COMPLETE.' OR __p42.status IS NULL OR __p42.status != \''.Presentation::STATUS_RECEIVED.'\')'.
+                                        (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '42'): ' ').
+                                        'AND NOT EXISTS (
+                                            SELECT ___sp42.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp42
+                                            JOIN ___sp42.presentation ___p42
+                                            JOIN ___sp42.list ___spl42 WITH ___spl42.list_type = \'%1$s\' AND ___spl42.list_class = \'%2$s\'
+                                            WHERE ___p42.id = __p42.id
+                                        ))',
+                                SummitSelectedPresentationList::Group,
+                                SummitSelectedPresentationList::Session
+                            )
+                        ),
+                        'false' => new DoctrineCaseFilterMapping(
+                            'false',
+                            sprintf('
+                                     NOT EXISTS (
+                                        SELECT __p41.id FROM models\summit\Presentation __p41
+                                        JOIN __p41.speakers __spk41 WITH __spk41.speaker = e.id
+                                        JOIN __p41.category __cat41
+                                        JOIN __p41.type __t41
+                                        LEFT JOIN __p41.selection_plan __sel_plan41
+                                        LEFT JOIN models\summit\PresentationMediaUpload __pm41 WITH __pm41.presentation = __p41
+                                        LEFT JOIN __pm41.media_upload_type __mut41
+                                        WHERE
+                                        __p41.summit = :summit
+                                        AND __p41.published = 0
+                                        AND (__p41.progress != '.Presentation::PHASE_COMPLETE.' OR __p41.status IS NULL OR __p41.status != \''.Presentation::STATUS_RECEIVED.'\')'.
+                                        (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '41'): ' ').
+                                        'AND NOT EXISTS (
+                                            SELECT ___sp41.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp41
+                                            JOIN ___sp41.presentation ___p41
+                                            JOIN ___sp41.list ___spl41 WITH ___spl41.list_type = \'%1$s\' AND ___spl41.list_class = \'%2$s\'
+                                            WHERE ___p41.id = __p41.id
+                                        ))',
+                                SummitSelectedPresentationList::Group,
+                                       SummitSelectedPresentationList::Session
+                                    ).
+                                     ' AND '.
+                                     sprintf('NOT EXISTS (
+                                        SELECT __p42.id FROM models\summit\Presentation __p42
+                                        JOIN __p42.moderator __md42 WITH __md42.id = e.id
+                                        JOIN __p42.category __cat42
+                                        JOIN __p42.type __t42
+                                        LEFT JOIN __p42.selection_plan __sel_plan42
+                                        LEFT JOIN models\summit\PresentationMediaUpload __pm42 WITH __pm42.presentation = __p42
+                                        LEFT JOIN __pm42.media_upload_type __mut42
+                                        WHERE
+                                        __p42.summit = :summit
+                                        AND __p42.published = 0
+                                        AND (__p42.progress != '.Presentation::PHASE_COMPLETE.' OR __p42.status IS NULL OR __p42.status != \''.Presentation::STATUS_RECEIVED.'\')'.
+                                        (!empty($extraSelectionStatusFilter)? sprintf($extraSelectionStatusFilter, '42'): ' ').
+                                        'AND NOT EXISTS (
+                                            SELECT ___sp42.id
+                                            FROM models\summit\SummitSelectedPresentation ___sp42
+                                            JOIN ___sp42.presentation ___p42
+                                            JOIN ___sp42.list ___spl42 WITH ___spl42.list_type = \'%1$s\' AND ___spl42.list_class = \'%2$s\'
+                                            WHERE ___p42.id = __p42.id
+                                        ))',
+                                SummitSelectedPresentationList::Group,
+                                SummitSelectedPresentationList::Session
+                            )
+                        ),
+                    ]
+                ),
             'has_accepted_presentations' =>
                 new DoctrineSwitchFilterMapping([
                         'true' => new DoctrineCaseFilterMapping(

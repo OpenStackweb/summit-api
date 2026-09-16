@@ -81,7 +81,7 @@ abstract class PresentationMaterial
         try {
             return $this->presentation->getSummitId();
         }
-        catch (\Exception $ex){
+        catch (\Throwable $ex){
             return 0;
         }
     }

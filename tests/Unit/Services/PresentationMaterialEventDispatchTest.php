@@ -136,4 +136,17 @@ class PresentationMaterialEventDispatchTest extends TestCase
         $this->assertCount(1, $jobs, 'Expected 1 ProcessScheduleEntityLifeCycleEvent for PresentationMediaUpload delete');
         $this->assertSame(0, $jobs[0]->summit_id, 'summit_id is 0 here because unsetPresentation() runs before PreRemove - accepted degraded case, not a regression');
     }
+
+    /**
+     * Both accessors must survive a material whose owning presentation is not set - the
+     * state removeMediaUpload() leaves behind before PreRemove fires. A null dereference
+     * throws \Error, which a catch of \Exception does not cover.
+     */
+    public function testAccessorsReturnZeroWhenPresentationIsNotSet(): void
+    {
+        $media_upload = new PresentationMediaUpload();
+
+        $this->assertSame(0, $media_upload->getPresentationId());
+        $this->assertSame(0, $media_upload->getSummitId());
+    }
 }

@@ -11,8 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Jobs\FileProcessingJob;
+use App\Models\Foundation\Summit\Repositories\ISummitBadgeFeatureTypeRepository;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Mockery;
+use models\summit\SummitBadgeFeatureType;
 /**
  * Class OAuth2SummitBadgeFeatureTypeApiTest
  */
@@ -305,5 +312,228 @@ HTML;
 
         $content = $response->getContent();
         $this->assertResponseStatus(204);
+    }
+
+    // -------------------------------------------------------------------------
+    // image as File API payload (async FileProcessingJob)
+    // -------------------------------------------------------------------------
+
+    private function jsonHeaders(): array
+    {
+        return [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"       => "application/json"
+        ];
+    }
+
+    /**
+     * Pins the File API storage to a fake local disk and stores $content at $remotePath.
+     */
+    private function putRemoteFile(string $remotePath, string $content): void
+    {
+        Config::set('file_upload.storage_driver', 'local');
+        Storage::fake('local');
+        Storage::disk('local')->put($remotePath, $content);
+    }
+
+    private function buildImagePayload(string $remotePath, string $filename, string $content, string $mime_type = 'image/png'): array
+    {
+        return [
+            'filepath'  => $remotePath,
+            'filename'  => $filename,
+            'md5'       => md5($content),
+            'size'      => strlen($content),
+            'mime_type' => $mime_type,
+        ];
+    }
+
+    private function fakePngContent(): string
+    {
+        return file_get_contents(UploadedFile::fake()->image('feature.png')->getRealPath());
+    }
+
+    private function postFeature(array $data)
+    {
+        return $this->action(
+            "POST",
+            "OAuth2SummitBadgeFeatureTypeApiController@add",
+            ['id' => self::$summit->getId()],
+            [],
+            [],
+            [],
+            $this->jsonHeaders(),
+            json_encode($data)
+        );
+    }
+
+    private function putFeature(int $feature_id, array $data)
+    {
+        return $this->action(
+            "PUT",
+            "OAuth2SummitBadgeFeatureTypeApiController@update",
+            ['id' => self::$summit->getId(), 'feature_id' => $feature_id],
+            [],
+            [],
+            [],
+            $this->jsonHeaders(),
+            json_encode($data)
+        );
+    }
+
+    private function assertImageJobPushedFor(int $feature_id): void
+    {
+        Queue::assertPushed(FileProcessingJob::class, 1);
+        Queue::assertPushed(FileProcessingJob::class, function (FileProcessingJob $job) use ($feature_id) {
+            return $job->fileInfoDTO->owner_entity_class === SummitBadgeFeatureType::class
+                && $job->fileInfoDTO->owner_member_name === 'image'
+                && $job->fileInfoDTO->owner_entity_id === $feature_id;
+        });
+    }
+
+    public function testAddBadgeFeatureTypeWithImageQueuesFileProcessingJob(): void
+    {
+        $content = $this->fakePngContent();
+        $this->putRemoteFile('badge-features/tmp/feature.png', $content);
+        Queue::fake();
+
+        $response = $this->postFeature([
+            'name'  => str_random(16) . '_feature_type',
+            'image' => $this->buildImagePayload('badge-features/tmp/feature.png', 'feature.png', $content),
+        ]);
+
+        $this->assertResponseStatus(201);
+        $feature = json_decode($response->getContent());
+        $this->assertImageJobPushedFor($feature->id);
+    }
+
+    public function testUpdateBadgeFeatureTypeWithImageQueuesFileProcessingJob(): void
+    {
+        $content = $this->fakePngContent();
+        $this->putRemoteFile('badge-features/tmp/feature.png', $content);
+        Queue::fake();
+
+        $feature = $this->_testAddBadgeFeatureType();
+
+        // PUT goes through JsonController::updated(), which responds 201
+        $this->putFeature($feature->id, [
+            'image' => $this->buildImagePayload('badge-features/tmp/feature.png', 'feature.png', $content),
+        ]);
+
+        $this->assertResponseStatus(201);
+        $this->assertImageJobPushedFor($feature->id);
+    }
+
+    public function testUpdateBadgeFeatureTypeWithoutImageQueuesNoJobAndKeepsImage(): void
+    {
+        $feature = $this->_testAddBadgeFeatureType();
+
+        $this->action(
+            "POST",
+            "OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage",
+            ['id' => self::$summit->getId(), 'feature_id' => $feature->id],
+            [],
+            [],
+            ['file' => UploadedFile::fake()->image('feat.png')],
+            $this->jsonHeaders()
+        );
+        $this->assertResponseStatus(201);
+
+        Queue::fake();
+
+        $this->putFeature($feature->id, ['description' => 'updated without image']);
+
+        $this->assertResponseStatus(201);
+        Queue::assertNotPushed(FileProcessingJob::class);
+        $entity = App::make(ISummitBadgeFeatureTypeRepository::class)->getById($feature->id);
+        $this->assertNotNull($entity->getImage());
+    }
+
+    public function testEmptyStringImageIsIgnoredOnAddAndUpdate(): void
+    {
+        Queue::fake();
+
+        $response = $this->postFeature([
+            'name'  => str_random(16) . '_feature_type',
+            'image' => '',
+        ]);
+        $this->assertResponseStatus(201);
+        $feature = json_decode($response->getContent());
+
+        $this->putFeature($feature->id, ['image' => '']);
+        $this->assertResponseStatus(201);
+
+        Queue::assertNotPushed(FileProcessingJob::class);
+    }
+
+    public function testImageWithInvalidExtensionReturns412AndPersistsNothing(): void
+    {
+        $this->putRemoteFile('badge-features/tmp/feature.bmp', 'fake-bmp-content');
+        Queue::fake();
+        $image = $this->buildImagePayload('badge-features/tmp/feature.bmp', 'feature.bmp', 'fake-bmp-content', 'image/bmp');
+
+        // POST: nothing is created, so the same name is still free afterwards
+        $name = str_random(16) . '_feature_type';
+        $this->postFeature(['name' => $name, 'image' => $image]);
+        $this->assertResponseStatus(412);
+        $this->postFeature(['name' => $name]);
+        $this->assertResponseStatus(201);
+
+        // PUT: the name change in the same request is not persisted
+        $feature = $this->_testAddBadgeFeatureType();
+        $this->putFeature($feature->id, ['name' => str_random(16) . '_renamed', 'image' => $image]);
+        $this->assertResponseStatus(412);
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitBadgeFeatureTypeApiController@get",
+            ['id' => self::$summit->getId(), 'feature_id' => $feature->id],
+            [],
+            [],
+            [],
+            $this->jsonHeaders()
+        );
+        $this->assertResponseStatus(200);
+        $this->assertEquals($feature->name, json_decode($response->getContent())->name);
+
+        Queue::assertNotPushed(FileProcessingJob::class);
+    }
+
+    public function testImageNotPresentInStorageReturns412AndPersistsNothing(): void
+    {
+        Config::set('file_upload.storage_driver', 'local');
+        Storage::fake('local');
+        Queue::fake();
+
+        $name = str_random(16) . '_feature_type';
+        $this->postFeature([
+            'name'  => $name,
+            'image' => $this->buildImagePayload('badge-features/tmp/missing.png', 'missing.png', 'whatever'),
+        ]);
+        $this->assertResponseStatus(412);
+
+        $this->postFeature(['name' => $name]);
+        $this->assertResponseStatus(201);
+
+        Queue::assertNotPushed(FileProcessingJob::class);
+    }
+
+    public function testImageOverMaxFileSizeReturns412AndPersistsNothing(): void
+    {
+        // valid extension, one byte over the limit enforced by addFeatureImage
+        $content = str_repeat('a', SummitBadgeFeatureType::ImageMaxFileSize + 1);
+        $this->putRemoteFile('badge-features/tmp/huge.png', $content);
+        Queue::fake();
+
+        $name = str_random(16) . '_feature_type';
+        $this->postFeature([
+            'name'  => $name,
+            'image' => $this->buildImagePayload('badge-features/tmp/huge.png', 'huge.png', $content),
+        ]);
+        $this->assertResponseStatus(412);
+
+        $this->postFeature(['name' => $name]);
+        $this->assertResponseStatus(201);
+
+        Queue::assertNotPushed(FileProcessingJob::class);
     }
 }

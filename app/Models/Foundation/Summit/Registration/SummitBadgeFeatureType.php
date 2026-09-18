@@ -27,6 +27,10 @@ class SummitBadgeFeatureType extends SilverstripeBaseModel
 {
     use SummitOwned;
 
+    public const ImageAllowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg'];
+
+    public const ImageMaxFileSize = 10485760; // bytes
+
     /**
      * @var string
      */

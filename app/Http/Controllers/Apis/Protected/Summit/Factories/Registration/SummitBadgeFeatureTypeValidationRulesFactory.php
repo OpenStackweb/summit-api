@@ -30,12 +30,14 @@ final class SummitBadgeFeatureTypeValidationRulesFactory
                 'name' => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'template_content' => 'nullable|string',
+                'image' => 'sometimes|file_dto',
             ];
         }
         return [
             'name' => 'required|string',
             'description' => 'sometimes|string',
             'template_content' => 'nullable|string',
+            'image' => 'sometimes|file_dto',
         ];
     }
 }

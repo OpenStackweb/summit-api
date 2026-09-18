@@ -13,6 +13,8 @@
  **/
 
 use App\Http\Utils\FileUploadInfo;
+use App\Services\Model\FileInfoDTO;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use models\exceptions\ValidationException;
@@ -137,6 +139,62 @@ trait FileUtils{
         $disk->delete($remotePath);
         Log::debug(sprintf("cleanLocalFile deleting local file %s", $localPath));
         unlink($localPath);
+    }
+
+    /**
+     * Downloads a file from remote storage to a local temp path, verifies its MD5 (when provided),
+     * invokes $uploader($owner_entity_id, UploadedFile) to persist it, then cleans up. On failure the
+     * remote file is preserved so queue retries can re-download it. Cleanup errors after a successful
+     * upload are logged but not re-thrown - upload success determines job success, not storage housekeeping.
+     * @param FileInfoDTO $file_info_dto
+     * @param callable $uploader
+     * @return mixed whatever $uploader returns
+     * @throws ValidationException
+     */
+    public static function processFileFromRemoteStorage(FileInfoDTO $file_info_dto, callable $uploader)
+    {
+        $localPath = self::getFileFromRemoteStorageOnTempStorage(
+            $file_info_dto->filename,
+            $file_info_dto->filepath
+        );
+        $succeeded = false;
+        try {
+            if (!is_null($file_info_dto->md5)) {
+                $localHash = md5_file($localPath);
+                if ($localHash === false)
+                    throw new ValidationException("File integrity check failed: unable to read local temp file.");
+                if ($localHash !== strtolower($file_info_dto->md5))
+                    throw new ValidationException("File integrity check failed: MD5 mismatch.");
+            }
+            $file = new UploadedFile(
+                path: $localPath,
+                originalName: $file_info_dto->filename,
+                mimeType: $file_info_dto->mime_type,
+                error: null,
+                test: true,
+            );
+            $res = $uploader($file_info_dto->owner_entity_id, $file);
+            $succeeded = true;
+        } finally {
+            if ($succeeded) {
+                try {
+                    self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
+                } catch (\Throwable $e) {
+                    // Upload succeeded; cleanup failure is non-fatal. Log and continue so the
+                    // job does not retry and create duplicate File records.
+                    Log::warning(sprintf(
+                        "FileUtils::processFileFromRemoteStorage cleanup failed after successful upload (entity=%s member=%s filepath=%s): %s",
+                        $file_info_dto->owner_entity_class,
+                        $file_info_dto->owner_member_name,
+                        $file_info_dto->filepath,
+                        $e->getMessage()
+                    ));
+                }
+            } else {
+                self::cleanLocalFile($localPath);
+            }
+        }
+        return $res;
     }
 
     /**

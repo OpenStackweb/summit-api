@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Security\SummitScopes;
 use Libs\ModelSerializers\AbstractSerializer;
 use libs\utils\JsonUtils;
 use models\oauth2\IResourceServerContext;
@@ -41,11 +42,14 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
     ];
 
     protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
-        if(in_array("email", $values)) {
+        if(array_key_exists("email", $values)) {
             $application_type = $this->resource_server_context->getApplicationType();
             // choose email serializer depending on user permissions
             // is current user is null then is a service account
-            $values['email'] = $application_type == IResourceServerContext::ApplicationType_Service ?
+            $isServiceWithEmailScope = $application_type == IResourceServerContext::ApplicationType_Service
+                && in_array(SummitScopes::ReadSpeakersDataEmail, $this->resource_server_context->getCurrentScope());
+
+            $values['email'] = ($application_type == IResourceServerContext::ApplicationType_Service && !$isServiceWithEmailScope) ?
                 JsonUtils::toNullEmail($speaker->getEmail()) :
                 JsonUtils::toJsonString($speaker->getEmail());
         }

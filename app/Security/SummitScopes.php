@@ -82,6 +82,7 @@ final class SummitScopes
     const WriteSummitData = SCOPE_BASE_REALM.'/summits/write';
     const WriteSpeakersData = SCOPE_BASE_REALM.'/speakers/write';
     const ReadSpeakersData = SCOPE_BASE_REALM.'/speakers/read';
+    // this scope should only be granted through the private scope mechanism at the IDP
     const ReadSpeakersDataEmail = SCOPE_BASE_REALM.'/speakers/read/email';
 
     const WriteTrackTagGroupsData = SCOPE_BASE_REALM.'/track-tag-groups/write';

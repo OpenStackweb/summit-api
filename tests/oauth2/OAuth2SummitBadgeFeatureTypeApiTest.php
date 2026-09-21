@@ -349,7 +349,9 @@ HTML;
 
     private function fakePngContent(): string
     {
-        return file_get_contents(UploadedFile::fake()->image('feature.png')->getRealPath());
+        // Hold the fake file in a variable: it deletes its temp file on destruction.
+        $file = UploadedFile::fake()->image('feature.png');
+        return file_get_contents($file->getRealPath());
     }
 
     private function postFeature(array $data)

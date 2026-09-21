@@ -4144,6 +4144,7 @@ class ApiEndpointsSeeder extends Seeder
                 'http_method' => 'GET',
                 'scopes' => [
                     SummitScopes::ReadSpeakersData,
+                    SummitScopes::ReadSpeakersDataEmail,
                     SummitScopes::ReadSummitData,
                     SummitScopes::ReadAllSummitData
                 ],

@@ -16,6 +16,7 @@ use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\Speakers\SpeakerEditPermissionRequest;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Queue;
@@ -973,6 +974,130 @@ final class OAuth2SummitSpeakersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
         $speaker = json_decode($content);
         $this->assertTrue(!is_null($speaker));
+    }
+
+    /**
+     * Creates a speaker for self::$summit and returns [speaker_id, real_email]. The email
+     * is captured locally rather than read back off the creation response, because
+     * addSpeakerBySummit serializes its response with SerializerType_Public - which
+     * obfuscates/blanks the email for a non-owner caller - so the response body is not a
+     * reliable source of the raw email a test needs to assert against.
+     * @return array{0: int, 1: string}
+     */
+    private function createSpeakerBySummitWithRealEmail(): array
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $email = 'smarcet.' . str_random(16) . '@gmail.com';
+
+        $data = [
+            'title' => 'Developer!',
+            'first_name' => 'Sebastian',
+            'last_name' => 'Marcet',
+            'email' => $email,
+        ];
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSpeakersApiController@addSpeakerBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+
+        $this->assertResponseStatus(201);
+        $speaker = json_decode($response->getContent());
+        $this->assertTrue($speaker->id > 0);
+
+        return [$speaker->id, $email];
+    }
+
+    /**
+     * A service account (client_credentials, no member behind the token) without the
+     * ReadSpeakersDataEmail scope must not see the speaker's real email, same as any
+     * other service account - see AdminPresentationSpeakerSerializer::checkDataPermissions.
+     */
+    public function testGetSummitSpeakerByServiceAccountWithoutEmailScopeGetsNulledEmail()
+    {
+        [$speaker_id, $email] = $this->createSpeakerBySummitWithRealEmail();
+
+        App::singleton('App\Models\ResourceServer\IAccessTokenService', AccessTokenServiceStub::class);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'speaker_id' => $speaker_id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSummitSpeaker",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $speaker = json_decode($response->getContent());
+        // Even more restrictive than the SummitScopes::ReadSpeakersDataEmail-gated
+        // 'blank@blank.com' placeholder: this speaker has no linked member, so
+        // PresentationSpeakerSerializer::checkDataPermissions (the Public-serializer path
+        // taken here) blanks the email outright regardless of application type.
+        $this->assertEquals('', $speaker->email);
+        $this->assertNotEquals(strtolower($email), strtolower($speaker->email));
+    }
+
+    /**
+     * A service account whose token carries ReadSpeakersDataEmail gets the speaker's
+     * real email instead of the nulled-out placeholder every other service account gets.
+     */
+    public function testGetSummitSpeakerByServiceAccountWithEmailScopeGetsRealEmail()
+    {
+        [$speaker_id, $email] = $this->createSpeakerBySummitWithRealEmail();
+
+        App::singleton('App\Models\ResourceServer\IAccessTokenService', AccessTokenServiceStub2::class);
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'speaker_id' => $speaker_id,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitSpeakersApiController@getSummitSpeaker",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $speaker = json_decode($response->getContent());
+        // Email is normalized to lowercase somewhere in the create pipeline, so compare
+        // case-insensitively rather than assuming byte-for-byte equality with the value sent.
+        $this->assertEquals(strtolower($email), strtolower($speaker->email));
     }
 
     public function testGetSpeaker()

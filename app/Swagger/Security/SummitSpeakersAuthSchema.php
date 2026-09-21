@@ -22,6 +22,7 @@ use OpenApi\Attributes as OA;
                     SummitScopes::WriteSpeakersData => 'Write Speakers Data',
                     SummitScopes::ReadMySpeakersData => 'Read My Speakers Data',
                     SummitScopes::WriteMySpeakersData => 'Write My Speakers Data',
+                    SummitScopes::ReadSpeakersDataEmail => 'Read Speakers Email',
                 ],
             ),
         ],

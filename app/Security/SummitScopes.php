@@ -82,6 +82,8 @@ final class SummitScopes
     const WriteSummitData = SCOPE_BASE_REALM.'/summits/write';
     const WriteSpeakersData = SCOPE_BASE_REALM.'/speakers/write';
     const ReadSpeakersData = SCOPE_BASE_REALM.'/speakers/read';
+    const ReadSpeakersDataEmail = SCOPE_BASE_REALM.'/speakers/read/email';
+
     const WriteTrackTagGroupsData = SCOPE_BASE_REALM.'/track-tag-groups/write';
     const WriteTrackQuestionTemplateData = SCOPE_BASE_REALM.'/track-question-templates/write';
     const WriteMySpeakersData = SCOPE_BASE_REALM.'/speakers/write/me';

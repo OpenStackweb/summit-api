@@ -41,6 +41,14 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
     ];
 
     protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
+        if(in_array("email", $values)) {
+            $application_type = $this->resource_server_context->getApplicationType();
+            // choose email serializer depending on user permissions
+            // is current user is null then is a service account
+            $values['email'] = $application_type == IResourceServerContext::ApplicationType_Service ?
+                JsonUtils::toNullEmail($speaker->getEmail()) :
+                JsonUtils::toJsonString($speaker->getEmail());
+        }
         return $values;
     }
 
@@ -79,15 +87,6 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
 
         if(in_array('big_pic', $fields)) {
             $values['big_pic'] = $speaker->getBigProfilePhotoUrl($bypass_toggle);
-        }
-
-        if(in_array("email", $fields)) {
-            $application_type = $this->resource_server_context->getApplicationType();
-            // choose email serializer depending on user permissions
-            // is current user is null then is a service account
-            $values['email'] = $application_type == IResourceServerContext::ApplicationType_Service ?
-                JsonUtils::toNullEmail($speaker->getEmail()) :
-                JsonUtils::toJsonString($speaker->getEmail());
         }
 
         if(!is_null($summit)){

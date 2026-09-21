@@ -225,6 +225,11 @@ final class ApiScopesSeeder extends Seeder
                 'description' => 'Grants read access for My Speaker Profile Data',
             ],
             [
+                'name' => SummitScopes::ReadSpeakersDataEmail,
+                'short_description' => 'Read Speakers Email',
+                'description' => 'Grants read access for Speakers Email',
+            ],
+            [
                 'name' => SummitScopes::WriteAttendeesData,
                 'short_description' => 'Write Attendees Data',
                 'description' => 'Grants write access for Attendees Data',

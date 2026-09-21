@@ -832,6 +832,7 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
         tags: ['Summit Speakers'],
         security: [['summit_speakers_oauth2' => [
             SummitScopes::ReadSpeakersData,
+            SummitScopes::ReadSpeakersDataEmail,
             SummitScopes::ReadSummitData,
             SummitScopes::ReadAllSummitData
         ]]],
@@ -959,6 +960,11 @@ final class OAuth2SummitSpeakersApiController extends OAuth2ProtectedController
                 if ($current_member->isAdmin() || $current_member->isSummitAdmin()) {
                     $serializer_type = SerializerRegistry::SerializerType_Admin;
                 }
+            } else if (
+                $this->resource_server_context->getApplicationType() === IResourceServerContext::ApplicationType_Service
+                && in_array(SummitScopes::ReadSpeakersDataEmail, $this->resource_server_context->getCurrentScope())
+            ) {
+                $serializer_type = SerializerRegistry::SerializerType_Admin;
             }
 
             return $this->ok

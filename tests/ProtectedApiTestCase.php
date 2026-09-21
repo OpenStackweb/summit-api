@@ -267,6 +267,7 @@ class AccessTokenServiceStub2 implements IAccessTokenService
             SummitScopes::WriteSummitMediaFileTypes,
             SummitScopes::WriteMetrics,
             SummitScopes::ReadMetrics,
+            SummitScopes::ReadSpeakersDataEmail,
             CompanyScopes::Write,
             CompanyScopes::Read,
             SponsoredProjectScope::Write,

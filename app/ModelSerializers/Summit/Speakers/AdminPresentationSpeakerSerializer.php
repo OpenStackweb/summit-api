@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Security\SummitScopes;
 use Libs\ModelSerializers\AbstractSerializer;
 use libs\utils\JsonUtils;
 use models\oauth2\IResourceServerContext;
@@ -41,6 +42,17 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
     ];
 
     protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
+        if(array_key_exists("email", $values)) {
+            $application_type = $this->resource_server_context->getApplicationType();
+            // choose email serializer depending on user permissions
+            // is current user is null then is a service account
+            $isServiceWithEmailScope = $application_type == IResourceServerContext::ApplicationType_Service
+                && in_array(SummitScopes::ReadSpeakersDataEmail, $this->resource_server_context->getCurrentScope());
+
+            $values['email'] = ($application_type == IResourceServerContext::ApplicationType_Service && !$isServiceWithEmailScope) ?
+                JsonUtils::toNullEmail($speaker->getEmail()) :
+                JsonUtils::toJsonString($speaker->getEmail());
+        }
         return $values;
     }
 
@@ -79,15 +91,6 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
 
         if(in_array('big_pic', $fields)) {
             $values['big_pic'] = $speaker->getBigProfilePhotoUrl($bypass_toggle);
-        }
-
-        if(in_array("email", $fields)) {
-            $application_type = $this->resource_server_context->getApplicationType();
-            // choose email serializer depending on user permissions
-            // is current user is null then is a service account
-            $values['email'] = $application_type == IResourceServerContext::ApplicationType_Service ?
-                JsonUtils::toNullEmail($speaker->getEmail()) :
-                JsonUtils::toJsonString($speaker->getEmail());
         }
 
         if(!is_null($summit)){

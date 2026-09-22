@@ -207,6 +207,19 @@ class ActivitiesCountFilterMappingsTest extends TestCase
         $this->assertStringContainsString('E.CategoryID = :param_1', $sql);
     }
 
+    public function testAnOrGroupOfTwoMappedFieldsKeepsEveryBranch(): void
+    {
+        [$sql, $bindings] = $this->activitiesCountSQL(
+            $this->filterOf([
+                FilterElement::makeEqual('presentations_track_id', '5'),
+                FilterElement::makeEqual('presentations_type_id', '7'),
+            ])
+        );
+
+        $this->assertEquals('(E.CategoryID = :param_1 OR E.TypeID = :param_2)', $sql);
+        $this->assertEquals(['param_1' => '5', 'param_2' => '7'], $bindings);
+    }
+
     public function testEveryReturnedBindingHasItsPlaceholderInTheStatement(): void
     {
         [$sql, $bindings] = $this->activitiesCountSQL(

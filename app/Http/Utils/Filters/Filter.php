@@ -320,11 +320,15 @@ final class Filter
                     if ($e instanceof FilterElement && isset($mappings[$e->getField()])) {
                         $mapping = $mappings[$e->getField()];
                         if ($mapping instanceof FilterMapping) {
-                            $condition = $mapping->toRawSQL($e, $this->bindings);
+                            $c = $mapping->toRawSQL($e, $this->bindings);
                             $local_bindings = $mapping->getBindings();
                             if(count($local_bindings) > 0 ){
                                 $this->bindings = array_merge($this->bindings, $local_bindings);
                                 $param_idx = count($this->bindings) + 1;
+                            }
+                            if (!empty($c)) {
+                                if (!empty($condition)) $condition .= ' OR ';
+                                $condition .= $c;
                             }
                         }
                         else if (is_array($mapping)) {

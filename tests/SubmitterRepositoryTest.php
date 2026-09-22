@@ -1085,9 +1085,18 @@ class SubmitterRepositoryTest extends ProtectedApiTestCase
     {
         // Guards the OR-ing of the status group from over-widening: the two == false
         // companions must stay neutral, not turn into an unrestricted OR branch.
-        $submitter = $this->seedActivitiesCountScenario();
+        //
+        // Can't reuse seedActivitiesCountScenario here: its P3 is unpublished and absent
+        // from every list, which makes it "rejected" -- a submitter owning it never
+        // satisfies phase 1's has_rejected_presentations==false (NOT EXISTS a rejected
+        // presentation of theirs). Needs a submitter with zero rejected presentations,
+        // same fixture shape as testActivitiesCountForRejectedFalseCountsEveryPresentationOfTheMatchedSubmitter.
+        $submitter = self::$em->find(Member::class, self::$member2->getId());
 
-        // P1 and P2 are published (accepted); P3 is not.
+        $this->seedPresentation($submitter, self::$defaultTrack,   'Accepted A', true);
+        $this->seedPresentation($submitter, self::$secondaryTrack, 'Accepted B', true);
+        self::$em->flush();
+
         $this->assertEquals(2, $this->countActivitiesOf($submitter, [
             'has_rejected_presentations'  => 'false',
             'has_accepted_presentations'  => 'true',

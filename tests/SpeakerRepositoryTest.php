@@ -952,9 +952,21 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
     {
         // Guards the OR-ing of the status group from over-widening: the two == false
         // companions must stay neutral, not turn into an unrestricted OR branch.
-        $speaker = $this->seedActivitiesCountScenario('ScenarioOnlyAccepted');
+        //
+        // Can't reuse seedActivitiesCountScenario here: its P3 is unpublished and absent
+        // from every list, which makes it "rejected" -- a speaker owning it never
+        // satisfies phase 1's has_rejected_presentations==false (NOT EXISTS a rejected
+        // presentation of theirs). Needs a speaker with zero rejected presentations, same
+        // fixture shape as testActivitiesCountForRejectedFalseCountsEveryPresentationOfTheMatchedSpeaker.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ScenarioOnlyAccepted');
+        $speaker->setLastName('ActivitiesScenario');
+        self::$em->persist($speaker);
 
-        // P1 and P2 are published (accepted); P3 is not.
+        $this->seedPresentation($speaker, self::$defaultTrack,   'Accepted A', true);
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'Accepted B', true);
+        self::$em->flush();
+
         $this->assertEquals(2, $this->countActivitiesOf($speaker, [
             'has_rejected_presentations'  => 'false',
             'has_accepted_presentations'  => 'true',

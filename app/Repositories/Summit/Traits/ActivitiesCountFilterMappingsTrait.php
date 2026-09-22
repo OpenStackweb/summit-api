@@ -50,12 +50,33 @@ use utils\Filter;
 trait ActivitiesCountFilterMappingsTrait
 {
     /**
+     * The three selection-status filters share a single presentation-level check
+     * (has_published_presentations does not, its published check is compatible with
+     * being AND'd with any of them).
+     */
+    private const SELECTION_STATUS_FILTERS = [
+        'has_accepted_presentations',
+        'has_alternate_presentations',
+        'has_rejected_presentations',
+    ];
+
+    /**
      * Turns the request filter into the phase-2 WHERE fragment and the bindings the
      * statement needs.
      *
      * Contract for the caller: the statement selects from `SummitEvent E` joined to
      * `Presentation P`, binds the summit as `:summit_id`, and appends the fragment to its
      * own WHERE. The fragment is empty when no presentation-level filter applies.
+     *
+     * The three selection-status filters (SELECTION_STATUS_FILTERS) are handled apart from
+     * the rest: phase 1 reads them per person ("has at least one accepted presentation"),
+     * so a request combining two of them with AND (e.g. the "Accepted & Rejected" option in
+     * summit-admin) asks for a person who has one presentation of each status, not for a
+     * single presentation that is both -- no row can satisfy that literally. The `== true`
+     * conditions among them are therefore OR'd together (the union of the matched
+     * statuses), while `== false` stays neutral exactly as it already is for every other
+     * filter, and the resulting group is AND'd with the rest of the presentation-level
+     * filters same as before.
      *
      * @param Filter|null $filter
      * @param int $summit_id
@@ -67,10 +88,26 @@ trait ActivitiesCountFilterMappingsTrait
         $bindings = ['summit_id' => $summit_id];
 
         if (!is_null($filter)) {
-            $where = $filter->toRawSQL($this->getActivitiesCountFilterMappings());
+            $mappings = $this->getActivitiesCountFilterMappings();
+            $status_mappings = array_intersect_key($mappings, array_flip(self::SELECTION_STATUS_FILTERS));
+            $other_mappings = array_diff_key($mappings, $status_mappings);
+
+            $where = $filter->toRawSQL($other_mappings);
             if (!empty($where)) {
-                $extra_filters = ' AND (' . $where . ')';
+                $extra_filters .= ' AND (' . $where . ')';
                 $bindings = array_merge($bindings, $filter->getSQLBindings());
+            }
+
+            $status_conditions = [];
+            foreach ($status_mappings as $field => $mapping) {
+                foreach ($filter->getFilter($field) as $element) {
+                    $condition = $mapping->toRawSQL($element);
+                    if ($condition === '' || $condition === '( ' . SQLSwitchFilterMapping::NoRestriction . ' )') continue;
+                    $status_conditions[] = $condition;
+                }
+            }
+            if (!empty($status_conditions)) {
+                $extra_filters .= ' AND (' . implode(' OR ', $status_conditions) . ')';
             }
         }
 

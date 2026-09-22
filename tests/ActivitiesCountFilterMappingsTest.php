@@ -332,6 +332,48 @@ class ActivitiesCountFilterMappingsTest extends TestCase
     }
 
     #[DataProvider('repositoryProvider')]
+    public function testBuildOrsTheTrueSelectionStatusFlagsAndKeepsFalseNeutral(string $repository_class): void
+    {
+        // The three selection-status filters are read per person in phase 1 ("has at
+        // least one accepted presentation"), so AND-ing e.g. accepted==true and
+        // rejected==true in phase 2 would demand a single row with both statuses at
+        // once -- impossible. They must be OR'd among themselves instead, with the
+        // == false side staying neutral (dropped, not turned into an OR branch).
+        [$extra_filters] = $this->buildFor(
+            $this->filterOf(
+                FilterElement::makeEqual('has_rejected_presentations', 'true'),
+                FilterElement::makeEqual('has_accepted_presentations', 'true'),
+                FilterElement::makeEqual('has_alternate_presentations', 'false')
+            ),
+            $repository_class
+        );
+
+        $this->assertStringContainsString('E.Published = 0 AND NOT EXISTS', $extra_filters);
+        $this->assertStringContainsString('E.Published = 1', $extra_filters);
+        $this->assertStringContainsString(') OR (', $extra_filters, 'the true flags must be OR\'d together');
+        // the alternate==false branch must not appear as a bare "1 = 1" clause of its own
+        $this->assertStringNotContainsString('OR (1 = 1)', $extra_filters);
+        $this->assertStringNotContainsString('(1 = 1) OR', $extra_filters);
+    }
+
+    #[DataProvider('repositoryProvider')]
+    public function testBuildKeepsTheStatusGroupAndedWithTheRestOfTheFilters(string $repository_class): void
+    {
+        [$extra_filters, $bindings] = $this->buildFor(
+            $this->filterOf(
+                FilterElement::makeEqual('has_accepted_presentations', 'true'),
+                FilterElement::makeEqual('presentations_track_id', '5')
+            ),
+            $repository_class
+        );
+
+        $this->assertStringContainsString('E.CategoryID = :param_1', $extra_filters);
+        $this->assertStringContainsString('E.Published = 1', $extra_filters);
+        $this->assertMatchesRegularExpression('/\)\s*AND\s*\(/', $extra_filters);
+        $this->assertEquals(['summit_id' => 73, 'param_1' => '5'], $bindings);
+    }
+
+    #[DataProvider('repositoryProvider')]
     public function testBuildProducesTheSameFragmentForBothRoles(string $repository_class): void
     {
         // the conditions correlate to the presentation, so both repositories must agree

@@ -927,6 +927,41 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
         ]));
     }
 
+    public function testActivitiesCountForCombinedStatusFlagsIsTheUnionOfTheStatuses(): void
+    {
+        // summit-admin "Accepted & Rejected": three AND'd flags. Phase 1 reads them per
+        // person (one accepted AND one rejected presentation, possibly different ones),
+        // so phase 2 must not demand both statuses of a single presentation.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ScenarioAcceptedRejected');
+        $speaker->setLastName('ActivitiesScenario');
+        self::$em->persist($speaker);
+
+        $this->seedPresentation($speaker, self::$defaultTrack,   'Accepted (published)', true);
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'Rejected (unpublished, unlisted)', false);
+        self::$em->flush();
+
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'has_rejected_presentations'  => 'true',
+            'has_accepted_presentations'  => 'true',
+            'has_alternate_presentations' => 'false',
+        ]));
+    }
+
+    public function testActivitiesCountForOnlyAcceptedStatusDoesNotWidenPastTheTrueFlags(): void
+    {
+        // Guards the OR-ing of the status group from over-widening: the two == false
+        // companions must stay neutral, not turn into an unrestricted OR branch.
+        $speaker = $this->seedActivitiesCountScenario('ScenarioOnlyAccepted');
+
+        // P1 and P2 are published (accepted); P3 is not.
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'has_rejected_presentations'  => 'false',
+            'has_accepted_presentations'  => 'true',
+            'has_alternate_presentations' => 'false',
+        ]));
+    }
+
     public function testActivitiesCountWithNoFilterIsUnaffectedByTheScoping(): void
     {
         $before = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit);

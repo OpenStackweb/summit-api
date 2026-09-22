@@ -973,17 +973,17 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
         $this->assertEquals($before + 3, $after);
     }
 
-    public function testActivitiesCountWithAnOredPersonLevelFilterKeepsThePresentationBranch(): void
+    public function testActivitiesCountWithAnOredPersonLevelFilterCountsEveryPresentation(): void
     {
+        // "id==<speaker> OR presentations_track_id==<secondaryTrack>". Phase 1 matches the
+        // speaker through either branch. Phase 2 cannot express the id branch, and an OR
+        // group with a branch it cannot express must stop restricting the count rather
+        // than narrow to the branches it can express -- narrowing would read as "0
+        // Activities" for anyone matched only through the unmapped branch, which is what
+        // summit-admin's term search does on every name match. So the whole group is
+        // dropped and every presentation of the matched speaker is counted.
         $speaker = $this->seedActivitiesCountScenario('ScenarioOrGroup');
 
-        // "id==<speaker> OR presentations_track_id==<secondaryTrack>". Phase 1 matches
-        // the speaker through either branch, but phase 2 sees only the presentation-level
-        // branch: Filter::toRawSQL skips the fields it has no mapping for, which is the
-        // same semantics every other toRawSQL caller lives with. The count is therefore
-        // the secondaryTrack presentations of the matched speakers -- P2 alone -- and not
-        // all three. Pinned here because it is the one case where phase 2 ends up
-        // narrower than the set phase 1 matched.
         $filter = FilterParser::parse(
             ['id==' . $speaker->getId() . ',presentations_track_id==' . self::$secondaryTrack->getId()],
             ['id' => ['=='], 'presentations_track_id' => ['==']]
@@ -991,6 +991,52 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
 
         $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
 
-        $this->assertEquals(1, $count);
+        $this->assertEquals(3, $count);
+    }
+
+    public function testActivitiesCountForATermSearchCountsEveryPresentationOfTheMatchedSpeaker(): void
+    {
+        // buildTermFilter shape (summit-admin): one OR group of full_name, first_name,
+        // last_name, email (all unmapped in phase 2) plus presentations_title and
+        // presentations_abstract (mapped). Matched here through first_name alone, with no
+        // title or abstract containing the term.
+        $speaker = $this->seedActivitiesCountScenario('Zzterm');
+
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(
+            self::$summit,
+            FilterParser::parse(
+                ['full_name=@zzterm,first_name=@zzterm,last_name=@zzterm,email=@zzterm,presentations_title=@zzterm,presentations_abstract=@zzterm'],
+                [
+                    'full_name'             => ['=@'],
+                    'first_name'            => ['=@'],
+                    'last_name'             => ['=@'],
+                    'email'                 => ['=@'],
+                    'presentations_title'   => ['=@'],
+                    'presentations_abstract' => ['=@'],
+                ]
+            )
+        );
+
+        $this->assertEquals(3, $count);
+    }
+
+    public function testActivitiesCountWithAFullyMappedOrGroupStillRestricts(): void
+    {
+        // Guards the widening from leaking into a group phase 2 CAN fully express: every
+        // branch here has a phase-2 mapping, so it must still narrow the count as before.
+        $speaker = $this->seedActivitiesCountScenario('ScenarioFullyMappedOrGroup');
+
+        $filter = FilterParser::parse(
+            [
+                'id==' . $speaker->getId(),
+                'presentations_track_id==' . self::$secondaryTrack->getId() . ',has_published_presentations==true',
+            ],
+            ['id' => ['=='], 'presentations_track_id' => ['=='], 'has_published_presentations' => ['==']]
+        );
+
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+
+        // P2 matches by track, P1 and P2 match by published; P3 matches neither.
+        $this->assertEquals(2, $count);
     }
 }

@@ -374,6 +374,44 @@ class ActivitiesCountFilterMappingsTest extends TestCase
     }
 
     #[DataProvider('repositoryProvider')]
+    public function testBuildDropsAnOrGroupWithAnUnmappedBranchEntirely(string $repository_class): void
+    {
+        // "id" has no phase-2 mapping. A branch phase 2 cannot express must stop the
+        // whole OR group from restricting the count, not narrow it to the branches it
+        // can express -- narrowing would read as "0 Activities" for anyone matched only
+        // through the unmapped branch (summit-admin's term search does this on every
+        // name match).
+        [$extra_filters, $bindings] = $this->buildFor(
+            $this->filterOf([
+                FilterElement::makeEqual('id', '123'),
+                FilterElement::makeEqual('presentations_track_id', '5'),
+            ]),
+            $repository_class
+        );
+
+        $this->assertEmpty($extra_filters);
+        $this->assertEquals(['summit_id' => 73], $bindings);
+    }
+
+    #[DataProvider('repositoryProvider')]
+    public function testBuildStillRestrictsAFullyMappedOrGroup(string $repository_class): void
+    {
+        // Guards the widening from leaking into a group phase 2 CAN fully express.
+        [$extra_filters, $bindings] = $this->buildFor(
+            $this->filterOf([
+                FilterElement::makeEqual('presentations_track_id', '5'),
+                FilterElement::makeEqual('presentations_type_id', '7'),
+            ]),
+            $repository_class
+        );
+
+        $this->assertStringContainsString('E.CategoryID = :param_1', $extra_filters);
+        $this->assertStringContainsString('E.TypeID = :param_2', $extra_filters);
+        $this->assertStringContainsString(' OR ', $extra_filters);
+        $this->assertEquals(['summit_id' => 73, 'param_1' => '5', 'param_2' => '7'], $bindings);
+    }
+
+    #[DataProvider('repositoryProvider')]
     public function testBuildProducesTheSameFragmentForBothRoles(string $repository_class): void
     {
         // the conditions correlate to the presentation, so both repositories must agree

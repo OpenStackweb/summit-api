@@ -36,13 +36,16 @@ use utils\Filter;
  * unrestricted for them, and both repositories share this list because the conditions
  * correlate to the presentation, not to the role the person plays on it.
  *
- * Known limitation, inherited from Filter::toRawSQL and shared with every other caller of
- * it: skipping an unmapped field is right for a slot joined by AND, but inside an OR group
- * it drops a branch instead of widening it, so `full_name==x,presentations_track_id==N`
- * counts only the track N presentations even though phase 1 also matched people through
- * full_name. Expressing the correct rule needs a per-person predicate, which no set-level
- * condition can carry. The behaviour is pinned by
- * testActivitiesCountWithAnOredPersonLevelFilterKeepsThePresentationBranch in both
+ * An unmapped field inside an OR group is a different case: skipping it there would
+ * narrow the group to only the branches phase 2 can express, e.g. summit-admin's term
+ * search ORs full_name/first_name/last_name/email (unmapped) with presentations_title/
+ * presentations_abstract (mapped) -- narrowing would count nothing for a person matched
+ * through their name alone. `Filter::toRawSQL`'s $skip_partially_mapped_or_groups flag
+ * drops such a group entirely instead, so it does not restrict the count at all; every
+ * presentation of the matched person is counted, which over-counts for people matched
+ * through a presentation branch but never reads as "0 Activities" for a match phase 2
+ * cannot express. The behaviour is pinned by
+ * testActivitiesCountWithAnOredPersonLevelFilterCountsEveryPresentation in both
  * repository test suites.
  *
  * @package App\Repositories\Summit\Traits
@@ -92,7 +95,7 @@ trait ActivitiesCountFilterMappingsTrait
             $status_mappings = array_intersect_key($mappings, array_flip(self::SELECTION_STATUS_FILTERS));
             $other_mappings = array_diff_key($mappings, $status_mappings);
 
-            $where = $filter->toRawSQL($other_mappings);
+            $where = $filter->toRawSQL($other_mappings, 1, true);
             if (!empty($where)) {
                 $extra_filters .= ' AND (' . $where . ')';
                 $bindings = array_merge($bindings, $filter->getSQLBindings());

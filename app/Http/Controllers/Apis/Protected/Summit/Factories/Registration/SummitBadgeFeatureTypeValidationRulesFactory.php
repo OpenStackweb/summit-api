@@ -25,19 +25,23 @@ final class SummitBadgeFeatureTypeValidationRulesFactory
      */
     public static function build(array $data, $update = false){
 
+        // only a File API dto (array) is validated; clients echo back the read-only image URL
+        // from GET as a string, which the service ignores
+        $image_rule = isset($data['image']) && is_array($data['image']) ? 'file_dto' : 'sometimes';
+
         if($update){
             return [
                 'name' => 'sometimes|string',
                 'description' => 'sometimes|string',
                 'template_content' => 'nullable|string',
-                'image' => 'sometimes|file_dto',
+                'image' => $image_rule,
             ];
         }
         return [
             'name' => 'required|string',
             'description' => 'sometimes|string',
             'template_content' => 'nullable|string',
-            'image' => 'sometimes|file_dto',
+            'image' => $image_rule,
         ];
     }
 }

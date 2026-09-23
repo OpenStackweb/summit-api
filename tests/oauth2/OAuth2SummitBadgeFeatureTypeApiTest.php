@@ -467,6 +467,37 @@ HTML;
         Queue::assertNotPushed(FileProcessingJob::class);
     }
 
+    public function testUpdateEchoingImageUrlFromGetIsIgnoredAndKeepsImage(): void
+    {
+        $feature = $this->_testAddBadgeFeatureType();
+
+        $this->action(
+            "POST",
+            "OAuth2SummitBadgeFeatureTypeApiController@addFeatureImage",
+            ['id' => self::$summit->getId(), 'feature_id' => $feature->id],
+            [],
+            [],
+            ['file' => UploadedFile::fake()->image('feat.png')],
+            $this->jsonHeaders()
+        );
+        $this->assertResponseStatus(201);
+
+        Queue::fake();
+
+        // summit-admin echoes the GET payload back on save, so image arrives as the read-only
+        // URL string the serializer emits (image:json_url), not as a File API dto
+        $this->putFeature($feature->id, [
+            'description' => 'updated echoing image url',
+            'image'       => 'https://cdn.example.org/summit-event-images/feat.png',
+        ]);
+
+        $this->assertResponseStatus(201);
+        Queue::assertNotPushed(FileProcessingJob::class);
+        $entity = App::make(ISummitBadgeFeatureTypeRepository::class)->getById($feature->id);
+        $this->assertEquals('updated echoing image url', $entity->getDescription());
+        $this->assertNotNull($entity->getImage());
+    }
+
     public function testImageWithInvalidExtensionReturns412AndPersistsNothing(): void
     {
         $this->putRemoteFile('badge-features/tmp/feature.bmp', 'fake-bmp-content');

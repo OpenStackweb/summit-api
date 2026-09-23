@@ -51287,6 +51287,7 @@
                     {
                         "summit_speakers_oauth2": [
                             "http://localhost/speakers/read",
+                            "http://localhost/speakers/read/email",
                             "http://localhost/summits/read",
                             "http://localhost/summits/read/all"
                         ]
@@ -90672,7 +90673,8 @@
                             "http://localhost/speakers/read": "Read Speakers Data",
                             "http://localhost/speakers/write": "Write Speakers Data",
                             "http://localhost/speakers/read/me": "Read My Speakers Data",
-                            "http://localhost/speakers/write/me": "Write My Speakers Data"
+                            "http://localhost/speakers/write/me": "Write My Speakers Data",
+                            "http://localhost/speakers/read/email": "Read Speakers Email"
                         }
                     }
                 }

@@ -16,9 +16,11 @@ use App\Services\Model\FileInfoDTO;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\IFilePostProcessorForChildEntity;
 use App\Services\Model\IFilePostProcessorService;
+use App\Services\Model\ISummitBadgeFeatureTypeService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use models\main\Company;
+use models\summit\SummitBadgeFeatureType;
 use models\utils\IEntity;
 
 final class FilePostProcessorService implements IFilePostProcessorService
@@ -33,6 +35,8 @@ final class FilePostProcessorService implements IFilePostProcessorService
         switch($className){
             case Company::class:
                 return App::make(ICompanyService::class);
+            case SummitBadgeFeatureType::class:
+                return App::make(ISummitBadgeFeatureTypeService::class);
         }
         return null;
     }

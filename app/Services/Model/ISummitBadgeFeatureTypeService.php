@@ -22,7 +22,7 @@ use models\summit\SummitBadgeFeatureType;
  * Interface ISummitBadgeFeatureTypeService
  * @package App\Services\Model
  */
-interface ISummitBadgeFeatureTypeService
+interface ISummitBadgeFeatureTypeService extends IFilePostProcessorForChildEntity
 {
 
     /**
@@ -65,7 +65,7 @@ interface ISummitBadgeFeatureTypeService
         Summit $summit,
         int $feature_id,
         UploadedFile $file,
-        int $max_file_size = 10485760
+        int $max_file_size = SummitBadgeFeatureType::ImageMaxFileSize
     ):File;
 
     /**

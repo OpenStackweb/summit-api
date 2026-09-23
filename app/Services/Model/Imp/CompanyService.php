@@ -240,63 +240,13 @@ final class CompanyService
         Log::debug(sprintf("CompanyService::processFileForChildEntity file_info_dto %s", $file_info_dto));
         switch ($file_info_dto->owner_member_name) {
             case 'big_logo':
-                return $this->processLogoFile($file_info_dto, [$this, 'addCompanyBigLogo']);
+                return self::processFileFromRemoteStorage($file_info_dto, [$this, 'addCompanyBigLogo']);
             case 'logo':
-                return $this->processLogoFile($file_info_dto, [$this, 'addCompanyLogo']);
+                return self::processFileFromRemoteStorage($file_info_dto, [$this, 'addCompanyLogo']);
             default:
                 Log::warning(sprintf("CompanyService::processFileForChildEntity unknown member name '%s'", $file_info_dto->owner_member_name));
                 throw new \InvalidArgumentException(sprintf("Unknown owner_member_name '%s' for entity class '%s'.", $file_info_dto->owner_member_name, $file_info_dto->owner_entity_class));
         }
-    }
-
-    /**
-     * Downloads a file from remote storage to a local temp path, verifies its MD5 (when provided),
-     * invokes $uploader to persist it, then cleans up. On failure the remote file is preserved
-     * so queue retries can re-download it. Cleanup errors after a successful upload are logged
-     * but not re-thrown - upload success determines job success, not storage housekeeping.
-     */
-    private function processLogoFile(FileInfoDTO $file_info_dto, callable $uploader): IEntity
-    {
-        $localPath = self::getFileFromRemoteStorageOnTempStorage(
-            $file_info_dto->filename,
-            $file_info_dto->filepath
-        );
-        $succeeded = false;
-        try {
-            if (!is_null($file_info_dto->md5)) {
-                $localHash = md5_file($localPath);
-                if ($localHash === false)
-                    throw new ValidationException("File integrity check failed: unable to read local temp file.");
-                if ($localHash !== strtolower($file_info_dto->md5))
-                    throw new ValidationException("File integrity check failed: MD5 mismatch.");
-            }
-            $file = new UploadedFile(
-                path: $localPath,
-                originalName: $file_info_dto->filename,
-                mimeType: $file_info_dto->mime_type,
-                error: null,
-                test: true,
-            );
-            $logo = $uploader($file_info_dto->owner_entity_id, $file);
-            $succeeded = true;
-        } finally {
-            if ($succeeded) {
-                try {
-                    self::cleanLocalAndRemoteFile($localPath, $file_info_dto->filepath);
-                } catch (\Throwable $e) {
-                    // Upload succeeded; cleanup failure is non-fatal. Log and continue so the
-                    // job does not retry and create duplicate File records.
-                    Log::warning(sprintf(
-                        "CompanyService::processLogoFile cleanup failed after successful upload (filepath=%s): %s",
-                        $file_info_dto->filepath,
-                        $e->getMessage()
-                    ));
-                }
-            } else {
-                self::cleanLocalFile($localPath);
-            }
-        }
-        return $logo;
     }
 
     private function dispatchLogoJob(Company $company, string $memberName, array $payload): void
@@ -304,6 +254,7 @@ final class CompanyService
         $file_upload_info = FileUploadInfo::buildFromPayload($payload);
         if (is_null($file_upload_info)) return;
 
+        // TODO: also validate the size here (as SummitBadgeFeatureTypeService does) so an oversized logo returns 412 instead of failing the job silently
         if (!in_array($file_upload_info->getFileExt(), Company::LogoAllowedExtensions))
             throw new ValidationException(sprintf(
                 "%s file does not have a valid extension (%s).",

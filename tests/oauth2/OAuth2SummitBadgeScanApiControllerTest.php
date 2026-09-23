@@ -20,6 +20,8 @@ use App\Services\Model\Imp\SponsorUserInfoGrantService;
 use App\Services\Model\ISponsorUserInfoGrantService;
 use App\Services\Utils\Exceptions\UnacquiredLockException;
 use App\Services\Utils\ILockManagerService;
+use Doctrine\DBAL\Driver\PDO\Exception as PDODriverException;
+use Doctrine\DBAL\Exception\DeadlockException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\App;
 use LaravelDoctrine\ORM\Facades\Registry;
@@ -27,6 +29,7 @@ use Libs\ModelSerializers\AbstractSerializer;
 use libs\utils\ITransactionService;
 use Mockery;
 use models\main\Group;
+use models\main\IMemberRepository;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\Sponsor;
@@ -1164,25 +1167,26 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     /**
-     * Builds the real SponsorUserInfoGrantService, except that its
-     * findExistingBadgeScan answers null for the first $stubbed_calls calls
-     * and delegates to the real repository afterwards. That is how a
-     * sequential test reproduces the race the UNIQUE index exists for: the
-     * pre-INSERT existence check misses a row that is already committed,
+     * Builds the real SponsorUserInfoGrantService, except that every
+     * findExistingBadgeScan call goes through $find($call_number, $real),
+     * where $real() runs the real repository query. Blinding that check is
+     * how a sequential test reproduces the race the UNIQUE index exists for:
+     * the pre-INSERT existence check misses a row that is already committed,
      * exactly as it does when the lock lapsed and a concurrent request won.
-     * @param int $stubbed_calls
+     * Throwing from it is how a test injects a failure into a given attempt
+     * of the transaction.
+     * @param \Closure $find
      * @param int $calls counts every findExistingBadgeScan call, by reference
      * @return ISponsorUserInfoGrantService
      */
-    private function buildServiceWithBlindExistenceCheck(int $stubbed_calls, int &$calls): ISponsorUserInfoGrantService
+    private function buildServiceWithExistenceCheck(\Closure $find, int &$calls): ISponsorUserInfoGrantService
     {
         $real_repository = App::make(ISponsorUserInfoGrantRepository::class);
         $repository = Mockery::mock(ISponsorUserInfoGrantRepository::class);
         $repository->shouldReceive('findExistingBadgeScan')
-            ->andReturnUsing(function(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date) use($real_repository, $stubbed_calls, &$calls){
+            ->andReturnUsing(function(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date) use($real_repository, $find, &$calls){
                 $calls++;
-                if($calls <= $stubbed_calls) return null;
-                return $real_repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
+                return $find($calls, fn() => $real_repository->findExistingBadgeScan($sponsor, $badge, $scan_date));
             });
 
         return new SponsorUserInfoGrantService(
@@ -1190,6 +1194,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             App::make(ISummitAttendeeRepository::class),
             App::make(ISummitAttendeeBadgeRepository::class),
             App::make(ISponsorRepository::class),
+            App::make(IMemberRepository::class),
             App::make(ITransactionService::class),
             App::make(ILockManagerService::class)
         );
@@ -1239,7 +1244,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $dedup_key = $winner->getScanDedupKey();
 
         $calls = 0;
-        $service = $this->buildServiceWithBlindExistenceCheck(1, $calls);
+        $service = $this->buildServiceWithExistenceCheck(fn(int $n, \Closure $real) => $n === 1 ? null : $real(), $calls);
 
         $scan = $service->addBadgeScan(self::$summit, self::$member, [
             'qr_code'    => $badge->generateQRCode(),
@@ -1273,7 +1278,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->insertWinningScan($sponsor, $badge, new \DateTime("@$scan_date_epoch"));
 
         $calls = 0;
-        $service = $this->buildServiceWithBlindExistenceCheck(PHP_INT_MAX, $calls);
+        $service = $this->buildServiceWithExistenceCheck(fn() => null, $calls);
 
         $threw = false;
         try {
@@ -1290,5 +1295,51 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             "the handler must have re-checked for the winner before giving up");
         $this->assertTrue($threw,
             "a unique violation the handler cannot match to an existing scan must be rethrown");
+    }
+
+    /**
+     * A reconnectable error (deadlock, lock wait timeout, lost connection)
+     * makes DoctrineTransactionService discard the EntityManager and re-run
+     * the closure against a fresh one. If the closure reused the Sponsor,
+     * badge and Member resolved before the transaction, they would be unknown
+     * to that new manager: the cascade from the sponsor never fires, the
+     * COMMIT succeeds with nothing in it and a transient scan with id 0 comes
+     * back as a 201 - a scan the app then marks uploaded and never resends.
+     * The retried attempt must persist exactly one real row instead.
+     */
+    public function testAddBadgeScanPersistsTheScanWhenTheFirstAttemptDeadlocks(){
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+        $scan_date_epoch = 1572019200;
+        $sponsor_id = $sponsor->getId();
+        $badge_id = $badge->getId();
+
+        $calls = 0;
+        $service = $this->buildServiceWithExistenceCheck(function(int $n, \Closure $real){
+            if($n === 1)
+                throw new DeadlockException(
+                    PDODriverException::new(new \PDOException('Deadlock found when trying to get lock; try restarting transaction', 1213)),
+                    null
+                );
+            return $real();
+        }, $calls);
+
+        $scan = $service->addBadgeScan(self::$summit, self::$member, [
+            'qr_code'    => $badge->generateQRCode(),
+            'scan_date'  => $scan_date_epoch,
+            'sponsor_id' => $sponsor_id,
+        ]);
+
+        $this->assertEquals(2, $calls, "the deadlocked attempt must have been retried once");
+        $this->assertGreaterThan(0, $scan->getId(),
+            "the retried attempt must return a persisted scan, not a transient one with id 0");
+
+        // The deadlock discarded the manager the test started with.
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $count = $em->getRepository(SponsorBadgeScan::class)->count([
+            'scan_dedup_key' => sprintf('%d:%d:%d', $sponsor_id, $badge_id, $scan_date_epoch),
+        ]);
+        $this->assertEquals(1, $count, "exactly one row must be committed by the retried attempt");
     }
 }

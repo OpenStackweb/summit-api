@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\main\IMemberRepository;
 use models\main\Member;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitAttendeeRepository;
@@ -60,6 +61,11 @@ final class SponsorUserInfoGrantService
     private $sponsor_repository;
 
     /**
+     * @var IMemberRepository
+     */
+    private $member_repository;
+
+    /**
      * @var ILockManagerService
      */
     private $lock_service;
@@ -69,6 +75,7 @@ final class SponsorUserInfoGrantService
      * @param ISummitAttendeeRepository $attendee_repository
      * @param ISummitAttendeeBadgeRepository $badge_repository
      * @param ISponsorRepository $sponsor_repository
+     * @param IMemberRepository $member_repository
      * @param ITransactionService $tx_service
      * @param ILockManagerService $lock_service
      */
@@ -78,6 +85,7 @@ final class SponsorUserInfoGrantService
         ISummitAttendeeRepository $attendee_repository,
         ISummitAttendeeBadgeRepository $badge_repository,
         ISponsorRepository $sponsor_repository,
+        IMemberRepository $member_repository,
         ITransactionService $tx_service,
         ILockManagerService $lock_service
     )
@@ -87,6 +95,7 @@ final class SponsorUserInfoGrantService
         $this->attendee_repository = $attendee_repository;
         $this->badge_repository = $badge_repository;
         $this->sponsor_repository =  $sponsor_repository;
+        $this->member_repository = $member_repository;
         $this->lock_service = $lock_service;
     }
 
@@ -306,6 +315,15 @@ final class SponsorUserInfoGrantService
      *    is rejected by the index and the UniqueConstraintViolationException
      *    handler below resolves the retry to the row that won the race.
      *
+     * The transaction closure captures ids, not the Sponsor/badge/Member
+     * resolved in addBadgeScan, and reloads them on every attempt. On a
+     * reconnectable error DoctrineTransactionService resets the registry to
+     * a fresh EntityManager and re-runs the closure; entities captured from
+     * the previous manager are unknown to it, so the cascade from
+     * Sponsor::$user_info_grants never fires, flush() commits an empty unit
+     * of work and a transient scan with id 0 is returned as if it had been
+     * saved. On the first attempt the reload is served by the identity map.
+     *
      * Rows predating that index keep a NULL ScanDedupKey and are covered by
      * the explicit existence check alone - see the column's own docblock.
      *
@@ -340,10 +358,25 @@ final class SponsorUserInfoGrantService
     {
         $lock_name = sprintf('badge_scan.%d.%d.%d.lock', $sponsor->getId(), $badge->getId(), $scan_date_epoch);
         $dedup_key = SponsorBadgeScan::buildDedupKey($sponsor, $badge, $scan_date);
+        $sponsor_id = $sponsor->getId();
+        $badge_id = $badge->getId();
+        $member_id = $current_member->getId();
 
         try {
-            return $this->lock_service->lock($lock_name, function() use($sponsor, $badge, $scan_date, $dedup_key, $qr_code, $source, $current_member, $data){
-                return $this->tx_service->transaction(function() use($sponsor, $badge, $scan_date, $dedup_key, $qr_code, $source, $current_member, $data){
+            return $this->lock_service->lock($lock_name, function() use($sponsor_id, $badge_id, $member_id, $scan_date, $dedup_key, $qr_code, $source, $data){
+                return $this->tx_service->transaction(function() use($sponsor_id, $badge_id, $member_id, $scan_date, $dedup_key, $qr_code, $source, $data){
+                    // Reloaded on every attempt, see the docblock: a retried attempt
+                    // runs against a fresh EntityManager.
+                    $sponsor = $this->sponsor_repository->getById($sponsor_id);
+                    if(!$sponsor instanceof Sponsor)
+                        throw new EntityNotFoundException("Sponsor not found.");
+                    $badge = $this->badge_repository->getById($badge_id);
+                    if(!$badge instanceof SummitAttendeeBadge)
+                        throw new EntityNotFoundException("badge not found.");
+                    $current_member = $this->member_repository->getById($member_id);
+                    if(!$current_member instanceof Member)
+                        throw new EntityNotFoundException("Member not found.");
+
                     $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
                     if(!is_null($existing)){
                         Log::warning(

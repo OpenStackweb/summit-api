@@ -30,6 +30,7 @@ use libs\utils\ITransactionService;
 use Mockery;
 use models\main\Group;
 use models\main\IMemberRepository;
+use models\main\Member;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\Sponsor;
@@ -1206,14 +1207,15 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
      * @param Sponsor $sponsor
      * @param SummitAttendeeBadge $badge
      * @param \DateTime $scan_date
+     * @param Member|null $user defaults to self::$member
      * @return SponsorBadgeScan
      */
-    private function insertWinningScan(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date): SponsorBadgeScan
+    private function insertWinningScan(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date, ?Member $user = null): SponsorBadgeScan
     {
         $winner = new SponsorBadgeScan();
         $winner->setScanDate($scan_date);
         $winner->setQRCode('dedup-race-winner');
-        $winner->setUser(self::$member);
+        $winner->setUser($user ?? self::$member);
         $winner->setBadge($badge);
         $winner->setNotes('');
         $winner->setScanDedupKey(SponsorBadgeScan::buildDedupKey($sponsor, $badge, $scan_date));
@@ -1341,5 +1343,150 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             'scan_dedup_key' => sprintf('%d:%d:%d', $sponsor_id, $badge_id, $scan_date_epoch),
         ]);
         $this->assertEquals(1, $count, "exactly one row must be committed by the retried attempt");
+    }
+
+    /**
+     * Payload of a scan of the default attendee's badge for sponsors[0],
+     * plus whatever extra fields the test adds.
+     * @param array $extra
+     * @return array
+     */
+    private function badgeScanPayload(array $extra = []): array
+    {
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        return array_merge([
+            'qr_code'    => $attendee->getFirstTicket()->getBadge()->generateQRCode(),
+            'scan_date'  => 1572019200,
+            'sponsor_id' => self::$summit->getSummitSponsors()[0]->getId(),
+        ], $extra);
+    }
+
+    /**
+     * Reads a scan back from the database rather than the identity map.
+     * @param int $scan_id
+     * @return SponsorBadgeScan
+     */
+    private function reloadScan(int $scan_id): SponsorBadgeScan
+    {
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em->clear();
+        $scan = $em->getRepository(SponsorBadgeScan::class)->find($scan_id);
+        $this->assertInstanceOf(SponsorBadgeScan::class, $scan);
+        return $scan;
+    }
+
+    /**
+     * The app's first POST goes out right after the scan, before the notes
+     * form is submitted. When that POST commits but fails on the client, the
+     * form submit arrives as a second POST that carries the notes, and it is
+     * matched to the scan the first one created. Those notes must be stored,
+     * not dropped because the scan already existed.
+     */
+    public function testAddBadgeScanRetryAppliesItsNotesToTheExistingScan(){
+        $service = App::make(ISponsorUserInfoGrantService::class);
+
+        $first = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+        $first_id = $first->getId();
+
+        $second = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'notes' => 'hot lead, follow up',
+        ]));
+
+        $this->assertEquals($first_id, $second->getId(), "the retry must still resolve to the existing scan");
+        $this->assertEquals('hot lead, follow up', $this->reloadScan($first_id)->getNotes(),
+            "notes carried by the retry must be persisted on the existing scan");
+    }
+
+    /**
+     * The reverse order: an earlier, emptier attempt that arrives after the
+     * one carrying the notes must not wipe them.
+     */
+    public function testAddBadgeScanRetryWithoutNotesKeepsTheStoredNotes(){
+        $service = App::make(ISponsorUserInfoGrantService::class);
+
+        $first = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'notes' => 'hot lead, follow up',
+        ]));
+        $first_id = $first->getId();
+
+        $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+
+        $this->assertEquals('hot lead, follow up', $this->reloadScan($first_id)->getNotes(),
+            "a retry without notes must leave the stored notes alone");
+    }
+
+    /**
+     * Same as the notes case, for the extra question answers the form sends.
+     */
+    public function testAddBadgeScanRetryAppliesItsExtraQuestionsToTheExistingScan(){
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $question = $sponsor->getExtraQuestions()[0];
+        if (!$question instanceof SummitSponsorExtraQuestionType) self::fail();
+        $question_id = $question->getId();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+
+        $first = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+        $first_id = $first->getId();
+        $this->assertCount(0, $first->getExtraQuestionAnswers());
+
+        $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'extra_questions' => [
+                ['question_id' => $question_id, 'answer' => 'None'],
+            ],
+        ]));
+
+        $answers = $this->reloadScan($first_id)->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers, "answers carried by the retry must be persisted on the existing scan");
+        $this->assertEquals($question_id, $answers->first()->getQuestionId());
+        $this->assertEquals('None', $answers->first()->getValue());
+    }
+
+    /**
+     * The dedup key has no member in it, so a match can be a scan another
+     * rep of the same sponsor recorded in the same second. That is not a
+     * retry of this request, and it must not overwrite that rep's notes.
+     */
+    public function testAddBadgeScanDoesNotApplyNotesToAnotherMembersScan(){
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+
+        $other = $this->insertWinningScan($sponsor, $badge, new \DateTime("@1572019200"), self::$member2);
+        $other_id = $other->getId();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'notes' => 'hot lead, follow up',
+        ]));
+
+        $this->assertEquals($other_id, $scan->getId());
+        $this->assertEquals('', $this->reloadScan($other_id)->getNotes(),
+            "another member's scan must not take this request's notes");
+    }
+
+    /**
+     * The unique-violation handler resolves to the winning row through the
+     * same merge, so notes that lost the race are not dropped either.
+     */
+    public function testAddBadgeScanUniqueViolationAppliesNotesToTheWinningScan(){
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+
+        $winner = $this->insertWinningScan($sponsor, $badge, new \DateTime("@1572019200"));
+        $winner_id = $winner->getId();
+
+        $calls = 0;
+        $service = $this->buildServiceWithExistenceCheck(fn(int $n, \Closure $real) => $n === 1 ? null : $real(), $calls);
+
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'notes' => 'hot lead, follow up',
+        ]));
+
+        $this->assertEquals(2, $calls, "the INSERT must have hit the index and gone through the handler");
+        $this->assertEquals($winner_id, $scan->getId());
+        $this->assertEquals('hot lead, follow up', $this->reloadScan($winner_id)->getNotes(),
+            "notes of the request that lost the race must be persisted on the winning scan");
     }
 }

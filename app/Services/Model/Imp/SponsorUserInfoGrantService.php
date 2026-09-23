@@ -388,7 +388,7 @@ final class SponsorUserInfoGrantService
                                 $existing->getId()
                             )
                         );
-                        return $existing;
+                        return $this->mergeRetryIntoExistingScan($existing, $member_id, $data);
                     }
 
                     $scan = new SponsorBadgeScan();
@@ -440,16 +440,67 @@ final class SponsorUserInfoGrantService
                 )
             );
 
-            return $this->tx_service->transaction(function() use($sponsor, $badge, $scan_date, $ex){
+            return $this->tx_service->transaction(function() use($sponsor, $badge, $scan_date, $member_id, $data, $ex){
                 $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
                 if(is_null($existing)){
                     // Not our tuple - some other unique index on the scan or its answers
                     // rejected the write, and swallowing that would hide a real failure.
                     throw $ex;
                 }
-                return $existing;
+                return $this->mergeRetryIntoExistingScan($existing, $member_id, $data);
             });
         }
+    }
+
+    /**
+     * A retry matched to an existing scan is not always a byte-identical
+     * resend. The scanning app POSTs as soon as the badge is scanned, while
+     * the notes/extra questions form is still open; if that first POST
+     * committed but failed on the client (timeout, dropped connection, 5xx),
+     * the scan keeps no server id and the form submit goes out as a second
+     * POST that carries the notes and answers. Returning the existing row
+     * unchanged would drop them silently, and the app would then mark the
+     * scan uploaded and never resend them - so they are applied here, the
+     * same way updateBadgeScan applies them.
+     *
+     * Only non-empty fields are applied, so an earlier, emptier attempt that
+     * arrives late cannot wipe data a later one already stored. The extra
+     * answers are replaced as a whole (hadCompletedExtraQuestions rebuilds
+     * the set), which is right because the app always sends its full set.
+     *
+     * The dedup key does not include the member, so the match may be a scan
+     * another rep of the same sponsor recorded in the same second. That is
+     * not a retry of this request, and its notes and answers are that rep's
+     * own: they are left untouched and the existing scan is returned as is.
+     * @param SponsorBadgeScan $existing
+     * @param int $member_id
+     * @param array $data
+     * @return SponsorBadgeScan
+     * @throws ValidationException
+     */
+    private function mergeRetryIntoExistingScan(SponsorBadgeScan $existing, int $member_id, array $data): SponsorBadgeScan
+    {
+        if($existing->getUser()->getId() !== $member_id){
+            Log::warning(
+                sprintf(
+                    "SponsorUserInfoGrantService::addBadgeScan existing scan %s was recorded by member %s, not %s - not applying notes/extra questions to it.",
+                    $existing->getId(),
+                    $existing->getUser()->getId(),
+                    $member_id
+                )
+            );
+            return $existing;
+        }
+
+        $notes = trim($data['notes'] ?? '');
+        if(!empty($notes))
+            $existing->setNotes($notes);
+
+        $extra_questions = $data['extra_questions'] ?? [];
+        if (count($extra_questions) && !$existing->hadCompletedExtraQuestions($extra_questions))
+            throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+
+        return $existing;
     }
 
     /**

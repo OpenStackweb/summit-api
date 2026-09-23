@@ -14,19 +14,29 @@
 
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
+use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
+use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
+use App\Services\Model\Imp\SponsorUserInfoGrantService;
 use App\Services\Model\ISponsorUserInfoGrantService;
 use App\Services\Utils\Exceptions\UnacquiredLockException;
 use App\Services\Utils\ILockManagerService;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\App;
+use LaravelDoctrine\ORM\Facades\Registry;
 use Libs\ModelSerializers\AbstractSerializer;
+use libs\utils\ITransactionService;
+use Mockery;
 use models\main\Group;
+use models\summit\ISponsorUserInfoGrantRepository;
+use models\summit\ISummitAttendeeRepository;
 use models\summit\Sponsor;
+use models\summit\SponsorBadgeScan;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitLeadReportSetting;
 use models\summit\SummitOrder;
+use models\utils\SilverstripeBaseModel;
 /**
  * Class OAuth2SummitBadgeScanApiControllerTest
  */
@@ -70,6 +80,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
     protected function tearDown():void
     {
+        Mockery::close();
         self::clearSummitTestData();
         parent::tearDown();
     }
@@ -1150,5 +1161,134 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             $scan->getScanDedupKey(),
             "addBadgeScan must stamp the dedup key on the new scan, otherwise the UNIQUE index protects nothing"
         );
+    }
+
+    /**
+     * Builds the real SponsorUserInfoGrantService, except that its
+     * findExistingBadgeScan answers null for the first $stubbed_calls calls
+     * and delegates to the real repository afterwards. That is how a
+     * sequential test reproduces the race the UNIQUE index exists for: the
+     * pre-INSERT existence check misses a row that is already committed,
+     * exactly as it does when the lock lapsed and a concurrent request won.
+     * @param int $stubbed_calls
+     * @param int $calls counts every findExistingBadgeScan call, by reference
+     * @return ISponsorUserInfoGrantService
+     */
+    private function buildServiceWithBlindExistenceCheck(int $stubbed_calls, int &$calls): ISponsorUserInfoGrantService
+    {
+        $real_repository = App::make(ISponsorUserInfoGrantRepository::class);
+        $repository = Mockery::mock(ISponsorUserInfoGrantRepository::class);
+        $repository->shouldReceive('findExistingBadgeScan')
+            ->andReturnUsing(function(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date) use($real_repository, $stubbed_calls, &$calls){
+                $calls++;
+                if($calls <= $stubbed_calls) return null;
+                return $real_repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
+            });
+
+        return new SponsorUserInfoGrantService(
+            $repository,
+            App::make(ISummitAttendeeRepository::class),
+            App::make(ISummitAttendeeBadgeRepository::class),
+            App::make(ISponsorRepository::class),
+            App::make(ITransactionService::class),
+            App::make(ILockManagerService::class)
+        );
+    }
+
+    /**
+     * Persists the scan that "won the race": same (sponsor, badge, scan_date)
+     * and therefore the same ScanDedupKey the service is about to INSERT.
+     * @param Sponsor $sponsor
+     * @param SummitAttendeeBadge $badge
+     * @param \DateTime $scan_date
+     * @return SponsorBadgeScan
+     */
+    private function insertWinningScan(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date): SponsorBadgeScan
+    {
+        $winner = new SponsorBadgeScan();
+        $winner->setScanDate($scan_date);
+        $winner->setQRCode('dedup-race-winner');
+        $winner->setUser(self::$member);
+        $winner->setBadge($badge);
+        $winner->setNotes('');
+        $winner->setScanDedupKey(SponsorBadgeScan::buildDedupKey($sponsor, $badge, $scan_date));
+        $sponsor->addUserInfoGrant($winner);
+        self::$em->persist($winner);
+        self::$em->flush();
+        return $winner;
+    }
+
+    /**
+     * The UniqueConstraintViolationException handler in addBadgeScanLocked is
+     * what actually guarantees one row per scan, and the sequential POST tests
+     * above never reach it (their second request stops at the existence check).
+     * Here the check is blinded once, so the INSERT really hits the index: the
+     * flush fails, the EntityManager is closed, and the handler has to re-read
+     * the winner in a fresh transaction and return it instead of failing or
+     * writing a second row.
+     */
+    public function testAddBadgeScanResolvesAUniqueViolationToTheWinningScan(){
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+        $scan_date_epoch = 1572019200;
+        $scan_date = new \DateTime("@$scan_date_epoch");
+
+        $winner = $this->insertWinningScan($sponsor, $badge, $scan_date);
+        $winner_id = $winner->getId();
+        $dedup_key = $winner->getScanDedupKey();
+
+        $calls = 0;
+        $service = $this->buildServiceWithBlindExistenceCheck(1, $calls);
+
+        $scan = $service->addBadgeScan(self::$summit, self::$member, [
+            'qr_code'    => $badge->generateQRCode(),
+            'scan_date'  => $scan_date_epoch,
+            'sponsor_id' => $sponsor->getId(),
+        ]);
+
+        $this->assertEquals(2, $calls,
+            "the existence check must run once before the INSERT and once more in the unique-violation handler");
+        $this->assertEquals($winner_id, $scan->getId(),
+            "a unique violation on the dedup key must resolve to the scan that won the race");
+
+        // The failed flush closed the manager the test started with.
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $count = $em->getRepository(SponsorBadgeScan::class)->count(['scan_dedup_key' => $dedup_key]);
+        $this->assertEquals(1, $count, "the losing request must not leave a second row behind");
+    }
+
+    /**
+     * The handler only swallows a violation it can attribute to this scan's
+     * own tuple. If the re-read finds nothing, the violation came from some
+     * other constraint and must surface, not be turned into a bogus success.
+     * Simulated by keeping the existence check blind on the re-read too.
+     */
+    public function testAddBadgeScanRethrowsAUniqueViolationItCannotResolve(){
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
+        $badge = $attendee->getFirstTicket()->getBadge();
+        $scan_date_epoch = 1572019200;
+
+        $this->insertWinningScan($sponsor, $badge, new \DateTime("@$scan_date_epoch"));
+
+        $calls = 0;
+        $service = $this->buildServiceWithBlindExistenceCheck(PHP_INT_MAX, $calls);
+
+        $threw = false;
+        try {
+            $service->addBadgeScan(self::$summit, self::$member, [
+                'qr_code'    => $badge->generateQRCode(),
+                'scan_date'  => $scan_date_epoch,
+                'sponsor_id' => $sponsor->getId(),
+            ]);
+        } catch (UniqueConstraintViolationException $ex) {
+            $threw = true;
+        }
+
+        $this->assertEquals(2, $calls,
+            "the handler must have re-checked for the winner before giving up");
+        $this->assertTrue($threw,
+            "a unique violation the handler cannot match to an existing scan must be rethrown");
     }
 }

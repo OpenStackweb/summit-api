@@ -96,16 +96,11 @@ class PresentationTrackChairScoreAuditLogFormatter
         }
 
         try {
-            $score_type = $subject->getScoreType();
-            $score_label = $score_type ? $score_type->getLabel() : 'Unknown Score';
-            
-            $presentation = $subject->getPresentation();
-            $presentation_title = $presentation ? $presentation->getTitle() : 'Unknown Presentation';
-            
-            $created_by = $subject->getCreatedBy();
-            $chair_name = $created_by 
-                ? sprintf("%s %s", $created_by->getFirstName(), $created_by->getLastName())
-                : 'Unknown Chair';
+            $score_label = $subject->getType()->getName();
+            // reviewer / presentation are resolved through hasReviewer() / hasPresentation():
+            // removeScore() / removeTrackChairScore() null them and the typed getters would throw
+            $presentation_title = $this->getPresentationTitle($subject, null);
+            $chair_name = $this->getChairName($subject, null);
 
             switch ($child_entity_action_type) {
                 case self::CHILD_ENTITY_CREATION:
@@ -117,8 +112,9 @@ class PresentationTrackChairScoreAuditLogFormatter
                     );
                 case self::CHILD_ENTITY_DELETION:
                     return sprintf(
-                        "Score removed for Track Chair '%s' from presentation '%s'",
+                        "Track Chair '%s' removed score '%s' from presentation '%s'",
                         $chair_name,
+                        $score_label,
                         $presentation_title
                     );
                 case self::CHILD_ENTITY_UPDATE:

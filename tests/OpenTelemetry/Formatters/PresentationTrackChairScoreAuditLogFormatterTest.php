@@ -158,6 +158,37 @@ final class PresentationTrackChairScoreAuditLogFormatterTest extends TestCase
         );
     }
 
+    public function testFormatResolvesChairAndScoreForEveryAction(): void
+    {
+        $formatter = new PresentationTrackChairScoreAuditLogFormatter();
+        $score = $this->buildScore('Great');
+
+        $this->assertSame(
+            "Track Chair 'Ada Lovelace' scored 'Great' on presentation 'Liquid Cooling Filtration'",
+            $formatter->format($score, PresentationTrackChairScoreAuditLogFormatter::CHILD_ENTITY_CREATION)
+        );
+        $this->assertSame(
+            "Track Chair 'Ada Lovelace' score updated to 'Great' on presentation 'Liquid Cooling Filtration'",
+            $formatter->format($score, PresentationTrackChairScoreAuditLogFormatter::CHILD_ENTITY_UPDATE)
+        );
+        $this->assertSame(
+            "Track Chair 'Ada Lovelace' removed score 'Great' from presentation 'Liquid Cooling Filtration'",
+            $formatter->format($score, PresentationTrackChairScoreAuditLogFormatter::CHILD_ENTITY_DELETION)
+        );
+    }
+
+    public function testFormatDoesNotThrowOnRemovedScoreWithoutReviewer(): void
+    {
+        $score = $this->buildScore('Good');
+        $score->clearReviewer();
+
+        $this->assertSame(
+            "Track Chair 'Unknown Chair' removed score 'Good' from presentation 'Liquid Cooling Filtration'",
+            (new PresentationTrackChairScoreAuditLogFormatter())
+                ->format($score, PresentationTrackChairScoreAuditLogFormatter::CHILD_ENTITY_DELETION)
+        );
+    }
+
     public function testCollectionUpdateFormatterDelegatesToCollectionFormatter(): void
     {
         $old = $this->buildScore('Good');

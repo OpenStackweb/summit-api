@@ -1,4 +1,4 @@
-<?php namespace Tests;
+<?php namespace Tests\Unit\Services;
 /**
  * Copyright 2018 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +12,25 @@
  * limitations under the License.
  **/
 
+use App\Jobs\Emails\InviteAttendeeTicketEditionMail;
+use App\Jobs\Emails\RevocationTicketEmail;
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
+use App\Jobs\Emails\SummitAttendeeTicketEmail;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailEventFlowType;
+use App\Models\Foundation\Summit\EmailFlows\SummitEmailFlowType;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\App;
 use LaravelDoctrine\ORM\Facades\EntityManager;
+use models\exceptions\ValidationException;
 use models\summit\Summit;
+use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
 use models\summit\SummitAttendeeTicket;
+use Tests\InsertMemberTestData;
+use Tests\InsertSummitTestData;
+use Tests\TestCase;
 /**
  * Class AttendeeServiceTest
  */
@@ -48,10 +58,91 @@ final class AttendeeServiceTest extends TestCase
 
     public function testRedeemPromoCodes(){
 
+        // Eventbrite isn't configured in CI, and updateRedeemedPromoCodes makes a real,
+        // unmocked network call with no error handling around it, so replace the API with
+        // a double that fails fast instead of hitting a third-party service from a test.
+        $eventbrite_api = \Mockery::mock(\services\apis\IEventbriteAPI::class);
+        $eventbrite_api->shouldReceive('getAttendees')
+            ->andThrow(new \Exception('Eventbrite API is not available in tests.'));
+        App::singleton(\services\apis\IEventbriteAPI::class, function () use ($eventbrite_api) {
+            return $eventbrite_api;
+        });
+
         $service = App::make(IAttendeeService::class);
         $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
-        $summit = $repo->getById(24);
+        $summit = $repo->getById(self::$summit->getId());
+
+        $this->expectException(\Exception::class);
         $service->updateRedeemedPromoCodes($summit);
+    }
+
+    public function testUpdateAttendeeEmailOnlyLinksExistingMemberAccount() {
+
+        $service = App::make(IAttendeeService::class);
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+
+        // only email is submitted (no member_id), and it belongs to a known member account
+        $payload = [
+            'email' => self::$member2->getEmail(),
+        ];
+
+        $updated = $service->updateAttendee(self::$summit, $attendee->getId(), $payload);
+
+        $this->assertNotNull($updated->getMember());
+        $this->assertEquals(self::$member2->getId(), $updated->getMember()->getId());
+    }
+
+    /**
+     * @see https://github.com/OpenStackweb/summit-api/pull/588#discussion_r3897380061
+     * member2 is already linked to a different attendee in this summit, whose stored email
+     * has drifted away from member2's current account email - so the sibling
+     * getBySummitAndEmail check (keyed on email) can't catch the collision. Resolving member2
+     * via the email fallback branch must still raise the same clean ValidationException the
+     * member_id branch raises, instead of letting the flush fail on the unique
+     * (MemberID, SummitID) index.
+     */
+    private function linkOtherAttendeeToMember2WithDriftedEmail(): void
+    {
+        $other_attendee = new SummitAttendee();
+        $other_attendee->setMember(self::$member2);
+        $other_attendee->setEmail('drifted-' . self::$member2->getEmail());
+        $other_attendee->setFirstName(self::$member2->getFirstName());
+        $other_attendee->setSurname(self::$member2->getLastName());
+
+        self::$summit->addAttendee($other_attendee);
+        self::$em->persist($other_attendee);
+        self::$em->flush();
+    }
+
+    public function testUpdateAttendeeEmailResolvingToAlreadyLinkedMemberThrowsValidationException()
+    {
+        $this->linkOtherAttendeeToMember2WithDriftedEmail();
+
+        $service = App::make(IAttendeeService::class);
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+
+        $payload = [
+            'email' => self::$member2->getEmail(),
+        ];
+
+        $this->expectException(ValidationException::class);
+        $service->updateAttendee(self::$summit, $attendee->getId(), $payload);
+    }
+
+    public function testAddAttendeeEmailResolvingToAlreadyLinkedMemberThrowsValidationException()
+    {
+        $this->linkOtherAttendeeToMember2WithDriftedEmail();
+
+        $service = App::make(IAttendeeService::class);
+
+        $payload = [
+            'email' => self::$member2->getEmail(),
+        ];
+
+        $this->expectException(ValidationException::class);
+        $service->addAttendee(self::$summit, $payload);
     }
 
     public function testSendAllAttendeeTickets() {
@@ -90,6 +181,8 @@ final class AttendeeServiceTest extends TestCase
     }
 
     public function testReassignAttendeeTicketRegeneratesBadgeQRCode(){
+
+        $this->ensureTicketRevocationEmailTemplateSeeded();
 
         $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
         $this->assertNotNull($attendee);
@@ -130,6 +223,8 @@ final class AttendeeServiceTest extends TestCase
 
     public function testReassignAttendeeTicketByMemberRegeneratesBadgeQRCode(){
 
+        $this->ensureTicketRevocationEmailTemplateSeeded();
+
         $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
         $this->assertNotNull($attendee);
         $ticket = $attendee->getTickets()->first();
@@ -158,6 +253,46 @@ final class AttendeeServiceTest extends TestCase
         $this->assertBadgeQRRegeneratedForNewOwner(
             $reassigned_ticket, $badge_id, $summit, $member2_email, $member2_fullname, $default_email
         );
+    }
+
+    /**
+     * reassignAttendeeTicket/reassignAttendeeTicketByMember dispatch a RevocationTicketEmail
+     * to the previous owner and, depending on whether the new owner's profile is already
+     * complete, either a SummitAttendeeTicketEmail or an InviteAttendeeTicketEditionMail to
+     * the new one. Each of those job constructors requires a resolvable email template
+     * identifier. The seeder that normally provides this catalog (SummitEmailFlowTypeSeeder)
+     * never runs in CI, so seed the minimal rows here rather than relying on production data.
+     */
+    private function ensureTicketRevocationEmailTemplateSeeded(): void
+    {
+        $slugs = [
+            RevocationTicketEmail::EVENT_SLUG => RevocationTicketEmail::DEFAULT_TEMPLATE,
+            SummitAttendeeTicketEmail::EVENT_SLUG => SummitAttendeeTicketEmail::DEFAULT_TEMPLATE,
+            InviteAttendeeTicketEditionMail::EVENT_SLUG => InviteAttendeeTicketEditionMail::DEFAULT_TEMPLATE,
+        ];
+
+        $repository = EntityManager::getRepository(SummitEmailEventFlowType::class);
+        $flow = null;
+
+        foreach ($slugs as $slug => $default_template) {
+            if (!is_null($repository->findOneBy(['slug' => $slug]))) continue;
+
+            if (is_null($flow)) {
+                $flow = new SummitEmailFlowType();
+                $flow->setName('Registration');
+            }
+
+            $event_type = new SummitEmailEventFlowType();
+            $event_type->setName($slug);
+            $event_type->setSlug($slug);
+            $event_type->setDefaultEmailTemplate($default_template);
+            $flow->addFlowEventType($event_type);
+        }
+
+        if (!is_null($flow)) {
+            EntityManager::persist($flow);
+            EntityManager::flush();
+        }
     }
 
     /**

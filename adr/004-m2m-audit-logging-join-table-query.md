@@ -119,12 +119,19 @@ private function auditCollection($subject, $uow, string $eventType): array
         'collection' => $subject,
     ];
 
-    // For deletions with uninitialized collections, query the join table directly
-    // to get target IDs without hydrating entities (avoids memory blowup)
+    // For deletions whose delete diff cannot tell us what is being removed, query the
+    // join table directly to get target IDs without hydrating entities (avoids memory
+    // blowup). Two cases:
+    //   - the collection was never loaded (no snapshot at all)
+    //   - the collection is initialized but its delete diff is empty: clear() takes a
+    //     fresh, empty snapshot, so a clear()+add() cycle (e.g. SummitService replacing
+    //     an event's sponsors) leaves nothing in getDeleteDiff()
     if ($eventType === IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
-        && !$subject->isInitialized()) {
-        $em = $uow->getEntityManager();
-        $payload['deleted_ids'] = $this->fetchManyToManyIds($subject, $em);
+        && (
+            !$subject->isInitialized()
+            || ($subject->isInitialized() && count($subject->getDeleteDiff()) === 0)
+        )) {
+        $payload['deleted_ids'] = $this->fetchManyToManyIds($subject, $this->em);
     }
 
     return [$owner, $payload, $eventType];
@@ -140,14 +147,15 @@ private function auditCollection($subject, $uow, string $eventType): array
 | ManyToMany inverse side | `[null, null, null]` — only the owning side is audited to avoid duplicates |
 | ManyToMany owning side, no owner | `[null, null, null]` — orphaned collection |
 | ManyToMany owning side, deletion + uninitialized | `[$owner, {collection, deleted_ids}, $eventType]` — queries join table via `fetchManyToManyIds()` |
+| ManyToMany owning side, deletion + initialized with empty `getDeleteDiff()` | `[$owner, {collection, deleted_ids}, $eventType]` — same query; the collection was cleared, so its snapshot is empty and the diff cannot name the removed rows |
 | ManyToMany owning side, otherwise | `[$owner, {collection}, $eventType]` — `getInsertDiff()`/`getDeleteDiff()` work on initialized collections |
 
 **Design rationale:**
 
 - **Pure routing, no dispatch** — the method returns a triple `[$subject, $payload, $eventType]` instead of calling `$strategy->audit()`. The caller (`onFlush()`) handles dispatch, keeping strategy and context dependencies out of the routing logic. Skip conditions return `[null, null, null]`; the caller checks `is_null($subject)` before dispatching.
 - **No boolean-to-event-type conversion** — the caller expresses intent directly via the event type string. No `$isDeletion` parameter.
-- **`$uow` stays scoped** — only accessed inside this method when the join table query is needed (uninitialized deletion). Never passed downstream in the payload.
-- **Minimal payload** — only `['collection' => $subject]` for updates, or `['collection' => $subject, 'deleted_ids' => [...]]` for uninitialized deletions. No `is_deletion` flag, no `uow` reference.
+- **`$uow` stays scoped** — only accessed inside this method when the join table query is needed (a deletion with no usable delete diff). Never passed downstream in the payload.
+- **Minimal payload** — only `['collection' => $subject]` for updates, or `['collection' => $subject, 'deleted_ids' => [...]]` for deletions whose ids had to be pre-queried. No `is_deletion` flag, no `uow` reference.
 
 ### Sequence Diagrams
 
@@ -462,17 +470,17 @@ A listener unit test (`tests/OpenTelemetry/AuditEventListenerTest.php`) exercise
 
 #### Safety rule: never access uninitialized collections
 
-**`buildAuditLogData()` must never call `count()`, `getSnapshot()`, or `isDirty()` on an uninitialized `PersistentCollection`** — all three trigger Doctrine lazy loading, which hydrates every related entity into memory and causes the same production memory blowup this ADR addresses (see Constraint section above).
+**`buildAuditLogData()` must never call `count()`, `getSnapshot()`, or `isDirty()` on an uninitialized `PersistentCollection`.** In Doctrine ORM 3.3.3 the call that actually initializes is `count()`: on a non-`EXTRA_LAZY` collection it goes through `AbstractLazyCollection::count()` → `initialize()`, hydrating every related entity into memory and causing the same production memory blowup this ADR addresses (see Constraint section above); on an uninitialized `EXTRA_LAZY` collection it runs a persister `COUNT` query instead. `getSnapshot()` and `isDirty()` are plain field reads. The rule still covers all three calls: the guard is one `isInitialized()` check, it is cheaper than reasoning per method about fetch mode, and it keeps the helper safe if a future Doctrine version changes the internals.
 
-The private helper `getCollectionChanges()` calls all three dangerous methods:
+The private helper `getCollectionChanges()` is where the three calls live:
 
 ```php
 private function getCollectionChanges(PersistentCollection $collection, array $change_set): array
 {
     return [
-        'current_count'  => count($collection),              // triggers hydration if uninitialized
-        'snapshot_count' => count($collection->getSnapshot()), // triggers hydration if uninitialized
-        'is_dirty'       => $collection->isDirty(),           // triggers hydration if uninitialized
+        'current_count'  => count($collection),              // initializes a non-EXTRA_LAZY collection
+        'snapshot_count' => count($collection->getSnapshot()), // field read
+        'is_dirty'       => $collection->isDirty(),           // field read
     ];
 }
 ```
@@ -550,7 +558,7 @@ case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
 
 **The three conditions in detail:**
 
-1. **`!empty($change_set['deleted_ids'])`** — The `deleted_ids` key is present and non-empty. This means `auditCollection()` detected an uninitialized collection during a deletion event and queried the join table via `fetchManyToManyIds()` to pre-load the target IDs. The collection itself is **uninitialized** — it is unsafe to call `count()`, `getSnapshot()`, or `isDirty()` on it. Instead, `count($change_set['deleted_ids'])` provides the collection count from the pre-queried ID array. Current count and snapshot count are set to `0` (the collection is about to be deleted), and `is_dirty` is `'true'` (conservative — it is being deleted).
+1. **`!empty($change_set['deleted_ids'])`** — The `deleted_ids` key is present and non-empty. This means `auditCollection()` saw a deletion event whose delete diff could not name the removed rows and queried the join table via `fetchManyToManyIds()` to pre-load the target IDs. That happens in two situations: the collection was never loaded (**uninitialized**, no snapshot), or it is initialized but `getDeleteDiff()` is empty because `clear()` took a fresh empty snapshot (the `clear()` + `add()` cycle used to replace an event's sponsors). In the first case it is unsafe to touch the collection; in both cases the pre-queried array is the reliable source, so `count($change_set['deleted_ids'])` provides the collection count. Current count and snapshot count are set to `0` (the rows are being deleted), and `is_dirty` is `'true'` (conservative — it is being deleted).
 
 2. **`$collection->isInitialized()`** — No `deleted_ids` in the payload, and the collection **is** initialized. This is the normal update path — the user added or removed items from the collection, so Doctrine loaded it into memory. It is safe to call `count($collection)`, `getCollectionChanges()` (which internally calls `count()`, `getSnapshot()`, and `isDirty()`). This is also the path for initialized deletions (the collection was accessed before the owning entity was removed).
 
@@ -558,7 +566,7 @@ case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
 
 **Why `!empty($change_set['deleted_ids'])` is checked first (before `isInitialized()`):**
 
-The `deleted_ids` check comes first because it is the **most specific** condition — when present, it definitively identifies the uninitialized deletion path and provides a known-safe data source (`count($change_set['deleted_ids'])`) without needing to touch the collection at all. Checking `isInitialized()` first would still work (the collection is not initialized when `deleted_ids` is present), but would fall into the `else` branch and lose the pre-queried ID count information.
+The `deleted_ids` check comes first because it is the **most specific** condition — when present, it identifies a deletion whose ids were pre-queried and provides a known-safe data source (`count($change_set['deleted_ids'])`) without needing to touch the collection at all. Checking `isInitialized()` first would misroute both pre-queried cases: an uninitialized collection would fall into the `else` branch and lose the pre-queried ID count, and a cleared (initialized, empty-snapshot) collection would report a `0` count from the collection instead of the rows actually being removed.
 
 #### Summary of guards
 
@@ -570,7 +578,7 @@ The `deleted_ids` check comes first because it is the **most specific** conditio
 | `EVENT_COLLECTION_MANYTOMANY_*` | `$collection->isInitialized() === true` | `count()`, `getSnapshot()`, `isDirty()` | Collection directly |
 | `EVENT_COLLECTION_MANYTOMANY_*` | `$collection->isInitialized() === false` | **None** | Safe defaults (0, 0, 0, 'true') |
 
-**Invariant:** No code path reaches `count($collection)`, `$collection->getSnapshot()`, or `$collection->isDirty()` without first confirming `$collection->isInitialized() === true`.
+**Invariant:** No code path reaches `count($collection)`, `$collection->getSnapshot()`, or `$collection->isDirty()` without first confirming `$collection->isInitialized() === true`. Only `count()` can initialize the collection (see the safety rule above); the other two are guarded for uniformity.
 
 ## Consequences
 

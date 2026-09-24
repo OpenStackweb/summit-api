@@ -3,8 +3,10 @@
 namespace App\Audit\ConcreteFormatters;
 
 use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityAuditLogFormatter;
+use App\Audit\ConcreteFormatters\ChildEntityFormatters\IChildEntityCollectionAuditLogFormatter;
 use App\Audit\AbstractAuditLogFormatter;
 use App\Audit\Interfaces\IAuditStrategy;
+use Doctrine\ORM\PersistentCollection;
 use Illuminate\Support\Facades\Log;
 use ReflectionException;
 
@@ -44,6 +46,11 @@ class EntityCollectionUpdateAuditLogFormatter extends AbstractAuditLogFormatter
      */
     public function format($subject, $change_set): ?string {
         try {
+            if ($this->child_entity_formatter instanceof IChildEntityCollectionAuditLogFormatter
+                && $subject instanceof PersistentCollection) {
+                return $this->child_entity_formatter->formatCollection($subject);
+            }
+
             if ($this->child_entity_formatter != null) {
                 $changes = [];
 

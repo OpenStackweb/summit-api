@@ -21,6 +21,15 @@ use App\Jobs\EmitAuditLogJob;
  */
 class AuditLogOtlpStrategy implements IAuditStrategy
 {
+    /**
+     * Bidirectional collections whose changes are already audited from the other side.
+     * A track chair score is added to both Presentation::track_chairs_scores and
+     * SummitTrackChair::scores, and only the track chair side carries score removals,
+     * so auditing both emits every score twice.
+     */
+    private const SKIPPED_COLLECTIONS = [
+        \models\summit\Presentation::class => ['track_chairs_scores'],
+    ];
 
     private bool $enabled;
     private string $elasticIndex;
@@ -51,6 +60,9 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         }
             Log::debug("AuditLogOtlpStrategy::audit", ['subject' => $subject, 'change_set' => $change_set, 'event_type' => $event_type]);
         try {
+            if ($this->isSkippedCollection($subject)) {
+                return;
+            }
             $entity = $this->resolveAuditableEntity($subject);
             if (is_null($entity)) {
                 Log::warning("AuditLogOtlpStrategy::audit subject not found");
@@ -87,6 +99,20 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 'event_type' => $event_type,
             ]);
         }
+    }
+
+    private function isSkippedCollection($subject): bool
+    {
+        if (!$subject instanceof PersistentCollection) {
+            return false;
+        }
+        $owner = $subject->getOwner();
+        foreach (self::SKIPPED_COLLECTIONS as $class => $fields) {
+            if ($owner instanceof $class && in_array($subject->getMapping()->fieldName, $fields, true)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function resolveAuditableEntity($subject)

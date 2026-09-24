@@ -22,6 +22,7 @@ use App\Models\Foundation\Summit\SelectionPlan;
 use Mockery;
 use models\summit\Summit;
 use Tests\OpenTelemetry\Formatters\Support\AuditContextBuilder;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class SelectionPlanAuditLogFormatterTest extends TestCase
@@ -161,5 +162,58 @@ class SelectionPlanAuditLogFormatterTest extends TestCase
 
         $this->assertNotNull($result);
         $this->assertStringContainsString('updated', $result);
+    }
+
+    /**
+     * Doctrine reports a change when a factory writes int 0 / 1 (or "0" / "1") over a
+     * boolean column that was hydrated as false / true, e.g. PresentationFactory
+     * writing setAttendingMedia(0). The stored value does not change, so no entry.
+     */
+    public static function equivalentBooleanPairsProvider(): array
+    {
+        return [
+            'false vs int 0'     => [false, 0],
+            'true vs int 1'      => [true, 1],
+            'false vs string 0'  => [false, "0"],
+            'true vs string 1'   => [true, "1"],
+            'int 0 vs false'     => [0, false],
+            'string 1 vs true'   => ["1", true],
+        ];
+    }
+
+    #[DataProvider('equivalentBooleanPairsProvider')]
+    public function testUpdateWithBooleanToEquivalentScalarIsSuppressed($old_value, $new_value): void
+    {
+        $plan = $this->createMockPlan();
+
+        $result = $this->formatter_update->format($plan, [
+            'is_enabled' => [$old_value, $new_value],
+        ]);
+
+        $this->assertNull($result);
+    }
+
+    public static function differentBooleanPairsProvider(): array
+    {
+        return [
+            'false vs true'      => [false, true],
+            'false vs int 1'     => [false, 1],
+            'true vs string 0'   => [true, "0"],
+            'false vs string yes'=> [false, "yes"],
+            'true vs null'       => [true, null],
+        ];
+    }
+
+    #[DataProvider('differentBooleanPairsProvider')]
+    public function testUpdateWithBooleanToDifferentValueIsNotSuppressed($old_value, $new_value): void
+    {
+        $plan = $this->createMockPlan();
+
+        $result = $this->formatter_update->format($plan, [
+            'is_enabled' => [$old_value, $new_value],
+        ]);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('"is_enabled"', $result);
     }
 }

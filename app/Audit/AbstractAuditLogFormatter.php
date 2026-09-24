@@ -224,11 +224,38 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
             return $old_value->getTimestamp() === $new_value->getTimestamp();
         }
 
+        // A boolean column hydrated as false/true and re-written by a factory as 0/1 or "0"/"1"
+        // (e.g. PresentationFactory::setAttendingMedia(0)) is reported by Doctrine as a change
+        // (false !== 0) although the stored value is the same. Only the exact 0/1 forms are
+        // accepted; anything else next to a boolean is a real change.
+        if (is_bool($old_value) || is_bool($new_value)) {
+            $old_flag = $this->asBooleanFlag($old_value);
+            $new_flag = $this->asBooleanFlag($new_value);
+            return $old_flag !== null && $new_flag !== null && $old_flag === $new_flag;
+        }
+
         if ((is_scalar($old_value) || is_null($old_value)) && (is_scalar($new_value) || is_null($new_value))) {
             return $this->formatChangeValue($old_value) === $this->formatChangeValue($new_value);
         }
 
         return false;
+    }
+
+    /**
+     * Maps true/1/"1" to true and false/0/"0" to false; any other value yields null.
+     */
+    private function asBooleanFlag($value): ?bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if ($value === 0 || $value === "0") {
+            return false;
+        }
+        if ($value === 1 || $value === "1") {
+            return true;
+        }
+        return null;
     }
 
     /**

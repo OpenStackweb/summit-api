@@ -2,6 +2,7 @@
 
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Presentation;
+use models\summit\PresentationMediaUpload;
 use models\summit\PresentationSpeaker;
 use utils\FilterParser;
 use utils\Order;
@@ -688,5 +689,366 @@ class SpeakerRepositoryTest extends ProtectedApiTestCase
         $this->assertEmpty(array_intersect($ids1, $ids2), 'Pages must be disjoint');
         $this->assertEquals($total, $page1->getTotal(), 'Total must be consistent across pages');
         $this->assertEquals($total, $page2->getTotal());
+    }
+    // -----------------------------------------------------------------
+    // getUniqueActivitiesCountBySummit - the count is scoped by the
+    // presentation-level filters, not only by who matches them.
+    //
+    // Phase 1 resolves WHICH speakers match; phase 2 used to count every
+    // presentation of those speakers, so any presentation-level filter
+    // over-counted (a speaker with 3 presentations returned 3 for all of them).
+    // -----------------------------------------------------------------
+
+    /**
+     * Seeds the acceptance scenario: one speaker owning three presentations that
+     * differ in track, type, published state and media upload.
+     *
+     *   P1 - defaultTrack,   defaultPresentationType,    published,   media upload of type M
+     *   P2 - secondaryTrack, defaultPresentationType,    published,   no media upload
+     *   P3 - defaultTrack,   allow2VotePresentationType, unpublished, no media upload
+     */
+    private function seedActivitiesCountScenario(string $first_name): PresentationSpeaker
+    {
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName($first_name);
+        $speaker->setLastName('ActivitiesScenario');
+        self::$em->persist($speaker);
+
+        $p1 = $this->seedPresentation($speaker, self::$defaultTrack, 'P1 Published Default Track', true);
+        $media_upload = new PresentationMediaUpload();
+        $media_upload->setName('P1 Media Upload');
+        $media_upload->setDescription('P1 Media Upload Description');
+        $media_upload->setFilename('p1.pdf');
+        $media_upload->setMediaUploadType(self::$media_uploads_types[0]);
+        $p1->addMediaUpload($media_upload);
+
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'P2 Published Secondary Track', true);
+
+        // allow2VotePresentationType does not allow a publishing period, so this one
+        // must not get start/end dates or SummitEvent rejects it.
+        $p3 = new Presentation();
+        self::$summit->addEvent($p3);
+        $p3->setTitle('P3 Unpublished Default Track Other Type');
+        $p3->setAbstract('Abstract');
+        $p3->setCategory(self::$defaultTrack);
+        $p3->setType(self::$allow2VotePresentationType);
+        $p3->setProgress(Presentation::PHASE_COMPLETE);
+        $p3->setStatus(Presentation::STATUS_RECEIVED);
+        $p3->addSpeaker($speaker);
+
+        self::$em->flush();
+
+        return $speaker;
+    }
+
+    /**
+     * Counts the activities of one speaker under the given presentation-level conditions.
+     */
+    private function countActivitiesOf(PresentationSpeaker $speaker, array $conditions = []): int
+    {
+        $expressions = ['id==' . $speaker->getId()];
+        $rules = ['id' => ['==']];
+
+        foreach ($conditions as $field => $value) {
+            $expressions[] = $field . '==' . $value;
+            $rules[$field] = ['=='];
+        }
+
+        return $this->repo()->getUniqueActivitiesCountBySummit(
+            self::$summit,
+            FilterParser::parse($expressions, $rules)
+        );
+    }
+
+    public function testActivitiesCountWithoutPresentationFilterCountsEveryPresentationOfTheSpeaker(): void
+    {
+        $speaker = $this->seedActivitiesCountScenario('ScenarioAll');
+
+        $this->assertEquals(3, $this->countActivitiesOf($speaker));
+    }
+
+    public function testActivitiesCountIsScopedByTrackFilter(): void
+    {
+        $speaker = $this->seedActivitiesCountScenario('ScenarioTrack');
+
+        // P1 and P3 are in defaultTrack, P2 is in secondaryTrack.
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'presentations_track_id' => self::$defaultTrack->getId(),
+        ]));
+        $this->assertEquals(1, $this->countActivitiesOf($speaker, [
+            'presentations_track_id' => self::$secondaryTrack->getId(),
+        ]));
+    }
+
+    public function testActivitiesCountIsScopedByTrackGroupFilter(): void
+    {
+        $speaker = $this->seedActivitiesCountScenario('ScenarioTrackGroup');
+
+        // defaultTrackGroup contains defaultTrack only: P1 and P3.
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'presentations_track_group_id' => self::$defaultTrackGroup->getId(),
+        ]));
+    }
+
+    public function testActivitiesCountIsScopedByTypeFilter(): void
+    {
+        $speaker = $this->seedActivitiesCountScenario('ScenarioType');
+
+        // only P3 uses allow2VotePresentationType
+        $this->assertEquals(1, $this->countActivitiesOf($speaker, [
+            'presentations_type_id' => self::$allow2VotePresentationType->getId(),
+        ]));
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'presentations_type_id' => self::$defaultPresentationType->getId(),
+        ]));
+    }
+
+    public function testActivitiesCountIsScopedByPublishedFilter(): void
+    {
+        $speaker = $this->seedActivitiesCountScenario('ScenarioPublished');
+
+        // P1 and P2 are published, P3 is not.
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'has_published_presentations' => 'true',
+        ]));
+    }
+
+    public function testActivitiesCountIsScopedByMediaUploadFilter(): void
+    {
+        $speaker = $this->seedActivitiesCountScenario('ScenarioMediaUpload');
+
+        // only P1 carries a media upload of that type
+        $this->assertEquals(1, $this->countActivitiesOf($speaker, [
+            'has_media_upload_with_type' => self::$media_uploads_types[0]->getId(),
+        ]));
+    }
+
+    public function testActivitiesCountForNotMediaUploadFilterCountsEveryPresentationOfTheMatchedSpeaker(): void
+    {
+        // has_not_media_upload_with_type matches a speaker only when NONE of their
+        // presentations carries a media upload of that type, so every presentation
+        // phase 2 reaches already qualifies.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ScenarioNoMediaUpload');
+        $speaker->setLastName('ActivitiesScenario');
+        self::$em->persist($speaker);
+
+        $this->seedPresentation($speaker, self::$defaultTrack,   'No Media A', true);
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'No Media B', true);
+        self::$em->flush();
+
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'has_not_media_upload_with_type' => self::$media_uploads_types[0]->getId(),
+        ]));
+
+        // the scenario speaker owns P1 with that media upload, so they do not match at all
+        $with_media = $this->seedActivitiesCountScenario('ScenarioHasMediaUpload');
+        $this->assertEquals(0, $this->countActivitiesOf($with_media, [
+            'has_not_media_upload_with_type' => self::$media_uploads_types[0]->getId(),
+        ]));
+    }
+
+    public function testActivitiesCountIsScopedByPublishedAndTrackCombined(): void
+    {
+        $speaker = $this->seedActivitiesCountScenario('ScenarioCombined');
+
+        // only P1 is both published and in defaultTrack
+        $this->assertEquals(1, $this->countActivitiesOf($speaker, [
+            'has_published_presentations' => 'true',
+            'presentations_track_id'      => self::$defaultTrack->getId(),
+        ]));
+
+        // P2 is published but in secondaryTrack
+        $this->assertEquals(1, $this->countActivitiesOf($speaker, [
+            'has_published_presentations' => 'true',
+            'presentations_track_id'      => self::$secondaryTrack->getId(),
+        ]));
+
+        // P3 is in defaultTrack with that type but unpublished
+        $this->assertEquals(0, $this->countActivitiesOf($speaker, [
+            'has_published_presentations' => 'true',
+            'presentations_type_id'       => self::$allow2VotePresentationType->getId(),
+        ]));
+    }
+
+    public function testActivitiesCountIsScopedByTitleFilter(): void
+    {
+        $speaker = $this->seedActivitiesCountScenario('ScenarioTitle');
+
+        $expressions = [
+            'id==' . $speaker->getId(),
+            'presentations_title=@P1 Published',
+        ];
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(
+            self::$summit,
+            FilterParser::parse($expressions, ['id' => ['=='], 'presentations_title' => ['=@']])
+        );
+
+        $this->assertEquals(1, $count);
+    }
+
+    public function testActivitiesCountForPublishedFalseCountsEveryPresentationOfTheMatchedSpeaker(): void
+    {
+        // A speaker with no published and no selected presentation at all: the == false
+        // side adds no presentation predicate, so every presentation of theirs is counted.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ScenarioUnpublishedOnly');
+        $speaker->setLastName('ActivitiesScenario');
+        self::$em->persist($speaker);
+
+        $this->seedPresentation($speaker, self::$defaultTrack,   'Unpublished A', false);
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'Unpublished B', false);
+        self::$em->flush();
+
+        foreach (['has_published_presentations', 'has_accepted_presentations', 'has_alternate_presentations'] as $field) {
+            $this->assertEquals(
+                2,
+                $this->countActivitiesOf($speaker, [$field => 'false']),
+                $field . '==false must not restrict which presentations are counted'
+            );
+        }
+    }
+
+    public function testActivitiesCountForRejectedFalseCountsEveryPresentationOfTheMatchedSpeaker(): void
+    {
+        // rejected == false needs a speaker with no rejected presentation: an unpublished
+        // presentation outside every selected list is rejected, so this one publishes both.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ScenarioNoRejected');
+        $speaker->setLastName('ActivitiesScenario');
+        self::$em->persist($speaker);
+
+        $this->seedPresentation($speaker, self::$defaultTrack,   'Published A', true);
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'Published B', true);
+        self::$em->flush();
+
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'has_rejected_presentations' => 'false',
+        ]));
+    }
+
+    public function testActivitiesCountForCombinedStatusFlagsIsTheUnionOfTheStatuses(): void
+    {
+        // summit-admin "Accepted & Rejected": three AND'd flags. Phase 1 reads them per
+        // person (one accepted AND one rejected presentation, possibly different ones),
+        // so phase 2 must not demand both statuses of a single presentation.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ScenarioAcceptedRejected');
+        $speaker->setLastName('ActivitiesScenario');
+        self::$em->persist($speaker);
+
+        $this->seedPresentation($speaker, self::$defaultTrack,   'Accepted (published)', true);
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'Rejected (unpublished, unlisted)', false);
+        self::$em->flush();
+
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'has_rejected_presentations'  => 'true',
+            'has_accepted_presentations'  => 'true',
+            'has_alternate_presentations' => 'false',
+        ]));
+    }
+
+    public function testActivitiesCountForOnlyAcceptedStatusDoesNotWidenPastTheTrueFlags(): void
+    {
+        // Guards the OR-ing of the status group from over-widening: the two == false
+        // companions must stay neutral, not turn into an unrestricted OR branch.
+        //
+        // Can't reuse seedActivitiesCountScenario here: its P3 is unpublished and absent
+        // from every list, which makes it "rejected" -- a speaker owning it never
+        // satisfies phase 1's has_rejected_presentations==false (NOT EXISTS a rejected
+        // presentation of theirs). Needs a speaker with zero rejected presentations, same
+        // fixture shape as testActivitiesCountForRejectedFalseCountsEveryPresentationOfTheMatchedSpeaker.
+        $speaker = new PresentationSpeaker();
+        $speaker->setFirstName('ScenarioOnlyAccepted');
+        $speaker->setLastName('ActivitiesScenario');
+        self::$em->persist($speaker);
+
+        $this->seedPresentation($speaker, self::$defaultTrack,   'Accepted A', true);
+        $this->seedPresentation($speaker, self::$secondaryTrack, 'Accepted B', true);
+        self::$em->flush();
+
+        $this->assertEquals(2, $this->countActivitiesOf($speaker, [
+            'has_rejected_presentations'  => 'false',
+            'has_accepted_presentations'  => 'true',
+            'has_alternate_presentations' => 'false',
+        ]));
+    }
+
+    public function testActivitiesCountWithNoFilterIsUnaffectedByTheScoping(): void
+    {
+        $before = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit);
+
+        $this->seedActivitiesCountScenario('ScenarioUnfiltered');
+
+        $after = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit);
+
+        $this->assertEquals($before + 3, $after);
+    }
+
+    public function testActivitiesCountWithAnOredPersonLevelFilterCountsEveryPresentation(): void
+    {
+        // "id==<speaker> OR presentations_track_id==<secondaryTrack>". Phase 1 matches the
+        // speaker through either branch. Phase 2 cannot express the id branch, and an OR
+        // group with a branch it cannot express must stop restricting the count rather
+        // than narrow to the branches it can express -- narrowing would read as "0
+        // Activities" for anyone matched only through the unmapped branch, which is what
+        // summit-admin's term search does on every name match. So the whole group is
+        // dropped and every presentation of the matched speaker is counted.
+        $speaker = $this->seedActivitiesCountScenario('ScenarioOrGroup');
+
+        $filter = FilterParser::parse(
+            ['id==' . $speaker->getId() . ',presentations_track_id==' . self::$secondaryTrack->getId()],
+            ['id' => ['=='], 'presentations_track_id' => ['==']]
+        );
+
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+
+        $this->assertEquals(3, $count);
+    }
+
+    public function testActivitiesCountForATermSearchCountsEveryPresentationOfTheMatchedSpeaker(): void
+    {
+        // buildTermFilter shape (summit-admin): one OR group of full_name, first_name,
+        // last_name, email (all unmapped in phase 2) plus presentations_title and
+        // presentations_abstract (mapped). Matched here through first_name alone, with no
+        // title or abstract containing the term.
+        $speaker = $this->seedActivitiesCountScenario('Zzterm');
+
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(
+            self::$summit,
+            FilterParser::parse(
+                ['full_name=@zzterm,first_name=@zzterm,last_name=@zzterm,email=@zzterm,presentations_title=@zzterm,presentations_abstract=@zzterm'],
+                [
+                    'full_name'             => ['=@'],
+                    'first_name'            => ['=@'],
+                    'last_name'             => ['=@'],
+                    'email'                 => ['=@'],
+                    'presentations_title'   => ['=@'],
+                    'presentations_abstract' => ['=@'],
+                ]
+            )
+        );
+
+        $this->assertEquals(3, $count);
+    }
+
+    public function testActivitiesCountWithAFullyMappedOrGroupStillRestricts(): void
+    {
+        // Guards the widening from leaking into a group phase 2 CAN fully express: every
+        // branch here has a phase-2 mapping, so it must still narrow the count as before.
+        $speaker = $this->seedActivitiesCountScenario('ScenarioFullyMappedOrGroup');
+
+        $filter = FilterParser::parse(
+            [
+                'id==' . $speaker->getId(),
+                'presentations_track_id==' . self::$secondaryTrack->getId() . ',has_published_presentations==true',
+            ],
+            ['id' => ['=='], 'presentations_track_id' => ['=='], 'has_published_presentations' => ['==']]
+        );
+
+        $count = $this->repo()->getUniqueActivitiesCountBySummit(self::$summit, $filter);
+
+        // P2 matches by track, P1 and P2 match by published; P3 matches neither.
+        $this->assertEquals(2, $count);
     }
 }

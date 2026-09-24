@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
 
 abstract class BasePresentationAuditLogFormatter extends AbstractAuditLogFormatter
 {
+    use FormatsPresentationManyToManyCollections;
+
     public function __construct(string $event_type)
     {
         parent::__construct($event_type);
@@ -66,6 +68,10 @@ abstract class BasePresentationAuditLogFormatter extends AbstractAuditLogFormatt
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return $this->formatDeletion($data);
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->handlePresentationManyToManyCollection($change_set, $data['id'], $data['title']);
             }
         } catch (\Exception $ex) {
             Log::warning(static::class . " error: " . $ex->getMessage());

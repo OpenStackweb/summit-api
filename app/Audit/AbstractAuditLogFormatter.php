@@ -158,7 +158,7 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
     }
 
 
-    protected function buildChangeDetails(array $change_set): string
+    private function buildChangeDetails(array $change_set): ?string
     {
         $changed_fields = [];
         $ignored_fields = $this->getIgnoredFields();
@@ -178,19 +178,84 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         }
 
         if (empty($changed_fields)) {
-            return 'properties without changes registered';
+            return null;
         }
 
         $fields_summary = count($changed_fields) . ' field(s) modified: ';
         return $fields_summary . implode(' | ', $changed_fields);
     }
 
+    /**
+     * The only way to consume buildChangeDetails() for an EVENT_ENTITY_UPDATE message.
+     * Returns null (suppressing the audit entry) whenever nothing meaningful changed,
+     * otherwise hands the non-null details string to $messageBuilder to assemble the
+     * final message. buildChangeDetails() is private specifically so a formatter cannot
+     * bypass this null-check.
+     */
+    final protected function formatUpdateMessage(array $change_set, \Closure $messageBuilder): ?string
+    {
+        $details = $this->buildChangeDetails($change_set);
+        if ($details === null) {
+            return null;
+        }
+        return $messageBuilder($details);
+    }
+
+
     protected function formatFieldChange(string $prop_name, $old_value, $new_value): ?string
     {
+        if ($this->valuesAreEffectivelyEqual($old_value, $new_value)) {
+            return null;
+        }
+
         $old_display = $this->formatChangeValue($old_value);
         $new_display = $this->formatChangeValue($new_value);
 
         return sprintf("Property \"%s\" has changed from \"%s\" to \"%s\"", $prop_name, $old_display, $new_display);
+    }
+
+    protected function valuesAreEffectivelyEqual($old_value, $new_value): bool
+    {
+        if ($old_value === $new_value) {
+            return true;
+        }
+
+        if ($old_value instanceof \DateTimeInterface && $new_value instanceof \DateTimeInterface) {
+            return $old_value->getTimestamp() === $new_value->getTimestamp();
+        }
+
+        // A boolean column hydrated as false/true and re-written by a factory as 0/1 or "0"/"1"
+        // (e.g. PresentationFactory::setAttendingMedia(0)) is reported by Doctrine as a change
+        // (false !== 0) although the stored value is the same. Only the exact 0/1 forms are
+        // accepted; anything else next to a boolean is a real change.
+        if (is_bool($old_value) || is_bool($new_value)) {
+            $old_flag = $this->asBooleanFlag($old_value);
+            $new_flag = $this->asBooleanFlag($new_value);
+            return $old_flag !== null && $new_flag !== null && $old_flag === $new_flag;
+        }
+
+        if ((is_scalar($old_value) || is_null($old_value)) && (is_scalar($new_value) || is_null($new_value))) {
+            return $this->formatChangeValue($old_value) === $this->formatChangeValue($new_value);
+        }
+
+        return false;
+    }
+
+    /**
+     * Maps true/1/"1" to true and false/0/"0" to false; any other value yields null.
+     */
+    private function asBooleanFlag($value): ?bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if ($value === 0 || $value === "0") {
+            return false;
+        }
+        if ($value === 1 || $value === "1") {
+            return true;
+        }
+        return null;
     }
 
     /**

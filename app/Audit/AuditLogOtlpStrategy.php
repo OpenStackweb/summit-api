@@ -49,7 +49,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
         if (!$this->enabled) {
             return;
         }
-            Log::debug("AuditLogOtlpStrategy::audit", ['subject' => $subject, 'change_set' => $change_set, 'event_type' => $event_type]);
+        Log::debug("AuditLogOtlpStrategy::audit", ['subject' => $subject, 'change_set' => $change_set, 'event_type' => $event_type]);
         try {
             $entity = $this->resolveAuditableEntity($subject);
             if (is_null($entity)) {
@@ -67,7 +67,7 @@ class AuditLogOtlpStrategy implements IAuditStrategy
             }
             $description = $formatter->format($subject, $change_set);
             if(is_null($description)){
-                Log::warning("AuditLogOtlpStrategy::audit description is empty");
+                Log::debug("AuditLogOtlpStrategy::audit description is empty");
                 return;
             }
             $auditData = $this->buildAuditLogData($entity, $subject, $change_set, $event_type, $ctx);
@@ -79,7 +79,6 @@ class AuditLogOtlpStrategy implements IAuditStrategy
                 job: $job,
             );
             Log::debug("AuditLogOtlpStrategy::audit entry sent to OTEL", ["user_id" => $ctx->userId, "user_email" => $ctx->userEmail]);
-
         } catch (\Exception $ex) {
             Log::error('OTEL audit logging error: ' . $ex->getMessage(), [
                 'exception' => $ex,

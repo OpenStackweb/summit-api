@@ -47,14 +47,13 @@ class SummitRegistrationFeedMetadataAuditLogFormatter extends AbstractAuditLogFo
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
                     $key = $subject->getKey() ?? 'Unknown Key';
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Summit Registration Feed Metadata (%s) key '%s' updated: %s by user %s",
                         $id,
                         $key,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     $key = $subject->getKey() ?? 'Unknown Key';

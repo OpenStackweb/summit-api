@@ -250,4 +250,32 @@ class AuditOtlpStrategyTest extends OpenTelemetryTestCase
             return true;
         });
     }
+
+    /**
+     * Doctrine reports a change when a fresh DateTime instance or a type-coerced scalar
+     * is assigned with the same value; the formatter returns null for such a change set
+     * and the strategy must not emit an audit job for it.
+     */
+    public function testAuditWithNoMeaningfulChangeDoesNotDispatchJob(): void
+    {
+        $this->skipIfOpenTelemetryDisabled();
+
+        Queue::fake();
+
+        $ctx = $this->createAuditContext();
+        $simulatedChangeSet = [
+            'name' => [self::$summit->getName(), self::$summit->getName()],
+            'begin_date' => [new \DateTime('2026-10-12 09:00:00'), new \DateTime('2026-10-12 09:00:00')],
+            'active' => [true, 1],
+        ];
+
+        $this->auditStrategy->audit(
+            self::$summit,
+            $simulatedChangeSet,
+            AuditLogOtlpStrategy::EVENT_ENTITY_UPDATE,
+            $ctx
+        );
+
+        Queue::assertNotPushed(EmitAuditLogJob::class);
+    }
 }

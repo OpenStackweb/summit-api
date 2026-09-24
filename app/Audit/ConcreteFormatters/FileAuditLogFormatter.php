@@ -44,15 +44,14 @@ class FileAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "File '%s' (%s) (%d) updated: %s by user %s",
                         $name,
                         $filename,
                         $id,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

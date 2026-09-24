@@ -120,10 +120,8 @@ class SummitBadgeTypeAuditLogFormatterTest extends TestCase
         $this->formatter_update->setContext($this->audit_context);
         $result = $this->formatter_update->format($badge_type, []);
 
-        $this->assertNotNull($result);
-        $this->assertStringContainsString("Test Badge Type", $result);
-        $this->assertStringContainsString("updated", $result);
-    }
+        $this->assertNull($result);
+}
 
     public function testPropertiesExist(): void
     {

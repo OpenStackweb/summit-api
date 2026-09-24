@@ -48,15 +48,14 @@ class PresentationLinkAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Presentation Link '%s' (%d) for presentation '%s' updated: %s by user %s",
                         $title,
                         $id,
                         $presentation_title,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

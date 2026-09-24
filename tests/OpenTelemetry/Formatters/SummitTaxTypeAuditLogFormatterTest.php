@@ -136,7 +136,7 @@ class SummitTaxTypeAuditLogFormatterTest extends TestCase
         $code = $this->createMockTax('Empty Tax', 'EMPTY', 10.0);
         $result = $this->formatter_update->format($code, []);
 
-        $this->assertStringContainsString("properties without changes registered", $result);
-    }
+        $this->assertNull($result);
+}
 
 }

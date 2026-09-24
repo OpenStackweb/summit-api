@@ -145,8 +145,7 @@ final class SummitSponsorExtraQuestionTypeAuditLogFormatterTest extends TestCase
     }
 
     /**
-     * The audit formatter is also invoked on updates; ensure the same
-     * null-safe path is taken there.
+     * On update with no meaningful changes, formatter should return null.
      */
     public function test_update_format_does_not_crash_when_sponsor_is_cleared(): void
     {
@@ -157,10 +156,7 @@ final class SummitSponsorExtraQuestionTypeAuditLogFormatterTest extends TestCase
 
         $result = $formatter->format($question, []);
 
-        self::assertIsString($result);
-        self::assertStringContainsString(self::LABEL, $result);
-        self::assertStringContainsString('Unknown Sponsor', $result);
-        self::assertStringContainsString('updated', $result);
+        self::assertNull($result);
     }
 
     /**

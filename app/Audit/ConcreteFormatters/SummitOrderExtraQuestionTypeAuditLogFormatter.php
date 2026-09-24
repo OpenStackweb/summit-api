@@ -39,8 +39,7 @@ class SummitOrderExtraQuestionTypeAuditLogFormatter extends AbstractAuditLogForm
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf("Order Extra Question '%s' (%s) of type '%s' created in Summit '%s' by user %s", $label, $id, $question_type, $summit_name, $this->getUserInfo());
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    return sprintf("Order Extra Question '%s' (%s) in Summit '%s' updated: %s by user %s", $label, $id, $summit_name, $details, $this->getUserInfo());
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf("Order Extra Question '%s' (%s) in Summit '%s' updated: %s by user %s", $label, $id, $summit_name, $details, $this->getUserInfo()));
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Order Extra Question '%s' (%s) in Summit '%s' deleted by user %s", $label, $id, $summit_name, $this->getUserInfo());
             }

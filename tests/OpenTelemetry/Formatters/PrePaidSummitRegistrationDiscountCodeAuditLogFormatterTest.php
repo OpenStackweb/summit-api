@@ -221,7 +221,7 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatterTest extends TestCas
         $code = $this->createMockCode("Empty", 0, 0, 0);
         $result = $this->formatter_update->format($code, []);
 
-        $this->assertStringContainsString("properties without changes registered", $result);
-    }
+        $this->assertNull($result);
+}
 
 }

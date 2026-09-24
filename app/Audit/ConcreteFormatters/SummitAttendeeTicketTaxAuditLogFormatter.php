@@ -40,8 +40,7 @@ class SummitAttendeeTicketTaxAuditLogFormatter extends AbstractAuditLogFormatter
                     return sprintf("Attendee Ticket Tax (%s) '%s' for ticket %s created by user %s", $id, $tax_name, $ticket_id, $this->getUserInfo());
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    return sprintf("Attendee Ticket Tax (%s) '%s' for ticket %s updated: %s by user %s", $id, $tax_name, $ticket_id, $details, $this->getUserInfo());
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf("Attendee Ticket Tax (%s) '%s' for ticket %s updated: %s by user %s", $id, $tax_name, $ticket_id, $details, $this->getUserInfo()));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Attendee Ticket Tax (%s) '%s' for ticket %s deleted by user %s", $id, $tax_name, $ticket_id, $this->getUserInfo());

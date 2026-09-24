@@ -46,15 +46,14 @@ class SummitProposedScheduleAllowedLocationAuditLogFormatter extends AbstractAud
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Proposed Schedule Allowed Location (%d) Track '%s' Location '%s' updated: %s by user %s",
                         $id,
                         $track_name,
                         $location_name,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

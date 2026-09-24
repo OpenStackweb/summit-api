@@ -37,8 +37,7 @@ class PresentationAttendeeVoteAuditLogFormatter extends AbstractAuditLogFormatte
                 case IAuditStrategy::EVENT_ENTITY_CREATION:
                     return sprintf("Presentation Attendee Vote (%s) for '%s' created by user %s", $id, $title, $this->getUserInfo());
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $details = $this->buildChangeDetails($change_set);
-                    return sprintf("Presentation Attendee Vote (%s) for '%s' updated: %s by user %s", $id, $title, $details, $this->getUserInfo());
+                    return $this->formatUpdateMessage($change_set, fn($details) => sprintf("Presentation Attendee Vote (%s) for '%s' updated: %s by user %s", $id, $title, $details, $this->getUserInfo()));
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Presentation Attendee Vote (%s) for '%s' deleted by user %s", $id, $title, $this->getUserInfo());
             }

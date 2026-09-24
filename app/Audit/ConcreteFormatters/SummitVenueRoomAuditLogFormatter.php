@@ -50,8 +50,7 @@ class SummitVenueRoomAuditLogFormatter extends AbstractAuditLogFormatter
                     );
 
                 case IAuditStrategy::EVENT_ENTITY_UPDATE:
-                    $change_details = $this->buildChangeDetails($change_set);
-                    return sprintf(
+                    return $this->formatUpdateMessage($change_set, fn($change_details) => sprintf(
                         "Venue Room '%s' (%d) in Venue '%s' for Summit '%s' updated: %s by user %s",
                         $name,
                         $id,
@@ -59,7 +58,7 @@ class SummitVenueRoomAuditLogFormatter extends AbstractAuditLogFormatter
                         $summit_name,
                         $change_details,
                         $this->getUserInfo()
-                    );
+                    ));
 
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf(

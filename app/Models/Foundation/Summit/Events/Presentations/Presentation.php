@@ -994,7 +994,7 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
     /**
      * @param bool $attending_media
      */
-    public function setAttendingMedia($attending_media)
+    public function setAttendingMedia(bool $attending_media): void
     {
         $this->attending_media = $attending_media;
     }

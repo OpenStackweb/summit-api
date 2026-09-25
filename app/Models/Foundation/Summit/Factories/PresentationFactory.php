@@ -108,8 +108,8 @@ final class PresentationFactory
         if (isset($payload['attendees_expected_learnt']))
             $presentation->setAttendeesExpectedLearnt(html_entity_decode($payload['attendees_expected_learnt']));
 
-        $presentation->setAttendingMedia(isset($payload['attending_media']) ?
-            filter_var($payload['attending_media'], FILTER_VALIDATE_BOOLEAN) : 0);
+        if (isset($payload['attending_media']))
+            $presentation->setAttendingMedia(filter_var($payload['attending_media'], FILTER_VALIDATE_BOOLEAN));
 
         if (isset($payload['to_record']))
             $presentation->setToRecord(boolval($payload['to_record']));

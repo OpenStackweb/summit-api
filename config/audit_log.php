@@ -60,6 +60,11 @@ return [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationTrackChairRatingTypeAuditLogFormatter::class,
         ],
+        // scores are audited through the SummitTrackChair::scores collection; the entity-level
+        // insert/delete events would log each score again with the generic formatters
+        \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScore::class => [
+            'enabled' => false,
+        ],
         \App\Models\Foundation\Summit\Events\Presentations\TrackChairs\PresentationTrackChairScoreType::class => [
             'enabled' => true,
             'strategy' => \App\Audit\ConcreteFormatters\PresentationFormatters\PresentationTrackChairScoreTypeAuditLogFormatter::class,

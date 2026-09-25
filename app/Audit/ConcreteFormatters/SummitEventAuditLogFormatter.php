@@ -63,11 +63,82 @@ class SummitEventAuditLogFormatter extends AbstractAuditLogFormatter
                         $summit_name,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->handleEventManyToManyCollection($change_set, $id, $title, $summit_name);
             }
         } catch (\Exception $ex) {
             Log::warning("SummitEventAuditLogFormatter error: " . $ex->getMessage());
         }
 
         return null;
+    }
+
+    /**
+     * sponsors, tags and allowed_ticket_types; two-step pipeline per the M2M audit ADR.
+     */
+    private function handleEventManyToManyCollection(array $change_set, $id, string $title, string $summit_name): ?string
+    {
+        $metadata = $this->handleManyToManyCollection($change_set);
+        if ($metadata === null) {
+            return null;
+        }
+
+        $collectionData = $this->processCollection($metadata);
+        if (!$collectionData) {
+            return null;
+        }
+
+        return $this->event_type === IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
+            ? $this->formatManyToManyDelete($collectionData, $id, $title, $summit_name)
+            : $this->formatManyToManyUpdate($collectionData, $id, $title, $summit_name);
+    }
+
+    private function formatManyToManyUpdate(array $collectionData, $id, string $title, string $summit_name): ?string
+    {
+        $added_ids = $collectionData['added_ids'] ?? [];
+        $removed_ids = $collectionData['removed_ids'] ?? [];
+
+        $parts = [];
+        if (!empty($added_ids)) {
+            $parts[] = 'Added IDs: ' . json_encode($added_ids);
+        }
+        if (!empty($removed_ids)) {
+            $parts[] = 'Removed IDs: ' . json_encode($removed_ids);
+        }
+        if (empty($parts)) {
+            return null;
+        }
+
+        return sprintf(
+            "Summit Event '%s' (%s) for Summit '%s' %s (%s) updated: %s by user %s",
+            $title,
+            $id,
+            $summit_name,
+            $collectionData['field'] ?? 'unknown',
+            $collectionData['target_entity'] ?? 'unknown',
+            implode(', ', $parts),
+            $this->getUserInfo()
+        );
+    }
+
+    private function formatManyToManyDelete(array $collectionData, $id, string $title, string $summit_name): ?string
+    {
+        $removed_ids = $collectionData['removed_ids'] ?? [];
+        if (empty($removed_ids)) {
+            return null;
+        }
+
+        return sprintf(
+            "Summit Event '%s' (%s) for Summit '%s' %s (%s) deleted: Removed IDs: %s by user %s",
+            $title,
+            $id,
+            $summit_name,
+            $collectionData['field'] ?? 'unknown',
+            $collectionData['target_entity'] ?? 'unknown',
+            json_encode($removed_ids),
+            $this->getUserInfo()
+        );
     }
 }

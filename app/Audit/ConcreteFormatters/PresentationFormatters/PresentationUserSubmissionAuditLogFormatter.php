@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 
 class PresentationUserSubmissionAuditLogFormatter extends AbstractAuditLogFormatter
 {
+    use FormatsPresentationManyToManyCollections;
+
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof Presentation) {
@@ -56,6 +58,10 @@ class PresentationUserSubmissionAuditLogFormatter extends AbstractAuditLogFormat
                         $category_name,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->handlePresentationManyToManyCollection($change_set, $id, $title);
             }
         } catch (\Exception $ex) {
             Log::warning("PresentationUserSubmissionAuditLogFormatter error: " . $ex->getMessage());

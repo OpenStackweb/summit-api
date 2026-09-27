@@ -18,5 +18,14 @@ use models\utils\IBaseRepository;
  */
 interface ISponsorUserInfoGrantRepository extends IBaseRepository
 {
-
+    /**
+     * Looks up a previously persisted SponsorBadgeScan for the exact same
+     * (sponsor, badge, scan_date) tuple, used to make SponsorUserInfoGrantService::addBadgeScan
+     * idempotent against a client retry of the same scan (SUP-86b9fp53j).
+     * @param Sponsor $sponsor
+     * @param SummitAttendeeBadge $badge
+     * @param \DateTime $scan_date
+     * @return SponsorBadgeScan|null
+     */
+    public function findExistingBadgeScan(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date): ?SponsorBadgeScan;
 }

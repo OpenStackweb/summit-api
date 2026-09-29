@@ -120,6 +120,8 @@ final class SummitRoomAdministratorPermissionGroupTest extends TestCase
         $permissions_manager = App::make(IPermissionsManager::class);
 
         $this->assertTrue($permissions_manager->canEditFields(self::$member, 'SummitEvent', ['occupancy' => 'FULL']));
+        // payload sent by the summit-admin Room Occupancy screen
+        $this->assertTrue($permissions_manager->canEditFields(self::$member, 'SummitEvent', ['id' => 1, 'occupancy' => 'FULL']));
         $this->assertFalse($permissions_manager->canEditFields(self::$member, 'SummitEvent', ['title' => 'NEW TITLE']));
         $this->assertFalse($permissions_manager->canEditFields(self::$member, 'SummitEvent', ['occupancy' => 'FULL', 'description' => 'NEW DESCRIPTION']));
     }

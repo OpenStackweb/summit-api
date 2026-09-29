@@ -4221,6 +4221,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRoomAdministrators,
                 ]
             ],
             [
@@ -4382,6 +4383,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins,
                     IGroup::TrackChairs,
                     IGroup::TrackChairsAdmins,
+                    IGroup::SummitRoomAdministrators,
                 ]
             ],
             [
@@ -9494,6 +9496,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRoomAdministrators,
                 ]
             ],
             [
@@ -9505,6 +9508,7 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
+                    IGroup::SummitRoomAdministrators,
                 ]
             ],
             [

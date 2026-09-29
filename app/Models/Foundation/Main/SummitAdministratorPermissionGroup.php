@@ -38,7 +38,8 @@ class SummitAdministratorPermissionGroup extends SilverstripeBaseModel
         IGroup::TrackChairs,
         IGroup::BadgePrinters,
         IGroup::SummitRegistrationAdmins,
-        IGroup::SummitAccessControl
+        IGroup::SummitAccessControl,
+        IGroup::SummitRoomAdministrators,
     ];
 
     public function __construct()

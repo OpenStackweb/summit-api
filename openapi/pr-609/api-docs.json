@@ -24620,7 +24620,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             },
             "delete": {
@@ -24697,7 +24698,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             }
         },

@@ -2742,7 +2742,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         summary: 'Set overflow streaming for an event',
         description: 'Configures overflow streaming settings for a specific event.',
         security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
-        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRoomAdministrators]],
         tags: ['Summit Events'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -2779,6 +2779,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             if (is_null($summit))
                 return $this->error404();
 
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403();
+
             $event = $summit->getEvent(intval($event_id));
             if (is_null($event))
                 return $this->error404();
@@ -2804,7 +2808,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         summary: 'Clear overflow streaming for an event',
         description: 'Removes overflow streaming settings from a specific event.',
         security: [['summit_events_api_oauth2' => [SummitScopes::WriteEventData]]],
-        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRoomAdministrators]],
         tags: ['Summit Events'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -2830,6 +2834,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $summit = SummitFinderStrategyFactory::build($this->repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit))
                 return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403();
 
             $event = $summit->getEvent(intval($event_id));
             if (is_null($event))

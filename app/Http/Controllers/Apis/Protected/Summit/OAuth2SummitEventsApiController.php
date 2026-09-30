@@ -203,7 +203,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         summary: 'Export all summit events to CSV',
         description: 'Exports a CSV file containing all events for a specific summit.',
         security: [['summit_events_api_oauth2' => [SummitScopes::ReadSummitData, SummitScopes::ReadAllSummitData]]],
-        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRoomAdministrators]],
         tags: ['Summit Events'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
@@ -1064,7 +1064,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         summary: 'Update an existing event',
         description: 'Updates an existing event for a specific summit.',
         security: [['summit_events_api_oauth2' => [SummitScopes::WriteSummitData, SummitScopes::WriteEventData]]],
-        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        x: ['required-groups' => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::SummitRegistrationAdmins, IGroup::TrackChairs, IGroup::TrackChairsAdmins, IGroup::SummitRoomAdministrators]],
         tags: ['Summit Events'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),

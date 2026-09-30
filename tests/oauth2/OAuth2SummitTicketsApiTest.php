@@ -1258,6 +1258,91 @@ CSV;
         return $tickets;
     }
 
+    /**
+     * Assigns the first ticket of a purchaser-less (OwnerID = NULL) paid offline order
+     * to the current member and returns it.
+     */
+    private function assignTicketOfOrderWithoutPurchaserToCurrentMember(): \models\summit\SummitAttendeeTicket
+    {
+        $order = self::$summit_orders[0];
+        $this->assertNull($order->getOwner());
+        $ticket = $order->getFirstTicket();
+        $attendee = self::$summit->getAttendeeByMember(self::$member);
+        $this->assertNotNull($attendee);
+        $attendee->addTicket($ticket);
+        self::$em->persist($ticket);
+        self::$em->flush();
+        return $ticket;
+    }
+
+    private function getAllMyTicketsBySummitWithFilter(array $filter)
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 10,
+            'filter' => $filter,
+            'order' => '+id',
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllMyTicketsBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $this->assertResponseStatus(200);
+        $tickets = json_decode($response->getContent());
+        $this->assertNotNull($tickets);
+        return $tickets;
+    }
+
+    /**
+     * Assigned Tickets tab: order_owner_id<>me must not drop tickets whose order has no linked purchaser.
+     */
+    public function testGetAllMyTicketsBySummitExcludingOwnOrdersIncludesOrdersWithoutPurchaser()
+    {
+        $ticket = $this->assignTicketOfOrderWithoutPurchaserToCurrentMember();
+
+        $tickets = $this->getAllMyTicketsBySummitWithFilter([
+            'status==Paid',
+            'order_owner_id<>' . self::$member->getId(),
+        ]);
+
+        // the member's self-purchased fixture tickets are excluded, only the assigned one remains
+        $this->assertEquals(1, $tickets->total);
+        $this->assertCount(1, $tickets->data);
+        $this->assertEquals($ticket->getId(), $tickets->data[0]->id);
+    }
+
+    /**
+     * order_owner_email must fall back to the order's stored email when there is no linked purchaser.
+     */
+    public function testGetAllMyTicketsBySummitByOrderOwnerEmailFallsBackToOrderEmail()
+    {
+        $ticket = $this->assignTicketOfOrderWithoutPurchaserToCurrentMember();
+        $order = $ticket->getOrder();
+        $order->setOwnerEmail('sponsor.purchaser@test.com');
+        self::$em->persist($order);
+        self::$em->flush();
+
+        $tickets = $this->getAllMyTicketsBySummitWithFilter([
+            'order_owner_email==sponsor.purchaser@test.com',
+        ]);
+
+        $this->assertEquals(1, $tickets->total);
+        $this->assertEquals($ticket->getId(), $tickets->data[0]->id);
+    }
+
     public function testAddTicketToOrder()
     {
         $order = self::$summit_orders[0];

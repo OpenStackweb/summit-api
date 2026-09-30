@@ -532,13 +532,14 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
     #[OA\Get(
         path: "/api/v1/summits/{id}/members/csv",
         operationId: "getAllMembersBySummitCSV",
-        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators,
+        description: "required-groups " . IGroup::SummitAdministrators . ", " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitRoomAdministrators,
         tags: ["Summit Members"],
         x: [
             'required-groups' => [
                 IGroup::SummitAdministrators,
                 IGroup::SuperAdmins,
-                IGroup::Administrators
+                IGroup::Administrators,
+                IGroup::SummitRoomAdministrators
             ]
         ],
         security: [['summit_members_oauth2' => [
@@ -557,6 +558,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(response: Response::HTTP_OK, description: "CSV export", content: new OA\MediaType(mediaType: "text/csv")),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not found"),
             new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
@@ -596,6 +598,10 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
 
             $summit = SummitFinderStrategyFactory::build($this->summit_repository, $this->resource_server_context)->find($summit_id);
             if (is_null($summit)) return $this->error404();
+
+            $current_member = $this->resource_server_context->getCurrentUser();
+            if (!is_null($current_member) && !$current_member->isSummitAllowed($summit))
+                return $this->error403();
 
             $validation = Validator::make($values, $rules);
 

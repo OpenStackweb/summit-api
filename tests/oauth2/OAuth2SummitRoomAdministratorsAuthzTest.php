@@ -21,13 +21,13 @@ use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * setOverflow / clearOverflow / getEventsCSV must only be allowed on summits the caller has access to.
+ * setOverflow / clearOverflow / events CSV / members CSV must only be allowed on summits the caller has access to.
  * The identity is a summit-room-administrators member (not a global admin) whose permission
  * group is scoped to self::$summit only.
- * Class OAuth2SummitEventsOverflowAuthzTest
+ * Class OAuth2SummitRoomAdministratorsAuthzTest
  * @package Tests
  */
-class OAuth2SummitEventsOverflowAuthzTest extends ProtectedApiTestCase
+class OAuth2SummitRoomAdministratorsAuthzTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
@@ -146,6 +146,21 @@ class OAuth2SummitEventsOverflowAuthzTest extends ProtectedApiTestCase
         );
     }
 
+    private function getMembersCSV($summit, SummitEvent $event)
+    {
+        return $this->action(
+            "GET",
+            "OAuth2SummitMembersApiController@getAllBySummitCSV",
+            [
+                'id' => $summit->getId(),
+                'columns' => 'id,first_name,last_name,email,affiliations',
+                'filter' => ['schedule_event_id==' . $event->getId()],
+            ],
+            [], [], [],
+            $this->getAuthHeaders()
+        );
+    }
+
     public function testRoomAdministratorCanSetOverflowOnAllowedSummit()
     {
         Queue::fake();
@@ -196,6 +211,18 @@ class OAuth2SummitEventsOverflowAuthzTest extends ProtectedApiTestCase
     public function testRoomAdministratorCannotExportEventsCSVOnAnotherSummit()
     {
         $this->getEventsCSV(self::$summit2);
+        $this->assertResponseStatus(403);
+    }
+
+    public function testRoomAdministratorCanExportMembersCSVOnAllowedSummit()
+    {
+        $this->getMembersCSV(self::$summit, self::$allowed_event);
+        $this->assertResponseStatus(200);
+    }
+
+    public function testRoomAdministratorCannotExportMembersCSVOnAnotherSummit()
+    {
+        $this->getMembersCSV(self::$summit2, self::$other_summit_event);
         $this->assertResponseStatus(403);
     }
 }

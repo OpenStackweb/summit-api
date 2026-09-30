@@ -17,7 +17,7 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Allow summit-room-administrators on the endpoints used by the Room Occupancy screen.
+ * Allow summit-room-administrators on the endpoints used by the Room Occupancy screen and the Room Manifest report.
  *
  * Idempotent via WHERE NOT EXISTS in APIEndpointsMigrationHelper.
  */
@@ -32,11 +32,12 @@ final class Version20260929120000 extends AbstractMigration
         'update-event',
         'update-overflow-streaming',
         'delete-overflow-streaming',
+        'get-member-from-summit-csv',
     ];
 
     public function getDescription(): string
     {
-        return 'Add summit-room-administrators authz group to room occupancy endpoints';
+        return 'Add summit-room-administrators authz group to room occupancy and room manifest endpoints';
     }
 
     public function up(Schema $schema): void

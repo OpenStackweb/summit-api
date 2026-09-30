@@ -33147,7 +33147,7 @@
                 "tags": [
                     "Summit Members"
                 ],
-                "description": "required-groups summit-front-end-administrators, super-admins, administrators",
+                "description": "required-groups summit-front-end-administrators, super-admins, administrators, summit-room-administrators",
                 "operationId": "getAllMembersBySummitCSV",
                 "parameters": [
                     {
@@ -33232,6 +33232,9 @@
                             "text/csv": {}
                         }
                     },
+                    "403": {
+                        "description": "Forbidden"
+                    },
                     "404": {
                         "description": "Not found"
                     },
@@ -33252,7 +33255,8 @@
                 "x-required-groups": [
                     "summit-front-end-administrators",
                     "super-admins",
-                    "administrators"
+                    "administrators",
+                    "summit-room-administrators"
                 ]
             }
         },

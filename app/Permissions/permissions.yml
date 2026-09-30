@@ -7,6 +7,7 @@
   - summit-front-end-administrators:
     - __all__
   - summit-room-administrators:
+    - id
     - occupancy
 - Presentation:
   - super-admins:

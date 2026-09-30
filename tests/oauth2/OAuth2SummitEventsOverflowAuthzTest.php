@@ -21,7 +21,7 @@ use models\summit\SummitEvent;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * setOverflow / clearOverflow must only be allowed on summits the caller has access to.
+ * setOverflow / clearOverflow / getEventsCSV must only be allowed on summits the caller has access to.
  * The identity is a summit-room-administrators member (not a global admin) whose permission
  * group is scoped to self::$summit only.
  * Class OAuth2SummitEventsOverflowAuthzTest
@@ -135,6 +135,17 @@ class OAuth2SummitEventsOverflowAuthzTest extends ProtectedApiTestCase
         );
     }
 
+    private function getEventsCSV($summit)
+    {
+        return $this->action(
+            "GET",
+            "OAuth2SummitEventsApiController@getEventsCSV",
+            ['id' => $summit->getId()],
+            [], [], [],
+            $this->getAuthHeaders()
+        );
+    }
+
     public function testRoomAdministratorCanSetOverflowOnAllowedSummit()
     {
         Queue::fake();
@@ -173,5 +184,18 @@ class OAuth2SummitEventsOverflowAuthzTest extends ProtectedApiTestCase
 
         $event = $this->reload(self::$other_summit_event->getId());
         $this->assertEquals(SummitEvent::OccupancyOverflow, $event->getOccupancy());
+    }
+
+    public function testRoomAdministratorCanExportEventsCSVOnAllowedSummit()
+    {
+        $response = $this->getEventsCSV(self::$summit);
+        $this->assertResponseStatus(200);
+        $this->assertNotEmpty($response->getContent());
+    }
+
+    public function testRoomAdministratorCannotExportEventsCSVOnAnotherSummit()
+    {
+        $this->getEventsCSV(self::$summit2);
+        $this->assertResponseStatus(403);
     }
 }

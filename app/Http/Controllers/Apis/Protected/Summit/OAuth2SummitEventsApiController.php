@@ -232,6 +232,9 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
                 $summit = SummitFinderStrategyFactory::build($this->getRepository(), $this->getResourceServerContext())->find($summit_id);
                 if (is_null($summit)) return $this->error404();
 
+                if (!is_null($current_user) && !$current_user->isSummitAllowed($summit))
+                    return $this->error403();
+
                 $strategy = new RetrieveAllSummitEventsBySummitCSVStrategy
                 (
                     $this->repository,

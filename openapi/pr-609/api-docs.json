@@ -21488,7 +21488,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             },
             "post": {
@@ -22397,7 +22398,8 @@
                     "summit-front-end-administrators",
                     "summit-registration-administrators",
                     "track-chairs",
-                    "track-chairs-admins"
+                    "track-chairs-admins",
+                    "summit-room-administrators"
                 ]
             },
             "delete": {

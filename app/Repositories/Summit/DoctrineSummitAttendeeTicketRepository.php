@@ -102,7 +102,9 @@ final class DoctrineSummitAttendeeTicketRepository
             || $has('bought_date') || $has('summit_id')) {
             $need['o'] = true;
             if ($has('order_owner_id') ||  $has('order_owner_email')) {
-                $this->joinCatalog['ord_m'][1] = 'join';
+                // LEFT: orders without a linked purchaser (e.g. offline sponsor orders) must reach
+                // the COALESCE(ord_m.id,0) / COALESCE(ord_m.email, o.owner_email) filter mappings
+                $this->joinCatalog['ord_m'][1] = 'leftJoin';
                 $need['ord_m'] = true;
             }
         }

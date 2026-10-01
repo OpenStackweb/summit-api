@@ -17,6 +17,9 @@ use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
 /**
  * Class SummitJsonGenerator
  * @package App\Console\Commands
@@ -86,35 +89,62 @@ final class SummitJsonGenerator extends Command {
 	public function handle()
 	{
 
-        $summits = $this->repository->getAvailables();
+        // keep only the ids, so entities can be detached between summits
+        // without leaving stale (detached) instances in the loop
+        $summit_ids = array_map(function ($summit) {
+            return $summit->getId();
+        }, $this->repository->getAvailables());
 
-        foreach($summits as $summit) {
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em->clear();
 
-            $this->info(sprintf("processing summit %s (%s)",  $summit->getName(), $summit->getId()));
-            $start  = time();
-            $expand = 'schedule';
+        $expand = 'schedule';
+        $cache_lifetime = intval(Config::get('cache_api_response.get_summit_response_lifetime', 600));
 
-            $data = SerializerRegistry::getInstance()->getSerializer($summit)->serialize($expand);
-            if (is_null($data)) return;
-            $end = time();
-            $delta = $end - $start;
-            $this->info(sprintf("execution call %s seconds", $delta));
-            $current_time = time();
-            $key_current = sprintf('/api/v1/summits/%s.expand=%s', 'current', urlencode($expand));
-            $key_id = sprintf('/api/v1/summits/%s.expand=%s', $summit->getIdentifier(), urlencode($expand));
+        foreach ($summit_ids as $summit_id) {
+            try {
+                $summit = $this->repository->getById($summit_id);
+                if (is_null($summit)) continue;
 
-            $cache_lifetime = intval(Config::get('cache_api_response.get_summit_response_lifetime', 600));
+                $this->info(sprintf("processing summit %s (%s)", $summit->getName(), $summit->getId()));
+                $start = time();
 
-            if ($summit->isActive()) {
-                $this->cache_service->setSingleValue($key_current, gzdeflate(json_encode($data), 9), $cache_lifetime);
-                $this->cache_service->setSingleValue($key_current . ".generated", $current_time, $cache_lifetime);
+                $data = SerializerRegistry::getInstance()->getSerializer($summit)->serialize($expand);
+                if (is_null($data)) {
+                    Log::warning(sprintf("SummitJsonGenerator: null serialization for summit %s, skipping", $summit_id));
+                    continue;
+                }
+
+                $this->info(sprintf("execution call %s seconds", time() - $start));
+                $current_time = time();
+                $key_current = sprintf('/api/v1/summits/%s.expand=%s', 'current', urlencode($expand));
+                $key_id = sprintf('/api/v1/summits/%s.expand=%s', $summit->getIdentifier(), urlencode($expand));
+
+                // encode and compress once, reuse for both keys
+                $payload = gzdeflate(json_encode($data), 9);
+                unset($data);
+
+                if ($summit->isActive()) {
+                    $this->cache_service->setSingleValue($key_current, $payload, $cache_lifetime);
+                    $this->cache_service->setSingleValue($key_current . ".generated", $current_time, $cache_lifetime);
+                }
+
+                $this->cache_service->setSingleValue($key_id, $payload, $cache_lifetime);
+                $this->cache_service->setSingleValue($key_id . ".generated", $current_time, $cache_lifetime);
+
+                $this->info(sprintf("regenerated cache for summit id %s", $summit->getIdentifier()));
+            } catch (\Exception $ex) {
+                Log::error($ex);
+                $this->error(sprintf("error processing summit %s: %s", $summit_id, $ex->getMessage()));
+            } finally {
+                unset($payload, $summit);
+                // after the cache writes, so nothing in this iteration still uses detached entities
+                $em->clear();
+                gc_collect_cycles();
             }
-
-            $this->cache_service->setSingleValue($key_id, gzdeflate(json_encode($data), 9), $cache_lifetime);
-            $this->cache_service->setSingleValue($key_id . ".generated", $current_time, $cache_lifetime);
-
-            $this->info(sprintf("regenerated cache for summit id %s", $summit->getIdentifier()));
         }
+
+        $this->info(sprintf("peak memory usage %.2f MB", memory_get_peak_usage(true) / 1048576));
 	}
 
 }

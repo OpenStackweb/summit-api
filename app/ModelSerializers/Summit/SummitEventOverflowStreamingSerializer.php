@@ -39,6 +39,11 @@ class SummitEventOverflowStreamingSerializer extends AbstractSerializer
         $values['end_date'] = $event->getEndDate()->getTimestamp();
         $values['overflow_streaming_url'] = $event->getOverflowStreamingUrl();
         $values['overflow_stream_is_secure'] = $event->getOverflowStreamIsSecure();
+        try {
+            $values['overflow_url'] = $event->getOverflowUrl();
+        }
+        catch (\Exception $exception)
+        {}
         $values['overflow_tokens'] = [];
         if($event->getOverflowStreamIsSecure()){
             $values['overflow_tokens'] = $event->getOverflowStreamingTokens();

@@ -13,6 +13,7 @@
  **/
 
 use App\ModelSerializers\Summit\SummitEventOverflowStreamingSerializer;
+use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
@@ -115,5 +116,46 @@ final class SerializerTests extends TestCase
         // whatever getOverflowStreamingTokens() currently returns.
         $this->assertEquals('token-A', $first['overflow_tokens']['playback_token']);
         $this->assertEquals('token-B', $second['overflow_tokens']['playback_token']);
+    }
+
+    private function buildOverflowEvent(): SummitEvent
+    {
+        $event = Mockery::mock(SummitEvent::class)->makePartial();
+        $event->shouldReceive('getId')->andReturn(1001);
+        $event->shouldReceive('getTitle')->andReturn('Overflow Event');
+        $event->shouldReceive('getStartDate')->andReturn(new \DateTime('2026-07-15 10:00:00'));
+        $event->shouldReceive('getEndDate')->andReturn(new \DateTime('2026-07-15 11:00:00'));
+        $event->shouldReceive('getOverflowStreamingUrl')->andReturn('https://stream.example.org');
+        $event->shouldReceive('getOverflowStreamIsSecure')->andReturn(false);
+        return $event;
+    }
+
+    public function testOverflowStreamingSerializerIncludesOverflowUrl()
+    {
+        $event = $this->buildOverflowEvent();
+        $event->shouldReceive('getOverflowUrl')->andReturn('https://summit.example.org/a/overflow-player?k=abc123');
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new SerializerDecorator(new SummitEventOverflowStreamingSerializer($event, $resource_server_context));
+        $values = $serializer->serialize();
+
+        $this->assertArrayHasKey('overflow_url', $values);
+        $this->assertEquals('https://summit.example.org/a/overflow-player?k=abc123', $values['overflow_url']);
+    }
+
+    public function testOverflowStreamingSerializerOmitsOverflowUrlWhenNotAvailable()
+    {
+        $event = $this->buildOverflowEvent();
+        $event->shouldReceive('getOverflowUrl')
+            ->andThrow(new ValidationException("To get the overflow url, occupancy must be OVERFLOW."));
+
+        $resource_server_context = Mockery::mock(IResourceServerContext::class);
+        $serializer = new SerializerDecorator(new SummitEventOverflowStreamingSerializer($event, $resource_server_context));
+        $values = $serializer->serialize();
+
+        $this->assertArrayNotHasKey('overflow_url', $values);
+        $this->assertEquals(1001, $values['id']);
+        $this->assertEquals('https://stream.example.org', $values['overflow_streaming_url']);
+        $this->assertEquals([], $values['overflow_tokens']);
     }
 }

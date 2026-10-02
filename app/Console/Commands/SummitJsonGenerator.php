@@ -137,7 +137,7 @@ final class SummitJsonGenerator extends Command {
                 Log::error($ex);
                 $this->error(sprintf("error processing summit %s: %s", $summit_id, $ex->getMessage()));
             } finally {
-                unset($payload, $summit);
+                unset($payload, $summit, $ex);
                 // after the cache writes, so nothing in this iteration still uses detached entities
                 $em->clear();
                 gc_collect_cycles();

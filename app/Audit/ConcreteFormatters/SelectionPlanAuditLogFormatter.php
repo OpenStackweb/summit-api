@@ -80,6 +80,10 @@ class SelectionPlanAuditLogFormatter extends AbstractAuditLogFormatter
                         $summit_name,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Selection Plan '%s' (%s) for Summit '%s'", $name, $id, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("SelectionPlanAuditLogFormatter error: " . $ex->getMessage());

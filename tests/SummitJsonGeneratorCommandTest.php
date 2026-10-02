@@ -185,6 +185,16 @@ final class SummitJsonGeneratorCommandTest extends TestCase
         $this->assertArrayHasKey('/api/v1/summits/2.expand=schedule', $this->cache);
     }
 
+    public function testErrorInOneSummitDoesNotStopTheOthers(): void
+    {
+        JsonGeneratorFakeSerializer::$results[1] = new \TypeError('boom');
+        JsonGeneratorFakeSerializer::$results[2] = ['id' => 2];
+        $this->run_command([new JsonGeneratorFakeSummit(1), new JsonGeneratorFakeSummit(2)]);
+
+        $this->assertArrayNotHasKey('/api/v1/summits/1.expand=schedule', $this->cache);
+        $this->assertArrayHasKey('/api/v1/summits/2.expand=schedule', $this->cache);
+    }
+
     public function testEntityManagerIsClearedAfterEverySummit(): void
     {
         $this->em = Mockery::mock(EntityManagerInterface::class);

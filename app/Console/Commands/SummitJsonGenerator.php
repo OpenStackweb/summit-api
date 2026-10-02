@@ -133,7 +133,7 @@ final class SummitJsonGenerator extends Command {
                 $this->cache_service->setSingleValue($key_id . ".generated", $current_time, $cache_lifetime);
 
                 $this->info(sprintf("regenerated cache for summit id %s", $summit->getIdentifier()));
-            } catch (\Exception $ex) {
+            } catch (\Throwable $ex) {
                 Log::error($ex);
                 $this->error(sprintf("error processing summit %s: %s", $summit_id, $ex->getMessage()));
             } finally {

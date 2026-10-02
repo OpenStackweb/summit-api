@@ -62,6 +62,10 @@ class SummitBadgeTypeAuditLogFormatter extends AbstractAuditLogFormatter
                         $summit_name,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Badge Type '%s' (%s) in Summit '%s'", $name, $id, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("SummitBadgeTypeAuditLogFormatter error: " . $ex->getMessage());

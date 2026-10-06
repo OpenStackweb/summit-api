@@ -93,7 +93,7 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
     private $source;
 
     /**
-     * Denormalized "<sponsor>:<badge>:<scan_date epoch>" identity of the physical
+     * Denormalized "<sponsor>:<badge>:<member>:<scan_date epoch>" identity of the physical
      * scan this row represents, carrying a UNIQUE index (see the migration that
      * adds SponsorBadgeScan_ScanDedupKey). That index - not the Redis dedup lock
      * in SponsorUserInfoGrantService::addBadgeScanLocked - is what actually makes
@@ -201,14 +201,18 @@ class SponsorBadgeScan extends SponsorUserInfoGrant
      * insensitive to how the DateTime was constructed (timezone, sub-second
      * precision the DATETIME column would drop anyway) - the scanning app
      * sends the timestamp as epoch seconds and resends it unchanged on a retry.
+     * The scanning member is part of the identity: a real retry always comes from
+     * the same member, whereas two reps of one sponsor scanning the same badge in
+     * the same second are two distinct scans, each with its own notes and answers.
      * @param Sponsor $sponsor
      * @param SummitAttendeeBadge $badge
+     * @param Member $member
      * @param \DateTime $scan_date
      * @return string
      */
-    public static function buildDedupKey(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date): string
+    public static function buildDedupKey(Sponsor $sponsor, SummitAttendeeBadge $badge, Member $member, \DateTime $scan_date): string
     {
-        return sprintf('%d:%d:%d', $sponsor->getId(), $badge->getId(), $scan_date->getTimestamp());
+        return sprintf('%d:%d:%d:%d', $sponsor->getId(), $badge->getId(), $member->getId(), $scan_date->getTimestamp());
     }
 
     /**

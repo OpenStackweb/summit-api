@@ -11,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use models\main\Member;
 use models\utils\IBaseRepository;
 /**
  * Interface ISponsorUserInfoGrantRepository
@@ -27,5 +28,5 @@ interface ISponsorUserInfoGrantRepository extends IBaseRepository
      * @param \DateTime $scan_date
      * @return SponsorBadgeScan|null
      */
-    public function findExistingBadgeScan(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date): ?SponsorBadgeScan;
+    public function findExistingBadgeScan(Sponsor $sponsor, SummitAttendeeBadge $badge, Member $member, \DateTime $scan_date): ?SponsorBadgeScan;
 }

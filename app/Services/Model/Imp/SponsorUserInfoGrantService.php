@@ -276,13 +276,13 @@ final class SponsorUserInfoGrantService
         }
 
         // Phase 2: create the scan, guarded against a concurrent duplicate
-        // for this same (sponsor, badge, scan_date) - see addBadgeScanLocked.
+        // for this same (sponsor, badge, member, scan_date) - see addBadgeScanLocked.
         return $this->addBadgeScanLocked($sponsor, $badge, $scan_date, $scan_date_epoch, $qr_code, $source, $current_member, $data);
     }
 
     /**
      * Creates (or, on a retry of the same scan, returns) the SponsorBadgeScan
-     * for the given (sponsor, badge, scan_date). SUP-86b9fp53j: the scanning
+     * for the given (sponsor, badge, member, scan_date). SUP-86b9fp53j: the scanning
      * app retries an upload whenever its own client-side timeout elapses,
      * with no guarantee the original request didn't already reach this far
      * and commit - two such requests reading "no existing scan yet" before
@@ -356,11 +356,11 @@ final class SponsorUserInfoGrantService
         array $data
     ): SponsorBadgeScan
     {
-        $lock_name = sprintf('badge_scan.%d.%d.%d.lock', $sponsor->getId(), $badge->getId(), $scan_date_epoch);
-        $dedup_key = SponsorBadgeScan::buildDedupKey($sponsor, $badge, $scan_date);
         $sponsor_id = $sponsor->getId();
         $badge_id = $badge->getId();
         $member_id = $current_member->getId();
+        $lock_name = sprintf('badge_scan.%d.%d.%d.%d.lock', $sponsor_id, $badge_id, $member_id, $scan_date_epoch);
+        $dedup_key = SponsorBadgeScan::buildDedupKey($sponsor, $badge, $current_member, $scan_date);
 
         try {
             return $this->lock_service->lock($lock_name, function() use($sponsor_id, $badge_id, $member_id, $scan_date, $dedup_key, $qr_code, $source, $data){
@@ -377,7 +377,7 @@ final class SponsorUserInfoGrantService
                     if(!$current_member instanceof Member)
                         throw new EntityNotFoundException("Member not found.");
 
-                    $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
+                    $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $current_member, $scan_date);
                     if(!is_null($existing)){
                         Log::warning(
                             sprintf(
@@ -388,7 +388,7 @@ final class SponsorUserInfoGrantService
                                 $existing->getId()
                             )
                         );
-                        return $this->mergeRetryIntoExistingScan($existing, $member_id, $data);
+                        return $this->mergeRetryIntoExistingScan($existing, $data);
                     }
 
                     $scan = new SponsorBadgeScan();
@@ -440,14 +440,17 @@ final class SponsorUserInfoGrantService
                 )
             );
 
-            return $this->tx_service->transaction(function() use($sponsor, $badge, $scan_date, $member_id, $data, $ex){
-                $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $scan_date);
+            return $this->tx_service->transaction(function() use($sponsor_id, $badge_id, $member_id, $scan_date, $data, $ex){
+                $sponsor = $this->sponsor_repository->getById($sponsor_id);
+                $badge = $this->badge_repository->getById($badge_id);
+                $member = $this->member_repository->getById($member_id);
+                $existing = $this->repository->findExistingBadgeScan($sponsor, $badge, $member, $scan_date);
                 if(is_null($existing)){
                     // Not our tuple - some other unique index on the scan or its answers
                     // rejected the write, and swallowing that would hide a real failure.
                     throw $ex;
                 }
-                return $this->mergeRetryIntoExistingScan($existing, $member_id, $data);
+                return $this->mergeRetryIntoExistingScan($existing, $data);
             });
         }
     }
@@ -468,30 +471,16 @@ final class SponsorUserInfoGrantService
      * answers are replaced as a whole (hadCompletedExtraQuestions rebuilds
      * the set), which is right because the app always sends its full set.
      *
-     * The dedup key does not include the member, so the match may be a scan
-     * another rep of the same sponsor recorded in the same second. That is
-     * not a retry of this request, and its notes and answers are that rep's
-     * own: they are left untouched and the existing scan is returned as is.
+     * The dedup key includes the member, so a match is always a scan this same
+     * member recorded: two reps of one sponsor scanning the same badge in the
+     * same second get one scan each and never reach this method for the other's.
      * @param SponsorBadgeScan $existing
-     * @param int $member_id
      * @param array $data
      * @return SponsorBadgeScan
      * @throws ValidationException
      */
-    private function mergeRetryIntoExistingScan(SponsorBadgeScan $existing, int $member_id, array $data): SponsorBadgeScan
+    private function mergeRetryIntoExistingScan(SponsorBadgeScan $existing, array $data): SponsorBadgeScan
     {
-        if($existing->getUser()->getId() !== $member_id){
-            Log::warning(
-                sprintf(
-                    "SponsorUserInfoGrantService::addBadgeScan existing scan %s was recorded by member %s, not %s - not applying notes/extra questions to it.",
-                    $existing->getId(),
-                    $existing->getUser()->getId(),
-                    $member_id
-                )
-            );
-            return $existing;
-        }
-
         $notes = trim($data['notes'] ?? '');
         if(!empty($notes))
             $existing->setNotes($notes);

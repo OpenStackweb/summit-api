@@ -13,6 +13,7 @@
  **/
 use App\Repositories\SilverStripeDoctrineRepository;
 use Doctrine\ORM\QueryBuilder;
+use models\main\Member;
 use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\Presentation;
 use models\summit\Sponsor;
@@ -130,15 +131,16 @@ final class DoctrineSponsorUserInfoGrantRepository
     /**
      * Queries SponsorBadgeScan directly (not the generic filter/order pipeline
      * above, which matches against the whole SponsorUserInfoGrant hierarchy and
-     * is meant for paged listing) for an exact (sponsor, badge, scan_date) match.
+     * is meant for paged listing) for an exact (sponsor, badge, member, scan_date) match.
      * Doctrine resolves the SponsorUserInfoGrant/SponsorBadgeScan joined-table
      * inheritance transparently, so no manual join is needed here.
      * @param Sponsor $sponsor
      * @param SummitAttendeeBadge $badge
+     * @param Member $member
      * @param \DateTime $scan_date
      * @return SponsorBadgeScan|null
      */
-    public function findExistingBadgeScan(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date): ?SponsorBadgeScan
+    public function findExistingBadgeScan(Sponsor $sponsor, SummitAttendeeBadge $badge, Member $member, \DateTime $scan_date): ?SponsorBadgeScan
     {
         $query = $this->getEntityManager()
             ->createQueryBuilder()
@@ -146,9 +148,11 @@ final class DoctrineSponsorUserInfoGrantRepository
             ->from(SponsorBadgeScan::class, "e")
             ->where("e.sponsor = :sponsor")
             ->andWhere("e.badge = :badge")
+            ->andWhere("e.user = :member")
             ->andWhere("e.scan_date = :scan_date")
             ->setParameter("sponsor", $sponsor)
             ->setParameter("badge", $badge)
+            ->setParameter("member", $member)
             ->setParameter("scan_date", $scan_date)
             ->setMaxResults(1);
 

@@ -352,7 +352,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         // $lock_name - deliberately duplicated (not called via a shared
         // constant) so this test also catches a future change to that
         // format silently no longer matching what's held here.
-        $lock_name = sprintf('badge_scan.%d.%d.%d.lock', $sponsor->getId(), $badge->getId(), $scan_date_epoch);
+        $lock_name = sprintf('badge_scan.%d.%d.%d.%d.lock', $sponsor->getId(), $badge->getId(), self::$member->getId(), $scan_date_epoch);
 
         $lock_service = App::make(ILockManagerService::class);
         $held_token = $lock_service->acquireLock($lock_name, 10);
@@ -375,7 +375,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         }
         $this->assertTrue($threw,
             "addBadgeScan must fail to acquire a lock already held under the exact name this test holds - ".
-            "either it isn't locking on (sponsor, badge, scan_date) at all, or the name format drifted");
+            "either it isn't locking on (sponsor, badge, member, scan_date) at all, or the name format drifted");
 
         // With the external holder gone, the same call now succeeds.
         $scan = $service->addBadgeScan(self::$summit, self::$member, $data);
@@ -1092,7 +1092,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $badge = $attendee->getFirstTicket()->getBadge();
         $scan_date = new \DateTime("@1572019200");
 
-        $dedup_key = \models\summit\SponsorBadgeScan::buildDedupKey($sponsor, $badge, $scan_date);
+        $dedup_key = \models\summit\SponsorBadgeScan::buildDedupKey($sponsor, $badge, self::$member, $scan_date);
 
         $first = new \models\summit\SponsorBadgeScan();
         $first->setScanDate($scan_date);
@@ -1185,9 +1185,9 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $real_repository = App::make(ISponsorUserInfoGrantRepository::class);
         $repository = Mockery::mock(ISponsorUserInfoGrantRepository::class);
         $repository->shouldReceive('findExistingBadgeScan')
-            ->andReturnUsing(function(Sponsor $sponsor, SummitAttendeeBadge $badge, \DateTime $scan_date) use($real_repository, $find, &$calls){
+            ->andReturnUsing(function(Sponsor $sponsor, SummitAttendeeBadge $badge, Member $member, \DateTime $scan_date) use($real_repository, $find, &$calls){
                 $calls++;
-                return $find($calls, fn() => $real_repository->findExistingBadgeScan($sponsor, $badge, $scan_date));
+                return $find($calls, fn() => $real_repository->findExistingBadgeScan($sponsor, $badge, $member, $scan_date));
             });
 
         return new SponsorUserInfoGrantService(
@@ -1215,10 +1215,11 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $winner = new SponsorBadgeScan();
         $winner->setScanDate($scan_date);
         $winner->setQRCode('dedup-race-winner');
-        $winner->setUser($user ?? self::$member);
+        $user = $user ?? self::$member;
+        $winner->setUser($user);
         $winner->setBadge($badge);
         $winner->setNotes('');
-        $winner->setScanDedupKey(SponsorBadgeScan::buildDedupKey($sponsor, $badge, $scan_date));
+        $winner->setScanDedupKey(SponsorBadgeScan::buildDedupKey($sponsor, $badge, $user, $scan_date));
         $sponsor->addUserInfoGrant($winner);
         self::$em->persist($winner);
         self::$em->flush();
@@ -1443,11 +1444,11 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
     }
 
     /**
-     * The dedup key has no member in it, so a match can be a scan another
-     * rep of the same sponsor recorded in the same second. That is not a
-     * retry of this request, and it must not overwrite that rep's notes.
+     * The dedup key includes the member, so another rep of the same sponsor
+     * scanning the same badge in the same second is not a retry: it gets its
+     * own scan, and the first rep's notes are left alone.
      */
-    public function testAddBadgeScanDoesNotApplyNotesToAnotherMembersScan(){
+    public function testAddBadgeScanCreatesASeparateScanPerMemberInTheSameSecond(){
         $sponsor = self::$summit->getSummitSponsors()[0];
         $attendee = self::$summit->getAttendeeByMemberId(self::$defaultMember->getId());
         $badge = $attendee->getFirstTicket()->getBadge();
@@ -1460,7 +1461,10 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
             'notes' => 'hot lead, follow up',
         ]));
 
-        $this->assertEquals($other_id, $scan->getId());
+        $this->assertNotEquals($other_id, $scan->getId(),
+            "a scan by a different member in the same second must not collapse into the other member's scan");
+        $this->assertEquals(self::$member->getId(), $scan->getUser()->getId());
+        $this->assertEquals('hot lead, follow up', $this->reloadScan($scan->getId())->getNotes());
         $this->assertEquals('', $this->reloadScan($other_id)->getNotes(),
             "another member's scan must not take this request's notes");
     }

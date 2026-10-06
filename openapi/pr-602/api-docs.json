@@ -21488,7 +21488,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             },
             "post": {
@@ -22397,7 +22398,8 @@
                     "summit-front-end-administrators",
                     "summit-registration-administrators",
                     "track-chairs",
-                    "track-chairs-admins"
+                    "track-chairs-admins",
+                    "summit-room-administrators"
                 ]
             },
             "delete": {
@@ -24620,7 +24622,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             },
             "delete": {
@@ -24697,7 +24700,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             }
         },
@@ -33143,7 +33147,7 @@
                 "tags": [
                     "Summit Members"
                 ],
-                "description": "required-groups summit-front-end-administrators, super-admins, administrators",
+                "description": "required-groups summit-front-end-administrators, super-admins, administrators, summit-room-administrators",
                 "operationId": "getAllMembersBySummitCSV",
                 "parameters": [
                     {
@@ -33228,6 +33232,9 @@
                             "text/csv": {}
                         }
                     },
+                    "403": {
+                        "description": "Forbidden"
+                    },
                     "404": {
                         "description": "Not found"
                     },
@@ -33248,7 +33255,8 @@
                 "x-required-groups": [
                     "summit-front-end-administrators",
                     "super-admins",
-                    "administrators"
+                    "administrators",
+                    "summit-room-administrators"
                 ]
             }
         },
@@ -86228,6 +86236,15 @@
                     "template_content": {
                         "type": "string",
                         "example": "<div>{{name}}</div>"
+                    },
+                    "image": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Feature type image (File API payload), applied asynchronously"
                     }
                 },
                 "type": "object"
@@ -86245,6 +86262,15 @@
                     "template_content": {
                         "type": "string",
                         "example": "<div class=\"vip\">{{name}}</div>"
+                    },
+                    "image": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Feature type image (File API payload), applied asynchronously"
                     }
                 },
                 "type": "object"

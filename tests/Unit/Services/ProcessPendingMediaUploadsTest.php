@@ -23,7 +23,7 @@ use models\summit\PendingMediaUpload;
 use models\summit\Summit;
 use models\summit\SummitMediaUploadType;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
+use Psr\Log\AbstractLogger;
 
 /**
  * Class ProcessPendingMediaUploadsTest
@@ -36,8 +36,38 @@ use Psr\Log\NullLogger;
  *
  * @package Tests\Unit\Services
  */
+/**
+ * PSR-3 logger that records (level, message) pairs so tests can assert on the level
+ * a transition was logged at (e.g. Error transitions must be visible at LOG_LEVEL=error).
+ */
+final class RecordingLogger extends AbstractLogger
+{
+    /** @var array<int, array{level: string, message: string}> */
+    public array $records = [];
+
+    public function log($level, string|\Stringable $message, array $context = []): void
+    {
+        $this->records[] = ['level' => (string) $level, 'message' => (string) $message];
+    }
+
+    /**
+     * @param string $level
+     * @param string $pattern regex
+     * @return bool
+     */
+    public function has(string $level, string $pattern): bool
+    {
+        foreach ($this->records as $record) {
+            if ($record['level'] === $level && preg_match($pattern, $record['message'])) return true;
+        }
+        return false;
+    }
+}
+
 class ProcessPendingMediaUploadsTest extends TestCase
 {
+    /** @var RecordingLogger */
+    private $logger;
     protected function setUp(): void
     {
         parent::setUp();
@@ -47,7 +77,8 @@ class ProcessPendingMediaUploadsTest extends TestCase
         // prior test that booted a full Laravel app (e.g., AbstractOAuth2ApiScopesTest).
         Facade::clearResolvedInstances();
         $app = new Container();
-        $app->singleton('log', fn() => new NullLogger());
+        $this->logger = new RecordingLogger();
+        $app->singleton('log', fn() => $this->logger);
         Container::setInstance($app);
         Facade::setFacadeApplication($app);
     }
@@ -101,6 +132,19 @@ class ProcessPendingMediaUploadsTest extends TestCase
     }
 
     /**
+     * What PendingMediaUpload::getLastEditedUTC() returns for a row last edited $minutes ago.
+     * The service must use the UTC accessor: the raw getLastEdited() is hydrated in the app
+     * timezone from a DefaultTimeZone wall-clock value and is off by the zone offset.
+     * @param int $minutes
+     * @return \DateTime
+     */
+    private function minutesAgo(int $minutes): \DateTime
+    {
+        $dt = new \DateTime('now', new \DateTimeZone('UTC'));
+        return $dt->modify(sprintf('-%d minutes', $minutes));
+    }
+
+    /**
      * Test max retries exceeded marks upload as Error.
      * When attempts >= max_retries, the upload should be permanently marked as Error.
      */
@@ -129,6 +173,8 @@ class ProcessPendingMediaUploadsTest extends TestCase
 
         $this->assertEquals(0, $stats['processed']);
         $this->assertEquals(1, $stats['errors']);
+        // The permanent Error transition must be visible in production logs (LOG_LEVEL=error)
+        $this->assertTrue($this->logger->has('error', '/upload ID 1 exceeded max retries/'), 'Error transition not logged at error level');
     }
 
     /**
@@ -321,6 +367,8 @@ class ProcessPendingMediaUploadsTest extends TestCase
         // First call: retry guard (1 < 3, passes)
         // Second call: in catch block (2 < 3, leave at partial status)
         $pendingUpload->shouldReceive('getAttempts')->andReturnValues([1, 2]);
+        // Backoff for attempt 1 is 5 minutes; last attempt long ago -> due for retry
+        $pendingUpload->shouldReceive('getLastEditedUTC')->andReturn($this->minutesAgo(60));
 
         // Verify setErrorMessage is called but setStatus is NOT called in catch block
         // (status stays at whatever partial state was reached)
@@ -341,5 +389,85 @@ class ProcessPendingMediaUploadsTest extends TestCase
 
         $this->assertEquals(0, $stats['processed']);
         $this->assertEquals(1, $stats['errors']);
+    }
+
+    /**
+     * A row that already failed must wait before being retried: 5 * 2^(attempts-1) minutes
+     * since LastEdited (5, 10, 20, 40 ...). With 2 attempts and a failure 6 minutes ago the
+     * row is due at 10 minutes, so this run must leave it untouched (no status change,
+     * no attempt increment, not counted as processed or error).
+     */
+    public function testProcessPendingMediaUploadsSkipsRowWhileBackoffNotElapsed(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
+        $pendingUpload->shouldReceive('getId')->andReturn(1);
+        $pendingUpload->shouldReceive('getAttempts')->andReturn(2);
+        $pendingUpload->shouldReceive('getLastEditedUTC')->andReturn($this->minutesAgo(6));
+        $pendingUpload->shouldNotReceive('setStatus');
+        $pendingUpload->shouldNotReceive('incrementAttempts');
+        $pendingUpload->shouldNotReceive('setErrorMessage');
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        // Only reset stuck + cleanup transactions: the row is skipped without touching it
+        $txService->shouldReceive('transaction')->twice()->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService);
+
+        $stats = $service->processPendingMediaUploads();
+
+        $this->assertEquals(0, $stats['processed']);
+        $this->assertEquals(0, $stats['errors']);
+    }
+
+    /**
+     * Default retry budget is 5 attempts. A row with 4 failed attempts whose backoff
+     * (40 minutes) has elapsed is attempted again; when that 5th attempt fails the row
+     * transitions to Error and the transition is logged at error level.
+     */
+    public function testProcessPendingMediaUploadsMarksErrorAndLogsErrorOnFinalFailedAttempt(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+        $summitRepository = Mockery::mock(ISummitRepository::class);
+
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
+        $pendingUpload->shouldReceive('getId')->andReturn(1);
+        // First getAttempts() call: retry guard + backoff (4 < 5, 45 min > 40 min backoff)
+        // Second getAttempts() call: in catch block after incrementAttempts (5 >= 5 -> Error)
+        $pendingUpload->shouldReceive('getAttempts')->andReturnValues([4, 5]);
+        $pendingUpload->shouldReceive('getLastEditedUTC')->andReturn($this->minutesAgo(45));
+        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PROCESSING)->once();
+        $pendingUpload->shouldReceive('incrementAttempts')->once();
+        $pendingUpload->shouldReceive('getSummitId')->andReturn(999);
+        // Summit not found -> EntityNotFoundException -> caught, attempts exhausted
+        $summitRepository->shouldReceive('getById')->with(999)->andReturn(null);
+        $pendingUpload->shouldReceive('setErrorMessage')->once()->with(Mockery::pattern('/Summit 999 not found/'));
+        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_ERROR)->once();
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        // 4 transactions: reset stuck, mark processing, catch (error message + Error status), cleanup
+        $txService->shouldReceive('transaction')->times(4)->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService, $summitRepository);
+
+        // default max_retries
+        $stats = $service->processPendingMediaUploads();
+
+        $this->assertEquals(0, $stats['processed']);
+        $this->assertEquals(1, $stats['errors']);
+        $this->assertTrue($this->logger->has('error', '/upload ID 1 failed \(attempt 5\/5\)/'), 'Final failed attempt not logged at error level');
     }
 }

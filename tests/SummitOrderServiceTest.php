@@ -1460,6 +1460,106 @@ CSV;
         $this->assertEquals('NEW BADGE TYPE', $badge->getType()->getName());
     }
 
+    /**
+     * Resolves the real ticket of the default attendee (see the fixture note in
+     * testUpdateTicketReassignmentRegeneratesBadgeQRCode) and primes the sold counters:
+     * fixture tickets are created without SummitTicketType::sell(), so the old type is
+     * sold once (unless $sell_old_type is false, i.e. a counter already out of sync) to make a decrement observable.
+     * @return array [summit_id, order_id, ticket_id, old_type_id, new_type_id]
+     */
+    private function prepareTicketTypeChange(int $new_type_quantity_2_sell = 100, int $new_type_sold = 0, bool $sell_old_type = true): array
+    {
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+        $badge_id = $attendee->getTickets()->first()->getBadge()->getId();
+
+        $summit_id = self::$summit->getId();
+
+        $real_ticket = EntityManager::getRepository(SummitAttendeeBadge::class)->find($badge_id)->getTicket();
+        $ticket_id   = $real_ticket->getId();
+        $order_id    = $real_ticket->getOrder()->getId();
+        $old_type    = $real_ticket->getTicketType();
+        $new_type    = self::$default_ticket_type_2;
+        $this->assertNotEquals($old_type->getId(), $new_type->getId());
+
+        if ($sell_old_type) $old_type->sell(1);
+        $new_type->setQuantity2Sell($new_type_quantity_2_sell);
+        if ($new_type_sold > 0) $new_type->sell($new_type_sold);
+        self::$em->persist($old_type);
+        self::$em->persist($new_type);
+        self::$em->flush();
+
+        $ids = [$summit_id, $order_id, $ticket_id, $old_type->getId(), $new_type->getId()];
+        EntityManager::clear();
+        return $ids;
+    }
+
+    public function testUpdateTicketTypeChangeMovesSoldCounter()
+    {
+        Queue::fake();
+        list($summit_id, $order_id, $ticket_id, $old_type_id, $new_type_id) = $this->prepareTicketTypeChange();
+
+        $summit = EntityManager::getRepository(Summit::class)->find($summit_id);
+        App::make(ISummitOrderService::class)
+            ->updateTicket($summit, $order_id, $ticket_id, ['ticket_type_id' => $new_type_id]);
+
+        EntityManager::clear();
+        $ticket = EntityManager::getRepository(SummitAttendeeTicket::class)->find($ticket_id);
+        $this->assertEquals($new_type_id, $ticket->getTicketTypeId());
+        $this->assertEquals(0, EntityManager::getRepository(SummitTicketType::class)->find($old_type_id)->getQuantitySold());
+        $this->assertEquals(1, EntityManager::getRepository(SummitTicketType::class)->find($new_type_id)->getQuantitySold());
+    }
+
+    public function testUpdateTicketTypeChangeWithOldCounterAlreadyAtZeroStillMovesTheTicket()
+    {
+        Queue::fake();
+        list($summit_id, $order_id, $ticket_id, $old_type_id, $new_type_id) = $this->prepareTicketTypeChange(100, 0, false);
+
+        $summit = EntityManager::getRepository(Summit::class)->find($summit_id);
+        App::make(ISummitOrderService::class)
+            ->updateTicket($summit, $order_id, $ticket_id, ['ticket_type_id' => $new_type_id]);
+
+        EntityManager::clear();
+        $ticket = EntityManager::getRepository(SummitAttendeeTicket::class)->find($ticket_id);
+        $this->assertEquals($new_type_id, $ticket->getTicketTypeId());
+        $this->assertEquals(0, EntityManager::getRepository(SummitTicketType::class)->find($old_type_id)->getQuantitySold());
+        $this->assertEquals(1, EntityManager::getRepository(SummitTicketType::class)->find($new_type_id)->getQuantitySold());
+    }
+
+    public function testUpdateTicketSameTypeLeavesSoldCounterUntouched()
+    {
+        Queue::fake();
+        list($summit_id, $order_id, $ticket_id, $old_type_id) = $this->prepareTicketTypeChange();
+
+        $summit = EntityManager::getRepository(Summit::class)->find($summit_id);
+        App::make(ISummitOrderService::class)
+            ->updateTicket($summit, $order_id, $ticket_id, ['ticket_type_id' => $old_type_id]);
+
+        EntityManager::clear();
+        $this->assertEquals(1, EntityManager::getRepository(SummitTicketType::class)->find($old_type_id)->getQuantitySold());
+    }
+
+    public function testUpdateTicketToSoldOutTypeFailsAndLeavesCountersUntouched()
+    {
+        Queue::fake();
+        list($summit_id, $order_id, $ticket_id, $old_type_id, $new_type_id) = $this->prepareTicketTypeChange(1, 1);
+
+        $summit = EntityManager::getRepository(Summit::class)->find($summit_id);
+        try {
+            App::make(ISummitOrderService::class)
+                ->updateTicket($summit, $order_id, $ticket_id, ['ticket_type_id' => $new_type_id]);
+            $this->fail('Moving a ticket to a sold out ticket type should be rejected.');
+        } catch (ValidationException $ex) {
+            // expected
+        }
+
+        EntityManager::clear();
+        $ticket = EntityManager::getRepository(SummitAttendeeTicket::class)->find($ticket_id);
+        $this->assertEquals($old_type_id, $ticket->getTicketTypeId());
+        $this->assertEquals(1, EntityManager::getRepository(SummitTicketType::class)->find($old_type_id)->getQuantitySold());
+        $this->assertEquals(1, EntityManager::getRepository(SummitTicketType::class)->find($new_type_id)->getQuantitySold());
+    }
+
     public function testAddTicketsCommitsAcrossNestedTransaction()
     {
         $service = App::make(ISummitOrderService::class);

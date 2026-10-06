@@ -4057,7 +4057,30 @@ final class SummitOrderService
                 if (is_null($ticket_type))
                     throw new EntityNotFoundException("ticket type not found");
 
+                $old_ticket_type_id = $ticket->getTicketTypeId();
+
                 $ticket->upgradeTicketType($ticket_type);
+
+                // quantity_sold is a hand maintained counter: move the sale from the old type to the new one
+                if ($old_ticket_type_id !== $ticket_type->getId()) {
+                    // lock in ascending id order so two opposite moves can not deadlock
+                    $ids = [$old_ticket_type_id, $ticket_type->getId()];
+                    sort($ids);
+                    $locked_types = [];
+                    foreach ($ids as $id) {
+                        $locked_types[$id] = $this->ticket_type_repository->getByIdExclusiveLock($id, true);
+                    }
+
+                    // fails (and rolls back the whole update) if the new type has no seats left
+                    $locked_types[$ticket_type->getId()]->sell(1);
+
+                    try {
+                        $locked_types[$old_ticket_type_id]->restore(1);
+                    } catch (ValidationException $ex) {
+                        // old counter already out of sync (below the restored qty), do not block the admin
+                        Log::warning($ex);
+                    }
+                }
 
                 $shouldSendInvitationEmail = true;
             }

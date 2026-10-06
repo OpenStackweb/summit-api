@@ -135,6 +135,10 @@ class OAuth2SummitAttendeeCheckInLogApiTest extends ProtectedApiTestCase
         $this->updateAttendee($attendee, ['summit_hall_checked_in' => false, 'reason' => '   ']);
         $this->assertResponseStatus(412);
 
+        // "0" is accepted by the boolean rule and must be treated as a check out as well
+        $this->updateAttendee($attendee, ['summit_hall_checked_in' => '0']);
+        $this->assertResponseStatus(412);
+
         self::$em->clear();
         $attendee = self::$em->find(SummitAttendee::class, $attendee->getId());
         $this->assertTrue($attendee->hasCheckedIn());

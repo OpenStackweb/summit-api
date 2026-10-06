@@ -355,15 +355,13 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $was_checked_in = $attendee->hasCheckedIn();
             $reason = trim(strval($payload['reason'] ?? ''));
 
-            if (isset($payload['summit_hall_checked_in'])
-                && $was_checked_in
-                && !boolval($payload['summit_hall_checked_in'])
-                && $reason === '') {
-                // check out from admin UI requires a reason
+            SummitAttendeeFactory::populate($summit, $attendee, $payload, $member, false, $manager);
+
+            if ($was_checked_in && !$attendee->hasCheckedIn() && $reason === '') {
+                // check out from admin UI requires a reason; decided on the resulting state (same one
+                // that drives the log) and the transaction rolls the change back
                 throw new ValidationException("A reason is required to check out an attendee.");
             }
-
-            SummitAttendeeFactory::populate($summit, $attendee, $payload, $member, false, $manager);
 
             if ($was_checked_in !== $attendee->hasCheckedIn()) {
                 $this->check_in_log_service->log

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\App;
 use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeCheckInLog;
-use services\model\ISummitOrderService;
+use App\Services\Model\ISummitOrderService;
 
 /**
  * Check in / check out audit log (ADR-005): writers on the 3 call sites + read API.

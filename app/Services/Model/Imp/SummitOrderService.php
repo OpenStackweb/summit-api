@@ -153,7 +153,14 @@ final class Saga
     private function abort()
     {
         foreach (array_reverse($this->already_run_tasks) as $task) {
-            $task->undo();
+            // a failing compensation must neither mask the exception that aborted the saga
+            // nor prevent the remaining tasks (ticket stock, member quota) from being undone
+            try {
+                $task->undo();
+            } catch (\Throwable $ex) {
+                Log::error(sprintf("Saga::abort undo failed for %s: %s", get_class($task), $ex->getMessage()));
+                Log::error($ex);
+            }
         }
     }
 }
@@ -689,7 +696,21 @@ final class ReserveOrderTask extends AbstractTask
             return;
         }
 
-        $this->tx_service->transaction(function () use ($order) {
+        $order_id = $order->getId();
+
+        $this->tx_service->transaction(function () use ($order_id) {
+            // The order cached in formerState (and $this->summit) belong to the transaction that
+            // created them. When a later task fails, the root transaction rollback clears the
+            // EntityManager, so they are detached by now and can not be removed: reload them.
+            $order_repository = App::make(ISummitOrderRepository::class);
+            $order = $order_repository->getByIdExclusiveLock($order_id);
+            if (!$order instanceof SummitOrder) {
+                Log::warning(sprintf("ReserveOrderTask::undo: order id %s not found, nothing to compensate", $order_id));
+                return;
+            }
+            // re attach
+            $summit = App::make(ISummitRepository::class)->getById($this->summit->getId());
+
             Log::info(sprintf("ReserveOrderTask::undo: removing reserved order id %s number %s",
                 $order->getId(), $order->getNumber()));
 
@@ -703,8 +724,8 @@ final class ReserveOrderTask extends AbstractTask
                 }
             }
 
-            $this->summit->removeOrder($order);
-            App::make(ISummitOrderRepository::class)->delete($order);
+            $summit->removeOrder($order);
+            $order_repository->delete($order);
         });
     }
 }

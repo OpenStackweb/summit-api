@@ -19,6 +19,7 @@ use App\Services\Model\Saga;
 use libs\utils\ITransactionService;
 use Mockery;
 use models\main\Member;
+use models\summit\ISummitRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeTicket;
@@ -119,16 +120,24 @@ class SagaCompensationTest extends TestCase
         $order->shouldReceive('getTickets')->andReturn([$ticket1, $ticket2, $ticket3]);
 
         $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getId')->andReturn(77);
         $summit->shouldReceive('removeOrder')->once()->with($order);
 
         $owner = Mockery::mock(Member::class);
 
+        // undo() reloads the order and the summit: the instances cached by run() are
+        // detached once the failing task's root transaction cleared the EntityManager.
         $order_repo = Mockery::mock(ISummitOrderRepository::class);
+        $order_repo->shouldReceive('getByIdExclusiveLock')->once()->with(9001)->andReturn($order);
         $order_repo->shouldReceive('delete')->once()->with($order);
 
-        // Bind the repo into the container so App::make() inside undo() resolves it.
+        $summit_repo = Mockery::mock(ISummitRepository::class);
+        $summit_repo->shouldReceive('getById')->once()->with(77)->andReturn($summit);
+
+        // Bind the repos into the container so App::make() inside undo() resolves them.
         $container = \Illuminate\Support\Facades\Facade::getFacadeApplication();
         $container->instance(ISummitOrderRepository::class, $order_repo);
+        $container->instance(ISummitRepository::class, $summit_repo);
 
         $tx_service = Mockery::mock(ITransactionService::class);
         $tx_service->shouldReceive('transaction')->once()->andReturnUsing(function ($fn) {
@@ -177,6 +186,49 @@ class SagaCompensationTest extends TestCase
             ['run:first', 'run:second', 'undo:second', 'undo:first'],
             $order_of_calls
         );
+    }
+
+    /**
+     * A compensation that itself fails must neither mask the exception that aborted
+     * the saga nor stop the remaining compensations (ticket stock, member quota)
+     * from running.
+     */
+    public function testSagaAbortKeepsUndoingAndRethrowsOriginalWhenAnUndoFails(): void
+    {
+        $order_of_calls = [];
+
+        $first = new RecordingTask('first', $order_of_calls);
+        $broken_undo = new class extends AbstractTask {
+            public function run(array $formerState): array
+            {
+                return $formerState;
+            }
+            public function undo()
+            {
+                throw new \LogicException('undo failure');
+            }
+        };
+        $failing = new class extends AbstractTask {
+            public function run(array $formerState): array
+            {
+                throw new \RuntimeException('downstream failure');
+            }
+            public function undo() { /* never runs — it threw in run() */ }
+        };
+
+        $saga = Saga::start()
+            ->addTask($first)
+            ->addTask($broken_undo)
+            ->addTask($failing);
+
+        try {
+            $saga->run();
+            $this->fail('Expected saga to propagate the downstream exception');
+        } catch (\RuntimeException $ex) {
+            $this->assertSame('downstream failure', $ex->getMessage());
+        }
+
+        $this->assertSame(['run:first', 'undo:first'], $order_of_calls);
     }
 
     /**

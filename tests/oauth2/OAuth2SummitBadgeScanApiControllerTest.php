@@ -1161,7 +1161,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
 
         $this->assertNotNull($scan);
         $this->assertEquals(
-            sprintf('%d:%d:%d', $sponsor->getId(), $badge->getId(), $scan_date_epoch),
+            sprintf('%d:%d:%d:%d', $sponsor->getId(), $badge->getId(), self::$member->getId(), $scan_date_epoch),
             $scan->getScanDedupKey(),
             "addBadgeScan must stamp the dedup key on the new scan, otherwise the UNIQUE index protects nothing"
         );
@@ -1341,7 +1341,7 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         // The deadlock discarded the manager the test started with.
         $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
         $count = $em->getRepository(SponsorBadgeScan::class)->count([
-            'scan_dedup_key' => sprintf('%d:%d:%d', $sponsor_id, $badge_id, $scan_date_epoch),
+            'scan_dedup_key' => sprintf('%d:%d:%d:%d', $sponsor_id, $badge_id, self::$member->getId(), $scan_date_epoch),
         ]);
         $this->assertEquals(1, $count, "exactly one row must be committed by the retried attempt");
     }

@@ -1693,6 +1693,12 @@ Route::group(array('prefix' => 'summits'), function () {
                     Route::get('', [ 'uses' => 'OAuth2SummitOrderExtraQuestionTypeApiController@getAttendeeExtraQuestions']);
                 });
 
+                // attendee check in / check out log
+                Route::group(array('prefix' => 'check-in-logs'), function () {
+                    Route::get('', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeCheckInLogApiController@getAllByAttendee']);
+                    Route::get('csv', ['middleware' => 'auth.user', 'uses' => 'OAuth2SummitAttendeeCheckInLogApiController@getAllByAttendeeCSV']);
+                });
+
                 // attendee notes
                 Route::group(['prefix' => 'notes', 'where' => ['note_id' => '[0-9]+']], function () {
                     Route::get('', 'OAuth2SummitAttendeeNotesApiController@getAttendeeNotes');

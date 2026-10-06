@@ -15297,6 +15297,212 @@
                 ]
             }
         },
+        "/api/v1/summits/{id}/attendees/{attendee_id}/check-in-logs": {
+            "get": {
+                "tags": [
+                    "Summit Attendee Check In Logs"
+                ],
+                "summary": "Get the check in / check out history of an attendee",
+                "description": "Returns a paginated list of check in / check out records for a specific attendee. Allows ordering, filtering and pagination.",
+                "operationId": "getAllAttendeeCheckInLogs",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The summit id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "attendee_id",
+                        "in": "path",
+                        "description": "The attendee id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "The number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[]",
+                        "in": "query",
+                        "description": "Filter check in logs. Available filters: id==, action==, source==, actor_id==, client_id (==, @@, =@), created (>, <, <=, >=, ==, []), actor_email (==, @@, =@)",
+                        "required": false,
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order by field. Valid fields: id, created, action, source, actor_email",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "expand",
+                        "in": "query",
+                        "description": "Expand related entities. Available expansions: actor",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedSummitAttendeeCheckInLogsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Summit or attendee not found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "400": {
+                        "description": "Invalid filter or order parameter"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_attendee_check_in_log_oauth2": [
+                            "http://localhost/summits/read/all"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators",
+                    "summit-registration-administrators"
+                ]
+            }
+        },
+        "/api/v1/summits/{id}/attendees/{attendee_id}/check-in-logs/csv": {
+            "get": {
+                "tags": [
+                    "Summit Attendee Check In Logs"
+                ],
+                "summary": "Export the check in / check out history of an attendee to CSV",
+                "description": "Exports all check in / check out records for a specific attendee to CSV format. Allows ordering and filtering.",
+                "operationId": "getAllAttendeeCheckInLogsCSV",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The summit id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "attendee_id",
+                        "in": "path",
+                        "description": "The attendee id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[]",
+                        "in": "query",
+                        "description": "Filter check in logs. Available filters: id==, action==, source==, actor_id==, client_id (==, @@, =@), created (>, <, <=, >=, ==, []), actor_email (==, @@, =@)",
+                        "required": false,
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order by field. Valid fields: id, created, action, source, actor_email",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CSV file",
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Summit or attendee not found"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "400": {
+                        "description": "Invalid filter or order parameter"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_attendee_check_in_log_oauth2": [
+                            "http://localhost/summits/read/all"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators",
+                    "summit-registration-administrators"
+                ]
+            }
+        },
         "/api/v1/summits/{id}/attendees/all/notes": {
             "get": {
                 "tags": [
@@ -81258,6 +81464,103 @@
                     }
                 ]
             },
+            "SummitAttendeeCheckInLog": {
+                "description": "Append-only record of a physical check-in / check-out of an attendee",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "created": {
+                        "description": "Creation timestamp (epoch)",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1234567890
+                    },
+                    "last_edited": {
+                        "description": "Last edit timestamp (epoch)",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1234567890
+                    },
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "CHECKED_IN",
+                            "CHECKED_OUT"
+                        ],
+                        "example": "CHECKED_OUT"
+                    },
+                    "source": {
+                        "type": "string",
+                        "enum": [
+                            "ADMIN_UI",
+                            "BADGE_SCAN",
+                            "BADGE_PRINT"
+                        ],
+                        "example": "ADMIN_UI"
+                    },
+                    "reason": {
+                        "description": "Mandatory for CHECKED_OUT from ADMIN_UI",
+                        "type": "string",
+                        "example": "Left the venue",
+                        "nullable": true
+                    },
+                    "client_id": {
+                        "description": "OAuth2 client id of the access token used",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "ip_address": {
+                        "type": "string",
+                        "example": "203.0.113.10",
+                        "nullable": true
+                    },
+                    "user_agent": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "attendee_id": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "actor_id": {
+                        "description": "ID of the member that triggered the change",
+                        "type": "integer",
+                        "example": 456,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedSummitAttendeeCheckInLogsResponse": {
+                "description": "Paginated response for Summit Attendee Check In Logs",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SummitAttendeeCheckInLog"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "AttendeeNoteAddRequest": {
                 "required": [
                     "content"
@@ -90425,6 +90728,18 @@
                     }
                 }
             },
+            "summit_attendee_check_in_log_oauth2": {
+                "type": "oauth2",
+                "flows": {
+                    "authorizationCode": {
+                        "authorizationUrl": "http://localhost/oauth/authorize",
+                        "tokenUrl": "http://localhost/oauth/token",
+                        "scopes": {
+                            "http://localhost/summits/read/all": "Read All Summit Data"
+                        }
+                    }
+                }
+            },
             "summit_attendee_notes_oauth2": {
                 "type": "oauth2",
                 "flows": {
@@ -91137,6 +91452,10 @@
         {
             "name": "Summit Badge Prints",
             "description": "Summit Badge Prints"
+        },
+        {
+            "name": "Summit Attendee Check In Logs",
+            "description": "Summit Attendee Check In Logs"
         },
         {
             "name": "Attendee Notes",

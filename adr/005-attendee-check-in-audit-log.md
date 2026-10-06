@@ -71,9 +71,9 @@ change. The setter is not modified: it has no access to the request or actor, an
   `ValidationException` and persists nothing. Creating an attendee with `summit_hall_checked_in = true`
   logs a `CHECKED_IN` (previous value is `false`); the log is written after persist/flush so the id
   exists. `reason` is added to the PUT rules and ignored when no check-out happens.
-- **QR scan (`BADGE_SCAN`):** the controller resolves actor/client from the resource server context
-  and passes it to `doCheckIn()` (signature change: update other callers and test mocks). The
-  existing "already checked in" guard throws before any change, so nothing is logged then.
+- **QR scan (`BADGE_SCAN`):** `doCheckIn()` keeps its signature; the log service resolves
+  actor/client from the resource server context. The existing "already checked in" guard throws
+  before any change, so nothing is logged then.
 - **Badge print (`BADGE_PRINT`):** logged only inside the existing
   `if ($must_check_in && !$attendee->hasCheckedIn())` branch; actor is `$requestor`.
 
@@ -128,7 +128,8 @@ Reason / IP / Date, date filter, CSV export). Changing "Checked In?" from Yes to
   and (for check-outs) a reason.
 - The flag has three writers; a fourth added later bypasses the log. Mitigation: a single writer
   service and a test enumerating callers of `setSummitHallCheckedIn`.
-- `doCheckIn()` changes signature; its callers and test mocks must be updated.
+- `SummitOrderService` and `AttendeeService` receive the log service by constructor, so code that
+  builds them by hand (some tests) must pass it.
 - No backfill: the table starts empty, so history begins at deploy.
 - Two migrations in two folders (model + config) must deploy together, with or before the application.
 - UI requiring `reason` before the API supports it would break check-out; deploy API first.

@@ -44,6 +44,9 @@ use models\main\IMemberRepository;
 use models\main\ITagRepository;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\SummitRegistrationDiscountCode;
+use models\summit\SummitRegistrationPromoCode;
+use models\summit\PresentationSpeaker;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
@@ -760,6 +763,137 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
 
         $reFetchedTicketType = self::$em->find(SummitTicketType::class, $ticket_type_id);
         $this->assertEquals($initial_quantity_sold, $reFetchedTicketType->getQuantitySold());
+    }
+
+    /**
+     * Each promo code is applied on its own transaction. When a later code of the same
+     * order is rejected, the usage already applied for the first one must be released
+     * together with the deleted order.
+     */
+    public function testReserveRejectedOnSecondPromoCodeReleasesFirstCodeUsage()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $regular_code = new SummitRegistrationDiscountCode();
+        $regular_code->setCode('TEST_DC_' . uniqid());
+        $regular_code->setAmount(15);
+        $regular_code->setQuantityAvailable(10);
+        $regular_code->addAllowedTicketType(self::$default_ticket_type);
+        self::$summit->addPromoCode($regular_code);
+
+        // the buyer is not assigned to this speakers code: ApplyPromoCodeTask rejects it
+        $speakers_code = new SpeakersRegistrationDiscountCode();
+        $speakers_code->setCode('TEST_SPK_DC_' . uniqid());
+        $speakers_code->setType(PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes[0]);
+        $speakers_code->setAmount(100);
+        $speakers_code->addAllowedTicketType(self::$default_ticket_type);
+        self::$summit->addPromoCode($speakers_code);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $regular_code_id = $regular_code->getId();
+        $ticket_type_id = self::$default_ticket_type->getId();
+        $initial_quantity_used = $regular_code->getQuantityUsed();
+
+        $payload = [
+            "owner_email" => sprintf('not-a-speaker-%s@test.com', uniqid()),
+            "owner_first_name" => "Not",
+            "owner_last_name" => "Speaker",
+            "owner_company" => "Pumant",
+            "tickets" => [
+                ["type_id" => $ticket_type_id, "promo_code" => $regular_code->getCode()],
+                ["type_id" => $ticket_type_id, "promo_code" => $speakers_code->getCode()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('is not valid for', $ex->getMessage());
+        }
+
+        self::$em->clear();
+        $re_fetched_code = self::$em->find(SummitRegistrationPromoCode::class, $regular_code_id);
+        $this->assertEquals($initial_quantity_used, $re_fetched_code->getQuantityUsed());
+    }
+
+    /**
+     * A speaker whose reservation was rejected because of another ticket's promo code
+     * must keep their speakers code unredeemed, so they can reserve again right away.
+     */
+    public function testReserveRejectedOnSecondPromoCodeLeavesSpeakersCodeRedeemable()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $buyer_email = self::$defaultSpeaker->getEmail();
+
+        $speakers_code = new SpeakersRegistrationDiscountCode();
+        $speakers_code->setCode('TEST_SPK_DC_' . uniqid());
+        $speakers_code->setType(PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes[0]);
+        $speakers_code->setAmount(100);
+        $speakers_code->addAllowedTicketType(self::$default_ticket_type);
+        $speakers_code->assignSpeaker(self::$defaultSpeaker);
+        self::$summit->addPromoCode($speakers_code);
+
+        // expired: PreProcessReservationTask does not check the validity period, so it is
+        // ApplyPromoCodeTask that rejects it, after the speakers code was already applied
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $expired_code = new SummitRegistrationDiscountCode();
+        $expired_code->setCode('TEST_DC_' . uniqid());
+        $expired_code->setAmount(15);
+        $expired_code->setQuantityAvailable(10);
+        $expired_code->setValidSinceDate((clone $now)->sub(new \DateInterval('P10D')));
+        $expired_code->setValidUntilDate((clone $now)->sub(new \DateInterval('P5D')));
+        $expired_code->addAllowedTicketType(self::$default_ticket_type);
+        self::$summit->addPromoCode($expired_code);
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $speakers_code_id = $speakers_code->getId();
+        $speaker_id = self::$defaultSpeaker->getId();
+        $ticket_type_id = self::$default_ticket_type->getId();
+
+        $payload = [
+            "owner_email" => $buyer_email,
+            "owner_first_name" => "Sebastian",
+            "owner_last_name" => "Marcet",
+            "owner_company" => "Pumant",
+            "tickets" => [
+                ["type_id" => $ticket_type_id, "promo_code" => $speakers_code->getCode()],
+                ["type_id" => $ticket_type_id, "promo_code" => $expired_code->getCode()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('is not a valid code', $ex->getMessage());
+        }
+
+        self::$em->clear();
+        $re_fetched_code = self::$em->find(SummitRegistrationPromoCode::class, $speakers_code_id);
+        $speaker = self::$em->find(PresentationSpeaker::class, $speaker_id);
+        $assignment = $re_fetched_code->getSpeakerAssignment($speaker);
+        $this->assertNotNull($assignment);
+        $this->assertNull($assignment->getRedeemedAt());
+
+        // the speaker can retry right away with their own code
+        self::$summit = self::$summit_repository->find(self::$summit->getId());
+        $retry_payload = $payload;
+        $retry_payload["tickets"] = [
+            ["type_id" => $ticket_type_id, "promo_code" => $speakers_code->getCode()],
+        ];
+        $order = $service->reserve(null, self::$summit, $retry_payload);
+        $this->assertNotNull($order);
+
+        // release the seat so the fixture teardown can delete the ticket type
+        $service->cancel(self::$summit, $order->getHash());
     }
 
     /**

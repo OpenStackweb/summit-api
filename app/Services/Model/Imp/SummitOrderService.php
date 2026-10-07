@@ -59,6 +59,8 @@ use models\main\Member;
 use models\main\Tag;
 use models\oauth2\IResourceServerContext;
 use models\summit\factories\SummitAttendeeFactory;
+use models\summit\SummitAttendeeCheckInLog;
+use services\model\ISummitAttendeeCheckInLogService;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
@@ -1713,6 +1715,11 @@ final class SummitOrderService
     extends AbstractService implements ISummitOrderService
 {
     /**
+     * @var ISummitAttendeeCheckInLogService
+     */
+    private $check_in_log_service;
+
+    /**
      * @var IMemberRepository
      */
     private $member_repository;
@@ -1861,10 +1868,12 @@ final class SummitOrderService
         ICompanyService                             $company_service,
         ITicketFinderStrategyFactory                $ticket_finder_strategy_factory,
         ITransactionService                         $tx_service,
-        ILockManagerService                         $lock_service
+        ILockManagerService                         $lock_service,
+        ISummitAttendeeCheckInLogService            $check_in_log_service
     )
     {
         parent::__construct($tx_service);
+        $this->check_in_log_service = $check_in_log_service;
         $this->member_repository = $member_repository;
         $this->ticket_type_repository = $ticket_type_repository;
         $this->promo_code_repository = $promo_code_repository;
@@ -3505,6 +3514,14 @@ final class SummitOrderService
             $must_check_in = $payload['check_in'] ?? true;
             if ($must_check_in && !$attendee->hasCheckedIn()) {
                 $attendee->setSummitHallCheckedIn(true);
+                $this->check_in_log_service->log
+                (
+                    $attendee,
+                    SummitAttendeeCheckInLog::ActionCheckedIn,
+                    SummitAttendeeCheckInLog::SourceBadgePrint,
+                    null,
+                    $requestor
+                );
             }
 
             return $badge;

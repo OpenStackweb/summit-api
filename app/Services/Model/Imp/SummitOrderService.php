@@ -909,8 +909,9 @@ final class ApplyPromoCodeTask extends AbstractTask
     /**
      * Releases the usages applied by this task instance. Idempotent: each entry is dropped
      * from $applied once released, so the local release done by run() on failure plus a later
-     * Saga::abort() can not release the same usage twice, and an interrupted undo can be
-     * retried without re releasing the entries that already went through.
+     * Saga::abort() can not release the same usage twice. A release that fails is logged and
+     * kept in $applied, so it does not block the remaining codes and a later undo() retries
+     * only the entries that did not go through.
      */
     public function undo()
     {
@@ -926,24 +927,36 @@ final class ApplyPromoCodeTask extends AbstractTask
 
         $owner_email = $this->payload['owner_email'];
 
-        while (!empty($this->applied)) {
-            $entry = $this->applied[0];
+        // a failing release must not block the release of the remaining codes:
+        // failed entries are kept so a later undo() can retry them
+        $remaining = [];
+
+        foreach ($this->applied as $entry) {
             $code = $entry['code'];
             Log::debug(sprintf("ApplyPromoCodeTask::undo undoing promo code %s qty %s owner_email %s", $code, $entry['qty'], $owner_email));
 
-            // reload the code: instances from the failed transaction are detached
-            // once its rollback cleared the EntityManager
-            $this->tx_service->transaction(function () use ($code, $entry, $owner_email) {
-                $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $code);
-                if (is_null($promo_code)) return;
+            try {
+                // reload the code: instances from the failed transaction are detached
+                // once its rollback cleared the EntityManager
+                $this->tx_service->transaction(function () use ($code, $entry, $owner_email) {
+                    $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $code);
+                    if (is_null($promo_code)) return;
 
-                $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $entry, $owner_email) {
-                    $promo_code->removeUsage($entry['qty'], $owner_email);
-                }, 30);
+                    $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $entry, $owner_email) {
+                        $promo_code->removeUsage($entry['qty'], $owner_email);
+                    }, 30);
 
-            });
-            array_shift($this->applied);
+                });
+            } catch (\Throwable $ex) {
+                Log::warning(sprintf(
+                    "ApplyPromoCodeTask::undo failed to release %s × %s: %s",
+                    $code, $entry['qty'], $ex->getMessage()
+                ));
+                $remaining[] = $entry;
+            }
         }
+
+        $this->applied = $remaining;
     }
 }
 

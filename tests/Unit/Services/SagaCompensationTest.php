@@ -357,6 +357,59 @@ class SagaCompensationTest extends TestCase
         }
     }
 
+    /**
+     * A release that fails for one code must not leak the usage of the other codes
+     * applied by the same run, and a later undo() retries only the failed one.
+     */
+    public function testApplyPromoCodeFailingReleaseDoesNotBlockTheOtherCodes(): void
+    {
+        $rejection = new ValidationException('code C is not valid for the buyer');
+
+        $release_attempts = 0;
+        $code_a = $this->buildPromoCode(1, 'CODE_A');
+        $code_a->shouldReceive('addUsage')->once()->with('buyer@test.com', 2);
+        $code_a->shouldReceive('removeUsage')->twice()->with(2, 'buyer@test.com')
+            ->andReturnUsing(function () use (&$release_attempts) {
+                if (++$release_attempts === 1) throw new \RuntimeException('release failed');
+            });
+
+        $code_b = $this->buildPromoCode(2, 'CODE_B');
+        $code_b->shouldReceive('addUsage')->once()->with('buyer@test.com', 1);
+        $b_released = false;
+        $code_b->shouldReceive('removeUsage')->once()->with(1, 'buyer@test.com')
+            ->andReturnUsing(function () use (&$b_released) {
+                $b_released = true;
+            });
+
+        $code_c = $this->buildPromoCode(3, 'CODE_C');
+        $code_c->shouldReceive('validate')->once()->andThrow($rejection);
+        $code_c->shouldReceive('addUsage')->never();
+        $code_c->shouldReceive('removeUsage')->never();
+
+        $task = $this->buildApplyPromoCodeTask(['CODE_A' => $code_a, 'CODE_B' => $code_b, 'CODE_C' => $code_c]);
+
+        $former_state = $this->promoCodesFormerState();
+        $former_state['promo_codes_usage']['CODE_C'] = ['qty' => 1, 'types' => [10]];
+
+        try {
+            $task->run($former_state);
+            $this->fail('Expected the rejection of the third promo code to propagate');
+        } catch (ValidationException $ex) {
+            $this->assertSame($rejection, $ex);
+        }
+
+        // CODE_B is released by run() itself, despite CODE_A failing before it
+        $this->assertTrue($b_released);
+        $this->assertSame(1, $release_attempts);
+
+        // retries CODE_A only: CODE_B was already released
+        $task->undo();
+        // nothing left to release
+        $task->undo();
+
+        $this->assertSame(2, $release_attempts);
+    }
+
     private function promoCodesFormerState(): array
     {
         return [

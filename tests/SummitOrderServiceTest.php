@@ -42,6 +42,8 @@ use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\main\ITagRepository;
+use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
+use models\summit\SpeakersRegistrationDiscountCode;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
@@ -708,6 +710,56 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
         self::$em->clear();
         self::$summit = self::$summit_repository->find(self::$summit->getId());
         $this->assertEquals($initial_order_count, self::$summit->getOrders()->count());
+    }
+
+    /**
+     * ApplyPromoCodeTask (last saga task) rejects a speakers promo code that is not
+     * assigned to the buyer. The saga compensation must then delete the order that
+     * ReserveOrderTask already committed and restore the ticket type stock, and the
+     * caller must see the original ValidationException, not a detached-entity error.
+     */
+    public function testReserveRejectedByPromoCodeLeavesNoOrderAndRestoresStock()
+    {
+        $this->openRegistrationPeriod();
+        $service = App::make(ISummitOrderService::class);
+
+        $promo_code = new SpeakersRegistrationDiscountCode();
+        $promo_code->setCode('TEST_SPK_DC_' . uniqid());
+        $promo_code->setType(PromoCodesConstants::SpeakerSummitRegistrationPromoCodeTypes[0]);
+        $promo_code->setAmount(100);
+        $promo_code->addAllowedTicketType(self::$default_ticket_type);
+        self::$summit->addPromoCode($promo_code);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        $ticket_type_id = self::$default_ticket_type->getId();
+        $initial_quantity_sold = self::$default_ticket_type->getQuantitySold();
+        $initial_order_count = self::$summit->getOrders()->count();
+        $buyer_email = sprintf('not-a-speaker-%s@test.com', uniqid());
+
+        $payload = [
+            "owner_email" => $buyer_email,
+            "owner_first_name" => "Not",
+            "owner_last_name" => "Speaker",
+            "owner_company" => "Pumant",
+            "tickets" => [
+                ["type_id" => $ticket_type_id, "promo_code" => $promo_code->getCode()],
+            ],
+        ];
+
+        try {
+            $service->reserve(null, self::$summit, $payload);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString('is not valid for', $ex->getMessage());
+        }
+
+        self::$em->clear();
+        self::$summit = self::$summit_repository->find(self::$summit->getId());
+        $this->assertEquals($initial_order_count, self::$summit->getOrders()->count());
+
+        $reFetchedTicketType = self::$em->find(SummitTicketType::class, $ticket_type_id);
+        $this->assertEquals($initial_quantity_sold, $reFetchedTicketType->getQuantitySold());
     }
 
     /**

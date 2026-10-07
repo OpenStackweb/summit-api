@@ -14,9 +14,15 @@
 
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Services\Model\AbstractTask;
+use App\Services\Model\ApplyPromoCodeTask;
 use App\Services\Model\ReserveOrderTask;
 use App\Services\Model\Saga;
+use App\Services\Utils\ILockManagerService;
 use libs\utils\ITransactionService;
+use models\exceptions\ValidationException;
+use models\summit\ISummitRegistrationPromoCodeRepository;
+use models\summit\SummitRegistrationPromoCode;
+use models\summit\SummitTicketType;
 use Mockery;
 use models\main\Member;
 use models\summit\ISummitRepository;
@@ -229,6 +235,194 @@ class SagaCompensationTest extends TestCase
         }
 
         $this->assertSame(['run:first', 'undo:first'], $order_of_calls);
+    }
+
+    /**
+     * Saga::run() only marks a task as ran after run() returns, so when the second
+     * promo code is rejected the saga never undoes this task. run() must release the
+     * usage it already applied for the first code and rethrow the original exception.
+     */
+    public function testApplyPromoCodeReleasesAppliedCodesWhenALaterCodeIsRejected(): void
+    {
+        $rejection = new ValidationException('code B is not valid for the buyer');
+
+        $code_a = $this->buildPromoCode(1, 'CODE_A');
+        $code_a->shouldReceive('addUsage')->once()->with('buyer@test.com', 2);
+        $code_a->shouldReceive('removeUsage')->once()->with(2, 'buyer@test.com');
+
+        $code_b = $this->buildPromoCode(2, 'CODE_B');
+        $code_b->shouldReceive('validate')->once()->andThrow($rejection);
+        $code_b->shouldReceive('addUsage')->never();
+        $code_b->shouldReceive('removeUsage')->never();
+
+        $task = $this->buildApplyPromoCodeTask(['CODE_A' => $code_a, 'CODE_B' => $code_b]);
+
+        try {
+            $task->run($this->promoCodesFormerState());
+            $this->fail('Expected the rejection of the second promo code to propagate');
+        } catch (ValidationException $ex) {
+            $this->assertSame($rejection, $ex);
+        }
+
+        // a later Saga::abort() (or any extra undo) must not release the usage twice
+        $task->undo();
+    }
+
+    public function testApplyPromoCodeDoesNotReleaseAnythingWhenTheFirstCodeIsRejected(): void
+    {
+        $rejection = new ValidationException('code A is not valid for the buyer');
+
+        $code_a = $this->buildPromoCode(1, 'CODE_A');
+        $code_a->shouldReceive('validate')->once()->andThrow($rejection);
+        $code_a->shouldReceive('addUsage')->never();
+        $code_a->shouldReceive('removeUsage')->never();
+
+        $code_b = $this->buildPromoCode(2, 'CODE_B');
+        $code_b->shouldReceive('addUsage')->never();
+        $code_b->shouldReceive('removeUsage')->never();
+
+        $task = $this->buildApplyPromoCodeTask(['CODE_A' => $code_a, 'CODE_B' => $code_b]);
+
+        try {
+            $task->run($this->promoCodesFormerState());
+            $this->fail('Expected the rejection of the first promo code to propagate');
+        } catch (ValidationException $ex) {
+            $this->assertSame($rejection, $ex);
+        }
+    }
+
+    /**
+     * A successful run leaves every usage applied; if a later saga task fails the
+     * saga undoes this one, releasing each code exactly once however often undo() runs.
+     */
+    public function testApplyPromoCodeUndoAfterSuccessfulRunReleasesEachCodeOnce(): void
+    {
+        $code_a = $this->buildPromoCode(1, 'CODE_A');
+        $code_a->shouldReceive('addUsage')->once()->with('buyer@test.com', 2);
+        $code_a->shouldReceive('removeUsage')->once()->with(2, 'buyer@test.com');
+
+        $code_b = $this->buildPromoCode(2, 'CODE_B');
+        $code_b->shouldReceive('addUsage')->once()->with('buyer@test.com', 1);
+        $code_b->shouldReceive('removeUsage')->once()->with(1, 'buyer@test.com');
+
+        $task = $this->buildApplyPromoCodeTask(['CODE_A' => $code_a, 'CODE_B' => $code_b]);
+
+        $task->run($this->promoCodesFormerState());
+        $task->undo();
+        $task->undo();
+
+        // the once() expectations above are verified on Mockery::close()
+        $this->addToAssertionCount(Mockery::getContainer()->mockery_getExpectationCount());
+    }
+
+    /**
+     * Without a successful run there is nothing to release: an undo() must never
+     * touch a usage that belongs to another order of the same buyer.
+     */
+    public function testApplyPromoCodeUndoWithoutRunReleasesNothing(): void
+    {
+        $code_a = $this->buildPromoCode(1, 'CODE_A');
+        $code_a->shouldReceive('removeUsage')->never();
+
+        $task = $this->buildApplyPromoCodeTask(['CODE_A' => $code_a]);
+        $this->setPrivate($task, 'formerState', $this->promoCodesFormerState());
+
+        $task->undo();
+
+        $this->addToAssertionCount(Mockery::getContainer()->mockery_getExpectationCount());
+    }
+
+    /**
+     * If releasing the first code fails while compensating, the caller still gets
+     * the exception that rejected the reservation, not the compensation failure.
+     */
+    public function testApplyPromoCodeFailingReleaseDoesNotMaskTheRejection(): void
+    {
+        $rejection = new ValidationException('code B is not valid for the buyer');
+
+        $code_a = $this->buildPromoCode(1, 'CODE_A');
+        $code_a->shouldReceive('addUsage')->once();
+        $code_a->shouldReceive('removeUsage')->once()->andThrow(new \RuntimeException('release failed'));
+
+        $code_b = $this->buildPromoCode(2, 'CODE_B');
+        $code_b->shouldReceive('validate')->once()->andThrow($rejection);
+
+        $task = $this->buildApplyPromoCodeTask(['CODE_A' => $code_a, 'CODE_B' => $code_b]);
+
+        try {
+            $task->run($this->promoCodesFormerState());
+            $this->fail('Expected the rejection of the second promo code to propagate');
+        } catch (ValidationException $ex) {
+            $this->assertSame($rejection, $ex);
+        }
+    }
+
+    private function promoCodesFormerState(): array
+    {
+        return [
+            'promo_codes_usage' => [
+                'CODE_A' => ['qty' => 2, 'types' => [10]],
+                'CODE_B' => ['qty' => 1, 'types' => [10]],
+            ],
+        ];
+    }
+
+    /**
+     * @return \Mockery\MockInterface|SummitRegistrationPromoCode
+     */
+    private function buildPromoCode(int $id, string $code)
+    {
+        $promo_code = Mockery::mock(SummitRegistrationPromoCode::class);
+        $promo_code->shouldReceive('getId')->andReturn($id);
+        $promo_code->shouldReceive('getCode')->andReturn($code);
+        $promo_code->shouldReceive('getSummitId')->andReturn(77);
+        $promo_code->shouldReceive('validate')->andReturnNull()->byDefault();
+        $promo_code->shouldReceive('canBeAppliedTo')->andReturn(true);
+        return $promo_code;
+    }
+
+    /**
+     * @param array<string, SummitRegistrationPromoCode> $promo_codes by code value
+     */
+    private function buildApplyPromoCodeTask(array $promo_codes): ApplyPromoCodeTask
+    {
+        $ticket_type = Mockery::mock(SummitTicketType::class);
+        $ticket_type->shouldReceive('getName')->andReturn('Ticket');
+
+        $summit = Mockery::mock(Summit::class);
+        $summit->shouldReceive('getId')->andReturn(77);
+        $summit->shouldReceive('getTicketTypeById')->andReturn($ticket_type);
+
+        // run() re attaches the summit through the repository
+        $summit_repo = Mockery::mock(ISummitRepository::class);
+        $summit_repo->shouldReceive('getById')->with(77)->andReturn($summit);
+        $container = \Illuminate\Support\Facades\Facade::getFacadeApplication();
+        $container->instance(ISummitRepository::class, $summit_repo);
+
+        $promo_code_repo = Mockery::mock(ISummitRegistrationPromoCodeRepository::class);
+        $promo_code_repo->shouldReceive('getByValueExclusiveLock')
+            ->andReturnUsing(function ($summit, $code) use ($promo_codes) {
+                return $promo_codes[$code] ?? null;
+            });
+
+        $tx_service = Mockery::mock(ITransactionService::class);
+        $tx_service->shouldReceive('transaction')->andReturnUsing(function ($fn) {
+            return $fn();
+        });
+
+        $lock_service = Mockery::mock(ILockManagerService::class);
+        $lock_service->shouldReceive('lock')->andReturnUsing(function ($name, $fn) {
+            return $fn();
+        });
+
+        return new ApplyPromoCodeTask(
+            $summit,
+            ['owner_email' => 'buyer@test.com', 'owner_company' => 'Acme'],
+            null,
+            $promo_code_repo,
+            $tx_service,
+            $lock_service
+        );
     }
 
     /**

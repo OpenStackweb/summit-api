@@ -14,6 +14,7 @@
 
 use App\Jobs\Emails\Registration\Reminders\SummitOrderReminderEmail;
 use App\Jobs\Emails\Registration\Reminders\SummitTicketReminderEmail;
+use App\Jobs\Emails\RevocationTicketEmail;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IGroup;
@@ -1558,6 +1559,71 @@ CSV;
         $this->assertEquals($old_type_id, $ticket->getTicketTypeId());
         $this->assertEquals(1, EntityManager::getRepository(SummitTicketType::class)->find($old_type_id)->getQuantitySold());
         $this->assertEquals(1, EntityManager::getRepository(SummitTicketType::class)->find($new_type_id)->getQuantitySold());
+    }
+
+    /**
+     * The revocation email is deduplicated per attendee email with a 10 minutes cache key
+     * (SummitAttendee::dispatchRevocationTicketEmail); the test cache driver is not reset between
+     * tests, so the key must be cleared for the Queue assertions below to be meaningful.
+     */
+    private function forgetRevocationEmailDedup(string $email): void
+    {
+        Cache::forget(sprintf("%s_revoke_ticket", md5($email)));
+    }
+
+    public function testUpdateTicketReassignmentToSoldOutTypeDoesNotSendRevocationEmail()
+    {
+        Queue::fake();
+        $old_owner_email = self::$defaultMember->getEmail();
+        $new_owner_email = self::$member2->getEmail();
+        $this->forgetRevocationEmailDedup($old_owner_email);
+        list($summit_id, $order_id, $ticket_id, $old_type_id, $new_type_id) = $this->prepareTicketTypeChange(1, 1);
+
+        $summit = EntityManager::getRepository(Summit::class)->find($summit_id);
+        try {
+            App::make(ISummitOrderService::class)->updateTicket($summit, $order_id, $ticket_id, [
+                'attendee_email' => $new_owner_email,
+                'ticket_type_id' => $new_type_id,
+            ]);
+            $this->fail('Moving a ticket to a sold out ticket type should be rejected.');
+        } catch (ValidationException $ex) {
+            // expected
+        }
+
+        // the whole update rolled back: the former owner must not be told the ticket was revoked
+        Queue::assertNotPushed(RevocationTicketEmail::class);
+
+        EntityManager::clear();
+        $ticket = EntityManager::getRepository(SummitAttendeeTicket::class)->find($ticket_id);
+        $this->assertEquals($old_type_id, $ticket->getTicketTypeId());
+        $this->assertEquals($old_owner_email, $ticket->getOwner()->getEmail());
+    }
+
+    public function testUpdateTicketReassignmentWithTypeChangeSendsRevocationEmailAfterCommit()
+    {
+        Queue::fake();
+        $old_owner_email = self::$defaultMember->getEmail();
+        $new_owner_email = self::$member2->getEmail();
+        $this->forgetRevocationEmailDedup($old_owner_email);
+        list($summit_id, $order_id, $ticket_id, , $new_type_id) = $this->prepareTicketTypeChange();
+
+        $summit = EntityManager::getRepository(Summit::class)->find($summit_id);
+        App::make(ISummitOrderService::class)->updateTicket($summit, $order_id, $ticket_id, [
+            'attendee_email' => $new_owner_email,
+            'ticket_type_id' => $new_type_id,
+        ]);
+
+        // the email must go to the former owner even though, once committed, the ticket belongs to the new one
+        Queue::assertPushed(RevocationTicketEmail::class, function (RevocationTicketEmail $job) use ($old_owner_email) {
+            $prop = new \ReflectionProperty(\App\Jobs\Emails\AbstractEmailJob::class, 'to_email');
+            $prop->setAccessible(true);
+            return $prop->getValue($job) === $old_owner_email;
+        });
+
+        EntityManager::clear();
+        $ticket = EntityManager::getRepository(SummitAttendeeTicket::class)->find($ticket_id);
+        $this->assertEquals($new_type_id, $ticket->getTicketTypeId());
+        $this->assertEquals($new_owner_email, $ticket->getOwner()->getEmail());
     }
 
     public function testAddTicketsCommitsAcrossNestedTransaction()

@@ -3953,7 +3953,7 @@ final class SummitOrderService
      */
     public function updateTicket(Summit $summit, int $order_id, int $ticket_id, array $payload): SummitAttendeeTicket
     {
-        list($ticket, $shouldSendInvitationEmail) = $this->tx_service->transaction(function () use ($summit, $order_id, $ticket_id, $payload) {
+        list($ticket, $shouldSendInvitationEmail, $revoked_owner) = $this->tx_service->transaction(function () use ($summit, $order_id, $ticket_id, $payload) {
             // lock and get the order
             $order = $this->order_repository->getByIdExclusiveLock($order_id);
 
@@ -4026,9 +4026,12 @@ final class SummitOrderService
             }
 
             $shouldSendInvitationEmail = false;
+            $revoked_owner = null;
             // we are doing a reassignment from owner to new owner
             if (!is_null($owner) && !is_null($new_owner) && $owner->getId() !== $new_owner->getId()) {
-                $owner->sendRevocationTicketEmail($ticket);
+                // the queue is not transactional: the revocation email is enqueued after commit (see below),
+                // so a rollback further down (e.g. sold out ticket type) does not notify the former owner
+                $revoked_owner = $owner;
                 $owner->removeTicket($ticket);
                 $owner->updateStatus();
             }
@@ -4097,8 +4100,12 @@ final class SummitOrderService
                 $ticket->setBadge($badge);
             }
 
-            return [$ticket, $shouldSendInvitationEmail];
+            return [$ticket, $shouldSendInvitationEmail, $revoked_owner];
         });
+
+        // the reassignment is committed: now it is safe to tell the former owner
+        if (!is_null($revoked_owner))
+            $revoked_owner->dispatchRevocationTicketEmail($ticket);
 
         if ($shouldSendInvitationEmail && $summit->isRegistrationSendTicketEmailAutomatically() && $ticket->hasOwner())
             $ticket->getOwner()->sendInvitationEmail($ticket);

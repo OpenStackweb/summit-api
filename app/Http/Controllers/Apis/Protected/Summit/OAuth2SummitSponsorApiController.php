@@ -3684,8 +3684,8 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}",
-        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
-        summary: 'Delete Sponsor Extra Question',
+        summary: 'Delete Sponsor Extra Question (always refused)',
+        description: "Always refused with 412: devices may hold answers for this question that the server has not seen yet. Edit the wording or turn off Mandatory instead. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
         operationId: 'deleteSponsorExtraQuestion',
         tags: ['Sponsors'],
         x: [
@@ -3730,8 +3730,8 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_NO_CONTENT,
-                description: 'Extra question deleted successfully'
+                response: Response::HTTP_PRECONDITION_FAILED,
+                description: "Validation Error - always returned: questions can't be deleted once created, because devices may already be using them"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
@@ -3979,8 +3979,8 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     use ParametrizedDeleteEntity;
     #[OA\Delete(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}",
-        description: "required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
-        summary: 'Delete Extra Question Value',
+        description: "Always refused with 412: devices may hold answers for this option that the server has not seen yet. Edit the wording instead. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
+        summary: 'Delete Extra Question Value (always refused)',
         operationId: 'deleteSponsorExtraQuestionValue',
         tags: ['Sponsors'],
         x: [
@@ -4032,8 +4032,8 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         ],
         responses: [
             new OA\Response(
-                response: Response::HTTP_NO_CONTENT,
-                description: 'Question value deleted successfully'
+                response: Response::HTTP_PRECONDITION_FAILED,
+                description: "Validation Error - always returned: answer options can't be deleted once created, because devices may already be using them"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),

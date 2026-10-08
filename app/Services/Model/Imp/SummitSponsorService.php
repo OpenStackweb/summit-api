@@ -1084,18 +1084,10 @@ final class SummitSponsorService
      */
     public function deleteSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id): void
     {
-        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id) {
-            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
-            if (is_null($summit_sponsor))
-                throw new EntityNotFoundException("Sponsor not found.");
-
-            $extra_question = $summit_sponsor->getExtraQuestionById($extra_question_id);
-
-            if(!$extra_question instanceof SummitSponsorExtraQuestionType)
-                throw new EntityNotFoundException("Sponsor extra question not found.");
-
-            $summit_sponsor->removeExtraQuestion($extra_question);
-        });
+        // Always refused: a device may hold answers for this question that the server has not seen yet.
+        throw new ValidationException(
+            "Questions can't be deleted once created, because devices may already be using them. You can edit the wording, turn off Mandatory, or contact support."
+        );
     }
 
     /**
@@ -1160,19 +1152,10 @@ final class SummitSponsorService
      */
     public function deleteExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id): void
     {
-        $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id) {
-            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
-            if (is_null($summit_sponsor))
-                throw new EntityNotFoundException("Sponsor not found.");
-
-            $extra_question = $summit_sponsor->getExtraQuestionById($question_id);
-
-            if(!$extra_question instanceof SummitSponsorExtraQuestionType)
-                throw new EntityNotFoundException("Sponsor extra question not found.");
-
-
-            parent::_deleteExtraQuestionValue($extra_question, $value_id);
-        });
+        // Always refused: a device may hold answers for this option that the server has not seen yet.
+        throw new ValidationException(
+            "Answer options can't be deleted once created, because devices may already be using them. You can edit the wording, or contact support."
+        );
     }
 
     /**

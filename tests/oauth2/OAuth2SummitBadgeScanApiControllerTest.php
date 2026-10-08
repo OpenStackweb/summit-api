@@ -12,6 +12,8 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Repositories\ISponsorRepository;
@@ -1492,5 +1494,159 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertEquals($winner_id, $scan->getId());
         $this->assertEquals('hot lead, follow up', $this->reloadScan($winner_id)->getNotes(),
             "notes of the request that lost the race must be persisted on the winning scan");
+    }
+
+    /**
+     * "Mandatory" is an instruction to the device, not a server rule: sets the
+     * sponsor's first two questions as mandatory and returns their ids.
+     * @return array
+     */
+    private function makeFirstTwoSponsorQuestionsMandatory(): array
+    {
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $ids = [];
+        foreach ([0, 1] as $idx) {
+            $question = $sponsor->getExtraQuestions()[$idx];
+            if (!$question instanceof SummitSponsorExtraQuestionType) self::fail();
+            $question->setMandatory(true);
+            $ids[] = $question->getId();
+        }
+        self::$em->persist($sponsor);
+        self::$em->flush();
+        return $ids;
+    }
+
+    /**
+     * A scan captured offline and answered before reconnecting reaches the
+     * server as a first POST that carries answers. A mandatory question left
+     * unanswered must neither reject it nor roll the scan back.
+     */
+    public function testAddBadgeScanWithMissingMandatoryAnswerIsSavedWithItsOtherAnswers(){
+        [$answered_id, ] = $this->makeFirstTwoSponsorQuestionsMandatory();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'extra_questions' => [
+                ['question_id' => $answered_id, 'answer' => 'None'],
+            ],
+        ]));
+
+        $answers = $this->reloadScan($scan->getId())->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals($answered_id, $answers->first()->getQuestionId());
+    }
+
+    public function testAddBadgeScanRetryWithMissingMandatoryAnswerIsSaved(){
+        [$answered_id, ] = $this->makeFirstTwoSponsorQuestionsMandatory();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $first = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+        $first_id = $first->getId();
+
+        $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'extra_questions' => [
+                ['question_id' => $answered_id, 'answer' => 'None'],
+            ],
+        ]));
+
+        $answers = $this->reloadScan($first_id)->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals($answered_id, $answers->first()->getQuestionId());
+    }
+
+    public function testUpdateBadgeScanWithMissingMandatoryAnswerIsSaved(){
+        [$answered_id, ] = $this->makeFirstTwoSponsorQuestionsMandatory();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+        $scan_id = $scan->getId();
+
+        $service->updateBadgeScan(self::$summit, self::$member, $scan_id, [
+            'extra_questions' => [
+                ['question_id' => $answered_id, 'answer' => 'None'],
+            ],
+        ]);
+
+        $answers = $this->reloadScan($scan_id)->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals($answered_id, $answers->first()->getQuestionId());
+    }
+
+    /**
+     * The sponsor switches the first question (Text) to a mandatory ComboBox
+     * while devices still hold free-text answers for it. Returns its id.
+     * @return int
+     */
+    private function switchFirstSponsorQuestionToMandatoryComboBox(): int
+    {
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $question = $sponsor->getExtraQuestions()[0];
+        if (!$question instanceof SummitSponsorExtraQuestionType) self::fail();
+        $question->setType(ExtraQuestionTypeConstants::ComboBoxQuestionType);
+        $question->setMandatory(true);
+        $value = new ExtraQuestionTypeValue();
+        $value->setLabel('Yes');
+        $value->setValue('Yes');
+        $question->addValue($value);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+        return $question->getId();
+    }
+
+    /**
+     * A free-text answer ("Yes") matches no option id of the ComboBox, which
+     * makes the question validation throw; it must neither reject the upload
+     * nor roll the scan back.
+     */
+    public function testAddBadgeScanWithAnswerNotMatchingTheQuestionOptionsIsSaved(){
+        $question_id = $this->switchFirstSponsorQuestionToMandatoryComboBox();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'extra_questions' => [
+                ['question_id' => $question_id, 'answer' => 'Yes'],
+            ],
+        ]));
+
+        $answers = $this->reloadScan($scan->getId())->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals($question_id, $answers->first()->getQuestionId());
+        $this->assertEquals('Yes', $answers->first()->getValue());
+    }
+
+    public function testAddBadgeScanRetryWithAnswerNotMatchingTheQuestionOptionsIsSaved(){
+        $question_id = $this->switchFirstSponsorQuestionToMandatoryComboBox();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $first = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+        $first_id = $first->getId();
+
+        $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'extra_questions' => [
+                ['question_id' => $question_id, 'answer' => 'Yes'],
+            ],
+        ]));
+
+        $answers = $this->reloadScan($first_id)->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals('Yes', $answers->first()->getValue());
+    }
+
+    public function testUpdateBadgeScanWithAnswerNotMatchingTheQuestionOptionsIsSaved(){
+        $question_id = $this->switchFirstSponsorQuestionToMandatoryComboBox();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+        $scan_id = $scan->getId();
+
+        $service->updateBadgeScan(self::$summit, self::$member, $scan_id, [
+            'extra_questions' => [
+                ['question_id' => $question_id, 'answer' => 'Yes'],
+            ],
+        ]);
+
+        $answers = $this->reloadScan($scan_id)->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals('Yes', $answers->first()->getValue());
     }
 }

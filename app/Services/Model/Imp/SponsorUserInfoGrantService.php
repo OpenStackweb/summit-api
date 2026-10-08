@@ -408,12 +408,8 @@ final class SponsorUserInfoGrantService
                     // extra questions
                     $extra_questions = $data['extra_questions'] ?? [];
 
-                    if (count($extra_questions)) {
-                        $res = $scan->hadCompletedExtraQuestions($extra_questions);
-                        if (!$res) {
-                            throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
-                        }
-                    }
+                    if (count($extra_questions))
+                        $this->applyExtraQuestionAnswers($scan, $extra_questions, 'addBadgeScan');
 
                     return $scan;
                 });
@@ -477,7 +473,6 @@ final class SponsorUserInfoGrantService
      * @param SponsorBadgeScan $existing
      * @param array $data
      * @return SponsorBadgeScan
-     * @throws ValidationException
      */
     private function mergeRetryIntoExistingScan(SponsorBadgeScan $existing, array $data): SponsorBadgeScan
     {
@@ -486,10 +481,80 @@ final class SponsorUserInfoGrantService
             $existing->setNotes($notes);
 
         $extra_questions = $data['extra_questions'] ?? [];
-        if (count($extra_questions) && !$existing->hadCompletedExtraQuestions($extra_questions))
-            throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+        if (count($extra_questions))
+            $this->applyExtraQuestionAnswers($existing, $extra_questions, 'mergeRetryIntoExistingScan');
 
         return $existing;
+    }
+
+    /**
+     * "Mandatory" and the allowed options are instructions to the device, not
+     * server rules: a device can hold answers captured under a question setup
+     * the server no longer has (e.g. a mandatory Text question switched to a
+     * ComboBox, so a free-text answer matches no option). Save whatever answers
+     * were sent and never reject the upload or roll the scan back over them.
+     *
+     * hadCompletedExtraQuestions adds every answer before validating them and
+     * nothing is flushed yet, so catching its ValidationException keeps both
+     * the scan and the answers.
+     * @param SponsorBadgeScan $scan
+     * @param array $extra_questions
+     * @param string $caller
+     */
+    private function applyExtraQuestionAnswers(SponsorBadgeScan $scan, array $extra_questions, string $caller): void
+    {
+        try {
+            if (!$scan->hadCompletedExtraQuestions($extra_questions))
+                Log::warning(
+                    sprintf(
+                        "SponsorUserInfoGrantService::%s badge scan was saved with missing mandatory answers - %s",
+                        $caller,
+                        $this->describeScanForLog($scan)
+                    )
+                );
+        }
+        catch (ValidationException $ex) {
+            Log::warning(
+                sprintf(
+                    "SponsorUserInfoGrantService::%s badge scan was saved with answers that do not match the question setup (%s) - %s",
+                    $caller,
+                    $ex->getMessage(),
+                    $this->describeScanForLog($scan)
+                )
+            );
+        }
+    }
+
+    /**
+     * Ids support needs to find a scan saved with incomplete answers. A new
+     * scan has no id until the transaction flushes (logged as 0); sponsor,
+     * badge, member and scan date identify it.
+     * @param SponsorBadgeScan $scan
+     * @return string
+     */
+    private function describeScanForLog(SponsorBadgeScan $scan): string
+    {
+        $answered = [];
+        foreach ($scan->getExtraQuestionAnswers() as $answer) {
+            if ($answer->hasValue())
+                $answered[$answer->getQuestionId()] = true;
+        }
+
+        $unanswered_mandatory = [];
+        foreach ($scan->getExtraQuestions() as $question) {
+            if ($question->isMandatory() && !isset($answered[$question->getId()]))
+                $unanswered_mandatory[] = $question->getId();
+        }
+
+        return sprintf(
+            "scan %s sponsor %s badge %s member %s scan_date %s unanswered mandatory questions [%s]",
+            $scan->getId(),
+            $scan->getSponsor()->getId(),
+            $scan->getBadge()->getId(),
+            $scan->getUser()->getId(),
+            $scan->getScanDate()->getTimestamp(),
+            implode(",", $unanswered_mandatory)
+        );
     }
 
     /**
@@ -521,12 +586,8 @@ final class SponsorUserInfoGrantService
             // extra questions
             $extra_questions = $payload['extra_questions'] ?? [];
 
-            if (count($extra_questions)) {
-                $res = $scan->hadCompletedExtraQuestions($extra_questions);
-                if (!$res) {
-                    throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
-                }
-            }
+            if (count($extra_questions))
+                $this->applyExtraQuestionAnswers($scan, $extra_questions, 'updateBadgeScan');
 
             return $scan;
         });

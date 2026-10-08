@@ -36536,6 +36536,9 @@
                     },
                     "404": {
                         "description": "Summit or order not found"
+                    },
+                    "412": {
+                        "description": "Validation Error (order already paid, or payment configuration not set)"
                     }
                 },
                 "security": [

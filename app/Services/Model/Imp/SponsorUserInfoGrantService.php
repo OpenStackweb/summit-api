@@ -505,11 +505,56 @@ final class SponsorUserInfoGrantService
     {
         try {
             if (!$scan->hadCompletedExtraQuestions($extra_questions))
-                Log::warning(sprintf("SponsorUserInfoGrantService::%s badge scan was saved with missing mandatory answers.", $caller));
+                Log::warning(
+                    sprintf(
+                        "SponsorUserInfoGrantService::%s badge scan was saved with missing mandatory answers - %s",
+                        $caller,
+                        $this->describeScanForLog($scan)
+                    )
+                );
         }
         catch (ValidationException $ex) {
-            Log::warning(sprintf("SponsorUserInfoGrantService::%s badge scan was saved with answers that do not match the question setup: %s", $caller, $ex->getMessage()));
+            Log::warning(
+                sprintf(
+                    "SponsorUserInfoGrantService::%s badge scan was saved with answers that do not match the question setup (%s) - %s",
+                    $caller,
+                    $ex->getMessage(),
+                    $this->describeScanForLog($scan)
+                )
+            );
         }
+    }
+
+    /**
+     * Ids support needs to find a scan saved with incomplete answers. A new
+     * scan has no id until the transaction flushes (logged as 0); sponsor,
+     * badge, member and scan date identify it.
+     * @param SponsorBadgeScan $scan
+     * @return string
+     */
+    private function describeScanForLog(SponsorBadgeScan $scan): string
+    {
+        $answered = [];
+        foreach ($scan->getExtraQuestionAnswers() as $answer) {
+            if ($answer->hasValue())
+                $answered[$answer->getQuestionId()] = true;
+        }
+
+        $unanswered_mandatory = [];
+        foreach ($scan->getExtraQuestions() as $question) {
+            if ($question->isMandatory() && !isset($answered[$question->getId()]))
+                $unanswered_mandatory[] = $question->getId();
+        }
+
+        return sprintf(
+            "scan %s sponsor %s badge %s member %s scan_date %s unanswered mandatory questions [%s]",
+            $scan->getId(),
+            $scan->getSponsor()->getId(),
+            $scan->getBadge()->getId(),
+            $scan->getUser()->getId(),
+            $scan->getScanDate()->getTimestamp(),
+            implode(",", $unanswered_mandatory)
+        );
     }
 
     /**

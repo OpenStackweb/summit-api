@@ -30,10 +30,14 @@ use App\Services\Model\IMemberService;
 use App\Services\Model\ISummitOrderService;
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Model\SummitOrderService;
+use App\Services\Apis\CartAlreadyPaidException;
+use App\Services\Apis\IPaymentGatewayAPI;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use libs\utils\ITransactionService;
@@ -45,11 +49,13 @@ use models\main\IMemberRepository;
 use models\main\ITagRepository;
 use App\Models\Foundation\Summit\PromoCodes\PromoCodesConstants;
 use models\summit\SpeakersRegistrationDiscountCode;
+use models\summit\IOrderConstants;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\ISummitRegistrationPromoCodeRepository;
 use models\summit\ISummitRepository;
 use models\summit\ISummitTicketTypeRepository;
+use models\summit\PaymentGatewayProfile;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
@@ -2064,5 +2070,465 @@ CSV;
         $this->assertNotNull($reFetchedFree);
         $this->assertEquals(0, $reFetchedRefundable->getRefundedRequests()->count());
         $this->assertEquals(0, $reFetchedFree->getRefundedRequests()->count());
+    }
+
+    // ---------------------------------------------------------------------
+    // Slot release idempotency: a reservation slot must be released exactly
+    // once per order, only while the order holds it, and only after the
+    // payment gateway confirmed the PaymentIntent can no longer be charged.
+    // ---------------------------------------------------------------------
+
+    /**
+     * Builds the service with every real dependency except the payment gateway.
+     * The test summit has no active payment profile, so Summit::getPaymentGateWayPerApp
+     * falls back to the default-profile strategy, which is where the mock is injected.
+     */
+    private function buildOrderServiceWithGateway(?IPaymentGatewayAPI $gateway): SummitOrderService
+    {
+        $strategy = Mockery::mock(IBuildDefaultPaymentGatewayProfileStrategy::class);
+        if (is_null($gateway)) {
+            $strategy->shouldReceive('build')->andReturnNull();
+        } else {
+            $profile = Mockery::mock(PaymentGatewayProfile::class);
+            $profile->shouldReceive('buildPaymentGatewayApi')->andReturn($gateway);
+            $strategy->shouldReceive('build')->andReturn($profile);
+        }
+
+        return new SummitOrderService(
+            App::make(ISummitTicketTypeRepository::class),
+            App::make(IMemberRepository::class),
+            App::make(ISummitRegistrationPromoCodeRepository::class),
+            App::make(\models\summit\ISummitPromoCodeMemberReservationRepository::class),
+            App::make(ISummitAttendeeRepository::class),
+            App::make(ISummitOrderRepository::class),
+            App::make(ISummitAttendeeTicketRepository::class),
+            App::make(ISummitAttendeeBadgeRepository::class),
+            App::make(ISummitRepository::class),
+            App::make(ISummitAttendeeBadgePrintRuleRepository::class),
+            App::make(IMemberService::class),
+            $strategy,
+            Mockery::mock(IFileUploadStrategy::class),
+            Mockery::mock(IFileDownloadStrategy::class),
+            App::make(ICompanyRepository::class),
+            App::make(ITagRepository::class),
+            App::make(ISummitRefundRequestRepository::class),
+            App::make(ICompanyService::class),
+            App::make(ITicketFinderStrategyFactory::class),
+            App::make(ITransactionService::class),
+            App::make(ILockManagerService::class)
+        );
+    }
+
+    /**
+     * A gateway mock with Stripe-like status semantics. Tests add the
+     * getCartStatus / abandonCart / isSuccessFullPayment expectations they need.
+     */
+    private function mockGateway(): Mockery\MockInterface
+    {
+        $gateway = Mockery::mock(IPaymentGatewayAPI::class);
+        $gateway->shouldReceive('canAbandon')->andReturnUsing(
+            fn(string $status) => in_array($status, ['requires_payment_method', 'requires_confirmation', 'requires_action'])
+        );
+        $gateway->shouldReceive('isSucceeded')->andReturnUsing(fn(string $status) => $status === 'succeeded');
+        $gateway->shouldReceive('isDeclined')->andReturnUsing(fn(string $status) => $status === 'canceled');
+        $gateway->shouldReceive('getPaymentDetailsInfo')->andReturn([]);
+        return $gateway;
+    }
+
+    private function createCappedTicketType(int $cap): SummitTicketType
+    {
+        $type = new SummitTicketType();
+        $type->setName('SLOT RELEASE TICKET TYPE ' . uniqid());
+        $type->setCost(100);
+        $type->setCurrency('USD');
+        $type->setQuantity2Sell($cap);
+        $type->setAudience(SummitTicketType::Audience_All);
+        self::$summit->addTicketType($type);
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+        return $type;
+    }
+
+    /**
+     * An order holding exactly one slot of $type, counted the same way
+     * ReserveTicketsTask counts it (SummitTicketType::sell).
+     */
+    private function createOrderHoldingSlot(SummitTicketType $type, ?string $cart_id): SummitOrder
+    {
+        $order = new SummitOrder();
+        $order->setSummit(self::$summit);
+        $order->setOwner(self::$defaultMember);
+        $order->generateNumber();
+        $order->generateHash();
+        if (!is_null($cart_id)) {
+            $order->setPaymentGatewayCartId($cart_id);
+        }
+
+        $ticket = new SummitAttendeeTicket();
+        $ticket->setTicketType($type);
+        $order->addTicket($ticket);
+        $ticket->activate();
+        $ticket->generateNumber();
+        $ticket->generateQRCode();
+
+        $type->sell(1);
+        self::$summit->addOrder($order);
+        self::$em->persist($order);
+        self::$em->flush();
+        return $order;
+    }
+
+    private function quantitySoldFromDb(int $type_id): int
+    {
+        self::$em->clear();
+        return self::$em->find(SummitTicketType::class, $type_id)->getQuantitySold();
+    }
+
+    private function orderFromDb(int $order_id): SummitOrder
+    {
+        self::$em->clear();
+        return self::$em->find(SummitOrder::class, $order_id);
+    }
+
+    /**
+     * Simulates another PHP process cancelling $order and releasing its slot while
+     * this process still holds the stale order entity in its identity map (what the
+     * widget DELETE does to an order the cron loop listed a moment earlier). Only the
+     * order stays stale: the ticket type is refreshed so the DB and memory counters
+     * agree and a phantom release is observable as an extra decrement.
+     */
+    private function cancelOrderFromAnotherProcess(SummitOrder $order, SummitTicketType $type): void
+    {
+        DB::update('UPDATE SummitOrder SET Status = ? WHERE ID = ?', [IOrderConstants::CancelledStatus, $order->getId()]);
+        DB::update('UPDATE SummitAttendeeTicket SET Status = ? WHERE OrderID = ?', [IOrderConstants::CancelledStatus, $order->getId()]);
+        DB::update('UPDATE SummitTicketType SET QuantitySold = QuantitySold - 1 WHERE ID = ?', [$type->getId()]);
+        self::$em->refresh($type);
+    }
+
+    public function test_cancel_twice_restores_once()
+    {
+        $type = $this->createCappedTicketType(10);
+        $order_a = $this->createOrderHoldingSlot($type, null);
+        $this->createOrderHoldingSlot($type, null);
+        $this->assertEquals(2, $type->getQuantitySold());
+        $service = $this->buildOrderServiceWithGateway($this->mockGateway());
+
+        $service->cancel(self::$summit, $order_a->getHash());
+        $service->cancel(self::$summit, $order_a->getHash());
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'A second cancel of the same order must not release a second slot');
+    }
+
+    public function test_cancel_on_paid_order_throws_and_keeps_quantity_sold()
+    {
+        $type = $this->createCappedTicketType(10);
+        $paid_order = $this->createOrderHoldingSlot($type, 'pi_paid_' . uniqid());
+        $paid_order->setPaid();
+        self::$em->flush();
+        $this->createOrderHoldingSlot($type, null);
+        $service = $this->buildOrderServiceWithGateway($this->mockGateway());
+
+        try {
+            $service->cancel(self::$summit, $paid_order->getHash());
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->addToAssertionCount(1);
+        }
+
+        $this->assertEquals(2, $this->quantitySoldFromDb($type->getId()), 'Cancelling a paid order must not release its slot');
+        $this->assertEquals(IOrderConstants::PaidStatus, $this->orderFromDb($paid_order->getId())->getStatus());
+    }
+
+    public function test_cancel_abandonable_intent_abandons_then_restores()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_abandon_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $abandoned = false;
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('getCartStatus')->with($cart_id)->andReturn('requires_payment_method');
+        $gateway->shouldReceive('abandonCart')->with($cart_id)->andReturnUsing(function () use (&$abandoned) {
+            $abandoned = true;
+        });
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->cancel(self::$summit, $order->getHash());
+
+        $this->assertTrue($abandoned, 'cancel() must cancel the PaymentIntent before releasing the slot');
+        $this->assertEquals(0, $this->quantitySoldFromDb($type->getId()));
+        $this->assertEquals(IOrderConstants::CancelledStatus, $this->orderFromDb($order->getId())->getStatus());
+    }
+
+    /**
+     * Anti-regression (passes before the fix): a PaymentIntent that is already
+     * canceled still holds the slot on our side, so cancel() releases it without
+     * trying to abandon the intent again.
+     */
+    public function test_cancel_canceled_intent_restores_without_abandon()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_canceled_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('getCartStatus')->with($cart_id)->andReturn('canceled');
+        $gateway->shouldReceive('abandonCart')->never();
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->cancel(self::$summit, $order->getHash());
+
+        $this->assertEquals(0, $this->quantitySoldFromDb($type->getId()));
+        $this->assertEquals(IOrderConstants::CancelledStatus, $this->orderFromDb($order->getId())->getStatus());
+    }
+
+    public function test_cancel_processing_intent_leaves_order_unchanged()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_processing_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('getCartStatus')->with($cart_id)->andReturn('processing');
+        $gateway->shouldReceive('abandonCart')->never();
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->cancel(self::$summit, $order->getHash());
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'A payment in flight must keep its slot');
+        $this->assertEquals(IOrderConstants::ReservedStatus, $this->orderFromDb($order->getId())->getStatus());
+    }
+
+    public function test_cancel_unreadable_status_leaves_order_unchanged()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_unreadable_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('getCartStatus')->with($cart_id)->andReturnNull();
+        $gateway->shouldReceive('abandonCart')->never();
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->cancel(self::$summit, $order->getHash());
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'An unreadable gateway status must never release a slot');
+        $this->assertEquals(IOrderConstants::ReservedStatus, $this->orderFromDb($order->getId())->getStatus());
+    }
+
+    public function test_cancel_abandon_failure_leaves_order_unchanged()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_abandon_fail_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('getCartStatus')->with($cart_id)->andReturn('requires_payment_method');
+        $gateway->shouldReceive('abandonCart')->with($cart_id)->andThrow(new \RuntimeException('gateway unavailable'));
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->cancel(self::$summit, $order->getHash());
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'A failed abandon must not release the slot');
+        $this->assertEquals(IOrderConstants::ReservedStatus, $this->orderFromDb($order->getId())->getStatus());
+    }
+
+    public function test_cancel_abandon_already_paid_marks_order_paid_without_restore()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_race_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $gateway = $this->mockGateway();
+        // the intent was paid between the status read and the cancel attempt
+        $gateway->shouldReceive('getCartStatus')->with($cart_id)->andReturn('requires_payment_method', 'succeeded');
+        $gateway->shouldReceive('abandonCart')->with($cart_id)->andThrow(new CartAlreadyPaidException('already paid'));
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->cancel(self::$summit, $order->getHash());
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'A paid intent keeps its slot');
+        $this->assertEquals(IOrderConstants::PaidStatus, $this->orderFromDb($order->getId())->getStatus());
+    }
+
+    public function test_cancel_without_gateway_configured_throws_and_keeps_quantity_sold()
+    {
+        $type = $this->createCappedTicketType(10);
+        $order = $this->createOrderHoldingSlot($type, 'pi_no_gateway_' . uniqid());
+        $service = $this->buildOrderServiceWithGateway(null);
+
+        try {
+            $service->cancel(self::$summit, $order->getHash());
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->addToAssertionCount(1);
+        }
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()));
+        $this->assertEquals(IOrderConstants::ReservedStatus, $this->orderFromDb($order->getId())->getStatus());
+    }
+
+    public function test_payment_failed_on_cancelled_order_keeps_cancelled()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_failed_late_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $order->setCancelled();
+        $type->restore(1);
+        self::$em->flush();
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('isSuccessFullPayment')->andReturn(false);
+        $gateway->shouldReceive('getPaymentError')->andReturn('Your card was declined.');
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->processPayment(['cart_id' => $cart_id], self::$summit);
+
+        $db_order = $this->orderFromDb($order->getId());
+        $this->assertEquals(IOrderConstants::CancelledStatus, $db_order->getStatus(), 'A late payment_failed must not move a cancelled order back to Error');
+        $this->assertEquals('Your card was declined.', $db_order->getLastError());
+    }
+
+    /**
+     * Anti-regression (passes before the fix): Error is the only route by which a
+     * failed order reaches the revoke cron, so Confirmed -> Error must stay open.
+     */
+    public function test_payment_failed_on_confirmed_order_moves_to_error()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_failed_confirmed_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $order->setConfirmed();
+        self::$em->flush();
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('isSuccessFullPayment')->andReturn(false);
+        $gateway->shouldReceive('getPaymentError')->andReturn('Your card was declined.');
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->processPayment(['cart_id' => $cart_id], self::$summit);
+
+        $this->assertEquals(IOrderConstants::ErrorStatus, $this->orderFromDb($order->getId())->getStatus());
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'An Error order still holds its slot until the cron releases it');
+    }
+
+    public function test_succeeded_on_cancelled_order_keeps_cancelled_and_logs_error()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_succeeded_late_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $order->setCancelled();
+        $type->restore(1);
+        self::$em->flush();
+        $this->createOrderHoldingSlot($type, null);
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('isSuccessFullPayment')->andReturn(true);
+        $service = $this->buildOrderServiceWithGateway($gateway);
+        Log::spy();
+
+        $service->processPayment(['cart_id' => $cart_id], self::$summit);
+
+        $this->assertEquals(IOrderConstants::CancelledStatus, $this->orderFromDb($order->getId())->getStatus(), 'A cancelled order must never be revived by a late succeeded webhook');
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()));
+        Log::shouldHaveReceived('error')->withArgs(function ($message) use ($order, $cart_id) {
+            return is_string($message)
+                && str_contains($message, (string)$order->getId())
+                && str_contains($message, $cart_id);
+        })->once();
+    }
+
+    public function test_revoke_after_widget_cancel_does_not_restore()
+    {
+        $type = $this->createCappedTicketType(10);
+        $order_a = $this->createOrderHoldingSlot($type, 'pi_revoke_a_' . uniqid());
+        $this->createOrderHoldingSlot($type, 'pi_revoke_b_' . uniqid());
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('getCartStatus')->andReturn('requires_payment_method');
+        $gateway->shouldReceive('abandonCart')->andReturnNull();
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        // the widget cancels A after the cron listed it but before its turn in the loop
+        $this->cancelOrderFromAnotherProcess($order_a, $type);
+        $service->processOrder2Revoke($order_a->getId());
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'The cron must not release a slot the widget already released');
+    }
+
+    public function test_revoke_error_order_with_canceled_intent_moves_to_cancelled()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_zombie_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $this->createOrderHoldingSlot($type, null);
+        // the incident shape: tickets Cancelled and slot released, order flipped back to Error
+        $order->setCancelled();
+        $type->restore(1);
+        self::$em->flush();
+        DB::update('UPDATE SummitOrder SET Status = ? WHERE ID = ?', [IOrderConstants::ErrorStatus, $order->getId()]);
+        self::$em->refresh($order);
+        $this->assertEquals(IOrderConstants::ErrorStatus, $order->getStatus());
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('getCartStatus')->with($cart_id)->andReturn('canceled');
+        $gateway->shouldReceive('abandonCart')->never();
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->processOrder2Revoke($order->getId());
+
+        $this->assertEquals(IOrderConstants::CancelledStatus, $this->orderFromDb($order->getId())->getStatus(), 'An Error order whose intent is canceled must end Cancelled, not stay Error forever');
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'Tickets already Cancelled must not be released again');
+    }
+
+    public function test_revoke_unreadable_status_skips_order()
+    {
+        $type = $this->createCappedTicketType(10);
+        $cart_id = 'pi_revoke_null_' . uniqid();
+        $order = $this->createOrderHoldingSlot($type, $cart_id);
+        $gateway = $this->mockGateway();
+        $gateway->shouldReceive('getCartStatus')->with($cart_id)->andReturnNull();
+        $gateway->shouldReceive('abandonCart')->never();
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->processOrder2Revoke($order->getId());
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'The cron must not release a slot while the PaymentIntent is still chargeable');
+        $this->assertEquals(IOrderConstants::ReservedStatus, $this->orderFromDb($order->getId())->getStatus());
+    }
+
+    /**
+     * Guard for the refresh fix (passes before it): an order deleted between the
+     * cron listing and its turn must be skipped, not crash the whole run.
+     */
+    public function test_revoke_deleted_order_returns_silently()
+    {
+        $type = $this->createCappedTicketType(10);
+        $order = $this->createOrderHoldingSlot($type, null);
+        $order_id = $order->getId();
+        self::$summit->removeOrder($order);
+        self::$em->flush();
+        $service = $this->buildOrderServiceWithGateway($this->mockGateway());
+
+        $service->processOrder2Revoke($order_id);
+
+        self::$em->clear();
+        $this->assertNull(self::$em->find(SummitOrder::class, $order_id));
+    }
+
+    public function test_confirm_cron_after_widget_cancel_does_not_restore()
+    {
+        $type = $this->createCappedTicketType(10);
+        // B is created first so the cron processes it before A
+        $cart_b = 'pi_confirm_b_' . uniqid();
+        $cart_a = 'pi_confirm_a_' . uniqid();
+        $order_b = $this->createOrderHoldingSlot($type, $cart_b);
+        $order_a = $this->createOrderHoldingSlot($type, $cart_a);
+        $order_b->setConfirmed();
+        $order_a->setConfirmed();
+        self::$em->flush();
+        $this->assertEquals(2, $type->getQuantitySold());
+        $gateway = $this->mockGateway();
+        // while the cron is on B, the widget cancels A (already listed, still stale in memory)
+        $gateway->shouldReceive('getCartStatus')->with($cart_b)->andReturnUsing(function () use ($order_a, $type) {
+            $this->cancelOrderFromAnotherProcess($order_a, $type);
+            return 'processing';
+        });
+        $gateway->shouldReceive('getCartStatus')->with($cart_a)->andReturn('canceled');
+        $service = $this->buildOrderServiceWithGateway($gateway);
+
+        $service->confirmOrdersOlderThanNMinutes(0);
+
+        $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'The confirm cron must not release a slot the widget already released');
+        $this->assertEquals(IOrderConstants::ConfirmedStatus, $this->orderFromDb($order_b->getId())->getStatus());
     }
 }

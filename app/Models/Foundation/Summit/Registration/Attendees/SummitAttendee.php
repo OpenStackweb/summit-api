@@ -528,6 +528,17 @@ class SummitAttendee extends SilverstripeBaseModel
         if (!$ticket->hasOwner()) return;
 
         if ($ticket->getOwner()->getId() != $this->getId()) return;
+        $this->dispatchRevocationTicketEmail($ticket);
+    }
+
+    /**
+     * Enqueues the revocation email without checking the current ticket owner: use it once a
+     * reassignment is committed and $this is no longer the owner (the queue is not transactional,
+     * so enqueueing inside the transaction would notify the former owner even on rollback).
+     * @param SummitAttendeeTicket $ticket
+     */
+    public function dispatchRevocationTicketEmail(SummitAttendeeTicket $ticket): void
+    {
         $email = $this->getEmail();
         $key = md5($email);
         if (Cache::add(sprintf("%s_revoke_ticket", $key), true, 600)) {

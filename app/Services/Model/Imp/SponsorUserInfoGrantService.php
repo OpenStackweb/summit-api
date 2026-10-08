@@ -408,14 +408,8 @@ final class SponsorUserInfoGrantService
                     // extra questions
                     $extra_questions = $data['extra_questions'] ?? [];
 
-                    if (count($extra_questions)) {
-                        // "mandatory" is an instruction to the device, not a server rule:
-                        // save whatever answers were sent and never roll back the scan.
-                        $res = $scan->hadCompletedExtraQuestions($extra_questions);
-                        if (!$res) {
-                            Log::warning("SponsorUserInfoGrantService::addBadgeScan badge scan was saved with missing mandatory answers.");
-                        }
-                    }
+                    if (count($extra_questions))
+                        $this->applyExtraQuestionAnswers($scan, $extra_questions, 'addBadgeScan');
 
                     return $scan;
                 });
@@ -479,7 +473,6 @@ final class SponsorUserInfoGrantService
      * @param SponsorBadgeScan $existing
      * @param array $data
      * @return SponsorBadgeScan
-     * @throws ValidationException
      */
     private function mergeRetryIntoExistingScan(SponsorBadgeScan $existing, array $data): SponsorBadgeScan
     {
@@ -488,10 +481,35 @@ final class SponsorUserInfoGrantService
             $existing->setNotes($notes);
 
         $extra_questions = $data['extra_questions'] ?? [];
-        if (count($extra_questions) && !$existing->hadCompletedExtraQuestions($extra_questions))
-            Log::warning("SponsorUserInfoGrantService::mergeRetryIntoExistingScan badge scan was saved with missing mandatory answers.");
+        if (count($extra_questions))
+            $this->applyExtraQuestionAnswers($existing, $extra_questions, 'mergeRetryIntoExistingScan');
 
         return $existing;
+    }
+
+    /**
+     * "Mandatory" and the allowed options are instructions to the device, not
+     * server rules: a device can hold answers captured under a question setup
+     * the server no longer has (e.g. a mandatory Text question switched to a
+     * ComboBox, so a free-text answer matches no option). Save whatever answers
+     * were sent and never reject the upload or roll the scan back over them.
+     *
+     * hadCompletedExtraQuestions adds every answer before validating them and
+     * nothing is flushed yet, so catching its ValidationException keeps both
+     * the scan and the answers.
+     * @param SponsorBadgeScan $scan
+     * @param array $extra_questions
+     * @param string $caller
+     */
+    private function applyExtraQuestionAnswers(SponsorBadgeScan $scan, array $extra_questions, string $caller): void
+    {
+        try {
+            if (!$scan->hadCompletedExtraQuestions($extra_questions))
+                Log::warning(sprintf("SponsorUserInfoGrantService::%s badge scan was saved with missing mandatory answers.", $caller));
+        }
+        catch (ValidationException $ex) {
+            Log::warning(sprintf("SponsorUserInfoGrantService::%s badge scan was saved with answers that do not match the question setup: %s", $caller, $ex->getMessage()));
+        }
     }
 
     /**
@@ -523,12 +541,8 @@ final class SponsorUserInfoGrantService
             // extra questions
             $extra_questions = $payload['extra_questions'] ?? [];
 
-            if (count($extra_questions)) {
-                $res = $scan->hadCompletedExtraQuestions($extra_questions);
-                if (!$res) {
-                    Log::warning("SponsorUserInfoGrantService::updateBadgeScan badge scan was saved with missing mandatory answers.");
-                }
-            }
+            if (count($extra_questions))
+                $this->applyExtraQuestionAnswers($scan, $extra_questions, 'updateBadgeScan');
 
             return $scan;
         });

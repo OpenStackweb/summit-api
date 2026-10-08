@@ -2508,7 +2508,6 @@ CSV;
     public function test_confirm_cron_after_widget_cancel_does_not_restore()
     {
         $type = $this->createCappedTicketType(10);
-        // B is created first so the cron processes it before A
         $cart_b = 'pi_confirm_b_' . uniqid();
         $cart_a = 'pi_confirm_a_' . uniqid();
         $order_b = $this->createOrderHoldingSlot($type, $cart_b);
@@ -2518,17 +2517,32 @@ CSV;
         self::$em->flush();
         $this->assertEquals(2, $type->getQuantitySold());
         $gateway = $this->mockGateway();
-        // while the cron is on B, the widget cancels A (already listed, still stale in memory)
-        $gateway->shouldReceive('getCartStatus')->with($cart_b)->andReturnUsing(function () use ($order_a, $type) {
-            $this->cancelOrderFromAnotherProcess($order_a, $type);
+        $processed_order_id = null;
+        // getAllConfirmedOlderThanXMinutes has no ORDER BY, so the cron may visit A or B first.
+        // While the cron processes the first listed order, the widget cancels the other one,
+        // which is already listed but still stale in memory.
+        $gateway->shouldReceive('getCartStatus')->andReturnUsing(function ($cart_id) use (
+            $cart_b,
+            $order_a,
+            $order_b,
+            $type,
+            &$processed_order_id
+        ) {
+            if ($cart_id === $cart_b) {
+                $processed_order_id = $order_b->getId();
+                $this->cancelOrderFromAnotherProcess($order_a, $type);
+            } else {
+                $processed_order_id = $order_a->getId();
+                $this->cancelOrderFromAnotherProcess($order_b, $type);
+            }
             return 'processing';
         });
-        $gateway->shouldReceive('getCartStatus')->with($cart_a)->andReturn('canceled');
         $service = $this->buildOrderServiceWithGateway($gateway);
 
         $service->confirmOrdersOlderThanNMinutes(0);
 
+        $this->assertNotNull($processed_order_id, 'The cron must have queried the gateway for one of the two orders');
         $this->assertEquals(1, $this->quantitySoldFromDb($type->getId()), 'The confirm cron must not release a slot the widget already released');
-        $this->assertEquals(IOrderConstants::ConfirmedStatus, $this->orderFromDb($order_b->getId())->getStatus());
+        $this->assertEquals(IOrderConstants::ConfirmedStatus, $this->orderFromDb($processed_order_id)->getStatus());
     }
 }

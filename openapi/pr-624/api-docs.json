@@ -56862,8 +56862,8 @@
                 "tags": [
                     "Sponsors"
                 ],
-                "summary": "Delete Sponsor Extra Question",
-                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
+                "summary": "Delete Sponsor Extra Question (always refused)",
+                "description": "Always refused with 412: devices may hold answers for this question that the server has not seen yet. Edit the wording or turn off Mandatory instead. required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
                 "operationId": "deleteSponsorExtraQuestion",
                 "parameters": [
                     {
@@ -56895,8 +56895,8 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "Extra question deleted successfully"
+                    "412": {
+                        "description": "Validation Error - always returned: questions can't be deleted once created, because devices may already be using them"
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -57106,8 +57106,8 @@
                 "tags": [
                     "Sponsors"
                 ],
-                "summary": "Delete Extra Question Value",
-                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
+                "summary": "Delete Extra Question Value (always refused)",
+                "description": "Always refused with 412: devices may hold answers for this option that the server has not seen yet. Edit the wording instead. required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
                 "operationId": "deleteSponsorExtraQuestionValue",
                 "parameters": [
                     {
@@ -57148,8 +57148,8 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "Question value deleted successfully"
+                    "412": {
+                        "description": "Validation Error - always returned: answer options can't be deleted once created, because devices may already be using them"
                     },
                     "401": {
                         "description": "Unauthorized"

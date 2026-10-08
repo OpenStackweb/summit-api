@@ -522,23 +522,21 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         return $sponsor;
     }
 
+    /**
+     * Sponsors are seeded with the maximum number of extra questions and the API
+     * no longer deletes them, so make room directly on the model.
+     * using last() keeps order numbering compact so new question order == count
+     */
+    private function removeLastSponsorExtraQuestion(){
+        $sponsor = self::$sponsors[0];
+        $sponsor->removeExtraQuestion($sponsor->getExtraQuestions()->last());
+        self::$em->persist($sponsor);
+        self::$em->flush();
+    }
+
     public function testAddSponsorExtraQuestions(){
 
-        // remove the last extra question first (sponsors already have 5, the max)
-        // using last() keeps order numbering compact so new question order == count
-        $existingQuestion = self::$sponsors[0]->getExtraQuestions()->last();
-        $this->action(
-            "DELETE",
-            "OAuth2SummitSponsorApiController@deleteExtraQuestion",
-            [
-                'id' => self::$summit->getId(),
-                'sponsor_id' => self::$sponsors[0]->getId(),
-                'extra_question_id' => $existingQuestion->getId()
-            ],
-            [], [], [],
-            $this->getAuthHeaders()
-        );
-        $this->assertResponseStatus(204);
+        $this->removeLastSponsorExtraQuestion();
 
         $params = [
             'id' => self::$summit->getId(),
@@ -711,7 +709,9 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             $this->getAuthHeaders()
         );
 
-        $this->assertResponseStatus(204);
+        // questions can never be deleted: devices may hold answers the server has not seen
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString("Questions can't be deleted once created", $response->getContent());
     }
 
     public function testAddLeadReportSettings(){
@@ -1499,21 +1499,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
     // ---- Extra Question Values CRUD ----
 
     private function createComboBoxExtraQuestion(){
-        // remove the last extra question first (sponsors already have 5, the max)
-        $existingQuestion = self::$sponsors[0]->getExtraQuestions()->last();
-        $this->action(
-            "DELETE",
-            "OAuth2SummitSponsorApiController@deleteExtraQuestion",
-            [
-                'id' => self::$summit->getId(),
-                'sponsor_id' => self::$sponsors[0]->getId(),
-                'extra_question_id' => $existingQuestion->getId()
-            ],
-            [], [], [],
-            $this->getAuthHeaders()
-        );
-        $this->assertResponseStatus(204);
-
+        $this->removeLastSponsorExtraQuestion();
         $params = [
             'id' => self::$summit->getId(),
             'sponsor_id' => self::$sponsors[0]->getId(),
@@ -1630,7 +1616,9 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             $this->getAuthHeaders()
         );
 
-        $this->assertResponseStatus(204);
+        // answer options can never be deleted: devices may hold answers the server has not seen
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString("Answer options can't be deleted once created", $response->getContent());
     }
 
     // ---- Public API ----

@@ -1493,4 +1493,80 @@ class OAuth2SummitBadgeScanApiControllerTest extends ProtectedApiTestCase
         $this->assertEquals('hot lead, follow up', $this->reloadScan($winner_id)->getNotes(),
             "notes of the request that lost the race must be persisted on the winning scan");
     }
+
+    /**
+     * "Mandatory" is an instruction to the device, not a server rule: sets the
+     * sponsor's first two questions as mandatory and returns their ids.
+     * @return array
+     */
+    private function makeFirstTwoSponsorQuestionsMandatory(): array
+    {
+        $sponsor = self::$summit->getSummitSponsors()[0];
+        $ids = [];
+        foreach ([0, 1] as $idx) {
+            $question = $sponsor->getExtraQuestions()[$idx];
+            if (!$question instanceof SummitSponsorExtraQuestionType) self::fail();
+            $question->setMandatory(true);
+            $ids[] = $question->getId();
+        }
+        self::$em->persist($sponsor);
+        self::$em->flush();
+        return $ids;
+    }
+
+    /**
+     * A scan captured offline and answered before reconnecting reaches the
+     * server as a first POST that carries answers. A mandatory question left
+     * unanswered must neither reject it nor roll the scan back.
+     */
+    public function testAddBadgeScanWithMissingMandatoryAnswerIsSavedWithItsOtherAnswers(){
+        [$answered_id, ] = $this->makeFirstTwoSponsorQuestionsMandatory();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'extra_questions' => [
+                ['question_id' => $answered_id, 'answer' => 'None'],
+            ],
+        ]));
+
+        $answers = $this->reloadScan($scan->getId())->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals($answered_id, $answers->first()->getQuestionId());
+    }
+
+    public function testAddBadgeScanRetryWithMissingMandatoryAnswerIsSaved(){
+        [$answered_id, ] = $this->makeFirstTwoSponsorQuestionsMandatory();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $first = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+        $first_id = $first->getId();
+
+        $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload([
+            'extra_questions' => [
+                ['question_id' => $answered_id, 'answer' => 'None'],
+            ],
+        ]));
+
+        $answers = $this->reloadScan($first_id)->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals($answered_id, $answers->first()->getQuestionId());
+    }
+
+    public function testUpdateBadgeScanWithMissingMandatoryAnswerIsSaved(){
+        [$answered_id, ] = $this->makeFirstTwoSponsorQuestionsMandatory();
+
+        $service = App::make(ISponsorUserInfoGrantService::class);
+        $scan = $service->addBadgeScan(self::$summit, self::$member, $this->badgeScanPayload());
+        $scan_id = $scan->getId();
+
+        $service->updateBadgeScan(self::$summit, self::$member, $scan_id, [
+            'extra_questions' => [
+                ['question_id' => $answered_id, 'answer' => 'None'],
+            ],
+        ]);
+
+        $answers = $this->reloadScan($scan_id)->getExtraQuestionAnswers();
+        $this->assertCount(1, $answers);
+        $this->assertEquals($answered_id, $answers->first()->getQuestionId());
+    }
 }

@@ -409,9 +409,11 @@ final class SponsorUserInfoGrantService
                     $extra_questions = $data['extra_questions'] ?? [];
 
                     if (count($extra_questions)) {
+                        // "mandatory" is an instruction to the device, not a server rule:
+                        // save whatever answers were sent and never roll back the scan.
                         $res = $scan->hadCompletedExtraQuestions($extra_questions);
                         if (!$res) {
-                            throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+                            Log::warning("SponsorUserInfoGrantService::addBadgeScan badge scan was saved with missing mandatory answers.");
                         }
                     }
 
@@ -487,7 +489,7 @@ final class SponsorUserInfoGrantService
 
         $extra_questions = $data['extra_questions'] ?? [];
         if (count($extra_questions) && !$existing->hadCompletedExtraQuestions($extra_questions))
-            throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+            Log::warning("SponsorUserInfoGrantService::mergeRetryIntoExistingScan badge scan was saved with missing mandatory answers.");
 
         return $existing;
     }
@@ -524,7 +526,7 @@ final class SponsorUserInfoGrantService
             if (count($extra_questions)) {
                 $res = $scan->hadCompletedExtraQuestions($extra_questions);
                 if (!$res) {
-                    throw new ValidationException("You neglected to fill in all mandatory questions for the badge scan.");
+                    Log::warning("SponsorUserInfoGrantService::updateBadgeScan badge scan was saved with missing mandatory answers.");
                 }
             }
 

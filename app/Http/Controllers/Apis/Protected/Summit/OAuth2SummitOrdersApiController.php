@@ -442,6 +442,7 @@ final class OAuth2SummitOrdersApiController extends OAuth2ProtectedController
         responses: [
             new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Order cancelled successfully'),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: 'Summit or order not found'),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: 'Validation Error (order already paid, or payment configuration not set)'),
         ]
     )]
     public function cancel($summit_id, $hash)

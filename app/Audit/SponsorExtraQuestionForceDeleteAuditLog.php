@@ -16,9 +16,11 @@ use App\Audit\Interfaces\IAuditStrategy;
 use App\Jobs\EmitAuditLogJob;
 use App\Jobs\Utils\JobDispatcher;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
+use App\Models\Foundation\Main\Repositories\IAuditLogRepository;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use Illuminate\Support\Facades\Log;
 use models\main\Member;
+use models\main\SummitAuditLog;
 use models\summit\Sponsor;
 use models\summit\Summit;
 
@@ -28,6 +30,10 @@ use models\summit\Summit;
  * The onFlush listener already audits the entities removed by the delete, but it
  * cannot carry the reason the admin gave nor how many collected answers were
  * destroyed or modified, so this entry records them explicitly.
+ *
+ * The entry is always persisted as a SummitAuditLog (queryable through
+ * /api/v1/audit-logs) within the same transaction as the delete, so a force delete
+ * never commits without its audit record, whether or not the OTLP pipeline is on.
  * @package App\Audit
  */
 final class SponsorExtraQuestionForceDeleteAuditLog
@@ -38,6 +44,8 @@ final class SponsorExtraQuestionForceDeleteAuditLog
     public const LogMessage = 'audit.sponsor_extra_question.force_deleted';
 
     /**
+     * Persists the audit entry, call it within the transaction that performs the delete.
+     * @param IAuditLogRepository $repository
      * @param Member $by
      * @param Summit $summit
      * @param Sponsor $sponsor
@@ -47,10 +55,11 @@ final class SponsorExtraQuestionForceDeleteAuditLog
      * @param string $reason
      * @param int $answers_deleted answers removed from the server
      * @param int $answers_modified answers that only lost the deleted option
-     * @return array the audit data that was emitted
+     * @return array the audit data, to be handed to emit() once the transaction commits
      */
     public static function record
     (
+        IAuditLogRepository $repository,
         Member $by,
         Summit $summit,
         Sponsor $sponsor,
@@ -107,13 +116,28 @@ final class SponsorExtraQuestionForceDeleteAuditLog
             'elasticsearch.index'     => config('opentelemetry.logs.elasticsearch_index', 'logs-audit'),
         ];
 
-        // always leave a trace in the application log, the OTLP pipeline may be off
+        // Metadata is a varchar(255), the full description (reason included) goes into Action
+        $repository->add(new SummitAuditLog(
+            $by,
+            $description,
+            $summit,
+            sprintf('sponsor:%s %s:%s', $sponsor->getId(), $target_type, $target_id)
+        ));
+
+        return $data;
+    }
+
+    /**
+     * Ships the audit data to the application log and, when enabled, to the OTLP pipeline.
+     * Call it once the delete transaction has committed.
+     * @param array $data as returned by record()
+     */
+    public static function emit(array $data): void
+    {
         Log::warning(self::LogMessage, $data);
 
         if (config('opentelemetry.enabled', false)) {
             JobDispatcher::withDbFallback(job: new EmitAuditLogJob(self::LogMessage, $data));
         }
-
-        return $data;
     }
 }

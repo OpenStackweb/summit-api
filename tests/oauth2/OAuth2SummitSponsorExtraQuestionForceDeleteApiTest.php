@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Bus;
 use LaravelDoctrine\ORM\Facades\Registry;
 use Mockery;
+use models\main\SummitAuditLog;
 use models\summit\SponsorBadgeScan;
 use models\summit\SponsorBadgeScanExtraQuestionAnswer;
 use models\utils\SilverstripeBaseModel;
@@ -204,6 +205,22 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         return $jobs->isEmpty() ? null : $jobs->first();
     }
 
+    /**
+     * The force delete audit records persisted for the given target.
+     * @param string $target_type question | option
+     * @param int $target_id
+     * @return SummitAuditLog[]
+     */
+    private function persistedAudits(string $target_type, int $target_id): array
+    {
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em->clear();
+        $logs = $em->getRepository(SummitAuditLog::class)->findBy(['summit' => self::$summit->getId()]);
+        return array_values(array_filter($logs, function (SummitAuditLog $log) use ($target_type, $target_id) {
+            return str_ends_with((string)$log->getMetadata(), sprintf(' %s:%s', $target_type, $target_id));
+        }));
+    }
+
     protected function enableAuditCapture(): void
     {
         config(['opentelemetry.enabled' => true]);
@@ -263,6 +280,11 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertEquals(0, $audit->auditData['audit.answers_deleted']);
         $this->assertEquals((string)self::$member->getId(), (string)$audit->auditData['auth.user.id']);
 
+        $logs = $this->persistedAudits('question', $question_id);
+        $this->assertCount(1, $logs);
+        $this->assertEquals(self::$member->getId(), $logs[0]->getUser()->getId());
+        $this->assertStringContainsString('Reason: created by mistake, 0 pending uploads', $logs[0]->getAction());
+
         // the slot is free right away
         $this->action(
             "POST",
@@ -299,6 +321,8 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertStringContainsString("3 collected answers will be permanently deleted", $response->getContent());
         $this->assertContains($question_id, $this->sponsorQuestionIds());
         $this->assertCount(3, $this->answersOf($question_id));
+        // nothing was deleted, so nothing is audited
+        $this->assertCount(0, $this->persistedAudits('question', $question_id));
     }
 
     public function testAdminForceDeleteQuestionWithAnswersAndConfirmationDestroysThemAndIsAudited()
@@ -326,6 +350,21 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertNotNull($audit);
         $this->assertEquals(3, $audit->auditData['audit.answers_deleted']);
         $this->assertEquals('sponsor insists', $audit->auditData['audit.reason']);
+    }
+
+    public function testAdminForceDeleteQuestionIsPersistedInTheAuditLogWhenOpenTelemetryIsOff()
+    {
+        config(['opentelemetry.enabled' => false]);
+        Bus::fake([EmitAuditLogJob::class]);
+        [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
+
+        $this->deleteQuestion($question_id, ['force' => 'true'], ['reason' => 'created by mistake']);
+
+        $this->assertResponseStatus(204);
+        $this->assertNull($this->emittedAudit());
+        $logs = $this->persistedAudits('question', $question_id);
+        $this->assertCount(1, $logs);
+        $this->assertStringContainsString('Reason: created by mistake', $logs[0]->getAction());
     }
 
     // ---- options ----
@@ -401,6 +440,10 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertEquals(1, $audit->auditData['audit.answers_deleted']);
         $this->assertEquals(1, $audit->auditData['audit.answers_modified']);
         $this->assertEquals('sponsor insists', $audit->auditData['audit.reason']);
+
+        $logs = $this->persistedAudits('option', $a);
+        $this->assertCount(1, $logs);
+        $this->assertStringContainsString('Collected answers deleted: 1, modified: 1', $logs[0]->getAction());
 
         // the option is gone
         $this->deleteValue($question_id, $a, ['force' => 'true'], ['reason' => 'again']);

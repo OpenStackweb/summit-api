@@ -23,6 +23,7 @@ use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
+use App\Models\Foundation\Main\Repositories\IAuditLogRepository;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Factories\LeadReportSettingsFactory;
 use App\Models\Foundation\Summit\Factories\SponsorAdFactory;
@@ -91,12 +92,18 @@ final class SummitSponsorService
     private $user_info_grant_repository;
 
     /**
+     * @var IAuditLogRepository
+     */
+    private $audit_log_repository;
+
+    /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISponsorExtraQuestionTypeRepository $repository
      * @param ISummitSponsorshipRepository $sponsorship_repository
      * @param ISponsorUserInfoGrantRepository $user_info_grant_repository
      * @param IFileUploader $file_uploader
+     * @param IAuditLogRepository $audit_log_repository
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -107,10 +114,12 @@ final class SummitSponsorService
         ISummitSponsorshipRepository $sponsorship_repository,
         ISponsorUserInfoGrantRepository $user_info_grant_repository,
         IFileUploader              $file_uploader,
+        IAuditLogRepository        $audit_log_repository,
         ITransactionService        $tx_service
     )
     {
         parent::__construct($tx_service);
+        $this->audit_log_repository = $audit_log_repository;
         $this->user_info_grant_repository = $user_info_grant_repository;
         $this->member_repository = $member_repository;
         $this->company_repository = $company_repository;
@@ -1115,7 +1124,7 @@ final class SummitSponsorService
 
         $reason = $this->requireForceDeleteReason($reason);
 
-        [$sponsor, $label, $answers_deleted] = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id, $delete_answers) {
+        $audit_data = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id, $force_by, $reason, $delete_answers) {
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");
@@ -1145,19 +1154,20 @@ final class SummitSponsorService
             $label = $extra_question->getLabel();
             $summit_sponsor->removeExtraQuestion($extra_question);
 
-            return [$summit_sponsor, $label, $answers_count];
+            return SponsorExtraQuestionForceDeleteAuditLog::record(
+                $this->audit_log_repository,
+                $force_by,
+                $summit,
+                $summit_sponsor,
+                SponsorExtraQuestionForceDeleteAuditLog::TargetQuestion,
+                $extra_question_id,
+                $label,
+                $reason,
+                $answers_count
+            );
         });
 
-        SponsorExtraQuestionForceDeleteAuditLog::record(
-            $force_by,
-            $summit,
-            $sponsor,
-            SponsorExtraQuestionForceDeleteAuditLog::TargetQuestion,
-            $extra_question_id,
-            $label,
-            $reason,
-            $answers_deleted
-        );
+        SponsorExtraQuestionForceDeleteAuditLog::emit($audit_data);
     }
 
     /**
@@ -1346,7 +1356,7 @@ final class SummitSponsorService
 
         $reason = $this->requireForceDeleteReason($reason);
 
-        [$sponsor, $label, $answers_deleted, $answers_modified] = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id, $delete_answers) {
+        $audit_data = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id, $force_by, $reason, $delete_answers) {
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");
@@ -1384,20 +1394,21 @@ final class SummitSponsorService
             $label = $value->getLabel();
             $extra_question->removeValue($value);
 
-            return [$summit_sponsor, $label, count($to_delete), count($to_modify)];
+            return SponsorExtraQuestionForceDeleteAuditLog::record(
+                $this->audit_log_repository,
+                $force_by,
+                $summit,
+                $summit_sponsor,
+                SponsorExtraQuestionForceDeleteAuditLog::TargetOption,
+                $value_id,
+                $label,
+                $reason,
+                count($to_delete),
+                count($to_modify)
+            );
         });
 
-        SponsorExtraQuestionForceDeleteAuditLog::record(
-            $force_by,
-            $summit,
-            $sponsor,
-            SponsorExtraQuestionForceDeleteAuditLog::TargetOption,
-            $value_id,
-            $label,
-            $reason,
-            $answers_deleted,
-            $answers_modified
-        );
+        SponsorExtraQuestionForceDeleteAuditLog::emit($audit_data);
     }
 
     /**

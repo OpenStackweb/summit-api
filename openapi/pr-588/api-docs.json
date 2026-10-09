@@ -21488,7 +21488,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             },
             "post": {
@@ -22397,7 +22398,8 @@
                     "summit-front-end-administrators",
                     "summit-registration-administrators",
                     "track-chairs",
-                    "track-chairs-admins"
+                    "track-chairs-admins",
+                    "summit-room-administrators"
                 ]
             },
             "delete": {
@@ -24620,7 +24622,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             },
             "delete": {
@@ -24697,7 +24700,8 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators"
+                    "summit-front-end-administrators",
+                    "summit-room-administrators"
                 ]
             }
         },
@@ -33143,7 +33147,7 @@
                 "tags": [
                     "Summit Members"
                 ],
-                "description": "required-groups summit-front-end-administrators, super-admins, administrators",
+                "description": "required-groups summit-front-end-administrators, super-admins, administrators, summit-room-administrators",
                 "operationId": "getAllMembersBySummitCSV",
                 "parameters": [
                     {
@@ -33228,6 +33232,9 @@
                             "text/csv": {}
                         }
                     },
+                    "403": {
+                        "description": "Forbidden"
+                    },
                     "404": {
                         "description": "Not found"
                     },
@@ -33248,7 +33255,8 @@
                 "x-required-groups": [
                     "summit-front-end-administrators",
                     "super-admins",
-                    "administrators"
+                    "administrators",
+                    "summit-room-administrators"
                 ]
             }
         },
@@ -50437,7 +50445,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter by id, first_name, last_name, email, full_name, member_id, has_accepted_presentations, etc.",
+                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -50614,7 +50622,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
+                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -50697,7 +50705,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type.",
+                        "description": "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -50766,7 +50774,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
+                        "description": "Filter by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type. Operands supported: == (equal), @@ (contains), =@ (starts with).",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -51287,6 +51295,7 @@
                     {
                         "summit_speakers_oauth2": [
                             "http://localhost/speakers/read",
+                            "http://localhost/speakers/read/email",
                             "http://localhost/summits/read",
                             "http://localhost/summits/read/all"
                         ]
@@ -53054,7 +53063,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter speakers by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type",
+                        "description": "Filter speakers by id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_track_group_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, has_media_upload_with_type, has_not_media_upload_with_type",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -56853,8 +56862,8 @@
                 "tags": [
                     "Sponsors"
                 ],
-                "summary": "Delete Sponsor Extra Question",
-                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
+                "summary": "Delete Sponsor Extra Question (always refused)",
+                "description": "Always refused with 412: devices may hold answers for this question that the server has not seen yet. Edit the wording or turn off Mandatory instead. required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
                 "operationId": "deleteSponsorExtraQuestion",
                 "parameters": [
                     {
@@ -56886,8 +56895,8 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "Extra question deleted successfully"
+                    "412": {
+                        "description": "Validation Error - always returned: questions can't be deleted once created, because devices may already be using them"
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -57097,8 +57106,8 @@
                 "tags": [
                     "Sponsors"
                 ],
-                "summary": "Delete Extra Question Value",
-                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
+                "summary": "Delete Extra Question Value (always refused)",
+                "description": "Always refused with 412: devices may hold answers for this option that the server has not seen yet. Edit the wording instead. required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
                 "operationId": "deleteSponsorExtraQuestionValue",
                 "parameters": [
                     {
@@ -57139,8 +57148,8 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "Question value deleted successfully"
+                    "412": {
+                        "description": "Validation Error - always returned: answer options can't be deleted once created, because devices may already be using them"
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -60297,7 +60306,7 @@
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, is_speaker, has_media_upload_with_type, has_not_media_upload_with_type.",
+                        "description": "Filter query (supports multiple operators). Filterable fields: id, not_id, first_name, last_name, email, full_name, member_id, member_user_external_id, has_pending_presentations, has_accepted_presentations, has_alternate_presentations, has_rejected_presentations, has_published_presentations, presentations_track_id, presentations_selection_plan_id, presentations_type_id, presentations_title, presentations_abstract, presentations_submitter_full_name, presentations_submitter_email, is_speaker, has_media_upload_with_type, has_not_media_upload_with_type.",
                         "required": false,
                         "schema": {
                             "type": "string",
@@ -86227,6 +86236,15 @@
                     "template_content": {
                         "type": "string",
                         "example": "<div>{{name}}</div>"
+                    },
+                    "image": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Feature type image (File API payload), applied asynchronously"
                     }
                 },
                 "type": "object"
@@ -86244,6 +86262,15 @@
                     "template_content": {
                         "type": "string",
                         "example": "<div class=\"vip\">{{name}}</div>"
+                    },
+                    "image": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/FileDTO"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Feature type image (File API payload), applied asynchronously"
                     }
                 },
                 "type": "object"
@@ -90654,7 +90681,8 @@
                             "http://localhost/speakers/read": "Read Speakers Data",
                             "http://localhost/speakers/write": "Write Speakers Data",
                             "http://localhost/speakers/read/me": "Read My Speakers Data",
-                            "http://localhost/speakers/write/me": "Write My Speakers Data"
+                            "http://localhost/speakers/write/me": "Write My Speakers Data",
+                            "http://localhost/speakers/read/email": "Read Speakers Email"
                         }
                     }
                 }

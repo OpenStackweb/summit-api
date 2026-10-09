@@ -93,6 +93,34 @@ final class AttendeeServiceTest extends TestCase
         $this->assertEquals(self::$member2->getId(), $updated->getMember()->getId());
     }
 
+    public function testUpdateAttendeeEmailOnlyWithUnknownEmailClearsMemberLink()
+    {
+        $service = App::make(IAttendeeService::class);
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+
+        // the email matches no member account, so the stale link must be cleared
+        $updated = $service->updateAttendee(self::$summit, $attendee->getId(), [
+            'email' => 'no-member-' . uniqid() . '@example.com',
+        ]);
+
+        $this->assertNull($updated->getMember());
+    }
+
+    public function testUpdateAttendeeEmailOnlyWithCurrentMemberEmailPreservesLink()
+    {
+        $service = App::make(IAttendeeService::class);
+        $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
+        $this->assertNotNull($attendee);
+
+        $updated = $service->updateAttendee(self::$summit, $attendee->getId(), [
+            'email' => self::$defaultMember->getEmail(),
+        ]);
+
+        $this->assertNotNull($updated->getMember());
+        $this->assertEquals(self::$defaultMember->getId(), $updated->getMember()->getId());
+    }
+
     /**
      * @see https://github.com/OpenStackweb/summit-api/pull/588#discussion_r3897380061
      * member2 is already linked to a different attendee in this summit, whose stored email

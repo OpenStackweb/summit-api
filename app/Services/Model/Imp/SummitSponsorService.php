@@ -12,12 +12,15 @@
  * limitations under the License.
  **/
 
+use App\Audit\SponsorExtraQuestionForceDeleteAuditLog;
 use App\Events\SponsorServices\SponsorDomainEvents;
 use App\Events\SponsorServices\SummitSponsorCreatedEventDTO;
 use App\Events\SponsorServices\SummitSponsorshipCreatedEventDTO;
 use App\Events\SponsorServices\DeletedEventDTO;
 use App\Http\Utils\IFileUploader;
 use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeValue;
 use App\Models\Foundation\Main\IFileConstants;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
@@ -43,8 +46,10 @@ use models\main\File;
 use models\main\ICompanyRepository;
 use models\main\IMemberRepository;
 use models\main\Member;
+use models\summit\ISponsorUserInfoGrantRepository;
 use models\summit\Sponsor;
 use models\summit\SponsorAd;
+use models\summit\SponsorBadgeScanExtraQuestionAnswer;
 use models\summit\SponsorMaterial;
 use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
@@ -81,10 +86,16 @@ final class SummitSponsorService
     private $file_uploader;
 
     /**
+     * @var ISponsorUserInfoGrantRepository
+     */
+    private $user_info_grant_repository;
+
+    /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISponsorExtraQuestionTypeRepository $repository
      * @param ISummitSponsorshipRepository $sponsorship_repository
+     * @param ISponsorUserInfoGrantRepository $user_info_grant_repository
      * @param IFileUploader $file_uploader
      * @param ITransactionService $tx_service
      */
@@ -94,11 +105,13 @@ final class SummitSponsorService
         ICompanyRepository         $company_repository,
         ISponsorExtraQuestionTypeRepository $repository,
         ISummitSponsorshipRepository $sponsorship_repository,
+        ISponsorUserInfoGrantRepository $user_info_grant_repository,
         IFileUploader              $file_uploader,
         ITransactionService        $tx_service
     )
     {
         parent::__construct($tx_service);
+        $this->user_info_grant_repository = $user_info_grant_repository;
         $this->member_repository = $member_repository;
         $this->company_repository = $company_repository;
         $this->sponsorship_repository = $sponsorship_repository;
@@ -1082,12 +1095,179 @@ final class SummitSponsorService
     /**
      * @inheritDoc
      */
-    public function deleteSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id): void
+    public function deleteSponsorExtraQuestion
+    (
+        Summit  $summit,
+        int     $sponsor_id,
+        int     $extra_question_id,
+        ?Member $force_by = null,
+        ?string $reason = null,
+        bool    $delete_answers = false
+    ): void
     {
-        // Always refused: a device may hold answers for this question that the server has not seen yet.
-        throw new ValidationException(
-            "Questions can't be deleted once created, because devices may already be using them. You can edit the wording, turn off Mandatory, or contact support."
+        if (is_null($force_by)) {
+            // Refused: a device may hold answers for this question that the server has not seen yet.
+            // Only an admin who checked the devices can force it (see $force_by).
+            throw new ValidationException(
+                "Questions can't be deleted once created, because devices may already be using them. You can edit the wording, turn off Mandatory, or contact support."
+            );
+        }
+
+        $reason = $this->requireForceDeleteReason($reason);
+
+        [$sponsor, $label, $answers_deleted] = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id, $delete_answers) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($extra_question_id);
+
+            if (!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+            $answers = $this->repository->getBadgeScanAnswersByQuestion($extra_question);
+            $answers_count = count($answers);
+
+            if ($answers_count > 0 && !$delete_answers) {
+                throw new ValidationException(
+                    sprintf(
+                        "%s collected answers will be permanently deleted. Send delete_answers=true to confirm.",
+                        $answers_count
+                    )
+                );
+            }
+
+            // the answers reference the question (FK without cascade), so they go first
+            foreach ($answers as $answer) {
+                $this->removeBadgeScanAnswer($answer);
+            }
+
+            $label = $extra_question->getLabel();
+            $summit_sponsor->removeExtraQuestion($extra_question);
+
+            return [$summit_sponsor, $label, $answers_count];
+        });
+
+        SponsorExtraQuestionForceDeleteAuditLog::record(
+            $force_by,
+            $summit,
+            $sponsor,
+            SponsorExtraQuestionForceDeleteAuditLog::TargetQuestion,
+            $extra_question_id,
+            $label,
+            $reason,
+            $answers_deleted
         );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getSponsorExtraQuestionUsage(Summit $summit, int $sponsor_id, int $extra_question_id): array
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($extra_question_id);
+
+            if (!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+            return array_merge(
+                [
+                    'answers_count' => count($this->repository->getBadgeScanAnswersByQuestion($extra_question)),
+                ],
+                $this->getScanActivity($summit_sponsor)
+            );
+        });
+    }
+
+    /**
+     * Removes a collected answer from its badge scan (the scan owns it, orphan removal deletes it).
+     * @param SponsorBadgeScanExtraQuestionAnswer $answer
+     */
+    private function removeBadgeScanAnswer(SponsorBadgeScanExtraQuestionAnswer $answer): void
+    {
+        $scan = $answer->getBadgeScan();
+        if (is_null($scan)) {
+            $this->repository->delete($answer);
+            return;
+        }
+        $scan->removeExtraQuestionAnswer($answer);
+        $scan->updateLastEdited();
+    }
+
+    /**
+     * @param string|null $reason
+     * @return string
+     * @throws ValidationException
+     */
+    private function requireForceDeleteReason(?string $reason): string
+    {
+        $reason = trim($reason ?? '');
+        if ($reason === '')
+            throw new ValidationException("A reason is required to force delete.");
+        return $reason;
+    }
+
+    /**
+     * Badge scan activity of the sponsor, to see what is at stake before a force delete.
+     * It does not prove devices have nothing pending, only the devices can show that.
+     * @param Sponsor $sponsor
+     * @return array
+     */
+    private function getScanActivity(Sponsor $sponsor): array
+    {
+        $reps = [];
+        foreach ($this->user_info_grant_repository->getScanActivityBySponsor($sponsor) as $row) {
+            $last_scan_date = $row['last_scan_date'];
+            $reps[] = [
+                'member_id'      => intval($row['member_id']),
+                'first_name'     => $row['first_name'],
+                'last_name'      => $row['last_name'],
+                'email'          => $row['email'],
+                'scans_count'    => intval($row['scans_count']),
+                'last_scan_date' => $last_scan_date instanceof \DateTimeInterface
+                    ? $last_scan_date->getTimestamp()
+                    : (new \DateTime($last_scan_date))->getTimestamp(),
+            ];
+        }
+        return [
+            'reps_count' => count($reps),
+            'reps'       => $reps,
+        ];
+    }
+
+    /**
+     * Collected answers that use an option. The answer value holds the ids of the
+     * selected options separated by commas, so it is matched id by id: a plain
+     * substring match would take 15 for 115 and a legacy free text like "15 apples" for 15.
+     * Answers whose only selected option is this one are to be deleted, the others
+     * only lose the id from their list.
+     * @param ExtraQuestionType $question
+     * @param int $value_id
+     * @return array [SponsorBadgeScanExtraQuestionAnswer[] $to_delete, array<array{0: SponsorBadgeScanExtraQuestionAnswer, 1: string}> $to_modify]
+     */
+    private function splitAnswersUsingOption(ExtraQuestionType $question, int $value_id): array
+    {
+        $to_delete = [];
+        $to_modify = [];
+        foreach ($this->repository->getBadgeScanAnswersByQuestion($question) as $answer) {
+            $selected = array_map('trim', explode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $answer->getValue()));
+            $remaining = array_values(array_filter(
+                $selected,
+                fn(string $id) => $id !== '' && !(ctype_digit($id) && intval($id) === $value_id)
+            ));
+            $uses_option = count($remaining) !== count(array_filter($selected, fn(string $id) => $id !== ''));
+            if (!$uses_option) continue;
+            if (count($remaining) === 0)
+                $to_delete[] = $answer;
+            else
+                $to_modify[] = [$answer, implode(ExtraQuestionTypeConstants::AnswerCharDelimiter, $remaining)];
+        }
+        return [$to_delete, $to_modify];
     }
 
     /**
@@ -1143,19 +1323,112 @@ final class SummitSponsorService
     }
 
     /**
-     * @param Summit $summit
-     * @param int $sponsor_id
-     * @param int $question_id
-     * @param int $value_id
-     * @return void
-     * @throws \Exception
+     * @inheritDoc
      */
-    public function deleteExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id): void
+    public function deleteExtraQuestionValue
+    (
+        Summit  $summit,
+        int     $sponsor_id,
+        int     $question_id,
+        int     $value_id,
+        ?Member $force_by = null,
+        ?string $reason = null,
+        bool    $delete_answers = false
+    ): void
     {
-        // Always refused: a device may hold answers for this option that the server has not seen yet.
-        throw new ValidationException(
-            "Answer options can't be deleted once created, because devices may already be using them. You can edit the wording, or contact support."
+        if (is_null($force_by)) {
+            // Refused: a device may hold answers for this option that the server has not seen yet.
+            // Only an admin who checked the devices can force it (see $force_by).
+            throw new ValidationException(
+                "Answer options can't be deleted once created, because devices may already be using them. You can edit the wording, or contact support."
+            );
+        }
+
+        $reason = $this->requireForceDeleteReason($reason);
+
+        [$sponsor, $label, $answers_deleted, $answers_modified] = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id, $delete_answers) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($question_id);
+
+            if (!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+            $value = $extra_question->getValueById($value_id);
+            if (is_null($value))
+                throw new EntityNotFoundException("value not found");
+
+            [$to_delete, $to_modify] = $this->splitAnswersUsingOption($extra_question, $value_id);
+
+            if ((count($to_delete) + count($to_modify)) > 0 && !$delete_answers) {
+                throw new ValidationException(
+                    sprintf(
+                        "%s collected answers use this option: %s will be permanently deleted and %s will only lose this option. Send delete_answers=true to confirm.",
+                        count($to_delete) + count($to_modify),
+                        count($to_delete),
+                        count($to_modify)
+                    )
+                );
+            }
+
+            foreach ($to_delete as $answer) {
+                $this->removeBadgeScanAnswer($answer);
+            }
+
+            foreach ($to_modify as [$answer, $remaining]) {
+                $answer->setValue($remaining);
+            }
+
+            $label = $value->getLabel();
+            $extra_question->removeValue($value);
+
+            return [$summit_sponsor, $label, count($to_delete), count($to_modify)];
+        });
+
+        SponsorExtraQuestionForceDeleteAuditLog::record(
+            $force_by,
+            $summit,
+            $sponsor,
+            SponsorExtraQuestionForceDeleteAuditLog::TargetOption,
+            $value_id,
+            $label,
+            $reason,
+            $answers_deleted,
+            $answers_modified
         );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getExtraQuestionValueUsage(Summit $summit, int $sponsor_id, int $question_id, int $value_id): array
+    {
+        return $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id) {
+            $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
+            if (is_null($summit_sponsor))
+                throw new EntityNotFoundException("Sponsor not found.");
+
+            $extra_question = $summit_sponsor->getExtraQuestionById($question_id);
+
+            if (!$extra_question instanceof SummitSponsorExtraQuestionType)
+                throw new EntityNotFoundException("Sponsor extra question not found.");
+
+            if (is_null($extra_question->getValueById($value_id)))
+                throw new EntityNotFoundException("value not found");
+
+            [$to_delete, $to_modify] = $this->splitAnswersUsingOption($extra_question, $value_id);
+
+            return array_merge(
+                [
+                    'answers_count'    => count($to_delete) + count($to_modify),
+                    'answers_to_delete' => count($to_delete),
+                    'answers_to_modify' => count($to_modify),
+                ],
+                $this->getScanActivity($summit_sponsor)
+            );
+        });
     }
 
     /**

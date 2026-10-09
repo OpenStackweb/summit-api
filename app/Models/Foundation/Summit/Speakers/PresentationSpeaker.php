@@ -532,6 +532,7 @@ class PresentationSpeaker extends SilverstripeBaseModel
         if ($role == self::ROLE_SPEAKER) {
             $res = $this->presentations->filter(function (PresentationSpeakerAssignment $ps_assignment) use ($summit) {
                 $presentation = $ps_assignment->getPresentation();
+                if(is_null($presentation)) return false;
                 if ($presentation->getSummit()->getId() != $summit->getId()) return false;
                 if ($presentation->getModeratorId() == $this->getId()) return false;
                 if ($presentation->getCreatorId() == $this->getMemberId()) return false;

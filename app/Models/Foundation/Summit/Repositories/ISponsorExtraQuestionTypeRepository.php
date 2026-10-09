@@ -12,12 +12,19 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\IExtraQuestionTypeRepository;
+use models\summit\SponsorBadgeScanExtraQuestionAnswer;
 /**
  * Interface ISponsorExtraQuestionTypeRepository
  * @package App\Models\Foundation\Summit\Repositories
  */
 interface ISponsorExtraQuestionTypeRepository extends IExtraQuestionTypeRepository
 {
-
+    /**
+     * Every badge scan answer collected so far for a question.
+     * @param ExtraQuestionType $question
+     * @return SponsorBadgeScanExtraQuestionAnswer[]
+     */
+    public function getBadgeScanAnswersByQuestion(ExtraQuestionType $question): array;
 }

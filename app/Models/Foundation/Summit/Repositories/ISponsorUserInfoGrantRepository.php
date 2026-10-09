@@ -29,4 +29,12 @@ interface ISponsorUserInfoGrantRepository extends IBaseRepository
      * @return SponsorBadgeScan|null
      */
     public function findExistingBadgeScan(Sponsor $sponsor, SummitAttendeeBadge $badge, Member $member, \DateTime $scan_date): ?SponsorBadgeScan;
+
+    /**
+     * Badge scan activity of a sponsor, one row per rep (member) that scanned for it,
+     * most recently active first.
+     * @param Sponsor $sponsor
+     * @return array<int, array{member_id:int, first_name:string, last_name:string, email:string, scans_count:int, last_scan_date:string}>
+     */
+    public function getScanActivityBySponsor(Sponsor $sponsor): array;
 }

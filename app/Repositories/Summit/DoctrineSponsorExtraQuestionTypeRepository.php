@@ -12,11 +12,13 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
 use models\summit\Sponsor;
+use models\summit\SponsorBadgeScanExtraQuestionAnswer;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -101,5 +103,20 @@ final class DoctrineSponsorExtraQuestionTypeRepository
                 //default order
                 return $query;
             });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getBadgeScanAnswersByQuestion(ExtraQuestionType $question): array
+    {
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("a")
+            ->from(SponsorBadgeScanExtraQuestionAnswer::class, "a")
+            ->where("a.question = :question")
+            ->setParameter("question", $question)
+            ->getQuery()
+            ->getResult();
     }
 }

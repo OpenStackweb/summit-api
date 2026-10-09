@@ -17,6 +17,7 @@ use Illuminate\Http\UploadedFile;
 use Mockery;
 use models\summit\SummitLeadReportSetting;
 use App\Models\Foundation\Main\IGroup;
+use App\Models\ResourceServer\IAccessTokenService;
 /**
  * Class OAuth2SummitSponsorApiTest
  */
@@ -1619,6 +1620,118 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         // answer options can never be deleted: devices may hold answers the server has not seen
         $this->assertResponseStatus(412);
         $this->assertStringContainsString("Answer options can't be deleted once created", $response->getContent());
+    }
+
+    // ---- Force delete is for admins only ----
+
+    /**
+     * Makes the user a member of sponsors[0] so the sponsor authz passes. It has to run
+     * before the first request: the entity manager is closed after each one.
+     */
+    private function makeMemberSponsorUser(): void
+    {
+        $sponsor = self::$sponsors[0];
+        $sponsor->addUser(self::$member);
+        self::$em->persist(self::$member);
+        self::$em->persist($sponsor);
+        self::$em->flush();
+        self::$member->addSponsorPermission($sponsor->getId(), IGroup::Sponsors);
+    }
+
+    /**
+     * The token stub grants the user the administrators group, and the first request syncs
+     * the token groups into the member's DB groups, so swap it for one that only has the
+     * sponsors group before the first request.
+     */
+    private function useSponsorOnlyToken(): void
+    {
+        $stub = new AccessTokenServiceStub([['slug' => IGroup::Sponsors]]);
+        $stub->setUserId(self::$member->getUserExternalId());
+        $stub->setUserExternalId(self::$member->getUserExternalId());
+        $stub->setUserEmail(self::$member->getEmail());
+        $stub->setUserFirstName(self::$member->getFirstName());
+        $stub->setUserLastName(self::$member->getLastName());
+        self::$service = $stub;
+        $this->app->singleton(IAccessTokenService::class, function () use ($stub) { return $stub; });
+    }
+
+    public function testForceDeleteSponsorExtraQuestionBySponsorIsForbidden(){
+        $this->makeMemberSponsorUser();
+        $this->useSponsorOnlyToken();
+        $q = $this->testAddSponsorExtraQuestions();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'extra_question_id' => $q->id,
+        ];
+
+        // the sponsor is authorized on the sponsor: a plain delete is refused...
+        $this->action("DELETE", "OAuth2SummitSponsorApiController@deleteExtraQuestion", $params, [], [], [], $this->getAuthHeaders());
+        $this->assertResponseStatus(412);
+
+        // ...and the flag never helps a sponsor
+        $this->action(
+            "DELETE",
+            "OAuth2SummitSponsorApiController@deleteExtraQuestion",
+            array_merge($params, ['force' => 'true']),
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['reason' => 'sponsor insists'])
+        );
+        $this->assertResponseStatus(403);
+    }
+
+    public function testForceDeleteExtraQuestionValueBySponsorIsForbidden(){
+        $this->makeMemberSponsorUser();
+        $this->useSponsorOnlyToken();
+        $result = $this->testAddExtraQuestionValue();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'sponsor_id' => self::$sponsors[0]->getId(),
+            'extra_question_id' => $result->question_id,
+            'value_id' => $result->value->id,
+        ];
+
+        $this->action("DELETE", "OAuth2SummitSponsorApiController@deleteExtraQuestionValue", $params, [], [], [], $this->getAuthHeaders());
+        $this->assertResponseStatus(412);
+
+        $this->action(
+            "DELETE",
+            "OAuth2SummitSponsorApiController@deleteExtraQuestionValue",
+            array_merge($params, ['force' => 'true']),
+            [],
+            [],
+            [],
+            $this->getAuthHeaders(),
+            json_encode(['reason' => 'sponsor insists'])
+        );
+        $this->assertResponseStatus(403);
+    }
+
+    public function testGetExtraQuestionUsageBySponsorIsForbidden(){
+        $this->makeMemberSponsorUser();
+        $this->useSponsorOnlyToken();
+        $q = $this->testAddSponsorExtraQuestions();
+
+        $this->action(
+            "GET",
+            "OAuth2SummitSponsorApiController@getExtraQuestionUsage",
+            [
+                'id' => self::$summit->getId(),
+                'sponsor_id' => self::$sponsors[0]->getId(),
+                'extra_question_id' => $q->id,
+            ],
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(403);
     }
 
     // ---- Public API ----

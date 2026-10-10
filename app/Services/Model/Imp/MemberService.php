@@ -558,10 +558,14 @@ final class MemberService
                             $member->removeFromGroup($group);
                         }
                     }
-                    // the IDP is the source of truth: a sponsor group that is gone takes its Sponsor_Users access with it
+                    // the IDP is the source of truth: a sponsor group that is gone takes its Sponsor_Users permission slug with it
                     if(in_array($externalGroup->getCode(), [IGroup::Sponsors, IGroup::SponsorExternalUsers])){
-                        Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing Sponsor_Users access for group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
-                        $member->removeSponsorPermissionFromAllSponsors($externalGroup->getCode());
+                        Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s stripping Sponsor_Users permission for group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
+                        // same primitive the sponsor-users-api removal event uses; the Sponsor_Users rows stay
+                        // (their lifecycle belongs to the access right events), only the slug is stripped
+                        foreach ($member->getSponsorMemberships() as $sponsor) {
+                            $member->removeSponsorPermission($sponsor->getId(), $externalGroup->getCode());
+                        }
                     }
                     Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
                     $member->removeFromGroup($externalGroup);

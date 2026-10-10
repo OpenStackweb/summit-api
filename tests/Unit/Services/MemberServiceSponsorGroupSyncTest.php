@@ -25,7 +25,8 @@ use Tests\TestCase;
  *
  * The IDP payload is the source of truth for the sponsor groups: on the full
  * (allow_removals = true) sync a sponsor group missing from the payload is removed
- * locally together with the matching Sponsor_Users access. The additive
+ * locally and its slug is stripped from the member's Sponsor_Users.Permissions (the
+ * Sponsor_Users rows stay: their lifecycle belongs to sponsor-users-api). The additive
  * (per-request, token claim) sync never removes either.
  *
  * @package Tests\Unit\Services
@@ -82,7 +83,7 @@ class MemberServiceSponsorGroupSyncTest extends TestCase
         self::$em->clear();
     }
 
-    public function testFullSyncWithoutSponsorsGroupRemovesLocalGroupAndSponsorUsersRow(): void
+    public function testFullSyncWithoutSponsorsGroupRemovesLocalGroupAndStripsSlugFromSponsorUsersRow(): void
     {
         $member_id = self::$member->getId();
         $sponsor_id = self::$sponsors[0]->getId();
@@ -92,7 +93,8 @@ class MemberServiceSponsorGroupSyncTest extends TestCase
 
         $member = self::$member_repository->find($member_id);
         $this->assertFalse($member->belongsToGroup(IGroup::Sponsors), "local sponsors group must be removed");
-        $this->assertNull($this->getPermissions($sponsor_id, $member_id), "Sponsor_Users row must be removed");
+        // the membership itself is owned by the sponsor-users-api access right events, not by the group sync
+        $this->assertEquals([], $this->getPermissions($sponsor_id, $member_id), "slug must be stripped, row must stay");
     }
 
     public function testFullSyncKeepsSponsorsGroupAndSponsorUsersRowWhenPayloadStillHasIt(): void
@@ -138,7 +140,7 @@ class MemberServiceSponsorGroupSyncTest extends TestCase
         );
     }
 
-    public function testFullSyncWithoutExternalUsersGroupRemovesLocalGroupAndSponsorUsersRow(): void
+    public function testFullSyncWithoutExternalUsersGroupRemovesLocalGroupAndStripsSlugFromSponsorUsersRow(): void
     {
         $member_id = self::$member->getId();
         $sponsor_id = self::$sponsors[0]->getId();
@@ -163,7 +165,7 @@ class MemberServiceSponsorGroupSyncTest extends TestCase
             $member = self::$member_repository->find($member_id);
             $this->assertTrue($member->belongsToGroup(IGroup::Sponsors));
             $this->assertFalse($member->belongsToGroup(IGroup::SponsorExternalUsers));
-            $this->assertNull($this->getPermissions($sponsor_id, $member_id));
+            $this->assertEquals([], $this->getPermissions($sponsor_id, $member_id));
         } finally {
             $g = self::$em->getRepository(Group::class)->findOneBy(['code' => IGroup::SponsorExternalUsers]);
             if (!is_null($g)) {

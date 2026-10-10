@@ -951,7 +951,7 @@ trait InsertSummitTestData
                 $m->setName(sprintf("Material %s %s %s", $i, $j, str_random(16)));
                 $m->setOrder($j);
                 $m->setLink(sprintf("https://%s.%s.%s.com", $i, $j, str_random(10)));
-                $m->setType(SponsorMaterial::ValidTypes[ array_rand(SponsorMaterial::ValidTypes)]);
+                $m->setType(SponsorMaterial::ValidTypes[$j % count(SponsorMaterial::ValidTypes)]);
                 $s->addMaterial($m);
 
                 $sn = new SponsorSocialNetwork();

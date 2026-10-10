@@ -539,7 +539,7 @@ final class MemberService
                             continue;
 
                         // skipping this groups bc are managed by SS side
-                        if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs, IGroup::Sponsors])){
+                        if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs])){
                             Log::debug(sprintf("MemberService::synchronizeGroups skipping group %s removal", $group->getCode()));
                             continue;
                         }
@@ -557,6 +557,11 @@ final class MemberService
                             Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s due is also a super admin", $member->getId(), $member->getEmail(), $group->getCode()));
                             $member->removeFromGroup($group);
                         }
+                    }
+                    // the IDP is the source of truth: a sponsor group that is gone takes its Sponsor_Users access with it
+                    if(in_array($externalGroup->getCode(), [IGroup::Sponsors, IGroup::SponsorExternalUsers])){
+                        Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing Sponsor_Users access for group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
+                        $member->removeSponsorPermissionFromAllSponsors($externalGroup->getCode());
                     }
                     Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
                     $member->removeFromGroup($externalGroup);

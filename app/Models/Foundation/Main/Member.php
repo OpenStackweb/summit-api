@@ -3599,6 +3599,70 @@ SQL;
         ])->executeQuery()->fetchOne());
     }
 
+    /**
+     * Strips $group_slug from the Permissions of EVERY Sponsor_Users row of this member and drops the
+     * membership of the rows that held that slug and are left without any permission. Used when the
+     * IDP no longer carries the sponsor group, so its access cannot outlive the group.
+     * Rows that never held the slug (or still hold another one) are left untouched.
+     *
+     * @param string $group_slug
+     * @return void
+     */
+    public function removeSponsorPermissionFromAllSponsors(string $group_slug): void
+    {
+        $params = ['member_id' => $this->getId(), 'group_slug' => $group_slug];
+
+        $sponsor_ids = $this->prepareRawSQL(
+            <<<SQL
+SELECT SponsorID FROM Sponsor_Users
+WHERE MemberID = :member_id
+AND JSON_CONTAINS(COALESCE(Permissions, '[]'), JSON_QUOTE(:group_slug))
+FOR UPDATE
+SQL,
+            $params
+        )->executeQuery()->fetchFirstColumn();
+
+        if (count($sponsor_ids) === 0) return;
+
+        $this->prepareRawSQL(
+            <<<SQL
+UPDATE Sponsor_Users
+SET Permissions = COALESCE(
+    (
+        SELECT JSON_ARRAYAGG(element)
+        FROM JSON_TABLE(
+            COALESCE(Permissions, '[]'), '$[*]'
+            COLUMNS(element VARCHAR(255) PATH '$')
+        ) AS jt
+        WHERE element != :group_slug
+    ),
+    '[]'
+)
+WHERE MemberID = :member_id
+AND JSON_CONTAINS(COALESCE(Permissions, '[]'), JSON_QUOTE(:group_slug))
+SQL,
+            $params
+        )->executeStatement();
+
+        $emptied_sponsor_ids = $this->prepareRawSQL(
+            <<<SQL
+SELECT SponsorID FROM Sponsor_Users
+WHERE MemberID = :member_id
+AND JSON_LENGTH(COALESCE(Permissions, '[]')) = 0
+SQL,
+            ['member_id' => $this->getId()]
+        )->executeQuery()->fetchFirstColumn();
+
+        // only the rows this call emptied, never an unrelated row that was already empty
+        $to_remove = array_intersect(array_map('intval', $sponsor_ids), array_map('intval', $emptied_sponsor_ids));
+
+        foreach ($this->sponsor_memberships->toArray() as $sponsor) {
+            if (in_array(intval($sponsor->getId()), $to_remove, true)) {
+                $sponsor->removeUser($this);
+            }
+        }
+    }
+
     public function addSponsorMembership(Sponsor $sponsor):void
     {
         if($this->sponsor_memberships->contains($sponsor)) return;

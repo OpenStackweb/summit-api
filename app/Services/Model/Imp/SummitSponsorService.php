@@ -1127,6 +1127,10 @@ final class SummitSponsorService
             if (!$extra_question instanceof SummitSponsorExtraQuestionType)
                 throw new EntityNotFoundException("Sponsor extra question not found.");
 
+            // serialize with badge scan ingestion: an answer committed after the read below would be
+            // cascade deleted (ExtraQuestionAnswer.QuestionID is ON DELETE CASCADE) without being counted
+            $this->repository->lockQuestion($extra_question);
+
             $answers = $this->repository->getBadgeScanAnswersByQuestion($extra_question);
             $answers_count = count($answers);
 
@@ -1139,7 +1143,8 @@ final class SummitSponsorService
                 );
             }
 
-            // the answers reference the question (FK without cascade), so they go first
+            // the FK would cascade the delete anyway, the explicit removal goes through the ORM so
+            // orphan removal, LastEdited and the onFlush audit run, and the count is exact (see lockQuestion)
             foreach ($answers as $answer) {
                 $this->removeBadgeScanAnswer($answer);
             }
@@ -1367,6 +1372,9 @@ final class SummitSponsorService
             $value = $extra_question->getValueById($value_id);
             if (is_null($value))
                 throw new EntityNotFoundException("value not found");
+
+            // serialize with badge scan ingestion, so the answers split below are the ones that get changed
+            $this->repository->lockQuestion($extra_question);
 
             [$to_delete, $to_modify] = $this->splitAnswersUsingOption($extra_question, $value_id);
 

@@ -19,6 +19,7 @@ use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepositor
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
 use models\summit\Sponsor;
 use models\summit\SponsorBadgeScanExtraQuestionAnswer;
+use Doctrine\DBAL\LockMode;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -118,5 +119,13 @@ final class DoctrineSponsorExtraQuestionTypeRepository
             ->setParameter("question", $question)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function lockQuestion(ExtraQuestionType $question): void
+    {
+        $this->getEntityManager()->lock($question, LockMode::PESSIMISTIC_WRITE);
     }
 }

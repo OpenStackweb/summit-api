@@ -27,4 +27,12 @@ interface ISponsorExtraQuestionTypeRepository extends IExtraQuestionTypeReposito
      * @return SponsorBadgeScanExtraQuestionAnswer[]
      */
     public function getBadgeScanAnswersByQuestion(ExtraQuestionType $question): array;
+
+    /**
+     * Takes a write lock on the question row, to be called at the top of a transaction.
+     * Badge scan ingestion takes a shared lock on that row when InnoDB checks the answer FK, so
+     * the answers read afterwards can't change until the transaction ends.
+     * @param ExtraQuestionType $question
+     */
+    public function lockQuestion(ExtraQuestionType $question): void;
 }

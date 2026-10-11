@@ -23,8 +23,6 @@ use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\FileSystem\S3\S3StorageFileDownloadStrategy;
 use App\Services\FileSystem\S3\S3StorageFileUploadStrategy;
-use App\Services\FileSystem\Swift\SwiftStorageFileDownloadStrategy;
-use App\Services\FileSystem\Swift\SwiftStorageFileUploadStrategy;
 use App\Services\ISummitRSVPInvitationService;
 use App\Services\Model\AllowedEmailDomainsLookupBuilder;
 use App\Services\Model\AttendeeService;
@@ -179,19 +177,14 @@ final class ModelServicesProvider extends ServiceProvider
 
     public function register()
     {
-        // temporary CSV import files ( save -> queued job reads -> delete )
-        $use_s3_for_imports = config('filesystems.imports_storage') === 's3';
-        $imports_download_strategy = $use_s3_for_imports ? S3StorageFileDownloadStrategy::class : SwiftStorageFileDownloadStrategy::class;
-        $imports_upload_strategy = $use_s3_for_imports ? S3StorageFileUploadStrategy::class : SwiftStorageFileUploadStrategy::class;
+        App::when(SummitService::class)->needs(IFileDownloadStrategy::class)->give(S3StorageFileDownloadStrategy::class);
+        App::when(SummitService::class)->needs(IFileUploadStrategy::class)->give(S3StorageFileUploadStrategy::class);
 
-        App::when(SummitService::class)->needs(IFileDownloadStrategy::class)->give($imports_download_strategy);
-        App::when(SummitService::class)->needs(IFileUploadStrategy::class)->give($imports_upload_strategy);
+        App::when(SummitOrderService::class)->needs(IFileDownloadStrategy::class)->give(S3StorageFileDownloadStrategy::class);
+        App::when(SummitOrderService::class)->needs(IFileUploadStrategy::class)->give(S3StorageFileUploadStrategy::class);
 
-        App::when(SummitOrderService::class)->needs(IFileDownloadStrategy::class)->give($imports_download_strategy);
-        App::when(SummitOrderService::class)->needs(IFileUploadStrategy::class)->give($imports_upload_strategy);
-
-        App::when(SummitSelectionPlanService::class)->needs(IFileDownloadStrategy::class)->give($imports_download_strategy);
-        App::when(SummitSelectionPlanService::class)->needs(IFileUploadStrategy::class)->give($imports_upload_strategy);
+        App::when(SummitSelectionPlanService::class)->needs(IFileDownloadStrategy::class)->give(S3StorageFileDownloadStrategy::class);
+        App::when(SummitSelectionPlanService::class)->needs(IFileUploadStrategy::class)->give(S3StorageFileUploadStrategy::class);
 
         // add bindings for service
         App::singleton(ISummitService::class, SummitService::class);

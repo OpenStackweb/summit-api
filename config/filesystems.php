@@ -131,7 +131,5 @@ return [
 
     ],
     'assets_disk' => env('FILESYSTEMS_ASSETS_DISK', 'assets'),
-    'static_images_disk' => env('FILESYSTEMS_STATIC_IMAGES_DISK', 'static_images'),
-    // storage for temporary CSV import files ( tickets, events, registration companies, selection plan members ): swift | s3
-    'imports_storage' => env('FILESYSTEMS_IMPORTS_STORAGE', 'swift'),
+    'static_images_disk' => env('FILESYSTEMS_STATIC_IMAGES_DISK', 'static_images')
 ];

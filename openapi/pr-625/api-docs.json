@@ -56963,9 +56963,7 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators",
-                    "sponsors",
-                    "sponsors-external-users"
+                    "summit-front-end-administrators"
                 ]
             }
         },
@@ -57260,9 +57258,7 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators",
-                    "sponsors",
-                    "sponsors-external-users"
+                    "summit-front-end-administrators"
                 ]
             }
         },

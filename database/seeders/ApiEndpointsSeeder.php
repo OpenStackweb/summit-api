@@ -2578,8 +2578,6 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
-                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2643,8 +2641,36 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
-                    IGroup::SponsorExternalUsers,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-extra-question-usage',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/usage',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSponsorExtraQuestions,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
+                'name' => 'get-sponsor-extra-question-value-usage',
+                'route' => '/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}/usage',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadSummitData,
+                    SummitScopes::ReadAllSummitData,
+                    SummitScopes::ReadSponsorExtraQuestions,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
                 ]
             ],
             // lead report settings

@@ -3694,8 +3694,6 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
-                IGroup::Sponsors,
-                IGroup::SponsorExternalUsers,
             ]
         ],
         security: [
@@ -4019,8 +4017,6 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 IGroup::SuperAdmins,
                 IGroup::Administrators,
                 IGroup::SummitAdministrators,
-                IGroup::Sponsors,
-                IGroup::SponsorExternalUsers,
             ]
         ],
         security: [

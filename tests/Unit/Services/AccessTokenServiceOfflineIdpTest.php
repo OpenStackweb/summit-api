@@ -1,4 +1,4 @@
-<?php namespace Tests\Unit;
+<?php namespace Tests\Unit\Services;
 /**
  * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\ResourceServer\AccessTokenService;
 use App\Models\ResourceServer\IAccessTokenService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
@@ -87,7 +88,10 @@ final class AccessTokenServiceOfflineIdpTest extends TestCase
         $port = (int)explode(':', stream_socket_get_name($listener, false))[1];
         fclose($listener);
 
-        $this->router_file = tempnam(sys_get_temp_dir(), 'fake_idp_') . '.php';
+        $base = tempnam(sys_get_temp_dir(), 'fake_idp_');
+        $this->router_file = $base . '.php';
+        // tempnam() already created $base: rename it so no empty file is left behind
+        rename($base, $this->router_file);
         file_put_contents(
             $this->router_file,
             sprintf(
@@ -142,7 +146,26 @@ final class AccessTokenServiceOfflineIdpTest extends TestCase
 
         $ttl = $this->cache->ttl($this->revoked_key);
         $this->assertGreaterThan(0, $ttl, 'the flag must expire, ttl=' . $ttl);
-        $this->assertLessThanOrEqual(60, $ttl);
+        $this->assertLessThanOrEqual(30, $ttl);
+    }
+
+    public function testOfflineIdpDoesNotDowngradeAPermanentRevocation()
+    {
+        // get() returns before introspecting when the flag already exists, so the race (a 400 writing
+        // the permanent flag while a 503 is in flight) is reproduced by calling the introspection directly
+        $this->startFakeIdp(503, ['Retry-After: 0', 'Content-Type: text/plain'], 'offline');
+        $this->cache->setSingleValue($this->revoked_key, md5($this->token_value));
+
+        $introspect = new \ReflectionMethod(AccessTokenService::class, 'doIntrospectionRequest');
+        $introspect->setAccessible(true);
+        try {
+            $introspect->invoke(App::make(IAccessTokenService::class), $this->token_value);
+            $this->fail('expected an InvalidGrantTypeException');
+        } catch (InvalidGrantTypeException $ex) {
+            // expected
+        }
+
+        $this->assertSame(-1, $this->cache->ttl($this->revoked_key), 'a permanent revocation must not be downgraded');
     }
 
     public function testInvalidTokenFromIdpStaysFlagged()

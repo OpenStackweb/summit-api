@@ -12,11 +12,14 @@
  * limitations under the License.
  **/
 
+use App\Models\Foundation\ExtraQuestions\ExtraQuestionType;
 use App\Models\Foundation\ExtraQuestions\ExtraQuestionTypeConstants;
 use App\Models\Foundation\Summit\ExtraQuestions\SummitSponsorExtraQuestionType;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Repositories\Main\DoctrineExtraQuestionTypeRepository;
 use models\summit\Sponsor;
+use models\summit\SponsorBadgeScanExtraQuestionAnswer;
+use Doctrine\DBAL\LockMode;
 use utils\DoctrineLeftJoinFilterMapping;
 use utils\Filter;
 use utils\Order;
@@ -101,5 +104,43 @@ final class DoctrineSponsorExtraQuestionTypeRepository
                 //default order
                 return $query;
             });
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getBadgeScanAnswersByQuestion(ExtraQuestionType $question): array
+    {
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("a")
+            ->from(SponsorBadgeScanExtraQuestionAnswer::class, "a")
+            ->where("a.question = :question")
+            ->setParameter("question", $question)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function countBadgeScanAnswersByQuestion(ExtraQuestionType $question): int
+    {
+        return (int)$this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("count(a.id)")
+            ->from(SponsorBadgeScanExtraQuestionAnswer::class, "a")
+            ->where("a.question = :question")
+            ->setParameter("question", $question)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function lockQuestion(ExtraQuestionType $question): void
+    {
+        $this->getEntityManager()->lock($question, LockMode::PESSIMISTIC_WRITE);
     }
 }

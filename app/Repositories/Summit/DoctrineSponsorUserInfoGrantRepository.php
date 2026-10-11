@@ -158,4 +158,22 @@ final class DoctrineSponsorUserInfoGrantRepository
 
         return $query->getQuery()->getOneOrNullResult();
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getScanActivityBySponsor(Sponsor $sponsor): array
+    {
+        return $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("m.id AS member_id, m.first_name AS first_name, m.last_name AS last_name, m.email AS email, COUNT(e.id) AS scans_count, MAX(e.scan_date) AS last_scan_date")
+            ->from(SponsorBadgeScan::class, "e")
+            ->join("e.user", "m")
+            ->where("e.sponsor = :sponsor")
+            ->setParameter("sponsor", $sponsor)
+            ->groupBy("m.id")
+            ->orderBy("last_scan_date", "DESC")
+            ->getQuery()
+            ->getArrayResult();
+    }
 }

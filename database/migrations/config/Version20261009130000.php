@@ -19,7 +19,7 @@ use Doctrine\Migrations\AbstractMigration;
 
 /**
  * Register the sponsor extra question and answer option usage endpoints, the pre-check an admin
- * reads before force deleting.
+ * reads before deleting, and make the DELETE endpoints of both admin only (sponsor groups removed).
  *
  * ApiEndpointsSeeder covers fresh installs only -- the k8s deploy flow does not re-run
  * seeders -- and OAuth2BearerAccessTokenRequestValidator rejects any route missing from
@@ -72,18 +72,40 @@ final class Version20261009130000 extends AbstractMigration
         ],
     ];
 
+    private const DELETE_ENDPOINTS = [
+        'delete-sponsor-extra-question',
+        'delete-sponsor-extra-question-value',
+    ];
+
+    private const SPONSOR_GROUPS = [
+        IGroup::Sponsors,
+        IGroup::SponsorExternalUsers,
+    ];
+
     public function getDescription(): string
     {
-        return 'Register the sponsor extra question and answer option usage endpoints.';
+        return 'Register the sponsor extra question and answer option usage endpoints, make their DELETE admin only.';
     }
 
     public function up(Schema $schema): void
     {
         $this->registerEndpoints(self::API_NAME, self::ENDPOINTS);
+
+        foreach (self::DELETE_ENDPOINTS as $endpoint) {
+            foreach (self::SPONSOR_GROUPS as $group) {
+                $this->addSql($this->deleteEndpointAuthzGroup(self::API_NAME, $endpoint, $group));
+            }
+        }
     }
 
     public function down(Schema $schema): void
     {
+        foreach (self::DELETE_ENDPOINTS as $endpoint) {
+            foreach (self::SPONSOR_GROUPS as $group) {
+                $this->addSql($this->insertEndpointAuthzGroup(self::API_NAME, $endpoint, $group));
+            }
+        }
+
         $this->unregisterEndpoints(self::API_NAME, array_column(self::ENDPOINTS, 'name'));
     }
 }

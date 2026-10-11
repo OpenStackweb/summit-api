@@ -272,23 +272,23 @@ interface ISummitSponsorService
     public function updateSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id, array $payload):SummitSponsorExtraQuestionType;
 
     /**
-     * Refused for everyone unless $force_by is given. $force_by is an admin the caller
-     * already authorized: a device may hold answers the server has not seen, and only an
-     * admin who checked the devices can tell a delete is safe.
+     * $deleted_by is an admin the caller already authorized: a device may hold answers the
+     * server has not seen, and only an admin who checked the devices can tell a delete is safe.
+     * Refused when the server holds answers and $delete_answers is false.
      * @param Summit $summit
      * @param int $sponsor_id
      * @param int $extra_question_id
-     * @param Member|null $force_by admin forcing the delete, null refuses it
-     * @param string|null $reason required when forcing, goes to the audit entry
+     * @param Member $deleted_by the admin deleting, goes to the audit entry
+     * @param string|null $reason required (ValidationException if blank), goes to the audit entry
      * @param bool $delete_answers confirms the collected answers of the question are destroyed
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function deleteSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id, ?Member $force_by = null, ?string $reason = null, bool $delete_answers = false):void;
+    public function deleteSponsorExtraQuestion(Summit $summit, int $sponsor_id, int $extra_question_id, Member $deleted_by, ?string $reason, ?bool $delete_answers):void;
 
     /**
-     * What a force delete of the question would affect.
+     * What deleting the question would affect.
      * @param Summit $summit
      * @param int $sponsor_id
      * @param int $extra_question_id
@@ -319,24 +319,24 @@ interface ISummitSponsorService
     public function updateExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id, array $payload):ExtraQuestionTypeValue;
 
     /**
-     * Refused for everyone unless $force_by is given, see deleteSponsorExtraQuestion.
+     * Admin only, see deleteSponsorExtraQuestion.
      * Collected answers that selected the option are deleted when it was their only
      * selection, otherwise they only lose its id.
      * @param Summit $summit
      * @param int $sponsor_id
      * @param int $question_id
      * @param int $value_id
-     * @param Member|null $force_by admin forcing the delete, null refuses it
-     * @param string|null $reason required when forcing, goes to the audit entry
+     * @param Member $deleted_by the admin deleting, goes to the audit entry
+     * @param string|null $reason required (ValidationException if blank), goes to the audit entry
      * @param bool $delete_answers confirms the collected answers that selected the option are changed
      * @return void
      * @throws EntityNotFoundException
      * @throws ValidationException
      */
-    public function deleteExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id, ?Member $force_by = null, ?string $reason = null, bool $delete_answers = false):void;
+    public function deleteExtraQuestionValue(Summit $summit, int $sponsor_id, int $question_id, int $value_id, Member $deleted_by, ?string $reason, ?bool $delete_answers):void;
 
     /**
-     * What a force delete of the option would affect.
+     * What deleting the option would affect.
      * @param Summit $summit
      * @param int $sponsor_id
      * @param int $question_id

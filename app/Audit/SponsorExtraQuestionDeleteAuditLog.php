@@ -25,23 +25,23 @@ use models\summit\Sponsor;
 use models\summit\Summit;
 
 /**
- * Audit entry for an admin force delete of a sponsor extra question or answer option.
+ * Audit entry for an admin delete of a sponsor extra question or answer option.
  *
  * The onFlush listener already audits the entities removed by the delete, but it
  * cannot carry the reason the admin gave nor how many collected answers were
  * destroyed or modified, so this entry records them explicitly.
  *
  * The entry is always persisted as a SummitAuditLog (queryable through
- * /api/v1/audit-logs) within the same transaction as the delete, so a force delete
+ * /api/v1/audit-logs) within the same transaction as the delete, so a delete
  * never commits without its audit record, whether or not the OTLP pipeline is on.
  * @package App\Audit
  */
-final class SponsorExtraQuestionForceDeleteAuditLog
+final class SponsorExtraQuestionDeleteAuditLog
 {
     public const TargetQuestion = 'question';
     public const TargetOption   = 'option';
 
-    public const LogMessage = 'audit.sponsor_extra_question.force_deleted';
+    public const LogMessage = 'audit.sponsor_extra_question.deleted';
 
     /**
      * Persists the audit entry, call it within the transaction that performs the delete.
@@ -74,7 +74,7 @@ final class SponsorExtraQuestionForceDeleteAuditLog
         $is_question = $target_type === self::TargetQuestion;
         $description = sprintf
         (
-            "Sponsor %s %s '%s' (ID: %s) of Sponsor %s (Summit %s) force deleted by user %s (%s). Reason: %s. Collected answers deleted: %s, modified: %s",
+            "Sponsor %s %s '%s' (ID: %s) of Sponsor %s (Summit %s) deleted by user %s (%s). Reason: %s. Collected answers deleted: %s, modified: %s",
             $is_question ? 'extra question' : 'extra question option',
             $target_type,
             $target_label,
@@ -99,7 +99,6 @@ final class SponsorExtraQuestionForceDeleteAuditLog
             'audit.timestamp'         => now()->toISOString(),
             'audit.summit_id'         => (string)$summit->getId(),
             'audit.sponsor_id'        => (string)$sponsor->getId(),
-            'audit.force'             => 'true',
             'audit.reason'            => $reason,
             'audit.target_label'      => $target_label,
             'audit.answers_deleted'   => $answers_deleted,

@@ -3685,8 +3685,8 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     #[OA\Delete(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}",
-        summary: 'Delete Sponsor Extra Question (admin force only)',
-        description: "Refused with 412 unless force=true is sent by an admin (Super Admins, Administrators or Summit Administrators allowed on the summit): devices may hold answers for this question that the server has not seen yet, so edit the wording or turn off Mandatory instead. A force delete needs a reason, is audited, and when the server holds answers it is refused with their count unless delete_answers=true. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
+        summary: 'Delete Sponsor Extra Question (admin only)',
+        description: "Admin only (Super Admins, Administrators or Summit Administrators allowed on the summit), anyone else gets 403. Devices may hold answers for this question that the server has not seen yet, so the admin must have checked them first. It needs a reason and delete_answers (true or false), and is audited; when the server holds answers it is refused with their count unless delete_answers=true. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
         operationId: 'deleteSponsorExtraQuestion',
         tags: ['Sponsors'],
         x: [
@@ -3729,36 +3729,29 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 description: 'The extra question id'
             ),
             new OA\Parameter(
-                name: 'force',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'boolean'),
-                description: 'Admin only force delete. Without it the delete is always refused (412); a non-admin sending it gets 403'
-            ),
-            new OA\Parameter(
                 name: 'delete_answers',
                 in: 'query',
-                required: false,
+                required: true,
                 schema: new OA\Schema(type: 'boolean'),
-                description: 'Confirms that collected answers are destroyed. Required when the server holds answers, otherwise 412 with their count'
+                description: 'Required (true or false). With false and answers on the server it is refused with 412 and their count; true destroys them'
             ),
         ],
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'reason', type: 'string', description: 'Required with force=true, goes to the audit entry'),
+                    new OA\Property(property: 'reason', type: 'string', description: 'Required, goes to the audit entry'),
                 ]
             )
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Question force deleted'),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Question deleted'),
             new OA\Response(
                 response: Response::HTTP_PRECONDITION_FAILED,
-                description: "Validation Error - questions can't be deleted once created (no force), a reason is missing, or collected answers would be destroyed and delete_answers is not true"
+                description: "Validation Error - a reason or delete_answers is missing, or collected answers would be destroyed and delete_answers is false"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - force=true is for admins only"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - admins only"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error"),
         ]
@@ -3784,10 +3777,12 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             if(!$current_member->isAuthzFor($summit, $sponsor))
                 throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
-            $force_by = $this->getForceDeleteAdmin($current_member, $summit);
-            [$reason, $delete_answers] = $this->getForceDeleteParams();
+            if (!$this->isAdminFor($current_member, $summit))
+                throw new HTTP403ForbiddenException("Only an administrator can delete.");
 
-            $this->service->deleteSponsorExtraQuestion($summit, intval($sponsor_id), intval($extra_question_id), $force_by, $reason, $delete_answers);
+            [$reason, $delete_answers] = $this->getDeleteParams();
+
+            $this->service->deleteSponsorExtraQuestion($summit, intval($sponsor_id), intval($extra_question_id), $current_member, $reason, $delete_answers);
 
             return $this->deleted();
 
@@ -4007,8 +4002,8 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     use ParametrizedDeleteEntity;
     #[OA\Delete(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}",
-        description: "Refused with 412 unless force=true is sent by an admin (Super Admins, Administrators or Summit Administrators allowed on the summit): devices may hold answers for this option that the server has not seen yet, so edit the wording instead. A force delete needs a reason and is audited. Collected answers that selected the option are deleted when it was their only selection, otherwise they only lose its id; when the server holds any, it is refused with their count unless delete_answers=true. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators . ", " . IGroup::Sponsors . ", " . IGroup::SponsorExternalUsers,
-        summary: 'Delete Extra Question Value (admin force only)',
+        description: "Admin only (Super Admins, Administrators or Summit Administrators allowed on the summit), anyone else gets 403. Devices may hold answers for this option that the server has not seen yet, so the admin must have checked them first. It needs a reason and delete_answers (true or false), and is audited. Collected answers that selected the option are deleted when it was their only selection, otherwise they only lose its id; when the server holds any, it is refused with their count unless delete_answers=true. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        summary: 'Delete Extra Question Value (admin only)',
         operationId: 'deleteSponsorExtraQuestionValue',
         tags: ['Sponsors'],
         x: [
@@ -4058,36 +4053,29 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 description: 'The question value id'
             ),
             new OA\Parameter(
-                name: 'force',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'boolean'),
-                description: 'Admin only force delete. Without it the delete is always refused (412); a non-admin sending it gets 403'
-            ),
-            new OA\Parameter(
                 name: 'delete_answers',
                 in: 'query',
-                required: false,
+                required: true,
                 schema: new OA\Schema(type: 'boolean'),
-                description: 'Confirms that collected answers are changed. Required when the server holds answers that selected the option, otherwise 412 with their count'
+                description: 'Required (true or false). With false and answers that selected the option on the server it is refused with 412 and their count; true changes them'
             ),
         ],
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'reason', type: 'string', description: 'Required with force=true, goes to the audit entry'),
+                    new OA\Property(property: 'reason', type: 'string', description: 'Required, goes to the audit entry'),
                 ]
             )
         ),
         responses: [
-            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Option force deleted'),
+            new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Option deleted'),
             new OA\Response(
                 response: Response::HTTP_PRECONDITION_FAILED,
-                description: "Validation Error - answer options can't be deleted once created (no force), a reason is missing, or collected answers would be changed and delete_answers is not true"
+                description: "Validation Error - a reason or delete_answers is missing, or collected answers would be changed and delete_answers is false"
             ),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
-            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - force=true is for admins only"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden - admins only"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
@@ -4115,11 +4103,13 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             if(!$current_member->isAuthzFor($summit, $sponsor))
                 throw new HTTP403ForbiddenException("You are not allowed to perform this action");
 
-            $force_by = $this->getForceDeleteAdmin($current_member, $summit);
-            [$reason, $delete_answers] = $this->getForceDeleteParams();
+            if (!$this->isAdminFor($current_member, $summit))
+                throw new HTTP403ForbiddenException("Only an administrator can delete.");
 
-            return $this->_delete($value_id, function ($value_id, $summit, $sponsor_id, $extra_question_id) use ($force_by, $reason, $delete_answers) {
-                $this->service->deleteExtraQuestionValue($summit, intval($sponsor_id), intval($extra_question_id), intval($value_id), $force_by, $reason, $delete_answers);
+            [$reason, $delete_answers] = $this->getDeleteParams();
+
+            return $this->_delete($value_id, function ($value_id, $summit, $sponsor_id, $extra_question_id) use ($current_member, $reason, $delete_answers) {
+                $this->service->deleteExtraQuestionValue($summit, intval($sponsor_id), intval($extra_question_id), intval($value_id), $current_member, $reason, $delete_answers);
             }
                 , ...$args);
         });
@@ -4127,7 +4117,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     }
 
     /**
-     * Force delete is for admins only: Super Admins, Administrators or Summit Administrators allowed on the summit.
+     * Delete is for admins only: Super Admins, Administrators or Summit Administrators allowed on the summit.
      * @param Member|null $member
      * @param Summit $summit
      * @return bool
@@ -4139,39 +4129,23 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     }
 
     /**
-     * The admin asking for a force delete (?force=true), null when it is a plain delete
-     * (the service refuses it for everyone). The flag never helps a sponsor.
-     * @param Member|null $member
-     * @param Summit $summit
-     * @return Member|null
-     * @throws HTTP403ForbiddenException
-     */
-    private function getForceDeleteAdmin(?Member $member, Summit $summit): ?Member
-    {
-        $force = filter_var(request()->input('force', false), FILTER_VALIDATE_BOOLEAN);
-        if (!$force) return null;
-        if (!$this->isAdminFor($member, $summit))
-            throw new HTTP403ForbiddenException("Only an administrator can force delete.");
-        return $member;
-    }
-
-    /**
      * reason and delete_answers can come in the body or the query string.
-     * @return array [?string $reason, bool $delete_answers]
+     * delete_answers is null when missing or not a boolean, the service refuses it (412).
+     * @return array [?string $reason, ?bool $delete_answers]
      */
-    private function getForceDeleteParams(): array
+    private function getDeleteParams(): array
     {
         $request = request();
         $reason = $request->input('reason');
         return [
             is_string($reason) ? $reason : null,
-            filter_var($request->input('delete_answers', false), FILTER_VALIDATE_BOOLEAN),
+            filter_var($request->input('delete_answers'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
         ];
     }
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/usage",
-        description: "What a force delete of the question affects: collected answers on the server and the sponsor's badge scan activity (reps and their last scan). It does not prove devices have nothing pending. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        description: "What deleting the question affects: collected answers on the server and the sponsor's badge scan activity (reps and their last scan). It does not prove devices have nothing pending. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
         summary: 'Get Sponsor Extra Question usage',
         operationId: 'getSponsorExtraQuestionUsage',
         tags: ['Sponsors'],
@@ -4228,7 +4202,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
 
     #[OA\Get(
         path: "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}/usage",
-        description: "What a force delete of the option affects: collected answers that selected it (answers_to_delete when it was their only selection, answers_to_modify when they only lose its id) and the sponsor's badge scan activity. It does not prove devices have nothing pending. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
+        description: "What deleting the option affects: collected answers that selected it (answers_to_delete when it was their only selection, answers_to_modify when they only lose its id) and the sponsor's badge scan activity. It does not prove devices have nothing pending. required-groups " . IGroup::SuperAdmins . ", " . IGroup::Administrators . ", " . IGroup::SummitAdministrators,
         summary: 'Get Extra Question Value usage',
         operationId: 'getSponsorExtraQuestionValueUsage',
         tags: ['Sponsors'],

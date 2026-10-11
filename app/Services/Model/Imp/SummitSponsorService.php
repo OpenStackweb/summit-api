@@ -12,7 +12,7 @@
  * limitations under the License.
  **/
 
-use App\Audit\SponsorExtraQuestionForceDeleteAuditLog;
+use App\Audit\SponsorExtraQuestionDeleteAuditLog;
 use App\Events\SponsorServices\SponsorDomainEvents;
 use App\Events\SponsorServices\SummitSponsorCreatedEventDTO;
 use App\Events\SponsorServices\SummitSponsorshipCreatedEventDTO;
@@ -1109,22 +1109,15 @@ final class SummitSponsorService
         Summit  $summit,
         int     $sponsor_id,
         int     $extra_question_id,
-        ?Member $force_by = null,
-        ?string $reason = null,
-        bool    $delete_answers = false
+        Member  $deleted_by,
+        ?string $reason,
+        ?bool   $delete_answers
     ): void
     {
-        if (is_null($force_by)) {
-            // Refused: a device may hold answers for this question that the server has not seen yet.
-            // Only an admin who checked the devices can force it (see $force_by).
-            throw new ValidationException(
-                "Questions can't be deleted once created, because devices may already be using them. You can edit the wording, turn off Mandatory, or contact support."
-            );
-        }
+        $reason = $this->requireDeleteReason($reason);
+        $delete_answers = $this->requireDeleteAnswers($delete_answers);
 
-        $reason = $this->requireForceDeleteReason($reason);
-
-        $audit_data = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id, $force_by, $reason, $delete_answers) {
+        $audit_data = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $extra_question_id, $deleted_by, $reason, $delete_answers) {
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");
@@ -1154,12 +1147,12 @@ final class SummitSponsorService
             $label = $extra_question->getLabel();
             $summit_sponsor->removeExtraQuestion($extra_question);
 
-            return SponsorExtraQuestionForceDeleteAuditLog::record(
+            return SponsorExtraQuestionDeleteAuditLog::record(
                 $this->audit_log_repository,
-                $force_by,
+                $deleted_by,
                 $summit,
                 $summit_sponsor,
-                SponsorExtraQuestionForceDeleteAuditLog::TargetQuestion,
+                SponsorExtraQuestionDeleteAuditLog::TargetQuestion,
                 $extra_question_id,
                 $label,
                 $reason,
@@ -1167,7 +1160,7 @@ final class SummitSponsorService
             );
         });
 
-        SponsorExtraQuestionForceDeleteAuditLog::emit($audit_data);
+        SponsorExtraQuestionDeleteAuditLog::emit($audit_data);
     }
 
     /**
@@ -1214,16 +1207,28 @@ final class SummitSponsorService
      * @return string
      * @throws ValidationException
      */
-    private function requireForceDeleteReason(?string $reason): string
+    private function requireDeleteReason(?string $reason): string
     {
         $reason = trim($reason ?? '');
         if ($reason === '')
-            throw new ValidationException("A reason is required to force delete.");
+            throw new ValidationException("A reason is required to delete.");
         return $reason;
     }
 
     /**
-     * Badge scan activity of the sponsor, to see what is at stake before a force delete.
+     * @param bool|null $delete_answers
+     * @return bool
+     * @throws ValidationException
+     */
+    private function requireDeleteAnswers(?bool $delete_answers): bool
+    {
+        if (is_null($delete_answers))
+            throw new ValidationException("delete_answers is required (true or false).");
+        return $delete_answers;
+    }
+
+    /**
+     * Badge scan activity of the sponsor, to see what is at stake before deleting.
      * It does not prove devices have nothing pending, only the devices can show that.
      * @param Sponsor $sponsor
      * @return array
@@ -1341,22 +1346,15 @@ final class SummitSponsorService
         int     $sponsor_id,
         int     $question_id,
         int     $value_id,
-        ?Member $force_by = null,
-        ?string $reason = null,
-        bool    $delete_answers = false
+        Member  $deleted_by,
+        ?string $reason,
+        ?bool   $delete_answers
     ): void
     {
-        if (is_null($force_by)) {
-            // Refused: a device may hold answers for this option that the server has not seen yet.
-            // Only an admin who checked the devices can force it (see $force_by).
-            throw new ValidationException(
-                "Answer options can't be deleted once created, because devices may already be using them. You can edit the wording, or contact support."
-            );
-        }
+        $reason = $this->requireDeleteReason($reason);
+        $delete_answers = $this->requireDeleteAnswers($delete_answers);
 
-        $reason = $this->requireForceDeleteReason($reason);
-
-        $audit_data = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id, $force_by, $reason, $delete_answers) {
+        $audit_data = $this->tx_service->transaction(function () use ($summit, $sponsor_id, $question_id, $value_id, $deleted_by, $reason, $delete_answers) {
             $summit_sponsor = $summit->getSummitSponsorById($sponsor_id);
             if (is_null($summit_sponsor))
                 throw new EntityNotFoundException("Sponsor not found.");
@@ -1394,12 +1392,12 @@ final class SummitSponsorService
             $label = $value->getLabel();
             $extra_question->removeValue($value);
 
-            return SponsorExtraQuestionForceDeleteAuditLog::record(
+            return SponsorExtraQuestionDeleteAuditLog::record(
                 $this->audit_log_repository,
-                $force_by,
+                $deleted_by,
                 $summit,
                 $summit_sponsor,
-                SponsorExtraQuestionForceDeleteAuditLog::TargetOption,
+                SponsorExtraQuestionDeleteAuditLog::TargetOption,
                 $value_id,
                 $label,
                 $reason,
@@ -1408,7 +1406,7 @@ final class SummitSponsorService
             );
         });
 
-        SponsorExtraQuestionForceDeleteAuditLog::emit($audit_data);
+        SponsorExtraQuestionDeleteAuditLog::emit($audit_data);
     }
 
     /**

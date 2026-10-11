@@ -27,13 +27,13 @@ use models\summit\SponsorBadgeScanExtraQuestionAnswer;
 use models\utils\SilverstripeBaseModel;
 
 /**
- * Class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest
+ * Class OAuth2SummitSponsorExtraQuestionDeleteApiTest
  * Sponsors can never delete an extra question or an answer option (devices may hold answers
- * the server has not seen); an admin can force it, with a reason, an explicit confirmation
+ * the server has not seen); an admin can, with a reason, an explicit delete_answers
  * when collected answers are destroyed, and an audit entry.
  * The current user is an administrator; the sponsor user cases live in OAuth2SummitSponsorApiTest.
  */
-final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends ProtectedApiTestCase
+final class OAuth2SummitSponsorExtraQuestionDeleteApiTest extends ProtectedApiTestCase
 {
     use InsertSummitTestData;
 
@@ -84,8 +84,8 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
 
         $question = new SummitSponsorExtraQuestionType();
         $question->setType($type);
-        $question->setLabel('Force delete question');
-        $question->setName('FORCE_DELETE_' . str_random(5));
+        $question->setLabel('Delete question');
+        $question->setName('DELETE_' . str_random(5));
         $values = [];
         foreach ($option_labels as $label) {
             $value = new ExtraQuestionTypeValue();
@@ -196,7 +196,7 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
     }
 
     /**
-     * The force delete audit entry that was emitted, if any.
+     * The delete audit entry that was emitted, if any.
      * @return EmitAuditLogJob|null
      */
     private function emittedAudit(): ?EmitAuditLogJob
@@ -206,7 +206,7 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
     }
 
     /**
-     * The force delete audit records persisted for the given target.
+     * The delete audit records persisted for the given target.
      * @param string $target_type question | option
      * @param int $target_id
      * @return SummitAuditLog[]
@@ -229,45 +229,45 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
 
     // ---- questions ----
 
-    public function testAdminDeleteQuestionWithoutForceIsRefused()
+    public function testAdminDeleteQuestionWithoutDeleteAnswersIsRefused()
     {
         [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
 
-        $response = $this->deleteQuestion($question_id);
+        $response = $this->deleteQuestion($question_id, [], ['reason' => 'cleanup']);
 
         $this->assertResponseStatus(412);
-        $this->assertStringContainsString("Questions can't be deleted once created", $response->getContent());
+        $this->assertStringContainsString("delete_answers is required", $response->getContent());
         $this->assertContains($question_id, $this->sponsorQuestionIds());
     }
 
-    public function testAdminForceDeleteQuestionWithoutReasonIsRefused()
+    public function testAdminDeleteQuestionWithoutReasonIsRefused()
     {
         [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
 
-        $response = $this->deleteQuestion($question_id, ['force' => 'true']);
+        $response = $this->deleteQuestion($question_id, ['delete_answers' => 'false']);
         $this->assertResponseStatus(412);
         $this->assertStringContainsString("A reason is required", $response->getContent());
 
-        $this->deleteQuestion($question_id, ['force' => 'true'], ['reason' => '   ']);
+        $this->deleteQuestion($question_id, ['delete_answers' => 'false'], ['reason' => '   ']);
         $this->assertResponseStatus(412);
 
         $this->assertContains($question_id, $this->sponsorQuestionIds());
     }
 
-    public function testAdminForceDeleteUnknownQuestionIsNotFound()
+    public function testAdminDeleteUnknownQuestionIsNotFound()
     {
-        $this->deleteQuestion(999999999, ['force' => 'true'], ['reason' => 'cleanup']);
+        $this->deleteQuestion(999999999, ['delete_answers' => 'false'], ['reason' => 'cleanup']);
         $this->assertResponseStatus(404);
     }
 
-    public function testAdminForceDeleteQuestionWithoutAnswersFreesTheSlotAndIsAudited()
+    public function testAdminDeleteQuestionWithoutAnswersFreesTheSlotAndIsAudited()
     {
         $this->enableAuditCapture();
         [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
         // the sponsor is at the cap
         $this->assertCount(5, $this->sponsorQuestionIds());
 
-        $this->deleteQuestion($question_id, ['force' => 'true'], ['reason' => 'created by mistake, 0 pending uploads']);
+        $this->deleteQuestion($question_id, ['delete_answers' => 'false'], ['reason' => 'created by mistake, 0 pending uploads']);
 
         $this->assertResponseStatus(204);
         $this->assertCount(4, $this->sponsorQuestionIds());
@@ -308,14 +308,14 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertCount(5, $this->sponsorQuestionIds());
     }
 
-    public function testAdminForceDeleteQuestionWithAnswersIsRefusedWithTheirCount()
+    public function testAdminDeleteQuestionWithAnswersIsRefusedWithTheirCount()
     {
         [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
         $this->addScanWithAnswer($question_id, 'one', 1);
         $this->addScanWithAnswer($question_id, 'two', 2);
         $this->addScanWithAnswer($question_id, 'three', 3);
 
-        $response = $this->deleteQuestion($question_id, ['force' => 'true'], ['reason' => 'sponsor insists']);
+        $response = $this->deleteQuestion($question_id, ['delete_answers' => 'false'], ['reason' => 'sponsor insists']);
 
         $this->assertResponseStatus(412);
         $this->assertStringContainsString("3 collected answers will be permanently deleted", $response->getContent());
@@ -325,7 +325,7 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertCount(0, $this->persistedAudits('question', $question_id));
     }
 
-    public function testAdminForceDeleteQuestionWithAnswersAndConfirmationDestroysThemAndIsAudited()
+    public function testAdminDeleteQuestionWithAnswersAndConfirmationDestroysThemAndIsAudited()
     {
         $this->enableAuditCapture();
         [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
@@ -335,7 +335,7 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
             $this->addScanWithAnswer($question_id, 'three', 3),
         ];
 
-        $this->deleteQuestion($question_id, ['force' => 'true', 'delete_answers' => 'true'], ['reason' => 'sponsor insists']);
+        $this->deleteQuestion($question_id, ['delete_answers' => 'true'], ['reason' => 'sponsor insists']);
 
         $this->assertResponseStatus(204);
         $this->assertNotContains($question_id, $this->sponsorQuestionIds());
@@ -352,13 +352,13 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertEquals('sponsor insists', $audit->auditData['audit.reason']);
     }
 
-    public function testAdminForceDeleteQuestionIsPersistedInTheAuditLogWhenOpenTelemetryIsOff()
+    public function testAdminDeleteQuestionIsPersistedInTheAuditLogWhenOpenTelemetryIsOff()
     {
         config(['opentelemetry.enabled' => false]);
         Bus::fake([EmitAuditLogJob::class]);
         [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
 
-        $this->deleteQuestion($question_id, ['force' => 'true'], ['reason' => 'created by mistake']);
+        $this->deleteQuestion($question_id, ['delete_answers' => 'false'], ['reason' => 'created by mistake']);
 
         $this->assertResponseStatus(204);
         $this->assertNull($this->emittedAudit());
@@ -369,31 +369,31 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
 
     // ---- options ----
 
-    public function testAdminDeleteOptionWithoutForceIsRefused()
+    public function testAdminDeleteOptionWithoutDeleteAnswersIsRefused()
     {
         [$question_id, [$a]] = $this->addQuestion(ExtraQuestionTypeConstants::CheckBoxListQuestionType, ['A', 'B']);
 
-        $response = $this->deleteValue($question_id, $a);
+        $response = $this->deleteValue($question_id, $a, [], ['reason' => 'cleanup']);
         $this->assertResponseStatus(412);
-        $this->assertStringContainsString("Answer options can't be deleted once created", $response->getContent());
+        $this->assertStringContainsString("delete_answers is required", $response->getContent());
     }
 
-    public function testAdminForceDeleteOptionWithoutReasonIsRefused()
+    public function testAdminDeleteOptionWithoutReasonIsRefused()
     {
         [$question_id, [$a]] = $this->addQuestion(ExtraQuestionTypeConstants::CheckBoxListQuestionType, ['A', 'B']);
 
-        $this->deleteValue($question_id, $a, ['force' => 'true']);
+        $this->deleteValue($question_id, $a, ['delete_answers' => 'false']);
         $this->assertResponseStatus(412);
     }
 
-    public function testAdminForceDeleteUnusedOptionDeletesIt()
+    public function testAdminDeleteUnusedOptionDeletesIt()
     {
         $this->enableAuditCapture();
         [$question_id, [$a, $b]] = $this->addQuestion(ExtraQuestionTypeConstants::CheckBoxListQuestionType, ['A', 'B']);
         // only B is used
         $this->addScanWithAnswer($question_id, (string)$b, 1);
 
-        $this->deleteValue($question_id, $a, ['force' => 'true'], ['reason' => 'option created by mistake']);
+        $this->deleteValue($question_id, $a, ['delete_answers' => 'false'], ['reason' => 'option created by mistake']);
 
         $this->assertResponseStatus(204);
         $audit = $this->emittedAudit();
@@ -404,21 +404,21 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertCount(1, $this->answersOf($question_id));
     }
 
-    public function testAdminForceDeleteUsedOptionIsRefusedWithTheCountOfDeletedAndModifiedAnswers()
+    public function testAdminDeleteUsedOptionIsRefusedWithTheCountOfDeletedAndModifiedAnswers()
     {
         [$question_id, [$a, $b, $c]] = $this->addQuestion(ExtraQuestionTypeConstants::CheckBoxListQuestionType, ['A', 'B', 'C']);
         $this->addScanWithAnswer($question_id, (string)$a, 1);             // only A: deleted
         $this->addScanWithAnswer($question_id, "$a,$b", 2);                // A and B: loses A
         $this->addScanWithAnswer($question_id, "$b,$c", 3);                // no A: untouched
 
-        $response = $this->deleteValue($question_id, $a, ['force' => 'true'], ['reason' => 'sponsor insists']);
+        $response = $this->deleteValue($question_id, $a, ['delete_answers' => 'false'], ['reason' => 'sponsor insists']);
 
         $this->assertResponseStatus(412);
         $this->assertStringContainsString("2 collected answers use this option: 1 will be permanently deleted and 1 will only lose this option", $response->getContent());
         $this->assertCount(3, $this->answersOf($question_id));
     }
 
-    public function testAdminForceDeleteUsedOptionWithConfirmationDeletesOnlyAnswersWithNoOtherOptionAndStripsTheRest()
+    public function testAdminDeleteUsedOptionWithConfirmationDeletesOnlyAnswersWithNoOtherOptionAndStripsTheRest()
     {
         $this->enableAuditCapture();
         [$question_id, [$a, $b, $c]] = $this->addQuestion(ExtraQuestionTypeConstants::CheckBoxListQuestionType, ['A', 'B', 'C']);
@@ -427,7 +427,7 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $b_and_c = $this->addScanWithAnswer($question_id, "$b,$c", 3);
         $only_c  = $this->addScanWithAnswer($question_id, (string)$c, 4);
 
-        $this->deleteValue($question_id, $a, ['force' => 'true', 'delete_answers' => 'true'], ['reason' => 'sponsor insists']);
+        $this->deleteValue($question_id, $a, ['delete_answers' => 'true'], ['reason' => 'sponsor insists']);
 
         $this->assertResponseStatus(204);
         $this->assertNull($this->answerValueOfScan($only_a), 'the answer that only selected the option is deleted');
@@ -446,7 +446,7 @@ final class OAuth2SummitSponsorExtraQuestionForceDeleteApiTest extends Protected
         $this->assertStringContainsString('Collected answers deleted: 1, modified: 1', $logs[0]->getAction());
 
         // the option is gone
-        $this->deleteValue($question_id, $a, ['force' => 'true'], ['reason' => 'again']);
+        $this->deleteValue($question_id, $a, ['delete_answers' => 'false'], ['reason' => 'again']);
         $this->assertResponseStatus(404);
     }
 

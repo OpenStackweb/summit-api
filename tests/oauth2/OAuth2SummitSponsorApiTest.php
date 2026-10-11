@@ -691,28 +691,29 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         return $question;
     }
 
-    public function testDeleteSponsorExtraQuestionsBySponsor(){
+    public function testDeleteSponsorExtraQuestionsByAdmin(){
         $q = $this->testAddSponsorExtraQuestions();
 
         $params = [
             'id' => self::$summit->getId(),
             'sponsor_id' => self::$sponsors[0]->getId(),
-            'extra_question_id' => $q->id
+            'extra_question_id' => $q->id,
+            'delete_answers' => 'false',
         ];
 
-        $response = $this->action(
+        $this->action(
             "DELETE",
             "OAuth2SummitSponsorApiController@deleteExtraQuestion",
             $params,
             [],
             [],
             [],
-            $this->getAuthHeaders()
+            $this->getAuthHeaders(),
+            json_encode(['reason' => 'created by mistake'])
         );
 
-        // questions can never be deleted: devices may hold answers the server has not seen
-        $this->assertResponseStatus(412);
-        $this->assertStringContainsString("Questions can't be deleted once created", $response->getContent());
+        // admin only, with a reason and an explicit delete_answers
+        $this->assertResponseStatus(204);
     }
 
     public function testAddLeadReportSettings(){
@@ -1605,24 +1606,25 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'sponsor_id' => self::$sponsors[0]->getId(),
             'extra_question_id' => $result->question_id,
             'value_id' => $result->value->id,
+            'delete_answers' => 'false',
         ];
 
-        $response = $this->action(
+        $this->action(
             "DELETE",
             "OAuth2SummitSponsorApiController@deleteExtraQuestionValue",
             $params,
             [],
             [],
             [],
-            $this->getAuthHeaders()
+            $this->getAuthHeaders(),
+            json_encode(['reason' => 'created by mistake'])
         );
 
-        // answer options can never be deleted: devices may hold answers the server has not seen
-        $this->assertResponseStatus(412);
-        $this->assertStringContainsString("Answer options can't be deleted once created", $response->getContent());
+        // admin only, with a reason and an explicit delete_answers
+        $this->assertResponseStatus(204);
     }
 
-    // ---- Force delete is for admins only ----
+    // ---- Delete is for admins only ----
 
     /**
      * Makes the user a member of sponsors[0] so the sponsor authz passes. It has to run
@@ -1655,7 +1657,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->app->singleton(IAccessTokenService::class, function () use ($stub) { return $stub; });
     }
 
-    public function testForceDeleteSponsorExtraQuestionBySponsorIsForbidden(){
+    public function testDeleteSponsorExtraQuestionBySponsorIsForbidden(){
         $this->makeMemberSponsorUser();
         $this->useSponsorOnlyToken();
         $q = $this->testAddSponsorExtraQuestions();
@@ -1666,15 +1668,11 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'extra_question_id' => $q->id,
         ];
 
-        // the sponsor is authorized on the sponsor: a plain delete is refused...
-        $this->action("DELETE", "OAuth2SummitSponsorApiController@deleteExtraQuestion", $params, [], [], [], $this->getAuthHeaders());
-        $this->assertResponseStatus(412);
-
-        // ...and the flag never helps a sponsor
+        // the sponsor is authorized on the sponsor, but delete is admin only
         $this->action(
             "DELETE",
             "OAuth2SummitSponsorApiController@deleteExtraQuestion",
-            array_merge($params, ['force' => 'true']),
+            array_merge($params, ['delete_answers' => 'true']),
             [],
             [],
             [],
@@ -1684,7 +1682,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(403);
     }
 
-    public function testForceDeleteExtraQuestionValueBySponsorIsForbidden(){
+    public function testDeleteExtraQuestionValueBySponsorIsForbidden(){
         $this->makeMemberSponsorUser();
         $this->useSponsorOnlyToken();
         $result = $this->testAddExtraQuestionValue();
@@ -1696,13 +1694,10 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
             'value_id' => $result->value->id,
         ];
 
-        $this->action("DELETE", "OAuth2SummitSponsorApiController@deleteExtraQuestionValue", $params, [], [], [], $this->getAuthHeaders());
-        $this->assertResponseStatus(412);
-
         $this->action(
             "DELETE",
             "OAuth2SummitSponsorApiController@deleteExtraQuestionValue",
-            array_merge($params, ['force' => 'true']),
+            array_merge($params, ['delete_answers' => 'true']),
             [],
             [],
             [],

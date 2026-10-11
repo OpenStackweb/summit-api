@@ -2578,8 +2578,6 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
-                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [
@@ -2643,8 +2641,6 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SuperAdmins,
                     IGroup::Administrators,
                     IGroup::SummitAdministrators,
-                    IGroup::Sponsors,
-                    IGroup::SponsorExternalUsers,
                 ]
             ],
             [

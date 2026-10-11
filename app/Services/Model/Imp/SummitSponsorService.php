@@ -1131,8 +1131,8 @@ final class SummitSponsorService
             // cascade deleted (ExtraQuestionAnswer.QuestionID is ON DELETE CASCADE) without being counted
             $this->repository->lockQuestion($extra_question);
 
-            $answers = $this->repository->getBadgeScanAnswersByQuestion($extra_question);
-            $answers_count = count($answers);
+            // a count is enough to refuse, the answers are only loaded when they are going to be removed
+            $answers_count = $this->repository->countBadgeScanAnswersByQuestion($extra_question);
 
             if ($answers_count > 0 && !$delete_answers) {
                 throw new ValidationException(
@@ -1145,6 +1145,7 @@ final class SummitSponsorService
 
             // the FK would cascade the delete anyway, the explicit removal goes through the ORM so
             // orphan removal, LastEdited and the onFlush audit run, and the count is exact (see lockQuestion)
+            $answers = $answers_count > 0 ? $this->repository->getBadgeScanAnswersByQuestion($extra_question) : [];
             foreach ($answers as $answer) {
                 $this->removeBadgeScanAnswer($answer);
             }
@@ -1185,7 +1186,7 @@ final class SummitSponsorService
 
             return array_merge(
                 [
-                    'answers_count' => count($this->repository->getBadgeScanAnswersByQuestion($extra_question)),
+                    'answers_count' => $this->repository->countBadgeScanAnswersByQuestion($extra_question),
                 ],
                 $this->getScanActivity($summit_sponsor)
             );

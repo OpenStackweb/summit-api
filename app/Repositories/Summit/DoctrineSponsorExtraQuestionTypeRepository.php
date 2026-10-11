@@ -124,6 +124,21 @@ final class DoctrineSponsorExtraQuestionTypeRepository
     /**
      * @inheritDoc
      */
+    public function countBadgeScanAnswersByQuestion(ExtraQuestionType $question): int
+    {
+        return (int)$this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("count(a.id)")
+            ->from(SponsorBadgeScanExtraQuestionAnswer::class, "a")
+            ->where("a.question = :question")
+            ->setParameter("question", $question)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function lockQuestion(ExtraQuestionType $question): void
     {
         $this->getEntityManager()->lock($question, LockMode::PESSIMISTIC_WRITE);

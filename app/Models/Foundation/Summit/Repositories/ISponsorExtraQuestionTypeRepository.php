@@ -29,6 +29,13 @@ interface ISponsorExtraQuestionTypeRepository extends IExtraQuestionTypeReposito
     public function getBadgeScanAnswersByQuestion(ExtraQuestionType $question): array;
 
     /**
+     * How many badge scan answers were collected so far for a question, without hydrating them.
+     * @param ExtraQuestionType $question
+     * @return int
+     */
+    public function countBadgeScanAnswersByQuestion(ExtraQuestionType $question): int;
+
+    /**
      * Takes a write lock on the question row, to be called at the top of a transaction.
      * Badge scan ingestion takes a shared lock on that row when InnoDB checks the answer FK, so
      * the answers read afterwards can't change until the transaction ends.

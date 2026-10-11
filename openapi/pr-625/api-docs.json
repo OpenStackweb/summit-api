@@ -56862,8 +56862,8 @@
                 "tags": [
                     "Sponsors"
                 ],
-                "summary": "Delete Sponsor Extra Question (admin force only)",
-                "description": "Refused with 412 unless force=true is sent by an admin (Super Admins, Administrators or Summit Administrators allowed on the summit): devices may hold answers for this question that the server has not seen yet, so edit the wording or turn off Mandatory instead. A force delete needs a reason, is audited, and when the server holds answers it is refused with their count unless delete_answers=true. required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
+                "summary": "Delete Sponsor Extra Question (admin only)",
+                "description": "Admin only (Super Admins, Administrators or Summit Administrators allowed on the summit), anyone else gets 403. Devices may hold answers for this question that the server has not seen yet, so the admin must have checked them first. It needs a reason and delete_answers (true or false), and is audited; when the server holds answers it is refused with their count unless delete_answers=true. required-groups super-admins, administrators, summit-front-end-administrators",
                 "operationId": "deleteSponsorExtraQuestion",
                 "parameters": [
                     {
@@ -56894,19 +56894,10 @@
                         }
                     },
                     {
-                        "name": "force",
-                        "in": "query",
-                        "description": "Admin only force delete. Without it the delete is always refused (412); a non-admin sending it gets 403",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
                         "name": "delete_answers",
                         "in": "query",
-                        "description": "Confirms that collected answers are destroyed. Required when the server holds answers, otherwise 412 with their count",
-                        "required": false,
+                        "description": "Required (true or false). With false and answers on the server it is refused with 412 and their count; true destroys them",
+                        "required": true,
                         "schema": {
                             "type": "boolean"
                         }
@@ -56919,7 +56910,7 @@
                             "schema": {
                                 "properties": {
                                     "reason": {
-                                        "description": "Required with force=true, goes to the audit entry",
+                                        "description": "Required, goes to the audit entry",
                                         "type": "string"
                                     }
                                 },
@@ -56930,16 +56921,16 @@
                 },
                 "responses": {
                     "204": {
-                        "description": "Question force deleted"
+                        "description": "Question deleted"
                     },
                     "412": {
-                        "description": "Validation Error - questions can't be deleted once created (no force), a reason is missing, or collected answers would be destroyed and delete_answers is not true"
+                        "description": "Validation Error - a reason or delete_answers is missing, or collected answers would be destroyed and delete_answers is false"
                     },
                     "401": {
                         "description": "Unauthorized"
                     },
                     "403": {
-                        "description": "Forbidden - force=true is for admins only"
+                        "description": "Forbidden - admins only"
                     },
                     "404": {
                         "description": "Not Found"
@@ -57146,8 +57137,8 @@
                 "tags": [
                     "Sponsors"
                 ],
-                "summary": "Delete Extra Question Value (admin force only)",
-                "description": "Refused with 412 unless force=true is sent by an admin (Super Admins, Administrators or Summit Administrators allowed on the summit): devices may hold answers for this option that the server has not seen yet, so edit the wording instead. A force delete needs a reason and is audited. Collected answers that selected the option are deleted when it was their only selection, otherwise they only lose its id; when the server holds any, it is refused with their count unless delete_answers=true. required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
+                "summary": "Delete Extra Question Value (admin only)",
+                "description": "Admin only (Super Admins, Administrators or Summit Administrators allowed on the summit), anyone else gets 403. Devices may hold answers for this option that the server has not seen yet, so the admin must have checked them first. It needs a reason and delete_answers (true or false), and is audited. Collected answers that selected the option are deleted when it was their only selection, otherwise they only lose its id; when the server holds any, it is refused with their count unless delete_answers=true. required-groups super-admins, administrators, summit-front-end-administrators",
                 "operationId": "deleteSponsorExtraQuestionValue",
                 "parameters": [
                     {
@@ -57187,19 +57178,10 @@
                         }
                     },
                     {
-                        "name": "force",
-                        "in": "query",
-                        "description": "Admin only force delete. Without it the delete is always refused (412); a non-admin sending it gets 403",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
                         "name": "delete_answers",
                         "in": "query",
-                        "description": "Confirms that collected answers are changed. Required when the server holds answers that selected the option, otherwise 412 with their count",
-                        "required": false,
+                        "description": "Required (true or false). With false and answers that selected the option on the server it is refused with 412 and their count; true changes them",
+                        "required": true,
                         "schema": {
                             "type": "boolean"
                         }
@@ -57212,7 +57194,7 @@
                             "schema": {
                                 "properties": {
                                     "reason": {
-                                        "description": "Required with force=true, goes to the audit entry",
+                                        "description": "Required, goes to the audit entry",
                                         "type": "string"
                                     }
                                 },
@@ -57223,16 +57205,16 @@
                 },
                 "responses": {
                     "204": {
-                        "description": "Option force deleted"
+                        "description": "Option deleted"
                     },
                     "412": {
-                        "description": "Validation Error - answer options can't be deleted once created (no force), a reason is missing, or collected answers would be changed and delete_answers is not true"
+                        "description": "Validation Error - a reason or delete_answers is missing, or collected answers would be changed and delete_answers is false"
                     },
                     "401": {
                         "description": "Unauthorized"
                     },
                     "403": {
-                        "description": "Forbidden - force=true is for admins only"
+                        "description": "Forbidden - admins only"
                     },
                     "404": {
                         "description": "Not Found"
@@ -57264,7 +57246,7 @@
                     "Sponsors"
                 ],
                 "summary": "Get Sponsor Extra Question usage",
-                "description": "What a force delete of the question affects: collected answers on the server and the sponsor's badge scan activity (reps and their last scan). It does not prove devices have nothing pending. required-groups super-admins, administrators, summit-front-end-administrators",
+                "description": "What deleting the question affects: collected answers on the server and the sponsor's badge scan activity (reps and their last scan). It does not prove devices have nothing pending. required-groups super-admins, administrators, summit-front-end-administrators",
                 "operationId": "getSponsorExtraQuestionUsage",
                 "parameters": [
                     {
@@ -57334,7 +57316,7 @@
                     "Sponsors"
                 ],
                 "summary": "Get Extra Question Value usage",
-                "description": "What a force delete of the option affects: collected answers that selected it (answers_to_delete when it was their only selection, answers_to_modify when they only lose its id) and the sponsor's badge scan activity. It does not prove devices have nothing pending. required-groups super-admins, administrators, summit-front-end-administrators",
+                "description": "What deleting the option affects: collected answers that selected it (answers_to_delete when it was their only selection, answers_to_modify when they only lose its id) and the sponsor's badge scan activity. It does not prove devices have nothing pending. required-groups super-admins, administrators, summit-front-end-administrators",
                 "operationId": "getSponsorExtraQuestionValueUsage",
                 "parameters": [
                     {

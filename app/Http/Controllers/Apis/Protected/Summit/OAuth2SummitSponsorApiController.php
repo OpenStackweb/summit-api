@@ -4153,9 +4153,14 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
     {
         $request = request();
         $reason = $request->input('reason');
+        // filter_var turns a missing value into false, so it has to be checked first
+        $raw = $request->input('delete_answers');
+        $delete_answers = (is_null($raw) || $raw === '')
+            ? null
+            : filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         return [
             is_string($reason) ? $reason : null,
-            filter_var($request->input('delete_answers'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+            $delete_answers,
         ];
     }
 

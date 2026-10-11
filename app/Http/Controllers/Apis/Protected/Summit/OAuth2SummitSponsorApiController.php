@@ -3731,16 +3731,24 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             new OA\Parameter(
                 name: 'delete_answers',
                 in: 'query',
-                required: true,
+                required: false,
                 schema: new OA\Schema(type: 'boolean'),
-                description: 'Required (true or false). With false and answers on the server it is refused with 412 and their count; true destroys them'
+                description: 'Required, true or false, in the query string or in the body. With false and answers on the server it is refused with 412 and their count; true destroys them'
+            ),
+            new OA\Parameter(
+                name: 'reason',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Alternative to the body property for clients that cannot send a DELETE body. Required in one of the two, goes to the audit entry'
             ),
         ],
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'reason', type: 'string', description: 'Required, goes to the audit entry'),
+                    new OA\Property(property: 'reason', type: 'string', description: 'Required (here or in the query string), goes to the audit entry'),
+                    new OA\Property(property: 'delete_answers', type: 'boolean', description: 'Alternative to the query parameter, required (here or in the query string)'),
                 ]
             )
         ),
@@ -4055,16 +4063,24 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             new OA\Parameter(
                 name: 'delete_answers',
                 in: 'query',
-                required: true,
+                required: false,
                 schema: new OA\Schema(type: 'boolean'),
-                description: 'Required (true or false). With false and answers that selected the option on the server it is refused with 412 and their count; true changes them'
+                description: 'Required, true or false, in the query string or in the body. With false and answers that selected the option on the server it is refused with 412 and their count; true changes them'
+            ),
+            new OA\Parameter(
+                name: 'reason',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'string'),
+                description: 'Alternative to the body property for clients that cannot send a DELETE body. Required in one of the two, goes to the audit entry'
             ),
         ],
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'reason', type: 'string', description: 'Required, goes to the audit entry'),
+                    new OA\Property(property: 'reason', type: 'string', description: 'Required (here or in the query string), goes to the audit entry'),
+                    new OA\Property(property: 'delete_answers', type: 'boolean', description: 'Alternative to the query parameter, required (here or in the query string)'),
                 ]
             )
         ),

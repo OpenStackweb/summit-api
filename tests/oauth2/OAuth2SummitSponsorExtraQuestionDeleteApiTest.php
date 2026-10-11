@@ -367,6 +367,31 @@ final class OAuth2SummitSponsorExtraQuestionDeleteApiTest extends ProtectedApiTe
         $this->assertStringContainsString('Reason: created by mistake', $logs[0]->getAction());
     }
 
+    public function testAdminDeleteQuestionWithReasonAndDeleteAnswersInTheQueryString()
+    {
+        [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
+        $this->addScanWithAnswer($question_id, 'one', 1);
+
+        // for clients that can't send a DELETE body
+        $this->deleteQuestion($question_id, ['delete_answers' => 'true', 'reason' => 'no body']);
+
+        $this->assertResponseStatus(204);
+        $this->assertNotContains($question_id, $this->sponsorQuestionIds());
+        $this->assertCount(0, $this->answersOf($question_id));
+    }
+
+    public function testAdminDeleteQuestionWithReasonAndDeleteAnswersInTheBody()
+    {
+        [$question_id] = $this->addQuestion(ExtraQuestionTypeConstants::TextQuestionType);
+        $this->addScanWithAnswer($question_id, 'one', 1);
+
+        $this->deleteQuestion($question_id, [], ['delete_answers' => true, 'reason' => 'all in the body']);
+
+        $this->assertResponseStatus(204);
+        $this->assertNotContains($question_id, $this->sponsorQuestionIds());
+        $this->assertCount(0, $this->answersOf($question_id));
+    }
+
     // ---- options ----
 
     public function testAdminDeleteOptionWithoutDeleteAnswersIsRefused()
@@ -448,6 +473,17 @@ final class OAuth2SummitSponsorExtraQuestionDeleteApiTest extends ProtectedApiTe
         // the option is gone
         $this->deleteValue($question_id, $a, ['delete_answers' => 'false'], ['reason' => 'again']);
         $this->assertResponseStatus(404);
+    }
+
+    public function testAdminDeleteOptionWithReasonAndDeleteAnswersInTheQueryString()
+    {
+        [$question_id, [$a]] = $this->addQuestion(ExtraQuestionTypeConstants::CheckBoxListQuestionType, ['A', 'B']);
+        $this->addScanWithAnswer($question_id, (string)$a, 1);
+
+        $this->deleteValue($question_id, $a, ['delete_answers' => 'true', 'reason' => 'no body']);
+
+        $this->assertResponseStatus(204);
+        $this->assertCount(0, $this->answersOf($question_id));
     }
 
     // ---- usage ----

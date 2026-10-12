@@ -31,6 +31,11 @@ use models\oauth2\AccessToken;
  */
 final class AccessTokenService implements IAccessTokenService
 {
+    /**
+     * seconds a token stays flagged as revoked when the IDP answered 503; the outage says nothing about
+     * the token, so it must not stay flagged after the IDP is back
+     */
+    private const OFFLINE_IDP_REVOKED_TTL = 30;
 
     static $access_token_keys = [
         'access_token',
@@ -269,8 +274,9 @@ final class AccessTokenService implements IAccessTokenService
                 throw new InvalidGrantTypeException($body['error']);
             }
             if($code == 503 ){
-                // service went offline temporally ... revoke token
-                $this->cache_service->setSingleValue(md5($token_value).'.revoked', md5($token_value));
+                // service went offline temporarily ... revoke token, but only for a short time. Add-if-absent, so a
+                // concurrent 400 that already flagged the token for good is not downgraded to a temporary flag
+                $this->cache_service->addSingleValue(md5($token_value).'.revoked', md5($token_value), self::OFFLINE_IDP_REVOKED_TTL);
                 Log::warning(sprintf("AccessTokenService::doIntrospectionRequest token %s marked as revoked (503 offline IDP)", $token_value));
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
             }

@@ -3401,6 +3401,15 @@ SQL;
 
     /**
      * @param Summit $summit
+     * @return bool
+     */
+    public function isSummitRoomAdmin(Summit $summit): bool
+    {
+        return $this->isOnGroup(IGroup::SummitRoomAdministrators) && $this->isSummitAllowed($summit);
+    }
+
+    /**
+     * @param Summit $summit
      * @param Sponsor|null $sponsor
      * @return bool
      */

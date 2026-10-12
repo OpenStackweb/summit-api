@@ -325,6 +325,8 @@ final class ResourceServerContext implements IResourceServerContext
      * The job associates by the member's current email, so the key includes it:
      * an email change queues the job again instead of waiting for the window.
      * Fails open: if the cache store cannot be reached the job is queued as before.
+     * If the queue push fails the throttle key is released, so the next request
+     * retries instead of skipping the job for the rest of the window.
      *
      * @param int $member_id
      * @param string|null $member_email
@@ -332,6 +334,8 @@ final class ResourceServerContext implements IResourceServerContext
     private function dispatchMemberAssocSummitOrders(int $member_id, ?string $member_email): void
     {
         $ttl = intval(config('registration.member_assoc_summit_orders_throttle_ttl', 3600));
+        // set only when this call acquired the throttle key
+        $acquired_key = null;
 
         if ($ttl > 0) {
             try {
@@ -340,12 +344,24 @@ final class ResourceServerContext implements IResourceServerContext
                     Log::debug(sprintf("ResourceServerContext::dispatchMemberAssocSummitOrders member %s already queued in the last %s seconds, skipping.", $member_id, $ttl));
                     return;
                 }
+                $acquired_key = $key;
             } catch (\Throwable $ex) {
                 Log::warning($ex);
             }
         }
 
-        MemberAssocSummitOrders::dispatch($member_id);
+        try {
+            MemberAssocSummitOrders::dispatch($member_id);
+        } catch (\Throwable $ex) {
+            if (!is_null($acquired_key)) {
+                try {
+                    Cache::forget($acquired_key);
+                } catch (\Throwable $forget_ex) {
+                    Log::warning($forget_ex);
+                }
+            }
+            throw $ex;
+        }
     }
 
     /**

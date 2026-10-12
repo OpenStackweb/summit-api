@@ -437,4 +437,35 @@ class ResourceServerContextTest extends BrowserKitTestCase
         $this->assertNotNull($member, 'The request must succeed even if the throttle cannot reach the cache');
         $this->assertSame([$existing->getId()], $this->dispatchedAssocMemberIds());
     }
+
+    /**
+     * When the queue push fails no job was queued, so the throttle marker must be
+     * released: the next request inside the window has to queue the job again.
+     */
+    public function testGetCurrentUserReleasesAssocSummitOrdersThrottleWhenDispatchFails(): void
+    {
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 3600]);
+
+        $external_id = (string)mt_rand(100000000, 999999999);
+        $email = sprintf('ctx-throttle-queue-down-%s@test.com', uniqid());
+        $existing = $this->persistMember($email, 'Throttle', 'QueueDown', $external_id);
+
+        $ctx = App::make(IResourceServerContext::class);
+
+        Bus::shouldReceive('dispatch')
+            ->once()
+            ->andThrow(new \RuntimeException('queue is down'));
+
+        try {
+            $this->simulateRequest($ctx, $external_id, $email);
+            $this->fail('The queue failure must propagate');
+        } catch (\RuntimeException $ex) {
+            $this->assertSame('queue is down', $ex->getMessage());
+        }
+
+        Bus::fake();
+        $this->simulateRequest($ctx, $external_id, $email);
+
+        $this->assertSame([$existing->getId()], $this->dispatchedAssocMemberIds());
+    }
 }

@@ -36,6 +36,7 @@ use models\summit\ISpeakerRepository;
 use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use models\summit\Presentation;
+use models\summit\Summit;
 use models\summit\SummitEvent;
 use ModelSerializers\IPresentationSerializerTypes;
 use ModelSerializers\SerializerRegistry;
@@ -112,9 +113,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
     }
 
     /**
+     * @param Summit|null $summit when given, room administrators allowed on it also get the private serializer
      * @return string
      */
-    private function getSerializerType(): string
+    private function getSerializerType(?Summit $summit = null): string
     {
         $current_user = $this->resource_server_context->getCurrentUser(true);
         $application_type = $this->resource_server_context->getApplicationType();
@@ -126,6 +128,10 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
         Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType client id %s app_type %s scope %s has current user %b %s %s ", $clientId, $application_type, implode(" ", $scope), !is_null($current_user), $method, $path));
         if ($application_type == IResourceServerContext::ApplicationType_Service || (!is_null($current_user) && ($current_user->isAdmin() || ($current_user->isSummitAdmin())))) {
             Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PRIVATE", $application_type, !is_null($current_user)));
+            return SerializerRegistry::SerializerType_Private;
+        }
+        if (!is_null($summit) && !is_null($current_user) && $current_user->isSummitRoomAdmin($summit)) {
+            Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType summit %s room admin PRIVATE", $summit->getId()));
             return SerializerRegistry::SerializerType_Private;
         }
         Log::debug(sprintf("OAuth2SummitEventsApiController::getSerializerType app_type %s has current user %b PUBLIC", $application_type, !is_null($current_user)));
@@ -852,7 +858,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
 
                 if (is_null($event)) throw new EntityNotFoundException;
 
-                return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType())->serialize
+                return SerializerRegistry::getInstance()->getSerializer($event, $this->getSerializerType($summit))->serialize
                 (
                     SerializerUtils::getExpand(),
                     SerializerUtils::getFields(),
@@ -2795,7 +2801,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $event = $this->service->updateOverflowInfo($summit, intval($event_id), $payload);
 
             return $this->updated(SerializerRegistry::getInstance()
-                ->getSerializer($event, $this->getSerializerType())
+                ->getSerializer($event, $this->getSerializerType($summit))
                 ->serialize
                 (
                     SerializerUtils::getExpand(),
@@ -2851,7 +2857,7 @@ final class OAuth2SummitEventsApiController extends OAuth2ProtectedController
             $event = $this->service->removeOverflowState($summit, $event->getId(), $payload);
 
             return $this->updated(SerializerRegistry::getInstance()
-                ->getSerializer($event, $this->getSerializerType())
+                ->getSerializer($event, $this->getSerializerType($summit))
                 ->serialize
                 (
                     SerializerUtils::getExpand(),

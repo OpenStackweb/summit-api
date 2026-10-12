@@ -135,6 +135,17 @@ class OAuth2SummitRoomAdministratorsAuthzTest extends ProtectedApiTestCase
         );
     }
 
+    private function getEvent($summit, SummitEvent $event)
+    {
+        return $this->action(
+            "GET",
+            "OAuth2SummitEventsApiController@getEvent",
+            ['id' => $summit->getId(), 'event_id' => $event->getId()],
+            [], [], [],
+            $this->getAuthHeaders()
+        );
+    }
+
     private function getEventsCSV($summit)
     {
         return $this->action(
@@ -199,6 +210,50 @@ class OAuth2SummitRoomAdministratorsAuthzTest extends ProtectedApiTestCase
 
         $event = $this->reload(self::$other_summit_event->getId());
         $this->assertEquals(SummitEvent::OccupancyOverflow, $event->getOccupancy());
+    }
+
+    public function testRoomAdministratorGetsOverflowFieldsOnAllowedSummit()
+    {
+        $response = $this->getEvent(self::$summit, self::$allowed_event);
+        $this->assertResponseStatus(200);
+
+        $event = json_decode($response->getContent());
+        $this->assertEquals(self::OriginalOverflowUrl, $event->overflow_streaming_url);
+        $this->assertTrue($event->overflow_stream_is_secure);
+        $this->assertTrue(property_exists($event, 'streaming_url'));
+    }
+
+    public function testRoomAdministratorGetsPublicEventOnAnotherSummit()
+    {
+        $response = $this->getEvent(self::$summit2, self::$other_summit_event);
+        $this->assertResponseStatus(200);
+
+        $event = json_decode($response->getContent());
+        $this->assertFalse(property_exists($event, 'overflow_streaming_url'));
+        $this->assertFalse(property_exists($event, 'overflow_stream_is_secure'));
+        $this->assertFalse(property_exists($event, 'streaming_url'));
+    }
+
+    public function testRoomAdministratorSetOverflowResponseIncludesOverflowFields()
+    {
+        Queue::fake();
+        $response = $this->setOverflow(self::$summit, self::$allowed_event);
+        $this->assertResponseStatus(201);
+
+        $event = json_decode($response->getContent());
+        $this->assertEquals('https://testoverflow-updated.org', $event->overflow_streaming_url);
+        $this->assertFalse($event->overflow_stream_is_secure);
+    }
+
+    public function testRoomAdministratorClearOverflowResponseIncludesOverflowFields()
+    {
+        Queue::fake();
+        $response = $this->clearOverflow(self::$summit, self::$allowed_event);
+        $this->assertResponseStatus(201);
+
+        $event = json_decode($response->getContent());
+        $this->assertTrue(property_exists($event, 'overflow_streaming_url'));
+        $this->assertTrue(property_exists($event, 'overflow_stream_is_secure'));
     }
 
     public function testRoomAdministratorCanExportEventsCSVOnAllowedSummit()

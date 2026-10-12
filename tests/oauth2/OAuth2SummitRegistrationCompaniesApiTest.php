@@ -132,7 +132,7 @@ final class OAuth2SummitRegistrationCompaniesApiTest extends ProtectedApiTestCas
 
     public function testIngestRegistrationCompanies()
     {
-        Storage::fake('swift');
+        Storage::fake('s3');
         Queue::fake();
 
         $csv_content = <<<CSV

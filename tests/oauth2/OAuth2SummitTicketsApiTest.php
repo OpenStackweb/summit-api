@@ -17,6 +17,7 @@ use App\Services\Apis\IExternalUserApi;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 use Mockery;
 use models\summit\IPaymentConstants;
 use models\summit\PaymentGatewayProfileFactory;
@@ -612,6 +613,8 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTestCase
 
     public function testIngestTicketData()
     {
+        Storage::fake('s3');
+
         $csv_content = <<<CSV
 attendee_email,attendee_first_name,attendee_last_name,ticket_type_name,badge_type_name,promo_code_id,promo_code,Bloomreach Connect Summit - Day 1,User Group - Day 2,Tech Track - Day 3,Partner Summit - Day 4
 smarcet+json12@gmail.com,Jason12,Marcet,General Admission,General Admission,1,FNSPEAKER,1,1,1,1
@@ -648,6 +651,8 @@ CSV;
 
     public function testIngestTicketData2()
     {
+        Storage::fake('s3');
+
         $csv_content = <<<CSV
 id,number,attendee_email,attendee_first_name,attendee_last_name,attendee_company,ticket_type_name,ticket_type_id,badge_type_id,badge_type_name,Commander,VIP Access
 ,REGISTRATIONDEVSUMMIT2019_TICKET_5D7BD99A36008622282877,xmarcet+4@gmail.com,,,,,,,,1,1

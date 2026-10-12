@@ -47,7 +47,7 @@ final class SummitSelectionPlanServiceTest extends BrowserKitTestCase
      */
     public function testProcessAllowedMemberDataImportsAllRowsWhenEveryRowIsValid()
     {
-        Storage::fake('swift');
+        Storage::fake('s3');
 
         $service = App::make(ISummitSelectionPlanService::class);
         $summit_id = self::$summit->getId();
@@ -65,7 +65,7 @@ final class SummitSelectionPlanServiceTest extends BrowserKitTestCase
 
         $filename = 'allowed_members_all_valid.csv';
         $path = "tmp/selection_plans_allowed_members/{$filename}";
-        Storage::disk('swift')->put($path, $csv_content);
+        Storage::disk('s3')->put($path, $csv_content);
 
         $service->processAllowedMemberData($summit_id, $selection_plan_id, $filename);
 
@@ -80,7 +80,7 @@ final class SummitSelectionPlanServiceTest extends BrowserKitTestCase
             );
         }
         $this->assertFalse(
-            Storage::disk('swift')->exists($path),
+            Storage::disk('s3')->exists($path),
             'A fully-processed import must delete its source file'
         );
     }
@@ -94,7 +94,7 @@ final class SummitSelectionPlanServiceTest extends BrowserKitTestCase
      */
     public function testProcessAllowedMemberDataImportsOnlyValidRowsWhenMostRowsAreSkipped()
     {
-        Storage::fake('swift');
+        Storage::fake('s3');
 
         $service = App::make(ISummitSelectionPlanService::class);
         $summit_id = self::$summit->getId();
@@ -132,7 +132,7 @@ final class SummitSelectionPlanServiceTest extends BrowserKitTestCase
 
         $filename = 'allowed_members_mixed.csv';
         $path = "tmp/selection_plans_allowed_members/{$filename}";
-        Storage::disk('swift')->put($path, $csv_content);
+        Storage::disk('s3')->put($path, $csv_content);
 
         // must not throw: non-importable rows are skipped by the row guards
         $service->processAllowedMemberData($summit_id, $selection_plan_id, $filename);
@@ -153,7 +153,7 @@ final class SummitSelectionPlanServiceTest extends BrowserKitTestCase
             'Only the 5 new emails should have been added - no duplicates, no empties'
         );
         $this->assertFalse(
-            Storage::disk('swift')->exists($path),
+            Storage::disk('s3')->exists($path),
             'Skipped rows are not failures - the file must still be deleted'
         );
     }

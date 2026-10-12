@@ -91,7 +91,7 @@ final class SummitServiceTest extends BrowserKitTestCase
      */
     public function testProcessRegistrationCompaniesDataSkipsFailingRowButProcessesLaterRows()
     {
-        Storage::fake('swift');
+        Storage::fake('s3');
 
         $service = App::make(ISummitService::class);
         $summit_id = self::$summit->getId();
@@ -110,7 +110,7 @@ name,
 CSV;
 
         $filename = 'registration_companies_isolation_test.csv';
-        Storage::disk('swift')->put("tmp/registration_companies_import/{$filename}", $csv_content);
+        Storage::disk('s3')->put("tmp/registration_companies_import/{$filename}", $csv_content);
 
         // processRegistrationCompaniesData() catches each row's transaction failure
         // locally, so it returns normally even though the first row fails.
@@ -243,7 +243,7 @@ CSV;
      */
     public function testProcessEventDataImportsAllRowsWhenEveryRowIsValid()
     {
-        Storage::fake('swift');
+        Storage::fake('s3');
 
         $service = App::make(ISummitService::class);
         $summit_id = self::$summit->getId();
@@ -262,7 +262,7 @@ CSV;
 
         $filename = 'events_all_valid.csv';
         $path = "tmp/events_imports/{$filename}";
-        Storage::disk('swift')->put($path, $csv_content);
+        Storage::disk('s3')->put($path, $csv_content);
 
         $service->processEventData($summit_id, $filename, false);
 
@@ -274,7 +274,7 @@ CSV;
             $this->assertEquals($summit_id, $event->getSummitId());
         }
         $this->assertFalse(
-            Storage::disk('swift')->exists($path),
+            Storage::disk('s3')->exists($path),
             'A fully-processed import must delete its source file'
         );
     }
@@ -288,7 +288,7 @@ CSV;
      */
     public function testProcessEventDataImportsOnlyValidRowsWhenMostRowsFail()
     {
-        Storage::fake('swift');
+        Storage::fake('s3');
 
         $service = App::make(ISummitService::class);
         $summit_id = self::$summit->getId();
@@ -316,7 +316,7 @@ CSV;
 
         $filename = 'events_mixed.csv';
         $path = "tmp/events_imports/{$filename}";
-        Storage::disk('swift')->put($path, $csv_content);
+        Storage::disk('s3')->put($path, $csv_content);
 
         // must not throw: failing rows are logged and skipped
         $service->processEventData($summit_id, $filename, false);
@@ -338,7 +338,7 @@ CSV;
             );
         }
         $this->assertFalse(
-            Storage::disk('swift')->exists($path),
+            Storage::disk('s3')->exists($path),
             'Known per-row failures must not block the source file deletion'
         );
     }

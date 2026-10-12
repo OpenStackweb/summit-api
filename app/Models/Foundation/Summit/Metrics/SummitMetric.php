@@ -30,6 +30,11 @@ class SummitMetric extends SilverstripeBaseModel
     use SummitOwned;
 
     /**
+     * max length (in characters) of the Ip, Origin, Location and Browser VARCHAR columns
+     */
+    const MaxStringColumnLength = 255;
+
+    /**
      * @var \DateTime
      */
     #[ORM\Column(name: 'IngressDate', type: 'datetime')]
@@ -44,7 +49,7 @@ class SummitMetric extends SilverstripeBaseModel
     /**
      * @var string|null
      */
-    #[ORM\Column(name: 'Ip', type: 'string')]
+    #[ORM\Column(name: 'Ip', type: 'string', length: self::MaxStringColumnLength)]
     protected $ip;
 
     /**
@@ -56,7 +61,7 @@ class SummitMetric extends SilverstripeBaseModel
     /**
      * @var string|null
      */
-    #[ORM\Column(name: 'Origin', type: 'string')]
+    #[ORM\Column(name: 'Origin', type: 'string', length: self::MaxStringColumnLength)]
     protected $origin;
 
     /**
@@ -68,7 +73,7 @@ class SummitMetric extends SilverstripeBaseModel
     /**
      * @var string|null
      */
-    #[ORM\Column(name: 'Browser', type: 'string')]
+    #[ORM\Column(name: 'Browser', type: 'string', length: self::MaxStringColumnLength)]
     protected $browser;
 
     /**
@@ -164,10 +169,22 @@ class SummitMetric extends SilverstripeBaseModel
         $metric = new static();
         $metric->member = $member;
         $metric->ingress_date = new \DateTime('now', new \DateTimeZone('UTC'));
-        $metric->ip = UserClientHelper::getUserIp();
-        $metric->origin = UserClientHelper::getUserOrigin();
-        $metric->browser = UserClientHelper::getUserBrowser();
+        $metric->ip = self::truncate(UserClientHelper::getUserIp());
+        $metric->origin = self::truncate(UserClientHelper::getUserOrigin());
+        $metric->browser = self::truncate(UserClientHelper::getUserBrowser());
         return $metric;
+    }
+
+    /**
+     * Header derived values are client controlled, cut them to the column length
+     * (characters, not bytes) so the INSERT never fails with "Data too long".
+     * @param string|null $value
+     * @return string|null
+     */
+    private static function truncate(?string $value): ?string
+    {
+        if (is_null($value)) return null;
+        return mb_substr($value, 0, self::MaxStringColumnLength);
     }
 
     /**

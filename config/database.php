@@ -178,6 +178,13 @@ return [
          * @see https://github.com/predis/predis/wiki/Connection-Parameters
          */
         'cluster' => false,
+        /*
+         * REDIS_PERSISTENT=true keeps one TLS socket per connection in each php-fpm worker,
+         * so requests skip the TLS handshake. Every connection needs its own persistent id:
+         * they share host:port, and a shared socket would let one connection's SELECT
+         * switch the database of another within the same request. predis takes the id from
+         * 'persistent', phpredis from 'persistent_id'; both are set so either client is safe.
+         */
         'default' => [
             'host' => env('REDIS_HOST'),
             'port' => env('REDIS_PORT'),
@@ -186,6 +193,8 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
             'timeout' => env('REDIS_TIMEOUT', 30),
+            'persistent' => env('REDIS_PERSISTENT', false) ? 'summit_api_default' : false,
+            'persistent_id' => 'summit_api_default',
         ],
 
         'cache' => [
@@ -196,6 +205,8 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
             'timeout' => env('REDIS_TIMEOUT', 5),
+            'persistent' => env('REDIS_PERSISTENT', false) ? 'summit_api_cache' : false,
+            'persistent_id' => 'summit_api_cache',
         ],
 
         'session' => [
@@ -206,6 +217,8 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
             'timeout' => env('REDIS_TIMEOUT', 5),
+            'persistent' => env('REDIS_PERSISTENT', false) ? 'summit_api_session' : false,
+            'persistent_id' => 'summit_api_session',
         ],
 
         'worker' => [
@@ -216,6 +229,8 @@ return [
             'scheme' => env('REDIS_SCHEME', 'tcp'),
             'read_write_timeout' => env('REDIS_WORKER_READ_WRITE_TIMEOUT', 10),
             'timeout' => env('REDIS_WORKER_TIMEOUT', 5),
+            'persistent' => env('REDIS_PERSISTENT', false) ? 'summit_api_worker' : false,
+            'persistent_id' => 'summit_api_worker',
         ],
     ],
     'allow_disabled_pk' => env('DB_ALLOW_DISABLED_PK', false),

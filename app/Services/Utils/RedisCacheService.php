@@ -31,8 +31,15 @@ class RedisCacheService implements ICacheService
     //services
     private $redis = null;
 
+    /**
+     * @var bool true when REDIS_PERSISTENT keeps the socket across requests; resolved in the constructor
+     * because the config may no longer be available when __destruct runs at shutdown
+     */
+    private $persistent = false;
+
     public function __construct()
     {
+        $this->persistent = (bool)config(sprintf('database.redis.%s.persistent', self::Connection), false);
         try {
             // try to re init the connection bc background process
             Redis::purge(self::Connection);
@@ -53,7 +60,11 @@ class RedisCacheService implements ICacheService
     {
         try {
             if (!is_null($this->redis)) {
-                $this->redis->disconnect();
+                // predis closes the stream on disconnect(), even a persistent one: that would drop the
+                // socket REDIS_PERSISTENT keeps for the next request
+                if (!$this->persistent) {
+                    $this->redis->disconnect();
+                }
                 $this->redis = null;
             }
         } catch (PredisConnectionException|\RedisException $ex) {

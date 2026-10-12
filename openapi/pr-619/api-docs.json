@@ -57068,8 +57068,8 @@
                 "tags": [
                     "Sponsors"
                 ],
-                "summary": "Delete Sponsor Extra Question",
-                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
+                "summary": "Delete Sponsor Extra Question (admin only)",
+                "description": "Admin only (Super Admins, Administrators or Summit Administrators allowed on the summit), anyone else gets 403. Devices may hold answers for this question that the server has not seen yet, so the admin must have checked them first. It needs a reason and delete_answers (true or false), and is audited; when the server holds answers it is refused with their count unless delete_answers=true. required-groups super-admins, administrators, summit-front-end-administrators",
                 "operationId": "deleteSponsorExtraQuestion",
                 "parameters": [
                     {
@@ -57098,14 +57098,58 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "delete_answers",
+                        "in": "query",
+                        "description": "Required, true or false, in the query string or in the body. With false and answers on the server it is refused with 412 and their count; true destroys them",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "description": "Alternative to the body property for clients that cannot send a DELETE body. Required in one of the two, goes to the audit entry",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "description": "Required (here or in the query string), goes to the audit entry",
+                                        "type": "string"
+                                    },
+                                    "delete_answers": {
+                                        "description": "Alternative to the query parameter, required (here or in the query string)",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "204": {
-                        "description": "Extra question deleted successfully"
+                        "description": "Question deleted"
+                    },
+                    "412": {
+                        "description": "Validation Error - a reason or delete_answers is missing, or collected answers would be destroyed and delete_answers is false"
                     },
                     "401": {
                         "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - admins only"
                     },
                     "404": {
                         "description": "Not Found"
@@ -57125,9 +57169,7 @@
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators",
-                    "sponsors",
-                    "sponsors-external-users"
+                    "summit-front-end-administrators"
                 ]
             }
         },
@@ -57312,9 +57354,198 @@
                 "tags": [
                     "Sponsors"
                 ],
-                "summary": "Delete Extra Question Value",
-                "description": "required-groups super-admins, administrators, summit-front-end-administrators, sponsors, sponsors-external-users",
+                "summary": "Delete Extra Question Value (admin only)",
+                "description": "Admin only (Super Admins, Administrators or Summit Administrators allowed on the summit), anyone else gets 403. Devices may hold answers for this option that the server has not seen yet, so the admin must have checked them first. It needs a reason and delete_answers (true or false), and is audited. Collected answers that selected the option are deleted when it was their only selection, otherwise they only lose its id; when the server holds any, it is refused with their count unless delete_answers=true. required-groups super-admins, administrators, summit-front-end-administrators",
                 "operationId": "deleteSponsorExtraQuestionValue",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The summit id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sponsor_id",
+                        "in": "path",
+                        "description": "The sponsor id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "extra_question_id",
+                        "in": "path",
+                        "description": "The extra question id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "value_id",
+                        "in": "path",
+                        "description": "The question value id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "delete_answers",
+                        "in": "query",
+                        "description": "Required, true or false, in the query string or in the body. With false and answers that selected the option on the server it is refused with 412 and their count; true changes them",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "description": "Alternative to the body property for clients that cannot send a DELETE body. Required in one of the two, goes to the audit entry",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "description": "Required (here or in the query string), goes to the audit entry",
+                                        "type": "string"
+                                    },
+                                    "delete_answers": {
+                                        "description": "Alternative to the query parameter, required (here or in the query string)",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Option deleted"
+                    },
+                    "412": {
+                        "description": "Validation Error - a reason or delete_answers is missing, or collected answers would be changed and delete_answers is false"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - admins only"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_sponsor_oauth2": [
+                            "http://localhost/summits/write",
+                            "http://localhost/summits/sponsors/extra-questions/write"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators"
+                ]
+            }
+        },
+        "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/usage": {
+            "get": {
+                "tags": [
+                    "Sponsors"
+                ],
+                "summary": "Get Sponsor Extra Question usage",
+                "description": "What deleting the question affects: collected answers on the server and the sponsor's badge scan activity (reps and their last scan). It does not prove devices have nothing pending. required-groups super-admins, administrators, summit-front-end-administrators",
+                "operationId": "getSponsorExtraQuestionUsage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The summit id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sponsor_id",
+                        "in": "path",
+                        "description": "The sponsor id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "extra_question_id",
+                        "in": "path",
+                        "description": "The extra question id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "answers_count, reps_count and reps (member_id, first_name, last_name, email, scans_count, last_scan_date)"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "summit_sponsor_oauth2": [
+                            "http://localhost/summits/read",
+                            "http://localhost/summits/read/all",
+                            "http://localhost/summits/sponsors/extra-questions/read"
+                        ]
+                    }
+                ],
+                "x-required-groups": [
+                    "super-admins",
+                    "administrators",
+                    "summit-front-end-administrators"
+                ]
+            }
+        },
+        "/api/v1/summits/{id}/sponsors/{sponsor_id}/extra-questions/{extra_question_id}/values/{value_id}/usage": {
+            "get": {
+                "tags": [
+                    "Sponsors"
+                ],
+                "summary": "Get Extra Question Value usage",
+                "description": "What deleting the option affects: collected answers that selected it (answers_to_delete when it was their only selection, answers_to_modify when they only lose its id) and the sponsor's badge scan activity. It does not prove devices have nothing pending. required-groups super-admins, administrators, summit-front-end-administrators",
+                "operationId": "getSponsorExtraQuestionValueUsage",
                 "parameters": [
                     {
                         "name": "id",
@@ -57354,11 +57585,14 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "Question value deleted successfully"
+                    "200": {
+                        "description": "answers_count, answers_to_delete, answers_to_modify, reps_count and reps (member_id, first_name, last_name, email, scans_count, last_scan_date)"
                     },
                     "401": {
                         "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "Not Found"
@@ -57370,17 +57604,16 @@
                 "security": [
                     {
                         "summit_sponsor_oauth2": [
-                            "http://localhost/summits/write",
-                            "http://localhost/summits/sponsors/extra-questions/write"
+                            "http://localhost/summits/read",
+                            "http://localhost/summits/read/all",
+                            "http://localhost/summits/sponsors/extra-questions/read"
                         ]
                     }
                 ],
                 "x-required-groups": [
                     "super-admins",
                     "administrators",
-                    "summit-front-end-administrators",
-                    "sponsors",
-                    "sponsors-external-users"
+                    "summit-front-end-administrators"
                 ]
             }
         },

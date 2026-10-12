@@ -185,7 +185,7 @@ final class EventServiceProvider extends ServiceProvider
 
         Event::listen(MemberUpdated::class, function ($event) {
             if (!$event instanceof MemberUpdated) return;
-            Log::debug(sprintf("EventServiceProvider::MemberUpdated: firing NewMemberAssocSummitOrders member id %s", $event->getMemberId()));
+            Log::debug(sprintf("EventServiceProvider::MemberUpdated: firing UpdateIDPMemberInfo member id %s", $event->getMemberId()));
 
             UpdateIDPMemberInfo::dispatch
             (

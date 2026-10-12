@@ -14,6 +14,7 @@
 use App\Jobs\MemberAssocSummitOrders;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\main\IMemberRepository;
@@ -304,7 +305,7 @@ final class ResourceServerContext implements IResourceServerContext
 
             $member->setUserExternalId($user_external_id);
             $member->setEmailVerified($user_email_verified);
-            MemberAssocSummitOrders::dispatch($member->getId());
+            $this->dispatchMemberAssocSummitOrders($member->getId(), $member->getEmail());
             return $synch_groups ? $this->checkGroups($member) : $member;
         });
 
@@ -314,6 +315,53 @@ final class ResourceServerContext implements IResourceServerContext
         $this->groupsSynched = $synch_groups;
         $this->fieldsSynched = $update_member_fields;
         return $this->cachedCurrentUser = $resolved;
+    }
+
+    /**
+     * Queues the order/attendee association job for the member, at most once per
+     * throttle window (registration.member_assoc_summit_orders_throttle_ttl
+     * seconds, 0 disables the throttle). The user cache is request-scoped, so
+     * without this every authenticated request would queue one job.
+     * The job associates by the member's current email, so the key includes it:
+     * an email change queues the job again instead of waiting for the window.
+     * Fails open: if the cache store cannot be reached the job is queued as before.
+     * If the queue push fails the throttle key is released, so the next request
+     * retries instead of skipping the job for the rest of the window.
+     *
+     * @param int $member_id
+     * @param string|null $member_email
+     */
+    private function dispatchMemberAssocSummitOrders(int $member_id, ?string $member_email): void
+    {
+        $ttl = intval(config('registration.member_assoc_summit_orders_throttle_ttl', 3600));
+        // set only when this call acquired the throttle key
+        $acquired_key = null;
+
+        if ($ttl > 0) {
+            try {
+                $key = sprintf('member_assoc_summit_orders_%s_%s', $member_id, md5(strtolower(trim($member_email ?? ''))));
+                if (!Cache::add($key, true, $ttl)) {
+                    Log::debug(sprintf("ResourceServerContext::dispatchMemberAssocSummitOrders member %s already queued in the last %s seconds, skipping.", $member_id, $ttl));
+                    return;
+                }
+                $acquired_key = $key;
+            } catch (\Throwable $ex) {
+                Log::warning($ex);
+            }
+        }
+
+        try {
+            MemberAssocSummitOrders::dispatch($member_id);
+        } catch (\Throwable $ex) {
+            if (!is_null($acquired_key)) {
+                try {
+                    Cache::forget($acquired_key);
+                } catch (\Throwable $forget_ex) {
+                    Log::warning($forget_ex);
+                }
+            }
+            throw $ex;
+        }
     }
 
     /**

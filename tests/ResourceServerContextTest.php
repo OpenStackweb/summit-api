@@ -11,7 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Jobs\MemberAssocSummitOrders;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\Member;
 use models\oauth2\IResourceServerContext;
@@ -272,5 +275,197 @@ class ResourceServerContextTest extends BrowserKitTestCase
             $other->getEmail(),
             'The colliding member email must be invalidated'
         );
+    }
+
+    /**
+     * Simulates one more authenticated request for the given IDP user: a fresh
+     * auth context resets the request-scoped cache, so getCurrentUser() runs the
+     * full resolution (PHASE B) again.
+     */
+    private function simulateRequest(IResourceServerContext $ctx, string $external_id, string $email): ?Member
+    {
+        $ctx->setAuthorizationContext($this->buildAuthContext($external_id, $email));
+        return $ctx->getCurrentUser();
+    }
+
+    /**
+     * @return int[] member ids of the MemberAssocSummitOrders jobs dispatched so far
+     */
+    private function dispatchedAssocMemberIds(): array
+    {
+        $prop = new \ReflectionProperty(MemberAssocSummitOrders::class, 'member_id');
+        $prop->setAccessible(true);
+        return Bus::dispatched(MemberAssocSummitOrders::class)
+            ->map(fn(MemberAssocSummitOrders $job) => $prop->getValue($job))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Every authenticated request resolves the user again (the cache is
+     * request-scoped), so the order/attendee association job must be throttled
+     * per member instead of being queued once per request.
+     */
+    public function testGetCurrentUserDispatchesAssocSummitOrdersOncePerMemberWithinThrottleWindow(): void
+    {
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 3600]);
+        Bus::fake();
+
+        $external_id = (string)mt_rand(100000000, 999999999);
+        $email = sprintf('ctx-throttle-%s@test.com', uniqid());
+        $existing = $this->persistMember($email, 'Throttled', 'Member', $external_id);
+
+        $ctx = App::make(IResourceServerContext::class);
+        for ($i = 0; $i < 3; $i++) {
+            $this->assertNotNull($this->simulateRequest($ctx, $external_id, $email));
+        }
+
+        $this->assertSame([$existing->getId()], $this->dispatchedAssocMemberIds());
+    }
+
+    public function testGetCurrentUserThrottlesAssocSummitOrdersPerMember(): void
+    {
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 3600]);
+        Bus::fake();
+
+        $external_a = (string)mt_rand(100000000, 499999999);
+        $email_a = sprintf('ctx-throttle-a-%s@test.com', uniqid());
+        $member_a = $this->persistMember($email_a, 'Throttled', 'A', $external_a);
+
+        $external_b = (string)mt_rand(500000000, 999999999);
+        $email_b = sprintf('ctx-throttle-b-%s@test.com', uniqid());
+        $member_b = $this->persistMember($email_b, 'Throttled', 'B', $external_b);
+
+        $ctx = App::make(IResourceServerContext::class);
+        $this->simulateRequest($ctx, $external_a, $email_a);
+        $this->simulateRequest($ctx, $external_b, $email_b);
+        $this->simulateRequest($ctx, $external_a, $email_a);
+        $this->simulateRequest($ctx, $external_b, $email_b);
+
+        $ids = $this->dispatchedAssocMemberIds();
+        sort($ids);
+        $expected = [$member_a->getId(), $member_b->getId()];
+        sort($expected);
+        $this->assertSame($expected, $ids, 'Each member must get exactly one job inside the window');
+    }
+
+    /**
+     * The job associates orders/attendees by the member's current email, so an
+     * email change must not wait for the window opened under the former email.
+     */
+    public function testGetCurrentUserDispatchesAssocSummitOrdersAgainWhenEmailChangesWithinThrottleWindow(): void
+    {
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 3600]);
+        Bus::fake();
+
+        $external_id = (string)mt_rand(100000000, 999999999);
+        $former_email = sprintf('ctx-throttle-former-%s@test.com', uniqid());
+        $new_email = sprintf('ctx-throttle-new-%s@test.com', uniqid());
+        $existing = $this->persistMember($former_email, 'Throttled', 'EmailChange', $external_id);
+
+        $ctx = App::make(IResourceServerContext::class);
+        $this->simulateRequest($ctx, $external_id, $former_email);
+        $member = $this->simulateRequest($ctx, $external_id, $new_email);
+        $this->simulateRequest($ctx, $external_id, $new_email);
+
+        $this->assertSame($new_email, $member->getEmail());
+        $this->assertSame(
+            [$existing->getId(), $existing->getId()],
+            $this->dispatchedAssocMemberIds(),
+            'The email change must queue the job once more, then stay throttled under the new email'
+        );
+    }
+
+    public function testGetCurrentUserDispatchesAssocSummitOrdersAgainAfterThrottleWindow(): void
+    {
+        // The test cache store is Redis, so expiry is real time: use the smallest window.
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 1]);
+        Bus::fake();
+
+        $external_id = (string)mt_rand(100000000, 999999999);
+        $email = sprintf('ctx-throttle-ttl-%s@test.com', uniqid());
+        $existing = $this->persistMember($email, 'Throttled', 'Expiring', $external_id);
+
+        $ctx = App::make(IResourceServerContext::class);
+        $this->simulateRequest($ctx, $external_id, $email);
+        sleep(2);
+        $this->simulateRequest($ctx, $external_id, $email);
+
+        $this->assertSame(
+            [$existing->getId(), $existing->getId()],
+            $this->dispatchedAssocMemberIds(),
+            'Once the window expires the next request must queue the job again'
+        );
+    }
+
+    public function testGetCurrentUserDispatchesAssocSummitOrdersOnEveryRequestWhenThrottleDisabled(): void
+    {
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 0]);
+        Bus::fake();
+
+        $external_id = (string)mt_rand(100000000, 999999999);
+        $email = sprintf('ctx-throttle-off-%s@test.com', uniqid());
+        $existing = $this->persistMember($email, 'Throttle', 'Disabled', $external_id);
+
+        $ctx = App::make(IResourceServerContext::class);
+        $this->simulateRequest($ctx, $external_id, $email);
+        $this->simulateRequest($ctx, $external_id, $email);
+
+        $this->assertSame([$existing->getId(), $existing->getId()], $this->dispatchedAssocMemberIds());
+    }
+
+    /**
+     * The throttle is an optimisation: when the cache store is down the request
+     * must still succeed and the job must still be queued (fail open).
+     */
+    public function testGetCurrentUserStillDispatchesAssocSummitOrdersWhenCacheFails(): void
+    {
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 3600]);
+        Bus::fake();
+
+        $external_id = (string)mt_rand(100000000, 999999999);
+        $email = sprintf('ctx-throttle-down-%s@test.com', uniqid());
+        $existing = $this->persistMember($email, 'Throttle', 'CacheDown', $external_id);
+
+        Cache::partialMock()
+            ->shouldReceive('add')
+            ->andThrow(new \RuntimeException('cache store is down'));
+
+        $ctx = App::make(IResourceServerContext::class);
+        $member = $this->simulateRequest($ctx, $external_id, $email);
+
+        $this->assertNotNull($member, 'The request must succeed even if the throttle cannot reach the cache');
+        $this->assertSame([$existing->getId()], $this->dispatchedAssocMemberIds());
+    }
+
+    /**
+     * When the queue push fails no job was queued, so the throttle marker must be
+     * released: the next request inside the window has to queue the job again.
+     */
+    public function testGetCurrentUserReleasesAssocSummitOrdersThrottleWhenDispatchFails(): void
+    {
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 3600]);
+
+        $external_id = (string)mt_rand(100000000, 999999999);
+        $email = sprintf('ctx-throttle-queue-down-%s@test.com', uniqid());
+        $existing = $this->persistMember($email, 'Throttle', 'QueueDown', $external_id);
+
+        $ctx = App::make(IResourceServerContext::class);
+
+        Bus::shouldReceive('dispatch')
+            ->once()
+            ->andThrow(new \RuntimeException('queue is down'));
+
+        try {
+            $this->simulateRequest($ctx, $external_id, $email);
+            $this->fail('The queue failure must propagate');
+        } catch (\RuntimeException $ex) {
+            $this->assertSame('queue is down', $ex->getMessage());
+        }
+
+        Bus::fake();
+        $this->simulateRequest($ctx, $external_id, $email);
+
+        $this->assertSame([$existing->getId()], $this->dispatchedAssocMemberIds());
     }
 }

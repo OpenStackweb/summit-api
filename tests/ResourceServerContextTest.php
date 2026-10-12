@@ -349,6 +349,33 @@ class ResourceServerContextTest extends BrowserKitTestCase
         $this->assertSame($expected, $ids, 'Each member must get exactly one job inside the window');
     }
 
+    /**
+     * The job associates orders/attendees by the member's current email, so an
+     * email change must not wait for the window opened under the former email.
+     */
+    public function testGetCurrentUserDispatchesAssocSummitOrdersAgainWhenEmailChangesWithinThrottleWindow(): void
+    {
+        config(['registration.member_assoc_summit_orders_throttle_ttl' => 3600]);
+        Bus::fake();
+
+        $external_id = (string)mt_rand(100000000, 999999999);
+        $former_email = sprintf('ctx-throttle-former-%s@test.com', uniqid());
+        $new_email = sprintf('ctx-throttle-new-%s@test.com', uniqid());
+        $existing = $this->persistMember($former_email, 'Throttled', 'EmailChange', $external_id);
+
+        $ctx = App::make(IResourceServerContext::class);
+        $this->simulateRequest($ctx, $external_id, $former_email);
+        $member = $this->simulateRequest($ctx, $external_id, $new_email);
+        $this->simulateRequest($ctx, $external_id, $new_email);
+
+        $this->assertSame($new_email, $member->getEmail());
+        $this->assertSame(
+            [$existing->getId(), $existing->getId()],
+            $this->dispatchedAssocMemberIds(),
+            'The email change must queue the job once more, then stay throttled under the new email'
+        );
+    }
+
     public function testGetCurrentUserDispatchesAssocSummitOrdersAgainAfterThrottleWindow(): void
     {
         // The test cache store is Redis, so expiry is real time: use the smallest window.

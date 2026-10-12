@@ -305,7 +305,7 @@ final class ResourceServerContext implements IResourceServerContext
 
             $member->setUserExternalId($user_external_id);
             $member->setEmailVerified($user_email_verified);
-            $this->dispatchMemberAssocSummitOrders($member->getId());
+            $this->dispatchMemberAssocSummitOrders($member->getId(), $member->getEmail());
             return $synch_groups ? $this->checkGroups($member) : $member;
         });
 
@@ -322,17 +322,21 @@ final class ResourceServerContext implements IResourceServerContext
      * throttle window (registration.member_assoc_summit_orders_throttle_ttl
      * seconds, 0 disables the throttle). The user cache is request-scoped, so
      * without this every authenticated request would queue one job.
+     * The job associates by the member's current email, so the key includes it:
+     * an email change queues the job again instead of waiting for the window.
      * Fails open: if the cache store cannot be reached the job is queued as before.
      *
      * @param int $member_id
+     * @param string|null $member_email
      */
-    private function dispatchMemberAssocSummitOrders(int $member_id): void
+    private function dispatchMemberAssocSummitOrders(int $member_id, ?string $member_email): void
     {
         $ttl = intval(config('registration.member_assoc_summit_orders_throttle_ttl', 3600));
 
         if ($ttl > 0) {
             try {
-                if (!Cache::add(sprintf('member_assoc_summit_orders_%s', $member_id), true, $ttl)) {
+                $key = sprintf('member_assoc_summit_orders_%s_%s', $member_id, md5(strtolower(trim($member_email ?? ''))));
+                if (!Cache::add($key, true, $ttl)) {
                     Log::debug(sprintf("ResourceServerContext::dispatchMemberAssocSummitOrders member %s already queued in the last %s seconds, skipping.", $member_id, $ttl));
                     return;
                 }

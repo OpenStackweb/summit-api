@@ -171,16 +171,22 @@ class OAuth2BearerAccessTokenRequestValidator
                 );
                 throw new InvalidGrantTypeException(OAuth2Protocol::OAuth2Protocol_Error_InvalidToken);
             }
-            if (
-                $token_info->getApplicationType() === 'JS_CLIENT'
-                && (is_null($origin) || empty($origin)|| str_contains($token_info->getAllowedOrigins(), $origin) === false )
-            ) {
+            if ($token_info->getApplicationType() === 'JS_CLIENT') {
                 //check origins
-                throw new OAuth2ResourceServerException(
-                    403,
-                    OAuth2Protocol::OAuth2Protocol_Error_UnauthorizedClient,
-                    sprintf('invalid origin %s - allowed ones (%s)', $origin, $token_info->getAllowedOrigins())
-                );
+                $allowedOrigins = array_filter(array_map(function ($o) {
+                    $o = trim($o);
+                    if ($o === '') return '';
+                    try { $o = (new Normalizer($o))->normalize(); } catch (\Throwable $e) {}
+                    return rtrim($o, '/');
+                }, explode(' ', $token_info->getAllowedOrigins() ?? '')));
+
+                if (is_null($origin) || empty($origin) || !in_array(rtrim($origin, '/'), $allowedOrigins, true)) {
+                    throw new OAuth2ResourceServerException(
+                        403,
+                        OAuth2Protocol::OAuth2Protocol_Error_UnauthorizedClient,
+                        sprintf('invalid origin %s - allowed ones (%s)', $origin, $token_info->getAllowedOrigins())
+                    );
+                }
             }
             //check scopes
             Log::debug('OAuth2BearerAccessTokenRequestValidator::handle checking token scopes ...');

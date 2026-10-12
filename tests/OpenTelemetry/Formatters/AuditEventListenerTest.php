@@ -15,16 +15,20 @@ namespace Tests\OpenTelemetry\Formatters;
  * limitations under the License.
  **/
 
+use App\Audit\AuditContext;
 use App\Audit\AuditEventListener;
 use App\Audit\Interfaces\IAuditStrategy;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\DefaultNamingStrategy;
 use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
 use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
 use Doctrine\ORM\PersistentCollection;
+use Doctrine\ORM\UnitOfWork;
 use Tests\TestCase;
 
 class AuditEventListenerTest extends TestCase
@@ -216,5 +220,49 @@ class AuditEventListenerTest extends TestCase
         $this->assertSame($owner, $subject);
         $this->assertSame([10, 11], $payload['deleted_ids']);
         $this->assertSame(IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE, $eventType);
+    }
+
+    public function testCreationAuditIsBufferedInOnFlushAndDispatchedInPostFlush(): void
+    {
+        // Simulate a new entity not yet persisted: getId() returns 0 (pre-INSERT state).
+        $entity = $this->getMockBuilder(\models\summit\SummitEvent::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getId'])
+            ->getMock();
+        $entity->method('getId')->willReturn(0);
+
+        $uow = $this->createMock(UnitOfWork::class);
+        $uow->method('getScheduledEntityInsertions')->willReturn([$entity]);
+        $uow->method('getScheduledEntityUpdates')->willReturn([]);
+        $uow->method('getScheduledEntityDeletions')->willReturn([]);
+        $uow->method('getScheduledCollectionDeletions')->willReturn([]);
+        $uow->method('getScheduledCollectionUpdates')->willReturn([]);
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->method('getUnitOfWork')->willReturn($uow);
+
+        $strategy = $this->createMock(IAuditStrategy::class);
+
+        $listener = $this->getMockBuilder(AuditEventListener::class)
+            ->onlyMethods(['shouldSkipInTest', 'getAuditStrategy', 'buildAuditContext'])
+            ->getMock();
+        $listener->method('shouldSkipInTest')->willReturn(false);
+        $listener->method('getAuditStrategy')->willReturn($strategy);
+        $listener->method('buildAuditContext')->willReturn(new AuditContext());
+
+        $capturedId = null;
+        $strategy->method('audit')->willReturnCallback(
+            function ($subject) use (&$capturedId) {
+                $capturedId = method_exists($subject, 'getId') ? $subject->getId() : null;
+            }
+        );
+
+        $listener->onFlush(new OnFlushEventArgs($em));
+
+        // Bug: audit() was called during onFlush — before the INSERT — so the captured id is 0.
+        $this->assertNotNull($capturedId,
+            'audit() must not be called during onFlush (INSERT has not run yet)');
+        $this->assertNotEquals(0, $capturedId,
+            'entity id captured during onFlush is 0 — the INSERT has not assigned the real id yet');
     }
 }

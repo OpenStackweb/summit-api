@@ -12,6 +12,10 @@
  * limitations under the License.
  **/
 use App\Models\Foundation\Main\IGroup;
+use models\main\IMemberRepository;
+use models\main\Member;
+use models\summit\ISummitRepository;
+use models\summit\Summit;
 use Illuminate\Support\Facades\App;
 use models\summit\SummitAccessLevelType;
 use models\summit\SummitAttendee;
@@ -46,6 +50,17 @@ class OAuth2SummitAttendeeCheckInLogApiTest extends ProtectedApiTestCase
         $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
         $this->assertNotNull($attendee);
         return $attendee;
+    }
+
+    // HTTP requests reset the EntityManager, so self::$summit goes stale between calls
+    private function freshSummit(): Summit
+    {
+        return App::make(ISummitRepository::class)->getById(self::$summit->getId());
+    }
+
+    private function freshMember(): Member
+    {
+        return App::make(IMemberRepository::class)->getById(self::$defaultMember->getId());
     }
 
     private function setCheckedIn(SummitAttendee $attendee, bool $value): void
@@ -271,8 +286,11 @@ class OAuth2SummitAttendeeCheckInLogApiTest extends ProtectedApiTestCase
     {
         $attendee = $this->getAttendee();
         $this->setCheckedIn($attendee, false);
-        $ticket = $attendee->getFirstTicket();
-        $badge = $ticket->getBadge();
+        // the fixture shares one badge instance across several tickets, but only the
+        // last one owns it (OneToOne): use the owner, the only ticket whose badge
+        // survives an EntityManager reset between calls
+        $badge = $attendee->getFirstTicket()->getBadge();
+        $ticket = $badge->getTicket();
 
         // make the fixture badge printable
         $in_person = new SummitAccessLevelType();
@@ -286,13 +304,13 @@ class OAuth2SummitAttendeeCheckInLogApiTest extends ProtectedApiTestCase
 
         // check_in = false: printed but not checked in => nothing logged
         $service->printAttendeeBadge(
-            self::$summit, $ticket->getId(), self::$default_badge_view_type->getName(), self::$defaultMember, ['check_in' => false]
+            $this->freshSummit(), $ticket->getId(), self::$default_badge_view_type->getName(), $this->freshMember(), ['check_in' => false]
         );
         $this->assertEquals(0, $this->getLogs($attendee->getId())->total);
 
         // default: checks in on print
         $service->printAttendeeBadge(
-            self::$summit, $ticket->getId(), self::$default_badge_view_type->getName(), self::$defaultMember
+            $this->freshSummit(), $ticket->getId(), self::$default_badge_view_type->getName(), $this->freshMember()
         );
         $page = $this->getLogs($attendee->getId());
         $this->assertEquals(1, $page->total);
@@ -301,7 +319,7 @@ class OAuth2SummitAttendeeCheckInLogApiTest extends ProtectedApiTestCase
 
         // already checked in: printing again does not log again
         $service->printAttendeeBadge(
-            self::$summit, $ticket->getId(), self::$default_badge_view_type->getName(), self::$defaultMember
+            $this->freshSummit(), $ticket->getId(), self::$default_badge_view_type->getName(), $this->freshMember()
         );
         $this->assertEquals(1, $this->getLogs($attendee->getId())->total);
     }

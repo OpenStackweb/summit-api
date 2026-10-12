@@ -26,6 +26,7 @@ return [
     'ticket_public_edit_ttl'                       => env('REGISTRATION_TICKET_PUBLIC_EDIT_TTL', 30),//in minutes
     'support_email'                                => env('REGISTRATION_SUPPORT_EMAIL', null),
     'reminder_email_days_interval'                 => env('REGISTRATION_REMINDER_EMAIL_DAYS_INTERVAL', 7),//in days
+    'member_assoc_summit_orders_throttle_ttl'      => env('REGISTRATION_MEMBER_ASSOC_SUMMIT_ORDERS_THROTTLE_TTL', 3600),//in seconds, 0 disables the throttle
     'validate_ticket_type_removal'                 => env('REGISTRATION_VALIDATE_TICKET_TYPE_REMOVAL', true),
     'default_payment_provider'                     => env('REGISTRATION_DEFAULT_PAYMENT_PROVIDER',IPaymentConstants::ProviderStripe),
     'default_payment_provider_config'              => [

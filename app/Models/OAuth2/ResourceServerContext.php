@@ -14,6 +14,7 @@
 use App\Jobs\MemberAssocSummitOrders;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use libs\utils\ITransactionService;
 use models\main\IMemberRepository;
@@ -304,7 +305,7 @@ final class ResourceServerContext implements IResourceServerContext
 
             $member->setUserExternalId($user_external_id);
             $member->setEmailVerified($user_email_verified);
-            MemberAssocSummitOrders::dispatch($member->getId());
+            $this->dispatchMemberAssocSummitOrders($member->getId());
             return $synch_groups ? $this->checkGroups($member) : $member;
         });
 
@@ -314,6 +315,33 @@ final class ResourceServerContext implements IResourceServerContext
         $this->groupsSynched = $synch_groups;
         $this->fieldsSynched = $update_member_fields;
         return $this->cachedCurrentUser = $resolved;
+    }
+
+    /**
+     * Queues the order/attendee association job for the member, at most once per
+     * throttle window (registration.member_assoc_summit_orders_throttle_ttl
+     * seconds, 0 disables the throttle). The user cache is request-scoped, so
+     * without this every authenticated request would queue one job.
+     * Fails open: if the cache store cannot be reached the job is queued as before.
+     *
+     * @param int $member_id
+     */
+    private function dispatchMemberAssocSummitOrders(int $member_id): void
+    {
+        $ttl = intval(config('registration.member_assoc_summit_orders_throttle_ttl', 3600));
+
+        if ($ttl > 0) {
+            try {
+                if (!Cache::add(sprintf('member_assoc_summit_orders_%s', $member_id), true, $ttl)) {
+                    Log::debug(sprintf("ResourceServerContext::dispatchMemberAssocSummitOrders member %s already queued in the last %s seconds, skipping.", $member_id, $ttl));
+                    return;
+                }
+            } catch (\Throwable $ex) {
+                Log::warning($ex);
+            }
+        }
+
+        MemberAssocSummitOrders::dispatch($member_id);
     }
 
     /**

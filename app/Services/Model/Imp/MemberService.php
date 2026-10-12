@@ -539,7 +539,7 @@ final class MemberService
                             continue;
 
                         // skipping this groups bc are managed by SS side
-                        if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs, IGroup::Sponsors])){
+                        if(in_array($group->getCode(), [IGroup::FoundationMembers, IGroup::CommunityMembers, IGroup::TrackChairs])){
                             Log::debug(sprintf("MemberService::synchronizeGroups skipping group %s removal", $group->getCode()));
                             continue;
                         }
@@ -556,6 +556,15 @@ final class MemberService
                         if(!is_null($group)) {
                             Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s due is also a super admin", $member->getId(), $member->getEmail(), $group->getCode()));
                             $member->removeFromGroup($group);
+                        }
+                    }
+                    // the IDP is the source of truth: a sponsor group that is gone takes its Sponsor_Users permission slug with it
+                    if(in_array($externalGroup->getCode(), [IGroup::Sponsors, IGroup::SponsorExternalUsers])){
+                        Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s stripping Sponsor_Users permission for group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));
+                        // same primitive the sponsor-users-api removal event uses; the Sponsor_Users rows stay
+                        // (their lifecycle belongs to the access right events), only the slug is stripped
+                        foreach ($member->getSponsorMemberships() as $sponsor) {
+                            $member->removeSponsorPermission($sponsor->getId(), $externalGroup->getCode());
                         }
                     }
                     Log::debug(sprintf("MemberService::synchronizeGroups member %s email %s removing from group %s", $member->getId(), $member->getEmail(), $externalGroup->getCode()));

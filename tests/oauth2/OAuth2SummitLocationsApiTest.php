@@ -369,6 +369,196 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         $this->assertNotEmpty($page->data);
     }
 
+    public static function locationEventsOrderProvider(): array
+    {
+        $cases = [];
+        foreach (['+occupancy', '-occupancy', '+track', '+location', '-location'] as $order) {
+            $cases["real location $order"] = [false, $order];
+            $cases["tbd location $order"] = [true, $order];
+        }
+        return $cases;
+    }
+
+    /**
+     * @dataProvider locationEventsOrderProvider
+     */
+    public function testGetLocationPublishedEventsOrderByOccupancyAndTrack(bool $tbd, string $order)
+    {
+        $params = [
+            'id'          => self::$summit->getId(),
+            'page'        => 1,
+            'per_page'    => 50,
+            'location_id' => $tbd ? 'tbd' : self::$mainVenue->getId(),
+            'order'       => $order,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getLocationPublishedEvents",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+        $this->assertNotNull(json_decode($response->getContent()));
+    }
+
+    /**
+     * @dataProvider locationEventsOrderProvider
+     */
+    public function testGetLocationEventsOrderByOccupancyAndTrack(bool $tbd, string $order)
+    {
+        $params = [
+            'id'          => self::$summit->getId(),
+            'page'        => 1,
+            'per_page'    => 50,
+            'location_id' => $tbd ? 'tbd' : self::$mainVenue->getId(),
+            'order'       => $order,
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getLocationEvents",
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+        $this->assertNotNull(json_decode($response->getContent()));
+    }
+
+    private function getPublishedLocationEventsOccupancies(string $order): array
+    {
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getLocationPublishedEvents",
+            [
+                'id'          => self::$summit->getId(),
+                'page'        => 1,
+                'per_page'    => 100,
+                'location_id' => self::$mainVenue->getId(),
+                'order'       => $order,
+            ],
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+        $page = json_decode($response->getContent());
+        $this->assertNotEmpty($page->data);
+
+        return array_map(function ($event) {
+            $this->assertTrue(property_exists($event, 'occupancy'), 'occupancy not serialized');
+            return $event->occupancy;
+        }, $page->data);
+    }
+
+    public function testGetLocationPublishedEventsOrderByOccupancySequence()
+    {
+        // null/unknown first, then EMPTY, 25%, 50%, 75%, FULL, OVERFLOW
+        $rank = ['EMPTY' => 1, '25%' => 2, '50%' => 3, '75%' => 4, 'FULL' => 5, 'OVERFLOW' => 6];
+        $values = array_keys($rank);
+
+        $i = 0;
+        foreach (self::$presentations as $presentation) {
+            if (!$presentation->isPublished()) continue;
+            $location = $presentation->getLocation();
+            if (is_null($location) || $location->getId() !== self::$mainVenue->getId()) continue;
+            $presentation->setOccupancy($values[$i % count($values)]);
+            $i++;
+        }
+        $this->assertGreaterThanOrEqual(count($values), $i, 'not enough published events at main venue');
+        self::$em->flush();
+
+        $to_ranks = fn(array $occupancies) => array_map(fn($o) => $rank[$o] ?? 0, $occupancies);
+
+        $asc = $to_ranks($this->getPublishedLocationEventsOccupancies('+occupancy'));
+        $sorted_asc = $asc;
+        sort($sorted_asc);
+        $this->assertSame($sorted_asc, $asc);
+        $this->assertGreaterThan(1, count(array_unique($asc)));
+
+        $desc = $to_ranks($this->getPublishedLocationEventsOccupancies('-occupancy'));
+        $sorted_desc = $desc;
+        rsort($sorted_desc);
+        $this->assertSame($sorted_desc, $desc);
+        $this->assertSame(array_reverse($sorted_asc), $sorted_desc);
+    }
+
+    public function testGetLocationPublishedEventsOrderByTrack()
+    {
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitLocationsApiController@getLocationPublishedEvents",
+            [
+                'id'          => self::$summit->getId(),
+                'page'        => 1,
+                'per_page'    => 100,
+                'location_id' => self::$mainVenue->getId(),
+                'order'       => '+track',
+            ],
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+        $page = json_decode($response->getContent());
+        $this->assertNotEmpty($page->data);
+        // fixtures share a single track, so only events with a track are expected (inner join)
+        foreach ($page->data as $event) {
+            $this->assertEquals(self::$defaultTrack->getId(), $event->track_id);
+        }
+    }
+
+    private function getPublishedEventsHasLocation(string $order): array
+    {
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitEventsApiController@getScheduledEvents",
+            [
+                'id'       => self::$summit->getId(),
+                'page'     => 1,
+                'per_page' => 100,
+                'order'    => $order,
+            ],
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+        $page = json_decode($response->getContent());
+        $this->assertNotEmpty($page->data);
+
+        return array_map(fn($event) => intval($event->location_id) > 0 ? 1 : 0, $page->data);
+    }
+
+    public function testGetPublishedEventsOrderByLocation()
+    {
+        // events without location sort as '' (COALESCE), so they come before the main venue on ascending order
+        $asc = $this->getPublishedEventsHasLocation('+location');
+        $sorted_asc = $asc;
+        sort($sorted_asc);
+        $this->assertSame($sorted_asc, $asc);
+        $this->assertCount(2, array_unique($asc), 'fixtures should mix events with and without location');
+
+        $desc = $this->getPublishedEventsHasLocation('-location');
+        $sorted_desc = $desc;
+        rsort($sorted_desc);
+        $this->assertSame($sorted_desc, $desc);
+    }
+
     public function testAddLocationWithoutClassName(){
 
         $params = [

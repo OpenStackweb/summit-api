@@ -113,4 +113,22 @@ final class RateLimitMiddleware extends ThrottleRequests
             $this->calculateRemainingAttempts($key, $maxAttempts)
         );
     }
+
+    /**
+     * Scopes the counter per HTTP method + matched route template + client, so the budget (and the
+     * window, which the first writer of a key fixes) of one rate limited route never leaks into another.
+     * The route TEMPLATE is used, not the concrete URL, so path values do not create a bucket each.
+     * @param \Illuminate\Http\Request $request
+     * @return string
+     */
+    protected function resolveRequestSignature($request)
+    {
+        return sha1(sprintf
+        (
+            '%s|%s|%s',
+            $request->getMethod(),
+            $request->route()?->uri() ?? $request->path(),
+            parent::resolveRequestSignature($request)
+        ));
+    }
 }

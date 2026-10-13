@@ -28272,7 +28272,7 @@
                     {
                         "name": "order",
                         "in": "query",
-                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track",
+                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track, location",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -28390,7 +28390,7 @@
                     {
                         "name": "order",
                         "in": "query",
-                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track",
+                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track, location",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -28499,7 +28499,7 @@
                     {
                         "name": "order",
                         "in": "query",
-                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track",
+                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track, location",
                         "required": false,
                         "schema": {
                             "type": "string"

@@ -14,6 +14,7 @@
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Throwable;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -68,6 +69,10 @@ class Handler extends ExceptionHandler
         }
 
         if ($request->expectsJson() || $request->is('api/*')) {
+            if ($e instanceof TooManyRequestsHttpException) {
+                // keep Retry-After / X-RateLimit-* so clients can back off instead of seeing a fake server fault
+                return response()->json(['message' => 'Too Many Requests'], 429, $e->getHeaders());
+            }
             $status = $this->isHttpException($e) ? $e->getStatusCode() : 500;
             return response()->json(['message' => 'server error'], $status);
         }

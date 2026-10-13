@@ -372,7 +372,7 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
     public static function locationEventsOrderProvider(): array
     {
         $cases = [];
-        foreach (['+occupancy', '-occupancy', '+track'] as $order) {
+        foreach (['+occupancy', '-occupancy', '+track', '+location', '-location'] as $order) {
             $cases["real location $order"] = [false, $order];
             $cases["tbd location $order"] = [true, $order];
         }
@@ -518,6 +518,45 @@ final class OAuth2SummitLocationsApiTest extends ProtectedApiTestCase
         foreach ($page->data as $event) {
             $this->assertEquals(self::$defaultTrack->getId(), $event->track_id);
         }
+    }
+
+    private function getPublishedEventsHasLocation(string $order): array
+    {
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitEventsApiController@getScheduledEvents",
+            [
+                'id'       => self::$summit->getId(),
+                'page'     => 1,
+                'per_page' => 100,
+                'order'    => $order,
+            ],
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $this->assertResponseStatus(200);
+        $page = json_decode($response->getContent());
+        $this->assertNotEmpty($page->data);
+
+        return array_map(fn($event) => intval($event->location_id) > 0 ? 1 : 0, $page->data);
+    }
+
+    public function testGetPublishedEventsOrderByLocation()
+    {
+        // events without location sort as '' (COALESCE), so they come before the main venue on ascending order
+        $asc = $this->getPublishedEventsHasLocation('+location');
+        $sorted_asc = $asc;
+        sort($sorted_asc);
+        $this->assertSame($sorted_asc, $asc);
+        $this->assertCount(2, array_unique($asc), 'fixtures should mix events with and without location');
+
+        $desc = $this->getPublishedEventsHasLocation('-location');
+        $sorted_desc = $desc;
+        rsort($sorted_desc);
+        $this->assertSame($sorted_desc, $desc);
     }
 
     public function testAddLocationWithoutClassName(){

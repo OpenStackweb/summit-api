@@ -943,6 +943,8 @@ SQL,
             ->leftJoin("e.location", 'l', Join::LEFT_JOIN)
             ->where("l.id is null or l.id = 0");
 
+        $query = $this->applyExtraJoins($query, $filter, $order);
+
         if (!is_null($filter)) {
             $filter->apply2Query($query, $this->getFilterMappings($filter));
         }

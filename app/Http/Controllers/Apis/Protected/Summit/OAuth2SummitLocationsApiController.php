@@ -1474,7 +1474,9 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
                     'end_date',
                     'id',
                     'created',
-                    'track_id'
+                    'track_id',
+                    'occupancy',
+                    'track',
                 ];
             },
             function ($filter) use($summit_id, $location, $published){
@@ -1537,7 +1539,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID or "tbd"', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: title, start_date, end_date, speaker, tags, event_type_id, track_id, type_show_always_on_schedule', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: title, start_date, end_date, id, created, track_id', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: title, start_date, end_date, id, created, track_id, occupancy, track', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
@@ -1568,7 +1570,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID or "tbd"', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: title, start_date, end_date, speaker, tags, event_type_id, track_id, type_show_always_on_schedule', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: title, start_date, end_date, id, created, track_id', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: title, start_date, end_date, id, created, track_id, occupancy, track', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),
@@ -1597,7 +1599,7 @@ final class OAuth2SummitLocationsApiController extends OAuth2ProtectedController
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID or slug', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'location_id', in: 'path', required: true, description: 'Location ID or "tbd"', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'filter', in: 'query', required: false, description: 'Filter by: title, start_date, end_date, speaker, tags, event_type_id, track_id, type_show_always_on_schedule', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: title, start_date, end_date, id, created, track_id', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'order', in: 'query', required: false, description: 'Order by: title, start_date, end_date, id, created, track_id, occupancy, track', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'page', in: 'query', required: false, description: 'Page number', schema: new OA\Schema(type: 'integer', default: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page', schema: new OA\Schema(type: 'integer', default: 10)),
             new OA\Parameter(name: 'expand', in: 'query', required: false, description: 'Expand related entities', schema: new OA\Schema(type: 'string')),

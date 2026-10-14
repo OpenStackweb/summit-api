@@ -4473,10 +4473,16 @@ final class SummitService
                     continue;
                 }
 
-                // The same per-upload lock CopyClonedMediaUploadFilesJob holds while it writes a
+                // The same storage-location lock CopyClonedMediaUploadFilesJob holds while it writes a
                 // clone's files. If a copy is running, leave this row untouched for the next run, so
                 // the staff file is written after the copy and never overwritten by it.
-                $lock_name = CopyClonedMediaUploadFilesJob::storageLockName($pending_upload->getMediaUpload()->getId());
+                $presentation = $pending_upload->getMediaUpload()->getPresentation();
+                if (is_null($presentation)) {
+                    // no presentation means no valid path to write to; leave the row untouched
+                    Log::warning(sprintf("SummitService::processPendingMediaUploads upload ID %s skipped, media upload %s has no presentation", $upload_id, $pending_upload->getMediaUpload()->getId()));
+                    continue;
+                }
+                $lock_name = CopyClonedMediaUploadFilesJob::storageLockName($presentation->getId(), $pending_upload->getFileName());
                 try {
                     $lock_token = $this->lock_service->acquireLock($lock_name, CopyClonedMediaUploadFilesJob::STORAGE_LOCK_LIFETIME);
                 } catch (UnacquiredLockException $lock_ex) {

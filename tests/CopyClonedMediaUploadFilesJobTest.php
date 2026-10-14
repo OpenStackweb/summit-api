@@ -137,10 +137,10 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
     }
 
     /** Holds an upload's storage lock, as processPendingMediaUploads does, while $fn runs. */
-    private function withStorageLockHeld(int $media_upload_id, \Closure $fn): void
+    private function withStorageLockHeld(PresentationMediaUpload $upload, \Closure $fn): void
     {
         $locks = App::make(ILockManagerService::class);
-        $name = CopyClonedMediaUploadFilesJob::storageLockName($media_upload_id);
+        $name = CopyClonedMediaUploadFilesJob::storageLockName($upload->getPresentation()->getId(), $upload->getFilename());
         $token = $locks->acquireLock($name, 60);
         try {
             $fn();
@@ -334,7 +334,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         [$source, $target] = $this->makePair();
         $this->seedSource($source);
 
-        $this->withStorageLockHeld($target->getId(), function () use ($source, $target) {
+        $this->withStorageLockHeld($target, function () use ($source, $target) {
             try {
                 $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
                 $this->fail('expected UnacquiredLockException');
@@ -344,12 +344,37 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         });
     }
 
+    /**
+     * summit-admin re-uploads by delete-then-add, so the processor's row belongs to a NEW upload
+     * record at the same storage path. The lock is keyed on that location, so the copy still waits.
+     */
+    public function testHandleThrowsWhenSameLocationLockedByDifferentUpload(): void
+    {
+        [$source, $target] = $this->makePair();
+        $this->seedSource($source);
+
+        $locks = App::make(ILockManagerService::class);
+        // the name a processor writing a DIFFERENT upload record at the clone's deck.pptx would hold
+        $name = CopyClonedMediaUploadFilesJob::storageLockName(self::$clonePresentation->getId(), 'deck.pptx');
+        $token = $locks->acquireLock($name, 60);
+        try {
+            $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+            $this->fail('expected UnacquiredLockException');
+        } catch (UnacquiredLockException $ex) {
+            $disk = Storage::disk('local');
+            $this->assertFalse($disk->exists($target->getRelativePath(IStorageTypesConstants::PrivateType)));
+            $this->assertFalse($disk->exists($target->getRelativePath(IStorageTypesConstants::PublicType)));
+        } finally {
+            $locks->releaseLock($name, $token);
+        }
+    }
+
     public function testFailedKeepsUploadWhenTargetStorageLocked(): void
     {
         [$source, $target] = $this->makePair();
         $target_id = $target->getId();
 
-        $this->withStorageLockHeld($target_id, function () use ($source, $target_id) {
+        $this->withStorageLockHeld($target, function () use ($source, $target_id) {
             (new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
         });
 
@@ -371,7 +396,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $source_id = $source->getId();
         $target_id = $target->getId();
 
-        $lock_name = CopyClonedMediaUploadFilesJob::storageLockName($target_id);
+        $lock_name = CopyClonedMediaUploadFilesJob::storageLockName(self::$clonePresentation->getId(), 'deck.pptx');
         $locks = App::make(ILockManagerService::class);
         $token = $locks->acquireLock($lock_name, 60);
 

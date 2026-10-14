@@ -382,7 +382,7 @@ CSV;
         };
 
         $locks = App::make(ILockManagerService::class);
-        $name = CopyClonedMediaUploadFilesJob::storageLockName($upload->getId());
+        $name = CopyClonedMediaUploadFilesJob::storageLockName($presentation->getId(), $upload->getFilename());
         $token = $locks->acquireLock($name, 60);
         try {
             App::make(ISummitService::class)->processPendingMediaUploads();

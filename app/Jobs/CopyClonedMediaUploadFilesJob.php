@@ -37,8 +37,10 @@ use models\summit\PresentationMediaUpload;
  * A clone that staff have re-uploaded since is never written to or deleted. updateMediaUploadFrom
  * keeps the record's ID and may keep its filename, so the signal is the PendingMediaUpload row
  * every re-upload creates (a clone never has one). The check and the writes run under the same
- * per-upload storage lock SummitService::processPendingMediaUploads takes, so a re-upload that
- * lands mid-copy is written after this job, never overwritten by it.
+ * storage lock SummitService::processPendingMediaUploads takes, so a re-upload that lands mid-copy
+ * is written after this job, never overwritten by it. The lock is keyed on the storage location
+ * (presentation + filename), not the upload ID: summit-admin re-uploads by delete-then-add, which
+ * gives the new file a new upload ID at the same path.
  * @package App\Jobs
  */
 final class CopyClonedMediaUploadFilesJob implements ShouldQueue
@@ -70,9 +72,10 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
         public string $filename
     ) {}
 
-    public static function storageLockName(int $media_upload_id): string
+    // the filename is hashed so an arbitrary filename is always a safe cache key
+    public static function storageLockName(int $presentation_id, string $filename): string
     {
-        return sprintf('media_upload_storage.%s', $media_upload_id);
+        return sprintf('media_upload_storage.%s.%s', $presentation_id, sha1($filename));
     }
 
     public function handle(
@@ -84,8 +87,12 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
     {
         Log::debug(sprintf("CopyClonedMediaUploadFilesJob::handle source %s target %s", $this->source_media_upload_id, $this->target_media_upload_id));
 
-        $lock_name = self::storageLockName($this->target_media_upload_id);
-        // UnacquiredLockException propagates: the processor is writing this upload, so retry later
+        $lock_name = $this->resolveLockName($repository, $tx_service);
+        if (is_null($lock_name)) {
+            Log::info(sprintf("CopyClonedMediaUploadFilesJob::handle target %s gone or has no presentation, nothing to copy", $this->target_media_upload_id));
+            return;
+        }
+        // UnacquiredLockException propagates: the processor is writing this location, so retry later
         $token = $lock_service->acquireLock($lock_name, self::STORAGE_LOCK_LIFETIME);
         self::$held_lock_tokens[$lock_name] = $token;
         try {
@@ -97,6 +104,21 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
             unset(self::$held_lock_tokens[$lock_name]);
             $lock_service->releaseLock($lock_name, $token);
         }
+    }
+
+    /**
+     * The storage lock for the target's location, or null when the target is gone or has no
+     * presentation. Read before the lock is taken; the guards re-check the target under it.
+     */
+    private function resolveLockName(IPresentationMediaUploadRepository $repository, ITransactionService $tx_service): ?string
+    {
+        return $tx_service->transaction(function () use ($repository) {
+            $target = $repository->getById($this->target_media_upload_id);
+            if (!$target instanceof PresentationMediaUpload) return null;
+            $presentation = $target->getPresentation();
+            if (is_null($presentation)) return null;
+            return self::storageLockName($presentation->getId(), $this->filename);
+        });
     }
 
     /**
@@ -183,7 +205,20 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
         ));
 
         $lock_service = App::make(ILockManagerService::class);
-        $lock_name = self::storageLockName($this->target_media_upload_id);
+        try {
+            $lock_name = $this->resolveLockName(
+                App::make(IPresentationMediaUploadRepository::class),
+                App::make(ITransactionService::class)
+            );
+        } catch (\Throwable $ex) {
+            Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not remove clone media upload %s", $this->target_media_upload_id));
+            Log::error($ex);
+            return;
+        }
+        if (is_null($lock_name)) {
+            Log::info(sprintf("CopyClonedMediaUploadFilesJob::failed target %s gone or has no presentation, nothing to remove", $this->target_media_upload_id));
+            return;
+        }
 
         if (array_key_exists($lock_name, self::$held_lock_tokens)) {
             // A final-attempt timeout calls failed() from the worker's SIGALRM handler in the

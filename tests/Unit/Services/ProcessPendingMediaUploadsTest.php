@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Jobs\CopyClonedMediaUploadFilesJob;
 use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Services\Utils\Exceptions\UnacquiredLockException;
 use App\Services\Utils\ILockManagerService;
@@ -22,6 +23,7 @@ use libs\utils\ITransactionService;
 use Mockery;
 use models\summit\ISummitRepository;
 use models\summit\PendingMediaUpload;
+use models\summit\Presentation;
 use models\summit\PresentationMediaUpload;
 use models\summit\Summit;
 use models\summit\SummitMediaUploadType;
@@ -115,6 +117,16 @@ class ProcessPendingMediaUploadsTest extends TestCase
         return $service;
     }
 
+    /** A media upload mock on presentation $presentation_id, as the processor's lock name needs. */
+    private function mediaUploadMock(int $presentation_id): PresentationMediaUpload
+    {
+        $presentation = Mockery::mock(Presentation::class);
+        $presentation->shouldReceive('getId')->andReturn($presentation_id);
+        $mediaUpload = Mockery::mock(PresentationMediaUpload::class);
+        $mediaUpload->shouldReceive('getPresentation')->andReturn($presentation);
+        return $mediaUpload;
+    }
+
     /**
      * Test max retries exceeded marks upload as Error.
      * When attempts >= max_retries, the upload should be permanently marked as Error.
@@ -157,12 +169,12 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $txService = Mockery::mock(ITransactionService::class);
         $summitRepository = Mockery::mock(ISummitRepository::class);
 
-        $mediaUpload = Mockery::mock(PresentationMediaUpload::class);
-        $mediaUpload->shouldReceive('getId')->andReturn(101);
+        $mediaUpload = $this->mediaUploadMock(101);
 
         $pendingUpload = Mockery::mock(PendingMediaUpload::class);
         $pendingUpload->shouldReceive('getId')->andReturn(1);
         $pendingUpload->shouldReceive('getMediaUpload')->andReturn($mediaUpload);
+        $pendingUpload->shouldReceive('getFileName')->andReturn('deck.pptx');
         // First getAttempts() call: retry guard check (0 < 3, passes)
         // Second getAttempts() call: in catch block (1 < 3, no ERROR status)
         $pendingUpload->shouldReceive('getAttempts')->andReturnValues([0, 1]);
@@ -335,12 +347,12 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
         $txService = Mockery::mock(ITransactionService::class);
 
-        $mediaUpload = Mockery::mock(PresentationMediaUpload::class);
-        $mediaUpload->shouldReceive('getId')->andReturn(102);
+        $mediaUpload = $this->mediaUploadMock(102);
 
         $pendingUpload = Mockery::mock(PendingMediaUpload::class);
         $pendingUpload->shouldReceive('getId')->andReturn(1);
         $pendingUpload->shouldReceive('getMediaUpload')->andReturn($mediaUpload);
+        $pendingUpload->shouldReceive('getFileName')->andReturn('deck.pptx');
         // First call: retry guard (1 < 3, passes)
         // Second call: in catch block (2 < 3, leave at partial status)
         $pendingUpload->shouldReceive('getAttempts')->andReturnValues([1, 2]);
@@ -377,19 +389,21 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
         $txService = Mockery::mock(ITransactionService::class);
 
-        $mediaUpload = Mockery::mock(PresentationMediaUpload::class);
-        $mediaUpload->shouldReceive('getId')->andReturn(103);
+        $mediaUpload = $this->mediaUploadMock(103);
 
         $pendingUpload = Mockery::mock(PendingMediaUpload::class);
         $pendingUpload->shouldReceive('getId')->andReturn(1);
         $pendingUpload->shouldReceive('getMediaUpload')->andReturn($mediaUpload);
+        $pendingUpload->shouldReceive('getFileName')->andReturn('deck.pptx');
         $pendingUpload->shouldReceive('getAttempts')->andReturn(0);
         $pendingUpload->shouldNotReceive('setStatus');
         $pendingUpload->shouldNotReceive('incrementAttempts');
         $pendingUpload->shouldNotReceive('setErrorMessage');
 
         $lockService = Mockery::mock(ILockManagerService::class);
-        $lockService->shouldReceive('acquireLock')->once()->andThrow(new UnacquiredLockException('upload 1 storage is locked'));
+        $lockService->shouldReceive('acquireLock')->once()
+            ->with(CopyClonedMediaUploadFilesJob::storageLockName(103, 'deck.pptx'), CopyClonedMediaUploadFilesJob::STORAGE_LOCK_LIFETIME)
+            ->andThrow(new UnacquiredLockException('upload 1 storage is locked'));
         $lockService->shouldNotReceive('releaseLock');
 
         $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
@@ -397,6 +411,49 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
 
         // 2 transactions: reset stuck, cleanup — the row's own processing never opens one
+        $txService->shouldReceive('transaction')->twice()->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService, null, $lockService);
+
+        $stats = $service->processPendingMediaUploads();
+
+        $this->assertEquals(0, $stats['processed']);
+        $this->assertEquals(0, $stats['errors']);
+    }
+
+    /**
+     * A row whose media upload has no presentation has no storage location to lock (nor a valid
+     * path to write); it is left untouched rather than aborting the whole run.
+     */
+    public function testUploadWithoutPresentationIsSkippedWithoutTouchingIt(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+
+        $mediaUpload = Mockery::mock(PresentationMediaUpload::class);
+        $mediaUpload->shouldReceive('getId')->andReturn(104);
+        $mediaUpload->shouldReceive('getPresentation')->andReturn(null);
+
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
+        $pendingUpload->shouldReceive('getId')->andReturn(1);
+        $pendingUpload->shouldReceive('getMediaUpload')->andReturn($mediaUpload);
+        $pendingUpload->shouldReceive('getFileName')->andReturn('deck.pptx');
+        $pendingUpload->shouldReceive('getAttempts')->andReturn(0);
+        $pendingUpload->shouldNotReceive('setStatus');
+        $pendingUpload->shouldNotReceive('incrementAttempts');
+        $pendingUpload->shouldNotReceive('setErrorMessage');
+
+        $lockService = Mockery::mock(ILockManagerService::class);
+        $lockService->shouldNotReceive('acquireLock');
+        $lockService->shouldNotReceive('releaseLock');
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        // 2 transactions: reset stuck, cleanup
         $txService->shouldReceive('transaction')->twice()->andReturnUsing(function ($callback) {
             return $callback();
         });

@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 use App\Jobs\Emails\IMailTemplatesConstants;
+use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
 use App\Jobs\Emails\Schedule\PresentationActivitySpeakerChangeEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\ISummitService;
@@ -2640,5 +2641,132 @@ CSV;
         $this->assertNotNull($result);
         $this->assertEquals(1, $result['total']);
         $this->assertEquals($overflow_event->getId(), $result['data'][0]['id']);
+    }
+
+    private function createPublishedEventForOverflow(): SummitEvent
+    {
+        $start_date = clone(self::$summit->getBeginDate());
+        $end_date = (clone $start_date)->add(new \DateInterval("PT1H"));
+
+        $event = new SummitEvent();
+        $event->setTitle(sprintf("Overflow Key Event %s", str_random(16)));
+        $event->setAbstract(sprintf("Overflow Key Event Abstract %s", str_random(16)));
+        $event->setCategory(self::$defaultTrack);
+        $event->setType(self::$defaultEventType);
+        self::$summit->addEvent($event);
+        $event->setStartDate($start_date);
+        $event->setEndDate($end_date);
+        $event->publish();
+        self::$em->persist($event);
+        self::$em->flush();
+        return $event;
+    }
+
+    private function putOverflow(SummitEvent $event, string $streaming_url, bool $is_secure = false)
+    {
+        return $this->action
+        (
+            "PUT",
+            "OAuth2SummitEventsApiController@setOverflow",
+            ['id' => self::$summit->getId(), 'event_id' => $event->getId()],
+            [], [], [],
+            ["HTTP_Authorization" => " Bearer " . $this->access_token, "CONTENT_TYPE" => "application/json"],
+            json_encode([
+                'overflow_streaming_url' => $streaming_url,
+                'overflow_stream_is_secure' => $is_secure,
+            ])
+        );
+    }
+
+    private function deleteOverflow(SummitEvent $event)
+    {
+        return $this->action
+        (
+            "DELETE",
+            "OAuth2SummitEventsApiController@clearOverflow",
+            ['id' => self::$summit->getId(), 'event_id' => $event->getId()],
+            [], [], [],
+            ["HTTP_Authorization" => " Bearer " . $this->access_token, "CONTENT_TYPE" => "application/json"],
+            json_encode([])
+        );
+    }
+
+    private function assertOverflowLifeCycleDispatched(string $expected_key): void
+    {
+        Queue::assertPushed(ProcessScheduleEntityLifeCycleEvent::class, function ($job) use ($expected_key) {
+            return $job->entity_type == Presentation::PresentationOverflowEntityType
+                && str_contains($job->params['overflow_url'], 'k=' . $expected_key);
+        });
+    }
+
+    public function testSetOverflowTwiceKeepsStreamKey()
+    {
+        Queue::fake();
+        $event = $this->createPublishedEventForOverflow();
+
+        $response = $this->putOverflow($event, "https://testoverflow-first.org", true);
+        $this->assertResponseStatus(201);
+        $first = json_decode($response->getContent(), true);
+        $first_key = $first['overflow_stream_key'];
+        $this->assertNotEmpty($first_key);
+        $this->assertOverflowLifeCycleDispatched($first_key);
+
+        $response = $this->putOverflow($event, "https://testoverflow-second.org", false);
+        $this->assertResponseStatus(201);
+        $second = json_decode($response->getContent(), true);
+
+        $this->assertEquals($first_key, $second['overflow_stream_key']);
+        $this->assertEquals("https://testoverflow-second.org", $second['overflow_streaming_url']);
+        $this->assertOverflowLifeCycleDispatched($second['overflow_stream_key']);
+        // one PresentationOverflow lifecycle job per PUT (other entity types may be pushed by event setup)
+        $this->assertCount(2, Queue::pushed(ProcessScheduleEntityLifeCycleEvent::class, function ($job) {
+            return $job->entity_type == Presentation::PresentationOverflowEntityType;
+        }));
+
+        self::$em->clear();
+        $found = self::$em->getRepository(SummitEvent::class)
+            ->getBySummitAndOverflowStreamKey(self::$summit, $first_key);
+        $this->assertNotNull($found);
+        $this->assertEquals($event->getId(), $found->getId());
+    }
+
+    public function testSetClearSetOverflowGeneratesNewStreamKey()
+    {
+        Queue::fake();
+        $event = $this->createPublishedEventForOverflow();
+
+        $response = $this->putOverflow($event, "https://testoverflow-first.org");
+        $this->assertResponseStatus(201);
+        $first_key = json_decode($response->getContent(), true)['overflow_stream_key'];
+        $this->assertNotEmpty($first_key);
+
+        $this->deleteOverflow($event);
+        $this->assertResponseStatus(201);
+
+        $response = $this->putOverflow($event, "https://testoverflow-first.org");
+        $this->assertResponseStatus(201);
+        $new_key = json_decode($response->getContent(), true)['overflow_stream_key'];
+
+        $this->assertNotEmpty($new_key);
+        $this->assertNotEquals($first_key, $new_key);
+        $this->assertOverflowLifeCycleDispatched($new_key);
+    }
+
+    public function testSetOverflowGeneratesKeyWhenOnOverflowWithoutKey()
+    {
+        Queue::fake();
+        $event = $this->createPublishedEventForOverflow();
+        // reachable state: occupancy OVERFLOW but no key (key is only nulled by clearOverflow)
+        $event->setOverflow("https://testoverflow-nokey.org", false);
+        $this->assertNull($event->getOverflowStreamKey());
+        self::$em->persist($event);
+        self::$em->flush();
+
+        $response = $this->putOverflow($event, "https://testoverflow-nokey-updated.org");
+        $this->assertResponseStatus(201);
+        $key = json_decode($response->getContent(), true)['overflow_stream_key'];
+
+        $this->assertNotEmpty($key);
+        $this->assertOverflowLifeCycleDispatched($key);
     }
 }

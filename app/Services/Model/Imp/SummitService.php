@@ -4250,11 +4250,15 @@ final class SummitService
             if (is_null($event))
                 throw new ValidationException(sprintf("Event id %s does not exists,", $event_id));
 
-            do {
-                $overflow_key = $event->generateOverflowKey();
-            } while (!is_null($this->event_repository->getBySummitAndOverflowStreamKey($summit, $overflow_key)));
+            // keep the key of an event already on overflow, so the urls already delivered stay valid
+            if (!$event->isOnOverflow() || is_null($event->getOverflowStreamKey())) {
+                do {
+                    $overflow_key = $event->generateOverflowKey();
+                } while (!is_null($this->event_repository->getBySummitAndOverflowStreamKey($summit, $overflow_key)));
 
-            $event->setOverflowStreamKey($overflow_key);
+                $event->setOverflowStreamKey($overflow_key);
+            }
+
             $event->setOverflow(
                 $payload['overflow_streaming_url'],
                 boolval($payload['overflow_stream_is_secure']));

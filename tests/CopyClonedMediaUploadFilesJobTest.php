@@ -20,6 +20,7 @@ use App\Services\Utils\Exceptions\UnacquiredLockException;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use libs\utils\ITransactionService;
 use models\summit\PendingMediaUpload;
@@ -319,6 +320,27 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->assertFalse($disk->exists($target_private)); // renamed to DELETED_deck.pptx
     }
 
+    /**
+     * The removal loads the clone FOR UPDATE, so a concurrent re-upload's PendingMediaUpload insert
+     * serializes against the delete instead of being cascaded away with it.
+     */
+    public function testFailedLoadsTargetUnderExclusiveLock(): void
+    {
+        [$source, $target] = $this->makePair();
+        $target_id = $target->getId();
+
+        $real = App::make(IPresentationMediaUploadRepository::class);
+        $repository = \Mockery::mock(IPresentationMediaUploadRepository::class);
+        $repository->shouldReceive('getById')->andReturnUsing(fn ($id) => $real->getById($id));
+        $repository->shouldReceive('getByIdExclusiveLock')->once()->with($target_id)
+            ->andReturnUsing(fn ($id) => $real->getByIdExclusiveLock($id));
+        App::instance(IPresentationMediaUploadRepository::class, $repository);
+
+        (new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
+
+        $this->assertNull($this->findUpload($target_id));
+    }
+
     public function testFailedDoesNotDeleteReplacedUpload(): void
     {
         [$source, $target] = $this->makePair();
@@ -390,11 +412,16 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         [$source, $target] = $this->makePair();
         $target_id = $target->getId();
 
+        Log::spy();
         $this->withStorageLockHeld($target, function () use ($source, $target_id) {
             (new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
         });
 
         $this->assertNotNull($this->findUpload($target_id));
+        // a lock miss can also be Redis being down, so the log names no cause, only the operator action
+        Log::shouldHaveReceived('error')->withArgs(fn ($message) => is_string($message)
+            && str_contains($message, sprintf('could not take the storage lock to remove clone media upload %s', $target_id))
+            && str_contains($message, 'delete the upload or re-upload it on the clone'));
     }
 
     /**

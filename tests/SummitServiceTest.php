@@ -500,6 +500,31 @@ CSV;
         $this->assertSame('private-bytes', $disk->get($upload->getRelativePath(IStorageTypesConstants::PrivateType)));
     }
 
+    /**
+     * Both queues down AND the synchronous fallback failing: the clone is already committed, so
+     * cloneEvent still returns it rather than surfacing the copy failure to the caller.
+     */
+    public function testCloneEventStillReturnsCloneWhenCopyDispatchFails(): void
+    {
+        Storage::fake('local');
+        [$presentation, $upload] = $this->presentationWithModernMediaUpload();
+
+        // every path JobDispatcher::withDbFallback takes (primary, database, sync) fails for the copy
+        // job only; other jobs cloneEvent dispatches are swallowed as Bus::fake would
+        $fail_copy = function ($job) {
+            if ($job instanceof CopyClonedMediaUploadFilesJob) throw new \RuntimeException('queue down');
+            return null;
+        };
+        Bus::shouldReceive('dispatch')->andReturnUsing($fail_copy);
+        Bus::shouldReceive('dispatchSync')->atLeast()->once()->andReturnUsing($fail_copy);
+
+        $clone = App::make(ISummitService::class)->cloneEvent(self::$summit, $presentation->getId());
+
+        $this->assertInstanceOf(Presentation::class, $clone);
+        $this->assertGreaterThan(0, $clone->getId());
+        $this->assertNotSame($presentation->getId(), $clone->getId());
+    }
+
     public function testCloneEventWithoutMediaUploadsQueuesNothing(): void
     {
         Bus::fake();

@@ -272,9 +272,10 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
                 self::STORAGE_LOCK_LIFETIME
             );
         } catch (UnacquiredLockException $ex) {
-            // the lock is held by another process; a same-process timeout is handled above, so
-            // this can only be the processor writing a re-upload of this clone - keep the record
-            Log::warning(sprintf("CopyClonedMediaUploadFilesJob::failed target %s storage is locked by a re-upload, keeping it", $this->target_media_upload_id));
+            // the lock could not be taken: held by another process (e.g. the processor writing a
+            // re-upload at this location) or the lock store is unreachable. Either way the record
+            // can't be safely checked and removed, so keep it and leave it to the operator.
+            Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not take the storage lock to remove clone media upload %s; if the clone's file is missing, delete the upload or re-upload it on the clone", $this->target_media_upload_id));
         } catch (\Throwable $ex) {
             // the job is already terminal: this error log is the operator's signal that the clone
             // still has an upload with no file behind it (fix: delete it or re-upload on the clone)
@@ -291,7 +292,9 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
         // remove the record first and capture its target-only paths; storage is touched only
         // after commit, so a failed commit can never leave a record whose file was moved
         $cleanup = App::make(ITransactionService::class)->transaction(function () use ($repository, $pending_repository) {
-            $target = $repository->getById($this->target_media_upload_id);
+            // FOR UPDATE: a concurrent re-upload's PendingMediaUpload insert waits for this delete
+            // (or wins, and the guard below sees it) instead of being cascaded away with the record
+            $target = $repository->getByIdExclusiveLock($this->target_media_upload_id);
             if (!$target instanceof PresentationMediaUpload) return [];
             if ($this->isReplaced($target, $pending_repository)) {
                 Log::info(sprintf("CopyClonedMediaUploadFilesJob::failed target %s was re-uploaded, keeping it", $this->target_media_upload_id));

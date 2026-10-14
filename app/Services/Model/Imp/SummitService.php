@@ -21,6 +21,7 @@ use App\Events\SponsorServices\DeletedEventDTO;
 use App\Events\SponsorServices\SummitDomainEvents;
 use App\Facades\ResourceServerContext;
 use App\Http\Utils\IFileUploader;
+use App\Jobs\CopyClonedMediaUploadFilesJob;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
@@ -54,6 +55,8 @@ use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\AbstractPublishService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\Notifications\SpeakerChangeNotifications;
+use App\Services\Utils\Exceptions\UnacquiredLockException;
+use App\Services\Utils\ILockManagerService;
 use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use DateInterval;
 use DateTime;
@@ -254,6 +257,11 @@ final class SummitService
     private $cache_service;
 
     /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    /**
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
      * @param ISpeakerRepository $speaker_repository
@@ -280,6 +288,7 @@ final class SummitService
      * @param IEncryptionAES256KeysGenerator $encryption_key_generator
      * @param IMUXApi $mux_api
      * @param ICacheService $cache_service
+     * @param ILockManagerService $lock_service
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -310,6 +319,7 @@ final class SummitService
         IEncryptionAES256KeysGenerator             $encryption_key_generator,
         IMUXApi                                    $mux_api,
         ICacheService                              $cache_service,
+        ILockManagerService                        $lock_service,
         ITransactionService                        $tx_service
     )
     {
@@ -340,6 +350,7 @@ final class SummitService
         $this->download_strategy = $download_strategy;
         $this->mux_api = $mux_api;
         $this->cache_service = $cache_service;
+        $this->lock_service = $lock_service;
     }
 
     /**
@@ -4437,6 +4448,18 @@ final class SummitService
                     continue;
                 }
 
+                // The same per-upload lock CopyClonedMediaUploadFilesJob holds while it writes a
+                // clone's files. If a copy is running, leave this row untouched for the next run, so
+                // the staff file is written after the copy and never overwritten by it.
+                $lock_name = CopyClonedMediaUploadFilesJob::storageLockName($pending_upload->getMediaUpload()->getId());
+                try {
+                    $lock_token = $this->lock_service->acquireLock($lock_name, CopyClonedMediaUploadFilesJob::STORAGE_LOCK_LIFETIME);
+                } catch (UnacquiredLockException $lock_ex) {
+                    Log::info(sprintf("SummitService::processPendingMediaUploads upload ID %s skipped, media upload storage is locked", $upload_id));
+                    continue;
+                }
+
+                try {
                 try {
                     // Mark as Processing and increment attempts
                     $this->tx_service->transaction(function () use ($pending_upload) {
@@ -4549,6 +4572,9 @@ final class SummitService
                         $max_retries,
                         $ex->getMessage()
                     ));
+                }
+                } finally {
+                    $this->lock_service->releaseLock($lock_name, $lock_token);
                 }
             }
 

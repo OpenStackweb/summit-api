@@ -20,6 +20,11 @@ use models\summit\SummitEvent;
 use models\summit\SummitEventType;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use services\model\ISummitService;
+use App\Jobs\CopyClonedMediaUploadFilesJob;
+use App\Services\Utils\ILockManagerService;
+use models\summit\PendingMediaUpload;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
 
 /**
  * Class SummitServiceTest
@@ -341,5 +346,48 @@ CSV;
             Storage::disk('s3')->exists($path),
             'Known per-row failures must not block the source file deletion'
         );
+    }
+
+    public function testProcessPendingMediaUploadsSkipsUploadWhileCloneCopyHoldsItsLock(): void
+    {
+        $presentation = self::$summit->getPresentations()[0];
+        $upload = $presentation->getMediaUploads()->first();
+
+        $pending = new PendingMediaUpload();
+        $pending->setSummitId(self::$summit->getId());
+        $pending->setMediaUploadTypeId($upload->getMediaUploadType()->getId());
+        $pending->setMediaUpload($upload);
+        $pending->setPublicPath($upload->getPath(\App\Models\Utils\IStorageTypesConstants::PublicType));
+        $pending->setPrivatePath($upload->getPath(\App\Models\Utils\IStorageTypesConstants::PrivateType));
+        $pending->setFileName($upload->getFilename());
+        $pending->setTempFilePath('upload/does-not-exist/' . $upload->getFilename());
+        $pending->setStatus(PendingMediaUpload::STATUS_PENDING);
+        self::$em->persist($pending);
+        self::$em->flush();
+        $pending_id = $pending->getId();
+
+        $reload = function () use ($pending_id): PendingMediaUpload {
+            $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+            $em->clear();
+            return $em->find(PendingMediaUpload::class, $pending_id);
+        };
+
+        $locks = App::make(ILockManagerService::class);
+        $name = CopyClonedMediaUploadFilesJob::storageLockName($upload->getId());
+        $token = $locks->acquireLock($name, 60);
+        try {
+            App::make(ISummitService::class)->processPendingMediaUploads();
+        } finally {
+            $locks->releaseLock($name, $token);
+        }
+
+        $row = $reload();
+        $this->assertSame(PendingMediaUpload::STATUS_PENDING, $row->getStatus());
+        $this->assertSame(0, $row->getAttempts());
+
+        // control: with the lock free the same row IS attempted (its temp file does not exist,
+        // so the attempt fails and is counted), which proves the lock is what skipped it above
+        App::make(ISummitService::class)->processPendingMediaUploads();
+        $this->assertSame(1, $reload()->getAttempts());
     }
 }

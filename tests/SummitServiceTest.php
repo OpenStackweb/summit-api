@@ -25,6 +25,15 @@ use App\Services\Utils\ILockManagerService;
 use models\summit\PendingMediaUpload;
 use LaravelDoctrine\ORM\Facades\Registry;
 use models\utils\SilverstripeBaseModel;
+use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
+use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
+use App\Models\Utils\IStorageTypesConstants;
+use Illuminate\Support\Facades\Bus;
+use libs\utils\ITransactionService;
+use models\summit\Presentation;
+use models\summit\PresentationMediaUpload;
+use models\summit\SummitMediaFileType;
+use models\summit\SummitMediaUploadType;
 
 /**
  * Class SummitServiceTest
@@ -389,5 +398,111 @@ CSV;
         // so the attempt fails and is counted), which proves the lock is what skipped it above
         App::make(ISummitService::class)->processPendingMediaUploads();
         $this->assertSame(1, $reload()->getAttempts());
+    }
+
+    /**
+     * Every InsertSummitTestData presentation already carries one media upload; clear the chosen
+     * presentation's materials so the test controls exactly which uploads get cloned.
+     */
+    private function presentationWithoutMaterials(): Presentation
+    {
+        $presentation = self::$summit->getPresentations()[0];
+        // removeMediaUpload, not a bare collection removeElement: it also unsets the owning
+        // side (PresentationID), so the removal is flushed and cloneEvent's reload cannot see it
+        foreach ($presentation->getMediaUploads()->toArray() as $media_upload)
+            $presentation->removeMediaUpload($media_upload);
+        $this->assertCount(0, $presentation->getMaterials()->toArray(), 'fixture presentation has non-upload materials; remove them too');
+        self::$em->flush();
+        return $presentation;
+    }
+
+    private function presentationWithModernMediaUpload(): array
+    {
+        $file_type = new SummitMediaFileType();
+        $file_type->setName('PPTX_' . rand(1, 100000));
+        $file_type->setDescription('PPTX');
+        $file_type->setAllowedExtensions('PPTX');
+        self::$em->persist($file_type);
+
+        $type = new SummitMediaUploadType();
+        $type->setType($file_type);
+        $type->setName('Deck');
+        $type->setDescription('Deck');
+        $type->setMaxSize(2048);
+        $type->setMinUploadsQty(0);
+        $type->setMaxUploadsQty(1);
+        $type->setPrivateStorageType(IStorageTypesConstants::Local);
+        $type->setPublicStorageType(IStorageTypesConstants::Local);
+        self::$summit->addMediaUploadType($type);
+
+        $presentation = $this->presentationWithoutMaterials();
+        $upload = new PresentationMediaUpload();
+        $upload->setName('deck');
+        $upload->setFilename('deck.pptx');
+        $upload->setMediaUploadType($type);
+        $presentation->addMediaUpload($upload);
+        // modern format, so the test proves the clone resets to legacy (ticket acceptance)
+        $r = new \ReflectionProperty(PresentationMediaUpload::class, 'legacy_path_format');
+        $r->setAccessible(true);
+        $r->setValue($upload, false);
+        $r = new \ReflectionProperty(PresentationMediaUpload::class, 'frozen_path_segment');
+        $r->setAccessible(true);
+        $r->setValue($upload, sprintf('%s-x/%s-y', self::$summit->getId(), $presentation->getId()));
+
+        self::$em->persist(self::$summit);
+        self::$em->flush();
+
+        Storage::disk('local')->put($upload->getRelativePath(IStorageTypesConstants::PrivateType), 'private-bytes');
+        Storage::disk('local')->put($upload->getRelativePath(IStorageTypesConstants::PublicType), 'public-bytes');
+        return [$presentation, $upload];
+    }
+
+    public function testCloneEventQueuesCopyAndCopyLandsFiles(): void
+    {
+        Storage::fake('local');
+        Bus::fake();
+        [$presentation, $upload] = $this->presentationWithModernMediaUpload();
+
+        $clone = App::make(ISummitService::class)->cloneEvent(self::$summit, $presentation->getId());
+
+        $this->assertInstanceOf(Presentation::class, $clone);
+        $clone_uploads = array_values($clone->getMediaUploads()->toArray());
+        $this->assertCount(1, $clone_uploads);
+        $clone_upload = $clone_uploads[0];
+        $this->assertSame('deck.pptx', $clone_upload->getFilename());
+        $this->assertStringEndsWith(
+            sprintf('/%s/%s/deck.pptx', self::$summit->getId(), $clone->getId()),
+            $clone_upload->getRelativePath(IStorageTypesConstants::PrivateType)
+        );
+
+        Bus::assertDispatchedTimes(CopyClonedMediaUploadFilesJob::class, 1);
+        Bus::assertDispatched(CopyClonedMediaUploadFilesJob::class, function (CopyClonedMediaUploadFilesJob $job) use ($upload, $clone_upload) {
+            return $job->source_media_upload_id === $upload->getId()
+                && $job->target_media_upload_id === $clone_upload->getId()
+                && $job->filename === 'deck.pptx';
+        });
+
+        $job = Bus::dispatched(CopyClonedMediaUploadFilesJob::class)->first();
+        $job->handle(
+            App::make(IPresentationMediaUploadRepository::class),
+            App::make(IPendingMediaUploadRepository::class),
+            App::make(\App\Services\Utils\ILockManagerService::class),
+            App::make(ITransactionService::class)
+        );
+
+        $disk = Storage::disk('local');
+        $this->assertSame('private-bytes', $disk->get($clone_upload->getRelativePath(IStorageTypesConstants::PrivateType)));
+        $this->assertSame('public-bytes', $disk->get($clone_upload->getRelativePath(IStorageTypesConstants::PublicType)));
+        $this->assertSame('private-bytes', $disk->get($upload->getRelativePath(IStorageTypesConstants::PrivateType)));
+    }
+
+    public function testCloneEventWithoutMediaUploadsQueuesNothing(): void
+    {
+        Bus::fake();
+        $presentation = $this->presentationWithoutMaterials();
+
+        App::make(ISummitService::class)->cloneEvent(self::$summit, $presentation->getId());
+
+        Bus::assertNotDispatched(CopyClonedMediaUploadFilesJob::class);
     }
 }

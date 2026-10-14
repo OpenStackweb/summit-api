@@ -32,6 +32,7 @@ use App\Jobs\ProcessEventDataImport;
 use App\Jobs\ProcessRegistrationCompaniesDataImport;
 use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
 use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
+use App\Jobs\Utils\JobDispatcher;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Models\Foundation\Summit\Factories\LeadReportSettingsFactory;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
@@ -2118,7 +2119,9 @@ final class SummitService
      */
     public function cloneEvent(Summit $summit, int $event_id): SummitEvent
     {
-        return $this->tx_service->transaction(function () use ($summit, $event_id) {
+        [$event_clone, $media_upload_pairs] = $this->tx_service->transaction(function () use ($summit, $event_id) {
+            // built per attempt: runRootTransaction can re-run this callback after a reconnectable error
+            $media_upload_pairs = [];
 
             $event = $this->event_repository->getById($event_id);
             if (is_null($event))
@@ -2266,13 +2269,35 @@ final class SummitService
                     $material_clone = $material->clone();
                     if ($material_clone != null) {
                         $event_clone->addMaterial($material_clone);
+                        if ($material instanceof PresentationMediaUpload)
+                            $media_upload_pairs[] = [$material, $material_clone];
                     }
                 }
             }
+
             $this->event_repository->add($event_clone);
 
-            return $event_clone;
+            return [$event_clone, $media_upload_pairs];
         });
+
+        // The clone's media upload records point at the clone's own storage path, where nothing
+        // exists yet. Copy the files after commit so the clone has IDs and a slow copy does not
+        // hold the transaction open.
+        foreach ($media_upload_pairs as [$source, $target]) {
+            try {
+                JobDispatcher::withDbFallback(
+                    job: new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), $target->getFilename()),
+                    logContext: ['summit_id' => $summit->getId(), 'event_id' => $event_id, 'clone_id' => $event_clone->getId()],
+                    primaryConnection: Config::get('queue.default')
+                );
+            } catch (\Throwable $ex) {
+                // only reachable when both queues are down and the synchronous run failed; its
+                // failed() has already removed the clone's upload, and the clone is committed
+                Log::error(sprintf("SummitService::cloneEvent copy of media upload %s for clone %s failed: %s", $target->getId(), $event_clone->getId(), $ex->getMessage()));
+            }
+        }
+
+        return $event_clone;
     }
 
     /**

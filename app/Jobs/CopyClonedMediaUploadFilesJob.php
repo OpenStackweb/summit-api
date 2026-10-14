@@ -97,9 +97,18 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
         self::$held_lock_tokens[$lock_name] = $token;
         try {
             $legs = $this->resolveLegs($repository, $pending_repository, $tx_service);
+            $enabled = 0;
+            $copied = 0;
             foreach ($legs as $leg) {
-                $this->copyLeg($leg['storage'], $leg['from'], $leg['to'], $leg['options']);
+                $result = $this->copyLeg($leg['kind'], $leg['storage'], $leg['from'], $leg['to'], $leg['options']);
+                if (is_null($result)) continue;
+                $enabled++;
+                if ($result) $copied++;
             }
+            // a source missing on every enabled leg is a broken original: fail so the retries,
+            // then failed(), resolve it
+            if ($enabled > 0 && $copied === 0)
+                throw new \RuntimeException(sprintf("CopyClonedMediaUploadFilesJob source media upload %s has no file on any storage", $this->source_media_upload_id));
         } finally {
             unset(self::$held_lock_tokens[$lock_name]);
             $lock_service->releaseLock($lock_name, $token);
@@ -154,12 +163,14 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
 
             return [
                 [
+                    'kind' => IStorageTypesConstants::PrivateType,
                     'storage' => $type->getPrivateStorageType(),
                     'from' => $source->getRelativePath(IStorageTypesConstants::PrivateType),
                     'to' => $target->getRelativePath(IStorageTypesConstants::PrivateType),
                     'options' => [],
                 ],
                 [
+                    'kind' => IStorageTypesConstants::PublicType,
                     'storage' => $type->getPublicStorageType(),
                     'from' => $source->getRelativePath(IStorageTypesConstants::PublicType),
                     'to' => $target->getRelativePath(IStorageTypesConstants::PublicType),
@@ -175,18 +186,29 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
             || $pending_repository->hasAnyForMediaUpload($target->getId());
     }
 
-    private function copyLeg(?string $storage, string $from, string $to, $options): void
+    /**
+     * @return bool|null null when the leg's storage is disabled, false when its source file is
+     * missing (skipped), true when copied
+     */
+    private function copyLeg(string $kind, ?string $storage, string $from, string $to, $options): ?bool
     {
-        if (empty($storage)) return;
+        if (empty($storage)) return null;
         $download = FileDownloadStrategyFactory::build($storage);
         $upload = FileUploadStrategyFactory::build($storage);
-        if (is_null($download) || is_null($upload)) return; // None
+        if (is_null($download) || is_null($upload)) return null; // None
+
+        // An original can lack one leg (storage types edited after upload; the public back-fill
+        // only covers display_on_site uploads). Copy the legs it has rather than fail the clone.
+        if (!$download->exists($from)) {
+            Log::warning(sprintf("CopyClonedMediaUploadFilesJob::copyLeg %s leg source missing on %s, skipping it: %s", $kind, $storage, $from));
+            return false;
+        }
 
         // Always overwrite: a killed attempt can leave a truncated file at $to (the Local adapter
         // writes straight to the final path), so existence never proves a leg finished.
         $stream = $download->readStream($from);
         if (!is_resource($stream))
-            throw new \RuntimeException(sprintf("CopyClonedMediaUploadFilesJob source missing on %s: %s", $storage, $from));
+            throw new \RuntimeException(sprintf("CopyClonedMediaUploadFilesJob could not read on %s: %s", $storage, $from));
 
         try {
             if (!$upload->saveFromStream($stream, $to, $options))
@@ -195,6 +217,7 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
             if (is_resource($stream)) fclose($stream);
         }
         Log::info(sprintf("CopyClonedMediaUploadFilesJob::copyLeg %s copied %s -> %s", $storage, $from, $to));
+        return true;
     }
 
     public function failed(\Throwable $exception): void

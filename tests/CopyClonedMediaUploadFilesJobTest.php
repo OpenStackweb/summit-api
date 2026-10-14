@@ -230,6 +230,22 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
     }
 
+    /**
+     * An original with only a private leg (storage types edited after upload; the public back-fill
+     * only covers display_on_site uploads) still gives the clone the leg it has.
+     */
+    public function testHandleCopiesAvailableLegWhenOtherSourceLegMissing(): void
+    {
+        [$source, $target] = $this->makePair();
+        Storage::disk('local')->put($source->getRelativePath(IStorageTypesConstants::PrivateType), 'private-bytes');
+
+        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+
+        $disk = Storage::disk('local');
+        $this->assertSame('private-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
+        $this->assertFalse($disk->exists($target->getRelativePath(IStorageTypesConstants::PublicType)));
+    }
+
     public function testHandleThrowsWhenSourceRecordGone(): void
     {
         [$source, $target] = $this->makePair();

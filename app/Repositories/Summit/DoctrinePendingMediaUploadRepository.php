@@ -141,4 +141,40 @@ final class DoctrinePendingMediaUploadRepository
 
         return $query->execute();
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasAnyForMediaUpload(int $media_upload_id): bool
+    {
+        $count = $this->getEntityManager()
+            ->createQuery(
+                "SELECT COUNT(p.id) FROM models\\summit\\PendingMediaUpload p WHERE p.media_upload = :mediaUpload"
+            )
+            ->setParameter('mediaUpload', $media_upload_id)
+            ->getSingleScalarResult();
+
+        return intval($count) > 0;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasInFlightForMediaUpload(int $media_upload_id): bool
+    {
+        $count = $this->getEntityManager()
+            ->createQuery(
+                "SELECT COUNT(p.id) FROM models\\summit\\PendingMediaUpload p WHERE p.media_upload = :mediaUpload AND p.status IN (:statuses)"
+            )
+            ->setParameter('mediaUpload', $media_upload_id)
+            ->setParameter('statuses', [
+                PendingMediaUpload::STATUS_PENDING,
+                PendingMediaUpload::STATUS_PROCESSING,
+                PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED,
+                PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED,
+            ])
+            ->getSingleScalarResult();
+
+        return intval($count) > 0;
+    }
 }

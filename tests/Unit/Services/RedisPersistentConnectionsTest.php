@@ -44,7 +44,7 @@ final class RedisPersistentConnectionsTest extends TestCase
     public function testPersistentConnectionsAreOffByDefault()
     {
         $redis = $this->redisConfigWith(null);
-        foreach (['default', 'cache', 'session', 'worker'] as $name) {
+        foreach (['default', 'cache', 'doctrine_cache', 'session', 'worker'] as $name) {
             $this->assertFalse($redis[$name]['persistent'], "$name must not be persistent by default");
         }
     }
@@ -54,12 +54,12 @@ final class RedisPersistentConnectionsTest extends TestCase
         // connections share host:port: a shared socket would let one connection's SELECT switch the database of another
         $redis = $this->redisConfigWith('true');
         $ids = [];
-        foreach (['default', 'cache', 'session', 'worker'] as $name) {
+        foreach (['default', 'cache', 'doctrine_cache', 'session', 'worker'] as $name) {
             $this->assertNotEmpty($redis[$name]['persistent'], "$name must be persistent");
             $this->assertSame($redis[$name]['persistent'], $redis[$name]['persistent_id'], "predis and phpredis must use the same id for $name");
             $ids[] = $redis[$name]['persistent_id'];
         }
-        $this->assertCount(4, array_unique($ids));
+        $this->assertCount(5, array_unique($ids));
     }
 
     /**

@@ -1389,14 +1389,20 @@ class Presentation extends SummitEvent implements IPublishableEventWithSpeakerCo
         '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores
     ];
 
+    public static function slugify(string $title): string
+    {
+        $slug = trim(Transliterator::utf8ToAscii($title));
+
+        foreach (self::$default_replacements as $regex => $replace) {
+            $slug = preg_replace($regex, $replace, $slug);
+        }
+        return $slug;
+    }
+
     public function generateSlug(): void
     {
         if (empty($this->title)) return;
-        $this->slug = trim(Transliterator::utf8ToAscii($this->title));
-
-        foreach (self::$default_replacements as $regex => $replace) {
-            $this->slug = preg_replace($regex, $replace, $this->slug);
-        }
+        $this->slug = self::slugify($this->title);
     }
 
 

@@ -70,6 +70,7 @@ jobs:
                     - { name: "SummitSubmissionInvitationServiceTest", filter: "--filter SummitSubmissionInvitationServiceTest" }
                     - { name: "MemberServiceTest", filter: "--filter MemberServiceTest" }
                     - { name: "EntityModelUnitTests", filter: "tests/Unit/Entities/" }
+                    - { name: "MigrationUnitTests", filter: "tests/Unit/Migrations/" }
                     - { name: "ModelUnitTests", filter: "tests/Unit/Models/" }
                     - { name: "AuditUnitTests", filter: "tests/Unit/Audit/" }
                     - { name: "AuditOtlpStrategyTest", filter: "--filter AuditOtlpStrategyTest" }

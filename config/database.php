@@ -209,6 +209,18 @@ return [
             'persistent_id' => 'summit_api_cache',
         ],
 
+        'doctrine_cache' => [
+            'host' => env('REDIS_HOST'),
+            'port' => env('REDIS_PORT'),
+            'database' => env('REDIS_DOCTRINE_CACHE_DB', 5),
+            'password' => env('REDIS_PASSWORD'),
+            'scheme' => env('REDIS_SCHEME', 'tcp'),
+            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', 5),
+            'timeout' => env('REDIS_TIMEOUT', 5),
+            'persistent' => env('REDIS_PERSISTENT', false) ? 'summit_api_doctrine_cache' : false,
+            'persistent_id' => 'summit_api_doctrine_cache',
+        ],
+
         'session' => [
             'host' => env('REDIS_HOST'),
             'port' => env('REDIS_PORT'),

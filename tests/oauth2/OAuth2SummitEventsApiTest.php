@@ -2769,4 +2769,46 @@ CSV;
         $this->assertNotEmpty($key);
         $this->assertOverflowLifeCycleDispatched($key);
     }
+
+    public function testSetOverflowAfterOccupancyStepDownGeneratesNewStreamKey()
+    {
+        Queue::fake();
+        $event = $this->createPublishedEventForOverflow();
+
+        $response = $this->putOverflow($event, "https://testoverflow-first.org");
+        $this->assertResponseStatus(201);
+        $first_key = json_decode($response->getContent(), true)['overflow_stream_key'];
+        $this->assertNotEmpty($first_key);
+
+        // step occupancy down through the generic event update (room occupancy "-" button),
+        // which does not clear the overflow key
+        $response = $this->action
+        (
+            "PUT",
+            "OAuth2SummitEventsApiController@updateEvent",
+            ['id' => self::$summit->getId(), 'event_id' => $event->getId()],
+            [], [], [],
+            $this->getAuthHeaders(),
+            json_encode(['occupancy' => SummitEvent::OccupancyFull])
+        );
+        $this->assertResponseStatus(200);
+        $updated = json_decode($response->getContent(), true);
+        $this->assertEquals(SummitEvent::OccupancyFull, $updated['occupancy']);
+        $this->assertEquals($first_key, $updated['overflow_stream_key']);
+
+        $response = $this->putOverflow($event, "https://testoverflow-second.org");
+        $this->assertResponseStatus(201);
+        $new_key = json_decode($response->getContent(), true)['overflow_stream_key'];
+
+        $this->assertNotEmpty($new_key);
+        $this->assertNotEquals($first_key, $new_key);
+        $this->assertOverflowLifeCycleDispatched($new_key);
+
+        self::$em->clear();
+        $repository = self::$em->getRepository(SummitEvent::class);
+        $this->assertNull($repository->getBySummitAndOverflowStreamKey(self::$summit, $first_key));
+        $found = $repository->getBySummitAndOverflowStreamKey(self::$summit, $new_key);
+        $this->assertNotNull($found);
+        $this->assertEquals($event->getId(), $found->getId());
+    }
 }

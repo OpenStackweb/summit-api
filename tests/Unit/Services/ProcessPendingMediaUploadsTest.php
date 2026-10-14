@@ -13,6 +13,8 @@
  **/
 
 use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
+use App\Services\Utils\Exceptions\UnacquiredLockException;
+use App\Services\Utils\ILockManagerService;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
 use services\model\SummitService;
@@ -20,6 +22,7 @@ use libs\utils\ITransactionService;
 use Mockery;
 use models\summit\ISummitRepository;
 use models\summit\PendingMediaUpload;
+use models\summit\PresentationMediaUpload;
 use models\summit\Summit;
 use models\summit\SummitMediaUploadType;
 use PHPUnit\Framework\TestCase;
@@ -71,7 +74,8 @@ class ProcessPendingMediaUploadsTest extends TestCase
     private function createServiceWithDeps(
         IPendingMediaUploadRepository $pendingRepo,
         ITransactionService $txService,
-        ?ISummitRepository $summitRepository = null
+        ?ISummitRepository $summitRepository = null,
+        ?ILockManagerService $lockService = null
     ): SummitService {
         $ref = new \ReflectionClass(SummitService::class);
         $service = $ref->newInstanceWithoutConstructor();
@@ -85,6 +89,17 @@ class ProcessPendingMediaUploadsTest extends TestCase
             $prop->setAccessible(true);
             $prop->setValue($service, $summitRepository);
         }
+
+        // Default: a lock that is always free, so tests that don't care about locking
+        // behavior exercise the per-row processing exactly as before Task 3.
+        if (!$lockService) {
+            $lockService = Mockery::mock(ILockManagerService::class);
+            $lockService->shouldReceive('acquireLock')->andReturn('test-token');
+            $lockService->shouldReceive('releaseLock')->andReturnNull();
+        }
+        $prop = $ref->getProperty('lock_service');
+        $prop->setAccessible(true);
+        $prop->setValue($service, $lockService);
 
         // tx_service is protected in AbstractService (grandparent of SummitService)
         $parentRef = $ref;
@@ -142,8 +157,12 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $txService = Mockery::mock(ITransactionService::class);
         $summitRepository = Mockery::mock(ISummitRepository::class);
 
+        $mediaUpload = Mockery::mock(PresentationMediaUpload::class);
+        $mediaUpload->shouldReceive('getId')->andReturn(101);
+
         $pendingUpload = Mockery::mock(PendingMediaUpload::class);
         $pendingUpload->shouldReceive('getId')->andReturn(1);
+        $pendingUpload->shouldReceive('getMediaUpload')->andReturn($mediaUpload);
         // First getAttempts() call: retry guard check (0 < 3, passes)
         // Second getAttempts() call: in catch block (1 < 3, no ERROR status)
         $pendingUpload->shouldReceive('getAttempts')->andReturnValues([0, 1]);
@@ -316,8 +335,12 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
         $txService = Mockery::mock(ITransactionService::class);
 
+        $mediaUpload = Mockery::mock(PresentationMediaUpload::class);
+        $mediaUpload->shouldReceive('getId')->andReturn(102);
+
         $pendingUpload = Mockery::mock(PendingMediaUpload::class);
         $pendingUpload->shouldReceive('getId')->andReturn(1);
+        $pendingUpload->shouldReceive('getMediaUpload')->andReturn($mediaUpload);
         // First call: retry guard (1 < 3, passes)
         // Second call: in catch block (2 < 3, leave at partial status)
         $pendingUpload->shouldReceive('getAttempts')->andReturnValues([1, 2]);
@@ -341,5 +364,48 @@ class ProcessPendingMediaUploadsTest extends TestCase
 
         $this->assertEquals(0, $stats['processed']);
         $this->assertEquals(1, $stats['errors']);
+    }
+
+    /**
+     * Unit-level counterpart of SummitServiceTest::testProcessPendingMediaUploadsSkipsUploadWhileCloneCopyHoldsItsLock.
+     * When the upload's storage lock is held (e.g. by CopyClonedMediaUploadFilesJob), the row
+     * must be left completely untouched: no status/attempts mutation, and since the lock was
+     * never acquired, no release either.
+     */
+    public function testLockedUploadIsSkippedWithoutTouchingIt(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+
+        $mediaUpload = Mockery::mock(PresentationMediaUpload::class);
+        $mediaUpload->shouldReceive('getId')->andReturn(103);
+
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
+        $pendingUpload->shouldReceive('getId')->andReturn(1);
+        $pendingUpload->shouldReceive('getMediaUpload')->andReturn($mediaUpload);
+        $pendingUpload->shouldReceive('getAttempts')->andReturn(0);
+        $pendingUpload->shouldNotReceive('setStatus');
+        $pendingUpload->shouldNotReceive('incrementAttempts');
+        $pendingUpload->shouldNotReceive('setErrorMessage');
+
+        $lockService = Mockery::mock(ILockManagerService::class);
+        $lockService->shouldReceive('acquireLock')->once()->andThrow(new UnacquiredLockException('upload 1 storage is locked'));
+        $lockService->shouldNotReceive('releaseLock');
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->with(10)->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        // 2 transactions: reset stuck, cleanup — the row's own processing never opens one
+        $txService->shouldReceive('transaction')->twice()->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService, null, $lockService);
+
+        $stats = $service->processPendingMediaUploads();
+
+        $this->assertEquals(0, $stats['processed']);
+        $this->assertEquals(0, $stats['errors']);
     }
 }

@@ -398,6 +398,10 @@ CSV;
         // so the attempt fails and is counted), which proves the lock is what skipped it above
         App::make(ISummitService::class)->processPendingMediaUploads();
         $this->assertSame(1, $reload()->getAttempts());
+
+        // the processor must release its lock when done; a missing finally would leave the
+        // name locked and this acquire would throw
+        $locks->releaseLock($name, $locks->acquireLock($name, 1));
     }
 
     /**

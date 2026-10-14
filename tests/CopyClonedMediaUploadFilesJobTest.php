@@ -248,12 +248,13 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->seedSource($source);
         $target->setFilename('replaced.pptx');
         self::$em->flush();
+        Storage::disk('local')->put($target->getRelativePath(IStorageTypesConstants::PrivateType), 'staff-bytes');
 
         $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
 
-        $this->assertFalse(Storage::disk('local')->exists(
-            sprintf('%s/deck.pptx', $target->getPath(IStorageTypesConstants::PrivateType))
-        ));
+        $disk = Storage::disk('local');
+        $this->assertSame('staff-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
+        $this->assertFalse($disk->exists($target->getRelativePath(IStorageTypesConstants::PublicType)));
     }
 
     public function testHandleIsNoOpWhenTargetReuploadedWithSameFilename(): void
@@ -353,6 +354,47 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         });
 
         $this->assertNotNull($this->findUpload($target_id));
+    }
+
+    /**
+     * Simulates a final-attempt timeout: Laravel's Worker::registerTimeoutHandler calls failed()
+     * from the SIGALRM handler in the SAME process while handle() is suspended mid-copy still
+     * holding the target's storage lock (its finally never runs before the process is killed).
+     */
+    public function testFailedAfterTimeoutRemovesCloneUploadUnderItsOwnLock(): void
+    {
+        [$source, $target] = $this->makePair();
+        $this->seedSource($source);
+        $source_private = $source->getRelativePath(IStorageTypesConstants::PrivateType);
+        $target_private = $target->getRelativePath(IStorageTypesConstants::PrivateType);
+        Storage::disk('local')->put($target_private, 'partial');
+        $source_id = $source->getId();
+        $target_id = $target->getId();
+
+        $lock_name = CopyClonedMediaUploadFilesJob::storageLockName($target_id);
+        $locks = App::make(ILockManagerService::class);
+        $token = $locks->acquireLock($lock_name, 60);
+
+        $held = new \ReflectionProperty(CopyClonedMediaUploadFilesJob::class, 'held_lock_tokens');
+        $held->setAccessible(true);
+        $held->setValue(null, [$lock_name => $token]);
+
+        try {
+            (new CopyClonedMediaUploadFilesJob($source_id, $target_id, 'deck.pptx'))
+                ->failed(new \Illuminate\Queue\TimeoutExceededException('timed out'));
+        } finally {
+            $held->setValue(null, []);
+        }
+
+        $this->assertNull($this->findUpload($target_id));
+        $this->assertNotNull($this->findUpload($source_id));
+        $disk = Storage::disk('local');
+        $this->assertSame('private-bytes', $disk->get($source_private));
+        $this->assertFalse($disk->exists($target_private)); // renamed to DELETED_deck.pptx
+
+        // the lock must have been released by failed(), not left held: a fresh acquire succeeds
+        $fresh_token = $locks->acquireLock($lock_name, 60);
+        $locks->releaseLock($lock_name, $fresh_token);
     }
 
     public function testHandleThrowsWhenSourceReuploadInFlight(): void

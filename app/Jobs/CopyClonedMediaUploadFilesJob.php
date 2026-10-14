@@ -56,6 +56,14 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
     // database-fallback worker's --timeout, so a slow attempt is never re-served concurrently
     public $timeout = 1200;
 
+    // Keyed by lock name, set for the duration handle() holds that lock. On a final-attempt
+    // timeout, Laravel's Worker::registerTimeoutHandler calls failed() from the SIGALRM handler
+    // in the SAME process while handle() is suspended mid-copy still holding the lock - its
+    // finally never runs before the process is killed. failed() runs on a freshly unserialized
+    // job instance, so an instance property can't carry the token across to it; a static can,
+    // since it lives in the same process. See failed() for how this is consumed.
+    private static array $held_lock_tokens = [];
+
     public function __construct(
         public int $source_media_upload_id,
         public int $target_media_upload_id,
@@ -76,17 +84,19 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
     {
         Log::debug(sprintf("CopyClonedMediaUploadFilesJob::handle source %s target %s", $this->source_media_upload_id, $this->target_media_upload_id));
 
+        $lock_name = self::storageLockName($this->target_media_upload_id);
         // UnacquiredLockException propagates: the processor is writing this upload, so retry later
-        $lock_service->lock(
-            self::storageLockName($this->target_media_upload_id),
-            function () use ($repository, $pending_repository, $tx_service) {
-                $legs = $this->resolveLegs($repository, $pending_repository, $tx_service);
-                foreach ($legs as $leg) {
-                    $this->copyLeg($leg['storage'], $leg['from'], $leg['to'], $leg['options']);
-                }
-            },
-            self::STORAGE_LOCK_LIFETIME
-        );
+        $token = $lock_service->acquireLock($lock_name, self::STORAGE_LOCK_LIFETIME);
+        self::$held_lock_tokens[$lock_name] = $token;
+        try {
+            $legs = $this->resolveLegs($repository, $pending_repository, $tx_service);
+            foreach ($legs as $leg) {
+                $this->copyLeg($leg['storage'], $leg['from'], $leg['to'], $leg['options']);
+            }
+        } finally {
+            unset(self::$held_lock_tokens[$lock_name]);
+            $lock_service->releaseLock($lock_name, $token);
+        }
     }
 
     /**
@@ -172,14 +182,40 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
             $this->source_media_upload_id, $this->target_media_upload_id, $exception->getMessage()
         ));
 
+        $lock_service = App::make(ILockManagerService::class);
+        $lock_name = self::storageLockName($this->target_media_upload_id);
+
+        if (array_key_exists($lock_name, self::$held_lock_tokens)) {
+            // A final-attempt timeout calls failed() from the worker's SIGALRM handler in the
+            // SAME process, with handle() suspended mid-copy still holding this lock - its finally
+            // never runs before the process is killed. The lock is still ours: re-acquiring it
+            // here would always throw UnacquiredLockException, so clean up directly and release
+            // the token we already hold instead.
+            $token = self::$held_lock_tokens[$lock_name];
+            Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed target %s copy timed out while still holding its own storage lock, removing the clone's upload", $this->target_media_upload_id));
+            try {
+                $this->removeTarget();
+            } catch (\Throwable $ex) {
+                // the job is already terminal: this error log is the operator's signal that the clone
+                // still has an upload with no file behind it (fix: delete it or re-upload on the clone)
+                Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not remove clone media upload %s", $this->target_media_upload_id));
+                Log::error($ex);
+            } finally {
+                unset(self::$held_lock_tokens[$lock_name]);
+                $lock_service->releaseLock($lock_name, $token);
+            }
+            return;
+        }
+
         try {
-            App::make(ILockManagerService::class)->lock(
-                self::storageLockName($this->target_media_upload_id),
+            $lock_service->lock(
+                $lock_name,
                 fn () => $this->removeTarget(),
                 self::STORAGE_LOCK_LIFETIME
             );
         } catch (UnacquiredLockException $ex) {
-            // only the processor writing a re-upload of this clone holds the lock, so keep the record
+            // the lock is held by another process; a same-process timeout is handled above, so
+            // this can only be the processor writing a re-upload of this clone - keep the record
             Log::warning(sprintf("CopyClonedMediaUploadFilesJob::failed target %s storage is locked by a re-upload, keeping it", $this->target_media_upload_id));
         } catch (\Throwable $ex) {
             // the job is already terminal: this error log is the operator's signal that the clone

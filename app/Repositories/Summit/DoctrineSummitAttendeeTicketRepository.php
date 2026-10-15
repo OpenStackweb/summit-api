@@ -762,7 +762,9 @@ SQL,
 
         $start = time();
         Log::debug(sprintf('DoctrineSummitAttendeeTicketRepository::getAllByPage'));
-        $total = $this->getFastCount($filter, $order);
+        // the total does not depend on the order; aggregate orders (badge_prints_count, refunded_amount,
+        // final_amount_adjusted) add GROUP BY e.id, which breaks the single scalar COUNT
+        $total = $this->getFastCount($filter);
         $ids = $this->getAllIdsByPage($paging_info, $filter, $order);
         $query = $this->getEntityManager()->createQueryBuilder()
             ->select('e, a, o, tt, pc, b, bt, a_c, m')

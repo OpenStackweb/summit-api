@@ -21,19 +21,18 @@ use models\summit\SummitEventType;
 use App\Models\Foundation\Summit\Events\SummitEventTypeConstants;
 use services\model\ISummitService;
 use App\Jobs\CopyClonedMediaUploadFilesJob;
-use App\Services\Utils\ILockManagerService;
-use models\summit\PendingMediaUpload;
-use LaravelDoctrine\ORM\Facades\Registry;
-use models\utils\SilverstripeBaseModel;
-use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
-use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Utils\IStorageTypesConstants;
+use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\Bus;
-use libs\utils\ITransactionService;
+use Illuminate\Support\Facades\Config;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\summit\PendingMediaUpload;
 use models\summit\Presentation;
 use models\summit\PresentationMediaUpload;
 use models\summit\SummitMediaFileType;
 use models\summit\SummitMediaUploadType;
+use models\utils\SilverstripeBaseModel;
+use services\model\SummitService;
 
 /**
  * Class SummitServiceTest
@@ -366,8 +365,8 @@ CSV;
         $pending->setSummitId(self::$summit->getId());
         $pending->setMediaUploadTypeId($upload->getMediaUploadType()->getId());
         $pending->setMediaUpload($upload);
-        $pending->setPublicPath($upload->getPath(\App\Models\Utils\IStorageTypesConstants::PublicType));
-        $pending->setPrivatePath($upload->getPath(\App\Models\Utils\IStorageTypesConstants::PrivateType));
+        $pending->setPublicPath($upload->getPath(IStorageTypesConstants::PublicType));
+        $pending->setPrivatePath($upload->getPath(IStorageTypesConstants::PrivateType));
         $pending->setFileName($upload->getFilename());
         $pending->setTempFilePath('upload/does-not-exist/' . $upload->getFilename());
         $pending->setStatus(PendingMediaUpload::STATUS_PENDING);
@@ -382,7 +381,7 @@ CSV;
         };
 
         $locks = App::make(ILockManagerService::class);
-        $name = CopyClonedMediaUploadFilesJob::storageLockName($presentation->getId(), $upload->getFilename());
+        $name = SummitService::mediaUploadStorageLockName($presentation->getId(), $upload->getFilename());
         $token = $locks->acquireLock($name, 60);
         try {
             App::make(ISummitService::class)->processPendingMediaUploads();
@@ -487,12 +486,7 @@ CSV;
         });
 
         $job = Bus::dispatched(CopyClonedMediaUploadFilesJob::class)->first();
-        $job->handle(
-            App::make(IPresentationMediaUploadRepository::class),
-            App::make(IPendingMediaUploadRepository::class),
-            App::make(\App\Services\Utils\ILockManagerService::class),
-            App::make(ITransactionService::class)
-        );
+        $job->handle(App::make(ISummitService::class));
 
         $disk = Storage::disk('local');
         $this->assertSame('private-bytes', $disk->get($clone_upload->getRelativePath(IStorageTypesConstants::PrivateType)));
@@ -524,7 +518,7 @@ CSV;
         $this->assertGreaterThan(0, $clone->getId());
         $this->assertNotSame($presentation->getId(), $clone->getId());
 
-        // By the time cloneEvent returns, the explicit failed() call in its catch has already run
+        // By the time cloneEvent returns, the cleanup call in its catch has already run
         // synchronously and removed the clone's upload from the in-memory collection too - so the
         // path has to be derived rather than read off the (already gone) clone upload entity. The
         // cloned upload is created via PresentationMediaUpload::createInstance(), which always starts
@@ -532,7 +526,7 @@ CSV;
         $clone_id = $clone->getId();
         $clone_private_path = sprintf(
             '%s/%s/%s/%s/%s',
-            \Illuminate\Support\Facades\Config::get('mediaupload.private_mounting_folder'),
+            Config::get('mediaupload.private_mounting_folder'),
             IStorageTypesConstants::PrivateType,
             self::$summit->getId(),
             $clone_id,

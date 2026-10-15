@@ -13,7 +13,6 @@
  **/
 
 use App\Jobs\CopyClonedMediaUploadFilesJob;
-use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Models\Utils\IStorageTypesConstants;
 use App\Services\Utils\Exceptions\UnacquiredLockException;
@@ -22,15 +21,18 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use libs\utils\ITransactionService;
 use models\summit\PendingMediaUpload;
 use models\summit\Presentation;
 use models\summit\PresentationMediaUpload;
 use models\summit\SummitMediaFileType;
 use models\summit\SummitMediaUploadType;
+use services\model\ISummitService;
+use services\model\SummitService;
 
 /**
- * DB-backed: the job reloads both uploads by ID. Storage is the Local driver on a faked disk.
+ * DB-backed: SummitService::copyClonedMediaUploadFiles / removeUncopiedClonedMediaUpload, run
+ * through the job's handle()/failed(), reload both uploads by ID. Storage is the Local driver on a
+ * faked disk.
  */
 class CopyClonedMediaUploadFilesJobTest extends TestCase
 {
@@ -129,19 +131,14 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
 
     private function runJob(CopyClonedMediaUploadFilesJob $job): void
     {
-        $job->handle(
-            App::make(IPresentationMediaUploadRepository::class),
-            App::make(IPendingMediaUploadRepository::class),
-            App::make(ILockManagerService::class),
-            App::make(ITransactionService::class)
-        );
+        $job->handle(App::make(ISummitService::class));
     }
 
     /** Holds an upload's storage lock, as processPendingMediaUploads does, while $fn runs. */
     private function withStorageLockHeld(PresentationMediaUpload $upload, \Closure $fn): void
     {
         $locks = App::make(ILockManagerService::class);
-        $name = CopyClonedMediaUploadFilesJob::storageLockName($upload->getPresentation()->getId(), $upload->getFilename());
+        $name = SummitService::mediaUploadStorageLockName($upload->getPresentation()->getId(), $upload->getFilename());
         $token = $locks->acquireLock($name, 60);
         try {
             $fn();
@@ -164,6 +161,14 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->assertSame([30, 60, 120, 300], $job->backoff);
         $this->assertLessThan(Config::get('queue.connections.redis.retry_after'), $job->timeout);
         $this->assertLessThan(Config::get('queue.connections.database.retry_after'), $job->timeout);
+    }
+
+    public function testHandleDelegatesToSummitService(): void
+    {
+        $service = \Mockery::mock(ISummitService::class);
+        $service->shouldReceive('copyClonedMediaUploadFiles')->once()->with(1, 2, 'deck.pptx');
+
+        (new CopyClonedMediaUploadFilesJob(1, 2, 'deck.pptx'))->handle($service);
     }
 
     public function testHandleCopiesBothLegsAndLeavesOriginal(): void
@@ -335,6 +340,9 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $repository->shouldReceive('getByIdExclusiveLock')->once()->with($target_id)
             ->andReturnUsing(fn ($id) => $real->getByIdExclusiveLock($id));
         App::instance(IPresentationMediaUploadRepository::class, $repository);
+        // the service singleton takes its repositories at construction; drop any instance already
+        // resolved so failed() builds one with the mock
+        App::forgetInstance(ISummitService::class);
 
         (new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
 
@@ -393,7 +401,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
 
         $locks = App::make(ILockManagerService::class);
         // the name a processor writing a DIFFERENT upload record at the clone's deck.pptx would hold
-        $name = CopyClonedMediaUploadFilesJob::storageLockName(self::$clonePresentation->getId(), 'deck.pptx');
+        $name = SummitService::mediaUploadStorageLockName(self::$clonePresentation->getId(), 'deck.pptx');
         $token = $locks->acquireLock($name, 60);
         try {
             $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
@@ -439,11 +447,11 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $source_id = $source->getId();
         $target_id = $target->getId();
 
-        $lock_name = CopyClonedMediaUploadFilesJob::storageLockName(self::$clonePresentation->getId(), 'deck.pptx');
+        $lock_name = SummitService::mediaUploadStorageLockName(self::$clonePresentation->getId(), 'deck.pptx');
         $locks = App::make(ILockManagerService::class);
         $token = $locks->acquireLock($lock_name, 60);
 
-        $held = new \ReflectionProperty(CopyClonedMediaUploadFilesJob::class, 'held_lock_tokens');
+        $held = new \ReflectionProperty(SummitService::class, 'held_media_upload_lock_tokens');
         $held->setAccessible(true);
         $held->setValue(null, [$lock_name => $token]);
 

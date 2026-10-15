@@ -12,12 +12,12 @@
  * limitations under the License.
  **/
 
-use App\Jobs\CopyClonedMediaUploadFilesJob;
 use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Services\Utils\Exceptions\UnacquiredLockException;
 use App\Services\Utils\ILockManagerService;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
+use services\model\ISummitService;
 use services\model\SummitService;
 use libs\utils\ITransactionService;
 use Mockery;
@@ -93,7 +93,7 @@ class ProcessPendingMediaUploadsTest extends TestCase
         }
 
         // Default: a lock that is always free, so tests that don't care about locking
-        // behavior exercise the per-row processing exactly as before Task 3.
+        // exercise only the per-row processing.
         if (!$lockService) {
             $lockService = Mockery::mock(ILockManagerService::class);
             $lockService->shouldReceive('acquireLock')->andReturn('test-token');
@@ -380,7 +380,7 @@ class ProcessPendingMediaUploadsTest extends TestCase
 
     /**
      * Unit-level counterpart of SummitServiceTest::testProcessPendingMediaUploadsSkipsUploadWhileCloneCopyHoldsItsLock.
-     * When the upload's storage lock is held (e.g. by CopyClonedMediaUploadFilesJob), the row
+     * When the upload's storage lock is held (e.g. by copyClonedMediaUploadFiles), the row
      * must be left completely untouched: no status/attempts mutation, and since the lock was
      * never acquired, no release either.
      */
@@ -402,7 +402,7 @@ class ProcessPendingMediaUploadsTest extends TestCase
 
         $lockService = Mockery::mock(ILockManagerService::class);
         $lockService->shouldReceive('acquireLock')->once()
-            ->with(CopyClonedMediaUploadFilesJob::storageLockName(103, 'deck.pptx'), CopyClonedMediaUploadFilesJob::STORAGE_LOCK_LIFETIME)
+            ->with(SummitService::mediaUploadStorageLockName(103, 'deck.pptx'), ISummitService::MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME)
             ->andThrow(new UnacquiredLockException('upload 1 storage is locked'));
         $lockService->shouldNotReceive('releaseLock');
 

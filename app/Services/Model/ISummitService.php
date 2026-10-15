@@ -41,6 +41,11 @@ use utils\Filter;
  */
 interface ISummitService
 {
+    // lifetime of the media upload storage lock (SummitService::mediaUploadStorageLockName); above
+    // CopyClonedMediaUploadFilesJob::$timeout, so a killed copy's lock expires on its own before
+    // anything waits on it long
+    const MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME = 1300;
+
     /**
      * @param Summit $summit
      * @param array $data
@@ -556,6 +561,31 @@ interface ISummitService
      * @return array Stats array: ['processed' => int, 'errors' => int]
      */
     public function processPendingMediaUploads(int $max_retries = 3): array;
+
+    /**
+     * Copies a cloned media upload's files from the original's storage paths to the clone's, under
+     * the same storage lock processPendingMediaUploads takes. A clone that has been re-uploaded
+     * since is never written to. A leg whose source file is missing is skipped; a source missing
+     * on every enabled leg throws.
+     *
+     * @param int $source_media_upload_id
+     * @param int $target_media_upload_id
+     * @param string $filename the clone's filename when the copy was queued
+     * @throws \App\Services\Utils\Exceptions\UnacquiredLockException when the storage location is locked
+     * @throws \RuntimeException when the source is gone, has a re-upload in flight, or has no file
+     */
+    public function copyClonedMediaUploadFiles(int $source_media_upload_id, int $target_media_upload_id, string $filename): void;
+
+    /**
+     * Removes a cloned media upload whose files could not be copied, so the clone never points at a
+     * missing file. A clone that has been re-uploaded since is kept. Removal failures are logged
+     * for the operator, not thrown.
+     *
+     * @param int $target_media_upload_id
+     * @param string $filename the clone's filename when the copy was queued
+     * @param \Throwable|null $cause why the copy failed
+     */
+    public function removeUncopiedClonedMediaUpload(int $target_media_upload_id, string $filename, ?\Throwable $cause = null): void;
 
     /**
      * @param Summit $summit

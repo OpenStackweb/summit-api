@@ -41,7 +41,7 @@ SQL);
 
         foreach ($rows as $row) {
             $title = (string)($row['Title'] ?? '');
-            $slug = $title !== '' ? Presentation::slugify($title) : $row['PresentationSlug'];
+            $slug = !empty($title) ? Presentation::slugify($title) : $row['PresentationSlug'];
             $segment = PresentationMediaUpload::buildModernPathSegment(
                 intval($row['SummitID']), $row['SummitSlug'], intval($row['PresentationID']), $slug
             );

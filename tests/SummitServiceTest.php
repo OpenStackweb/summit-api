@@ -523,6 +523,28 @@ CSV;
         $this->assertInstanceOf(Presentation::class, $clone);
         $this->assertGreaterThan(0, $clone->getId());
         $this->assertNotSame($presentation->getId(), $clone->getId());
+
+        // By the time cloneEvent returns, the explicit failed() call in its catch has already run
+        // synchronously and removed the clone's upload from the in-memory collection too - so the
+        // path has to be derived rather than read off the (already gone) clone upload entity. The
+        // cloned upload is created via PresentationMediaUpload::createInstance(), which always starts
+        // legacy_path_format=true, so its path is the legacy {mount}/Private/{summit_id}/{clone_id}/{filename}.
+        $clone_id = $clone->getId();
+        $clone_private_path = sprintf(
+            '%s/%s/%s/%s/%s',
+            \Illuminate\Support\Facades\Config::get('mediaupload.private_mounting_folder'),
+            IStorageTypesConstants::PrivateType,
+            self::$summit->getId(),
+            $clone_id,
+            $upload->getFilename()
+        );
+
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $em->clear();
+        /** @var Presentation $reloaded_clone */
+        $reloaded_clone = $em->find(Presentation::class, $clone_id);
+        $this->assertCount(0, $reloaded_clone->getMediaUploads());
+        $this->assertFalse(Storage::disk('local')->exists($clone_private_path));
     }
 
     public function testCloneEventWithoutMediaUploadsQueuesNothing(): void

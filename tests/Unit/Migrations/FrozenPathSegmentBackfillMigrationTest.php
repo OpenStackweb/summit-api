@@ -67,6 +67,17 @@ class FrozenPathSegmentBackfillMigrationTest extends TestCase
         $this->assertSame(['8-s8/301-kept-slug', 6], $sql[0]->getParameters());
     }
 
+    public function testUsesStoredSlugWhenTitleIsZero(): void
+    {
+        $m = $this->migrationWithRows([[
+            'ID' => 7, 'SummitID' => 9, 'SummitSlug' => 's9',
+            'PresentationID' => 302, 'Title' => '0', 'PresentationSlug' => 'kept-slug',
+        ]]);
+        $m->up(new Schema());
+        $sql = $m->getSql();
+        $this->assertSame(['9-s9/302-kept-slug', 7], $sql[0]->getParameters());
+    }
+
     public function testNoRowsNoSql(): void
     {
         $m = $this->migrationWithRows([]);

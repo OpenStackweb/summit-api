@@ -2284,16 +2284,26 @@ final class SummitService
         // exists yet. Copy the files after commit so the clone has IDs and a slow copy does not
         // hold the transaction open.
         foreach ($media_upload_pairs as [$source, $target]) {
+            $job = new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), $target->getFilename());
             try {
                 JobDispatcher::withDbFallback(
-                    job: new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), $target->getFilename()),
+                    job: $job,
                     logContext: ['summit_id' => $summit->getId(), 'event_id' => $event_id, 'clone_id' => $event_clone->getId()],
                     primaryConnection: Config::get('queue.default')
                 );
             } catch (\Throwable $ex) {
-                // only reachable when both queues are down and the synchronous run failed; its
-                // failed() has already removed the clone's upload, and the clone is committed
+                // only reachable when both queues are down and the synchronous dispatch itself threw
+                // (Laravel's SyncQueue resolves/builds the job outside its own try, so a failure there
+                // never reaches handle() or failed()); call failed() explicitly so the clone's upload
+                // is cleaned up instead of pointing at a file that was never copied. failed() is
+                // idempotent and never throws, but guard the call anyway so cloneEvent still returns
+                // the already-committed clone.
                 Log::error(sprintf("SummitService::cloneEvent copy of media upload %s for clone %s failed: %s", $target->getId(), $event_clone->getId(), $ex->getMessage()));
+                try {
+                    $job->failed($ex);
+                } catch (\Throwable $cleanup_ex) {
+                    Log::error(sprintf("SummitService::cloneEvent failed() cleanup for media upload %s on clone %s threw: %s", $target->getId(), $event_clone->getId(), $cleanup_ex->getMessage()));
+                }
             }
         }
 

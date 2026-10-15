@@ -63,7 +63,7 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
         Log::error($exception);
 
         try {
-            App::make(ISummitService::class)->removeUncopiedClonedMediaUpload($this->target_media_upload_id, $this->filename, $exception);
+            App::make(ISummitService::class)->removeUncopiedClonedMediaUpload($this->target_media_upload_id, $this->filename);
         } catch (\Throwable $ex) {
             Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not remove clone media upload %s", $this->target_media_upload_id));
             Log::error($ex);

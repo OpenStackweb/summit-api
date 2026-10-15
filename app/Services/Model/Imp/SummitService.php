@@ -2309,7 +2309,7 @@ final class SummitService
                 Log::error(sprintf("SummitService::cloneEvent copy of media upload %s for clone %s failed: %s", $target->getId(), $event_clone->getId(), $ex->getMessage()));
                 Log::error($ex);
                 try {
-                    $this->removeUncopiedClonedMediaUpload($target->getId(), $target->getFilename(), $ex);
+                    $this->removeUncopiedClonedMediaUpload($target->getId(), $target->getFilename());
                 } catch (\Throwable $cleanup_ex) {
                     Log::error(sprintf("SummitService::cloneEvent cleanup for media upload %s on clone %s threw: %s", $target->getId(), $event_clone->getId(), $cleanup_ex->getMessage()));
                     Log::error($cleanup_ex);
@@ -4689,7 +4689,7 @@ final class SummitService
     {
         $lock_name = $this->resolveClonedMediaUploadLockName($target_media_upload_id, $filename);
         if (is_null($lock_name)) {
-            Log::info(sprintf("CopyClonedMediaUploadFilesJob::handle target %s gone or has no presentation, nothing to copy", $target_media_upload_id));
+            Log::info(sprintf("SummitService::copyClonedMediaUploadFiles target %s gone or has no presentation, nothing to copy", $target_media_upload_id));
             return;
         }
         // UnacquiredLockException propagates: the processor is writing this location, so retry later
@@ -4708,7 +4708,7 @@ final class SummitService
             // a source missing on every enabled leg is a broken original: fail so the retries,
             // then failed(), resolve it
             if ($enabled > 0 && $copied === 0)
-                throw new \RuntimeException(sprintf("CopyClonedMediaUploadFilesJob source media upload %s has no file on any storage", $source_media_upload_id));
+                throw new \RuntimeException(sprintf("SummitService::copyClonedMediaUploadFiles source media upload %s has no file on any storage", $source_media_upload_id));
         } finally {
             unset(self::$held_media_upload_lock_tokens[$lock_name]);
             $this->lock_service->releaseLock($lock_name, $token);
@@ -4718,22 +4718,17 @@ final class SummitService
     /**
      * @inheritDoc
      */
-    public function removeUncopiedClonedMediaUpload(int $target_media_upload_id, string $filename, ?\Throwable $cause = null): void
+    public function removeUncopiedClonedMediaUpload(int $target_media_upload_id, string $filename): void
     {
-        Log::debug(sprintf(
-            "SummitService::removeUncopiedClonedMediaUpload target %s cause %s",
-            $target_media_upload_id, is_null($cause) ? 'none' : $cause->getMessage()
-        ));
-
         try {
             $lock_name = $this->resolveClonedMediaUploadLockName($target_media_upload_id, $filename);
         } catch (\Throwable $ex) {
-            Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not remove clone media upload %s", $target_media_upload_id));
+            Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload could not remove clone media upload %s", $target_media_upload_id));
             Log::error($ex);
             return;
         }
         if (is_null($lock_name)) {
-            Log::info(sprintf("CopyClonedMediaUploadFilesJob::failed target %s gone or has no presentation, nothing to remove", $target_media_upload_id));
+            Log::info(sprintf("SummitService::removeUncopiedClonedMediaUpload target %s gone or has no presentation, nothing to remove", $target_media_upload_id));
             return;
         }
 
@@ -4744,13 +4739,13 @@ final class SummitService
             // re-acquiring it here would always throw UnacquiredLockException, so clean up directly
             // and release the token we already hold instead.
             $token = self::$held_media_upload_lock_tokens[$lock_name];
-            Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed target %s copy timed out while still holding its own storage lock, removing the clone's upload", $target_media_upload_id));
+            Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload target %s copy timed out while still holding its own storage lock, removing the clone's upload", $target_media_upload_id));
             try {
                 $this->removeClonedMediaUploadTarget($target_media_upload_id, $filename);
             } catch (\Throwable $ex) {
                 // the job is already terminal: this error log is the operator's signal that the clone
                 // still has an upload with no file behind it (fix: delete it or re-upload on the clone)
-                Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not remove clone media upload %s", $target_media_upload_id));
+                Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload could not remove clone media upload %s", $target_media_upload_id));
                 Log::error($ex);
             } finally {
                 unset(self::$held_media_upload_lock_tokens[$lock_name]);
@@ -4769,11 +4764,11 @@ final class SummitService
             // the lock could not be taken: held by another process (e.g. the processor writing a
             // re-upload at this location) or the lock store is unreachable. Either way the record
             // can't be safely checked and removed, so keep it and leave it to the operator.
-            Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not take the storage lock to remove clone media upload %s; if the clone's file is missing, delete the upload or re-upload it on the clone", $target_media_upload_id));
+            Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload could not take the storage lock to remove clone media upload %s; if the clone's file is missing, delete the upload or re-upload it on the clone", $target_media_upload_id));
         } catch (\Throwable $ex) {
             // the job is already terminal: this error log is the operator's signal that the clone
             // still has an upload with no file behind it (fix: delete it or re-upload on the clone)
-            Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not remove clone media upload %s", $target_media_upload_id));
+            Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload could not remove clone media upload %s", $target_media_upload_id));
             Log::error($ex);
         }
     }
@@ -4808,21 +4803,21 @@ final class SummitService
         return $this->tx_service->transaction(function () use ($source_media_upload_id, $target_media_upload_id, $filename) {
             $target = $this->presentation_media_upload_repository->getById($target_media_upload_id);
             if (!$target instanceof PresentationMediaUpload) {
-                Log::info(sprintf("CopyClonedMediaUploadFilesJob::handle target %s gone, nothing to copy", $target_media_upload_id));
+                Log::info(sprintf("SummitService::resolveClonedMediaUploadLegs target %s gone, nothing to copy", $target_media_upload_id));
                 return [];
             }
             if ($this->isClonedMediaUploadReplaced($target, $filename)) {
-                Log::info(sprintf("CopyClonedMediaUploadFilesJob::handle target %s was re-uploaded, nothing to copy", $target_media_upload_id));
+                Log::info(sprintf("SummitService::resolveClonedMediaUploadLegs target %s was re-uploaded, nothing to copy", $target_media_upload_id));
                 return [];
             }
             $source = $this->presentation_media_upload_repository->getById($source_media_upload_id);
             // the clone still needs this file; fail so the retries, then failed(), resolve it
             if (!$source instanceof PresentationMediaUpload)
-                throw new \RuntimeException(sprintf("CopyClonedMediaUploadFilesJob source media upload %s is gone", $source_media_upload_id));
+                throw new \RuntimeException(sprintf("SummitService::resolveClonedMediaUploadLegs source media upload %s is gone", $source_media_upload_id));
             // a same-filename re-upload of the original leaves the old file in place until the
             // processor writes the new one; wait for it rather than copy stale bytes
             if ($this->pending_media_upload_repository->hasInFlightForMediaUpload($source->getId()))
-                throw new \RuntimeException(sprintf("CopyClonedMediaUploadFilesJob source media upload %s has a re-upload in flight", $source_media_upload_id));
+                throw new \RuntimeException(sprintf("SummitService::resolveClonedMediaUploadLegs source media upload %s has a re-upload in flight", $source_media_upload_id));
 
             $type = $target->getMediaUploadType();
             if (is_null($type)) return [];
@@ -4879,7 +4874,7 @@ final class SummitService
         // An original can lack one leg (storage types edited after upload; the public back-fill
         // only covers display_on_site uploads). Copy the legs it has rather than fail the clone.
         if (!$download->exists($from)) {
-            Log::warning(sprintf("CopyClonedMediaUploadFilesJob::copyLeg %s leg source missing on %s, skipping it: %s", $kind, $storage, $from));
+            Log::warning(sprintf("SummitService::copyClonedMediaUploadLeg %s leg source missing on %s, skipping it: %s", $kind, $storage, $from));
             return false;
         }
 
@@ -4887,15 +4882,15 @@ final class SummitService
         // writes straight to the final path), so existence never proves a leg finished.
         $stream = $download->readStream($from);
         if (!is_resource($stream))
-            throw new \RuntimeException(sprintf("CopyClonedMediaUploadFilesJob could not read on %s: %s", $storage, $from));
+            throw new \RuntimeException(sprintf("SummitService::copyClonedMediaUploadLeg could not read on %s: %s", $storage, $from));
 
         try {
             if (!$upload->saveFromStream($stream, $to, $options))
-                throw new \RuntimeException(sprintf("CopyClonedMediaUploadFilesJob could not write on %s: %s", $storage, $to));
+                throw new \RuntimeException(sprintf("SummitService::copyClonedMediaUploadLeg could not write on %s: %s", $storage, $to));
         } finally {
             if (is_resource($stream)) fclose($stream);
         }
-        Log::info(sprintf("CopyClonedMediaUploadFilesJob::copyLeg %s copied %s -> %s", $storage, $from, $to));
+        Log::info(sprintf("SummitService::copyClonedMediaUploadLeg %s copied %s -> %s", $storage, $from, $to));
         return true;
     }
 
@@ -4913,7 +4908,7 @@ final class SummitService
             $target = $this->presentation_media_upload_repository->getByIdExclusiveLock($target_media_upload_id);
             if (!$target instanceof PresentationMediaUpload) return [];
             if ($this->isClonedMediaUploadReplaced($target, $filename)) {
-                Log::info(sprintf("CopyClonedMediaUploadFilesJob::failed target %s was re-uploaded, keeping it", $target_media_upload_id));
+                Log::info(sprintf("SummitService::removeClonedMediaUploadTarget target %s was re-uploaded, keeping it", $target_media_upload_id));
                 return [];
             }
 
@@ -4931,7 +4926,7 @@ final class SummitService
 
             $presentation = $target->getPresentation();
             if (!is_null($presentation)) $presentation->removeMediaUpload($target);
-            Log::warning(sprintf("CopyClonedMediaUploadFilesJob::failed removed clone media upload %s", $target_media_upload_id));
+            Log::warning(sprintf("SummitService::removeClonedMediaUploadTarget removed clone media upload %s", $target_media_upload_id));
             return $paths;
         });
 
@@ -4941,7 +4936,7 @@ final class SummitService
                 $strategy = FileUploadStrategyFactory::build($storage);
                 if (!is_null($strategy)) $strategy->markAsDeleted($path, $stored_filename);
             } catch (\Throwable $ex) {
-                Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not mark %s/%s deleted on %s", $path, $stored_filename, $storage));
+                Log::error(sprintf("SummitService::removeClonedMediaUploadTarget could not mark %s/%s deleted on %s", $path, $stored_filename, $storage));
                 Log::error($ex);
             }
         }

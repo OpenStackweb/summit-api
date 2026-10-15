@@ -163,14 +163,6 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->assertLessThan(Config::get('queue.connections.database.retry_after'), $job->timeout);
     }
 
-    public function testHandleDelegatesToSummitService(): void
-    {
-        $service = \Mockery::mock(ISummitService::class);
-        $service->shouldReceive('copyClonedMediaUploadFiles')->once()->with(1, 2, 'deck.pptx');
-
-        (new CopyClonedMediaUploadFilesJob(1, 2, 'deck.pptx'))->handle($service);
-    }
-
     public function testHandleCopiesBothLegsAndLeavesOriginal(): void
     {
         [$source, $target] = $this->makePair();

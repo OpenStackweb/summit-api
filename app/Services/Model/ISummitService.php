@@ -44,6 +44,8 @@ interface ISummitService
     // lifetime of the media upload storage lock (SummitService::mediaUploadStorageLockName); above
     // CopyClonedMediaUploadFilesJob::$timeout, so a killed copy's lock expires on its own before
     // anything waits on it long
+    // the key builder itself stays on SummitService, not here: it's static, and an interface
+    // cannot hold a static implementation
     const MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME = 1300;
 
     /**
@@ -583,9 +585,8 @@ interface ISummitService
      *
      * @param int $target_media_upload_id
      * @param string $filename the clone's filename when the copy was queued
-     * @param \Throwable|null $cause why the copy failed
      */
-    public function removeUncopiedClonedMediaUpload(int $target_media_upload_id, string $filename, ?\Throwable $cause = null): void;
+    public function removeUncopiedClonedMediaUpload(int $target_media_upload_id, string $filename): void;
 
     /**
      * @param Summit $summit

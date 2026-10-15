@@ -46,6 +46,30 @@ class PresentationMediaUpload extends PresentationMaterial
     private $legacy_path_format;
 
     /**
+     * The "{summit}-{slug}/{presentation}-{slug}" folder segment of a modern-format upload,
+     * fixed when the row was backfilled so a later title or summit slug change cannot move it.
+     * @var string|null
+     */
+    #[ORM\Column(name: 'FrozenPathSegment', type: 'string', length: 1024, nullable: true)]
+    private $frozen_path_segment;
+
+    public function getFrozenPathSegment(): ?string
+    {
+        return $this->frozen_path_segment;
+    }
+
+    public static function buildModernPathSegment(int $summitId, ?string $summitRawSlug, int $presentationId, ?string $presentationSlug): string
+    {
+        return sprintf(
+            '%s-%s/%s-%s',
+            $summitId,
+            filter_var($summitRawSlug, FILTER_SANITIZE_ENCODED),
+            $presentationId,
+            filter_var($presentationSlug, FILTER_SANITIZE_ENCODED)
+        );
+    }
+
+    /**
      * @var SummitMediaUploadType
      */
     #[ORM\JoinColumn(name: 'SummitMediaUploadTypeID', referencedColumnName: 'ID')]
@@ -141,13 +165,17 @@ class PresentationMediaUpload extends PresentationMaterial
 
         $summit = $this->getPresentation()->getSummit();
         $presentation = $this->getPresentation();
-        $format = $storageType == IStorageTypesConstants::PublicType ? '%s/%s/%s': '%s/'.IStorageTypesConstants::PrivateType.'/%s/%s';
+        $prefix = $storageType == IStorageTypesConstants::PublicType ?
+            $mountingFolder : sprintf('%s/%s', $mountingFolder, IStorageTypesConstants::PrivateType);
 
         if($this->legacy_path_format)
-            return sprintf($format, $mountingFolder, $summit->getId(), $presentation->getId());
+            return sprintf('%s/%s/%s', $prefix, $summit->getId(), $presentation->getId());
+
+        if(!empty($this->frozen_path_segment))
+            return sprintf('%s/%s', $prefix, $this->frozen_path_segment);
 
         $presentation->generateSlug();
-        return sprintf($format, $mountingFolder, sprintf("%s-%s", $summit->getId(), filter_var($summit->getRawSlug(), FILTER_SANITIZE_ENCODED)), sprintf("%s-%s", $presentation->getId(), filter_var($presentation->getSlug(), FILTER_SANITIZE_ENCODED)));
+        return sprintf('%s/%s', $prefix, self::buildModernPathSegment($summit->getId(), $summit->getRawSlug(), $presentation->getId(), $presentation->getSlug()));
     }
 
     public function __construct()

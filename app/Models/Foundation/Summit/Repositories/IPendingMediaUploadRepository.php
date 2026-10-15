@@ -52,4 +52,20 @@ interface IPendingMediaUploadRepository extends IBaseRepository
      * @return int Number of rows deleted
      */
     public function deleteByMediaUpload(PresentationMediaUpload $mediaUpload): int;
+
+    /**
+     * True if any row, in any status, references the given media upload. Every upload and
+     * re-upload through PresentationService creates one; a cloned media upload never has one.
+     * @param int $media_upload_id
+     * @return bool
+     */
+    public function hasAnyForMediaUpload(int $media_upload_id): bool;
+
+    /**
+     * True if a row whose file is not fully written yet (Pending, Processing,
+     * PublicStorageUploaded, PrivateStorageUploaded) references the given media upload.
+     * @param int $media_upload_id
+     * @return bool
+     */
+    public function hasInFlightForMediaUpload(int $media_upload_id): bool;
 }

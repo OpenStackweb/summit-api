@@ -25,8 +25,13 @@ use models\summit\PresentationMediaUpload;
  * title is empty (generateSlug() returns early on an empty title).
  * @package Database\Migrations\Model
  */
-class Version20261014120001 extends AbstractMigration
+final class Version20261014120001 extends AbstractMigration
 {
+    public function getDescription(): string
+    {
+        return 'Backfill PresentationMediaUpload.FrozenPathSegment for modern-format media uploads.';
+    }
+
     public function up(Schema $schema): void
     {
         $rows = $this->connection->fetchAllAssociative(<<<SQL

@@ -132,12 +132,7 @@ final class DoctrinePendingMediaUploadRepository
                 "DELETE FROM models\\summit\\PendingMediaUpload p WHERE p.media_upload = :mediaUpload AND p.status IN (:statuses)"
             );
         $query->setParameter('mediaUpload', $mediaUpload->getId());
-        $query->setParameter('statuses', [
-            PendingMediaUpload::STATUS_PENDING,
-            PendingMediaUpload::STATUS_PROCESSING,
-            PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED,
-            PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED
-        ]);
+        $query->setParameter('statuses', PendingMediaUpload::IN_FLIGHT_STATUSES);
 
         return $query->execute();
     }
@@ -167,12 +162,7 @@ final class DoctrinePendingMediaUploadRepository
                 "SELECT COUNT(p.id) FROM models\\summit\\PendingMediaUpload p WHERE p.media_upload = :mediaUpload AND p.status IN (:statuses)"
             )
             ->setParameter('mediaUpload', $media_upload_id)
-            ->setParameter('statuses', [
-                PendingMediaUpload::STATUS_PENDING,
-                PendingMediaUpload::STATUS_PROCESSING,
-                PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED,
-                PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED,
-            ])
+            ->setParameter('statuses', PendingMediaUpload::IN_FLIGHT_STATUSES)
             ->getSingleScalarResult();
 
         return intval($count) > 0;

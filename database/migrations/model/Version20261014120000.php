@@ -20,8 +20,13 @@ use LaravelDoctrine\Migrations\Schema\Table;
  * Adds PresentationMediaUpload.FrozenPathSegment. Backfilled by Version20261014120001.
  * @package Database\Migrations\Model
  */
-class Version20261014120000 extends AbstractMigration
+final class Version20261014120000 extends AbstractMigration
 {
+    public function getDescription(): string
+    {
+        return 'Add PresentationMediaUpload.FrozenPathSegment.';
+    }
+
     /**
      * @param Schema $schema
      */

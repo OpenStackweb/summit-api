@@ -1035,6 +1035,82 @@ CSV;
         return $tickets;
     }
 
+    /**
+     * badge_prints_count filter maps to SIZE(prt), so the badge/prints joins must be added
+     * for the filter too (not only for the order), otherwise the count query fails with
+     * a DQL semantical error on the undefined prt alias.
+     */
+    public function testGetAllTicketsByBadgePrintsCount()
+    {
+        foreach ([
+            ['badge_prints_count>1'],
+            ['badge_prints_count==3,badge_prints_count==4,badge_prints_count==5'],
+            ['badge_prints_count==0'],
+        ] as $filter) {
+            $params = [
+                'id' => self::$summit->getId(),
+                'page' => 1,
+                'per_page' => 10,
+                'filter' => $filter,
+                'order' => '+id'
+            ];
+
+            $headers = [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE" => "application/json"
+            ];
+
+            $response = $this->action(
+                "GET",
+                "OAuth2SummitTicketApiController@getAllBySummit",
+                $params,
+                [],
+                [],
+                [],
+                $headers
+            );
+
+            $content = $response->getContent();
+            $this->assertResponseStatus(200);
+            $tickets = json_decode($content);
+            $this->assertTrue(!is_null($tickets));
+        }
+    }
+
+    public function testGetAllTicketsByHasBadgePrints()
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+            'page' => 1,
+            'per_page' => 10,
+            'filter' => [
+                'has_badge_prints==1',
+            ],
+            'order' => '+id'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "GET",
+            "OAuth2SummitTicketApiController@getAllBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(200);
+        $tickets = json_decode($content);
+        $this->assertTrue(!is_null($tickets));
+        return $tickets;
+    }
+
     public function testGetAttendeeBadge()
     {
         // Use the testCreateAttendeeBadge helper to ensure a badge exists

@@ -169,7 +169,12 @@ final class DoctrineSummitAttendeeTicketRepository
             $need['b'] = $need['bt'] = $need['bf'] = $need['bt_bf'] = true;
         }
 
-        if ($has('has_badge_prints') || $ord('badge_prints_count')) {
+        // filters use SIZE(b.prints): DQL SIZE() needs a collection path, not the joined prt alias
+        if ($has('has_badge_prints') || $has('badge_prints_count')) {
+            $need['b'] = true;
+        }
+
+        if ($ord('badge_prints_count')) {
             $need['b'] = $need['prt'] = true;
         }
 
@@ -380,15 +385,15 @@ final class DoctrineSummitAttendeeTicketRepository
             'has_badge_prints' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',
-                        "SIZE(prt) > 0"
+                        "SIZE(b.prints) > 0"
                     ),
                     '0' => new DoctrineCaseFilterMapping(
                         'false',
-                        "SIZE(prt) = 0"
+                        "SIZE(b.prints) = 0"
                     ),
                 ]
             ),
-            'badge_prints_count' => 'SIZE(prt) :operator :value',
+            'badge_prints_count' => 'SIZE(b.prints) :operator :value',
             'exclude_is_printable_free_unassigned' => new DoctrineSwitchFilterMapping([
                     '1' => new DoctrineCaseFilterMapping(
                         'true',

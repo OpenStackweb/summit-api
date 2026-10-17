@@ -42,10 +42,12 @@ use models\summit\ISummitTicketTypeRepository;
 use models\summit\Summit;
 use models\summit\SummitAttendee;
 use models\summit\SummitAttendeeBadge;
+use models\summit\SummitAttendeeCheckInLog;
 use models\summit\SummitAttendeeNote;
 use models\summit\SummitAttendeeTicket;
 use services\apis\IEventbriteAPI;
 use services\model\IAttendeeEmailFilterFields;
+use services\model\ISummitAttendeeCheckInLogService;
 use utils\Filter;
 use utils\FilterElement;
 use utils\FilterParser;
@@ -113,6 +115,11 @@ final class AttendeeService extends AbstractService implements IAttendeeService
     private $registration_feed_factory;
 
     /**
+     * @var ISummitAttendeeCheckInLogService
+     */
+    private $check_in_log_service;
+
+    /**
      * @param IExternalRegistrationFeedFactory $registration_feed_factory
      * @param ISummitAttendeeRepository $attendee_repository
      * @param IMemberRepository $member_repository
@@ -139,10 +146,12 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         IEventbriteAPI                         $eventbrite_api,
         ICompanyRepository                     $company_repository,
         ITagRepository                         $tag_repository,
-        ITransactionService                    $tx_service
+        ITransactionService                    $tx_service,
+        ISummitAttendeeCheckInLogService       $check_in_log_service
     )
     {
         parent::__construct($tx_service);
+        $this->check_in_log_service = $check_in_log_service;
         $this->attendee_repository = $attendee_repository;
         $this->ticket_repository = $ticket_repository;
         $this->member_repository = $member_repository;
@@ -249,6 +258,16 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
             $this->attendee_repository->add($attendee);
 
+            if ($attendee->hasCheckedIn()) {
+                // created already checked in (previous state was not checked in)
+                $this->check_in_log_service->log
+                (
+                    $attendee,
+                    SummitAttendeeCheckInLog::ActionCheckedIn,
+                    SummitAttendeeCheckInLog::SourceAdminUI
+                );
+            }
+
             $attendee->updateStatus();
 
             return $attendee;
@@ -333,7 +352,28 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     throw new EntityNotFoundException("Manager not found.");
             }
 
+            $was_checked_in = $attendee->hasCheckedIn();
+            $reason = trim(strval($payload['reason'] ?? ''));
+
             SummitAttendeeFactory::populate($summit, $attendee, $payload, $member, false, $manager);
+
+            if ($was_checked_in && !$attendee->hasCheckedIn() && $reason === '') {
+                // check out from admin UI requires a reason; decided on the resulting state (same one
+                // that drives the log) and the transaction rolls the change back
+                throw new ValidationException("A reason is required to check out an attendee.");
+            }
+
+            if ($was_checked_in !== $attendee->hasCheckedIn()) {
+                $this->check_in_log_service->log
+                (
+                    $attendee,
+                    $attendee->hasCheckedIn()
+                        ? SummitAttendeeCheckInLog::ActionCheckedIn
+                        : SummitAttendeeCheckInLog::ActionCheckedOut,
+                    SummitAttendeeCheckInLog::SourceAdminUI,
+                    $attendee->hasCheckedIn() ? null : $reason
+                );
+            }
 
             $attendee->updateStatus();
             return $attendee;
@@ -919,6 +959,13 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 );
 
             $owner->setSummitHallCheckedIn(true);
+
+            $this->check_in_log_service->log
+            (
+                $owner,
+                SummitAttendeeCheckInLog::ActionCheckedIn,
+                SummitAttendeeCheckInLog::SourceBadgeScan
+            );
         });
     }
 

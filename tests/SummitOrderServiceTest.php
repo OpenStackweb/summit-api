@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use libs\utils\ITransactionService;
 use Mockery;
+use services\model\ISummitAttendeeCheckInLogService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\ICompanyRepository;
@@ -253,7 +254,8 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             $company_service,
             $ticket_finder_strategy_factory,
             $tx_service,
-            $lock_service
+            $lock_service,
+            Mockery::mock(ISummitAttendeeCheckInLogService::class)
         );
 
         $result = $service->processSummitOrderReminders($summit);
@@ -497,7 +499,8 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             App::make(ICompanyService::class),
             App::make(ITicketFinderStrategyFactory::class),
             App::make(ITransactionService::class),
-            App::make(ILockManagerService::class)
+            App::make(ILockManagerService::class),
+            App::make(ISummitAttendeeCheckInLogService::class)
         );
     }
 

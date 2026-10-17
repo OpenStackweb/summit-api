@@ -153,6 +153,7 @@ use services\model\IPresentationSubmissionReopenService;
 use services\model\ISpeakerService;
 use services\model\ISubmitterService;
 use services\model\ISummitAttendeeBadgePrintService;
+use services\model\ISummitAttendeeCheckInLogService;
 use services\model\ISummitPromoCodeService;
 use services\model\ISummitService;
 use services\model\ISummitSponsorService;
@@ -161,6 +162,7 @@ use services\model\PresentationSubmissionReopenService;
 use services\model\SpeakerService;
 use services\model\SubmitterService;
 use services\model\SummitAttendeeBadgePrintService;
+use services\model\SummitAttendeeCheckInLogService;
 use services\model\SummitService;
 
 /***
@@ -528,6 +530,11 @@ final class ModelServicesProvider extends ServiceProvider
         );
 
         App::singleton(
+            ISummitAttendeeCheckInLogService::class,
+            SummitAttendeeCheckInLogService::class
+        );
+
+        App::singleton(
             ISponsorUserSyncService::class,
             SponsorUserSyncService::class
         );
@@ -614,6 +621,7 @@ final class ModelServicesProvider extends ServiceProvider
             ITicketFinderStrategyFactory::class,
             IPromoCodeStrategyFactory::class,
             ISummitAttendeeBadgePrintService::class,
+            ISummitAttendeeCheckInLogService::class,
             ISponsorUserSyncService::class,
             ISummitRSVPService::class,
             ISummitRSVPInvitationService::class,

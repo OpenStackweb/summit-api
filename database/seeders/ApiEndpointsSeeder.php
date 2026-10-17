@@ -411,6 +411,34 @@ class ApiEndpointsSeeder extends Seeder
                     IGroup::SummitRegistrationAdmins,
                 ]
             ],
+            [
+                'name' => 'get-attendee-check-in-logs',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/check-in-logs',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadAllSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
+            [
+                'name' => 'get-attendee-check-in-logs-csv',
+                'route' => '/api/v1/summits/{id}/attendees/{attendee_id}/check-in-logs/csv',
+                'http_method' => 'GET',
+                'scopes' => [
+                    SummitScopes::ReadAllSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                    IGroup::SummitRegistrationAdmins,
+                ]
+            ],
 
             [
                 'name' => 'delete-ticket-badge',

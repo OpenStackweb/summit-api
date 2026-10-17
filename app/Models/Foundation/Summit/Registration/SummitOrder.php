@@ -340,6 +340,10 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
             return;
         }
 
+        // a cancelled order already released its slots; reviving it would oversell
+        if ($this->isCancelled())
+            throw new ValidationException(sprintf("Order %s is cancelled and can not be marked as paid.", $this->id));
+
         $this->setPaidStatus();
 
         if(!$this->tickets->count())
@@ -360,8 +364,15 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
     public function setPaymentError(?string $error): void
     {
         if (empty($error)) return;
-        $this->status = IOrderConstants::ErrorStatus;
         $this->last_error = $error;
+        // only an order that still holds its slots can move to Error (Error is how it reaches the revoke cron);
+        // a Paid or Cancelled order keeps its status, otherwise a late payment_failed re-opens a released order
+        $allowed_statuses = [IOrderConstants::ReservedStatus, IOrderConstants::ConfirmedStatus, IOrderConstants::ErrorStatus];
+        if (!in_array($this->status, $allowed_statuses)) {
+            Log::warning(sprintf("SummitOrder::setPaymentError order %s is %s, keeping status (error: %s).", $this->id, $this->status, $error));
+            return;
+        }
+        $this->status = IOrderConstants::ErrorStatus;
     }
 
     public function setConfirmed()
@@ -394,6 +405,12 @@ class SummitOrder extends SilverstripeBaseModel implements IQREntity
         $promo_codes_to_return = [];
 
         foreach ($this->tickets as $ticket) {
+
+            // a cancelled ticket already returned its slot: counting it again is a phantom release
+            if ($ticket->isCancelled()) {
+                Log::debug(sprintf("SummitOrder::calculateTicketsAndPromoCodesToReturn order %s ticket %s is already cancelled, skipping", $this->id, $ticket->getId()));
+                continue;
+            }
 
             if (!isset($tickets_to_return[$ticket->getTicketTypeId()]))
                 $tickets_to_return[$ticket->getTicketTypeId()] = 0;

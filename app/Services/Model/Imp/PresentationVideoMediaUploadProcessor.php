@@ -141,7 +141,7 @@ final class PresentationVideoMediaUploadProcessor
                                 $relativePath = $mediaUpload->getRelativePath(IStorageTypesConstants::PrivateType, $mountingFolder);
                                 Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s processing media upload %s relativePath %s", $event_id, $mediaUpload->getId(), $relativePath));
                                 $assetUrl = $strategy->getUrl($relativePath);
-                                if ($assetUrl == '#') {
+                                if (empty($assetUrl)) {
                                     Log::debug(sprintf("PresentationVideoMediaUploadProcessor::processEvent event %s processing media upload %s got asset url %s is not valid", $event_id, $mediaUpload->getId(), $assetUrl));
                                     return false;
                                 }

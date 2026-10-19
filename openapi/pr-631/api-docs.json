@@ -28272,7 +28272,7 @@
                     {
                         "name": "order",
                         "in": "query",
-                        "description": "Order by: title, start_date, end_date, id, created, track_id",
+                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track, location",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -28390,7 +28390,7 @@
                     {
                         "name": "order",
                         "in": "query",
-                        "description": "Order by: title, start_date, end_date, id, created, track_id",
+                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track, location",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -28499,7 +28499,7 @@
                     {
                         "name": "order",
                         "in": "query",
-                        "description": "Order by: title, start_date, end_date, id, created, track_id",
+                        "description": "Order by: title, start_date, end_date, id, created, track_id, occupancy, track, location",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -82038,9 +82038,8 @@
                         "type": "integer"
                     },
                     "location": {
-                        "description": "Location information",
-                        "type": "string",
-                        "maxLength": 255
+                        "description": "Location information (truncated to 255 characters server-side)",
+                        "type": "string"
                     }
                 },
                 "type": "object"
@@ -82067,9 +82066,8 @@
                         "type": "integer"
                     },
                     "location": {
-                        "description": "Location information",
-                        "type": "string",
-                        "maxLength": 255
+                        "description": "Location information (truncated to 255 characters server-side)",
+                        "type": "string"
                     }
                 },
                 "type": "object"

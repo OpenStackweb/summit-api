@@ -149,6 +149,12 @@ final class FilterParser
     public static function filterExpresion(string $exp)
     {
 
+        // the messages below echo the expression, so it has to be valid UTF-8 before anything else
+        // (JsonResponse cannot encode it otherwise); this also has to run before any preg_match with
+        // the u modifier, which returns false and not 0 on invalid UTF-8
+        if (!mb_check_encoding($exp, 'UTF-8'))
+            throw new FilterParserException("Invalid filter format: the filter is not valid UTF-8.");
+
         Log::debug(sprintf("FilterParser::filterExpresion %s", $exp));
         if (!preg_match('/\[\]|\(\)|>=|<=|<>|==|=\@|\@\@|<|>/i', $exp, $matches))
             throw new FilterParserException(sprintf("Invalid filter format %s (should be [:FIELD_NAME:OPERAND:VALUE]).", $exp));
@@ -156,7 +162,17 @@ final class FilterParser
         $op = $matches[0];
         $operands = explode($op, $exp, 2);
         $field = strtolower(trim($operands[0]));
+        // second urldecode on purpose: a literal + travels as %2B and is encoded again by the HTTP client
         $value = str_replace(['\\,','\\;'], [',',';'], urldecode($operands[1]));
+
+        // never echo the value: it may not be valid UTF-8
+        if (!mb_check_encoding($value, 'UTF-8'))
+            throw new FilterParserException(sprintf("Filter by field %s has a value that is not valid UTF-8.", $field));
+
+        // characters outside the BMP (emoji) can not be compared against our utf8mb3/latin1 columns
+        if (preg_match('/[\x{10000}-\x{10FFFF}]/u', $value))
+            throw new FilterParserException(sprintf("Filter by field %s has a value with unsupported characters.", $field));
+
         Log::debug(sprintf("FilterParser::filterExpresion field %s op %s value %s", $field, $op, json_encode($value)));
         return [$field, $op, $value];
     }

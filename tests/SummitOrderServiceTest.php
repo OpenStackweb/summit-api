@@ -28,9 +28,12 @@ use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\ICompanyService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\ISummitOrderService;
+use App\Services\Model\ReserveOrderTask;
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Model\SummitOrderService;
 use App\Services\Utils\ILockManagerService;
+use Doctrine\DBAL\Driver\PDO\Exception as PDODriverException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -667,6 +670,65 @@ final class SummitOrderServiceTest extends BrowserKitTestCase
             if ($ticket->hasOwner()) $assigned[] = $ticket->getOwnerEmail();
         }
         $this->assertEquals([$guest_email], $assigned);
+    }
+
+    private function buildReserveOrderTaskThrowing(string $index_name, string $owner_email): ReserveOrderTask
+    {
+        $tx_service = Mockery::mock(ITransactionService::class);
+        // the violation is raised by the root flush after the closure returns, so the
+        // transaction call itself is what throws
+        $tx_service->shouldReceive('transaction')->andThrow(
+            new UniqueConstraintViolationException(
+                new PDODriverException(
+                    sprintf("SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '1-%s' for key '%s'", $owner_email, $index_name),
+                    '23000',
+                    1062
+                ),
+                null
+            )
+        );
+
+        return new ReserveOrderTask(
+            null,
+            self::$summit,
+            ["owner_email" => $owner_email],
+            Mockery::mock(IBuildDefaultPaymentGatewayProfileStrategy::class),
+            Mockery::mock(IMemberRepository::class),
+            Mockery::mock(ISummitAttendeeRepository::class),
+            Mockery::mock(ISummitAttendeeTicketRepository::class),
+            Mockery::mock(ICompanyRepository::class),
+            Mockery::mock(ICompanyService::class),
+            $tx_service
+        );
+    }
+
+    /**
+     * A concurrent reserve for the same attendee email loses the race on the
+     * (SummitID, Email) unique index: it must be rejected as a 412 ValidationException.
+     */
+    public function testReserveOrderTaskTranslatesDuplicateAttendeeToValidationException()
+    {
+        $email = sprintf('dup-%s@test.com', uniqid());
+        $task = $this->buildReserveOrderTaskThrowing('SummitAttendee_Email_SummitID', $email);
+
+        try {
+            $task->run([]);
+            $this->fail('Expected ValidationException was not thrown');
+        } catch (ValidationException $ex) {
+            $this->assertStringContainsString($email, $ex->getMessage());
+            $this->assertStringContainsString('already being processed', $ex->getMessage());
+        }
+    }
+
+    /**
+     * A unique violation on any other index must keep propagating unchanged.
+     */
+    public function testReserveOrderTaskRethrowsOtherUniqueConstraintViolations()
+    {
+        $task = $this->buildReserveOrderTaskThrowing('SomeOther_Unique_Index', 'other@test.com');
+
+        $this->expectException(UniqueConstraintViolationException::class);
+        $task->run([]);
     }
 
     /**

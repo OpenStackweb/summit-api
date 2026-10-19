@@ -21,9 +21,19 @@ class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTestCase
 
     use InsertMemberTestData;
 
+    /**
+     * @var array original $_SERVER values overridden by the tests
+     */
+    private $original_server = [];
+
+    private const OverriddenServerKeys = ['HTTP_USER_AGENT', 'HTTP_REFERER', 'HTTP_X_FORWARDED_FOR'];
+
     protected function setUp():void
     {
         parent::setUp();
+        foreach (self::OverriddenServerKeys as $key) {
+            $this->original_server[$key] = array_key_exists($key, $_SERVER) ? $_SERVER[$key] : null;
+        }
         self::insertMemberTestData(IGroup::TrackChairs);
         self::$defaultMember = self::$member;
         self::insertSummitTestData();
@@ -31,6 +41,10 @@ class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTestCase
 
     protected function tearDown():void
     {
+        foreach ($this->original_server as $key => $value) {
+            if (is_null($value)) unset($_SERVER[$key]);
+            else $_SERVER[$key] = $value;
+        }
         self::clearSummitTestData();
         self::clearMemberTestData();
         parent::tearDown();
@@ -69,6 +83,114 @@ class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTestCase
         $metric = json_decode($content);
         $this->assertTrue(!is_null($metric));
         return $metric;
+    }
+
+    private function enterMetric(array $extra = [])
+    {
+        $params = [
+            'id' => self::$summit->getId(),
+        ];
+
+        $data = array_merge(['type' => \models\summit\ISummitMetricType::General], $extra);
+
+        $headers = [
+            "HTTP_Authorization"  => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json",
+        ];
+
+        return $this->action(
+            "PUT",
+            "OAuth2SummitMetricsApiController@enter",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode($data)
+        );
+    }
+
+    public function testEnterTruncatesLongHeaders(){
+        $_SERVER['HTTP_USER_AGENT'] = str_repeat('a', 300);
+        $_SERVER['HTTP_REFERER'] = str_repeat('b', 300);
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = str_repeat('1', 300);
+
+        $response = $this->enterMetric();
+        $this->assertResponseStatus(201);
+        $metric = json_decode($response->getContent());
+        $this->assertEquals(str_repeat('a', 255), $metric->browser);
+        $this->assertEquals(str_repeat('b', 255), $metric->origin);
+        $this->assertEquals(str_repeat('1', 255), $metric->ip);
+    }
+
+    public function testEnterTruncatesMultibyteUserAgent(){
+        $ua = str_repeat('é', 300);
+        $_SERVER['HTTP_USER_AGENT'] = $ua;
+
+        $response = $this->enterMetric();
+        $this->assertResponseStatus(201);
+        $metric = json_decode($response->getContent());
+        $this->assertEquals(mb_substr($ua, 0, 255), $metric->browser);
+        $this->assertEquals(255, mb_strlen($metric->browser));
+        $this->assertTrue(mb_check_encoding($metric->browser, 'UTF-8'));
+    }
+
+    public function testEnterKeepsShortUserAgent(){
+        $ua = str_repeat('a', 255);
+        $_SERVER['HTTP_USER_AGENT'] = $ua;
+
+        $response = $this->enterMetric();
+        $this->assertResponseStatus(201);
+        $metric = json_decode($response->getContent());
+        $this->assertEquals($ua, $metric->browser);
+    }
+
+    private function getStoredLocation(int $metric_id): ?string
+    {
+        $em = \LaravelDoctrine\ORM\Facades\Registry::getManager(\models\utils\SilverstripeBaseModel::EntityManager);
+        $em->clear();
+        return $em->find(\models\summit\SummitMetric::class, $metric_id)->getLocation();
+    }
+
+    public function testEnterKeepsLongLocation(){
+        $response = $this->enterMetric(['location' => str_repeat('l', 300)]);
+        $this->assertResponseStatus(201);
+        $metric = json_decode($response->getContent());
+        $this->assertEquals(str_repeat('l', 300), $this->getStoredLocation($metric->id));
+    }
+
+    public function testEnterStoresDecodedLocation(){
+        $location = str_repeat('é', 200);
+        $encoded = rawurlencode($location);
+        $this->assertGreaterThan(255, strlen($encoded));
+
+        $response = $this->enterMetric(['location' => $encoded]);
+        $this->assertResponseStatus(201);
+        $metric = json_decode($response->getContent());
+        $this->assertEquals($location, $this->getStoredLocation($metric->id));
+    }
+
+    public function testLeaveLongLocationIsAccepted(){
+        $this->enterMetric();
+        $this->assertResponseStatus(201);
+
+        $this->action(
+            "POST",
+            "OAuth2SummitMetricsApiController@leave",
+            ['id' => self::$summit->getId()],
+            [],
+            [],
+            [],
+            [
+                "HTTP_Authorization"  => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"        => "application/json",
+            ],
+            json_encode([
+                'type' => \models\summit\ISummitMetricType::General,
+                'location' => str_repeat('l', 300),
+            ])
+        );
+        $this->assertResponseStatus(201);
     }
 
     public function testEnterEvent(){

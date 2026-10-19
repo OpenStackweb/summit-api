@@ -101,6 +101,59 @@ final class OAuth2MembersApiTest extends ProtectedApiTestCase
         $this->assertResponseStatus(200);
     }
 
+    /**
+     * @param string|array $filter the filter as PHP hands it over, after its own decode of the query string
+     */
+    private function getMembersWithFilter($filter)
+    {
+        $headers = ["HTTP_Authorization" => " Bearer " . $this->access_token];
+        return $this->action(
+            "GET",
+            "OAuth2MembersApiController@getAll",
+            ['filter' => $filter, 'per_page' => 5],
+            [],
+            [],
+            [],
+            $headers
+        );
+    }
+
+    public function testGetMembersFilterEncodedPlus()
+    {
+        // C++ as openstack-uicore-foundation sends it: %2B, encoded again on the wire
+        $this->getMembersWithFilter('first_name=@C%2B%2B');
+        $this->assertResponseStatus(200);
+    }
+
+    public function testGetMembersFilterInvalidUtf8Value()
+    {
+        // first_name=@%25DA on the wire
+        $this->getMembersWithFilter('first_name=@%DA');
+        $this->assertResponseStatus(412);
+    }
+
+    public function testGetMembersFilterEmojiValue()
+    {
+        $this->getMembersWithFilter("first_name=@\u{1F600}");
+        $this->assertResponseStatus(412);
+    }
+
+    public function testGetMembersFilterInvalidUtf8Field()
+    {
+        // filter=%DA==x on the wire
+        $response = $this->getMembersWithFilter("\xDA==x");
+        $this->assertResponseStatus(412);
+        $this->assertNotNull(json_decode($response->getContent()));
+    }
+
+    public function testGetMembersFilterInvalidUtf8WithoutOperator()
+    {
+        // filter=%DA on the wire
+        $response = $this->getMembersWithFilter("\xDA");
+        $this->assertResponseStatus(412);
+        $this->assertNotNull(json_decode($response->getContent()));
+    }
+
     public function testGetMembersEmpty()
     {
 

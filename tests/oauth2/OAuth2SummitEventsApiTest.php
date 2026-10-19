@@ -1210,6 +1210,46 @@ final class OAuth2SummitEventsApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($events));
     }
 
+    /**
+     * @param string $filter the filter as PHP hands it over, after its own decode of the query string
+     */
+    private function getScheduledEventsWithFilter(string $filter)
+    {
+        $params = [
+            'id'     => self::$summit->getId(),
+            'filter' => $filter,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        return $this->action
+        (
+            "GET",
+            "OAuth2SummitEventsApiController@getScheduledEvents",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+    }
+
+    public function testGetScheduledEventsFilterInvalidUtf8Value()
+    {
+        // title=@%25DA on the wire
+        $this->getScheduledEventsWithFilter('title=@%DA');
+        $this->assertResponseStatus(412);
+    }
+
+    public function testGetScheduledEventsFilterEmojiValue()
+    {
+        $this->getScheduledEventsWithFilter("title=@\u{1F600}");
+        $this->assertResponseStatus(412);
+    }
+
     public function testCurrentSummitPublishedEventsBySummitType()
     {
         $this->markTestSkipped('Skipped test: needs review');

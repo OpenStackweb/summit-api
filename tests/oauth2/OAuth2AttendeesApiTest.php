@@ -72,6 +72,45 @@ class OAuth2AttendeesApiTest extends ProtectedApiTestCase
         $this->assertTrue(!is_null($attendees));
     }
 
+    /**
+     * @param string $filter the filter as PHP hands it over, after its own decode of the query string
+     */
+    private function getAttendeesWithFilter(string $filter)
+    {
+        $params = [
+            'id'       => self::$summit->getId(),
+            'page'     => 1,
+            'per_page' => 10,
+            'filter'   => $filter,
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE"        => "application/json"
+        ];
+
+        return $this->action(
+            "GET",
+            "OAuth2SummitAttendeesApiController@getAttendeesBySummit",
+            $params,
+            [],
+            [],
+            [],
+            $headers
+        );
+    }
+
+    public function testGetAttendeesFilterFieldNotAllowed(){
+        $this->getAttendeesWithFilter('nope==x');
+        $this->assertResponseStatus(412);
+    }
+
+    public function testGetAttendeesFilterInvalidUtf8Value(){
+        // first_name=@%25DA on the wire
+        $this->getAttendeesWithFilter('first_name=@%DA');
+        $this->assertResponseStatus(412);
+    }
+
     public function testGetAttendeesCSV(){
 
         $params = [

@@ -738,7 +738,9 @@ SQL,
 
             if ($event instanceof SummitEvent) {
                 $byId[$event->getId()] = $event;
-            } else {
+            } elseif ($row !== null && !($row instanceof PresentationType)) {
+                // null and PresentationType are the extra elements the query's own WITH joins
+                // (p, et2) make Doctrine return; any other element is unexpected.
                 Log::warning('DoctrineSummitEventRepository::getAllByPage unexpected hydration row', [
                     'type' => is_object($row) ? get_class($row) : gettype($row),
                     'keys' => is_array($row) ? array_keys($row) : null,

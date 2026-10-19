@@ -152,14 +152,14 @@ class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTestCase
         return $em->find(\models\summit\SummitMetric::class, $metric_id)->getLocation();
     }
 
-    public function testEnterTruncatesLongLocation(){
+    public function testEnterKeepsLongLocation(){
         $response = $this->enterMetric(['location' => str_repeat('l', 300)]);
         $this->assertResponseStatus(201);
         $metric = json_decode($response->getContent());
-        $this->assertEquals(str_repeat('l', 255), $this->getStoredLocation($metric->id));
+        $this->assertEquals(str_repeat('l', 300), $this->getStoredLocation($metric->id));
     }
 
-    public function testEnterKeepsEncodedLocationThatDecodesUnderLimit(){
+    public function testEnterStoresDecodedLocation(){
         $location = str_repeat('é', 200);
         $encoded = rawurlencode($location);
         $this->assertGreaterThan(255, strlen($encoded));

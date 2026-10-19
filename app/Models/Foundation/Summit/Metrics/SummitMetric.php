@@ -30,7 +30,7 @@ class SummitMetric extends SilverstripeBaseModel
     use SummitOwned;
 
     /**
-     * max length (in characters) of the Ip, Origin, Location and Browser VARCHAR columns
+     * max length (in characters) of the Ip, Origin and Browser VARCHAR columns
      */
     const MaxStringColumnLength = 255;
 
@@ -67,7 +67,7 @@ class SummitMetric extends SilverstripeBaseModel
     /**
      * @var string|null
      */
-    #[ORM\Column(name: 'Location', type: 'string', length: self::MaxStringColumnLength)]
+    #[ORM\Column(name: 'Location', type: 'string')]
     protected $location;
 
     /**
@@ -266,7 +266,7 @@ class SummitMetric extends SilverstripeBaseModel
      */
     public function setLocation(?string $location): void
     {
-        $this->location = self::truncate($location);
+        $this->location = $location;
     }
 
 }

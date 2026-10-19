@@ -145,50 +145,51 @@ class OAuth2SummitMetricsApiControllerTest extends ProtectedApiTestCase
         $this->assertEquals($ua, $metric->browser);
     }
 
-    public function testEnterLocationTooLong(){
-        $this->enterMetric(['location' => str_repeat('l', 256)]);
-        $this->assertResponseStatus(412);
+    private function getStoredLocation(int $metric_id): ?string
+    {
+        $em = \LaravelDoctrine\ORM\Facades\Registry::getManager(\models\utils\SilverstripeBaseModel::EntityManager);
+        $em->clear();
+        return $em->find(\models\summit\SummitMetric::class, $metric_id)->getLocation();
     }
 
-    public function testEnterLocationMaxLength(){
-        $this->enterMetric(['location' => str_repeat('l', 255)]);
+    public function testEnterTruncatesLongLocation(){
+        $response = $this->enterMetric(['location' => str_repeat('l', 300)]);
         $this->assertResponseStatus(201);
+        $metric = json_decode($response->getContent());
+        $this->assertEquals(str_repeat('l', 255), $this->getStoredLocation($metric->id));
     }
 
-    public function testLeaveLocationLength(){
+    public function testEnterKeepsEncodedLocationThatDecodesUnderLimit(){
+        $location = str_repeat('é', 200);
+        $encoded = rawurlencode($location);
+        $this->assertGreaterThan(255, strlen($encoded));
+
+        $response = $this->enterMetric(['location' => $encoded]);
+        $this->assertResponseStatus(201);
+        $metric = json_decode($response->getContent());
+        $this->assertEquals($location, $this->getStoredLocation($metric->id));
+    }
+
+    public function testLeaveLongLocationIsAccepted(){
         $this->enterMetric();
         $this->assertResponseStatus(201);
 
-        $params = [
-            'id' => self::$summit->getId(),
-        ];
-
-        $headers = [
-            "HTTP_Authorization"  => " Bearer " . $this->access_token,
-            "CONTENT_TYPE"        => "application/json",
-        ];
-
-        $leave = function (string $location) use ($params, $headers) {
-            return $this->action(
-                "POST",
-                "OAuth2SummitMetricsApiController@leave",
-                $params,
-                [],
-                [],
-                [],
-                $headers,
-                json_encode([
-                    'type' => \models\summit\ISummitMetricType::General,
-                    'location' => $location,
-                ])
-            );
-        };
-
-        // the pending metric is kept, so the 412 can only come from the location validation
-        $leave(str_repeat('l', 256));
-        $this->assertResponseStatus(412);
-
-        $leave(str_repeat('l', 255));
+        $this->action(
+            "POST",
+            "OAuth2SummitMetricsApiController@leave",
+            ['id' => self::$summit->getId()],
+            [],
+            [],
+            [],
+            [
+                "HTTP_Authorization"  => " Bearer " . $this->access_token,
+                "CONTENT_TYPE"        => "application/json",
+            ],
+            json_encode([
+                'type' => \models\summit\ISummitMetricType::General,
+                'location' => str_repeat('l', 300),
+            ])
+        );
         $this->assertResponseStatus(201);
     }
 

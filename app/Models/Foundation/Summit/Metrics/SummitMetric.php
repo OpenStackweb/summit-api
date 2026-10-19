@@ -67,7 +67,7 @@ class SummitMetric extends SilverstripeBaseModel
     /**
      * @var string|null
      */
-    #[ORM\Column(name: 'Location', type: 'string')]
+    #[ORM\Column(name: 'Location', type: 'string', length: self::MaxStringColumnLength)]
     protected $location;
 
     /**
@@ -266,7 +266,7 @@ class SummitMetric extends SilverstripeBaseModel
      */
     public function setLocation(?string $location): void
     {
-        $this->location = $location;
+        $this->location = self::truncate($location);
     }
 
 }

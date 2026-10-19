@@ -35,7 +35,7 @@ class SummitMetric
     properties: [
         new OA\Property(property: "type", type: "string", enum: ["GENERAL", "LOBBY", "EVENT", "SPONSOR", "POSTER", "POSTERS", "ROOM"]),
         new OA\Property(property: "source_id", type: "integer", description: "ID of the source (event, sponsor, room, etc.)"),
-        new OA\Property(property: "location", type: "string", maxLength: 255, description: "Location information")
+        new OA\Property(property: "location", type: "string", description: "Location information (truncated to 255 characters server-side)")
     ]
 )]
 class SummitMetricEnterRequest
@@ -49,7 +49,7 @@ class SummitMetricEnterRequest
     properties: [
         new OA\Property(property: "type", type: "string", enum: ["GENERAL", "LOBBY", "EVENT", "SPONSOR", "POSTER", "POSTERS", "ROOM"]),
         new OA\Property(property: "source_id", type: "integer", description: "ID of the source (event, sponsor, room, etc.)"),
-        new OA\Property(property: "location", type: "string", maxLength: 255, description: "Location information")
+        new OA\Property(property: "location", type: "string", description: "Location information (truncated to 255 characters server-side)")
     ]
 )]
 class SummitMetricLeaveRequest

@@ -121,7 +121,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
                 [
                     'type' => 'required|string|in:' . implode(",", ISummitMetricType::ValidTypes),
                     'source_id' => 'sometimes|integer',
-                    'location' => 'sometimes|string|max:255',
+                    'location' => 'sometimes|string',
                 ]
             );
 
@@ -191,7 +191,7 @@ final class OAuth2SummitMetricsApiController extends OAuth2ProtectedController
                 [
                     'type' => 'required|string|in:' . implode(",", ISummitMetricType::ValidTypes),
                     'source_id' => 'sometimes|integer',
-                    'location' => 'sometimes|string|max:255',
+                    'location' => 'sometimes|string',
                 ]
             );
             $metric = $this->service->leave($summit, $current_member, $payload);

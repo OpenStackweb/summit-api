@@ -94,4 +94,12 @@ final class FilterParserEncodingTest extends TestCase
             $this->assertNotFalse(json_encode(['message' => $ex->getMessage()]));
         }
     }
+
+    public function testInvalidUtf8OutsideMainOperatorWrapperIsRejected(): void
+    {
+        // the and(...) wrapper regex is not end-anchored, so the trailing byte is not part of
+        // the expression that filterExpresion validates
+        $this->expectException(FilterParserException::class);
+        FilterParser::parse("and(title==ok)\xDA", self::RULES);
+    }
 }

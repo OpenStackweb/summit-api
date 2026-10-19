@@ -47,6 +47,10 @@ final class FilterParser
 
         foreach ($filters as $filter) // parse Main Filters ( 1st grade )
         {
+            // the and(...)/or(...) regex below is not end-anchored, so bytes after the closing
+            // parenthesis would be dropped silently instead of reaching filterExpresion
+            if (!mb_check_encoding($filter, 'UTF-8'))
+                throw new FilterParserException("Invalid filter format: the filter is not valid UTF-8.");
 
             // check main operator
             $main_op_matches = null;

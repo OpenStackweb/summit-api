@@ -82038,7 +82038,7 @@
                         "type": "integer"
                     },
                     "location": {
-                        "description": "Location information (truncated to 255 characters server-side)",
+                        "description": "Location information",
                         "type": "string"
                     }
                 },
@@ -82066,7 +82066,7 @@
                         "type": "integer"
                     },
                     "location": {
-                        "description": "Location information (truncated to 255 characters server-side)",
+                        "description": "Location information",
                         "type": "string"
                     }
                 },

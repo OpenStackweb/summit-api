@@ -111,6 +111,29 @@ class OAuth2BearerEndpointCacheTest extends TestCase
         $this->addToAssertionCount(Mockery::getContainer()->mockery_getExpectationCount());
     }
 
+    public function testMissingVersionIsPersistedAndNotReused(): void
+    {
+        $repo = Mockery::mock(IApiEndpointRepository::class);
+        $repo->shouldReceive('getApiEndpointByUrlAndMethod')
+            ->twice()
+            ->andReturn($this->endpoint(true, ['scope-a']));
+
+        $this->assertNull(Cache::get(OAuth2BearerAccessTokenRequestValidator::EndpointCacheVersionKey));
+        $this->lookup($repo);
+        $version = Cache::get(OAuth2BearerAccessTokenRequestValidator::EndpointCacheVersionKey);
+        $this->assertNotNull($version);
+        $this->assertNotSame('0', $version);
+
+        // the version is evicted: entries cached under it must not be served again
+        Cache::forget(OAuth2BearerAccessTokenRequestValidator::EndpointCacheVersionKey);
+        $this->lookup($repo);
+        $this->assertNotSame(
+            $version,
+            Cache::get(OAuth2BearerAccessTokenRequestValidator::EndpointCacheVersionKey)
+        );
+        $this->addToAssertionCount(Mockery::getContainer()->mockery_getExpectationCount());
+    }
+
     public function testFlushForcesNewLookup(): void
     {
         $repo = Mockery::mock(IApiEndpointRepository::class);

@@ -108,10 +108,18 @@ class OAuth2BearerAccessTokenRequestValidator
             return $loader();
         }
 
+        // a missing version (cache cleared or evicted) gets a fresh one, so entries cached under
+        // a previous version are never read again
+        $version = Cache::get(self::EndpointCacheVersionKey);
+        if (is_null($version)) {
+            Cache::add(self::EndpointCacheVersionKey, uniqid('', true));
+            $version = Cache::get(self::EndpointCacheVersionKey);
+        }
+
         $key = sprintf
         (
             'api_endpoint_%s_%s_%s',
-            Cache::get(self::EndpointCacheVersionKey, '0'),
+            $version,
             $route,
             $method
         );

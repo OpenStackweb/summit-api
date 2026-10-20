@@ -22,6 +22,7 @@ use App\Security\SummitScopes;
 use App\Security\OrganizationScopes;
 use App\Security\MemberScopes;
 use App\Models\Foundation\Main\IGroup;
+use App\Http\Middleware\OAuth2BearerAccessTokenRequestValidator;
 use App\Security\CompanyScopes;
 use App\Security\SponsoredProjectScope;
 
@@ -50,6 +51,8 @@ class ApiEndpointsSeeder extends Seeder
         $this->seedSummitMediaFileTypeEndpoints();
         $this->seedElectionsEndpoints();
         $this->seedRSVPInvitationsEndpoints();
+        // endpoints/scopes changed, drop the validator lookups cached by route and method
+        OAuth2BearerAccessTokenRequestValidator::flushEndpointCache();
     }
 
     private function seedAttendeeBadgesEndpoints()

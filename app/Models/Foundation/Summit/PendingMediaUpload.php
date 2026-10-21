@@ -31,6 +31,14 @@ class PendingMediaUpload extends SilverstripeBaseModel
     const STATUS_PUBLIC_STORAGE_UPLOADED = 'PublicStorageUploaded';
     const STATUS_PRIVATE_STORAGE_UPLOADED = 'PrivateStorageUploaded';
 
+    // statuses whose file is not fully written to storage yet
+    const IN_FLIGHT_STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_PROCESSING,
+        self::STATUS_PUBLIC_STORAGE_UPLOADED,
+        self::STATUS_PRIVATE_STORAGE_UPLOADED,
+    ];
+
     /**
      * @var int
      */

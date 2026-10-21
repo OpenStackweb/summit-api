@@ -15,9 +15,13 @@
 use App\Jobs\Emails\SummitAttendeeAllTicketsEditionEmail;
 use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Models\Foundation\Main\IGroup;
+use App\Services\Model\AttendeeService;
 use App\Services\Model\IAttendeeService;
+use Closure;
+use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
+use libs\utils\ITransactionService;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
@@ -68,15 +72,31 @@ final class AttendeeServiceTest extends TestCase
     }
 
     public function testResynchAttendeesStatusBySummitDoesNotReleaseAnotherRunsLock() {
-        $service = App::make(IAttendeeService::class);
         $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", self::$summit->getId());
 
-        // a lock held by a different owner (a newer run, after this one's TTL expired) must survive
+        // while the run is in progress (first transaction, lock already acquired), simulate its TTL
+        // expiring and a newer run taking the lock; the release() in the finally of the first run
+        // must leave the newer run's lock in place
         $other = Cache::lock($key, 60, 'other-run');
-        $this->assertTrue($other->get());
+        $tx_service = new class(App::make(ITransactionService::class), $key, $other) implements ITransactionService {
+            public bool $taken = false;
+
+            public function __construct(private ITransactionService $inner, private string $key, private Lock $other) {}
+
+            public function transaction(Closure $callback, int $isolationLevel = 2)
+            {
+                if (!$this->taken) {
+                    Cache::lock($this->key)->forceRelease();
+                    $this->taken = $this->other->get();
+                }
+                return $this->inner->transaction($callback, $isolationLevel);
+            }
+        };
+        $service = App::make(AttendeeService::class, ['tx_service' => $tx_service]);
 
         try {
             $service->resynchAttendeesStatusBySummit(self::$summit->getId());
+            $this->assertTrue($tx_service->taken);
             $this->assertTrue($other->isOwnedByCurrentProcess());
         } finally {
             $other->release();

@@ -50,6 +50,12 @@ trait SummitRegistrationStats
         return $defaultSSTimeZone->getOffset($now) / 3600;
     }
 
+    /**
+     * Known limitation: a single fixed offset is used for the whole summit, the one in effect on its begin date.
+     * Tickets bought under a different offset (i.e. across a DST change) can fall in the neighbouring
+     * hour/day bucket of the purchased tickets histogram. Kept as is on purpose, see ClickUp task 86bcjg0u6.
+     * @return float|int
+     */
     private function getTimeZoneOffset(){
         try {
             $tz = $this->getTimeZone();
@@ -105,8 +111,7 @@ trait SummitRegistrationStats
         try {
             $sql = <<<SQL
           select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-WHERE SummitOrder.SummitID = :summit_id AND 
+WHERE SummitAttendeeTicket.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 1 AND 
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
@@ -134,8 +139,7 @@ SQL;
         try {
             $sql = <<<SQL
           select COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-WHERE SummitOrder.SummitID = :summit_id AND 
+WHERE SummitAttendeeTicket.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 0 AND 
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
@@ -163,9 +167,8 @@ SQL;
         try {
             $sql = <<<SQL
 SELECT COUNT(SummitAttendeeTicket.ID) FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
-WHERE SummitOrder.SummitID = :summit_id AND 
+WHERE SummitAttendeeTicket.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 1 AND 
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
@@ -220,8 +223,7 @@ SQL;
         try {
             $sql = <<<SQL
 SELECT SUM(SummitAttendeeTicket.RawCost - SummitAttendeeTicket.Discount)  FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-WHERE SummitOrder.SummitID = :summit_id AND 
+WHERE SummitAttendeeTicket.SummitID = :summit_id AND 
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
 
@@ -252,10 +254,9 @@ SQL;
       SELECT SUM(SummitRefundRequest.RefundedAmount) FROM `SummitRefundRequest`
 INNER JOIN SummitAttendeeTicketRefundRequest on SummitAttendeeTicketRefundRequest.ID = SummitRefundRequest.ID
 INNER JOIN SummitAttendeeTicket on SummitAttendeeTicket.ID = SummitAttendeeTicketRefundRequest.TicketID
-INNER JOIN SummitOrder on SummitOrder.ID = SummitAttendeeTicket.OrderID
 WHERE
       SummitRefundRequest.Status='Approved' AND 
-      SummitOrder.SummitID = :summit_id
+      SummitAttendeeTicket.SummitID = :summit_id
 SQL;
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitRefundRequest", "Created", $startDate, $endDate);
 
@@ -280,9 +281,8 @@ SQL;
         try {
             $sql = <<<SQL
 select SummitTicketType.Name AS type, COUNT(SummitAttendeeTicket.ID) as qty FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
-WHERE SummitOrder.SummitID = :summit_id AND 
+WHERE SummitAttendeeTicket.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 1 AND 
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
@@ -309,7 +309,6 @@ SQL;
         try {
             $sql = <<<SQL
 SELECT SummitTicketType.Name AS type, COUNT(SummitAttendeeTicket.ID) as qty FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
@@ -317,7 +316,7 @@ INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeType
 INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitBadgeTypeID = SummitBadgeType.ID
 INNER JOIN SummitAccessLevelType ON SummitAccessLevelType.ID = SummitBadgeType_AccessLevels.SummitAccessLevelTypeID
 WHERE
-      SummitOrder.SummitID = :summit_id AND
+      SummitAttendeeTicket.SummitID = :summit_id AND
       SummitAttendeeTicket.IsActive = 1 AND
       SummitAttendeeTicket.Status = 'Paid' AND
       SummitAttendee.SummitHallCheckedIn = 1 AND
@@ -348,9 +347,8 @@ SQL;
 SELECT SummitBadgeType.Name as type, COUNT(DISTINCT(SummitAttendeeBadge.ID)) as qty FROM SummitAttendeeBadge
 INNER JOIN SummitBadgeType ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
-WHERE SummitOrder.SummitID = :summit_id AND 
+WHERE SummitAttendeeTicket.SummitID = :summit_id AND 
       SummitAttendeeTicket.IsActive = 1 AND 
       SummitAttendeeTicket.Status = 'Paid'
 SQL;
@@ -379,12 +377,11 @@ SQL;
 SELECT SummitBadgeType.Name as type, COUNT(DISTINCT(SummitAttendeeBadge.ID)) as qty FROM SummitAttendeeBadge
 INNER JOIN SummitBadgeType ON SummitAttendeeBadge.BadgeTypeID = SummitBadgeType.ID
 INNER JOIN SummitAttendeeTicket ON SummitAttendeeTicket.ID = SummitAttendeeBadge.TicketID
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitTicketType ON SummitAttendeeTicket.TicketTypeID = SummitTicketType.ID
 INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 INNER JOIN SummitBadgeType_AccessLevels ON SummitBadgeType_AccessLevels.SummitBadgeTypeID = SummitBadgeType.ID
 INNER JOIN SummitAccessLevelType ON SummitAccessLevelType.ID = SummitBadgeType_AccessLevels.SummitAccessLevelTypeID
-WHERE SummitOrder.SummitID = :summit_id AND
+WHERE SummitAttendeeTicket.SummitID = :summit_id AND
       SummitAttendeeTicket.IsActive = 1 AND
       SummitAttendeeTicket.Status = 'Paid' AND
       SummitAttendee.SummitHallCheckedIn = 1 AND
@@ -608,7 +605,6 @@ SQL;
         try {
             $sql = <<<SQL
 SELECT  SummitBadgeFeatureType.Name as type, COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
 INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
 LEFT JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitBadgeType.ID
@@ -618,7 +614,7 @@ OR SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTy
 WHERE
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid' AND
-SummitOrder.SummitID = :summit_id
+SummitAttendeeTicket.SummitID = :summit_id
 SQL;
 
             $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
@@ -644,7 +640,6 @@ SQL;
         try {
             $sql = <<<SQL
 SELECT  SummitBadgeFeatureType.Name as type, COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
 INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
 LEFT JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitBadgeType.ID
@@ -655,7 +650,7 @@ INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
 WHERE
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid' AND
-SummitOrder.SummitID = :summit_id AND
+SummitAttendeeTicket.SummitID = :summit_id AND
 SummitAttendee.SummitHallCheckedIn = 1
 SQL;
 
@@ -806,9 +801,8 @@ SQL;
 SELECT COUNT(SummitAttendeeTicket.ID) as qty, 
        DATE_FORMAT(CONVERT_TZ(SummitAttendeeTicket.TicketBoughtDate,'+00:00','{$offset}'), '{$date_format}') AS label 
 FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 WHERE
-SummitOrder.SummitID = :summit_id AND
+SummitAttendeeTicket.SummitID = :summit_id AND
 SummitAttendeeTicket.IsActive = 1 AND 
 SummitAttendeeTicket.Status = 'Paid'
 SQL;
@@ -833,22 +827,15 @@ SQL;
             $sql .= " GROUP BY DATE_FORMAT(CONVERT_TZ(SummitAttendeeTicket.TicketBoughtDate,'+00:00','{$offset}'), '{$date_format}')";
             $sql .= " ORDER BY SummitAttendeeTicket.TicketBoughtDate ASC";
 
-            $count_sql = <<<SQL
-SELECT COUNT(*) FROM ({$sql}) T1
-SQL;
-            $stmt = $this->prepareRawSQL($count_sql, ['summit_id' => $this->id]);
-            $res = $stmt->executeQuery();
-            $res = $res->fetchFirstColumn();
-
-            $total = count($res) > 0 ? intval($res[0]) : 0;
-
-            $sql .= " LIMIT {$pagingInfo->getPerPage()} OFFSET {$pagingInfo->getOffset()} ";
             Log::debug(sprintf("Summit::getTicketsPurchasedGroupedBy sql %s", $sql));
 
+            // the histogram is computed once; the total is the number of buckets and the page is sliced here
             $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
             $res = $stmt->executeQuery();
-            $res = $res->fetchAllAssociative();
-            $res = count($res) > 0 ? $res : [];
+            $buckets = $res->fetchAllAssociative();
+
+            $total = count($buckets);
+            $res = array_slice($buckets, $pagingInfo->getOffset(), $pagingInfo->getPerPage());
 
             return new PagingResponse
             (

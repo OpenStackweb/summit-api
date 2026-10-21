@@ -24,6 +24,8 @@ use Doctrine\DBAL\TransactionIsolationLevel;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -57,6 +59,11 @@ use utils\PagingInfo;
  */
 final class AttendeeService extends AbstractService implements IAttendeeService
 {
+    /**
+     * seconds, same bound as SynchAllAttendeesStatus::$timeout
+     */
+    const ResynchAttendeesStatusLockTTL = 7200;
+
     /**
      * @var ISummitAttendeeRepository
      */
@@ -1129,13 +1136,13 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s", $summit_id));
         $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", $summit_id);
 
-        if (Cache::has($key)) {
+        // atomic acquire; the TTL lets a killed run (no finally) release the lock by itself
+        if (!Cache::add($key, $key, self::ResynchAttendeesStatusLockTTL)) {
             Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s already running", $summit_id));
             return;
         }
 
         try {
-            Cache::add($key, $key);
             $summit = $this->summit_repository->getById($summit_id);
             if (!$summit instanceof Summit)
                 throw new EntityNotFoundException(sprintf("Summit %s not found", $summit_id));
@@ -1179,6 +1186,23 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     }
                 }
                 ++$current_page;
+
+                // release the identity map between pages; the manager is fetched from the registry on
+                // every page because DoctrineTransactionService replaces it after a failed transaction
+                $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+                if ($em->isOpen())
+                    $em->clear();
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "AttendeeService::resynchAttendeesStatusBySummit summit id %s processed %s attendees so far, memory usage %s bytes",
+                        $summit_id,
+                        $count,
+                        memory_get_usage(true)
+                    )
+                );
             } while (true);
         } finally {
             Cache::forget($key);

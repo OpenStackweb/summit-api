@@ -17,6 +17,7 @@ use App\Jobs\Emails\SummitAttendeeRegistrationIncompleteReminderEmail;
 use App\Models\Foundation\Main\IGroup;
 use App\Services\Model\IAttendeeService;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use models\summit\Summit;
 use models\summit\SummitAttendeeBadge;
@@ -52,6 +53,29 @@ final class AttendeeServiceTest extends TestCase
         $repo   =  EntityManager::getRepository(\models\summit\Summit::class);
         $summit = $repo->getById(24);
         $service->updateRedeemedPromoCodes($summit);
+    }
+
+    public function testResynchAttendeesStatusBySummitReleasesLock() {
+        $service = App::make(IAttendeeService::class);
+        $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", self::$summit->getId());
+
+        $service->resynchAttendeesStatusBySummit(self::$summit->getId());
+
+        $this->assertFalse(Cache::has($key));
+    }
+
+    public function testResynchAttendeesStatusBySummitSkipsWhenLocked() {
+        $service = App::make(IAttendeeService::class);
+        $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", self::$summit->getId());
+        Cache::add($key, $key);
+
+        try {
+            $service->resynchAttendeesStatusBySummit(self::$summit->getId());
+            // the run that owns the lock must not be released by a skipped one
+            $this->assertTrue(Cache::has($key));
+        } finally {
+            Cache::forget($key);
+        }
     }
 
     public function testSendAllAttendeeTickets() {

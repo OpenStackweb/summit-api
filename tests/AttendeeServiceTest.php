@@ -61,20 +61,40 @@ final class AttendeeServiceTest extends TestCase
 
         $service->resynchAttendeesStatusBySummit(self::$summit->getId());
 
-        $this->assertFalse(Cache::has($key));
+        // the lock is free again: a new run can acquire it
+        $lock = Cache::lock($key, 60);
+        $this->assertTrue($lock->get());
+        $lock->release();
+    }
+
+    public function testResynchAttendeesStatusBySummitDoesNotReleaseAnotherRunsLock() {
+        $service = App::make(IAttendeeService::class);
+        $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", self::$summit->getId());
+
+        // a lock held by a different owner (a newer run, after this one's TTL expired) must survive
+        $other = Cache::lock($key, 60, 'other-run');
+        $this->assertTrue($other->get());
+
+        try {
+            $service->resynchAttendeesStatusBySummit(self::$summit->getId());
+            $this->assertTrue($other->isOwnedByCurrentProcess());
+        } finally {
+            $other->release();
+        }
     }
 
     public function testResynchAttendeesStatusBySummitSkipsWhenLocked() {
         $service = App::make(IAttendeeService::class);
         $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", self::$summit->getId());
-        Cache::add($key, $key);
+        $lock = Cache::lock($key, 60);
+        $this->assertTrue($lock->get());
 
         try {
             $service->resynchAttendeesStatusBySummit(self::$summit->getId());
             // the run that owns the lock must not be released by a skipped one
-            $this->assertTrue(Cache::has($key));
+            $this->assertTrue($lock->isOwnedByCurrentProcess());
         } finally {
-            Cache::forget($key);
+            $lock->release();
         }
     }
 

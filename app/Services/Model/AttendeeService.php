@@ -1136,8 +1136,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s", $summit_id));
         $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", $summit_id);
 
-        // atomic acquire; the TTL lets a killed run (no finally) release the lock by itself
-        if (!Cache::add($key, $key, self::ResynchAttendeesStatusLockTTL)) {
+        // owner-aware lock: the TTL lets a killed run (no finally) release it by itself, and release()
+        // in the finally only frees it if this run still owns it (a longer run can outlive the TTL)
+        $lock = Cache::lock($key, self::ResynchAttendeesStatusLockTTL);
+        if (!$lock->get()) {
             Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s already running", $summit_id));
             return;
         }
@@ -1205,7 +1207,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                 );
             } while (true);
         } finally {
-            Cache::forget($key);
+            $lock->release();
         }
 
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s processed %s attendees", $summit_id, $count));

@@ -50,9 +50,9 @@ services:
       - summit-api-local-net
     env_file: ./.env
   db_config:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: summit-api-config-db-local
-    command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION  --sql-require-primary-key=ON
+    command: --mysql-native-password=ON --sql_mode=NO_ENGINE_SUBSTITUTION  --sql-require-primary-key=ON
     restart: unless-stopped
     ports:
       - "32780:3306"
@@ -73,9 +73,9 @@ services:
       - summit-api-local-net
     env_file: ./.env
   db_model:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: summit-api-model-db-local
-    command: --default-authentication-plugin=mysql_native_password --sql_mode=NO_ENGINE_SUBSTITUTION --sql-require-primary-key=ON
+    command: --mysql-native-password=ON --sql_mode=NO_ENGINE_SUBSTITUTION --sql-require-primary-key=ON
     restart: unless-stopped
     ports:
       - "32781:3306"

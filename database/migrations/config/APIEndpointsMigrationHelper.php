@@ -30,6 +30,11 @@
  *           $this->addSql($this->insertEndpointAuthzGroup('summits', $endpointName, $groupSlug));
  *       }
  *   }
+ *
+ * Note: the bearer token validator caches the endpoint lookup (cache_api_response.api_endpoint_lifetime).
+ * A deploy running these migrations must flush it (php artisan cache:clear, or
+ * OAuth2BearerAccessTokenRequestValidator::flushEndpointCache()), otherwise new routes
+ * answer 400 until the lifetime expires.
  */
 trait APIEndpointsMigrationHelper
 {

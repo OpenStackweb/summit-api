@@ -14,6 +14,8 @@
 use App\Models\ResourceServer\IAccessTokenService;
 use App\Models\ResourceServer\IApiEndpointRepository;
 use Closure;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Response;
@@ -33,6 +35,7 @@ use URL\Normalizer;
  */
 class OAuth2BearerAccessTokenRequestValidator
 {
+    const EndpointCacheVersionKey = 'api_endpoint_cache_version';
 
     /**
      * @var IResourceServerContext
@@ -68,6 +71,60 @@ class OAuth2BearerAccessTokenRequestValidator
         $this->headers             = $this->getHeaders();
         $this->endpoint_repository = $endpoint_repository;
         $this->token_service       = $token_service;
+    }
+
+    /**
+     * Invalidates every cached endpoint lookup (call it after endpoints or scopes change).
+     */
+    public static function flushEndpointCache(): void
+    {
+        Cache::forever(self::EndpointCacheVersionKey, uniqid());
+    }
+
+    /**
+     * Only what the validator needs from the endpoint, cached per (route, method).
+     * Unknown endpoints are cached as missing.
+     *
+     * @param string $route
+     * @param string $method
+     * @return array{exists: bool, active: bool, scopes: string[]}
+     */
+    private function getEndpointInfo(string $route, string $method): array
+    {
+        $loader = function () use ($route, $method): array {
+            $endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
+            if (is_null($endpoint)) {
+                return ['exists' => false, 'active' => false, 'scopes' => []];
+            }
+            return [
+                'exists' => true,
+                'active' => $endpoint->isActive(),
+                'scopes' => $endpoint->getScopesNames(),
+            ];
+        };
+
+        $lifetime = intval(Config::get('cache_api_response.api_endpoint_lifetime', 3600));
+        if ($lifetime <= 0) {
+            return $loader();
+        }
+
+        // a missing version (cache cleared or evicted) gets a fresh one, so entries cached under
+        // a previous version are never read again
+        $version = Cache::get(self::EndpointCacheVersionKey);
+        if (is_null($version)) {
+            Cache::add(self::EndpointCacheVersionKey, uniqid('', true));
+            $version = Cache::get(self::EndpointCacheVersionKey);
+        }
+
+        $key = sprintf
+        (
+            'api_endpoint_%s_%s_%s',
+            $version,
+            $route,
+            $method
+        );
+
+        return Cache::remember($key, $lifetime, $loader);
     }
 
     /**
@@ -131,10 +188,10 @@ class OAuth2BearerAccessTokenRequestValidator
                 );
             }
 
-            $endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
+            $endpoint = $this->getEndpointInfo($route, $method);
 
             //api endpoint must be registered on db and active
-            if (is_null($endpoint) || !$endpoint->isActive()) {
+            if (!$endpoint['exists'] || !$endpoint['active']) {
                 Log::warning
                 (
                     sprintf('OAuth2BearerAccessTokenRequestValidator::handle API endpoint does not exits! (%s:%s)', $route, $method)
@@ -184,7 +241,7 @@ class OAuth2BearerAccessTokenRequestValidator
             }
             //check scopes
             Log::debug('OAuth2BearerAccessTokenRequestValidator::handle checking token scopes ...');
-            $endpoint_scopes = $endpoint->getScopesNames();
+            $endpoint_scopes = $endpoint['scopes'];
             Log::debug(sprintf("OAuth2BearerAccessTokenRequestValidator::handle endpoint scopes %s", implode(' ',$endpoint_scopes)));
             Log::debug(sprintf("OAuth2BearerAccessTokenRequestValidator::handle token scopes %s", $token_info->getScope()));
             $token_scopes = explode(' ', $token_info->getScope());

@@ -20,4 +20,6 @@ return [
     'get_summits_response_lifetime'         => env('CACHE_API_RESPONSE_GET_SUMMITS_LIFETIME', 600),
     'file_url_lifetime'                     => env('CACHE_API_RESPONSE_FILE_URL_LIFETIME', 3600),
     'event_has_access_lifetime'             => env('CACHE_API_RESPONSE_EVENT_HAS_ACCESS_LIFETIME', 600),
+    // 0 disables the cache of the endpoint lookup done by the bearer token validator
+    'api_endpoint_lifetime'                 => env('CACHE_API_RESPONSE_API_ENDPOINT_LIFETIME', 3600),
 ];

@@ -11,14 +11,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\IMemberService;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use LaravelDoctrine\ORM\Facades\EntityManager;
 use LaravelDoctrine\ORM\Facades\Registry;
 use libs\utils\ITransactionService;
+use Mockery;
 use models\main\Group;
+use models\main\IMemberRepository;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 
@@ -49,6 +53,25 @@ final class MemberServiceTest extends TestCase
 
     /** @var string */
     private $reassigned_email;
+
+    /** @var string */
+    private $new_email;
+
+    /** @var \Mockery\MockInterface */
+    private $external_user_api;
+
+    public function createApplication()
+    {
+        $app = parent::createApplication();
+
+        // mock the IDP user API before any service singleton is resolved
+        $this->external_user_api = Mockery::mock(IExternalUserApi::class)->shouldIgnoreMissing();
+        App::singleton(IExternalUserApi::class, function () {
+            return $this->external_user_api;
+        });
+
+        return $app;
+    }
 
     protected function setUp(): void
     {
@@ -81,7 +104,8 @@ final class MemberServiceTest extends TestCase
 
         // member already provisioned for the new external id, with a different email
         $new_member = new Member();
-        $new_member->setEmail(strtolower("new+{$prefix}@test.com"));
+        $this->new_email = strtolower("new+{$prefix}@test.com");
+        $new_member->setEmail($this->new_email);
         $new_member->setActive(true);
         $new_member->setEmailVerified(true);
         $new_member->setFirstName("New");
@@ -266,6 +290,90 @@ final class MemberServiceTest extends TestCase
         } catch (\Exception $ex) {
             // best-effort
         }
+    }
+
+    /**
+     * Company is stored in a column that must hold any character the IDP sends, such as the
+     * full-width parentheses. Production runs MySQL in strict mode and rejects the write (1366),
+     * CI is non-strict and silently stores "?" in place of the characters latin1 lacks, so the
+     * test asserts the value read back from the database.
+     *
+     * @dataProvider companyOutsideLatin1Provider
+     */
+    public function testRegisterExternalUserByPayloadStoresCompanyOutsideLatin1(string $company): void
+    {
+        $payload               = $this->buildExternalProfilePayload($this->new_external_id, $this->new_email);
+        $payload['company']    = $company;
+        $payload['first_name'] = 'Renamed';
+
+        $tx_service = App::make(ITransactionService::class);
+        $tx_service->transaction(function () use ($payload) {
+            return App::make(IMemberService::class)->registerExternalUserByPayload($payload);
+        });
+
+        $this->em->clear();
+
+        $member = $this->member_repository->findOneBy(['user_external_id' => $this->new_external_id]);
+        $this->assertNotNull($member, "member must still exist");
+        $this->assertEquals($company, $member->getCompany(), "company must be stored as sent by the IDP");
+        $this->assertEquals('Renamed', $member->getFirstName(), "first name must be updated");
+    }
+
+    public static function companyOutsideLatin1Provider(): array
+    {
+        return [
+            'full-width parentheses' => ['（ACME）'],
+            'latin extended'         => ['Łódź Inc'],
+        ];
+    }
+
+    /**
+     * Race: another process created the member of this IDP user between our lookups and our
+     * insert, so both lookups miss (READ COMMITTED takes no gap lock) and the insert collides
+     * with the unique ExternalUserId / Email keys. The sync must retry once and update the
+     * member the other process created, as the login path does.
+     */
+    public function testRegisterExternalUserByIdRetriesWhenMemberWasCreatedConcurrently(): void
+    {
+        $payload               = $this->buildExternalProfilePayload($this->new_external_id, $this->new_email);
+        $payload['first_name'] = 'Raced';
+
+        $this->external_user_api->shouldReceive('getUserById')
+            ->with($this->new_external_id)
+            ->andReturn($payload);
+
+        // double of the member repository: the first lookups by external id and by email miss
+        // (the member is not visible yet), every other call is forwarded to the real repository
+        $real_repository = EntityManager::getRepository(Member::class);
+        $repository      = Mockery::mock(IMemberRepository::class);
+        $repository->shouldReceive('getByExternalIdExclusiveLock')->once()->andReturn(null);
+        $repository->shouldReceive('getByEmail')->once()->andReturn(null);
+        foreach ((new \ReflectionClass(IMemberRepository::class))->getMethods() as $method) {
+            $name = $method->getName();
+            $repository->shouldReceive($name)->andReturnUsing(
+                function (...$args) use ($real_repository, $name) {
+                    return $real_repository->$name(...$args);
+                }
+            );
+        }
+        App::singleton(IMemberRepository::class, function () use ($repository) {
+            return $repository;
+        });
+        // the service singleton may already be resolved with the real repository
+        App::forgetInstance(IMemberService::class);
+
+        try {
+            App::make(IMemberService::class)->registerExternalUserById($this->new_external_id);
+        } catch (UniqueConstraintViolationException $ex) {
+            $this->fail(sprintf("the sync must retry on a concurrent member creation: %s", $ex->getMessage()));
+        }
+
+        $this->em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        $this->member_repository = EntityManager::getRepository(Member::class);
+
+        $members = $this->member_repository->findBy(['user_external_id' => $this->new_external_id]);
+        $this->assertCount(1, $members, "the existing member must be reused, not duplicated");
+        $this->assertEquals('Raced', $members[0]->getFirstName(), "the existing member must be updated");
     }
 
     private function buildExternalProfilePayload(int $external_id, string $email): array

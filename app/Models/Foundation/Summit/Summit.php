@@ -6075,7 +6075,13 @@ SQL;
             $end = $end->setTime(23, 59, 59)->setTimezone(new \DateTimeZone('UTC'))->format("Y-m-d H:i:s");
             foreach ($events as $event) {
                 // UTC "Y-m-d H:i:s" strings, same overlap test the SQL used to run
-                if ($event['StartDate'] <= $end && $event['EndDate'] >= $begin) {
+                // a published event may lack dates, SQL never matched those rows (NULL comparison)
+                if (
+                    $event['StartDate'] !== null &&
+                    $event['EndDate'] !== null &&
+                    $event['StartDate'] <= $end &&
+                    $event['EndDate'] >= $begin
+                ) {
                     $list[] = $day->format('Y-m-d');
                     break;
                 }

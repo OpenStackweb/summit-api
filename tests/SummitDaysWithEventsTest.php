@@ -99,6 +99,22 @@ final class SummitDaysWithEventsTest extends TestCase
         $this->assertSame($expected, $this->legacyDaysWithEvents(self::$summit));
     }
 
+    public function testPublishedEventsWithoutDatesAreIgnored(): void
+    {
+        $summit_id = self::$summit->getId();
+        DB::update("UPDATE SummitEvent SET Published = 0 WHERE SummitID = ?", [$summit_id]);
+        $days = self::$summit->getSummitDays();
+        $end = (clone $days[2])->setTime(2, 0, 0)->setTimezone(new \DateTimeZone('UTC'));
+        $id = DB::selectOne("SELECT ID FROM SummitEvent WHERE SummitID = ? LIMIT 1", [$summit_id])->ID;
+        DB::update(
+            "UPDATE SummitEvent SET Published = 1, StartDate = NULL, EndDate = ? WHERE ID = ?",
+            [$end->format('Y-m-d H:i:s'), $id]
+        );
+
+        $this->assertSame([], $this->legacyDaysWithEvents(self::$summit));
+        $this->assertSame([], $this->daysWithEvents(self::$summit));
+    }
+
     public function testRunsASingleSelectRegardlessOfTheNumberOfDays(): void
     {
         $this->assertGreaterThan(5, count(self::$summit->getSummitDays()));

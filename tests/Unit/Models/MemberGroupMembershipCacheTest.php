@@ -15,6 +15,7 @@
 use App\Models\Foundation\Main\IGroup;
 use Doctrine\DBAL\Logging\SQLLogger;
 use LaravelDoctrine\ORM\Facades\Registry;
+use models\main\Group;
 use models\main\Member;
 use models\utils\SilverstripeBaseModel;
 use Tests\InsertMemberTestData;
@@ -120,6 +121,9 @@ final class MemberGroupMembershipCacheTest extends TestCase
 
     public function testIsOnGroupForAdminShortCircuitsWithoutSecondLookup(): void
     {
+        // setUp cleared the unit of work: re-attach the fixtures before swapping the member's group
+        self::$group = self::$em->find(Group::class, self::$group->getId());
+        self::$member = self::$em->find(Member::class, self::$member->getId());
         self::setMemberDefaultGroup(IGroup::Administrators);
         self::$em->clear();
         $member = $this->loadMember(self::$member->getId());

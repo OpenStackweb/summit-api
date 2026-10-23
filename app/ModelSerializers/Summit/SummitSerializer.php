@@ -198,7 +198,6 @@ class SummitSerializer extends SilverStripeSerializer
         'badge_types',
         'badge_features_types',
         'badge_access_level_types',
-        'dates_with_events',
         'supported_currencies',
     ];
 

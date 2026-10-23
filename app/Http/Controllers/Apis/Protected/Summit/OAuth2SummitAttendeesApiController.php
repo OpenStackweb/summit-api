@@ -312,7 +312,6 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $schedule = [];
             foreach ($attendee->getSchedule() as $attendee_schedule) {
-                if (!$summit->isEventOnSchedule($attendee_schedule->getEvent()->getId())) continue;
                 $schedule[] = SerializerRegistry::getInstance()->getSerializer($attendee_schedule)->serialize();
             }
 

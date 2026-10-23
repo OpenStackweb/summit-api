@@ -6034,10 +6034,11 @@ SQL;
         if ($lifetime <= 0) {
             $with_events = $compute();
         } else {
-            // the key carries the summit dates, so a stale list is never served after they change
+            // the key carries the summit dates and timezone, so a stale list is never served after they change
             $key = sprintf(
-                "summit_%s_dates_with_events_%s_%s",
+                "summit_%s_dates_with_events_%s_%s_%s",
                 $this->id,
+                preg_replace('/[^A-Za-z0-9]/', '_', strval($this->getTimeZoneId())),
                 $this->begin_date->getTimestamp(),
                 $this->end_date->getTimestamp()
             );

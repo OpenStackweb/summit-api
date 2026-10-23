@@ -310,8 +310,14 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             $attendee = CheckAttendeeStrategyFactory::build(CheckAttendeeStrategyFactory::Own, $this->resource_server_context)->check($attendee_id, $summit);
             if (is_null($attendee)) return $this->error404();
 
+            $attendee_schedule_events = $attendee->getSchedule();
+            $this->event_repository->preloadEventRelations
+            (
+                array_map(fn($attendee_schedule) => $attendee_schedule->getEvent(), $attendee_schedule_events)
+            );
+
             $schedule = [];
-            foreach ($attendee->getSchedule() as $attendee_schedule) {
+            foreach ($attendee_schedule_events as $attendee_schedule) {
                 $schedule[] = SerializerRegistry::getInstance()->getSerializer($attendee_schedule)->serialize();
             }
 

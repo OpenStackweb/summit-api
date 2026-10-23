@@ -26,6 +26,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use models\main\IMemberRepository;
 use models\oauth2\IResourceServerContext;
+use models\summit\ISummitEventRepository;
 use models\summit\ISummitRepository;
 use ModelSerializers\SerializerRegistry;
 use services\model\ISummitService;
@@ -61,11 +62,17 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
     private $rsvp_service;
 
     /**
+     * @var ISummitEventRepository
+     */
+    private $event_repository;
+
+    /**
      * OAuth2SummitMembersApiController constructor.
      * @param IMemberRepository $member_repository
      * @param ISummitRepository $summit_repository
      * @param ISummitService $summit_service
      * @param ISummitRSVPService $rsvp_service
+     * @param ISummitEventRepository $event_repository
      * @param IResourceServerContext $resource_server_context
      */
     public function __construct
@@ -74,6 +81,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         ISummitRepository      $summit_repository,
         ISummitService         $summit_service,
         ISummitRSVPService $rsvp_service,
+        ISummitEventRepository $event_repository,
         IResourceServerContext $resource_server_context
     )
     {
@@ -82,6 +90,7 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
         $this->repository = $member_repository;
         $this->summit_service = $summit_service;
         $this->rsvp_service = $rsvp_service;
+        $this->event_repository = $event_repository;
     }
 
     use RequestProcessor;
@@ -317,8 +326,14 @@ final class OAuth2SummitMembersApiController extends OAuth2ProtectedController
             $current_member = $this->resource_server_context->getCurrentUser();
             if (is_null($current_member)) return $this->error403();
 
+            $schedule_events = $current_member->getScheduleBySummit($summit);
+            $this->event_repository->preloadEventRelations
+            (
+                array_map(fn($schedule_event) => $schedule_event->getEvent(), $schedule_events)
+            );
+
             $schedule = [];
-            foreach ($current_member->getScheduleBySummit($summit) as $schedule_event) {
+            foreach ($schedule_events as $schedule_event) {
                 $schedule[] = SerializerRegistry::getInstance()->getSerializer($schedule_event)->serialize
                 (
                     SerializerUtils::getExpand(),

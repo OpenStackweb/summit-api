@@ -286,6 +286,9 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'attendee_id', in: 'path', required: true, description: 'Attendee ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'expand', description: 'Expand relations', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'fields', description: 'Fields to return', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'relations', description: 'Relations to include', in: 'query', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(
@@ -318,7 +321,12 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
 
             $schedule = [];
             foreach ($attendee_schedule_events as $attendee_schedule) {
-                $schedule[] = SerializerRegistry::getInstance()->getSerializer($attendee_schedule)->serialize();
+                $schedule[] = SerializerRegistry::getInstance()->getSerializer($attendee_schedule)->serialize
+                (
+                    SerializerUtils::getExpand(),
+                    SerializerUtils::getFields(),
+                    SerializerUtils::getRelations()
+                );
             }
 
             return $this->ok($schedule);

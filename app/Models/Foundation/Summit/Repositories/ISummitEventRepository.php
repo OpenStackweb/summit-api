@@ -39,6 +39,13 @@ interface ISummitEventRepository extends ISummitEventPublishRepository
     public function getAllByPage(PagingInfo $paging_info, Filter $filter = null, Order $order = null);
 
     /**
+     * Batch-preloads the relations the event serializers read per event, so serializing a list
+     * of events does not lazy-load them once per event.
+     * @param SummitEvent[] $events
+     */
+    public function preloadEventRelations(array $events): void;
+
+    /**
      * @param PagingInfo $paging_info
      * @param Filter|null $filter
      * @param Order|null $order

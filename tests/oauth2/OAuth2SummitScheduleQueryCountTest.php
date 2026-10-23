@@ -125,7 +125,7 @@ class OAuth2SummitScheduleQueryCountTest extends ProtectedApiTestCase
     }
 
     /**
-     * @return array{0: int, 1: array} number of queries the request issued, decoded payload
+     * @return array{0: int, 1: array, 2: string[]} number of queries the request issued, decoded payload, captured SQL statements
      */
     private function requestSchedule(string $action, array $params, ?array $query = null): array
     {

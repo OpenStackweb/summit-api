@@ -11,7 +11,7 @@ $model_db_config = [
     'charset' => env('SS_DB_CHARSET', 'utf8mb4'),
     'collation' => env('SS_DB_COLLATION', 'utf8mb4_unicode_ci'),
     'prefix' => env('SS_DB_PREFIX', ''),
-    'serverVersion' => env('DB_SERVER_VERSION',  '8.0.43')
+    'serverVersion' => env('DB_SERVER_VERSION',  '8.4.11')
 ];
 
 /* see https://laravel.com/docs/11.x/database#read-and-write-connections
@@ -64,7 +64,7 @@ $model_write__db_config = [
     'charset' => env('SS_DB_CHARSET', 'utf8mb4'),
     'collation' => env('SS_DB_COLLATION', 'utf8mb4_unicode_ci'),
     'prefix' => env('SS_DB_PREFIX', ''),
-    'serverVersion' => env('DB_SERVER_VERSION',  '8.0.43')
+    'serverVersion' => env('DB_SERVER_VERSION',  '8.4.11')
 ];
 
 if(env('SS_DB_WRITE_HOST', null)) {
@@ -132,7 +132,7 @@ return [
                 'charset' => env('DB_CHARSET', 'utf8'),
                 'collation' => env('DB_COLLATION', 'utf8_unicode_ci'),
                 'prefix' => env('DB_PREFIX', ''),
-                'serverVersion' => env('DB_SERVER_VERSION',  '8.0.43')
+                'serverVersion' => env('DB_SERVER_VERSION',  '8.4.11')
             ],
             !empty(env('DB_MYSQL_ATTR_SSL_CA', '')) ?
                 [

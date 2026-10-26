@@ -731,7 +731,7 @@ SQL;
             }
             // group by
             $sql .= " GROUP BY DATE_FORMAT(CONVERT_TZ(SummitAttendee.SummitHallCheckedInDate,'+00:00','{$offset}'), '{$date_format}')";
-            $sql .= " ORDER BY SummitAttendee.SummitHallCheckedInDate ASC";
+            $sql .= " ORDER BY MIN(SummitAttendee.SummitHallCheckedInDate) ASC";
 
             $count_sql = <<<SQL
 SELECT COUNT(*) FROM ({$sql}) T1
@@ -831,7 +831,7 @@ SQL;
             }
             // group by
             $sql .= " GROUP BY DATE_FORMAT(CONVERT_TZ(SummitAttendeeTicket.TicketBoughtDate,'+00:00','{$offset}'), '{$date_format}')";
-            $sql .= " ORDER BY SummitAttendeeTicket.TicketBoughtDate ASC";
+            $sql .= " ORDER BY MIN(SummitAttendeeTicket.TicketBoughtDate) ASC";
 
             $count_sql = <<<SQL
 SELECT COUNT(*) FROM ({$sql}) T1

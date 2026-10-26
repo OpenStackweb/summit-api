@@ -599,77 +599,70 @@ SQL;
         return 0;
     }
     /**
+     * Counts tickets per badge feature type, including the features a badge inherits from its badge type
+     * (same semantics as SummitAttendeeBadge::getAllFeatures).
+     * @param bool $checked_in_only
      * @param DateTime|null $startDate
      * @param DateTime|null $endDate
      * @return array
+     * @throws \Exception
      */
-    public function getActiveTicketsPerBadgeFeatureType(?DateTime $startDate  = null, ?DateTime $endDate = null): array
+    private function getTicketsPerBadgeFeatureType(bool $checked_in_only, ?DateTime $startDate = null, ?DateTime $endDate = null): array
     {
-        try {
+        $checkin_join = $checked_in_only ? 'INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID' : '';
+        $checkin_filter = $checked_in_only ? ' AND SummitAttendee.SummitHallCheckedIn = 1' : '';
+
+        // one branch per level: the date filter is string concatenation on the WHERE clause,
+        // so it has to be applied to each branch and not to the combined query
+        $branch = function (string $feature_join) use ($checkin_join, $checkin_filter, $startDate, $endDate): string {
             $sql = <<<SQL
-SELECT  SummitBadgeFeatureType.Name as type, COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty FROM SummitAttendeeTicket
+SELECT SummitBadgeFeatureType.Name AS type, SummitAttendeeTicket.ID AS ticket_id FROM SummitAttendeeTicket
 INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
 INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
-INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
-LEFT JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitBadgeType.ID
-LEFT JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitAttendeeBadgeID = SummitAttendeeBadge.ID
-INNER JOIN SummitBadgeFeatureType ON SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
-OR SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
+{$feature_join}
+{$checkin_join}
 WHERE
 SummitAttendeeTicket.IsActive = 1 AND
 SummitAttendeeTicket.Status = 'Paid' AND
-SummitOrder.SummitID = :summit_id
+SummitOrder.SummitID = :summit_id{$checkin_filter}
 SQL;
+            return self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
+        };
 
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
-            $sql .= ' GROUP BY SummitBadgeFeatureType.Name';
-            $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
-            $res = $stmt->executeQuery();
-            $res = $res->fetchAllAssociative();
-            $res = count($res) > 0 ? $res : [];
-            return $res;
-        } catch (\Exception $ex) {
+        $badge_level = $branch(<<<SQL
+INNER JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitAttendeeBadgeID = SummitAttendeeBadge.ID
+INNER JOIN SummitBadgeFeatureType ON SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
+SQL);
+        $type_level = $branch(<<<SQL
+INNER JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitAttendeeBadge.BadgeTypeID
+INNER JOIN SummitBadgeFeatureType ON SummitBadgeFeatureType.ID = SummitBadgeType_BadgeFeatures.SummitBadgeFeatureTypeID
+SQL);
 
-        }
-        return [];
+        $sql = "SELECT features.type AS type, COUNT(DISTINCT features.ticket_id) AS qty FROM ({$badge_level} UNION ALL {$type_level}) AS features GROUP BY features.type";
+        $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
+        return $stmt->executeQuery()->fetchAllAssociative();
     }
 
     /**
      * @param DateTime|null $startDate
      * @param DateTime|null $endDate
      * @return array
+     * @throws \Exception
+     */
+    public function getActiveTicketsPerBadgeFeatureType(?DateTime $startDate  = null, ?DateTime $endDate = null): array
+    {
+        return $this->getTicketsPerBadgeFeatureType(false, $startDate, $endDate);
+    }
+
+    /**
+     * @param DateTime|null $startDate
+     * @param DateTime|null $endDate
+     * @return array
+     * @throws \Exception
      */
     public function getAttendeesCheckinPerBadgeFeatureType(?DateTime $startDate  = null, ?DateTime $endDate = null): array
     {
-        try {
-            $sql = <<<SQL
-SELECT  SummitBadgeFeatureType.Name as type, COUNT(DISTINCT(SummitAttendeeTicket.ID)) as qty FROM SummitAttendeeTicket
-INNER JOIN SummitOrder ON SummitOrder.ID = SummitAttendeeTicket.OrderID
-INNER JOIN SummitAttendeeBadge ON SummitAttendeeBadge.TicketID = SummitAttendeeTicket.ID
-INNER JOIN SummitBadgeType ON SummitBadgeType.ID = SummitAttendeeBadge.BadgeTypeID
-LEFT JOIN SummitBadgeType_BadgeFeatures ON SummitBadgeType_BadgeFeatures.SummitBadgeTypeID = SummitBadgeType.ID
-LEFT JOIN SummitAttendeeBadge_Features ON SummitAttendeeBadge_Features.SummitAttendeeBadgeID = SummitAttendeeBadge.ID
-INNER JOIN SummitBadgeFeatureType ON SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
-OR SummitBadgeFeatureType.ID = SummitAttendeeBadge_Features.SummitBadgeFeatureTypeID
-INNER JOIN SummitAttendee ON SummitAttendee.ID = SummitAttendeeTicket.OwnerID
-WHERE
-SummitAttendeeTicket.IsActive = 1 AND
-SummitAttendeeTicket.Status = 'Paid' AND
-SummitOrder.SummitID = :summit_id AND
-SummitAttendee.SummitHallCheckedIn = 1
-SQL;
-
-            $sql = self::addDatesFilteringWithTimeZone($sql, "SummitAttendeeTicket", "Created", $startDate, $endDate);
-            $sql .= ' GROUP BY SummitBadgeFeatureType.Name';
-            $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
-            $res = $stmt->executeQuery();
-            $res = $res->fetchAllAssociative();
-            $res = count($res) > 0 ? $res : [];
-            return $res;
-        } catch (\Exception $ex) {
-
-        }
-        return [];
+        return $this->getTicketsPerBadgeFeatureType(true, $startDate, $endDate);
     }
 
     /**

@@ -897,14 +897,12 @@ class Member extends SilverstripeBaseModel
     {
         // admin or super admin
         Log::debug(sprintf("Member::isAdmin id %s email %s", $this->id, $this->email));
-        $superAdminGroup = $this->getGroupByCode(IGroup::SuperAdmins);
-        if (!is_null($superAdminGroup)) {
+        if ($this->belongsToGroup(IGroup::SuperAdmins)) {
             Log::debug(sprintf("Member::isAdmin has Super Admin Group On DB"));
             return true;
         }
 
-        $adminGroup = $this->getGroupByCode(IGroup::Administrators);
-        if (!is_null($adminGroup)) {
+        if ($this->belongsToGroup(IGroup::Administrators)) {
             Log::debug(sprintf("Member::isAdmin has Admin Group On DB"));
             return true;
         }
@@ -923,8 +921,7 @@ class Member extends SilverstripeBaseModel
 
     public function isSummitAdmin(): bool
     {
-        $summitAdminGroup = $this->getGroupByCode(IGroup::SummitAdministrators);
-        if (!is_null($summitAdminGroup))
+        if ($this->belongsToGroup(IGroup::SummitAdministrators))
             return true;
         if ($this->isOnExternalGroup(IGroup::SummitAdministrators))
             return true;
@@ -933,8 +930,7 @@ class Member extends SilverstripeBaseModel
 
     public function isRegistrationAdmin(): bool
     {
-        $summitAdminGroup = $this->getGroupByCode(IGroup::SummitRegistrationAdmins);
-        if (!is_null($summitAdminGroup))
+        if ($this->belongsToGroup(IGroup::SummitRegistrationAdmins))
             return true;
         if ($this->isOnExternalGroup(IGroup::SummitRegistrationAdmins))
             return true;
@@ -944,8 +940,7 @@ class Member extends SilverstripeBaseModel
 
     public function isTester(): bool
     {
-        $summitAdminGroup = $this->getGroupByCode(IGroup::Testers);
-        if (!is_null($summitAdminGroup))
+        if ($this->belongsToGroup(IGroup::Testers))
             return true;
         if ($this->isOnExternalGroup(IGroup::Testers))
             return true;
@@ -954,8 +949,7 @@ class Member extends SilverstripeBaseModel
 
     public function isTrackChairAdmin(): bool
     {
-        $summitAdminGroup = $this->getGroupByCode(IGroup::TrackChairsAdmins);
-        if (!is_null($summitAdminGroup))
+        if ($this->belongsToGroup(IGroup::TrackChairsAdmins))
             return true;
         if ($this->isOnExternalGroup(IGroup::TrackChairsAdmins))
             return true;
@@ -1018,8 +1012,7 @@ class Member extends SilverstripeBaseModel
             Log::debug(sprintf("Member::isOnGroup member %s group code %s isAdmin true", $this->id, $code));
             return true;
         }
-        $group = $this->getGroupByCode($code);
-        if (!is_null($group)) {
+        if ($this->belongsToGroup($code)) {
             Log::debug(sprintf("Member::isOnGroup member %s group code %s belongs to group", $this->id, $code));
             return true;
         }
@@ -1036,10 +1029,15 @@ class Member extends SilverstripeBaseModel
      */
     public function getGroupByCode(string $code): ?Group
     {
+        $code = trim($code);
+        // a known negative answer needs no query
+        if (array_key_exists($code, $this->groupMembershipCache) && !$this->groupMembershipCache[$code]) {
+            return null;
+        }
         $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('code', trim($code)));
+        $criteria->where(Criteria::expr()->eq('code', $code));
         $res = $this->groups->matching($criteria)->first();
-        return $res === false ? null : $res;
+        return ($this->groupMembershipCache[$code] = ($res !== false)) ? $res : null;
     }
 
     /**
@@ -1081,10 +1079,10 @@ SQL;
             $res = $res->fetchFirstColumn();
             return $this->groupMembershipCache[$code] = (intval($res[0]) > 0);
         } catch (\Exception $ex) {
-
+            // do not cache the failure: a transient error must not stick as "not a member" for the whole request
+            Log::warning($ex);
         }
-        return $this->groupMembershipCache[$code] = false;
-
+        return false;
     }
 
     /**
@@ -2069,9 +2067,9 @@ SQL;
     {
         if ($this->groups->contains($group)) return;
         $this->groups->add($group);
-        // belongsToGroup() memoizes per instance against the DB; a mutation makes
-        // that memo stale (the fresh row/removal becomes visible after flush).
-        $this->groupMembershipCache = [];
+        // belongsToGroup() reads the DB, so an unflushed membership would be invisible to it
+        // (e.g. TrackChairService adds the group and then checks isOnGroup in the same request).
+        $this->groupMembershipCache[trim($group->getCode())] = true;
     }
 
     public function removeFromGroup(Group $group)
@@ -2079,7 +2077,7 @@ SQL;
         if (!$this->groups->contains($group)) return;
         $this->groups->removeElement($group);
         //$group->removeMember($this);
-        $this->groupMembershipCache = [];
+        $this->groupMembershipCache[trim($group->getCode())] = false;
     }
 
     /**

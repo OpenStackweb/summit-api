@@ -2067,9 +2067,9 @@ SQL;
     {
         if ($this->groups->contains($group)) return;
         $this->groups->add($group);
-        // belongsToGroup() memoizes per instance against the DB; a mutation makes
-        // that memo stale (the fresh row/removal becomes visible after flush).
-        $this->groupMembershipCache = [];
+        // belongsToGroup() reads the DB, so an unflushed membership would be invisible to it
+        // (e.g. TrackChairService adds the group and then checks isOnGroup in the same request).
+        $this->groupMembershipCache[trim($group->getCode())] = true;
     }
 
     public function removeFromGroup(Group $group)
@@ -2077,7 +2077,7 @@ SQL;
         if (!$this->groups->contains($group)) return;
         $this->groups->removeElement($group);
         //$group->removeMember($this);
-        $this->groupMembershipCache = [];
+        $this->groupMembershipCache[trim($group->getCode())] = false;
     }
 
     /**

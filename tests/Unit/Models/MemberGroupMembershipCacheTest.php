@@ -175,4 +175,22 @@ final class MemberGroupMembershipCacheTest extends TestCase
 
         $this->assertSame(0, $queries);
     }
+
+    public function testUnflushedGroupMutationsAreVisibleToGroupChecks(): void
+    {
+        $member = $this->loadMember(self::$member->getId());
+        $this->assertFalse($member->belongsToGroup(IGroup::Testers));
+
+        $group = new Group();
+        $group->setCode(IGroup::Testers);
+        $group->setTitle(IGroup::Testers);
+        self::$em->persist($group);
+
+        // not flushed: the raw SQL lookup alone could not see this membership
+        $member->add2Group($group);
+        $this->assertTrue($member->isOnGroup(IGroup::Testers, true));
+
+        $member->removeFromGroup($group);
+        $this->assertFalse($member->belongsToGroup(IGroup::Testers));
+    }
 }

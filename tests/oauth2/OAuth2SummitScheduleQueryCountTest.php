@@ -73,7 +73,19 @@ class OAuth2SummitScheduleQueryCountTest extends ProtectedApiTestCase
     {
         $this->reloadEntityManager();
         self::clearSummitTestData();
+        QueryTimingCollector::$statements = null;
+        $this->dropSerializerRegistry();
         parent::tearDown();
+    }
+
+    /**
+     * The registry is a process-wide singleton that keeps the resource server context of the app that
+     * created it, together with the current user that context resolved. That Member is detached by the
+     * clear() of requestSchedule(), so the next test class would serialize with a stale user.
+     */
+    private function dropSerializerRegistry(): void
+    {
+        (new \ReflectionProperty(SerializerRegistry::class, 'instance'))->setValue(null, null);
     }
 
     /**

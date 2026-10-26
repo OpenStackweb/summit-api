@@ -1451,7 +1451,9 @@ SQL;
     public function getScheduleBySummit(Summit $summit)
     {
 
-        $query = $this->createQuery("SELECT s from models\main\SummitMemberSchedule s
+        // select the event too: it is read for every row when the schedule is serialized,
+        // and would otherwise be lazy-loaded one query per row
+        $query = $this->createQuery("SELECT s, e from models\main\SummitMemberSchedule s
         JOIN s.member m
         JOIN s.event e
         JOIN e.summit su WHERE su.id = :summit_id and m.id = :member_id and e.published = 1 ");

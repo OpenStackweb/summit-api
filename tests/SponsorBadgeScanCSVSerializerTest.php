@@ -39,4 +39,10 @@ final class SponsorBadgeScanCSVSerializerTest extends TestCase
         $taken = ['notes' => 'a', 'notes (notes_q)' => 'b'];
         $this->assertSame('notes (notes_q-11)', $this->uniqueKey($taken, 'notes', 'notes_q', 11));
     }
+
+    public function testCollisionWithIdKeyUsesCounter(): void
+    {
+        $taken = ['notes' => 'a', 'notes (notes_q)' => 'b', 'notes (notes_q-11)' => 'c'];
+        $this->assertSame('notes (notes_q-11)-2', $this->uniqueKey($taken, 'notes', 'notes_q', 11));
+    }
 }

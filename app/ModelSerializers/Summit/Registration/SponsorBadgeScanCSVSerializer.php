@@ -54,7 +54,7 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
 
     /**
      * Returns a CSV column key that does not collide with the already taken ones,
-     * disambiguating with the question name (and the id as last resort).
+     * disambiguating with the question name, then the id, then a counter as last resort.
      * @param array $taken_keys
      * @param string $label
      * @param string $name
@@ -68,7 +68,13 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
         $key = sprintf("%s (%s)", $label, AbstractSerializer::getCSVLabel($name));
         if (!array_key_exists($key, $taken_keys)) return $key;
 
-        return sprintf("%s (%s-%s)", $label, AbstractSerializer::getCSVLabel($name), $id);
+        $key = sprintf("%s (%s-%s)", $label, AbstractSerializer::getCSVLabel($name), $id);
+        $base = $key;
+        $i = 2;
+        while (array_key_exists($key, $taken_keys)) {
+            $key = sprintf("%s-%s", $base, $i++);
+        }
+        return $key;
     }
 
     /**

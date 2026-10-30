@@ -1426,7 +1426,6 @@ class SummitEvent extends SilverstripeBaseModel implements IPublishableEvent
     public function setStreamingUrl(?string $streaming_url): void
     {
         $this->streaming_url = $streaming_url;
-        $this->overflow_streaming_url = $streaming_url;;
         $key = $this->getSecureStreamCacheKey();
         $this->skipDateUpdate();
         if (Cache::tags(sprintf('secure_streams_%s', $this->summit->getId()))->has($key))
@@ -1994,8 +1993,6 @@ SQL;
     {
         $this->overflow_streaming_url = $overflow_streaming_url;
         $this->overflow_stream_is_secure = $overflow_stream_is_secure;
-        $this->streaming_url = $overflow_streaming_url;
-        $this->stream_is_secure = $overflow_stream_is_secure;
         $this->occupancy = self::OccupancyOverflow;
         $this->skipDateUpdate();
     }

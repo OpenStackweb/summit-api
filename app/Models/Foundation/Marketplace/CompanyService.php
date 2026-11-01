@@ -90,7 +90,7 @@ class CompanyService extends SilverstripeBaseModel
      * @var CompanyServiceResource[]
      */
     #[ORM\OneToMany(targetEntity: \CompanyServiceResource::class, mappedBy: 'company_service', cascade: ['persist'], orphanRemoval: true)]
-    #[ORM\OrderBy(['name' => 'order'])]
+    #[ORM\OrderBy(['order' => 'ASC'])]
     protected $resources;
 
 

@@ -44,7 +44,7 @@ if(env('SS_DB_READ_HOST', null) && env('SS_DB_WRITE_HOST', null)) {
 
 $model_db_config = array_merge(
     $model_db_config,
-    !empty(env('DB_MYSQL_ATTR_SSL_CA', '')) ?
+    !empty(env('SS_DB_MYSQL_ATTR_SSL_CA', '')) ?
         [
             'options' => [
                 PDO::MYSQL_ATTR_SSL_CA => env('SS_DB_MYSQL_ATTR_SSL_CA', null),
@@ -73,6 +73,12 @@ if(env('SS_DB_WRITE_HOST', null)) {
     // single server
     $model_write__db_config['host'] = env('SS_DB_HOST');
 }
+
+// Apply the same TLS trust configuration to the dedicated write connection.
+$model_write__db_config = array_merge(
+    $model_write__db_config,
+    array_intersect_key($model_db_config, array_flip(['options', 'driverOptions']))
+);
 
 return [
 

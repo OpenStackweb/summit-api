@@ -230,6 +230,18 @@ final class AttendeeMemberEmailConflictTest extends TestCase
         Bus::assertNotDispatched(UpdateAttendeeInfo::class);
     }
 
+    public function testRepairCommandListsPairIdentifiers(): void
+    {
+        $this->changeMemberEmail(false);
+
+        Artisan::call('summit:repair-attendee-member-email-pairs');
+        $output = Artisan::output();
+
+        $this->assertStringContainsString((string)$this->member_attendee_id, $output);
+        $this->assertStringContainsString((string)$this->memberless_attendee_id, $output);
+        $this->assertStringNotContainsString(self::MemberlessEmail, $output);
+    }
+
     public function testRepairCommandResumesAfterMemberId(): void
     {
         $this->changeMemberEmail(true);

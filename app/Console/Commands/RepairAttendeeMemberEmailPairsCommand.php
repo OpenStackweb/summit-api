@@ -55,9 +55,7 @@ SELECT
     m.ID                        AS member_id,
     m.EmailVerified             AS email_verified,
     a.ID                        AS attendee_id,
-    a.Email                     AS attendee_email,
-    b.ID                        AS memberless_attendee_id,
-    b.Email                     AS member_email
+    b.ID                        AS memberless_attendee_id
 FROM SummitAttendee a
 JOIN Member m ON m.ID = a.MemberID
 JOIN SummitAttendee b
@@ -89,6 +87,19 @@ SQL
             $rows[] = [$summit_id, $verified ? 'yes' : 'no', $count];
         }
         $this->table(['summit_id', 'member email verified', 'pairs'], $rows);
+
+        // ids only, no emails: enough to inspect the attendees and to follow up on the unverified ones
+        $detail = [];
+        foreach ($pairs as $pair) {
+            $detail[] = [
+                $pair->summit_id,
+                $pair->member_id,
+                $pair->email_verified ? 'yes' : 'no',
+                $pair->attendee_id,
+                $pair->memberless_attendee_id,
+            ];
+        }
+        $this->table(['summit_id', 'member_id', 'member email verified', 'attendee_id', 'member-less attendee_id'], $detail);
 
         if (!$this->option('dispatch')) {
             $this->line('Dry run, nothing dispatched. Use --dispatch to enqueue UpdateAttendeeInfo for the verified ones.');

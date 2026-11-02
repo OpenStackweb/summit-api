@@ -2270,8 +2270,7 @@ final class SummitOrderService
                     (
                         sprintf
                         (
-                            "SummitOrderService::ownerAssignTicket email %s belongs to member %s that already has attendee %s in summit %s, attendee found by email is %s.",
-                            $email,
+                            "SummitOrderService::ownerAssignTicket the email belongs to member %s that already has attendee %s in summit %s, attendee found by email is %s.",
                             $member->getId(),
                             $member_attendee->getId(),
                             $summit->getId(),

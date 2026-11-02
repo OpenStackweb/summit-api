@@ -1036,8 +1036,7 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                             (
                                 sprintf
                                 (
-                                    "AttendeeService::updateAttendeesByMemberId can not set email %s to attendee %s of member %s in summit %s: it belongs to attendee %s (member %s, email verified %s), keeping attendee email.",
-                                    $email,
+                                    "AttendeeService::updateAttendeesByMemberId can not update the email of attendee %s of member %s in summit %s: the new email belongs to attendee %s (member %s, email verified %s), keeping attendee email.",
                                     $attendee->getId(),
                                     $member_id,
                                     $summit->getId(),

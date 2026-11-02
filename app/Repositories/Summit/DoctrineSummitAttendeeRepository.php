@@ -446,12 +446,11 @@ SQL,
                 (
                     sprintf
                     (
-                        "DoctrineSummitAttendeeRepository::getLinkableByMember member %s already has attendee %s in summit %s, skipping member-less attendee %s with email %s.",
+                        "DoctrineSummitAttendeeRepository::getLinkableByMember member %s already has attendee %s in summit %s, skipping member-less attendee %s.",
                         $member->getId(),
                         $member_attendee->getId(),
                         $summit->getId(),
-                        $attendee->getId(),
-                        $attendee->getEmail()
+                        $attendee->getId()
                     )
                 );
                 continue;

@@ -37,7 +37,7 @@ class RepairAttendeeMemberEmailPairsCommand extends Command
     /**
      * @var string
      */
-    protected $signature = 'summit:repair-attendee-member-email-pairs {--dispatch : enqueue UpdateAttendeeInfo for each member of a pair with a verified email} {--limit= : dispatch at most this many members}';
+    protected $signature = 'summit:repair-attendee-member-email-pairs {--dispatch : enqueue UpdateAttendeeInfo for each member of a pair with a verified email} {--limit= : dispatch at most this many members} {--after-member-id= : only dispatch members with an id greater than this one, to resume after the last dispatched member}';
 
     /**
      * @var string
@@ -102,6 +102,14 @@ SQL
             $member_ids[(int)$pair->member_id] = true;
         }
         $member_ids = array_keys($member_ids);
+        // stable order, so --after-member-id can resume past a member whose job keeps failing
+        sort($member_ids);
+
+        $after_member_id = $this->option('after-member-id');
+        if (!is_null($after_member_id) && $after_member_id !== '') {
+            $after_member_id = intval($after_member_id);
+            $member_ids = array_values(array_filter($member_ids, fn(int $id) => $id > $after_member_id));
+        }
 
         $limit = $this->option('limit');
         if (!is_null($limit) && $limit !== '')
@@ -116,6 +124,8 @@ SQL
         }
 
         $this->info(sprintf("dispatched UpdateAttendeeInfo for %s members", count($member_ids)));
+        if (count($member_ids))
+            $this->line(sprintf("last member id dispatched: %s (resume with --after-member-id=%s)", end($member_ids), end($member_ids)));
         return 0;
     }
 }

@@ -229,4 +229,27 @@ final class AttendeeMemberEmailConflictTest extends TestCase
         $this->assertStringContainsString('1 pairs', Artisan::output());
         Bus::assertNotDispatched(UpdateAttendeeInfo::class);
     }
+
+    public function testRepairCommandResumesAfterMemberId(): void
+    {
+        $this->changeMemberEmail(true);
+        Bus::fake();
+
+        // the member is at or before the cursor: skipped
+        Artisan::call('summit:repair-attendee-member-email-pairs', [
+            '--dispatch' => true,
+            '--after-member-id' => self::$member->getId(),
+        ]);
+        Bus::assertNotDispatched(UpdateAttendeeInfo::class);
+
+        Artisan::call('summit:repair-attendee-member-email-pairs', [
+            '--dispatch' => true,
+            '--after-member-id' => self::$member->getId() - 1,
+        ]);
+        Bus::assertDispatchedTimes(UpdateAttendeeInfo::class, 1);
+        $this->assertStringContainsString(
+            sprintf('--after-member-id=%s', self::$member->getId()),
+            Artisan::output()
+        );
+    }
 }

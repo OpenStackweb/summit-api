@@ -982,49 +982,77 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     $summit = $attendee->getSummit();
                     if (!$summit instanceof Summit) continue;
 
-                    // check if we have an attendee without member set and with same email
-                    $attendee_without_member = $summit->getAttendeeByEmailAndMemberNotSet($email);
+                    // check if the email is already taken by another attendee of the summit
+                    $attendee_with_email = $summit->getAttendeeByEmail($email);
+                    $update_email = true;
 
-                    if (!is_null($attendee_without_member) && $member->isEmailVerified()) {
+                    if (!is_null($attendee_with_email) && $attendee_with_email->getId() != $attendee->getId()) {
 
-                        Log::debug
-                        (
-                            sprintf
+                        $attendee_without_member = $summit->getAttendeeByEmailAndMemberNotSet($email);
+
+                        if (!is_null($attendee_without_member) && $member->isEmailVerified()) {
+
+                            Log::debug
                             (
-                                "AttendeeService::updateAttendeesByMemberId found attendee %s with email %s and member not set ( marking it for deletion ).",
-                                $attendee_without_member->getId(),
-                                $attendee_without_member->getEmail()
-                            )
-                        );
-
-                        // mark the attendee to be deleted bc its dupe
-
-                        $attendees_2_delete[] = $attendee_without_member->getId();
-
-                        // overwrite email to avoid FK exception
-                        $attendee_without_member->setEmail($attendee_without_member->getEmail() . '-deleted');
-
-                        // check if we have ticket and re-assign them
-                        if ($attendee_without_member->hasTickets()) {
-                            foreach ($attendee_without_member->getTickets() as $ticket) {
-                                Log::debug
+                                sprintf
                                 (
-                                    sprintf
+                                    "AttendeeService::updateAttendeesByMemberId found attendee %s with email %s and member not set ( marking it for deletion ).",
+                                    $attendee_without_member->getId(),
+                                    $attendee_without_member->getEmail()
+                                )
+                            );
+
+                            // mark the attendee to be deleted bc its dupe
+
+                            $attendees_2_delete[] = $attendee_without_member->getId();
+
+                            // overwrite email to avoid unique key exception
+                            $attendee_without_member->setEmail($attendee_without_member->getEmail() . '-deleted');
+                            // flush now: Doctrine runs the UPDATEs in the order the entities were loaded,
+                            // and the member's attendee was loaded first, so it would take the email
+                            // while this row still has it.
+                            $this->attendee_repository->add($attendee_without_member, true);
+
+                            // check if we have ticket and re-assign them
+                            if ($attendee_without_member->hasTickets()) {
+                                foreach ($attendee_without_member->getTickets() as $ticket) {
+                                    Log::debug
                                     (
-                                        "AttendeeService::updateAttendeesByMemberId re-assigning ticket %s from attendee %s to attendee %s",
-                                        $ticket->getId(),
-                                        $attendee_without_member->getId(),
-                                        $attendee->getId()
-                                    )
-                                );
-                                $attendee->addTicket($ticket);
+                                        sprintf
+                                        (
+                                            "AttendeeService::updateAttendeesByMemberId re-assigning ticket %s from attendee %s to attendee %s",
+                                            $ticket->getId(),
+                                            $attendee_without_member->getId(),
+                                            $attendee->getId()
+                                        )
+                                    );
+                                    $attendee->addTicket($ticket);
+                                }
                             }
+                        } else {
+                            $update_email = false;
+                            Log::warning
+                            (
+                                sprintf
+                                (
+                                    "AttendeeService::updateAttendeesByMemberId can not set email %s to attendee %s of member %s in summit %s: it belongs to attendee %s (member %s, email verified %s), keeping attendee email.",
+                                    $email,
+                                    $attendee->getId(),
+                                    $member_id,
+                                    $summit->getId(),
+                                    $attendee_with_email->getId(),
+                                    $attendee_with_email->hasMember() ? $attendee_with_email->getMemberId() : 'none',
+                                    $member->isEmailVerified() ? 'yes' : 'no'
+                                )
+                            );
                         }
                     }
 
                     $attendee->setFirstName($fname);
                     $attendee->setSurname($lname);
-                    $attendee->setEmail($email);
+
+                    if ($update_email)
+                        $attendee->setEmail($email);
 
                     // company logic
 
@@ -1076,11 +1104,10 @@ final class AttendeeService extends AbstractService implements IAttendeeService
             $email = $member->getEmail();
             $company_name = $member->getCompany();
 
-            $attendees = $this->attendee_repository->getByEmailAndMemberNotSet($member->getEmail());
+            $attendees = $this->attendee_repository->getLinkableByMember($member);
             if (!is_null($attendees)) {
 
                     foreach ($attendees as $attendee) {
-                        if (!$attendee instanceof SummitAttendee) continue;
 
                         Log::debug
                         (

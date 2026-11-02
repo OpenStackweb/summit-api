@@ -101,11 +101,11 @@ final class AttendeeMemberEmailConflictTest extends TestCase
     /**
      * the member email changes to the member-less attendee's one and the first name changes too
      */
-    private function changeMemberEmail(bool $verified): void
+    private function changeMemberEmail(bool $verified, string $email = self::MemberlessEmail): void
     {
         $em = $this->em();
         $member = $em->getRepository(Member::class)->find(self::$member->getId());
-        $member->setEmail(self::MemberlessEmail);
+        $member->setEmail($email);
         $member->setEmailVerified($verified);
         $member->setFirstName(self::NewFirstName);
         $em->flush();
@@ -263,5 +263,24 @@ final class AttendeeMemberEmailConflictTest extends TestCase
             sprintf('--after-member-id=%s', self::$member->getId()),
             Artisan::output()
         );
+    }
+
+    public function testUpdateAttendeesByMemberIdMergesMemberlessAttendeeWithEmailNearColumnLimit(): void
+    {
+        // SummitAttendee.Email is varchar(100): email + "-deleted" would not fit
+        $long_email = str_repeat('a', 98 - strlen('@test.com')) . '@test.com';
+        $this->assertEquals(98, strlen($long_email));
+        $this->db()->executeStatement(
+            'UPDATE SummitAttendee SET Email = ? WHERE ID = ?',
+            [$long_email, $this->memberless_attendee_id]
+        );
+        $this->changeMemberEmail(true, $long_email);
+
+        App::make(IAttendeeService::class)->updateAttendeesByMemberId(self::$member->getId());
+
+        $this->assertFalse($this->attendeeRow($this->memberless_attendee_id));
+        $row = $this->attendeeRow($this->member_attendee_id);
+        $this->assertEquals($long_email, $row['Email']);
+        $this->assertEquals(6, $this->ticketsCount($this->member_attendee_id));
     }
 }

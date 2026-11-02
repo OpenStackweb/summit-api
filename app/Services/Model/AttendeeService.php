@@ -1006,8 +1006,9 @@ final class AttendeeService extends AbstractService implements IAttendeeService
 
                             $attendees_2_delete[] = $attendee_without_member->getId();
 
-                            // overwrite email to avoid unique key exception
-                            $attendee_without_member->setEmail($attendee_without_member->getEmail() . '-deleted');
+                            // overwrite email to avoid unique key exception: unique per attendee and
+                            // always fits SummitAttendee.Email (varchar 100), unlike email + suffix
+                            $attendee_without_member->setEmail(sprintf("%s-deleted", $attendee_without_member->getId()));
                             // flush now: Doctrine runs the UPDATEs in the order the entities were loaded,
                             // and the member's attendee was loaded first, so it would take the email
                             // while this row still has it.

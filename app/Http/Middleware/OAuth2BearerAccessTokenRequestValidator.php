@@ -131,6 +131,16 @@ class OAuth2BearerAccessTokenRequestValidator
                 );
             }
 
+            // access_token[]=... or access_token[key]=... arrives as an array
+            if (!is_string($access_token_value)) {
+                Log::warning('OAuth2BearerAccessTokenRequestValidator::handle access token is not a string');
+                throw new OAuth2ResourceServerException(
+                    400,
+                    OAuth2Protocol::OAuth2Protocol_Error_InvalidRequest,
+                    'malformed access token'
+                );
+            }
+
             $endpoint = $this->endpoint_repository->getApiEndpointByUrlAndMethod($route, $method);
 
             //api endpoint must be registered on db and active

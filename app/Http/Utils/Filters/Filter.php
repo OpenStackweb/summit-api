@@ -282,9 +282,15 @@ final class Filter
 
     /**
      * @param array $mappings
+     * @param int $param_idx
+     * @param bool $skip_partially_mapped_or_groups When true, an OR group containing a
+     *        field absent from $mappings is dropped in full instead of being narrowed to
+     *        the branches that do have a mapping: a branch this call cannot express must
+     *        stop the group from restricting the result, not shrink it to what it can
+     *        express. Off by default so existing callers keep the narrowing behaviour.
      * @return string
      */
-    public function toRawSQL(array $mappings, int $param_idx = 1)
+    public function toRawSQL(array $mappings, int $param_idx = 1, bool $skip_partially_mapped_or_groups = false)
     {
         $sql = '';
         $this->bindings = [];
@@ -315,16 +321,27 @@ final class Filter
                 if(!empty($condition)) $sql .= '('. $condition. ')';
             } else if (is_array($filter)) {
                 // an array is a OR
+                if ($skip_partially_mapped_or_groups) {
+                    foreach ($filter as $e) {
+                        if ($e instanceof FilterElement && !isset($mappings[$e->getField()])) {
+                            continue 2;
+                        }
+                    }
+                }
                 $condition = '';
                 foreach ($filter as $e) {
                     if ($e instanceof FilterElement && isset($mappings[$e->getField()])) {
                         $mapping = $mappings[$e->getField()];
                         if ($mapping instanceof FilterMapping) {
-                            $condition = $mapping->toRawSQL($e, $this->bindings);
+                            $c = $mapping->toRawSQL($e, $this->bindings);
                             $local_bindings = $mapping->getBindings();
                             if(count($local_bindings) > 0 ){
                                 $this->bindings = array_merge($this->bindings, $local_bindings);
                                 $param_idx = count($this->bindings) + 1;
+                            }
+                            if (!empty($c)) {
+                                if (!empty($condition)) $condition .= ' OR ';
+                                $condition .= $c;
                             }
                         }
                         else if (is_array($mapping)) {

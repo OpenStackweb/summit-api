@@ -615,102 +615,105 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
             'has_manager' => ['=='],
         ];
 
-        if (Request::has('filter')) {
-            $filter = FilterParser::parse(Request::get('filter'), $filterRules);
-        }
+        // the pre-parse below must also run inside processRequest, so a FilterParserException answers 412
+        return $this->processRequest(function () use ($summit, $filterRules, $filter) {
+            if (Request::has('filter')) {
+                $filter = FilterParser::parse(Request::get('filter'), $filterRules);
+            }
 
-        if (is_null($filter)) $filter = new Filter();
+            if (is_null($filter)) $filter = new Filter();
 
-        $params  = [];
+            $params  = [];
 
-        if(!is_null($filter)) {
-            $votingDateFilter = $filter->getFilter('presentation_votes_date');
-            if ($votingDateFilter != null) {
-                $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
-                if (count($votingDateFilter) > 1) {
-                    $params['end_attendee_voting_period_date'] = $votingDateFilter[1]->getValue();
+            if(!is_null($filter)) {
+                $votingDateFilter = $filter->getFilter('presentation_votes_date');
+                if ($votingDateFilter != null) {
+                    $params['begin_attendee_voting_period_date'] = $votingDateFilter[0]->getValue();
+                    if (count($votingDateFilter) > 1) {
+                        $params['end_attendee_voting_period_date'] = $votingDateFilter[1]->getValue();
+                    }
+                }
+                $trackGroupFilter = $filter->getFilter('presentation_votes_track_group_id');
+                if ($trackGroupFilter != null) {
+                    $params['presentation_votes_track_group_id'] = $trackGroupFilter[0]->getValue();
                 }
             }
-            $trackGroupFilter = $filter->getFilter('presentation_votes_track_group_id');
-            if ($trackGroupFilter != null) {
-                $params['presentation_votes_track_group_id'] = $trackGroupFilter[0]->getValue();
-            }
-        }
 
-        return $this->_getAll(
-            function () use($filterRules){
-                return $filterRules;
-            },
-            function () {
-                return [
-                    'id' => 'sometimes|integer',
-                    'not_id' => 'sometimes|integer',
-                    'first_name' => 'sometimes|string',
-                    'last_name' => 'sometimes|string',
-                    'full_name' => 'sometimes|string',
-                    'company' => 'sometimes|string',
-                    'has_company' => ['sometimes', new Boolean()],
-                    'email' => 'sometimes|string',
-                    'external_order_id' => 'sometimes|string',
-                    'external_attendee_id' => 'sometimes|string',
-                    'member_id' => 'sometimes|integer',
-                    'ticket_type' => 'sometimes|string',
-                    'badge_type' => 'sometimes|string',
-                    'features' => 'sometimes|string',
-                    'access_levels' => 'sometimes|string',
-                    'status' => 'sometimes|string',
-                    'has_member' => 'sometimes|required|string|in:true,false',
-                    'has_tickets'=> 'sometimes|required|string|in:true,false',
-                    'has_virtual_checkin'=> 'sometimes|required|string|in:true,false',
-                    'has_checkin'=> 'sometimes|required|string|in:true,false',
-                    'tickets_count' => 'sometimes|integer',
-                    'presentation_votes_date' => 'sometimes|date_format:U|epoch_seconds',
-                    'presentation_votes_count' => 'sometimes|integer',
-                    'presentation_votes_track_group_id' => 'sometimes|integer',
-                    'ticket_type_id' => 'sometimes|integer',
-                    'badge_type_id' => 'sometimes|integer',
-                    'features_id'=> 'sometimes|integer',
-                    'access_levels_id' => 'sometimes|integer',
-                    'summit_hall_checked_in_date' => 'sometimes|date_format:U|epoch_seconds',
-                    'tags' => 'sometimes|string',
-                    'tags_id' => 'sometimes|integer',
-                    'notes' => 'sometimes|string',
-                    'has_notes' => ['sometimes', new Boolean()],
-                    'has_manager' => ['sometimes', new Boolean()],
-                ];
-            },
-            function () {
-                return [
-                    'first_name',
-                    'last_name',
-                    'email',
-                    'full_name',
-                    'company',
-                    'id',
-                    'external_order_id',
-                    'member_id',
-                    'status',
-                    'full_name',
-                    'presentation_votes_count',
-                    'summit_hall_checked_in_date',
-                    'tickets_count',
-                    'has_notes',
-                ];
-            },
-            function ($filter) use ($summit) {
-                if ($filter instanceof Filter) {
-                    $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
-                }
-                return $filter;
-            },
-            function () {
-                return SerializerRegistry::SerializerType_Private;
-            },
-            null,
-            null,
-            null,
-            $params
-        );
+            return $this->_getAll(
+                function () use($filterRules){
+                    return $filterRules;
+                },
+                function () {
+                    return [
+                        'id' => 'sometimes|integer',
+                        'not_id' => 'sometimes|integer',
+                        'first_name' => 'sometimes|string',
+                        'last_name' => 'sometimes|string',
+                        'full_name' => 'sometimes|string',
+                        'company' => 'sometimes|string',
+                        'has_company' => ['sometimes', new Boolean()],
+                        'email' => 'sometimes|string',
+                        'external_order_id' => 'sometimes|string',
+                        'external_attendee_id' => 'sometimes|string',
+                        'member_id' => 'sometimes|integer',
+                        'ticket_type' => 'sometimes|string',
+                        'badge_type' => 'sometimes|string',
+                        'features' => 'sometimes|string',
+                        'access_levels' => 'sometimes|string',
+                        'status' => 'sometimes|string',
+                        'has_member' => 'sometimes|required|string|in:true,false',
+                        'has_tickets'=> 'sometimes|required|string|in:true,false',
+                        'has_virtual_checkin'=> 'sometimes|required|string|in:true,false',
+                        'has_checkin'=> 'sometimes|required|string|in:true,false',
+                        'tickets_count' => 'sometimes|integer',
+                        'presentation_votes_date' => 'sometimes|date_format:U|epoch_seconds',
+                        'presentation_votes_count' => 'sometimes|integer',
+                        'presentation_votes_track_group_id' => 'sometimes|integer',
+                        'ticket_type_id' => 'sometimes|integer',
+                        'badge_type_id' => 'sometimes|integer',
+                        'features_id'=> 'sometimes|integer',
+                        'access_levels_id' => 'sometimes|integer',
+                        'summit_hall_checked_in_date' => 'sometimes|date_format:U|epoch_seconds',
+                        'tags' => 'sometimes|string',
+                        'tags_id' => 'sometimes|integer',
+                        'notes' => 'sometimes|string',
+                        'has_notes' => ['sometimes', new Boolean()],
+                        'has_manager' => ['sometimes', new Boolean()],
+                    ];
+                },
+                function () {
+                    return [
+                        'first_name',
+                        'last_name',
+                        'email',
+                        'full_name',
+                        'company',
+                        'id',
+                        'external_order_id',
+                        'member_id',
+                        'status',
+                        'full_name',
+                        'presentation_votes_count',
+                        'summit_hall_checked_in_date',
+                        'tickets_count',
+                        'has_notes',
+                    ];
+                },
+                function ($filter) use ($summit) {
+                    if ($filter instanceof Filter) {
+                        $filter->addFilterCondition(FilterElement::makeEqual('summit_id', $summit->getId()));
+                    }
+                    return $filter;
+                },
+                function () {
+                    return SerializerRegistry::SerializerType_Private;
+                },
+                null,
+                null,
+                null,
+                $params
+            );;
+        });
     }
 
     #[OA\Get(

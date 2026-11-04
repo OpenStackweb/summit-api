@@ -491,13 +491,13 @@ WHEN pc.ClassName = 'SpeakersRegistrationDiscountCode' THEN COUNT(NOT ISNULL(asp
 ELSE pc.redeemed 
 END AS REDEEMED_ORDER,
 CASE 
-WHEN pc.ClassName = 'SponsorSummitRegistrationPromoCode' THEN sp1stt.Name
-WHEN pc.ClassName = 'SponsorSummitRegistrationDiscountCode' THEN sp2stt.Name
+WHEN pc.ClassName = 'SponsorSummitRegistrationPromoCode' THEN ANY_VALUE(sp1stt.Name)
+WHEN pc.ClassName = 'SponsorSummitRegistrationDiscountCode' THEN ANY_VALUE(sp2stt.Name)
 ELSE NULL 
 END AS TIER_NAME_ORDER,
 CASE 
-WHEN pc.ClassName = 'SponsorSummitRegistrationPromoCode' THEN spn1.Name
-WHEN pc.ClassName = 'SponsorSummitRegistrationDiscountCode' THEN spn2.Name
+WHEN pc.ClassName = 'SponsorSummitRegistrationPromoCode' THEN ANY_VALUE(spn1.Name)
+WHEN pc.ClassName = 'SponsorSummitRegistrationDiscountCode' THEN ANY_VALUE(spn2.Name)
 ELSE NULL 
 END AS SPONSOR_COMPANY_NAME_ORDER,
 CASE 

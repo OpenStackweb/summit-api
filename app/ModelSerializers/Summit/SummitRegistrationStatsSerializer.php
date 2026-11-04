@@ -13,6 +13,8 @@
  **/
 use App\Http\Exceptions\HTTP403ForbiddenException;
 use App\Utils\FilterUtils;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use libs\utils\JsonUtils;
 use models\summit\Summit;
@@ -36,6 +38,45 @@ final class SummitRegistrationStatsSerializer extends SilverStripeSerializer
     {
         $summit = $this->object;
         if (!$summit instanceof Summit) return [];
+
+        $ttl = intval(Config::get('cache_api_response.registration_stats_response_lifetime', 600));
+        // the endpoints are admin only, so the key does not depend on the caller
+        if ($ttl <= 0)
+            return $this->buildValues($summit, $expand, $fields, $relations, $params);
+
+        $filter = $params['filter'] ?? null;
+        $start_date = null;
+        $end_date = null;
+        if ($filter instanceof Filter) list($start_date, $end_date) = FilterUtils::parseDateRangeUTC($filter);
+
+        $key = sprintf
+        (
+            'registration_stats_%s_%s_%s_%s',
+            $summit->getId(),
+            $start_date?->getTimestamp() ?? 'null',
+            $end_date?->getTimestamp() ?? 'null',
+            md5(json_encode([$expand, $fields, $relations]))
+        );
+
+        $values = Cache::get($key);
+        if (!is_array($values)) {
+            $values = $this->buildValues($summit, $expand, $fields, $relations, $params);
+            Cache::put($key, $values, $ttl);
+        }
+        return $values;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param null $expand
+     * @param array $fields
+     * @param array $relations
+     * @param array $params
+     * @return array
+     * @throws \Exception
+     */
+    private function buildValues(Summit $summit, $expand, array $fields, array $relations, array $params): array
+    {
         $values = parent::serialize($expand, $fields, $relations, $params);
 
         $filter = $params['filter'] ?? null;

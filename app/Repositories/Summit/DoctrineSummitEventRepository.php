@@ -751,7 +751,35 @@ SQL,
             if (isset($byId[$id])) $data[] = $byId[$id];
         }
 
-        // Batch-preload Tag rows for every event on the page so the serializer's
+        $this->preloadEventRelations($data);
+
+        if ($shuffleResults) shuffle($data);
+
+        $end = time() - $start;
+        Log::debug("DoctrineSummitEventRepository::getAllByPage", ['seconds'=>$end]);
+
+        return new PagingResponse
+        (
+            $total,
+            $paging_info->getPerPage(),
+            $paging_info->getCurrentPage(),
+            $paging_info->getLastPage($total),
+            $data
+        );
+
+    }
+
+    /**
+     * Batch-preloads the relations the event serializers read per event (tags, sponsors, and for
+     * presentations the selection status, speaker assignment order and materials), so serializing
+     * N events does not lazy-load them N times.
+     * @param SummitEvent[] $events
+     */
+    public function preloadEventRelations(array $events): void
+    {
+        $ids = array_map(fn(SummitEvent $event) => $event->getId(), $events);
+
+        // Batch-preload Tag rows for every given event so the serializer's
         // foreach (\$event->getTags()) does not lazy-load the collection per event.
         // SELECT e, t fetch-joins tags onto each SummitEvent.
         if (!empty($ids)) {
@@ -762,7 +790,7 @@ SQL,
                     'WHERE e.id IN (:ids)'
                 )->setParameter('ids', $ids)->getResult();
             } catch (\Exception $ex) {
-                Log::warning('DoctrineSummitEventRepository::getAllByPage tags preload failed', [
+                Log::warning('DoctrineSummitEventRepository::preloadEventRelations tags preload failed', [
                     'error' => $ex->getMessage(),
                 ]);
             }
@@ -775,21 +803,21 @@ SQL,
                     'WHERE e.id IN (:ids)'
                 )->setParameter('ids', $ids)->getResult();
             } catch (\Exception $ex) {
-                Log::warning('DoctrineSummitEventRepository::getAllByPage sponsors preload failed', [
+                Log::warning('DoctrineSummitEventRepository::preloadEventRelations sponsors preload failed', [
                     'error' => $ex->getMessage(),
                 ]);
             }
         }
 
-        // Targeted N+1 preload for Presentation rows on this page:
+        // Targeted N+1 preload for Presentation rows in the given set:
         // one DQL query that loads PresentationSpeakerAssignment + PresentationSpeaker + Member.
         // After this, identity-map lookups by the serializer no longer trigger:
         //   - per-speaker Member SELECT (was 56 queries on a typical /events page)
         //   - per-speaker Presentation_Speakers composite-key SELECT (was 19)
         // Net: ~75 queries collapsed into 1, ~216ms DB time saved per request.
-        // Only runs when there is at least one Presentation in the page.
+        // Only runs when there is at least one Presentation in the given set.
         $presentationIds = [];
-        foreach ($data as $event) {
+        foreach ($events as $event) {
             if ($event instanceof Presentation) $presentationIds[] = $event->getId();
         }
         if (!empty($presentationIds)) {
@@ -797,7 +825,7 @@ SQL,
                 $em = $this->getEntityManager();
 
                 // Batch-preload SummitSelectedPresentation rows for all presentations
-                // on this page. getSelectionStatus() on each Presentation then uses the
+                // in the given set. getSelectionStatus() on each Presentation then uses the
                 // preloaded data instead of firing its own DQL per presentation.
                 // Filters match getSelectionStatus()'s constants exactly.
                 try {
@@ -822,13 +850,13 @@ SQL,
                         $pid = $sp->getPresentation()->getId();
                         $byPresentation[$pid][] = $sp;
                     }
-                    foreach ($data as $event) {
+                    foreach ($events as $event) {
                         if ($event instanceof Presentation && method_exists($event, 'setPreloadedSessionSelections')) {
                             $event->setPreloadedSessionSelections($byPresentation[$event->getId()] ?? []);
                         }
                     }
                 } catch (\Exception $ex) {
-                    Log::warning('DoctrineSummitEventRepository::getAllByPage selection-status preload failed', [
+                    Log::warning('DoctrineSummitEventRepository::preloadEventRelations selection-status preload failed', [
                         'error' => $ex->getMessage(),
                     ]);
                 }
@@ -863,32 +891,17 @@ SQL,
                         'WHERE p.id IN (:ids)'
                     )->setParameter('ids', $presentationIds)->getResult();
                 } catch (\Exception $ex) {
-                    Log::warning('DoctrineSummitEventRepository::getAllByPage materials preload failed', [
+                    Log::warning('DoctrineSummitEventRepository::preloadEventRelations materials preload failed', [
                         'error' => $ex->getMessage(),
                     ]);
                 }
 
             } catch (\Exception $ex) {
-                Log::warning('DoctrineSummitEventRepository::getAllByPage speaker+member preload failed', [
+                Log::warning('DoctrineSummitEventRepository::preloadEventRelations speaker+member preload failed', [
                     'error' => $ex->getMessage(),
                 ]);
             }
         }
-
-        if ($shuffleResults) shuffle($data);
-
-        $end = time() - $start;
-        Log::debug("DoctrineSummitEventRepository::getAllByPage", ['seconds'=>$end]);
-
-        return new PagingResponse
-        (
-            $total,
-            $paging_info->getPerPage(),
-            $paging_info->getCurrentPage(),
-            $paging_info->getLastPage($total),
-            $data
-        );
-
     }
 
     /**

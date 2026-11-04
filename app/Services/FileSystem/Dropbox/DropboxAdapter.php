@@ -24,6 +24,10 @@ final class DropboxAdapter extends BaseDropboxAdapter
     /*
      * This method returns a public URL for the given path in Dropbox.
      * this is overloaded to retrieve a URL with the preview mode enabled.
+     * Returns an empty string when no shared link can be produced (e.g. the file is not in Dropbox);
+     * the parent declares getUrl(): string, so null is not allowed here by PHP return-type covariance.
+     * AbstractFileDownloadStrategy::getUrl() normalizes it to null, so serializers expose
+     * private_url = null and clients fall back to public_url.
      */
     public function getUrl(string $path): string
     {
@@ -65,6 +69,6 @@ final class DropboxAdapter extends BaseDropboxAdapter
         catch (Exception $ex){
             Log::error($ex);
         }
-        return '#';
+        return '';
     }
 }

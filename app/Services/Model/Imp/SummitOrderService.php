@@ -35,6 +35,8 @@ use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgePrintRuleRepos
 use App\Models\Foundation\Summit\Repositories\ISummitAttendeeBadgeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitRefundRequestRepository;
+use App\Services\Apis\CartAlreadyPaidException;
+use App\Services\Apis\IPaymentGatewayAPI;
 use App\Services\FileSystem\IFileDownloadStrategy;
 use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\dto\ExternalUserDTO;
@@ -2809,14 +2811,150 @@ final class SummitOrderService
             if (is_null($order) || !$order instanceof SummitOrder || $summit->getId() != $order->getSummitId())
                 throw new EntityNotFoundException("order not found");
 
-            list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+            if ($order->isPaid())
+                throw new ValidationException(sprintf("Order %s is already paid and can not be cancelled.", $order->getId()));
 
-            $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return, $order->getOwner());
+            if ($order->isCancelled()) {
+                Log::warning(sprintf("SummitOrderService::cancel order %s is already cancelled, nothing to release.", $order->getId()));
+                return $order;
+            }
 
-            $order->setCancelled();
+            $cart_id = $order->getPaymentGatewayCartId();
+            if (!empty($cart_id)) {
+                $payment_gateway = $summit->getPaymentGateWayPerApp
+                (
+                    IPaymentConstants::ApplicationTypeRegistration,
+                    $this->default_payment_gateway_strategy
+                );
+
+                if (is_null($payment_gateway))
+                    throw new ValidationException(sprintf("Payment configuration is not set for summit %s.", $summit->getId()));
+
+                $action = $this->resolveOrderReleaseAction($order, $payment_gateway, 'cancel');
+
+                if ($action === self::ReleaseAction_Succeeded) {
+                    Log::warning(sprintf("SummitOrderService::cancel order %s was already paid at the gateway, marking as paid instead of cancelling.", $order->getId()));
+                    $this->markOrderPaidFromGateway($order, $payment_gateway);
+                    return $order;
+                }
+
+                if ($action === self::ReleaseAction_Hold) {
+                    Log::warning(sprintf("SummitOrderService::cancel order %s keeps its slots, the payment intent can still be charged or its status is unknown.", $order->getId()));
+                    return $order;
+                }
+            }
+
+            $this->releaseOrderSlots($summit, $order);
 
             return $order;
         });
+    }
+
+    private const ReleaseAction_Succeeded = 'succeeded';
+    private const ReleaseAction_Release = 'release';
+    private const ReleaseAction_Hold = 'hold';
+
+    /**
+     * Decides, against the payment gateway, what a release path may do with an order
+     * that still holds its slots. Every gateway call happens here, BEFORE any entity
+     * mutation, so a caller that swallows exceptions never commits a half-done release.
+     *
+     * - ReleaseAction_Succeeded: the payment intent was paid, the caller marks the order paid and keeps the slots
+     * - ReleaseAction_Release:   the payment intent can no longer be charged (no intent, abandoned here, or already declined), the caller releases the slots
+     * - ReleaseAction_Hold:      status unreadable, payment in flight, or gateway failure; the caller leaves the order untouched and the cron retries
+     *
+     * @param SummitOrder $order
+     * @param IPaymentGatewayAPI $payment_gateway
+     * @param string $caller
+     * @return string
+     * @throws ValidationException when the gateway itself raises one
+     */
+    private function resolveOrderReleaseAction(SummitOrder $order, IPaymentGatewayAPI $payment_gateway, string $caller): string
+    {
+        $cart_id = $order->getPaymentGatewayCartId();
+        if (empty($cart_id)) return self::ReleaseAction_Release;
+
+        $status = $this->readCartStatus($cart_id, $payment_gateway, $caller);
+        if (is_null($status)) return self::ReleaseAction_Hold;
+
+        Log::debug(sprintf("SummitOrderService::%s order %s cart %s status %s", $caller, $order->getId(), $cart_id, $status));
+
+        if ($payment_gateway->isSucceeded($status)) return self::ReleaseAction_Succeeded;
+        if ($payment_gateway->isDeclined($status)) return self::ReleaseAction_Release;
+
+        if (!$payment_gateway->canAbandon($status)) {
+            Log::warning(sprintf("SummitOrderService::%s order %s can not be cancelled, external status %s, holding slots.", $caller, $order->getId(), $status));
+            return self::ReleaseAction_Hold;
+        }
+
+        try {
+            $payment_gateway->abandonCart($cart_id);
+            return self::ReleaseAction_Release;
+        } catch (CartAlreadyPaidException $ex) {
+            // the intent moved between the status read and the cancel attempt: re-read once
+            Log::warning(sprintf("SummitOrderService::%s order %s cart %s changed state while cancelling (%s), re-reading status.", $caller, $order->getId(), $cart_id, $ex->getMessage()));
+            $status = $this->readCartStatus($cart_id, $payment_gateway, $caller);
+            if (!is_null($status) && $payment_gateway->isSucceeded($status)) return self::ReleaseAction_Succeeded;
+            if (!is_null($status) && $payment_gateway->isDeclined($status)) return self::ReleaseAction_Release;
+            return self::ReleaseAction_Hold;
+        } catch (ValidationException $ex) {
+            throw $ex;
+        } catch (\Throwable $ex) {
+            Log::warning(sprintf("SummitOrderService::%s order %s could not abandon cart %s, holding slots.", $caller, $order->getId(), $cart_id));
+            Log::warning($ex);
+            return self::ReleaseAction_Hold;
+        }
+    }
+
+    /**
+     * @param string $cart_id
+     * @param IPaymentGatewayAPI $payment_gateway
+     * @param string $caller
+     * @return string|null null when the status can not be read, which must never release a slot
+     * @throws ValidationException
+     */
+    private function readCartStatus(string $cart_id, IPaymentGatewayAPI $payment_gateway, string $caller): ?string
+    {
+        try {
+            $status = $payment_gateway->getCartStatus($cart_id);
+            if (is_null($status))
+                Log::warning(sprintf("SummitOrderService::%s cart %s status is unreadable, holding slots.", $caller, $cart_id));
+            return $status;
+        } catch (ValidationException $ex) {
+            throw $ex;
+        } catch (\Throwable $ex) {
+            Log::warning(sprintf("SummitOrderService::%s cart %s status read failed, holding slots.", $caller, $cart_id));
+            Log::warning($ex);
+            return null;
+        }
+    }
+
+    /**
+     * Releases every slot the order still holds (tickets already Cancelled are skipped
+     * by calculateTicketsAndPromoCodesToReturn) and cancels the order and its tickets
+     * in the same transaction.
+     * @param Summit $summit
+     * @param SummitOrder $order
+     */
+    private function releaseOrderSlots(Summit $summit, SummitOrder $order): void
+    {
+        list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+
+        $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return, $order->getOwner());
+
+        $order->setCancelled();
+    }
+
+    /**
+     * @param SummitOrder $order
+     * @param IPaymentGatewayAPI $payment_gateway
+     * @throws ValidationException
+     */
+    private function markOrderPaidFromGateway(SummitOrder $order, IPaymentGatewayAPI $payment_gateway): void
+    {
+        $order->setPaid($payment_gateway->getPaymentDetailsInfo($order->getPaymentGatewayCartId()));
+        // invoke now to avoid delays
+        $this->processInvitation($order);
     }
 
     /**
@@ -2843,7 +2981,8 @@ final class SummitOrderService
         );
 
         foreach ($tickets_to_return as $ticket_type_id => $qty) {
-            $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock($ticket_type_id);
+            // refresh: the type may already be in the identity map with a stale counter (cron loop)
+            $ticket_type = $this->ticket_type_repository->getByIdExclusiveLock($ticket_type_id, true);
             if (!$ticket_type instanceof SummitTicketType) continue;
             Log::debug(sprintf("SummitOrderService::restoreTicketsPromoCodes compensating ticket type %s on %s usages", $ticket_type_id, $qty));
             try {
@@ -2911,6 +3050,20 @@ final class SummitOrderService
 
             if ($payment_gateway->isSuccessFullPayment($payload)) {
                 Log::debug("SummitOrderService::processPayment: payment is successful");
+                if ($order->isCancelled()) {
+                    // unreachable by construction (a slot is released only after the intent was abandoned),
+                    // so a paid cancelled order is an anomaly: never revive it, never sell again, hand it to a human
+                    Log::error
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::processPayment order %s (cart_id %s) is Cancelled but the gateway reported a successful payment. The slot was already released, the order is NOT revived, manual refund required.",
+                            $order->getId(),
+                            $payload['cart_id']
+                        )
+                    );
+                    return;
+                }
                 $order->setPaid($payload);
                 return;
             }
@@ -2937,8 +3090,14 @@ final class SummitOrderService
                 try {
                     if (!$order instanceof SummitOrder) return;
 
-                    $order = $this->order_repository->getByIdExclusiveLock($order->getId());
+                    // refresh: the entity comes from the listing query's identity map and may have been
+                    // cancelled or paid by another process (widget DELETE, webhook) since then
+                    $order = $this->order_repository->getByIdExclusiveLock($order->getId(), true);
                     if (!$order instanceof SummitOrder) return;
+                    if ($order->isPaid() || $order->isCancelled()) {
+                        Log::debug(sprintf("SummitOrderService::confirmOrdersOlderThanNMinutes order %s is %s, skipping", $order->getId(), $order->getStatus()));
+                        return;
+                    }
                     Log::debug(sprintf("SummitOrderService::confirmOrdersOlderThanNMinutes processing order %s", $order->getId()));
                     $summit = $order->getSummit();
                     $payment_gateway = $summit->getPaymentGateWayPerApp
@@ -2953,7 +3112,7 @@ final class SummitOrderService
 
                     $cart_id = $order->getPaymentGatewayCartId();
                     if (!empty($cart_id)) {
-                        $status = $payment_gateway->getCartStatus($cart_id);
+                        $status = $this->readCartStatus($cart_id, $payment_gateway, 'confirmOrdersOlderThanNMinutes');
                         if (!is_null($status)) {
 
                             Log::debug
@@ -2991,11 +3150,7 @@ final class SummitOrderService
                                     )
                                 );
 
-                                list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
-
-                                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return, $order->getOwner());
-
-                                $order->setCancelled();
+                                $this->releaseOrderSlots($summit, $order);
                             }
                         }
 
@@ -3077,8 +3232,14 @@ final class SummitOrderService
 
             try {
 
-                $order = $this->order_repository->getByIdExclusiveLock($order_id);
+                // refresh: the entity comes from the listing query's identity map and may have been
+                // cancelled or paid by another process (widget DELETE, webhook) since then
+                $order = $this->order_repository->getByIdExclusiveLock($order_id, true);
                 if (!$order instanceof SummitOrder) return;
+                if ($order->isPaid() || $order->isCancelled()) {
+                    Log::debug(sprintf("SummitOrderService::processOrder2Revoke order %s is %s, skipping", $order->getId(), $order->getStatus()));
+                    return;
+                }
                 $summit = $order->getSummit();
                 Log::debug(sprintf("SummitOrderService::processOrder2Revoke processing order %s summit %s", $order->getId(), $summit->getId()));
                 $payment_gateway = $summit->getPaymentGateWayPerApp
@@ -3094,29 +3255,20 @@ final class SummitOrderService
 
                 Log::warning(sprintf("SummitOrderService::processOrder2Revoke cancelling order reservation %s create at %s", $order->getNumber(), $order->getCreated()->format("Y-m-d h:i:sa")));
 
-                $cart_id = $order->getPaymentGatewayCartId();
-                if (!empty($cart_id)) {
+                $action = $this->resolveOrderReleaseAction($order, $payment_gateway, 'processOrder2Revoke');
 
-                    $status = $payment_gateway->getCartStatus($cart_id);
-                    if (!is_null($status)) {
-                        if (!$payment_gateway->canAbandon($status)) {
-                            Log::warning(sprintf("SummitOrderService::processOrder2Revoke reservation %s created at %s can not be cancelled external status %s", $order->getId(), $order->getCreated()->format("Y-m-d h:i:sa"), $status));
-                            if ($payment_gateway->isSucceeded($status)) {
-                                $order->setPaid($payment_gateway->getPaymentDetailsInfo($cart_id));
-                                // invoke now to avoid delays
-                                $this->processInvitation($order);
-                            }
-                            return;
-                        }
-                        $payment_gateway->abandonCart($cart_id);
-                    }
+                if ($action === self::ReleaseAction_Succeeded) {
+                    Log::warning(sprintf("SummitOrderService::processOrder2Revoke order %s was paid at the gateway, marking as paid.", $order->getId()));
+                    $this->markOrderPaidFromGateway($order, $payment_gateway);
+                    return;
                 }
 
-                list($tickets_to_return, $promo_codes_to_return) = $order->calculateTicketsAndPromoCodesToReturn();
+                if ($action === self::ReleaseAction_Hold) {
+                    Log::warning(sprintf("SummitOrderService::processOrder2Revoke order %s keeps its slots for now, will retry on next run.", $order->getId()));
+                    return;
+                }
 
-                $this->restoreTicketsPromoCodes($summit, $tickets_to_return, $promo_codes_to_return, $order->getOwner());
-
-                $order->setCancelled();
+                $this->releaseOrderSlots($summit, $order);
 
                 Log::warning(sprintf("SummitOrderService::processOrder2Revoke order %s got cancelled", $order->getId()));
             } catch (\Exception $ex) {

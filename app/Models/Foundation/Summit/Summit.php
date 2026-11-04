@@ -6024,39 +6024,69 @@ SQL;
     public function getSummitDaysWithEvents(): array
     {
         $days = $this->getSummitDays();
-        $list = [];
-        foreach ($days as $day) {
-            $begin = clone($day);
-            $begin = $begin->setTime(0, 0, 0)->setTimezone(new \DateTimeZone('UTC'));
-            $end = clone($day);
-            $end = $end->setTime(23, 59, 59)->setTimezone(new \DateTimeZone('UTC'));
-            $count = 0;
-            try {
-                $sql = <<<SQL
-            SELECT COUNT(SummitEvent.ID) AS QTY
+        if (count($days) == 0) return [];
+
+        $lifetime = intval(Config::get('cache_api_response.summit_dates_with_events_lifetime', 0));
+        $compute = function () use ($days): array {
+            return $this->computeSummitDaysWithEvents($days);
+        };
+
+        if ($lifetime <= 0) {
+            $with_events = $compute();
+        } else {
+            // the key carries the summit dates and timezone, so a stale list is never served after they change
+            $key = sprintf(
+                "summit_%s_dates_with_events_%s_%s_%s",
+                $this->id,
+                preg_replace('/[^A-Za-z0-9]/', '_', strval($this->getTimeZoneId())),
+                $this->begin_date->getTimestamp(),
+                $this->end_date->getTimestamp()
+            );
+            $with_events = Cache::remember($key, $lifetime, $compute);
+        }
+
+        return array_values(array_filter($days, function (DateTime $day) use ($with_events) {
+            return in_array($day->format('Y-m-d'), $with_events);
+        }));
+    }
+
+    /**
+     * Single query over the published events, the per day overlap test runs in PHP
+     * @param DateTime[] $days summit days (summit timezone)
+     * @return string[] Y-m-d of the days that have at least one published event
+     */
+    private function computeSummitDaysWithEvents(array $days): array
+    {
+        $sql = <<<SQL
+            SELECT SummitEvent.StartDate, SummitEvent.EndDate
             FROM SummitEvent
             WHERE
             SummitEvent.SummitID = :summit_id
             AND SummitEvent.Published = 1
-            AND (SummitEvent.StartDate <= :end and SummitEvent.EndDate >= :begin)
 SQL;
-                $stmt = $this->prepareRawSQL($sql, [
-                    'summit_id' => $this->id,
-                    'begin' => $begin->format("Y-m-d H:i:s"),
-                    'end' => $end->format('Y-m-d H:i:s'),
-                ]);
-                $res = $stmt->executeQuery();
-                $res = $res->fetchFirstColumn();
-                $count = count($res) > 0 ? $res[0] : 0;
-            } catch (\Exception $ex) {
-                Log::debug($ex);
-                $count = 0;
-            }
-            if ($count > 0) {
-                $list[] = $day;
+        $stmt = $this->prepareRawSQL($sql, ['summit_id' => $this->id]);
+        $events = $stmt->executeQuery()->fetchAllAssociative();
+
+        $list = [];
+        foreach ($days as $day) {
+            $begin = clone($day);
+            $begin = $begin->setTime(0, 0, 0)->setTimezone(new \DateTimeZone('UTC'))->format("Y-m-d H:i:s");
+            $end = clone($day);
+            $end = $end->setTime(23, 59, 59)->setTimezone(new \DateTimeZone('UTC'))->format("Y-m-d H:i:s");
+            foreach ($events as $event) {
+                // UTC "Y-m-d H:i:s" strings, same overlap test the SQL used to run
+                // a published event may lack dates, SQL never matched those rows (NULL comparison)
+                if (
+                    $event['StartDate'] !== null &&
+                    $event['EndDate'] !== null &&
+                    $event['StartDate'] <= $end &&
+                    $event['EndDate'] >= $begin
+                ) {
+                    $list[] = $day->format('Y-m-d');
+                    break;
+                }
             }
         }
-
         return $list;
     }
 

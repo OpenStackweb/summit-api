@@ -20,4 +20,5 @@ return [
     'get_summits_response_lifetime'         => env('CACHE_API_RESPONSE_GET_SUMMITS_LIFETIME', 600),
     'file_url_lifetime'                     => env('CACHE_API_RESPONSE_FILE_URL_LIFETIME', 3600),
     'event_has_access_lifetime'             => env('CACHE_API_RESPONSE_EVENT_HAS_ACCESS_LIFETIME', 600),
+    'summit_dates_with_events_lifetime'     => env('CACHE_API_RESPONSE_SUMMIT_DATES_WITH_EVENTS_LIFETIME', 300),
 ];

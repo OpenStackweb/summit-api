@@ -24,6 +24,8 @@ use Doctrine\DBAL\TransactionIsolationLevel;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\utils\SilverstripeBaseModel;
 use libs\utils\ITransactionService;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
@@ -57,6 +59,11 @@ use utils\PagingInfo;
  */
 final class AttendeeService extends AbstractService implements IAttendeeService
 {
+    /**
+     * seconds, same bound as SynchAllAttendeesStatus::$timeout
+     */
+    const ResynchAttendeesStatusLockTTL = 7200;
+
     /**
      * @var ISummitAttendeeRepository
      */
@@ -1129,13 +1136,15 @@ final class AttendeeService extends AbstractService implements IAttendeeService
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s", $summit_id));
         $key = sprintf("AttendeeService::resynchAttendeesStatusBySummit::%s", $summit_id);
 
-        if (Cache::has($key)) {
+        // owner-aware lock: the TTL lets a killed run (no finally) release it by itself, and release()
+        // in the finally only frees it if this run still owns it (a longer run can outlive the TTL)
+        $lock = Cache::lock($key, self::ResynchAttendeesStatusLockTTL);
+        if (!$lock->get()) {
             Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s already running", $summit_id));
             return;
         }
 
         try {
-            Cache::add($key, $key);
             $summit = $this->summit_repository->getById($summit_id);
             if (!$summit instanceof Summit)
                 throw new EntityNotFoundException(sprintf("Summit %s not found", $summit_id));
@@ -1179,9 +1188,26 @@ final class AttendeeService extends AbstractService implements IAttendeeService
                     }
                 }
                 ++$current_page;
+
+                // release the identity map between pages; the manager is fetched from the registry on
+                // every page because DoctrineTransactionService replaces it after a failed transaction
+                $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+                if ($em->isOpen())
+                    $em->clear();
+
+                Log::debug
+                (
+                    sprintf
+                    (
+                        "AttendeeService::resynchAttendeesStatusBySummit summit id %s processed %s attendees so far, memory usage %s bytes",
+                        $summit_id,
+                        $count,
+                        memory_get_usage(true)
+                    )
+                );
             } while (true);
         } finally {
-            Cache::forget($key);
+            $lock->release();
         }
 
         Log::debug(sprintf("AttendeeService::resynchAttendeesStatusBySummit summit id %s processed %s attendees", $summit_id, $count));

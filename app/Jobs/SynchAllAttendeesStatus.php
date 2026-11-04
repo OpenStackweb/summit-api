@@ -31,6 +31,9 @@ final class SynchAllAttendeesStatus implements ShouldQueue
 {
     public $tries = 1;
 
+    // 2 hours, bounded explicitly instead of relying on the worker default
+    public $timeout = 7200;
+
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**

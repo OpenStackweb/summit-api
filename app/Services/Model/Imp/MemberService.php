@@ -21,6 +21,7 @@ use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use App\Services\Apis\IExternalUserApi;
 use App\Services\Model\dto\ExternalUserDTO;
 use DateTime;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -454,15 +455,35 @@ final class MemberService
      */
     public function registerExternalUserById($user_external_id): Member
     {
-        $member = $this->tx_service->transaction(function () use ($user_external_id) {
-            // get external user from IDP
-            $user_data = $this->user_ext_api->getUserById($user_external_id);
-            if(is_null($user_data) || !isset($user_data['email'])){
-                Log::warning(sprintf("MemberService::registerExternalUserById user_external_id %s does not exists.", $user_external_id));
-                throw new EntityNotFoundException(sprintf("MemberService::registerExternalUserById user_external_id %s does not exists.", $user_external_id));
-            }
-            return $this->registerExternalUserByPayload($user_data);
-        });
+        $register = function () use ($user_external_id) {
+            return $this->tx_service->transaction(function () use ($user_external_id) {
+                // get external user from IDP
+                $user_data = $this->user_ext_api->getUserById($user_external_id);
+                if(is_null($user_data) || !isset($user_data['email'])){
+                    Log::warning(sprintf("MemberService::registerExternalUserById user_external_id %s does not exists.", $user_external_id));
+                    throw new EntityNotFoundException(sprintf("MemberService::registerExternalUserById user_external_id %s does not exists.", $user_external_id));
+                }
+                return $this->registerExternalUserByPayload($user_data);
+            });
+        };
+
+        try {
+            $member = $register();
+        } catch (UniqueConstraintViolationException $ex) {
+            // another process (login or a concurrent IDP message) created the same member between
+            // our lookups and our insert (READ COMMITTED takes no gap lock), the retry finds it and updates it.
+            // Both Email and ExternalUserId are unique keys, so either one can be the reported one
+            Log::warning
+            (
+                sprintf
+                (
+                    "MemberService::registerExternalUserById user_external_id %s concurrent member creation, retrying once: %s",
+                    $user_external_id,
+                    $ex->getMessage()
+                )
+            );
+            $member = $register();
+        }
 
         Event::dispatch(new MemberDataUpdatedExternally($member->getId()));
 

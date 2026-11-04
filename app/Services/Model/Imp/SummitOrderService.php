@@ -41,6 +41,7 @@ use App\Services\Model\dto\ExternalUserDTO;
 use App\Services\Model\Strategies\TicketFinder\ITicketFinderStrategyFactory;
 use App\Services\Utils\CSVReader;
 use App\Services\Utils\ILockManagerService;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\App;
@@ -432,7 +433,7 @@ final class ReserveOrderTask extends AbstractTask
     {
         $this->formerState = $formerState;
 
-        return $this->tx_service->transaction(function () {
+        $reserve = function () {
 
             $owner_email = $this->payload['owner_email'];
             $owner_first_name = $this->payload['owner_first_name'];
@@ -685,7 +686,22 @@ final class ReserveOrderTask extends AbstractTask
             // ApplyPromoCodeTask — which now runs after ReserveOrderTask — can read
             // the state populated by PreProcessReservationTask.
             return $this->formerState;
-        });
+        };
+
+        try {
+            return $this->tx_service->transaction($reserve);
+        } catch (UniqueConstraintViolationException $ex) {
+            // raised by the root flush (after the closure returns), so it can't be caught inside the transaction.
+            // a concurrent reserve for the same attendee email won the race on the (SummitID, Email) unique index
+            if (!str_contains($ex->getMessage(), 'SummitAttendee_Email_SummitID')) throw $ex;
+            Log::warning(sprintf("ReserveOrderTask::run duplicate attendee on concurrent reserve: %s", $ex->getMessage()));
+            throw new ValidationException(
+                sprintf(
+                    "A registration for %s is already being processed, please refresh and check your orders.",
+                    $this->payload['owner_email']
+                )
+            );
+        }
     }
 
     public function undo()

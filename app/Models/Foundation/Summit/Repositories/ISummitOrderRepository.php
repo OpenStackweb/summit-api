@@ -36,23 +36,11 @@ interface ISummitOrderRepository extends IBaseRepository
     public function getByPaymentGatewayCartIdExclusiveLock(string $payment_gateway_cart_id): ?SummitOrder;
 
     /**
-     * @param string $externalId
-     * @return SummitOrder|null
-     */
-    public function getByExternalIdLockExclusive(string $externalId):?SummitOrder;
-
-    /**
      * @param Summit $summit
      * @param string $externalId
      * @return SummitOrder|null
      */
     public function getByExternalIdAndSummitLockExclusive(Summit $summit, string $externalId):?SummitOrder;
-
-    /**
-     * @param string $email
-     * @return mixed
-     */
-    public function getAllByOwnerEmail(string $email);
 
     /**
      * @param string $email

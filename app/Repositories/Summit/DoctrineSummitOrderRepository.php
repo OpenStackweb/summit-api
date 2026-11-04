@@ -93,25 +93,6 @@ final class DoctrineSummitOrderRepository
      * @param string $email
      * @return mixed
      */
-    public function getAllByOwnerEmail(string $email)
-    {
-        $query = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->where("e.owner_email = :owner_email");
-
-        $query->setParameter("owner_email", trim($email));
-        return $query->getQuery()
-            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
-            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
-            ->getResult();
-    }
-
-    /**
-     * @param string $email
-     * @return mixed
-     */
     public function getAllByOwnerEmailAndOwnerNotSet(string $email)
     {
 
@@ -172,25 +153,6 @@ final class DoctrineSummitOrderRepository
 
         return $query->getQuery()->setMaxResults($max)->getResult();
 
-    }
-
-    /**
-     * @param string $externalId
-     * @return SummitOrder|null
-     */
-    public function getByExternalIdLockExclusive(string $externalId): ?SummitOrder
-    {
-        $query = $this->getEntityManager()
-            ->createQueryBuilder()
-            ->select("e")
-            ->from($this->getBaseEntity(), "e")
-            ->where("e.external_id = :external_id");
-
-        $query->setParameter("external_id", $externalId);
-        return $query->getQuery()
-            ->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
-            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
-            ->getOneOrNullResult();
     }
 
     /**

@@ -583,6 +583,11 @@ final class SerializerRegistry
             self::SerializerType_CSV => SummitAttendeeBadgePrintCSVSerializer::class,
         ];
 
+        $this->registry['SummitAttendeeCheckInLog'] = [
+            self::SerializerType_Public => SummitAttendeeCheckInLogSerializer::class,
+            self::SerializerType_CSV => SummitAttendeeCheckInLogCSVSerializer::class,
+        ];
+
         $this->registry['SummitAttendeeNote'] = [
             self::SerializerType_Public => SummitAttendeeNoteSerializer::class,
             self::SerializerType_CSV => AdminSummitAttendeeNoteCSVSerializer::class,

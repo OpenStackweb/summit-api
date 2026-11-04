@@ -1091,6 +1091,7 @@ final class OAuth2SummitAttendeesApiController extends OAuth2ProtectedController
                 'admin_notes' => 'nullable|sometimes|string|max:1024',
                 'tags' => 'sometimes|string_array',
                 'manager_id' => 'sometimes|integer',
+                'reason' => 'sometimes|nullable|string|max:1024',
             ];
 
             // Creates a Validator instance and validates the data.

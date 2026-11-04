@@ -39,6 +39,7 @@ use models\summit\Summit;
 use models\summit\SummitPromoCodeMemberReservation;
 use models\summit\SummitRegistrationPromoCode;
 use Mockery;
+use services\model\ISummitAttendeeCheckInLogService;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -99,7 +100,8 @@ class RestorePathReservationTest extends TestCase
             Mockery::mock(ICompanyService::class),
             Mockery::mock(ITicketFinderStrategyFactory::class),
             Mockery::mock(ITransactionService::class),
-            Mockery::mock(ILockManagerService::class)
+            Mockery::mock(ILockManagerService::class),
+            Mockery::mock(ISummitAttendeeCheckInLogService::class)
         );
     }
 

@@ -53,6 +53,31 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
     }
 
     /**
+     * Returns a CSV column key that does not collide with the already taken ones,
+     * disambiguating with the question name, then the id, then a counter as last resort.
+     * @param array $taken_keys
+     * @param string $label
+     * @param string $name
+     * @param int $id
+     * @return string
+     */
+    private static function getUniqueColumnKey(array $taken_keys, string $label, string $name, int $id): string
+    {
+        if (!array_key_exists($label, $taken_keys)) return $label;
+
+        $key = sprintf("%s (%s)", $label, AbstractSerializer::getCSVLabel($name));
+        if (!array_key_exists($key, $taken_keys)) return $key;
+
+        $key = sprintf("%s (%s-%s)", $label, AbstractSerializer::getCSVLabel($name), $id);
+        $base = $key;
+        $i = 2;
+        while (array_key_exists($key, $taken_keys)) {
+            $key = sprintf("%s-%s", $base, $i++);
+        }
+        return $key;
+    }
+
+    /**
      * @param null $expand
      * @param array $fields
      * @param array $relations
@@ -93,7 +118,13 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
 
                 if (!self::isAllowedExtraQuestion($allowed_sponsor_extra_questions, $question->getId())) continue;
 
-                $label = AbstractSerializer::getCSVLabel($question->getLabel());
+                $label = self::getUniqueColumnKey
+                (
+                    $values + $sponsor_questions_values,
+                    AbstractSerializer::getCSVLabel($question->getLabel()),
+                    $question->getName(),
+                    $question->getId()
+                );
                 Log::debug
                 (
                     sprintf
@@ -130,9 +161,15 @@ final class SponsorBadgeScanCSVSerializer extends AbstractSerializer
             foreach ($params['ticket_questions'] as $question) {
                 if (!self::isAllowedExtraQuestion($allowed_attendee_extra_questions, $question->getId())) continue;
 
-                $label = AbstractSerializer::getCSVLabel($question->getLabel());
-
                 if (!$question instanceof SummitOrderExtraQuestionType) continue;
+
+                $label = self::getUniqueColumnKey
+                (
+                    $values + $sponsor_questions_values + $ticket_questions_values,
+                    AbstractSerializer::getCSVLabel($question->getLabel()),
+                    $question->getName(),
+                    $question->getId()
+                );
                 $ticket_questions_values[$label] = '';
 
                 if (!is_null($ticket_owner)) {

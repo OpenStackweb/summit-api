@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 
 class SponsorSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAuditLogFormatter
 {
+
     private function buildDiscountDetails($subject): string
     {
         $details = [];
@@ -86,6 +87,10 @@ class SponsorSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
                         $discount_details,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Sponsor Registration Discount Code '%s' (ID: %s) in Summit '%s'", $code, $id, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("SponsorSummitRegistrationDiscountCodeAuditLogFormatter error: " . $ex->getMessage());

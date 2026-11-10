@@ -66,6 +66,10 @@ class PresentationCategoryAuditLogFormatter extends AbstractAuditLogFormatter
                         $summit_name,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Presentation Category '%s' (%s) (%s) for Summit '%s'", $title, $code, $id, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("PresentationCategoryAuditLogFormatter error: " . $ex->getMessage());

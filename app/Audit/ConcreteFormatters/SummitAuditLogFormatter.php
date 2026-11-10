@@ -57,6 +57,10 @@ class SummitAuditLogFormatter extends AbstractAuditLogFormatter
                         $id,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Summit '%s' (%s)", $name, $id));
             }
         } catch (\Exception $ex) {
             Log::warning("SummitAuditLogFormatter error: " . $ex->getMessage());

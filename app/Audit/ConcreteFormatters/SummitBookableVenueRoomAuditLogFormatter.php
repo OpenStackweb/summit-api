@@ -69,6 +69,10 @@ class SummitBookableVenueRoomAuditLogFormatter extends AbstractAuditLogFormatter
                         $summit_name,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Bookable Venue Room '%s' (%s) in Venue '%s' for Summit '%s'", $name, $id, $venue_name, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("SummitBookableVenueRoomAuditLogFormatter error: " . $ex->getMessage());

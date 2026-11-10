@@ -68,6 +68,10 @@ class SummitTaxTypeAuditLogFormatter extends AbstractAuditLogFormatter
                         ($rate !== null ? sprintf("%.2f%%", $rate) : 'N/A'),
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Tax Type '%s' (%s) for Summit '%s'", $name, $id, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("SummitTaxTypeAuditLogFormatter error: " . $ex->getMessage());

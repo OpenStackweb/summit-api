@@ -15,10 +15,20 @@
 use Mockery;
 use models\oauth2\IResourceServerContext;
 use models\main\Member;
+use models\summit\SummitEvent;
 use models\summit\SummitEventAttendanceMetric;
+use models\summit\SummitGroupEvent;
+use ModelSerializers\AdminSummitEventCSVSerializer;
+use ModelSerializers\AdminSummitEventSerializer;
+use ModelSerializers\AdminSummitEventWithFileCSVSerializer;
+use ModelSerializers\AdminSummitEventWithFileSerializer;
+use ModelSerializers\AdminSummitGroupEventSerializer;
 use ModelSerializers\PublicSummitEventAttendanceMetricSerializer;
 use ModelSerializers\SerializerRegistry;
 use ModelSerializers\SummitEventAttendanceMetricSerializer;
+use ModelSerializers\SummitEventSerializer;
+use ModelSerializers\SummitEventWithFileSerializer;
+use ModelSerializers\SummitGroupEventSerializer;
 
 /**
  * The "current_attendance" expand of the public events API must not leak ip/browser/origin.
@@ -93,5 +103,64 @@ final class PublicSummitEventAttendanceMetricSerializerTest extends TestCase
             SummitEventAttendanceMetricSerializer::class,
             $this->inner($registry->getSerializer($metric))
         );
+    }
+
+    private function attendanceTypeFor(string $serializer_class): string
+    {
+        $serializer = new $serializer_class(
+            Mockery::mock(SummitEvent::class), Mockery::mock(IResourceServerContext::class)
+        );
+        $method = new \ReflectionMethod($serializer, 'getSerializerType');
+        $method->setAccessible(true);
+        return $method->invoke($serializer, 'current_attendance');
+    }
+
+    public function testPublicEventSerializersSelectPublicAttendance()
+    {
+        foreach ([
+            SummitEventSerializer::class,
+            SummitEventWithFileSerializer::class,
+            SummitGroupEventSerializer::class,
+        ] as $serializer_class) {
+            $this->assertEquals(
+                SerializerRegistry::SerializerType_PublicAttendance,
+                $this->attendanceTypeFor($serializer_class),
+                $serializer_class
+            );
+        }
+    }
+
+    public function testAdminEventSerializersKeepFullAttendance()
+    {
+        foreach ([
+            AdminSummitEventSerializer::class,
+            AdminSummitEventCSVSerializer::class,
+            AdminSummitEventWithFileSerializer::class,
+            AdminSummitEventWithFileCSVSerializer::class,
+            AdminSummitGroupEventSerializer::class,
+        ] as $serializer_class) {
+            $this->assertNotEquals(
+                SerializerRegistry::SerializerType_PublicAttendance,
+                $this->attendanceTypeFor($serializer_class),
+                $serializer_class
+            );
+        }
+    }
+
+    public function testRegistryMapsAdminGroupEventSerializerForPrivateAndCsv()
+    {
+        $registry = SerializerRegistry::getInstance();
+        $event = new SummitGroupEvent();
+        $this->assertInstanceOf(
+            AdminSummitGroupEventSerializer::class,
+            $this->inner($registry->getSerializer($event, SerializerRegistry::SerializerType_Private))
+        );
+        $this->assertInstanceOf(
+            AdminSummitGroupEventSerializer::class,
+            $this->inner($registry->getSerializer($event, SerializerRegistry::SerializerType_CSV))
+        );
+        $inner = $this->inner($registry->getSerializer($event, SerializerRegistry::SerializerType_Public));
+        $this->assertInstanceOf(SummitGroupEventSerializer::class, $inner);
+        $this->assertNotInstanceOf(AdminSummitGroupEventSerializer::class, $inner);
     }
 }

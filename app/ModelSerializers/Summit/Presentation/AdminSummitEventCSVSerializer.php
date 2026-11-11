@@ -77,4 +77,12 @@ class AdminSummitEventCSVSerializer extends SummitEventSerializer
 
         return $values;
     }
+
+    /**
+     * @return bool
+     */
+    protected function canExposeAttendanceTechnicalData(): bool
+    {
+        return true;
+    }
 }

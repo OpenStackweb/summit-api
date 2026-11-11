@@ -122,6 +122,19 @@ class SummitEventSerializer extends SilverStripeSerializer
     ];
 
     /**
+     * The public serializer must never expose technical data (ip, browser, origin) of the
+     * attendance metrics; admins get the full one through AdminSummitEventSerializer.
+     * @param string|null $relation
+     * @return string
+     */
+    protected function getSerializerType(?string $relation = null): string
+    {
+        if (!is_null($relation) && trim($relation) === 'current_attendance')
+            return SerializerRegistry::SerializerType_PublicAttendance;
+        return parent::getSerializerType($relation);
+    }
+
+    /**
      * @param string|null $expand
      * @param array $fields
      * @param array $relations

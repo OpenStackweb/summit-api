@@ -38,16 +38,27 @@ final class PresentationSpeakerRejectedPresentationsTest extends TestCase
         $speaker->shouldReceive('hasMember')->andReturn(false);
         $speaker->shouldReceive('getRejectedPresentationIds')->andReturn([11, 12]);
         $speaker->shouldReceive('getRejectedPresentations')->andReturn([]);
+        $speaker->shouldReceive('getAlternatePresentationIds')->andReturn([21]);
+        $speaker->shouldReceive('getAlternatePresentations')->andReturn([]);
+        // records the "published_only" flag (6th argument) of every accepted lookup
+        $speaker->shouldReceive('getAcceptedPresentationIds')->andReturnUsing(
+            function () use ($speaker) {
+                $speaker->published_only_flags[] = func_get_arg(5);
+                return [31];
+            }
+        );
+        $speaker->shouldReceive('getAcceptedPresentations')->andReturn([]);
         return $speaker;
     }
 
-    private function serialize(string $class): array
+    private function serialize(string $class, ?PresentationSpeaker $speaker = null): array
     {
-        $serializer = new $class($this->buildSpeaker(), Mockery::mock(IResourceServerContext::class)->shouldIgnoreMissing());
+        $speaker = $speaker ?? $this->buildSpeaker();
+        $serializer = new $class($speaker, Mockery::mock(IResourceServerContext::class)->shouldIgnoreMissing());
         return $serializer->serialize(
-            'rejected_presentations',
+            'rejected_presentations,alternate_presentations,accepted_presentations',
             [],
-            ['rejected_presentations'],
+            ['rejected_presentations', 'alternate_presentations', 'accepted_presentations'],
             ['summit' => Mockery::mock(Summit::class)->shouldIgnoreMissing()]
         );
     }
@@ -62,5 +73,35 @@ final class PresentationSpeakerRejectedPresentationsTest extends TestCase
     {
         $values = $this->serialize(AdminPresentationSpeakerSerializer::class);
         $this->assertArrayHasKey('rejected_presentations', $values);
+    }
+
+    public function testPublicSerializerDoesNotExposeAlternatePresentations()
+    {
+        $values = $this->serialize(PresentationSpeakerSerializer::class);
+        $this->assertArrayNotHasKey('alternate_presentations', $values);
+    }
+
+    public function testAdminSerializerStillExposesAlternatePresentations()
+    {
+        $values = $this->serialize(AdminPresentationSpeakerSerializer::class);
+        $this->assertArrayHasKey('alternate_presentations', $values);
+    }
+
+    public function testPublicSerializerAsksOnlyForPublishedAcceptedPresentations()
+    {
+        $speaker = $this->buildSpeaker();
+        $speaker->published_only_flags = [];
+        $this->serialize(PresentationSpeakerSerializer::class, $speaker);
+        $this->assertNotEmpty($speaker->published_only_flags);
+        $this->assertNotContains(false, $speaker->published_only_flags);
+    }
+
+    public function testAdminSerializerKeepsUnpublishedAcceptedPresentations()
+    {
+        $speaker = $this->buildSpeaker();
+        $speaker->published_only_flags = [];
+        $this->serialize(AdminPresentationSpeakerSerializer::class, $speaker);
+        $this->assertNotEmpty($speaker->published_only_flags);
+        $this->assertNotContains(true, $speaker->published_only_flags);
     }
 }

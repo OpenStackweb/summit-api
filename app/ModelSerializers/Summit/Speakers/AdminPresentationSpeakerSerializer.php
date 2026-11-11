@@ -41,6 +41,11 @@ final class AdminPresentationSpeakerSerializer extends PresentationSpeakerSerial
         'registration_code',
     ];
 
+    protected function canExposeRejectedPresentations(): bool
+    {
+        return true;
+    }
+
     protected function checkDataPermissions(PresentationSpeaker $speaker, array $values):array{
         if(array_key_exists("email", $values)) {
             $application_type = $this->resource_server_context->getApplicationType();

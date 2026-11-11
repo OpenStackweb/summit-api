@@ -40,6 +40,16 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         'badge_features',
     ];
 
+    /**
+     * Rejected submissions are not public data. Only the private/admin serializers
+     * (AdminPresentationSpeakerSerializer) override this to expose them.
+     * @return bool
+     */
+    protected function canExposeRejectedPresentations(): bool
+    {
+        return false;
+    }
+
     protected function getMemberSerializerType():string {
         return SerializerRegistry::SerializerType_Public;
     }
@@ -130,7 +140,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
             $values['alternate_presentations'] = array_merge($alternate_presentation_ids, $moderated_alternate_presentation_ids);
         }
 
-        if (in_array('rejected_presentations', $relations) && !is_null($summit)) {
+        if ($this->canExposeRejectedPresentations() && in_array('rejected_presentations', $relations) && !is_null($summit)) {
             $rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null);
             $moderated_rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleModerator, false, [], $params['filter'] ?? null);
             $values['rejected_presentations'] = array_merge($rejected_presentation_ids, $moderated_rejected_presentation_ids);
@@ -314,6 +324,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
                     }
                         break;
                     case 'rejected_presentations': {
+                        if (!$this->canExposeRejectedPresentations()) break;
                         $rejected_presentations = [];
                         foreach ($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null) as $p) {
                             $rejected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize

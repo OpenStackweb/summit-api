@@ -25,4 +25,12 @@ class AdminSummitEventWithFileSerializer extends SummitEventWithFileSerializer
     protected static $allowed_fields = [
         'occupancy',
     ];
+
+    /**
+     * @return bool
+     */
+    protected function canExposeAttendanceTechnicalData(): bool
+    {
+        return true;
+    }
 }

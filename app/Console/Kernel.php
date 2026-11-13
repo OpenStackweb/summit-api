@@ -42,6 +42,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SummitEmailFlowTypeSeederCommand::class,
         \App\Console\Commands\PresentationMaterialsCreateMUXAssetsCommand::class,
         \App\Console\Commands\RecalculateAttendeesStatusCommand::class,
+        \App\Console\Commands\RepairAttendeeMemberEmailPairsCommand::class,
         \App\Console\Commands\EnableMP4SupportAtMUXCommand::class,
         \App\Console\Commands\SummitMediaUploadMigratePrivateToPublicStorage::class,
         \App\Console\Commands\PresentationMediaUploadsRegenerateTemporalLinks::class,

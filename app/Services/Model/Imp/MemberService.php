@@ -41,7 +41,6 @@ use models\main\Organization;
 use models\summit\ISpeakerRegistrationRequestRepository;
 use models\summit\ISummitAttendeeRepository;
 use models\summit\Presentation;
-use models\summit\SummitAttendee;
 use models\summit\SummitOrder;
 use function Psy\debug;
 
@@ -766,13 +765,9 @@ final class MemberService
         $this->tx_service->transaction(function() use($member_id){
             // associate attendees/tickets
             $member = $this->member_repository->getById($member_id);
-            $attendees = $this->attendee_repository->getByEmailAndMemberNotSet($member->getEmail());
-            if(!is_null($attendees)) {
-                foreach ($attendees as $attendee) {
-                    if (!$attendee instanceof SummitAttendee) continue;
-                    Log::debug(sprintf("MemberService::assocSummitOrders got attendee %s for member %s", $attendee->getId(), $member_id));
-                    $attendee->setMember($member);
-                }
+            foreach ($this->attendee_repository->getLinkableByMember($member) as $attendee) {
+                Log::debug(sprintf("MemberService::assocSummitOrders got attendee %s for member %s", $attendee->getId(), $member_id));
+                $attendee->setMember($member);
             }
         });
     }

@@ -479,9 +479,11 @@ CSV;
         );
 
         Bus::assertDispatchedTimes(CopyClonedMediaUploadFilesJob::class, 1);
-        Bus::assertDispatched(CopyClonedMediaUploadFilesJob::class, function (CopyClonedMediaUploadFilesJob $job) use ($upload, $clone_upload) {
+        Bus::assertDispatched(CopyClonedMediaUploadFilesJob::class, function (CopyClonedMediaUploadFilesJob $job) use ($presentation, $upload, $clone, $clone_upload) {
             return $job->source_media_upload_id === $upload->getId()
+                && $job->source_presentation_id === $presentation->getId()
                 && $job->target_media_upload_id === $clone_upload->getId()
+                && $job->target_presentation_id === $clone->getId()
                 && $job->filename === 'deck.pptx';
         });
 

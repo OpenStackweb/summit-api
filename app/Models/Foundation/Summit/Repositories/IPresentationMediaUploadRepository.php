@@ -13,9 +13,18 @@
  **/
 
 
+use models\summit\PresentationMediaUpload;
 use models\utils\IBaseRepository;
 
 interface IPresentationMediaUploadRepository extends IBaseRepository
 {
+    /**
+     * Reads the row from the database even when the entity is already managed, so a row another
+     * process deleted or changed is seen as it is now. Null when the row is gone.
+     * @param int $id
+     * @param bool $exclusive_lock lock the row FOR UPDATE; needs an open transaction
+     * @return PresentationMediaUpload|null
+     */
+    public function getByIdFresh(int $id, bool $exclusive_lock = false): ?PresentationMediaUpload;
 
 }

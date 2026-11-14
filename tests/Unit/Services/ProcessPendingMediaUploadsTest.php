@@ -15,6 +15,7 @@
 use App\Models\Foundation\Summit\Repositories\IPendingMediaUploadRepository;
 use App\Services\Utils\Exceptions\UnacquiredLockException;
 use App\Services\Utils\ILockManagerService;
+use libs\utils\ICacheService;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
 use services\model\ISummitService;
@@ -77,7 +78,8 @@ class ProcessPendingMediaUploadsTest extends TestCase
         IPendingMediaUploadRepository $pendingRepo,
         ITransactionService $txService,
         ?ISummitRepository $summitRepository = null,
-        ?ILockManagerService $lockService = null
+        ?ILockManagerService $lockService = null,
+        ?ICacheService $cacheService = null
     ): SummitService {
         $ref = new \ReflectionClass(SummitService::class);
         $service = $ref->newInstanceWithoutConstructor();
@@ -102,6 +104,15 @@ class ProcessPendingMediaUploadsTest extends TestCase
         $prop = $ref->getProperty('lock_service');
         $prop->setAccessible(true);
         $prop->setValue($service, $lockService);
+
+        // Default: a reachable lock store, so a lock miss means the lock is really held.
+        if (!$cacheService) {
+            $cacheService = Mockery::mock(ICacheService::class);
+            $cacheService->shouldReceive('exists')->andReturn(true);
+        }
+        $prop = $ref->getProperty('cache_service');
+        $prop->setAccessible(true);
+        $prop->setValue($service, $cacheService);
 
         // tx_service is protected in AbstractService (grandparent of SummitService)
         $parentRef = $ref;
@@ -402,7 +413,7 @@ class ProcessPendingMediaUploadsTest extends TestCase
 
         $lockService = Mockery::mock(ILockManagerService::class);
         $lockService->shouldReceive('acquireLock')->once()
-            ->with(SummitService::mediaUploadStorageLockName(103, 'deck.pptx'), ISummitService::MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME)
+            ->with(SummitService::mediaUploadStorageLockName(103, 'deck.pptx'), ISummitService::PENDING_MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME)
             ->andThrow(new UnacquiredLockException('upload 1 storage is locked'));
         $lockService->shouldNotReceive('releaseLock');
 
@@ -421,6 +432,102 @@ class ProcessPendingMediaUploadsTest extends TestCase
 
         $this->assertEquals(0, $stats['processed']);
         $this->assertEquals(0, $stats['errors']);
+    }
+
+    /**
+     * The lock store being down must not stall staff uploads: a lock miss with no key behind it is
+     * an unreachable store, not a holder, so the row is processed without the lock.
+     * @dataProvider lockStoreFailureProvider
+     */
+    public function testUploadIsProcessedWhenLockStoreIsUnavailable(\Throwable $acquire_failure): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+        $summitRepository = Mockery::mock(ISummitRepository::class);
+
+        $pendingUpload = Mockery::mock(PendingMediaUpload::class);
+        $pendingUpload->shouldReceive('getId')->andReturn(1);
+        $pendingUpload->shouldReceive('getMediaUpload')->andReturn($this->mediaUploadMock(104));
+        $pendingUpload->shouldReceive('getFileName')->andReturn('deck.pptx');
+        $pendingUpload->shouldReceive('getAttempts')->andReturnValues([0, 1]);
+        // the row IS attempted: marked Processing, then fails on the missing summit
+        $pendingUpload->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PROCESSING)->once();
+        $pendingUpload->shouldReceive('incrementAttempts')->once();
+        $pendingUpload->shouldReceive('getSummitId')->andReturn(999);
+        $summitRepository->shouldReceive('getById')->with(999)->andReturn(null);
+        $pendingUpload->shouldReceive('setErrorMessage')->once()->with(Mockery::pattern('/Summit 999 not found/'));
+
+        $lockService = Mockery::mock(ILockManagerService::class);
+        $lockService->shouldReceive('acquireLock')->once()->andThrow($acquire_failure);
+        $lockService->shouldNotReceive('releaseLock');
+        $cacheService = Mockery::mock(ICacheService::class);
+        $cacheService->shouldReceive('exists')->andReturn(false);
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn([$pendingUpload]);
+        // the rest of the run still happens: a lock store error never aborts the batch
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        $txService->shouldReceive('transaction')->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService, $summitRepository, $lockService, $cacheService);
+
+        $stats = $service->processPendingMediaUploads(3);
+
+        $this->assertEquals(1, $stats['errors']);
+    }
+
+    public static function lockStoreFailureProvider(): array
+    {
+        return [
+            'store unreachable (reported as a lock miss)' => [new UnacquiredLockException('lock name x')],
+            'store error (e.g. read-only replica)' => [new \RuntimeException('READONLY You can\'t write against a read only replica.')],
+        ];
+    }
+
+    /**
+     * A lock that cannot be released expires on its own; the rows after it are still processed.
+     */
+    public function testLockReleaseFailureDoesNotAbortTheBatch(): void
+    {
+        $pendingRepo = Mockery::mock(IPendingMediaUploadRepository::class);
+        $txService = Mockery::mock(ITransactionService::class);
+        $summitRepository = Mockery::mock(ISummitRepository::class);
+        $summitRepository->shouldReceive('getById')->with(999)->andReturn(null);
+
+        $rows = [];
+        foreach ([1, 2] as $id) {
+            $row = Mockery::mock(PendingMediaUpload::class);
+            $row->shouldReceive('getId')->andReturn($id);
+            $row->shouldReceive('getMediaUpload')->andReturn($this->mediaUploadMock(200 + $id));
+            $row->shouldReceive('getFileName')->andReturn('deck.pptx');
+            $row->shouldReceive('getAttempts')->andReturnValues([0, 1]);
+            $row->shouldReceive('setStatus')->with(PendingMediaUpload::STATUS_PROCESSING)->once();
+            $row->shouldReceive('incrementAttempts')->once();
+            $row->shouldReceive('getSummitId')->andReturn(999);
+            $row->shouldReceive('setErrorMessage')->once();
+            $rows[] = $row;
+        }
+
+        $lockService = Mockery::mock(ILockManagerService::class);
+        $lockService->shouldReceive('acquireLock')->twice()->andReturn('test-token');
+        $lockService->shouldReceive('releaseLock')->twice()->andThrow(new \RuntimeException('connection lost'));
+
+        $pendingRepo->shouldReceive('resetStuckProcessingRows')->once()->andReturn(0);
+        $pendingRepo->shouldReceive('getPendingUploads')->once()->andReturn($rows);
+        $pendingRepo->shouldReceive('deleteCompletedOlderThan')->once()->with(7, 1000)->andReturn(0);
+
+        $txService->shouldReceive('transaction')->andReturnUsing(function ($callback) {
+            return $callback();
+        });
+
+        $service = $this->createServiceWithDeps($pendingRepo, $txService, $summitRepository, $lockService);
+
+        $stats = $service->processPendingMediaUploads(3);
+
+        $this->assertEquals(2, $stats['errors']);
     }
 
     /**

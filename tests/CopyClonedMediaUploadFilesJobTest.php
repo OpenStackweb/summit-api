@@ -129,6 +129,24 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         self::$em->flush();
     }
 
+    private function makeJob(int $source_id, int $target_id): CopyClonedMediaUploadFilesJob
+    {
+        return new CopyClonedMediaUploadFilesJob(
+            $source_id, self::$original->getId(), $target_id, self::$clonePresentation->getId(), 'deck.pptx'
+        );
+    }
+
+    /**
+     * Deletes an upload's rows behind the EntityManager's back, as another process would: the
+     * entity this process already loaded stays in the identity map.
+     */
+    private function deleteRowOutsideEntityManager(int $id): void
+    {
+        $connection = self::$em->getConnection();
+        $connection->executeStatement('DELETE FROM PresentationMediaUpload WHERE ID = ?', [$id]);
+        $connection->executeStatement('DELETE FROM PresentationMaterial WHERE ID = ?', [$id]);
+    }
+
     private function runJob(CopyClonedMediaUploadFilesJob $job): void
     {
         $job->handle(App::make(ISummitService::class));
@@ -154,13 +172,16 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
             ->find(PresentationMediaUpload::class, $id);
     }
 
-    public function testQueueSettingsStayBelowRetryAfter(): void
+    public function testQueueSettingsKeepTheirOrdering(): void
     {
-        $job = new CopyClonedMediaUploadFilesJob(1, 2, 'deck.pptx');
-        $this->assertSame(5, $job->tries);
-        $this->assertSame([30, 60, 120, 300], $job->backoff);
+        $job = $this->makeJob(1, 2);
+        // a slow attempt is never re-served while it still runs
         $this->assertLessThan(Config::get('queue.connections.redis.retry_after'), $job->timeout);
         $this->assertLessThan(Config::get('queue.connections.database.retry_after'), $job->timeout);
+        // a killed attempt's locks outlive it, and a copy waiting on a lock outlasts that lock
+        $this->assertGreaterThan($job->timeout, ISummitService::MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME);
+        $this->assertCount($job->tries - 1, $job->backoff);
+        $this->assertGreaterThan(ISummitService::MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME, array_sum($job->backoff));
     }
 
     public function testHandleCopiesBothLegsAndLeavesOriginal(): void
@@ -168,7 +189,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         [$source, $target] = $this->makePair();
         $this->seedSource($source);
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
 
         $disk = Storage::disk('local');
         $this->assertSame('private-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
@@ -187,7 +208,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->seedSource($source);
         $this->assertStringContainsString('1-frozen/2-frozen-title', $source->getRelativePath(IStorageTypesConstants::PrivateType));
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
 
         $expected = sprintf('%s/%s/deck.pptx', self::$summit->getId(), self::$clonePresentation->getId());
         $this->assertStringEndsWith($expected, $target->getRelativePath(IStorageTypesConstants::PrivateType));
@@ -200,7 +221,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->seedSource($source);
         Storage::disk('local')->put($target->getRelativePath(IStorageTypesConstants::PrivateType), 'priv');
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
 
         $disk = Storage::disk('local');
         $this->assertSame('private-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
@@ -214,7 +235,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         [$source, $target] = $this->makePair();
         Storage::disk('local')->put($source->getRelativePath(IStorageTypesConstants::PrivateType), 'private-bytes');
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
 
         $this->assertSame('private-bytes', Storage::disk('local')->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
         $this->assertFalse(Storage::disk('local')->exists($target->getRelativePath(IStorageTypesConstants::PublicType)));
@@ -225,7 +246,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         [$source, $target] = $this->makePair();
 
         $this->expectException(\RuntimeException::class);
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
     }
 
     /**
@@ -237,7 +258,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         [$source, $target] = $this->makePair();
         Storage::disk('local')->put($source->getRelativePath(IStorageTypesConstants::PrivateType), 'private-bytes');
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
 
         $disk = Storage::disk('local');
         $this->assertSame('private-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
@@ -253,7 +274,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         self::$em->flush();
 
         $this->expectException(\RuntimeException::class);
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source_id, $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source_id, $target->getId()));
     }
 
     public function testHandleIsNoOpWhenTargetFilenameChanged(): void
@@ -264,7 +285,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         self::$em->flush();
         Storage::disk('local')->put($target->getRelativePath(IStorageTypesConstants::PrivateType), 'staff-bytes');
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
 
         $disk = Storage::disk('local');
         $this->assertSame('staff-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
@@ -278,7 +299,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->markReuploaded($target);
         Storage::disk('local')->put($target->getRelativePath(IStorageTypesConstants::PrivateType), 'staff-bytes');
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
 
         $disk = Storage::disk('local');
         $this->assertSame('staff-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
@@ -293,7 +314,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         self::$clonePresentation->removeMediaUpload($target);
         self::$em->flush();
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target_id));
 
         $this->assertNull($this->findUpload($target_id));
     }
@@ -308,7 +329,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $source_id = $source->getId();
         $target_id = $target->getId();
 
-        (new CopyClonedMediaUploadFilesJob($source_id, $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
+        ($this->makeJob($source_id, $target_id))->failed(new \RuntimeException('boom'));
 
         $this->assertNull($this->findUpload($target_id));
         $this->assertNotNull($this->findUpload($source_id));
@@ -318,27 +339,72 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
     }
 
     /**
-     * The removal loads the clone FOR UPDATE, so a concurrent re-upload's PendingMediaUpload insert
-     * serializes against the delete instead of being cascaded away with it.
+     * A worker that keeps its EntityManager across attempts still holds the clone's upload entity
+     * after staff delete it and add a new upload at the same path. The file there is the new
+     * upload's, so neither the copy nor the cleanup may touch it.
      */
-    public function testFailedLoadsTargetUnderExclusiveLock(): void
+    public function testHandleLeavesFileAloneWhenTargetDeletedByAnotherProcess(): void
     {
         [$source, $target] = $this->makePair();
+        $this->seedSource($source);
+        $target_private = $target->getRelativePath(IStorageTypesConstants::PrivateType);
+        $target_public = $target->getRelativePath(IStorageTypesConstants::PublicType);
+        Storage::disk('local')->put($target_private, 'staff-bytes');
+        $this->deleteRowOutsideEntityManager($target->getId());
+
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
+
+        $disk = Storage::disk('local');
+        $this->assertSame('staff-bytes', $disk->get($target_private));
+        $this->assertFalse($disk->exists($target_public));
+    }
+
+    public function testFailedLeavesFileAloneWhenTargetDeletedByAnotherProcess(): void
+    {
+        [$source, $target] = $this->makePair();
+        $target_private = $target->getRelativePath(IStorageTypesConstants::PrivateType);
+        Storage::disk('local')->put($target_private, 'staff-bytes');
+        $this->deleteRowOutsideEntityManager($target->getId());
+
+        ($this->makeJob($source->getId(), $target->getId()))->failed(new \RuntimeException('boom'));
+
+        $this->assertSame('staff-bytes', Storage::disk('local')->get($target_private));
+    }
+
+    /**
+     * Staff delete the clone's upload while its legs are copying: deleteMediaUpload has already run,
+     * so the copy itself must mark what it wrote deleted, or the files stay readable with no record.
+     */
+    public function testHandleMarksCopiedFilesDeletedWhenTargetDeletedDuringCopy(): void
+    {
+        [$source, $target] = $this->makePair();
+        $this->seedSource($source);
+        $source_id = $source->getId();
         $target_id = $target->getId();
+        $target_private = $target->getRelativePath(IStorageTypesConstants::PrivateType);
+        $target_public = $target->getRelativePath(IStorageTypesConstants::PublicType);
 
         $real = App::make(IPresentationMediaUploadRepository::class);
         $repository = \Mockery::mock(IPresentationMediaUploadRepository::class);
-        $repository->shouldReceive('getById')->andReturnUsing(fn ($id) => $real->getById($id));
-        $repository->shouldReceive('getByIdExclusiveLock')->once()->with($target_id)
-            ->andReturnUsing(fn ($id) => $real->getByIdExclusiveLock($id));
+        $repository->shouldReceive('getByIdFresh')->andReturnUsing(function ($id, $exclusive_lock = false) use ($real, $source_id, $target_id) {
+            $found = $real->getByIdFresh($id, $exclusive_lock);
+            // the source is the last record read before the legs are copied: delete the clone's
+            // upload here, after the copy has seen it and before it re-checks
+            if ($id === $source_id) $this->deleteRowOutsideEntityManager($target_id);
+            return $found;
+        });
         App::instance(IPresentationMediaUploadRepository::class, $repository);
         // the service singleton takes its repositories at construction; drop any instance already
-        // resolved so failed() builds one with the mock
+        // resolved so the job gets one built with the wrapped repository
         App::forgetInstance(ISummitService::class);
 
-        (new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
+        $this->runJob($this->makeJob($source_id, $target_id));
 
-        $this->assertNull($this->findUpload($target_id));
+        $disk = Storage::disk('local');
+        $this->assertFalse($disk->exists($target_private));
+        $this->assertFalse($disk->exists($target_public));
+        $this->assertSame('private-bytes', $disk->get(dirname($target_private) . '/DELETED_deck.pptx'));
+        $this->assertSame('public-bytes', $disk->get(dirname($target_public) . '/DELETED_deck.pptx'));
     }
 
     public function testFailedDoesNotDeleteReplacedUpload(): void
@@ -348,7 +414,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         self::$em->flush();
         $target_id = $target->getId();
 
-        (new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
+        ($this->makeJob($source->getId(), $target_id))->failed(new \RuntimeException('boom'));
 
         $this->assertNotNull($this->findUpload($target_id));
     }
@@ -361,7 +427,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         Storage::disk('local')->put($target_private, 'staff-bytes');
         $target_id = $target->getId();
 
-        (new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
+        ($this->makeJob($source->getId(), $target_id))->failed(new \RuntimeException('boom'));
 
         $this->assertNotNull($this->findUpload($target_id));
         $this->assertSame('staff-bytes', Storage::disk('local')->get($target_private));
@@ -374,7 +440,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
 
         $this->withStorageLockHeld($target, function () use ($source, $target) {
             try {
-                $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+                $this->runJob($this->makeJob($source->getId(), $target->getId()));
                 $this->fail('expected UnacquiredLockException');
             } catch (UnacquiredLockException $ex) {
                 $this->assertFalse(Storage::disk('local')->exists($target->getRelativePath(IStorageTypesConstants::PrivateType)));
@@ -396,7 +462,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $name = SummitService::mediaUploadStorageLockName(self::$clonePresentation->getId(), 'deck.pptx');
         $token = $locks->acquireLock($name, 60);
         try {
-            $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+            $this->runJob($this->makeJob($source->getId(), $target->getId()));
             $this->fail('expected UnacquiredLockException');
         } catch (UnacquiredLockException $ex) {
             $disk = Storage::disk('local');
@@ -414,7 +480,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
 
         Log::spy();
         $this->withStorageLockHeld($target, function () use ($source, $target_id) {
-            (new CopyClonedMediaUploadFilesJob($source->getId(), $target_id, 'deck.pptx'))->failed(new \RuntimeException('boom'));
+            ($this->makeJob($source->getId(), $target_id))->failed(new \RuntimeException('boom'));
         });
 
         $this->assertNotNull($this->findUpload($target_id));
@@ -445,10 +511,10 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
 
         $held = new \ReflectionProperty(SummitService::class, 'held_media_upload_lock_tokens');
         $held->setAccessible(true);
-        $held->setValue(null, [$lock_name => $token]);
+        $held->setValue(null, [$lock_name => [[$lock_name, $token]]]);
 
         try {
-            (new CopyClonedMediaUploadFilesJob($source_id, $target_id, 'deck.pptx'))
+            ($this->makeJob($source_id, $target_id))
                 ->failed(new \Illuminate\Queue\TimeoutExceededException('timed out'));
         } finally {
             $held->setValue(null, []);
@@ -472,7 +538,7 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->markReuploaded($source, PendingMediaUpload::STATUS_PROCESSING);
 
         try {
-            $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+            $this->runJob($this->makeJob($source->getId(), $target->getId()));
             $this->fail('expected RuntimeException');
         } catch (\RuntimeException $ex) {
             $this->assertStringContainsString('in flight', $ex->getMessage());
@@ -486,8 +552,74 @@ class CopyClonedMediaUploadFilesJobTest extends TestCase
         $this->seedSource($source);
         $this->markReuploaded($source, PendingMediaUpload::STATUS_COMPLETED);
 
-        $this->runJob(new CopyClonedMediaUploadFilesJob($source->getId(), $target->getId(), 'deck.pptx'));
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
 
         $this->assertSame('private-bytes', Storage::disk('local')->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
+    }
+
+    /**
+     * The original's location is locked while its processor writes it, and while another copy
+     * fills it when the original is itself a clone. Reading it then could copy a missing or
+     * half-written leg, so the copy waits instead and gives the target's lock back.
+     */
+    public function testHandleThrowsWhenSourceStorageLocked(): void
+    {
+        [$source, $target] = $this->makePair();
+        $this->seedSource($source);
+
+        $this->withStorageLockHeld($source, function () use ($source, $target) {
+            try {
+                $this->runJob($this->makeJob($source->getId(), $target->getId()));
+                $this->fail('expected UnacquiredLockException');
+            } catch (UnacquiredLockException $ex) {
+                $disk = Storage::disk('local');
+                $this->assertFalse($disk->exists($target->getRelativePath(IStorageTypesConstants::PrivateType)));
+                $this->assertFalse($disk->exists($target->getRelativePath(IStorageTypesConstants::PublicType)));
+            }
+        });
+
+        // the target's lock, taken first, was released when the source's could not be taken
+        $locks = App::make(ILockManagerService::class);
+        $target_lock = SummitService::mediaUploadStorageLockName(self::$clonePresentation->getId(), 'deck.pptx');
+        $locks->releaseLock($target_lock, $locks->acquireLock($target_lock, 60));
+    }
+
+    public function testHandleReleasesBothLocksAfterCopy(): void
+    {
+        [$source, $target] = $this->makePair();
+        $this->seedSource($source);
+
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
+
+        $locks = App::make(ILockManagerService::class);
+        foreach ([self::$original, self::$clonePresentation] as $presentation) {
+            $name = SummitService::mediaUploadStorageLockName($presentation->getId(), 'deck.pptx');
+            // acquireLock throws when the copy left the name locked
+            $token = $locks->acquireLock($name, 60);
+            $this->assertNotEmpty($token);
+            $locks->releaseLock($name, $token);
+        }
+    }
+
+    /**
+     * A re-upload of the original under a new name leaves the cloned file in storage beside the new
+     * one. The clone's record still says deck.pptx, so it must get deck.pptx's bytes.
+     */
+    public function testHandleCopiesTheClonedFileAfterSourceReuploadedUnderNewName(): void
+    {
+        [$source, $target] = $this->makePair();
+        $this->seedSource($source);
+        $source->setFilename('final.pdf');
+        self::$em->flush();
+        $disk = Storage::disk('local');
+        $disk->put($source->getRelativePath(IStorageTypesConstants::PrivateType), 'new-private-bytes');
+        $disk->put($source->getRelativePath(IStorageTypesConstants::PublicType), 'new-public-bytes');
+        $this->markReuploaded($source, PendingMediaUpload::STATUS_COMPLETED);
+
+        $this->runJob($this->makeJob($source->getId(), $target->getId()));
+
+        $this->assertSame('deck.pptx', $target->getFilename());
+        $this->assertSame('private-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PrivateType)));
+        $this->assertSame('public-bytes', $disk->get($target->getRelativePath(IStorageTypesConstants::PublicType)));
     }
 }

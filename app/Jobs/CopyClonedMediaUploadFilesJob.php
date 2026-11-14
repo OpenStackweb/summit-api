@@ -32,9 +32,12 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
-    public $tries = 5;
+    // the backoff adds up to more than ISummitService::MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME, so a copy
+    // waiting on a storage lock (another copy, the upload processor, or one left by a killed run)
+    // is still retrying when that lock is released or expires
+    public $tries = 8;
 
-    public $backoff = [30, 60, 120, 300];
+    public $backoff = [30, 60, 120, 300, 300, 300, 300];
 
     // strictly below every queue connection's retry_after (1800, config/queue.php) and the
     // database-fallback worker's --timeout, so a slow attempt is never re-served concurrently;
@@ -43,7 +46,9 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
 
     public function __construct(
         public readonly int $source_media_upload_id,
+        public readonly int $source_presentation_id,
         public readonly int $target_media_upload_id,
+        public readonly int $target_presentation_id,
         public readonly string $filename
     ) {}
 
@@ -51,7 +56,11 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
     {
         Log::debug(sprintf("CopyClonedMediaUploadFilesJob::handle source %s target %s", $this->source_media_upload_id, $this->target_media_upload_id));
 
-        $service->copyClonedMediaUploadFiles($this->source_media_upload_id, $this->target_media_upload_id, $this->filename);
+        $service->copyClonedMediaUploadFiles(
+            $this->source_media_upload_id, $this->source_presentation_id,
+            $this->target_media_upload_id, $this->target_presentation_id,
+            $this->filename
+        );
     }
 
     public function failed(\Throwable $exception): void
@@ -63,7 +72,7 @@ final class CopyClonedMediaUploadFilesJob implements ShouldQueue
         Log::error($exception);
 
         try {
-            App::make(ISummitService::class)->removeUncopiedClonedMediaUpload($this->target_media_upload_id, $this->filename);
+            App::make(ISummitService::class)->removeUncopiedClonedMediaUpload($this->target_media_upload_id, $this->target_presentation_id, $this->filename);
         } catch (\Throwable $ex) {
             Log::error(sprintf("CopyClonedMediaUploadFilesJob::failed could not remove clone media upload %s", $this->target_media_upload_id));
             Log::error($ex);

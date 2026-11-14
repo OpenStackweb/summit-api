@@ -41,6 +41,20 @@ use utils\Filter;
  */
 interface ISummitService
 {
+    // lifetime of the media upload storage locks (SummitService::mediaUploadStorageLockName) a clone
+    // copy holds; above CopyClonedMediaUploadFilesJob::$timeout, so a killed copy's locks expire on
+    // their own, and below the job's total backoff, so a waiting copy outlasts them
+    // the key builder itself stays on SummitService, not here: it's static, and an interface
+    // cannot hold a static implementation
+    const MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME = 1300;
+
+    // minutes after which processPendingMediaUploads treats a Processing row as left by a crashed run
+    const PENDING_MEDIA_UPLOAD_STUCK_MINUTES = 10;
+
+    // lifetime of the storage lock processPendingMediaUploads holds per row: a killed run's lock
+    // expires by the time its stuck row is reset, so the row is never reset yet still locked
+    const PENDING_MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME = self::PENDING_MEDIA_UPLOAD_STUCK_MINUTES * 60;
+
     /**
      * @param Summit $summit
      * @param array $data
@@ -556,6 +570,36 @@ interface ISummitService
      * @return array Stats array: ['processed' => int, 'errors' => int]
      */
     public function processPendingMediaUploads(int $max_retries = 3): array;
+
+    /**
+     * Copies a cloned media upload's files from the original's storage paths to the clone's, holding
+     * the storage locks of both locations (the ones processPendingMediaUploads takes), so neither
+     * side is written while it is read or copied. The presentation IDs come from the caller so the
+     * locks are taken before anything is read from the database. A clone that has been re-uploaded
+     * since is never written to. A leg whose source file is missing is skipped; a source missing
+     * on every enabled leg throws. If the clone's upload is deleted while the copy runs, the copied
+     * files are marked deleted.
+     *
+     * @param int $source_media_upload_id
+     * @param int $source_presentation_id
+     * @param int $target_media_upload_id
+     * @param int $target_presentation_id
+     * @param string $filename the clone's filename when the copy was queued
+     * @throws \App\Services\Utils\Exceptions\UnacquiredLockException when either storage location is locked
+     * @throws \RuntimeException when the source is gone, has a re-upload in flight, or has no file
+     */
+    public function copyClonedMediaUploadFiles(int $source_media_upload_id, int $source_presentation_id, int $target_media_upload_id, int $target_presentation_id, string $filename): void;
+
+    /**
+     * Removes a cloned media upload whose files could not be copied, so the clone never points at a
+     * missing file. A clone that has been re-uploaded since is kept. Removal failures are logged
+     * for the operator, not thrown.
+     *
+     * @param int $target_media_upload_id
+     * @param int $target_presentation_id
+     * @param string $filename the clone's filename when the copy was queued
+     */
+    public function removeUncopiedClonedMediaUpload(int $target_media_upload_id, int $target_presentation_id, string $filename): void;
 
     /**
      * @param Summit $summit

@@ -21,6 +21,7 @@ use App\Events\SponsorServices\DeletedEventDTO;
 use App\Events\SponsorServices\SummitDomainEvents;
 use App\Facades\ResourceServerContext;
 use App\Http\Utils\IFileUploader;
+use App\Jobs\CopyClonedMediaUploadFilesJob;
 use App\Jobs\Emails\PresentationSubmissions\ImportEventSpeakerEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationModeratorNotificationEmail;
 use App\Jobs\Emails\PresentationSubmissions\PresentationSpeakerNotificationEmail;
@@ -31,6 +32,7 @@ use App\Jobs\ProcessEventDataImport;
 use App\Jobs\ProcessRegistrationCompaniesDataImport;
 use App\Jobs\ProcessScheduleEntityLifeCycleEvent;
 use App\Jobs\SponsorServices\PublishSponsorServiceDomainEventsJob;
+use App\Jobs\Utils\JobDispatcher;
 use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Models\Foundation\Summit\Factories\LeadReportSettingsFactory;
 use App\Models\Foundation\Summit\Factories\PresentationFactory;
@@ -54,6 +56,8 @@ use App\Services\FileSystem\IFileUploadStrategy;
 use App\Services\Model\AbstractPublishService;
 use App\Services\Model\IMemberService;
 use App\Services\Model\Imp\Notifications\SpeakerChangeNotifications;
+use App\Services\Utils\Exceptions\UnacquiredLockException;
+use App\Services\Utils\ILockManagerService;
 use App\Services\Utils\Security\IEncryptionAES256KeysGenerator;
 use DateInterval;
 use DateTime;
@@ -254,6 +258,20 @@ final class SummitService
     private $cache_service;
 
     /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    // Keyed by the target's lock name; each value lists the [lock name, token] pairs that copy holds
+    // (target, then source), set for the duration copyClonedMediaUploadFiles holds them. On a
+    // final-attempt timeout, Laravel's Worker::registerTimeoutHandler calls the job's failed() from
+    // the SIGALRM handler in the SAME process while the copy is suspended mid-write still holding
+    // the locks - its finally never runs before the process is killed. A static, not an instance
+    // property, so the tokens reach removeUncopiedClonedMediaUpload however the service was
+    // resolved; it lives as long as the process does. See removeUncopiedClonedMediaUpload.
+    private static array $held_media_upload_lock_tokens = [];
+
+    /**
      * @param ISummitRepository $summit_repository
      * @param ISummitEventRepository $event_repository
      * @param ISpeakerRepository $speaker_repository
@@ -280,6 +298,7 @@ final class SummitService
      * @param IEncryptionAES256KeysGenerator $encryption_key_generator
      * @param IMUXApi $mux_api
      * @param ICacheService $cache_service
+     * @param ILockManagerService $lock_service
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -310,6 +329,7 @@ final class SummitService
         IEncryptionAES256KeysGenerator             $encryption_key_generator,
         IMUXApi                                    $mux_api,
         ICacheService                              $cache_service,
+        ILockManagerService                        $lock_service,
         ITransactionService                        $tx_service
     )
     {
@@ -340,6 +360,7 @@ final class SummitService
         $this->download_strategy = $download_strategy;
         $this->mux_api = $mux_api;
         $this->cache_service = $cache_service;
+        $this->lock_service = $lock_service;
     }
 
     /**
@@ -2107,7 +2128,9 @@ final class SummitService
      */
     public function cloneEvent(Summit $summit, int $event_id): SummitEvent
     {
-        return $this->tx_service->transaction(function () use ($summit, $event_id) {
+        [$event_clone, $media_upload_pairs] = $this->tx_service->transaction(function () use ($summit, $event_id) {
+            // built per attempt: runRootTransaction can re-run this callback after a reconnectable error
+            $media_upload_pairs = [];
 
             $event = $this->event_repository->getById($event_id);
             if (is_null($event))
@@ -2255,13 +2278,49 @@ final class SummitService
                     $material_clone = $material->clone();
                     if ($material_clone != null) {
                         $event_clone->addMaterial($material_clone);
+                        if ($material instanceof PresentationMediaUpload)
+                            $media_upload_pairs[] = [$material, $material_clone];
                     }
                 }
             }
+
             $this->event_repository->add($event_clone);
 
-            return $event_clone;
+            return [$event_clone, $media_upload_pairs];
         });
+
+        // The clone's media upload records point at the clone's own storage path, where nothing
+        // exists yet. Copy the files after commit so the clone has IDs and a slow copy does not
+        // hold the transaction open.
+        foreach ($media_upload_pairs as [$source, $target]) {
+            $job = new CopyClonedMediaUploadFilesJob(
+                $source->getId(), $event_id, $target->getId(), $event_clone->getId(), $target->getFilename()
+            );
+            try {
+                JobDispatcher::withDbFallback(
+                    job: $job,
+                    logContext: ['summit_id' => $summit->getId(), 'event_id' => $event_id, 'clone_id' => $event_clone->getId()],
+                    primaryConnection: Config::get('queue.default')
+                );
+            } catch (\Throwable $ex) {
+                // only reachable when both queues are down and the synchronous dispatch itself threw
+                // (Laravel's SyncQueue resolves/builds the job outside its own try, so a failure there
+                // never reaches handle() or failed()); run the same cleanup failed() runs so the clone's
+                // upload is removed instead of pointing at a file that was never copied. The cleanup is
+                // idempotent and logs its own errors, but guard the call anyway so cloneEvent still
+                // returns the already-committed clone.
+                Log::error(sprintf("SummitService::cloneEvent copy of media upload %s for clone %s failed: %s", $target->getId(), $event_clone->getId(), $ex->getMessage()));
+                Log::error($ex);
+                try {
+                    $this->removeUncopiedClonedMediaUpload($target->getId(), $event_clone->getId(), $target->getFilename());
+                } catch (\Throwable $cleanup_ex) {
+                    Log::error(sprintf("SummitService::cloneEvent cleanup for media upload %s on clone %s threw: %s", $target->getId(), $event_clone->getId(), $cleanup_ex->getMessage()));
+                    Log::error($cleanup_ex);
+                }
+            }
+        }
+
+        return $event_clone;
     }
 
     /**
@@ -4408,7 +4467,7 @@ final class SummitService
         try {
             // Reset stuck Processing rows (indicates crashed cron run)
             $this->tx_service->transaction(function () {
-                $reset_count = $this->pending_media_upload_repository->resetStuckProcessingRows(10);
+                $reset_count = $this->pending_media_upload_repository->resetStuckProcessingRows(ISummitService::PENDING_MEDIA_UPLOAD_STUCK_MINUTES);
 
                 if ($reset_count > 0) {
                     Log::warning(sprintf("SummitService::processPendingMediaUploads reset %s stuck Processing rows", $reset_count));
@@ -4437,118 +4496,31 @@ final class SummitService
                     continue;
                 }
 
+                // The same storage-location lock copyClonedMediaUploadFiles holds while it reads an
+                // original's files or writes a clone's. If a copy is running, leave this row untouched
+                // for the next run, so the staff file is written after the copy and never overwritten
+                // by it or read half-written.
+                $presentation = $pending_upload->getMediaUpload()->getPresentation();
+                if (is_null($presentation)) {
+                    // no presentation means no valid path to write to; leave the row untouched
+                    Log::warning(sprintf("SummitService::processPendingMediaUploads upload ID %s skipped, media upload %s has no presentation", $upload_id, $pending_upload->getMediaUpload()->getId()));
+                    continue;
+                }
+                $lock_name = self::mediaUploadStorageLockName($presentation->getId(), $pending_upload->getFileName());
+                $lock_token = $this->acquirePendingMediaUploadStorageLock($lock_name, $upload_id);
+                if ($lock_token === false) continue;
+
                 try {
-                    // Mark as Processing and increment attempts
-                    $this->tx_service->transaction(function () use ($pending_upload) {
-                        $pending_upload->setStatus(PendingMediaUpload::STATUS_PROCESSING);
-                        $pending_upload->incrementAttempts();
-                    });
-
-                    // Get summit and media upload type
-                    $summit = $this->summit_repository->getById($pending_upload->getSummitId());
-                    if (is_null($summit)) {
-                        throw new EntityNotFoundException(sprintf("Summit %s not found", $pending_upload->getSummitId()));
-                    }
-
-                    $mediaUploadType = $summit->getMediaUploadTypeById($pending_upload->getMediaUploadTypeId());
-                    if (is_null($mediaUploadType)) {
-                        throw new EntityNotFoundException(sprintf("Media Upload Type %s not found", $pending_upload->getMediaUploadTypeId()));
-                    }
-
-                    // Always re-download temp file from upload storage (even on retry from partial status)
-                    $localPath = self::getFileFromRemoteStorageOnTempStorage(
-                        $pending_upload->getFileName(),
-                        $pending_upload->getTempFilePath()
-                    );
-
-                    $currentStatus = $pending_upload->getStatus();
-
-                    // Phase 1: Public storage (skip if already done)
-                    if ($currentStatus !== PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED) {
-
-                        $publicStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
-                        if (!is_null($publicStrategy)) {
-                            Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to public storage", $upload_id));
-                            try {
-                                $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
-                                $publicStrategy->saveFromPath(
-                                    $localPath,
-                                    $pending_upload->getPublicPath(),
-                                    $pending_upload->getFileName(),
-                                    $options
-                                );
-                            } catch (\Exception $public_ex) {
-                                // Public storage failed - re-throw to outer catch
-                                throw $public_ex;
-                            }
+                    $this->processPendingUpload($pending_upload, $upload_id, $max_retries, $stats);
+                } finally {
+                    if (!is_null($lock_token)) {
+                        try {
+                            $this->lock_service->releaseLock($lock_name, $lock_token);
+                        } catch (\Throwable $release_ex) {
+                            // the lock expires on its own; never let it stop the rest of the batch
+                            Log::warning(sprintf("SummitService::processPendingMediaUploads upload ID %s could not release its storage lock: %s", $upload_id, $release_ex->getMessage()));
                         }
-                        // Public done (or skipped because None) — commit partial status
-                        $this->tx_service->transaction(function () use ($pending_upload) {
-                            $pending_upload->setStatus(PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED);
-                        });
-                        $currentStatus = PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED;
-                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s public storage completed", $upload_id));
-                    } else {
-                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s skipping public storage (current status: %s)", $upload_id, $currentStatus));
                     }
-
-                    // Phase 2: Private storage (skip if already done)
-                    if ($currentStatus !== PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED) {
-                        $privateStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
-                        if (!is_null($privateStrategy)) {
-                            Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to private storage", $upload_id));
-                            try {
-                                $privateStrategy->saveFromPath(
-                                    $localPath,
-                                    $pending_upload->getPrivatePath(),
-                                    $pending_upload->getFileName()
-                                );
-                            } catch (\Exception $private_ex) {
-                                // Private storage failed - status stays at PublicStorageUploaded for retry
-                                throw $private_ex;
-                            }
-                        }
-                        // Private done (or skipped because None) — commit partial status
-                        $this->tx_service->transaction(function () use ($pending_upload) {
-                            $pending_upload->setStatus(PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED);
-                        });
-                        $currentStatus = PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED;
-                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s private storage completed", $upload_id));
-                    } else {
-                        Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s skipping private storage (current status: %s)", $upload_id, $currentStatus));
-                    }
-
-                    // Both phases done — mark Completed
-                    $this->tx_service->transaction(function () use ($pending_upload) {
-                        $pending_upload->setStatus(PendingMediaUpload::STATUS_COMPLETED);
-                        $pending_upload->setProcessedDate(new \DateTime('now', new \DateTimeZone(\models\utils\SilverstripeBaseModel::DefaultTimeZone)));
-                    });
-
-                    // Clean up temp files after transaction commits successfully
-                    self::cleanLocalAndRemoteFile($localPath, $pending_upload->getTempFilePath());
-
-                    $stats['processed']++;
-                    Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s completed successfully", $upload_id));
-
-                } catch (\Exception $ex) {
-                    // On failure, status remains at whatever partial state was reached
-                    // Set error message and mark as ERROR only if max retries exhausted
-                    $this->tx_service->transaction(function () use ($pending_upload, $ex, $max_retries) {
-                        $pending_upload->setErrorMessage($ex->getMessage());
-                        if ($pending_upload->getAttempts() >= $max_retries) {
-                            $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
-                        }
-                        // else: leave at current status (Pending, PublicStorageUploaded, or PrivateStorageUploaded) for retry
-                    });
-
-                    $stats['errors']++;
-                    Log::warning(sprintf(
-                        "SummitService::processPendingMediaUploads upload ID %s failed (attempt %s/%s): %s",
-                        $upload_id,
-                        $pending_upload->getAttempts(),
-                        $max_retries,
-                        $ex->getMessage()
-                    ));
                 }
             }
 
@@ -4576,5 +4548,471 @@ final class SummitService
         ));
 
         return $stats;
+    }
+
+    /**
+     * Takes a pending upload's storage lock. Staff uploads must keep flowing when the lock store is
+     * down, so only a lock that is really held skips the row; a store that cannot answer does not.
+     * A clone copy takes the same lock and fails closed, and it also checks the PendingMediaUpload
+     * rows in the database, so a row processed without the lock is still seen by it.
+     * @param string $lock_name
+     * @param int $upload_id
+     * @return string|false|null the token; false when the lock is held (skip the row); null when
+     * the lock store is unavailable (process the row without the lock)
+     */
+    private function acquirePendingMediaUploadStorageLock(string $lock_name, int $upload_id): string|false|null
+    {
+        try {
+            return $this->lock_service->acquireLock($lock_name, ISummitService::PENDING_MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME);
+        } catch (UnacquiredLockException $lock_ex) {
+            // a miss is either a holder or an unreachable store; only a holder leaves the key readable
+            try {
+                if ($this->cache_service->exists($lock_name)) {
+                    Log::info(sprintf("SummitService::processPendingMediaUploads upload ID %s skipped, media upload storage is locked", $upload_id));
+                    return false;
+                }
+            } catch (\Throwable $exists_ex) {
+                Log::warning(sprintf("SummitService::processPendingMediaUploads upload ID %s could not read its storage lock: %s", $upload_id, $exists_ex->getMessage()));
+            }
+        } catch (\Throwable $lock_ex) {
+            Log::warning(sprintf("SummitService::processPendingMediaUploads upload ID %s could not take its storage lock: %s", $upload_id, $lock_ex->getMessage()));
+        }
+        Log::warning(sprintf("SummitService::processPendingMediaUploads upload ID %s lock store unavailable, processing without the storage lock", $upload_id));
+        return null;
+    }
+
+    /**
+     * Writes one pending upload to public then private storage. Runs under the upload's storage
+     * lock, which processPendingMediaUploads holds and releases.
+     * @param PendingMediaUpload $pending_upload
+     * @param int $upload_id
+     * @param int $max_retries
+     * @param array $stats
+     */
+    private function processPendingUpload(PendingMediaUpload $pending_upload, int $upload_id, int $max_retries, array &$stats): void
+    {
+        try {
+            // Mark as Processing and increment attempts
+            $this->tx_service->transaction(function () use ($pending_upload) {
+                $pending_upload->setStatus(PendingMediaUpload::STATUS_PROCESSING);
+                $pending_upload->incrementAttempts();
+            });
+
+            // Get summit and media upload type
+            $summit = $this->summit_repository->getById($pending_upload->getSummitId());
+            if (is_null($summit)) {
+                throw new EntityNotFoundException(sprintf("Summit %s not found", $pending_upload->getSummitId()));
+            }
+
+            $mediaUploadType = $summit->getMediaUploadTypeById($pending_upload->getMediaUploadTypeId());
+            if (is_null($mediaUploadType)) {
+                throw new EntityNotFoundException(sprintf("Media Upload Type %s not found", $pending_upload->getMediaUploadTypeId()));
+            }
+
+            // Always re-download temp file from upload storage (even on retry from partial status)
+            $localPath = self::getFileFromRemoteStorageOnTempStorage(
+                $pending_upload->getFileName(),
+                $pending_upload->getTempFilePath()
+            );
+
+            $currentStatus = $pending_upload->getStatus();
+
+            // Phase 1: Public storage (skip if already done)
+            if ($currentStatus !== PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED) {
+
+                $publicStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPublicStorageType());
+                if (!is_null($publicStrategy)) {
+                    Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to public storage", $upload_id));
+                    try {
+                        $options = $mediaUploadType->isUseTemporaryLinksOnPublicStorage() ? [] : 'public';
+                        $publicStrategy->saveFromPath(
+                            $localPath,
+                            $pending_upload->getPublicPath(),
+                            $pending_upload->getFileName(),
+                            $options
+                        );
+                    } catch (\Exception $public_ex) {
+                        // Public storage failed - re-throw to outer catch
+                        throw $public_ex;
+                    }
+                }
+                // Public done (or skipped because None) — commit partial status
+                $this->tx_service->transaction(function () use ($pending_upload) {
+                    $pending_upload->setStatus(PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED);
+                });
+                $currentStatus = PendingMediaUpload::STATUS_PUBLIC_STORAGE_UPLOADED;
+                Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s public storage completed", $upload_id));
+            } else {
+                Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s skipping public storage (current status: %s)", $upload_id, $currentStatus));
+            }
+
+            // Phase 2: Private storage (skip if already done)
+            if ($currentStatus !== PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED) {
+                $privateStrategy = FileUploadStrategyFactory::build($mediaUploadType->getPrivateStorageType());
+                if (!is_null($privateStrategy)) {
+                    Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s saving to private storage", $upload_id));
+                    try {
+                        $privateStrategy->saveFromPath(
+                            $localPath,
+                            $pending_upload->getPrivatePath(),
+                            $pending_upload->getFileName()
+                        );
+                    } catch (\Exception $private_ex) {
+                        // Private storage failed - status stays at PublicStorageUploaded for retry
+                        throw $private_ex;
+                    }
+                }
+                // Private done (or skipped because None) — commit partial status
+                $this->tx_service->transaction(function () use ($pending_upload) {
+                    $pending_upload->setStatus(PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED);
+                });
+                $currentStatus = PendingMediaUpload::STATUS_PRIVATE_STORAGE_UPLOADED;
+                Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s private storage completed", $upload_id));
+            } else {
+                Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s skipping private storage (current status: %s)", $upload_id, $currentStatus));
+            }
+
+            // Both phases done — mark Completed
+            $this->tx_service->transaction(function () use ($pending_upload) {
+                $pending_upload->setStatus(PendingMediaUpload::STATUS_COMPLETED);
+                $pending_upload->setProcessedDate(new \DateTime('now', new \DateTimeZone(\models\utils\SilverstripeBaseModel::DefaultTimeZone)));
+            });
+
+            // Clean up temp files after transaction commits successfully
+            self::cleanLocalAndRemoteFile($localPath, $pending_upload->getTempFilePath());
+
+            $stats['processed']++;
+            Log::debug(sprintf("SummitService::processPendingMediaUploads upload ID %s completed successfully", $upload_id));
+
+        } catch (\Exception $ex) {
+            // On failure, status remains at whatever partial state was reached
+            // Set error message and mark as ERROR only if max retries exhausted
+            $this->tx_service->transaction(function () use ($pending_upload, $ex, $max_retries) {
+                $pending_upload->setErrorMessage($ex->getMessage());
+                if ($pending_upload->getAttempts() >= $max_retries) {
+                    $pending_upload->setStatus(PendingMediaUpload::STATUS_ERROR);
+                }
+                // else: leave at current status (Pending, PublicStorageUploaded, or PrivateStorageUploaded) for retry
+            });
+
+            $stats['errors']++;
+            Log::warning(sprintf(
+                "SummitService::processPendingMediaUploads upload ID %s failed (attempt %s/%s): %s",
+                $upload_id,
+                $pending_upload->getAttempts(),
+                $max_retries,
+                $ex->getMessage()
+            ));
+        }
+    }
+
+    /**
+     * The storage lock shared by processPendingMediaUploads and copyClonedMediaUploadFiles. Keyed on
+     * the storage location (presentation + filename), not the upload ID: summit-admin re-uploads by
+     * delete-then-add, which gives the new file a new upload ID at the same path. The filename is
+     * hashed so an arbitrary filename is always a safe cache key.
+     * @param int $presentation_id
+     * @param string $filename
+     * @return string
+     */
+    public static function mediaUploadStorageLockName(int $presentation_id, string $filename): string
+    {
+        return sprintf('media_upload_storage.%s.%s.lock', $presentation_id, sha1($filename));
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function copyClonedMediaUploadFiles(int $source_media_upload_id, int $source_presentation_id, int $target_media_upload_id, int $target_presentation_id, string $filename): void
+    {
+        // Both names come from the caller, so nothing is read from the database until the locks are
+        // held. The source's lock keeps its processor, and a copy still filling it when the source
+        // is itself a clone, from writing the files while they are read.
+        $target_lock = self::mediaUploadStorageLockName($target_presentation_id, $filename);
+        $source_lock = self::mediaUploadStorageLockName($source_presentation_id, $filename);
+        $lock_names = $source_lock === $target_lock ? [$target_lock] : [$target_lock, $source_lock];
+
+        $held = [];
+        try {
+            foreach ($lock_names as $lock_name) {
+                // UnacquiredLockException propagates: the location is being written, so retry later.
+                // acquireLock never blocks, so two copies taking these in opposite order cannot deadlock.
+                $held[] = [$lock_name, $this->lock_service->acquireLock($lock_name, ISummitService::MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME)];
+                self::$held_media_upload_lock_tokens[$target_lock] = $held;
+            }
+
+            $legs = $this->resolveClonedMediaUploadLegs($source_media_upload_id, $target_media_upload_id, $filename);
+            $enabled = 0;
+            $copied = [];
+            $copying = null;
+            try {
+                foreach ($legs as $leg) {
+                    $copying = $leg;
+                    $result = $this->copyClonedMediaUploadLeg($leg['kind'], $leg['storage'], $leg['from'], $leg['to'], $leg['options']);
+                    $copying = null;
+                    if (is_null($result)) continue;
+                    $enabled++;
+                    if ($result) $copied[] = $leg;
+                }
+            } finally {
+                // staff may have deleted the clone's upload while the legs were copying; a leg that
+                // threw mid-write may have left a partial file, so it counts as written too
+                $this->discardCopiedLegsIfTargetGone($target_media_upload_id, $filename, is_null($copying) ? $copied : array_merge($copied, [$copying]));
+            }
+            // a source missing on every enabled leg is a broken original: fail so the retries,
+            // then failed(), resolve it
+            if ($enabled > 0 && count($copied) === 0)
+                throw new \RuntimeException(sprintf("SummitService::copyClonedMediaUploadFiles source media upload %s has no file on any storage", $source_media_upload_id));
+        } finally {
+            unset(self::$held_media_upload_lock_tokens[$target_lock]);
+            foreach (array_reverse($held) as [$lock_name, $token]) {
+                $this->lock_service->releaseLock($lock_name, $token);
+            }
+        }
+    }
+
+    /**
+     * deleteMediaUpload only marks deleted the files that exist when it runs, so legs written after
+     * it would stay readable at the clone's path with no record. Runs under the target's lock.
+     * @param int $target_media_upload_id
+     * @param string $filename
+     * @param array $copied the legs this copy wrote, or started to write
+     */
+    private function discardCopiedLegsIfTargetGone(int $target_media_upload_id, string $filename, array $copied): void
+    {
+        if (count($copied) === 0) return;
+        try {
+            $gone = $this->tx_service->transaction(function () use ($target_media_upload_id) {
+                return is_null($this->presentation_media_upload_repository->getByIdFresh($target_media_upload_id));
+            });
+        } catch (\Throwable $ex) {
+            Log::error(sprintf("SummitService::discardCopiedLegsIfTargetGone could not re-check clone media upload %s", $target_media_upload_id));
+            Log::error($ex);
+            return;
+        }
+        if (!$gone) return;
+
+        Log::warning(sprintf("SummitService::discardCopiedLegsIfTargetGone clone media upload %s was deleted during the copy, marking the copied files deleted", $target_media_upload_id));
+        foreach ($copied as $leg) {
+            try {
+                $strategy = FileUploadStrategyFactory::build($leg['storage']);
+                if (!is_null($strategy)) $strategy->markAsDeleted($leg['to_path'], $filename);
+            } catch (\Throwable $ex) {
+                Log::error(sprintf("SummitService::discardCopiedLegsIfTargetGone could not mark %s deleted on %s", $leg['to'], $leg['storage']));
+                Log::error($ex);
+            }
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeUncopiedClonedMediaUpload(int $target_media_upload_id, int $target_presentation_id, string $filename): void
+    {
+        $lock_name = self::mediaUploadStorageLockName($target_presentation_id, $filename);
+
+        if (array_key_exists($lock_name, self::$held_media_upload_lock_tokens)) {
+            // A final-attempt timeout calls the job's failed() from the worker's SIGALRM handler in
+            // the SAME process, with copyClonedMediaUploadFiles suspended mid-copy still holding its
+            // locks - its finally never runs before the process is killed. The target's lock is
+            // still ours: re-acquiring it here would always throw UnacquiredLockException, so clean
+            // up directly and release the tokens we already hold instead.
+            $held = self::$held_media_upload_lock_tokens[$lock_name];
+            Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload target %s copy timed out while still holding its own storage lock, removing the clone's upload", $target_media_upload_id));
+            try {
+                $this->removeClonedMediaUploadTarget($target_media_upload_id, $filename);
+            } catch (\Throwable $ex) {
+                // the job is already terminal: this error log is the operator's signal that the clone
+                // still has an upload with no file behind it (fix: delete it or re-upload on the clone)
+                Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload could not remove clone media upload %s", $target_media_upload_id));
+                Log::error($ex);
+            } finally {
+                unset(self::$held_media_upload_lock_tokens[$lock_name]);
+                foreach (array_reverse($held) as [$held_name, $token]) {
+                    try {
+                        $this->lock_service->releaseLock($held_name, $token);
+                    } catch (\Throwable $release_ex) {
+                        Log::error($release_ex);
+                    }
+                }
+            }
+            return;
+        }
+
+        try {
+            $this->lock_service->lock(
+                $lock_name,
+                fn () => $this->removeClonedMediaUploadTarget($target_media_upload_id, $filename),
+                ISummitService::MEDIA_UPLOAD_STORAGE_LOCK_LIFETIME
+            );
+        } catch (UnacquiredLockException $ex) {
+            // the lock could not be taken: held by another process (e.g. the processor writing a
+            // re-upload at this location) or the lock store is unreachable. Either way the record
+            // can't be safely checked and removed, so keep it and leave it to the operator.
+            Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload could not take the storage lock to remove clone media upload %s; if the clone's file is missing, delete the upload or re-upload it on the clone", $target_media_upload_id));
+        } catch (\Throwable $ex) {
+            // the job is already terminal: this error log is the operator's signal that the clone
+            // still has an upload with no file behind it (fix: delete it or re-upload on the clone)
+            Log::error(sprintf("SummitService::removeUncopiedClonedMediaUpload could not remove clone media upload %s", $target_media_upload_id));
+            Log::error($ex);
+        }
+    }
+
+    /**
+     * Resolved inside a short read transaction, under the locks; the copy runs outside the transaction.
+     * Both records are read fresh: a worker that keeps its EntityManager across attempts would
+     * otherwise be handed the entities an earlier attempt loaded.
+     * @param int $source_media_upload_id
+     * @param int $target_media_upload_id
+     * @param string $filename
+     * @return array
+     */
+    private function resolveClonedMediaUploadLegs(int $source_media_upload_id, int $target_media_upload_id, string $filename): array
+    {
+        return $this->tx_service->transaction(function () use ($source_media_upload_id, $target_media_upload_id, $filename) {
+            $target = $this->presentation_media_upload_repository->getByIdFresh($target_media_upload_id);
+            if (!$target instanceof PresentationMediaUpload) {
+                Log::info(sprintf("SummitService::resolveClonedMediaUploadLegs target %s gone, nothing to copy", $target_media_upload_id));
+                return [];
+            }
+            if ($this->isClonedMediaUploadReplaced($target, $filename)) {
+                Log::info(sprintf("SummitService::resolveClonedMediaUploadLegs target %s was re-uploaded, nothing to copy", $target_media_upload_id));
+                return [];
+            }
+            $source = $this->presentation_media_upload_repository->getByIdFresh($source_media_upload_id);
+            // the clone still needs this file; fail so the retries, then failed(), resolve it
+            if (!$source instanceof PresentationMediaUpload)
+                throw new \RuntimeException(sprintf("SummitService::resolveClonedMediaUploadLegs source media upload %s is gone", $source_media_upload_id));
+            // a same-filename re-upload of the original leaves the old file in place until the
+            // processor writes the new one; wait for it rather than copy stale bytes
+            if ($this->pending_media_upload_repository->hasInFlightForMediaUpload($source->getId()))
+                throw new \RuntimeException(sprintf("SummitService::resolveClonedMediaUploadLegs source media upload %s has a re-upload in flight", $source_media_upload_id));
+
+            $type = $target->getMediaUploadType();
+            if (is_null($type)) return [];
+
+            // Both sides use the filename the clone was queued with, never the source's current
+            // one: a re-upload of the original under a new name leaves the cloned file in place
+            // beside the new one, and the clone's record still describes the cloned file.
+            $legs = [];
+            foreach ([
+                IStorageTypesConstants::PrivateType => [$type->getPrivateStorageType(), []],
+                IStorageTypesConstants::PublicType => [$type->getPublicStorageType(), $type->isUseTemporaryLinksOnPublicStorage() ? [] : 'public'],
+            ] as $kind => [$storage, $options]) {
+                $to_path = $target->getPath($kind);
+                $legs[] = [
+                    'kind' => $kind,
+                    'storage' => $storage,
+                    'from' => sprintf('%s/%s', $source->getPath($kind), $filename),
+                    'to_path' => $to_path,
+                    'to' => sprintf('%s/%s', $to_path, $filename),
+                    'options' => $options,
+                ];
+            }
+            return $legs;
+        });
+    }
+
+    /**
+     * A clone that staff have re-uploaded since is never written to or deleted. updateMediaUploadFrom
+     * keeps the record's ID and may keep its filename, so the signal is the PendingMediaUpload row
+     * every re-upload creates (a clone never has one).
+     * @param PresentationMediaUpload $target
+     * @param string $filename the clone's filename when the copy was queued
+     * @return bool
+     */
+    private function isClonedMediaUploadReplaced(PresentationMediaUpload $target, string $filename): bool
+    {
+        return $target->getFilename() !== $filename
+            || $this->pending_media_upload_repository->hasAnyForMediaUpload($target->getId());
+    }
+
+    /**
+     * @param string $kind
+     * @param string|null $storage
+     * @param string $from
+     * @param string $to
+     * @param array|string $options
+     * @return bool|null null when the leg's storage is disabled, false when its source file is
+     * missing (skipped), true when copied
+     */
+    private function copyClonedMediaUploadLeg(string $kind, ?string $storage, string $from, string $to, $options): ?bool
+    {
+        if (empty($storage)) return null;
+        $download = FileDownloadStrategyFactory::build($storage);
+        $upload = FileUploadStrategyFactory::build($storage);
+        if (is_null($download) || is_null($upload)) return null; // None
+
+        // An original can lack one leg (storage types edited after upload; the public back-fill
+        // only covers display_on_site uploads). Copy the legs it has rather than fail the clone.
+        if (!$download->exists($from)) {
+            Log::warning(sprintf("SummitService::copyClonedMediaUploadLeg %s leg source missing on %s, skipping it: %s", $kind, $storage, $from));
+            return false;
+        }
+
+        // Always overwrite: a killed attempt can leave a truncated file at $to (the Local adapter
+        // writes straight to the final path), so existence never proves a leg finished.
+        $stream = $download->readStream($from);
+        if (!is_resource($stream))
+            throw new \RuntimeException(sprintf("SummitService::copyClonedMediaUploadLeg could not read on %s: %s", $storage, $from));
+
+        try {
+            if (!$upload->saveFromStream($stream, $to, $options))
+                throw new \RuntimeException(sprintf("SummitService::copyClonedMediaUploadLeg could not write on %s: %s", $storage, $to));
+        } finally {
+            if (is_resource($stream)) fclose($stream);
+        }
+        Log::info(sprintf("SummitService::copyClonedMediaUploadLeg %s copied %s -> %s", $storage, $from, $to));
+        return true;
+    }
+
+    /**
+     * @param int $target_media_upload_id
+     * @param string $filename
+     */
+    private function removeClonedMediaUploadTarget(int $target_media_upload_id, string $filename): void
+    {
+        // remove the record first and capture its target-only paths; storage is touched only
+        // after commit, so a failed commit can never leave a record whose file was moved
+        $cleanup = $this->tx_service->transaction(function () use ($target_media_upload_id, $filename) {
+            // FOR UPDATE: a concurrent re-upload's PendingMediaUpload insert waits for this delete
+            // (or wins, and the guard below sees it) instead of being cascaded away with the record.
+            // Read fresh, so a record staff already deleted is not answered from an earlier attempt's
+            // entity and the file a new upload wrote at the same path is left alone.
+            $target = $this->presentation_media_upload_repository->getByIdFresh($target_media_upload_id, true);
+            if (!$target instanceof PresentationMediaUpload) return [];
+            if ($this->isClonedMediaUploadReplaced($target, $filename)) {
+                Log::info(sprintf("SummitService::removeClonedMediaUploadTarget target %s was re-uploaded, keeping it", $target_media_upload_id));
+                return [];
+            }
+
+            $paths = [];
+            $type = $target->getMediaUploadType();
+            if (!is_null($type)) {
+                foreach ([
+                    IStorageTypesConstants::PrivateType => $type->getPrivateStorageType(),
+                    IStorageTypesConstants::PublicType => $type->getPublicStorageType(),
+                ] as $kind => $storage) {
+                    if (!empty($storage))
+                        $paths[] = [$storage, $target->getPath($kind), $target->getFilename()];
+                }
+            }
+
+            $presentation = $target->getPresentation();
+            if (!is_null($presentation)) $presentation->removeMediaUpload($target);
+            Log::warning(sprintf("SummitService::removeClonedMediaUploadTarget removed clone media upload %s", $target_media_upload_id));
+            return $paths;
+        });
+
+        // same rename-to-DELETED_ cleanup as PresentationService::deleteMediaUpload
+        foreach ($cleanup as [$storage, $path, $stored_filename]) {
+            try {
+                $strategy = FileUploadStrategyFactory::build($storage);
+                if (!is_null($strategy)) $strategy->markAsDeleted($path, $stored_filename);
+            } catch (\Throwable $ex) {
+                Log::error(sprintf("SummitService::removeClonedMediaUploadTarget could not mark %s/%s deleted on %s", $path, $stored_filename, $storage));
+                Log::error($ex);
+            }
+        }
     }
 }

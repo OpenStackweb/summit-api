@@ -115,10 +115,14 @@ class SummitSponsorServiceImportFaultTest extends TestCase
             $this->names[] = $name;
             $csv .= "\"{$name}\",Default\n";
         }
-        $path = tempnam(sys_get_temp_dir(), 'sponsor_import') . '.csv';
+        $path = sprintf('%s/sponsor_import_%s.csv', sys_get_temp_dir(), str_random(16));
         file_put_contents($path, $csv);
-        $file = new UploadedFile($path, 'sponsors.csv', 'text/csv', null, true);
-        return app(ISummitSponsorService::class)->importSponsors(self::$summit, $file, false);
+        try {
+            $file = new UploadedFile($path, 'sponsors.csv', 'text/csv', null, true);
+            return app(ISummitSponsorService::class)->importSponsors(self::$summit, $file, false);
+        } finally {
+            unlink($path);
+        }
     }
 
     private function assertLaterRowsNotAttempted(array $report): void

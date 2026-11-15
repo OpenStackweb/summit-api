@@ -71,8 +71,7 @@ final class CompanyNameMatcher
 
     public static function key(string $name): string
     {
-        $s = \Normalizer::normalize($name, \Normalizer::FORM_C);
-        if ($s === false) $s = $name;
+        $s = self::nfc($name);
         $s = mb_strtolower($s);
         $s = trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s));
         if ($s === '') return '';
@@ -83,10 +82,19 @@ final class CompanyNameMatcher
         return implode(' ', $words);
     }
 
+    /**
+     * NFC when intl is available; otherwise the name as given.
+     */
+    private static function nfc(string $name): string
+    {
+        if (!class_exists(\Normalizer::class)) return $name;
+        $s = \Normalizer::normalize($name, \Normalizer::FORM_C);
+        return $s === false ? $name : $s;
+    }
+
     private static function exactKey(string $name): string
     {
-        $s = \Normalizer::normalize($name, \Normalizer::FORM_C);
-        if ($s === false) $s = $name;
+        $s = self::nfc($name);
         return mb_strtolower(trim($s));
     }
 

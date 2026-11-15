@@ -1857,6 +1857,10 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 
     private function removeImportedCompanies(): void
     {
+        foreach ($this->csv_paths as $path) {
+            if (is_file($path)) unlink($path);
+        }
+        $this->csv_paths = [];
         if (count($this->imported_company_names) === 0) return;
         $em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
         foreach ($this->imported_company_names as $name) {
@@ -1871,10 +1875,16 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->imported_company_names = [];
     }
 
+    /**
+     * @var string[] temp upload paths, removed on tear down
+     */
+    private $csv_paths = [];
+
     private function buildCsvFile(string $content): UploadedFile
     {
-        $path = tempnam(sys_get_temp_dir(), 'sponsor_import') . '.csv';
+        $path = sprintf('%s/sponsor_import_%s.csv', sys_get_temp_dir(), str_random(16));
         file_put_contents($path, $content);
+        $this->csv_paths[] = $path;
         return new UploadedFile($path, 'sponsors.csv', 'text/csv', null, true);
     }
 
@@ -1993,6 +2003,31 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertSame(2, $report['rows'][0]['row']);
         $this->assertSame("{$name}, Inc.", $report['rows'][0]['company_input']);
         $this->assertSame(1, $report['summary']['total']);
+    }
+
+    public function testImportRecognizesHeaderWithTrailingNbsp(){
+        $name = $this->newCompanyName();
+        $response = $this->importCsv("company\u{00A0},\u{00A0}tier\n\"{$name}\",Default\n", true);
+        $this->assertResponseStatus(200);
+        $report = json_decode($response->getContent(), true);
+        $this->assertSame(['create'], array_column($report['rows'], 'action'));
+    }
+
+    public function testImportInvalidCsvDoesNotEchoLibraryMessage(){
+        // identical raw headers make League throw; its message names the header
+        $response = $this->importCsv("company,tier,<i>y</i>,<i>y</i>\nAcme,Default,1,2\n", true);
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('CSV is not valid.', $response->getContent());
+        $this->assertStringNotContainsString('<i>', $response->getContent());
+    }
+
+    public function testImportIgnoresDuplicateExtraColumnsWithoutEchoingThem(){
+        $name = $this->newCompanyName();
+        $response = $this->importCsv("<b>x</b>,<B>X</B>,company,tier\n1,2,\"{$name}\",Default\n", true);
+        $this->assertResponseStatus(200);
+        $this->assertStringNotContainsString('<b>', $response->getContent());
+        $report = json_decode($response->getContent(), true);
+        $this->assertSame(['create'], array_column($report['rows'], 'action'));
     }
 
     public function testImportValidationMissingTierColumn(){

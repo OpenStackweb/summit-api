@@ -301,14 +301,19 @@ final class SummitSponsorService
             $csv = Reader::createFromString($content);
             $csv->setHeaderOffset(0);
 
+            // messages never echo file content: the admin UI renders them as HTML
+            $required_columns = ['company', 'tier'];
             $columns = [];
             foreach ($csv->getHeader() as $header) {
-                $normalized = mb_strtolower(trim($header));
+                // Excel can leave a trailing NBSP on a header
+                $normalized = mb_strtolower(preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', (string)$header));
+                $required = array_search($normalized, $required_columns, true);
+                if ($required === false) continue;
                 if (isset($columns[$normalized]))
-                    throw new ValidationException(sprintf("File has more than one %s column.", $normalized));
+                    throw new ValidationException(sprintf("File has more than one %s column.", $required_columns[$required]));
                 $columns[$normalized] = $header;
             }
-            foreach (['company', 'tier'] as $required) {
+            foreach ($required_columns as $required) {
                 if (!isset($columns[$required]))
                     throw new ValidationException(sprintf("File is missing the %s column.", $required));
             }
@@ -321,7 +326,8 @@ final class SummitSponsorService
                 $rows[] = ['row' => $offset + 1, 'company' => $company, 'tier' => $tier];
             }
         } catch (UnableToProcessCsv $ex) {
-            throw new ValidationException(sprintf("CSV is not valid: %s", $ex->getMessage()));
+            Log::warning(sprintf("SummitSponsorService::importSponsors CSV is not valid: %s", $ex->getMessage()));
+            throw new ValidationException("CSV is not valid.");
         }
 
         if (count($rows) > SponsorImportPlanner::MAX_ROWS)

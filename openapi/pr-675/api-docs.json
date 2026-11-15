@@ -80941,8 +80941,12 @@
                         "format": "binary"
                     },
                     "dry_run": {
-                        "description": "Plan only, write nothing",
-                        "type": "boolean"
+                        "description": "Send 1 to plan only and write nothing, 0 (default) to import. true/false strings are rejected.",
+                        "type": "integer",
+                        "enum": [
+                            0,
+                            1
+                        ]
                     }
                 },
                 "type": "object"

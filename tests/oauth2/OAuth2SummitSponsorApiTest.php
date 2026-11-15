@@ -2050,6 +2050,29 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertStringContainsString('201 rows', $response->getContent());
     }
 
+    public function testImportValidationRejectsNonBooleanDryRun(){
+        $new_name = $this->newCompanyName();
+        $sponsors_before = self::$summit->getSummitSponsors()->count();
+        $summit_id = self::$summit->getId();
+
+        // a typo must not fall through to a real import
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitSponsorApiController@import",
+            ['id' => $summit_id],
+            ['dry_run' => 'ture'],
+            [],
+            ['file' => $this->buildCsvFile("company,tier\n\"{$new_name}\",Default\n")],
+            ["HTTP_Authorization" => " Bearer " . $this->access_token]
+        );
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('dry run', $response->getContent());
+
+        $em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        $this->assertNull($em->getRepository(Company::class)->findOneBy(['name' => $new_name]));
+        $this->assertSame($sponsors_before, $em->find(Summit::class, $summit_id)->getSummitSponsors()->count());
+    }
+
     public function testImportValidationNotUtf8(){
         // Excel's plain "CSV (comma delimited)" export is cp1252
         $response = $this->importCsv("company,tier\nCaf\xE9 Ltd,Default\n", true);

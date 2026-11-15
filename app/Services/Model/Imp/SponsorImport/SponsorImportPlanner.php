@@ -22,9 +22,6 @@ use services\model\ISummitSponsorService;
  */
 final class SponsorImportPlanner
 {
-    // a synchronous real run of 500 new companies measured ~24 s CPU against FPM's 30 s limit; 200 took ~7 s
-    const MAX_ROWS = 200;
-
     /**
      * @var CompanyNameMatcher
      */
@@ -43,13 +40,13 @@ final class SponsorImportPlanner
     /**
      * @param CompanyNameMatcher $matcher
      * @param array<string, array{id:int,name:string}> $tiers
-     * @param list<int> $sponsorCompanyIds
+     * @param list<int> $sponsor_company_ids
      */
-    public function __construct(CompanyNameMatcher $matcher, array $tiers, array $sponsorCompanyIds)
+    public function __construct(CompanyNameMatcher $matcher, array $tiers, array $sponsor_company_ids)
     {
         $this->matcher = $matcher;
         $this->tiers = $tiers;
-        $this->sponsor_company_ids = array_fill_keys(array_map('intval', $sponsorCompanyIds), true);
+        $this->sponsor_company_ids = array_fill_keys(array_map('intval', $sponsor_company_ids), true);
     }
 
     /**
@@ -146,10 +143,10 @@ final class SponsorImportPlanner
 
     /**
      * @param list<array> $rows
-     * @param bool $dryRun
+     * @param bool $dry_run
      * @return array{dry_run:bool,summary:array<string,int>}
      */
-    public static function summarize(array $rows, bool $dryRun): array
+    public static function summarize(array $rows, bool $dry_run): array
     {
         $summary = [
             'total' => count($rows),
@@ -172,7 +169,7 @@ final class SponsorImportPlanner
                 $summary['companies_created']++;
             }
         }
-        return ['dry_run' => $dryRun, 'summary' => $summary];
+        return ['dry_run' => $dry_run, 'summary' => $summary];
     }
 
     /**

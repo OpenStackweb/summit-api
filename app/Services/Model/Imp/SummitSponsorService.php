@@ -330,8 +330,8 @@ final class SummitSponsorService
             throw new ValidationException("CSV is not valid.");
         }
 
-        if (count($rows) > SponsorImportPlanner::MAX_ROWS)
-            throw new ValidationException(sprintf("File has %d rows; the maximum is %d.", count($rows), SponsorImportPlanner::MAX_ROWS));
+        if (count($rows) > ISummitSponsorService::ImportMaxRows)
+            throw new ValidationException(sprintf("File has %d rows; the maximum is %d.", count($rows), ISummitSponsorService::ImportMaxRows));
 
         return $rows;
     }

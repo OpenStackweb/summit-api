@@ -647,60 +647,16 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             required: true,
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
-                schema: new OA\Schema(
-                    type: 'object',
-                    required: ['file'],
-                    properties: [
-                        new OA\Property(
-                            property: 'file',
-                            type: 'string',
-                            format: 'binary',
-                            description: 'UTF-8 CSV file with company and tier columns'
-                        ),
-                        new OA\Property(
-                            property: 'dry_run',
-                            type: 'boolean',
-                            description: 'Plan only, write nothing'
-                        ),
-                    ]
-                )
+                schema: new OA\Schema(ref: '#/components/schemas/SponsorImportRequest')
             )
         ),
         responses: [
             new OA\Response(
                 response: Response::HTTP_OK,
                 description: 'Per-row import report',
-                content: new OA\JsonContent(
-                    type: 'object',
-                    properties: [
-                        new OA\Property(property: 'dry_run', type: 'boolean'),
-                        new OA\Property(property: 'summary', type: 'object', properties: [
-                            new OA\Property(property: 'total', type: 'integer'),
-                            new OA\Property(property: 'sponsors_created', type: 'integer'),
-                            new OA\Property(property: 'companies_created', type: 'integer'),
-                            new OA\Property(property: 'skipped', type: 'integer'),
-                            new OA\Property(property: 'errors', type: 'integer'),
-                            new OA\Property(property: 'not_attempted', type: 'integer'),
-                        ]),
-                        new OA\Property(property: 'rows', type: 'array', items: new OA\Items(type: 'object', properties: [
-                            new OA\Property(property: 'row', type: 'integer'),
-                            new OA\Property(property: 'company_input', type: 'string'),
-                            new OA\Property(property: 'tier_input', type: 'string'),
-                            new OA\Property(property: 'action', type: 'string', enum: ['create', 'skip_existing_sponsor', 'skip_duplicate', 'error', 'not_attempted']),
-                            new OA\Property(property: 'company', type: 'object', nullable: true, properties: [
-                                new OA\Property(property: 'id', type: 'integer', nullable: true),
-                                new OA\Property(property: 'name', type: 'string'),
-                                new OA\Property(property: 'match', type: 'string', enum: ['exact', 'normalized', 'new']),
-                            ]),
-                            new OA\Property(property: 'tiers', type: 'array', items: new OA\Items(type: 'string')),
-                            new OA\Property(property: 'sponsor_id', type: 'integer', nullable: true),
-                            new OA\Property(property: 'duplicate_of_row', type: 'integer', nullable: true),
-                            new OA\Property(property: 'candidates', type: 'array', items: new OA\Items(type: 'string')),
-                            new OA\Property(property: 'error', type: 'string', nullable: true),
-                        ])),
-                    ]
-                )
+                content: new OA\JsonContent(ref: '#/components/schemas/SponsorImportReport')
             ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
@@ -728,7 +684,10 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             if (!$is_authz)
                 throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
 
-            $validation = Validator::make($request->all(), ['file' => 'required|file']);
+            $validation = Validator::make($request->all(), [
+                'file' => 'required|file',
+                'dry_run' => 'sometimes|boolean',
+            ]);
             if ($validation->fails()) {
                 throw new ValidationException($validation->messages()->toArray());
             }

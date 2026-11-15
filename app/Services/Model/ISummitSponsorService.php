@@ -39,6 +39,9 @@ interface ISummitSponsorService
      */
     const ImportTierSeparator = '|';
 
+    // a synchronous real run of 500 new companies measured ~24 s CPU against FPM's 30 s limit; 200 took ~7 s
+    const ImportMaxRows = 200;
+
     /**
      * @param Summit $summit
      * @param array $payload

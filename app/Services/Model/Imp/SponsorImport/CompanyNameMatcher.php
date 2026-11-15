@@ -45,10 +45,13 @@ final class CompanyNameMatcher
      */
     public function __construct(array $companies)
     {
+        $seen = [];
         foreach ($companies as $company) {
             $name = $company['name'] ?? null;
             if (!is_string($name) || trim($name) === '') continue;
             $id = (int)$company['id'];
+            if (isset($seen[$id])) continue;
+            $seen[$id] = true;
 
             $exact_key = self::exactKey($name);
             $this->exact_ids[$exact_key][] = $id;
@@ -60,8 +63,9 @@ final class CompanyNameMatcher
             if ($key === '') continue;
             $this->by_key[$key][] = ['id' => $id, 'name' => $name];
         }
-        foreach ($this->exact_ids as &$ids) {
+        foreach ($this->exact_ids as $k => $ids) {
             sort($ids);
+            $this->exact_ids[$k] = $ids;
         }
     }
 

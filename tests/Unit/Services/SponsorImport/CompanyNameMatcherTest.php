@@ -29,6 +29,7 @@ final class CompanyNameMatcherTest extends TestCase
         $this->assertSame('co', CompanyNameMatcher::key('Co'));          // never strips the last word
         $this->assertSame('', CompanyNameMatcher::key(' -- '));
         $this->assertSame('münchen', CompanyNameMatcher::key('München GmbH'));
+        $this->assertSame('münchen', CompanyNameMatcher::key('MÜNCHEN GMBH'));
     }
 
     public function testExactWinsOverNormalizedAndLowestIdBreaksTies(): void
@@ -43,7 +44,11 @@ final class CompanyNameMatcherTest extends TestCase
     public function testNfcAndNullNames(): void
     {
         $m = new CompanyNameMatcher([['id' => 1, 'name' => "Cafe\u{0301} Corp"], ['id' => 2, 'name' => null], ['id' => 3, 'name' => '  ']]);
-        $this->assertSame(1, $m->resolve("Café Corp")['id']);           // precomposed input matches decomposed stored name (exact)
+        // precomposed input matches decomposed stored name (exact)
+        $this->assertSame(['match' => 'exact', 'id' => 1, 'name' => "Cafe\u{0301} Corp", 'ids' => [1]], $m->resolve("Café Corp"));
+        // and the reverse direction
+        $r = new CompanyNameMatcher([['id' => 4, 'name' => "Café Corp"]]);
+        $this->assertSame(['match' => 'exact', 'id' => 4, 'name' => "Café Corp", 'ids' => [4]], $r->resolve("Cafe\u{0301} Corp"));
         $this->assertSame(['match' => 'none'], $m->resolve(''));
     }
 
@@ -55,7 +60,7 @@ final class CompanyNameMatcherTest extends TestCase
 
     public function testNormalizedSeveralCandidatesIsAmbiguousSorted(): void
     {
-        $m = new CompanyNameMatcher([['id' => 1, 'name' => 'Arm Ltd.'], ['id' => 2, 'name' => 'arm, inc']]);
+        $m = new CompanyNameMatcher([['id' => 2, 'name' => 'arm, inc'], ['id' => 1, 'name' => 'Arm Ltd.']]);
         $this->assertSame(['match' => 'ambiguous', 'candidates' => ['Arm Ltd.', 'arm, inc']], $m->resolve('Arm Corp'));
     }
 
@@ -64,5 +69,12 @@ final class CompanyNameMatcherTest extends TestCase
         $m = new CompanyNameMatcher([['id' => 1, 'name' => '--']]);
         $this->assertSame(['match' => 'none'], $m->resolve('Acme'));
         $this->assertSame(['match' => 'none'], $m->resolve('!!'));      // key '' must not match '--'
+    }
+
+    public function testDuplicateInputRowsAreDedupedById(): void
+    {
+        $m = new CompanyNameMatcher([['id' => 5, 'name' => 'Wiwynn Corporation'], ['id' => 5, 'name' => 'Wiwynn Corporation']]);
+        $this->assertSame(['match' => 'normalized', 'id' => 5, 'name' => 'Wiwynn Corporation'], $m->resolve('Wiwynn'));
+        $this->assertSame(['match' => 'exact', 'id' => 5, 'name' => 'Wiwynn Corporation', 'ids' => [5]], $m->resolve('wiwynn corporation'));
     }
 }

@@ -2078,6 +2078,19 @@ class ApiEndpointsSeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'import-sponsors',
+                'route' => '/api/v1/summits/{id}/sponsors/csv',
+                'http_method' => 'POST',
+                'scopes' => [
+                    SummitScopes::WriteSummitData,
+                ],
+                'authz_groups' => [
+                    IGroup::SuperAdmins,
+                    IGroup::Administrators,
+                    IGroup::SummitAdministrators,
+                ]
+            ],
+            [
                 'name' => 'add-sponsor-v2',
                 'route' => '/api/v2/summits/{id}/sponsors',
                 'http_method' => 'POST',

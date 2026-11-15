@@ -49,6 +49,16 @@ interface ISummitSponsorService
     public function addSponsor(Summit $summit, array $payload):Sponsor;
 
     /**
+     * Creates sponsors (and missing companies) from a CSV with company and tier columns.
+     * @param Summit $summit
+     * @param UploadedFile $file
+     * @param bool $dry_run plan only, write nothing
+     * @return array{dry_run:bool,summary:array<string,int>,rows:list<array>}
+     * @throws ValidationException
+     */
+    public function importSponsors(Summit $summit, UploadedFile $file, bool $dry_run):array;
+
+    /**
      * @param Summit $summit
      * @param int $sponsor_id
      * @param array $payload

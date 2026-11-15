@@ -18,6 +18,14 @@ use Mockery;
 use models\summit\SummitLeadReportSetting;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\ResourceServer\IAccessTokenService;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Queue;
+use LaravelDoctrine\ORM\Facades\Registry;
+use models\main\Company;
+use models\summit\Sponsor;
+use models\summit\Summit;
+use models\utils\SilverstripeBaseModel;
+use services\model\ISummitSponsorService;
 /**
  * Class OAuth2SummitSponsorApiTest
  */
@@ -51,6 +59,7 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
     protected function tearDown(): void
     {
         self::clearSummitTestData();
+        $this->removeImportedCompanies();
         parent::tearDown();
     }
 
@@ -1647,7 +1656,15 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
      */
     private function useSponsorOnlyToken(): void
     {
-        $stub = new AccessTokenServiceStub([['slug' => IGroup::Sponsors]]);
+        $this->useTokenWithGroups([IGroup::Sponsors]);
+    }
+
+    /**
+     * @param string[] $group_slugs
+     */
+    private function useTokenWithGroups(array $group_slugs): void
+    {
+        $stub = new AccessTokenServiceStub(array_map(fn($slug) => ['slug' => $slug], $group_slugs));
         $stub->setUserId(self::$member->getUserExternalId());
         $stub->setUserExternalId(self::$member->getUserExternalId());
         $stub->setUserEmail(self::$member->getEmail());
@@ -1822,5 +1839,209 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         );
 
         $this->assertResponseStatus(412);
+    }
+
+    // ---- CSV import ----
+
+    /**
+     * @var string[] names of companies the import tests may create, removed on tear down
+     */
+    private $imported_company_names = [];
+
+    private function newCompanyName(): string
+    {
+        $name = 'Import Co ' . str_random(16);
+        $this->imported_company_names[] = $name;
+        return $name;
+    }
+
+    private function removeImportedCompanies(): void
+    {
+        if (count($this->imported_company_names) === 0) return;
+        $em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        foreach ($this->imported_company_names as $name) {
+            foreach ($em->getRepository(Company::class)->findBy(['name' => $name]) as $company) {
+                $em->remove($company);
+            }
+            foreach ($em->getRepository(Company::class)->findBy(['name' => $name . ', Inc.']) as $company) {
+                $em->remove($company);
+            }
+        }
+        $em->flush();
+        $this->imported_company_names = [];
+    }
+
+    private function buildCsvFile(string $content): UploadedFile
+    {
+        $path = tempnam(sys_get_temp_dir(), 'sponsor_import') . '.csv';
+        file_put_contents($path, $content);
+        return new UploadedFile($path, 'sponsors.csv', 'text/csv', null, true);
+    }
+
+    private function importCsv(string $content, bool $dry_run)
+    {
+        return $this->action(
+            "POST",
+            "OAuth2SummitSponsorApiController@import",
+            ['id' => self::$summit->getId()],
+            ['dry_run' => $dry_run ? '1' : '0'],
+            [],
+            ['file' => $this->buildCsvFile($content)],
+            // not getAuthHeaders(): its JSON content type replaces the form fields
+            ["HTTP_Authorization" => " Bearer " . $this->access_token]
+        );
+    }
+
+    public function testImportCreatesSponsorsAndCompanies(){
+        Queue::fake();
+        $existing = self::$companies_without_sponsor[0]->getName();
+        $new_name = $this->newCompanyName();
+        $sponsor_company = self::$sponsors[0]->getCompany()->getName();
+
+        $csv = "company,tier\n" .
+            "\"{$existing}\",Default\n" .
+            "\"{$new_name}\",Default|Default2\n" .
+            "\"{$sponsor_company}\",Default\n" .
+            "\"{$this->newCompanyName()}\",Nope\n";
+
+        $response = $this->importCsv($csv, false);
+        $this->assertResponseStatus(200);
+        $report = json_decode($response->getContent(), true);
+
+        $this->assertFalse($report['dry_run']);
+        $this->assertSame(['create', 'create', 'skip_existing_sponsor', 'error'], array_column($report['rows'], 'action'));
+        $this->assertSame(2, $report['summary']['sponsors_created']);
+        $this->assertSame(1, $report['summary']['companies_created']);
+        $this->assertSame(1, $report['summary']['skipped']);
+        $this->assertSame(1, $report['summary']['errors']);
+        $this->assertSame(0, $report['summary']['not_attempted']);
+        $this->assertGreaterThan(0, $report['rows'][0]['sponsor_id']);
+        $this->assertGreaterThan(0, $report['rows'][1]['sponsor_id']);
+        $this->assertGreaterThan(0, $report['rows'][1]['company']['id']);
+        $this->assertSame('new', $report['rows'][1]['company']['match']);
+        $this->assertSame(['Default', 'Default2'], $report['rows'][1]['tiers']);
+        foreach ($report['rows'] as $row) {
+            $this->assertArrayNotHasKey('tier_ids', $row);
+        }
+
+        // the request closed the cached manager
+        $em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        $sponsor = $em->find(Sponsor::class, $report['rows'][1]['sponsor_id']);
+        $this->assertInstanceOf(Sponsor::class, $sponsor);
+        $this->assertSame($new_name, $sponsor->getCompany()->getName());
+        $this->assertCount(2, $sponsor->getSponsorships());
+    }
+
+    public function testDryRunWritesNothing(){
+        $new_name = $this->newCompanyName();
+        $sponsors_before = self::$summit->getSummitSponsors()->count();
+        $summit_id = self::$summit->getId();
+
+        $response = $this->importCsv("company,tier\n\"{$new_name}\",Default\n", true);
+        $this->assertResponseStatus(200);
+        $report = json_decode($response->getContent(), true);
+
+        $this->assertTrue($report['dry_run']);
+        $this->assertSame('create', $report['rows'][0]['action']);
+        $this->assertSame('new', $report['rows'][0]['company']['match']);
+        $this->assertNull($report['rows'][0]['sponsor_id']);
+        $this->assertSame(1, $report['summary']['sponsors_created']);
+        $this->assertSame(1, $report['summary']['companies_created']);
+
+        $em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        $this->assertNull($em->getRepository(Company::class)->findOneBy(['name' => $new_name]));
+        $this->assertSame($sponsors_before, $em->find(Summit::class, $summit_id)->getSummitSponsors()->count());
+    }
+
+    public function testDryRunMatchesRealRun(){
+        Queue::fake();
+        $new_name = $this->newCompanyName();
+        $csv = "company,tier\n" .
+            "\"{$new_name}\",Default\n" .
+            "\"" . strtoupper($new_name) . " Inc.\",Default2\n" .
+            "\"" . self::$companies_without_sponsor[1]->getName() . "\",Default2\n" .
+            "\"" . self::$sponsors[0]->getCompany()->getName() . "\",Default\n" .
+            ",Default\n";
+
+        // dry run through the service: no HTTP request, so the manager stays open for the real run
+        $dry = App::make(ISummitSponsorService::class)->importSponsors(self::$summit, $this->buildCsvFile($csv), true);
+
+        $response = $this->importCsv($csv, false);
+        $this->assertResponseStatus(200);
+        $real = json_decode($response->getContent(), true);
+
+        $this->assertTrue($dry['dry_run']);
+        $this->assertFalse($real['dry_run']);
+        $this->assertSame(['create', 'skip_duplicate', 'create', 'skip_existing_sponsor', 'error'], array_column($dry['rows'], 'action'));
+        $this->assertSame(array_column($dry['rows'], 'action'), array_column($real['rows'], 'action'));
+        $this->assertSame($dry['summary'], $real['summary']);
+        // two spellings of one new company create it once
+        $this->assertSame(1, $real['summary']['companies_created']);
+    }
+
+    public function testImportHandlesExcelQuirks(){
+        Queue::fake();
+        $name = $this->newCompanyName();
+        $content = "\xEF\xBB\xBF Company ,TIER\r\n\"{$name}, Inc.\",Default\r\n\r\n";
+
+        $response = $this->importCsv($content, true);
+        $this->assertResponseStatus(200);
+        $report = json_decode($response->getContent(), true);
+
+        $this->assertCount(1, $report['rows']);
+        $this->assertSame('create', $report['rows'][0]['action']);
+        $this->assertSame(2, $report['rows'][0]['row']);
+        $this->assertSame("{$name}, Inc.", $report['rows'][0]['company_input']);
+        $this->assertSame(1, $report['summary']['total']);
+    }
+
+    public function testImportValidationMissingTierColumn(){
+        $response = $this->importCsv("company,level\nAcme,Default\n", true);
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('tier', $response->getContent());
+    }
+
+    public function testImportValidationDuplicateNormalizedHeader(){
+        $response = $this->importCsv("company, Company ,tier\nAcme,Acme,Default\n", true);
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('more than one company column', $response->getContent());
+    }
+
+    public function testImportValidationTooManyRows(){
+        $csv = "company,tier\n";
+        for ($i = 0; $i < 501; $i++) $csv .= "Company {$i},Default\n";
+        $response = $this->importCsv($csv, true);
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('501 rows', $response->getContent());
+    }
+
+    public function testImportValidationNotUtf8(){
+        // Excel's plain "CSV (comma delimited)" export is cp1252
+        $response = $this->importCsv("company,tier\nCaf\xE9 Ltd,Default\n", true);
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString('not UTF-8 encoded', $response->getContent());
+    }
+
+    public function testImportForbiddenForNonAuthzMember(){
+        $this->useSponsorOnlyToken();
+        $this->assertFalse(self::$member->isAdmin());
+        $this->assertFalse(self::$member->isAuthzFor(self::$summit));
+
+        $response = $this->importCsv("company,tier\n\"{$this->newCompanyName()}\",Default\n", true);
+        $this->assertResponseStatus(403);
+        // the auth.user group gate answered (sponsors is not in the endpoint's authz groups)
+        $this->assertStringContainsString('unauthorized member', $response->getContent());
+    }
+
+    public function testImportForbiddenForSummitAdminOfAnotherSummit(){
+        // passes the endpoint's group gate, but the member is not allowed on this summit
+        $this->useTokenWithGroups([IGroup::SummitAdministrators]);
+        $this->assertFalse(self::$member->isAdmin());
+        $this->assertFalse(self::$member->isAuthzFor(self::$summit));
+
+        $response = $this->importCsv("company,tier\n\"{$this->newCompanyName()}\",Default\n", true);
+        $this->assertResponseStatus(403);
+        // the controller's authz check answered, not the auth.user group gate
+        $this->assertStringNotContainsString('unauthorized member', $response->getContent());
     }
 }

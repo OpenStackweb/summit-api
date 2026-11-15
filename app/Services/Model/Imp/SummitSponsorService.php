@@ -35,7 +35,15 @@ use App\Models\Foundation\Summit\Factories\SponsorSocialNetworkFactory;
 use App\Models\Foundation\Summit\Repositories\ISponsorExtraQuestionTypeRepository;
 use App\Models\Foundation\Summit\Repositories\ISummitSponsorshipRepository;
 use App\Models\Foundation\Summit\SponsorStatistics;
+use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
+use App\Services\Model\Imp\SponsorImport\CompanyNameMatcher;
+use App\Services\Model\Imp\SponsorImport\SponsorImportPlanner;
+use LaravelDoctrine\ORM\Facades\Registry;
+use League\Csv\Reader;
+use League\Csv\UnableToProcessCsv;
+use models\utils\SilverstripeBaseModel;
+use services\utils\AmbiguousCommitException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -56,6 +64,7 @@ use models\summit\SponsorSocialNetwork;
 use models\summit\Summit;
 use models\summit\SummitLeadReportSetting;
 use models\summit\SummitSponsorship;
+use models\summit\SummitSponsorshipType;
 use services\model\ISummitSponsorService;
 
 /**
@@ -221,6 +230,170 @@ final class SummitSponsorService
         }
 
         return $sponsor;
+    }
+
+    /**
+     * @param Summit $summit
+     * @param UploadedFile $file
+     * @param bool $dry_run
+     * @return array
+     * @throws ValidationException
+     */
+    public function importSponsors(Summit $summit, UploadedFile $file, bool $dry_run): array
+    {
+        Log::debug(sprintf("SummitSponsorService::importSponsors summit %s dry_run %s", $summit->getId(), $dry_run ? "true" : "false"));
+
+        $rows = $this->parseSponsorsCsv($file);
+
+        $tiers = [];
+        foreach ($summit->getSummitSponsorshipTypes() as $summit_sponsorship_type) {
+            if (!$summit_sponsorship_type instanceof SummitSponsorshipType) continue;
+            $type = $summit_sponsorship_type->getType();
+            if (is_null($type)) continue;
+            $tiers[mb_strtolower($type->getName())] = ['id' => $summit_sponsorship_type->getId(), 'name' => $type->getName()];
+        }
+
+        $sponsor_company_ids = [];
+        foreach ($summit->getSummitSponsors() as $sponsor) {
+            if ($sponsor instanceof Sponsor && $sponsor->hasCompany())
+                $sponsor_company_ids[] = $sponsor->getCompanyId();
+        }
+
+        $planner = new SponsorImportPlanner(
+            new CompanyNameMatcher($this->company_repository->getAllIdAndName()),
+            $tiers,
+            $sponsor_company_ids
+        );
+        $rows = $planner->plan($rows);
+
+        if (!$dry_run) {
+            $rows = $this->executeSponsorsImport($summit, $rows);
+        }
+
+        $report = SponsorImportPlanner::summarize($rows, $dry_run);
+        $report['rows'] = array_map(static function (array $row): array {
+            unset($row['tier_ids']);
+            return $row;
+        }, $rows);
+        return $report;
+    }
+
+    /**
+     * @param UploadedFile $file
+     * @return list<array{row:int,company:string,tier:string}>
+     * @throws ValidationException
+     */
+    private function parseSponsorsCsv(UploadedFile $file): array
+    {
+        if (!in_array($file->extension(), ['csv', 'txt'])) {
+            throw new ValidationException("File does not has a valid extension ('csv').");
+        }
+
+        $content = file_get_contents($file->getRealPath());
+        if ($content === false || $content === '')
+            throw new ValidationException("File content is empty.");
+
+        // Excel's plain "CSV (comma delimited)" export is cp1252 and would create garbled companies
+        if (!mb_check_encoding($content, 'UTF-8'))
+            throw new ValidationException("File is not UTF-8 encoded. In Excel, use Save As > CSV UTF-8.");
+
+        try {
+            $csv = Reader::createFromString($content);
+            $csv->setHeaderOffset(0);
+
+            $columns = [];
+            foreach ($csv->getHeader() as $header) {
+                $normalized = mb_strtolower(trim($header));
+                if (isset($columns[$normalized]))
+                    throw new ValidationException(sprintf("File has more than one %s column.", $normalized));
+                $columns[$normalized] = $header;
+            }
+            foreach (['company', 'tier'] as $required) {
+                if (!isset($columns[$required]))
+                    throw new ValidationException(sprintf("File is missing the %s column.", $required));
+            }
+
+            $rows = [];
+            foreach ($csv->getRecords() as $offset => $record) {
+                $company = (string)($record[$columns['company']] ?? '');
+                $tier = (string)($record[$columns['tier']] ?? '');
+                if (trim($company) === '' && trim($tier) === '') continue;
+                $rows[] = ['row' => $offset + 1, 'company' => $company, 'tier' => $tier];
+            }
+        } catch (UnableToProcessCsv $ex) {
+            throw new ValidationException(sprintf("CSV is not valid: %s", $ex->getMessage()));
+        }
+
+        if (count($rows) > SponsorImportPlanner::MAX_ROWS)
+            throw new ValidationException(sprintf("File has %d rows; the maximum is %d.", count($rows), SponsorImportPlanner::MAX_ROWS));
+
+        return $rows;
+    }
+
+    /**
+     * Runs the planned creates in order, each through its own transaction(s); never wrapped in an outer one,
+     * so addSponsor publishes its domain events after its own commit.
+     * @param Summit $summit
+     * @param list<array> $rows
+     * @return list<array>
+     */
+    private function executeSponsorsImport(Summit $summit, array $rows): array
+    {
+        $connection_reset = "The import stopped because the database connection was reset. Rows below were not imported.";
+        $could_not_confirm = "Could not confirm whether this sponsor was saved; the import stopped here. Check the sponsor list before importing this file again.";
+        $could_not_create = "Could not create this sponsor; the import stopped here. Rows below were not imported.";
+
+        foreach ($rows as $index => $row) {
+            if ($row['action'] !== 'create') continue;
+
+            if (!$this->isSummitManaged($summit)) {
+                return SponsorImportPlanner::markStopped($rows, $index, $connection_reset, 'not_attempted');
+            }
+
+            $company_created = null;
+            try {
+                $company_id = $row['company']['id'];
+                if ($row['company']['match'] === 'new') {
+                    $name = $row['company']['name'];
+                    $company = $this->tx_service->transaction(function () use ($name) {
+                        $company = CompanyFactory::build(['name' => $name]);
+                        $this->company_repository->add($company, true);
+                        return $company;
+                    });
+                    $company_id = $company->getId();
+                    $rows[$index]['company']['id'] = $company_id;
+                    $company_created = sprintf(' Company "%s" was created.', $company->getName());
+
+                    if (!$this->isSummitManaged($summit)) {
+                        return SponsorImportPlanner::markStopped($rows, $index, $connection_reset . $company_created);
+                    }
+                }
+
+                $sponsor = $this->addSponsor($summit, [
+                    'company_id' => $company_id,
+                    'sponsorships' => array_map(static fn(int $type_id): array => ['type_id' => $type_id], $row['tier_ids']),
+                ]);
+
+                $sponsor_id = $sponsor->getId();
+                if (!$this->isSummitManaged($summit) || !is_int($sponsor_id) || $sponsor_id <= 0) {
+                    // addSponsor's own retry may have run against a detached summit
+                    return SponsorImportPlanner::markStopped($rows, $index, $could_not_confirm . ($company_created ?? ''));
+                }
+                $rows[$index]['sponsor_id'] = $sponsor_id;
+            } catch (\Throwable $ex) {
+                // Stop instead of log-and-skip: a failed transaction clears the EntityManager, which detaches
+                // $summit, so later rows would act on detached entities. Bad rows were already caught by the plan.
+                Log::error(sprintf("SummitSponsorService::importSponsors summit %s row %s: %s", $summit->getId(), $row['row'], $ex->getMessage()), ['exception' => $ex]);
+                $message = $ex instanceof AmbiguousCommitException ? $could_not_confirm : $could_not_create;
+                return SponsorImportPlanner::markStopped($rows, $index, $message . ($company_created ?? ''));
+            }
+        }
+        return $rows;
+    }
+
+    private function isSummitManaged(Summit $summit): bool
+    {
+        return Registry::getManager(SilverstripeBaseModel::EntityManager)->contains($summit);
     }
 
     /**

@@ -73,4 +73,23 @@ final class DoctrineCompanyRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * Scalar projection, no entity hydration.
+     * @return array<int, array{id:int,name:?string}>
+     */
+    public function getAllIdAndName(): array
+    {
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("e.id AS id", "e.name AS name")
+            ->from($this->getBaseEntity(), "e")
+            ->getQuery()
+            ->getArrayResult();
+
+        return array_map(
+            static fn(array $row): array => ['id' => (int)$row['id'], 'name' => $row['name']],
+            $rows
+        );
+    }
 }

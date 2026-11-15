@@ -361,11 +361,18 @@ final class SummitSponsorService
                 $company_id = $row['company']['id'];
                 if ($row['company']['match'] === 'new') {
                     $name = $row['company']['name'];
-                    $company = $this->tx_service->transaction(function () use ($name) {
-                        $company = CompanyFactory::build(['name' => $name]);
-                        $this->company_repository->add($company, true);
-                        return $company;
-                    });
+                    try {
+                        $company = $this->tx_service->transaction(function () use ($name) {
+                            $company = CompanyFactory::build(['name' => $name]);
+                            $this->company_repository->add($company, true);
+                            return $company;
+                        });
+                    } catch (AmbiguousCommitException $ex) {
+                        Log::error(sprintf("SummitSponsorService::importSponsors summit %s row %s: %s", $summit->getId(), $row['row'], $ex->getMessage()), ['exception' => $ex]);
+                        return SponsorImportPlanner::markStopped($rows, $index, sprintf(
+                            'Could not confirm whether company "%s" was saved; the import stopped here. Check the sponsor list before importing this file again.',
+                            $name));
+                    }
                     $company_id = $company->getId();
                     $rows[$index]['company']['id'] = $company_id;
                     $company_created = sprintf(' Company "%s" was created.', $company->getName());

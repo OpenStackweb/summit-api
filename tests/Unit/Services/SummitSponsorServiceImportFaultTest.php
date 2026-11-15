@@ -152,6 +152,25 @@ class SummitSponsorServiceImportFaultTest extends TestCase
         $this->assertGreaterThan(0, $fake->calls);
     }
 
+    public function testAmbiguousCommitOnCompanyStopsWithCompanyConfirmMessage(): void
+    {
+        Queue::fake();
+        // call 1 = row 1 company
+        $fake = $this->bindFake(1, new AmbiguousCommitException('x'), false);
+
+        $report = $this->importThreeNewCompanies();
+
+        $this->assertLaterRowsNotAttempted($report);
+        $row = $report['rows'][0];
+        $this->assertSame(sprintf(
+            'Could not confirm whether company "%s" was saved; the import stopped here. Check the sponsor list before importing this file again.',
+            $this->names[0]), $row['error']);
+        $this->assertNull($row['company']['id']);
+        $this->assertSame(0, $report['summary']['companies_created']);
+        $this->assertSame(1, $fake->calls);
+        Queue::assertNotPushed(PublishSponsorServiceDomainEventsJob::class);
+    }
+
     public function testDetachAfterCompanyCreationStopsBeforeAddSponsor(): void
     {
         Queue::fake();

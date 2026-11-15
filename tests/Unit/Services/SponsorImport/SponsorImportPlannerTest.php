@@ -182,6 +182,47 @@ final class SponsorImportPlannerTest extends TestCase
         $this->assertSame('reset', $out[0]['error']);
     }
 
+    public function testMarkStoppedAlsoStopsDuplicatesOfStoppedRows(): void
+    {
+        $rows = $this->planner()->plan([
+            $this->row(2, 'Acme Robotics Inc', 'Gold'),
+            $this->row(3, 'ACME Robotics', 'Gold'),
+            $this->row(4, 'Beta Labs', 'Gold'),
+            $this->row(5, 'beta labs', 'Gold'),
+            $this->row(6, 'NVIDIA', 'Gold'),
+        ]);
+        $this->assertSame(['create', 'skip_duplicate', 'create', 'skip_duplicate', 'create'], array_column($rows, 'action'));
+
+        $out = SponsorImportPlanner::markStopped($rows, 0, 'boom');
+
+        // row 3 duplicates the stopped row, row 5 duplicates a row that is now not_attempted
+        $this->assertSame(['error', 'not_attempted', 'not_attempted', 'not_attempted', 'not_attempted'], array_column($out, 'action'));
+        $this->assertNull($out[1]['error']);
+        $s = SponsorImportPlanner::summarize($out, false)['summary'];
+        $this->assertSame(0, $s['skipped']);
+        $this->assertSame(4, $s['not_attempted']);
+        $this->assertSame(1, $s['errors']);
+    }
+
+    public function testMarkStoppedKeepsDuplicateOfRowCreatedBeforeTheStop(): void
+    {
+        $rows = $this->planner()->plan([
+            $this->row(2, 'Acme Robotics Inc', 'Gold'),
+            $this->row(3, 'NVIDIA', 'Gold'),
+            $this->row(4, 'ACME Robotics', 'Gold'),
+        ]);
+        $out = SponsorImportPlanner::markStopped($rows, 1, 'boom');
+        $this->assertSame(['create', 'error', 'skip_duplicate'], array_column($out, 'action'));
+        $this->assertSame(1, SponsorImportPlanner::summarize($out, false)['summary']['skipped']);
+    }
+
+    public function testCompanyCellTrimsNbsp(): void
+    {
+        $out = $this->planner()->plan([$this->row(2, "\u{00A0}Acme\u{00A0}", 'Gold')]);
+        $this->assertSame('create', $out[0]['action']);
+        $this->assertSame(['id' => 7, 'name' => 'Acme', 'match' => 'exact'], $out[0]['company']);
+    }
+
     public function testSummarizeCountsCompanyCreatedBeforeFailedSponsor(): void
     {
         $rows = [

@@ -22,7 +22,8 @@ use services\model\ISummitSponsorService;
  */
 final class SponsorImportPlanner
 {
-    const MAX_ROWS = 500;
+    // a synchronous real run of 500 new companies measured ~24 s CPU against FPM's 30 s limit; 200 took ~7 s
+    const MAX_ROWS = 200;
 
     /**
      * @var CompanyNameMatcher
@@ -61,7 +62,8 @@ final class SponsorImportPlanner
         $seen = []; // identity => row number, non-error rows only
         foreach ($rows as $input) {
             $row = $this->newRow($input);
-            $company_name = trim($input['company']);
+            // NBSP too: cells pasted from web pages or Excel carry it
+            $company_name = preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', $input['company']);
 
             if ($company_name === '') {
                 $planned[] = $this->fail($row, 'Company is required.');
@@ -174,7 +176,8 @@ final class SponsorImportPlanner
     }
 
     /**
-     * Marks row $index with $action/$message and turns every later planned create into not_attempted.
+     * Marks row $index with $action/$message and turns every later planned create into not_attempted,
+     * along with any later skip_duplicate whose original row was stopped or not attempted.
      * @param list<array> $rows
      * @param int $index
      * @param string $message
@@ -185,9 +188,15 @@ final class SponsorImportPlanner
     {
         $rows[$index]['action'] = $action;
         $rows[$index]['error'] = $message;
+        $stopped = [$rows[$index]['row'] => true]; // row numbers with nothing imported
         $count = count($rows);
         for ($i = $index + 1; $i < $count; $i++) {
-            if ($rows[$i]['action'] === 'create') $rows[$i]['action'] = 'not_attempted';
+            $action_i = $rows[$i]['action'];
+            if ($action_i === 'create' ||
+                ($action_i === 'skip_duplicate' && isset($stopped[$rows[$i]['duplicate_of_row'] ?? null]))) {
+                $rows[$i]['action'] = 'not_attempted';
+                $stopped[$rows[$i]['row']] = true;
+            }
         }
         return $rows;
     }

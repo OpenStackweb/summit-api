@@ -2044,10 +2044,10 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 
     public function testImportValidationTooManyRows(){
         $csv = "company,tier\n";
-        for ($i = 0; $i < 501; $i++) $csv .= "Company {$i},Default\n";
+        for ($i = 0; $i < 201; $i++) $csv .= "Company {$i},Default\n";
         $response = $this->importCsv($csv, true);
         $this->assertResponseStatus(412);
-        $this->assertStringContainsString('501 rows', $response->getContent());
+        $this->assertStringContainsString('201 rows', $response->getContent());
     }
 
     public function testImportValidationNotUtf8(){

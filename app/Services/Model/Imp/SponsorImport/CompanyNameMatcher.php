@@ -83,7 +83,8 @@ final class CompanyNameMatcher
     }
 
     /**
-     * NFC when intl is available; otherwise the name as given.
+     * NFC. Normalizer normally comes from symfony/polyfill-intl-normalizer when intl is absent, so the
+     * class_exists guard is only defensive.
      */
     private static function nfc(string $name): string
     {

@@ -45,18 +45,19 @@ final class SponsorImportPlannerTest extends TestCase
     public function testCreatesWithExactMatchAndCanonicalTierNames(): void
     {
         $out = $this->planner()->plan([$this->row(2, 'acme', 'gold|SILVER')]);
-        $r = $out[0];
-        $this->assertSame('create', $r['action']);
-        $this->assertSame(['id' => 7, 'name' => 'Acme', 'match' => 'exact'], $r['company']);
-        $this->assertSame(['Gold', 'Silver'], $r['tiers']);
-        $this->assertSame([1, 2], $r['tier_ids']);
-        $this->assertSame(2, $r['row']);
-        $this->assertSame('acme', $r['company_input']);
-        $this->assertSame('gold|SILVER', $r['tier_input']);
-        $this->assertNull($r['sponsor_id']);
-        $this->assertNull($r['duplicate_of_row']);
-        $this->assertSame([], $r['candidates']);
-        $this->assertNull($r['error']);
+        $this->assertSame([
+            'row' => 2,
+            'company_input' => 'acme',
+            'tier_input' => 'gold|SILVER',
+            'action' => 'create',
+            'company' => ['id' => 7, 'name' => 'Acme', 'match' => 'exact'],
+            'tiers' => ['Gold', 'Silver'],
+            'sponsor_id' => null,
+            'duplicate_of_row' => null,
+            'candidates' => [],
+            'error' => null,
+            'tier_ids' => [1, 2],
+        ], $out[0]);
     }
 
     public function testMissingCompanyOrTierIsError(): void
@@ -169,17 +170,10 @@ final class SponsorImportPlannerTest extends TestCase
         $this->assertNull($out[0]['error']);
         $this->assertSame('Tier is required.', $out[2]['error']);
         $this->assertNull($out[3]['error']);
-    }
 
-    public function testMarkStoppedAsNotAttemptedForConnectionReset(): void
-    {
-        $rows = [
-            ['row' => 2, 'action' => 'create', 'error' => null],
-            ['row' => 3, 'action' => 'create', 'error' => null],
-        ];
-        $out = SponsorImportPlanner::markStopped($rows, 0, 'reset', 'not_attempted');
-        $this->assertSame(['not_attempted', 'not_attempted'], array_column($out, 'action'));
-        $this->assertSame('reset', $out[0]['error']);
+        $reset = SponsorImportPlanner::markStopped($rows, 1, 'reset', 'not_attempted');
+        $this->assertSame(['create', 'not_attempted', 'error', 'not_attempted'], array_column($reset, 'action'));
+        $this->assertSame('reset', $reset[1]['error']);
     }
 
     public function testMarkStoppedAlsoStopsDuplicatesOfStoppedRows(): void

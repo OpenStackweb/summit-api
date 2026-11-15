@@ -46,7 +46,6 @@ final class CompanyNameMatcherTest extends TestCase
         $m = new CompanyNameMatcher([['id' => 1, 'name' => "Cafe\u{0301} Corp"], ['id' => 2, 'name' => null], ['id' => 3, 'name' => '  ']]);
         // precomposed input matches decomposed stored name (exact)
         $this->assertSame(['match' => 'exact', 'id' => 1, 'name' => "Cafe\u{0301} Corp", 'ids' => [1]], $m->resolve("Café Corp"));
-        // and the reverse direction
         $r = new CompanyNameMatcher([['id' => 4, 'name' => "Café Corp"]]);
         $this->assertSame(['match' => 'exact', 'id' => 4, 'name' => "Café Corp", 'ids' => [4]], $r->resolve("Cafe\u{0301} Corp"));
         $this->assertSame(['match' => 'none'], $m->resolve(''));

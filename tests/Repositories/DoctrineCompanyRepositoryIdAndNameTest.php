@@ -69,8 +69,5 @@ final class DoctrineCompanyRepositoryIdAndNameTest extends TestCase
         foreach ($this->companies as $company) {
             $this->assertContains(['id' => $company->getId(), 'name' => $company->getName()], $rows);
         }
-        foreach ($rows as $row) {
-            $this->assertIsInt($row['id']);
-        }
     }
 }

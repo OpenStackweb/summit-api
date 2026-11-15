@@ -71,6 +71,7 @@ class SummitSponsorServiceImportFaultTest extends TestCase
     use InsertSummitTestData;
 
     const ConnectionResetMessage = 'The import stopped because the database connection was reset. Rows below were not imported.';
+    const CouldNotCreateMessage = 'Could not create this sponsor; the import stopped here. Rows below were not imported.';
     const CouldNotConfirmMessage = 'Could not confirm whether this sponsor was saved; the import stopped here. Check the sponsor list before importing this file again.';
 
     /**
@@ -149,7 +150,25 @@ class SummitSponsorServiceImportFaultTest extends TestCase
         $this->assertGreaterThan(0, $row['company']['id']);
         $this->assertNull($row['sponsor_id']);
         $this->assertSame(1, $report['summary']['companies_created']);
-        $this->assertGreaterThan(0, $fake->calls);
+        $this->assertSame(2, $fake->calls);
+    }
+
+    public function testWriteFailureOnSponsorStopsWithCouldNotCreateMessage(): void
+    {
+        Queue::fake();
+        // call 1 = row 1 company, call 2 = row 1 addSponsor
+        $fake = $this->bindFake(2, new \RuntimeException('x'), false);
+
+        $report = $this->importThreeNewCompanies();
+
+        $this->assertLaterRowsNotAttempted($report);
+        $row = $report['rows'][0];
+        $this->assertStringContainsString('Could not create this sponsor; the import stopped here', $row['error']);
+        $this->assertSame(self::CouldNotCreateMessage . sprintf(' Company "%s" was created.', $this->names[0]), $row['error']);
+        $this->assertNull($row['sponsor_id']);
+        $this->assertSame(1, $report['summary']['companies_created']);
+        $this->assertSame(3, $report['summary']['total']);
+        $this->assertSame(2, $fake->calls);
     }
 
     public function testAmbiguousCommitOnCompanyStopsWithCompanyConfirmMessage(): void

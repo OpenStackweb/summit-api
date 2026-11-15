@@ -24,6 +24,7 @@ use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\Company;
 use models\summit\Sponsor;
 use models\summit\Summit;
+use models\summit\SummitSponsorshipType;
 use models\utils\SilverstripeBaseModel;
 use services\model\ISummitSponsorService;
 /**
@@ -1984,6 +1985,19 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $this->assertSame($dry['summary'], $real['summary']);
         // two spellings of one new company create it once
         $this->assertSame(1, $real['summary']['companies_created']);
+    }
+
+    public function testImportSkipsTierWhoseSponsorshipTypeWasDeleted(){
+        $em = Registry::getManager(SilverstripeBaseModel::EntityManager);
+        $orphan = new SummitSponsorshipType();
+        self::$summit->addSponsorshipType($orphan);
+        $em->persist($orphan);
+        $em->flush();
+
+        $response = $this->importCsv("company,tier\n\"{$this->newCompanyName()}\",Default\n", true);
+        $this->assertResponseStatus(200);
+        $report = json_decode($response->getContent(), true);
+        $this->assertSame('create', $report['rows'][0]['action']);
     }
 
     public function testImportHandlesExcelQuirks(){

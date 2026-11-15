@@ -398,6 +398,14 @@ class SummitSponsorshipType extends BaseEntity implements IOrderable
     }
 
     /**
+     * @return bool
+     */
+    public function hasType(): bool
+    {
+        return !is_null($this->type);
+    }
+
+    /**
      * @param SponsorshipType $type
      */
     public function setType(SponsorshipType $type): void

@@ -247,9 +247,9 @@ final class SummitSponsorService
 
         $tiers = [];
         foreach ($summit->getSummitSponsorshipTypes() as $summit_sponsorship_type) {
-            if (!$summit_sponsorship_type instanceof SummitSponsorshipType) continue;
+            // the type FK is SET NULL on delete, and getType() is not nullable
+            if (!$summit_sponsorship_type instanceof SummitSponsorshipType || !$summit_sponsorship_type->hasType()) continue;
             $type = $summit_sponsorship_type->getType();
-            if (is_null($type)) continue;
             $tiers[mb_strtolower($type->getName())] = ['id' => $summit_sponsorship_type->getId(), 'name' => $type->getName()];
         }
 

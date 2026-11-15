@@ -35,6 +35,11 @@ use models\summit\SummitLeadReportSetting;
 interface ISummitSponsorService
 {
     /**
+     * Separates tier names within the tier cell of a sponsors CSV import.
+     */
+    const ImportTierSeparator = '|';
+
+    /**
      * @param Summit $summit
      * @param array $payload
      * @return Sponsor

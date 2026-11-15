@@ -278,7 +278,7 @@ class SponsorServicesStatisticsUpsertRequestSchema {}
     required: ['file'],
     properties: [
         new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'CSV file with company and tier columns'),
-        new OA\Property(property: 'dry_run', type: 'boolean', description: 'Plan only, write nothing'),
+        new OA\Property(property: 'dry_run', type: 'integer', enum: [0, 1], description: 'Send 1 to plan only and write nothing, 0 (default) to import. true/false strings are rejected.'),
     ]
 )]
 class SponsorImportRequestSchema {}

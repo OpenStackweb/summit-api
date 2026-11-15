@@ -73,7 +73,7 @@ final class CompanyNameMatcher
     {
         $s = self::nfc($name);
         $s = mb_strtolower($s);
-        $s = trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s));
+        $s = trim(preg_replace('/[^\p{L}\p{M}\p{N}]+/u', ' ', $s));
         if ($s === '') return '';
         $words = explode(' ', $s);
         while (count($words) > 1 && in_array(end($words), self::LegalSuffixes, true)) {
@@ -93,7 +93,8 @@ final class CompanyNameMatcher
     private static function exactKey(string $name): string
     {
         $s = self::nfc($name);
-        return mb_strtolower(trim($s));
+        // same trim as CSV cells, so NBSP padding on a stored name can't defeat the exact match
+        return mb_strtolower(preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', $s));
     }
 
     public function resolve(string $name): array

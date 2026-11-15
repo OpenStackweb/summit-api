@@ -32,6 +32,17 @@ final class CompanyNameMatcherTest extends TestCase
         $this->assertSame('münchen', CompanyNameMatcher::key('MÜNCHEN GMBH'));
     }
 
+    public function testKeyKeepsCombiningMarks(): void
+    {
+        $this->assertNotSame(CompanyNameMatcher::key('कला'), CompanyNameMatcher::key('कली'));
+    }
+
+    public function testExactKeyIgnoresNbspPaddingOnStoredNames(): void
+    {
+        $m = new CompanyNameMatcher([['id' => 1, 'name' => "Acme\u{00A0}"], ['id' => 2, 'name' => 'Acme Inc']]);
+        $this->assertSame(['match' => 'exact', 'id' => 1, 'name' => "Acme\u{00A0}", 'ids' => [1]], $m->resolve('Acme'));
+    }
+
     public function testExactWinsOverNormalizedAndLowestIdBreaksTies(): void
     {
         $m = new CompanyNameMatcher([

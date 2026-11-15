@@ -1,4 +1,4 @@
-<?php namespace Tests;
+<?php namespace Tests\Repositories;
 /**
  * Copyright 2026 OpenStack Foundation
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,11 @@ use LaravelDoctrine\ORM\Facades\Registry;
 use models\main\Company;
 use models\main\ICompanyRepository;
 use models\utils\SilverstripeBaseModel;
+use Tests\TestCase;
 
 /**
  * Class DoctrineCompanyRepositoryIdAndNameTest
- * @package Tests
+ * @package Tests\Repositories
  */
 final class DoctrineCompanyRepositoryIdAndNameTest extends TestCase
 {

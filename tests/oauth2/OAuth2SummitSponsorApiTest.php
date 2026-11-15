@@ -2061,16 +2061,23 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
 
     public function testImportValidationRejectsNonBooleanDryRun(){
         // a typo must not fall through to a real import
+        $new_name = $this->newCompanyName();
+        $sponsors_before = self::$summit->getSummitSponsors()->count();
+        $summit_id = self::$summit->getId();
         $this->action(
             "POST",
             "OAuth2SummitSponsorApiController@import",
-            ['id' => self::$summit->getId()],
+            ['id' => $summit_id],
             ['dry_run' => 'ture'],
             [],
-            ['file' => $this->buildCsvFile("company,tier\n\"{$this->newCompanyName()}\",Default\n")],
+            ['file' => $this->buildCsvFile("company,tier\n\"{$new_name}\",Default\n")],
             ["HTTP_Authorization" => " Bearer " . $this->access_token]
         );
         $this->assertResponseStatus(412);
+
+        $em = Registry::resetManager(SilverstripeBaseModel::EntityManager);
+        $this->assertNull($em->getRepository(Company::class)->findOneBy(['name' => $new_name]));
+        $this->assertSame($sponsors_before, $em->find(Summit::class, $summit_id)->getSummitSponsors()->count());
     }
 
     public function testImportValidationNotUtf8(){

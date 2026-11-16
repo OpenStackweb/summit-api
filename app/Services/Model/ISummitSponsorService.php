@@ -42,6 +42,12 @@ interface ISummitSponsorService
     // a synchronous real run of 500 new companies measured ~24 s CPU against FPM's 30 s limit; 200 took ~7 s
     const ImportMaxRows = 200;
 
+    // rejected before parsing; 200 rows of company,tier is far below this
+    const ImportMaxFileSizeKB = 1024;
+
+    // seconds; matches php-fpm's request_terminate_timeout, so a killed request does not hold the lock for long
+    const ImportLockLifetime = 300;
+
     /**
      * @param Summit $summit
      * @param array $payload

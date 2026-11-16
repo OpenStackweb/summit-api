@@ -660,7 +660,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
             new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
             new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
             new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
-            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error, or another import is already running for this summit"),
             new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
         ]
     )]
@@ -685,7 +685,7 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
                 throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
 
             $validation = Validator::make($request->all(), [
-                'file' => 'required|file',
+                'file' => 'required|file|max:' . ISummitSponsorService::ImportMaxFileSizeKB,
                 'dry_run' => 'sometimes|boolean',
             ]);
             if ($validation->fails()) {

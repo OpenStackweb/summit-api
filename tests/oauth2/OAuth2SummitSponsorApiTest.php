@@ -18,6 +18,7 @@ use Mockery;
 use models\summit\SummitLeadReportSetting;
 use App\Models\Foundation\Main\IGroup;
 use App\Models\ResourceServer\IAccessTokenService;
+use App\Services\Utils\ILockManagerService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Queue;
 use LaravelDoctrine\ORM\Facades\Registry;
@@ -2056,7 +2057,35 @@ final class OAuth2SummitSponsorApiTest extends ProtectedApiTestCase
         $max = ISummitSponsorService::ImportMaxRows;
         $response = $this->importCsv($this->rowsCsv($max + 1), true);
         $this->assertResponseStatus(412);
-        $this->assertStringContainsString(sprintf('File has %d rows; the maximum is %d.', $max + 1, $max), $response->getContent());
+        $this->assertStringContainsString(sprintf('File has more than %d rows.', $max), $response->getContent());
+    }
+
+    public function testImportValidationFileTooLarge(){
+        // header plus one padding column, so the size check fires and not the row cap
+        $csv = "company,tier,notes\nAcme,Default," . str_repeat('x', ISummitSponsorService::ImportMaxFileSizeKB * 1024) . "\n";
+        $response = $this->importCsv($csv, true);
+        $this->assertResponseStatus(412);
+        $this->assertStringContainsString(sprintf('greater than %d kilobytes', ISummitSponsorService::ImportMaxFileSizeKB), $response->getContent());
+    }
+
+    public function testImportRealRunIsRefusedWhileAnotherRunHoldsTheLock(){
+        Queue::fake();
+        $new_name = $this->newCompanyName();
+        $csv = "company,tier\n\"{$new_name}\",Default\n";
+        $lock_name = sprintf('summit.%s.sponsors.import.lock', self::$summit->getId());
+
+        App::make(ILockManagerService::class)->lock($lock_name, function () use ($csv) {
+            $response = $this->importCsv($csv, false);
+            $this->assertResponseStatus(412);
+            $this->assertStringContainsString('An import is already running for this show.', $response->getContent());
+
+            // dry runs write nothing and do not take the lock
+            $this->importCsv($csv, true);
+            $this->assertResponseStatus(200);
+        }, 30);
+
+        $this->importCsv($csv, false);
+        $this->assertResponseStatus(200);
     }
 
     public function testImportAcceptsExactlyMaxRows(){

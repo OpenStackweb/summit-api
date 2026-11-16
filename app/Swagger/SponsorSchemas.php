@@ -277,7 +277,7 @@ class SponsorServicesStatisticsUpsertRequestSchema {}
     description: 'Request to import sponsors from a UTF-8 CSV file with company and tier columns (tiers separated by |)',
     required: ['file'],
     properties: [
-        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'CSV file with company and tier columns'),
+        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'CSV file with company and tier columns, at most 1 MB and 200 rows'),
         new OA\Property(property: 'dry_run', type: 'integer', enum: [0, 1], description: 'Send 1 to plan only and write nothing, 0 (default) to import. true/false strings are rejected.'),
     ]
 )]

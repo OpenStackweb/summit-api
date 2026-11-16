@@ -39,10 +39,11 @@ use App\Models\Foundation\Main\Factories\CompanyFactory;
 use App\Services\Model\Imp\ExtraQuestionTypeService;
 use App\Services\Model\Imp\SponsorImport\CompanyNameMatcher;
 use App\Services\Model\Imp\SponsorImport\SponsorImportPlanner;
-use LaravelDoctrine\ORM\Facades\Registry;
+use App\Services\Utils\Exceptions\UnacquiredLockException;
+use App\Services\Utils\ILockManagerService;
 use League\Csv\Reader;
 use League\Csv\UnableToProcessCsv;
-use models\utils\SilverstripeBaseModel;
+use models\summit\ISummitRepository;
 use services\utils\AmbiguousCommitException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Illuminate\Http\UploadedFile;
@@ -106,6 +107,16 @@ final class SummitSponsorService
     private $audit_log_repository;
 
     /**
+     * @var ISummitRepository
+     */
+    private $summit_repository;
+
+    /**
+     * @var ILockManagerService
+     */
+    private $lock_service;
+
+    /**
      * @param IMemberRepository $member_repository
      * @param ICompanyRepository $company_repository
      * @param ISponsorExtraQuestionTypeRepository $repository
@@ -113,6 +124,8 @@ final class SummitSponsorService
      * @param ISponsorUserInfoGrantRepository $user_info_grant_repository
      * @param IFileUploader $file_uploader
      * @param IAuditLogRepository $audit_log_repository
+     * @param ISummitRepository $summit_repository
+     * @param ILockManagerService $lock_service
      * @param ITransactionService $tx_service
      */
     public function __construct
@@ -124,10 +137,14 @@ final class SummitSponsorService
         ISponsorUserInfoGrantRepository $user_info_grant_repository,
         IFileUploader              $file_uploader,
         IAuditLogRepository        $audit_log_repository,
+        ISummitRepository          $summit_repository,
+        ILockManagerService        $lock_service,
         ITransactionService        $tx_service
     )
     {
         parent::__construct($tx_service);
+        $this->summit_repository = $summit_repository;
+        $this->lock_service = $lock_service;
         $this->audit_log_repository = $audit_log_repository;
         $this->user_info_grant_repository = $user_info_grant_repository;
         $this->member_repository = $member_repository;
@@ -146,7 +163,13 @@ final class SummitSponsorService
      */
     public function addSponsor(Summit $summit, array $payload): Sponsor
     {
-        [$sponsor, $new_sponsorships] = $this->tx_service->transaction(function () use ($summit, $payload) {
+        $summit_id = $summit->getId();
+        [$sponsor, $new_sponsorships] = $this->tx_service->transaction(function () use ($summit_id, $payload) {
+            // resolved per attempt: a retried transaction runs on a fresh EntityManager, where a captured summit is detached
+            $summit = $this->summit_repository->getById($summit_id);
+            if (!$summit instanceof Summit)
+                throw new EntityNotFoundException("Summit not found.");
+
             $company_id = intval($payload['company_id']);
             $featured_event_id = isset($payload['featured_event_id']) ? intval($payload['featured_event_id']) : 0;
 
@@ -205,6 +228,10 @@ final class SummitSponsorService
             return [$sponsor, $new_sponsorships];
         });
 
+        // never publish an id of 0 to sponsor services
+        if ($sponsor->getId() <= 0)
+            throw new \RuntimeException("SummitSponsorService::addSponsor sponsor was not persisted; domain events not published.");
+
         try {
             PublishSponsorServiceDomainEventsJob::dispatch(
                 SummitSponsorCreatedEventDTO::fromSummitSponsor($sponsor)->serialize(),
@@ -245,6 +272,30 @@ final class SummitSponsorService
 
         $rows = $this->parseSponsorsCsv($file);
 
+        if ($dry_run) {
+            return $this->planAndRunSponsorsImport($summit, $rows, true);
+        }
+
+        // planning reads the show's sponsors once, so two real runs at the same time would both plan the same creates
+        try {
+            return $this->lock_service->lock(
+                sprintf('summit.%s.sponsors.import.lock', $summit->getId()),
+                fn() => $this->planAndRunSponsorsImport($summit, $rows, false),
+                ISummitSponsorService::ImportLockLifetime
+            );
+        } catch (UnacquiredLockException $ex) {
+            throw new ValidationException("An import is already running for this show. Try again when it finishes.");
+        }
+    }
+
+    /**
+     * @param Summit $summit
+     * @param list<array{row:int,company:string,tier:string}> $rows
+     * @param bool $dry_run
+     * @return array
+     */
+    private function planAndRunSponsorsImport(Summit $summit, array $rows, bool $dry_run): array
+    {
         $tiers = [];
         foreach ($summit->getSummitSponsorshipTypes() as $summit_sponsorship_type) {
             // the type FK is SET NULL on delete, and getType() is not nullable
@@ -323,6 +374,9 @@ final class SummitSponsorService
                 $company = (string)($record[$columns['company']] ?? '');
                 $tier = (string)($record[$columns['tier']] ?? '');
                 if (trim($company) === '' && trim($tier) === '') continue;
+                // fail on the first row over the cap instead of building the whole file
+                if (count($rows) >= ISummitSponsorService::ImportMaxRows)
+                    throw new ValidationException(sprintf("File has more than %d rows.", ISummitSponsorService::ImportMaxRows));
                 $rows[] = ['row' => $offset + 1, 'company' => $company, 'tier' => $tier];
             }
         } catch (UnableToProcessCsv $ex) {
@@ -330,31 +384,26 @@ final class SummitSponsorService
             throw new ValidationException("CSV is not valid.");
         }
 
-        if (count($rows) > ISummitSponsorService::ImportMaxRows)
-            throw new ValidationException(sprintf("File has %d rows; the maximum is %d.", count($rows), ISummitSponsorService::ImportMaxRows));
-
         return $rows;
     }
 
     /**
      * Runs the planned creates in order, each through its own transaction(s); never wrapped in an outer one,
-     * so addSponsor publishes its domain events after its own commit.
+     * so addSponsor publishes its domain events after its own commit. A failed row is reported and skipped;
+     * only a commit with an unknown outcome stops the run.
+     * addSponsor resolves the summit by id inside its transaction, so a failed row (which clears the
+     * EntityManager and detaches $summit) does not affect the rows after it.
      * @param Summit $summit
      * @param list<array> $rows
      * @return list<array>
      */
     private function executeSponsorsImport(Summit $summit, array $rows): array
     {
-        $connection_reset = "The import stopped because the database connection was reset. Rows below were not imported.";
         $could_not_confirm = "Could not confirm whether this sponsor was saved; the import stopped here. Check the sponsor list before importing this file again.";
-        $could_not_create = "Could not create this sponsor; the import stopped here. Rows below were not imported.";
+        $could_not_create = "Could not create this sponsor.";
 
         foreach ($rows as $index => $row) {
             if ($row['action'] !== 'create') continue;
-
-            if (!$this->isSummitManaged($summit)) {
-                return SponsorImportPlanner::markStopped($rows, $index, $connection_reset, 'not_attempted');
-            }
 
             $company_created = null;
             try {
@@ -376,37 +425,23 @@ final class SummitSponsorService
                     $company_id = $company->getId();
                     $rows[$index]['company']['id'] = $company_id;
                     $company_created = sprintf(' Company "%s" was created.', $company->getName());
-
-                    if (!$this->isSummitManaged($summit)) {
-                        return SponsorImportPlanner::markStopped($rows, $index, $connection_reset . $company_created);
-                    }
                 }
 
                 $sponsor = $this->addSponsor($summit, [
                     'company_id' => $company_id,
                     'sponsorships' => array_map(static fn(int $type_id): array => ['type_id' => $type_id], $row['tier_ids']),
                 ]);
-
-                $sponsor_id = $sponsor->getId();
-                if (!$this->isSummitManaged($summit) || !is_int($sponsor_id) || $sponsor_id <= 0) {
-                    // addSponsor's own retry may have run against a detached summit
-                    return SponsorImportPlanner::markStopped($rows, $index, $could_not_confirm . ($company_created ?? ''));
-                }
-                $rows[$index]['sponsor_id'] = $sponsor_id;
-            } catch (\Throwable $ex) {
-                // Stop instead of log-and-skip: a failed transaction clears the EntityManager, which detaches
-                // $summit, so later rows would act on detached entities. Bad rows were already caught by the plan.
+                $rows[$index]['sponsor_id'] = $sponsor->getId();
+            } catch (AmbiguousCommitException $ex) {
+                // the sponsor may or may not exist; continuing could hide that, so stop and report
                 Log::error(sprintf("SummitSponsorService::importSponsors summit %s row %s: %s", $summit->getId(), $row['row'], $ex->getMessage()), ['exception' => $ex]);
-                $message = $ex instanceof AmbiguousCommitException ? $could_not_confirm : $could_not_create;
-                return SponsorImportPlanner::markStopped($rows, $index, $message . ($company_created ?? ''));
+                return SponsorImportPlanner::markStopped($rows, $index, $could_not_confirm . ($company_created ?? ''));
+            } catch (\Throwable $ex) {
+                Log::error(sprintf("SummitSponsorService::importSponsors summit %s row %s: %s", $summit->getId(), $row['row'], $ex->getMessage()), ['exception' => $ex]);
+                $rows = SponsorImportPlanner::markFailed($rows, $index, $could_not_create . ($company_created ?? ''));
             }
         }
         return $rows;
-    }
-
-    private function isSummitManaged(Summit $summit): bool
-    {
-        return Registry::getManager(SilverstripeBaseModel::EntityManager)->contains($summit);
     }
 
     /**

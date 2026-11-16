@@ -170,10 +170,24 @@ final class SponsorImportPlannerTest extends TestCase
         $this->assertNull($out[0]['error']);
         $this->assertSame('Tier is required.', $out[2]['error']);
         $this->assertNull($out[3]['error']);
+    }
 
-        $reset = SponsorImportPlanner::markStopped($rows, 1, 'reset', 'not_attempted');
-        $this->assertSame(['create', 'not_attempted', 'error', 'not_attempted'], array_column($reset, 'action'));
-        $this->assertSame('reset', $reset[1]['error']);
+    public function testMarkFailedErrorsOnlyThatRowAndItsDuplicates(): void
+    {
+        $rows = $this->planner()->plan([
+            $this->row(2, 'Acme Robotics Inc', 'Gold'),
+            $this->row(3, 'Beta Labs', 'Gold'),
+            $this->row(4, 'ACME Robotics', 'Gold'),
+            $this->row(5, 'beta labs', 'Gold'),
+        ]);
+        $this->assertSame(['create', 'create', 'skip_duplicate', 'skip_duplicate'], array_column($rows, 'action'));
+
+        $out = SponsorImportPlanner::markFailed($rows, 0, 'boom');
+
+        // later creates still run; only the duplicate of the failed row loses its skip
+        $this->assertSame(['error', 'create', 'not_attempted', 'skip_duplicate'], array_column($out, 'action'));
+        $this->assertSame('boom', $out[0]['error']);
+        $this->assertNull($out[2]['error']);
     }
 
     public function testMarkStoppedAlsoStopsDuplicatesOfStoppedRows(): void

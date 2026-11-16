@@ -173,17 +173,37 @@ final class SponsorImportPlanner
     }
 
     /**
-     * Marks row $index with $action/$message and turns every later planned create into not_attempted,
+     * Marks row $index as an error with $message, and turns any later skip_duplicate of it into not_attempted.
+     * @param list<array> $rows
+     * @param int $index
+     * @param string $message
+     * @return list<array>
+     */
+    public static function markFailed(array $rows, int $index, string $message): array
+    {
+        $rows[$index]['action'] = 'error';
+        $rows[$index]['error'] = $message;
+        $failed_row = $rows[$index]['row'];
+        $count = count($rows);
+        for ($i = $index + 1; $i < $count; $i++) {
+            if ($rows[$i]['action'] === 'skip_duplicate' && ($rows[$i]['duplicate_of_row'] ?? null) === $failed_row) {
+                $rows[$i]['action'] = 'not_attempted';
+            }
+        }
+        return $rows;
+    }
+
+    /**
+     * Marks row $index as an error with $message and turns every later planned create into not_attempted,
      * along with any later skip_duplicate whose original row was stopped or not attempted.
      * @param list<array> $rows
      * @param int $index
      * @param string $message
-     * @param string $action
      * @return list<array>
      */
-    public static function markStopped(array $rows, int $index, string $message, string $action = 'error'): array
+    public static function markStopped(array $rows, int $index, string $message): array
     {
-        $rows[$index]['action'] = $action;
+        $rows[$index]['action'] = 'error';
         $rows[$index]['error'] = $message;
         $stopped = [$rows[$index]['row'] => true]; // row numbers with nothing imported
         $count = count($rows);

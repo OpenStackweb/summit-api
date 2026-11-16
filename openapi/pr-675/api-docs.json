@@ -54510,7 +54510,7 @@
                         "description": "Not Found"
                     },
                     "412": {
-                        "description": "Validation Error"
+                        "description": "Validation Error, or another import is already running for this summit"
                     },
                     "500": {
                         "description": "Server Error"
@@ -80936,7 +80936,7 @@
                 ],
                 "properties": {
                     "file": {
-                        "description": "CSV file with company and tier columns",
+                        "description": "CSV file with company and tier columns, at most 1 MB and 200 rows",
                         "type": "string",
                         "format": "binary"
                     },

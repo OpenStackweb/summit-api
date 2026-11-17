@@ -114,15 +114,17 @@ final class SponsorImportPlanner
                 $is_sponsor = false;
             } else {
                 $id = $match['id'];
+                $name = $match['name'];
                 if ($match['match'] === 'exact') {
                     foreach ($match['ids'] as $candidate_id) {
                         if (isset($this->sponsor_company_ids[$candidate_id])) {
                             $id = $candidate_id;
+                            $name = $this->matcher->nameOf($candidate_id) ?? $name;
                             break;
                         }
                     }
                 }
-                $row['company'] = ['id' => $id, 'name' => $match['name'], 'match' => $match['match']];
+                $row['company'] = ['id' => $id, 'name' => $name, 'match' => $match['match']];
                 $identity = 'id:' . $id;
                 $is_sponsor = isset($this->sponsor_company_ids[$id]);
             }

@@ -41,6 +41,11 @@ final class CompanyNameMatcher
     private $by_key = [];
 
     /**
+     * @var array<int, string> id => stored name
+     */
+    private $names = [];
+
+    /**
      * @param list<array{id:int,name:string}> $companies
      */
     public function __construct(array $companies)
@@ -55,6 +60,7 @@ final class CompanyNameMatcher
 
             $exact_key = self::exactKey($name);
             $this->exact_ids[$exact_key][] = $id;
+            $this->names[$id] = $name;
             if (!isset($this->exact[$exact_key]) || $id < $this->exact[$exact_key]['id']) {
                 $this->exact[$exact_key] = ['id' => $id, 'name' => $name];
             }
@@ -95,6 +101,11 @@ final class CompanyNameMatcher
         $s = self::nfc($name);
         // same trim as CSV cells, so NBSP padding on a stored name can't defeat the exact match
         return mb_strtolower(preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', $s));
+    }
+
+    public function nameOf(int $id): ?string
+    {
+        return $this->names[$id] ?? null;
     }
 
     public function resolve(string $name): array

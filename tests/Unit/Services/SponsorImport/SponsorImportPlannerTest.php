@@ -139,6 +139,19 @@ final class SponsorImportPlannerTest extends TestCase
         $this->assertSame('exact', $out[0]['company']['match']);
     }
 
+    public function testExactDuplicateTieBreakReportsTheSelectedCompanysName(): void
+    {
+        $matcher = new CompanyNameMatcher([
+            ['id' => 10, 'name' => 'ACME'],
+            ['id' => 99, 'name' => 'Acme'],
+        ]);
+        $planner = new SponsorImportPlanner($matcher, ['gold' => ['id' => 1, 'name' => 'Gold']], [99]);
+
+        $out = $planner->plan([$this->row(2, 'acme', 'Gold')]);
+        $this->assertSame('skip_existing_sponsor', $out[0]['action']);
+        $this->assertSame(['id' => 99, 'name' => 'Acme', 'match' => 'exact'], $out[0]['company']);
+    }
+
     public function testSummarizeCountsEachAction(): void
     {
         $rows = $this->planner()->plan([

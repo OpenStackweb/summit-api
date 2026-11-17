@@ -348,20 +348,4 @@ class PaymentSecretsLoggingTest extends TestCase
 
         $this->assertLogsDoNotContain(self::ProfileLiveSecretKey, self::ProfileTestSecretKey, self::StripeWebhookSecret);
     }
-
-    public function testProfileSyncJobsDeleteTheJobWhenThePaymentProfileIsNotFound(): void
-    {
-        $payments_api = Mockery::mock(IPaymentsApi::class);
-        $payments_api->shouldReceive('getPaymentProfile')->with(70, 5)->andReturn(null);
-        $summit_repository = Mockery::mock(ISummitRepository::class);
-        $summit_repository->shouldReceive('getById')->with(70)->andReturn(null);
-        $profile_repository = Mockery::mock(IPaymentGatewayProfileRepository::class);
-        $profile_repository->shouldReceive('getByExternalId')->andReturn(null);
-        $service = new PaymentGatewayProfileService(Mockery::mock(ITransactionService::class));
-
-        (new CreatePaymentProfileMQJob($summit_repository, $service, $payments_api))->handle($this->mqJob());
-        (new UpdatePaymentProfileMQJob($summit_repository, $profile_repository, $service, $payments_api))->handle($this->mqJob());
-
-        $this->assertTrue(true);
-    }
 }

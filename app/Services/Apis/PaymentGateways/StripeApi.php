@@ -307,13 +307,11 @@ final class StripeApi implements IPaymentGatewayAPI
             }
 
             throw new ValidationException(sprintf("event type %s not handled!", $event->type));
-        } catch (\UnexpectedValueException $e) {
-            Log::warning($e);
-            // Invalid payload
-            throw $e;
-        } catch (SignatureVerificationException $e) {
-            Log::warning($e);
-            // Invalid signature
+        } catch (\UnexpectedValueException|SignatureVerificationException $e) {
+            // Invalid payload or signature. Log the message only: the trace of an exception
+            // thrown by WebhookSignature::verifyHeader() carries its arguments, the webhook
+            // signing secret among them.
+            Log::warning(sprintf("StripeApi::processCallback %s: %s", get_class($e), $e->getMessage()));
             throw $e;
         } catch (\Exception $e) {
             Log::warning($e);

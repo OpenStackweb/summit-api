@@ -12,25 +12,33 @@
  * limitations under the License.
  **/
 
+use App\Http\Controllers\PaymentGatewayWebHookController;
 use App\Jobs\Payments\CreatePaymentProfileMQJob;
 use App\Jobs\Payments\PaymentsMQJob;
 use App\Jobs\Payments\UpdatePaymentProfileMQJob;
+use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
 use App\Models\Foundation\Summit\Repositories\IPaymentGatewayProfileRepository;
 use App\Services\Apis\AbstractOAuth2Api;
 use App\Services\Apis\IPaymentsApi;
 use App\Services\Apis\PaymentGateways\LawPayApi;
 use App\Services\Apis\PaymentGateways\StripeApi;
 use App\Services\Auth\OAuth2ClientFactory;
+use App\Services\Model\ILocationService;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
+use App\Services\Model\ISummitOrderService;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Facade;
 use libs\utils\ICacheService;
 use libs\utils\ITransactionService;
 use Mockery;
+use models\oauth2\IResourceServerContext;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitRepository;
+use models\summit\SummitOrder;
 use models\summit\PaymentGatewayProfile;
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\StripePaymentProfile;
@@ -38,6 +46,7 @@ use models\summit\Summit;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Stripe\ApiRequestor;
+use Stripe\Exception\SignatureVerificationException;
 use Stripe\HttpClient\ClientInterface;
 
 /**
@@ -66,13 +75,27 @@ class PaymentSecretsLoggingTest extends TestCase
     private const ProfileLiveSecretKey = 'sk_live_leakcheck_profile_key';
     private const ProfileTestSecretKey = 'sk_test_leakcheck_profile_key';
 
+    private const LawPayPaymentToken = 'lawpay_leakcheck_payment_token';
+
     private Container $app;
 
     private object $logger;
 
+    /**
+     * ini values restored in tearDown(); see setUp().
+     */
+    private array $ini = [];
+
     protected function setUp(): void
     {
         parent::setUp();
+        // Production keeps call arguments in exception traces (zend.exception_ignore_args off),
+        // so logging an exception object writes the first bytes of every string argument.
+        // Keep the arguments and lift the length cap, so a leak shows the whole marked value.
+        foreach (['zend.exception_ignore_args' => '0', 'zend.exception_string_param_max_len' => '1000000'] as $name => $value) {
+            $this->ini[$name] = ini_get($name);
+            ini_set($name, $value);
+        }
         Facade::clearResolvedInstances();
         $this->app = new Container();
         $this->logger = new class extends AbstractLogger {
@@ -91,6 +114,9 @@ class PaymentSecretsLoggingTest extends TestCase
 
     protected function tearDown(): void
     {
+        foreach ($this->ini as $name => $value) {
+            ini_set($name, (string)$value);
+        }
         ApiRequestor::setHttpClient(null);
         Facade::setFacadeApplication(null);
         Facade::clearResolvedInstances();
@@ -205,6 +231,84 @@ class PaymentSecretsLoggingTest extends TestCase
         $this->assertLogsDoNotContain(self::StripeSecretKey, self::StripeWebhookSecret, self::IntentClientSecret, $signature);
         $this->assertLogsContain('evt_leakcheck_event');
         $this->assertLogsContain('pi_leakcheck_intent');
+    }
+
+    /**
+     * A webhook request whose signature was made with another endpoint's secret, like the
+     * deliveries of the orphaned summit 70 endpoint.
+     */
+    private function wronglySignedWebhookRequest(): Request
+    {
+        $payload = json_encode([
+            'id' => 'evt_leakcheck_event',
+            'object' => 'event',
+            'type' => 'payment_intent.succeeded',
+            'data' => ['object' => $this->paymentIntent()],
+        ]);
+        $timestamp = time();
+        $signature = hash_hmac('sha256', $timestamp . '.' . $payload, 'whsec_another_endpoint');
+        return Request::create('/confirm', 'POST', [], [], [], [
+            'HTTP_STRIPE_SIGNATURE' => sprintf('t=%s,v1=%s', $timestamp, $signature),
+            'CONTENT_TYPE' => 'application/json',
+        ], $payload);
+    }
+
+    public function testStripeInvalidSignatureDoesNotLogTheSigningSecret(): void
+    {
+        $error = null;
+        try {
+            $this->stripeApi()->processCallback($this->wronglySignedWebhookRequest());
+        } catch (SignatureVerificationException $ex) {
+            $error = $ex;
+        }
+
+        $this->assertNotNull($error, 'the invalid signature must still reach the caller');
+        $this->assertLogsDoNotContain(self::StripeSecretKey, self::StripeWebhookSecret);
+        $this->assertLogsContain('No signatures found matching the expected signature');
+    }
+
+    public function testWebhookControllerDoesNotLogTheSigningSecretOnAnInvalidSignature(): void
+    {
+        $response_factory = Mockery::mock(ResponseFactory::class);
+        $response_factory->shouldReceive('json')->andReturnUsing(fn ($data, $status) => new JsonResponse($data, $status));
+        $this->app->instance(ResponseFactory::class, $response_factory);
+        $profile = Mockery::mock(PaymentGatewayProfile::class);
+        $profile->shouldReceive('buildPaymentGatewayApi')->andReturn($this->stripeApi());
+        $strategy = Mockery::mock(IBuildDefaultPaymentGatewayProfileStrategy::class);
+        $strategy->shouldReceive('build')->with(IPaymentConstants::ApplicationTypeRegistration)->andReturn($profile);
+        $controller = new PaymentGatewayWebHookController(
+            Mockery::mock(ISummitRepository::class),
+            Mockery::mock(IResourceServerContext::class),
+            Mockery::mock(ILocationService::class),
+            Mockery::mock(ISummitOrderService::class),
+            $strategy
+        );
+
+        $response = $controller->genericConfirm(IPaymentConstants::ApplicationTypeRegistration, $this->wronglySignedWebhookRequest());
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertLogsDoNotContain(self::StripeSecretKey, self::StripeWebhookSecret);
+    }
+
+    public function testLawPayOrderProcessingDoesNotLogThePaymentToken(): void
+    {
+        $order = Mockery::mock(SummitOrder::class);
+        $order->shouldReceive('getId')->andReturn(1);
+        $order->shouldReceive('getSummitId')->andReturn(43);
+        $order->shouldReceive('getFinalAmount')->andReturn(10.0);
+        // without keys generatePayment() stops before calling LawPay
+        $api = new LawPayApi(['test_mode_enabled' => true]);
+
+        $error = null;
+        try {
+            $api->postProcessOrder($order, ['payment_method_id' => self::LawPayPaymentToken]);
+        } catch (\InvalidArgumentException $ex) {
+            $error = $ex;
+        }
+
+        $this->assertNotNull($error);
+        $this->assertLogsDoNotContain(self::LawPayPaymentToken);
+        $this->assertLogsContain('LawPayApi::postProcessOrder order 1');
     }
 
     public function testStripeWebhookCreationDoesNotLogTheReturnedSigningSecret(): void

@@ -28,7 +28,7 @@ final class PaymentGatewayProfileFactory
      */
     public static function build(string $provider, array $params): ?PaymentGatewayProfile
     {
-        Log::debug("PaymentGatewayProfileFactory::build()", ['provider' => $provider, 'params' => $params]);
+        Log::debug("PaymentGatewayProfileFactory::build()", ['provider' => $provider, 'params' => PaymentGatewayProfile::toLogContext($params)]);
         return static::populate(static::create($provider), $params);
     }
 

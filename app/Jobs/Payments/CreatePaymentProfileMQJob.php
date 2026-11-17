@@ -22,6 +22,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitRepository;
+use models\summit\PaymentGatewayProfile;
 use models\summit\Summit;
 
 class CreatePaymentProfileMQJob implements ShouldQueue
@@ -67,13 +68,13 @@ class CreatePaymentProfileMQJob implements ShouldQueue
                 return;
             }
             $response = $this->payments_api->getPaymentProfile($summit_id, $id);
-            Log::debug("CreatePaymentProfileMQJob::handle", ['response' => $response]);
+            Log::debug("CreatePaymentProfileMQJob::handle", ['response' => PaymentGatewayProfile::toLogContext($response)]);
             $summit = $this->summit_repository->getById($summit_id);
             if($summit instanceof Summit) {
                 // mappings
                 $response['external_id'] = $id;
                 $response['active'] = $response['is_active'] ?? false;
-                Log::debug("CreatePaymentProfileMQJob::handle creating payment profile", ['response' => $response ]);
+                Log::debug("CreatePaymentProfileMQJob::handle creating payment profile", ['response' => PaymentGatewayProfile::toLogContext($response)]);
                 $this->service->addPaymentProfile($summit, $response);
             }
             $job->delete();

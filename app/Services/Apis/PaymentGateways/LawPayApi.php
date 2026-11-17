@@ -69,8 +69,11 @@ final class LawPayApi implements IPaymentGatewayAPI
         (
             sprintf
             (
-                "LawPayApi::__construct config %s",
-                json_encode($config)
+                "LawPayApi::__construct account_id %s test_mode_enabled %s secret_key %s public_key %s",
+                $this->account_id,
+                json_encode($this->test_mode_enabled),
+                empty($this->secret_key) ? 'not set' : 'set',
+                empty($this->public_key) ? 'not set' : 'set'
             )
         );
     }
@@ -93,7 +96,8 @@ final class LawPayApi implements IPaymentGatewayAPI
      */
     public function postProcessOrder(SummitOrder $order, array $payload = []):SummitOrder
     {
-        Log::debug(sprintf("LawPayApi::postProcessOrder order %s payload %s", $order->getId(), json_encode($payload)));
+        // the payload carries the one-time payment token (payment_method_id): log its keys only
+        Log::debug(sprintf("LawPayApi::postProcessOrder order %s payload keys %s", $order->getId(), implode(',', array_keys($payload))));
 
         $summit_id = $order->getSummitId();
         $token_id = $payload['payment_method_id'] ?? null;
@@ -164,7 +168,8 @@ final class LawPayApi implements IPaymentGatewayAPI
         if (empty($this->public_key))
             throw new \InvalidArgumentException();
 
-        Log::debug(sprintf("LawPayApi::generatePayment payload %s ",json_encode($payload)));
+        // the payload carries the one-time payment token (token_id): leave it out
+        Log::debug(sprintf("LawPayApi::generatePayment amount %s metadata %s", $payload['amount'] ?? '', json_encode($payload['metadata'] ?? [])));
         try {
             ChargeIO::setCredentials(new ChargeIO_Credentials(
                 $this->public_key,

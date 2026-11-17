@@ -72,11 +72,26 @@ final class StripeApi implements IPaymentGatewayAPI
         (
             sprintf
             (
-                "StripeApi::__construct secret_key %s  webhook_secret_key %s",
-                $this->secret_key,
-                $this->webhook_secret_key
+                "StripeApi::__construct secret_key %s (%s) webhook_secret_key %s",
+                empty($this->secret_key) ? 'not set' : 'set',
+                self::keyMode($this->secret_key),
+                empty($this->webhook_secret_key) ? 'not set' : 'set'
             )
         );
+    }
+
+    /**
+     * Mode of a Stripe API key, read from its prefix, so logs can tell live from test calls
+     * without ever printing the key.
+     * @param string|null $key
+     * @return string
+     */
+    private static function keyMode(?string $key): string
+    {
+        if (empty($key)) return 'none';
+        if (str_contains($key, '_live_')) return 'live';
+        if (str_contains($key, '_test_')) return 'test';
+        return 'unknown';
     }
 
     /**
@@ -92,7 +107,7 @@ final class StripeApi implements IPaymentGatewayAPI
      */
     private function extractPaymentMethodInfo(array $stripeObject): array
     {
-        Log::debug(sprintf("StripeApi::extractPaymentMethodInfo %s", json_encode($stripeObject)));
+        Log::debug(sprintf("StripeApi::extractPaymentMethodInfo %s %s", $stripeObject['object'] ?? '', $stripeObject['id'] ?? ''));
 
         $isIntent = $stripeObject['object'] === 'payment_intent';
         $charge = null;
@@ -248,10 +263,10 @@ final class StripeApi implements IPaymentGatewayAPI
             (
                 sprintf
                 (
-                    "StripeApi::processCallback Stripe-Signature %s requestContent %s webHook Secret %s",
-                    $signature,
-                    $requestContent,
-                    $this->webhook_secret_key
+                    "StripeApi::processCallback body %s bytes Stripe-Signature %s webhook_secret_key %s",
+                    strlen($requestContent),
+                    empty($signature) ? 'missing' : 'present',
+                    empty($this->webhook_secret_key) ? 'not set' : 'set'
                 )
             );
 
@@ -262,6 +277,7 @@ final class StripeApi implements IPaymentGatewayAPI
             );
 
             $event = Event::constructFrom(json_decode($requestContent, true));
+            Log::debug(sprintf("StripeApi::processCallback event %s type %s", $event->id, $event->type));
             if (!in_array($event->type, ["payment_intent.succeeded", "payment_intent.payment_failed"]))
                 throw new \InvalidArgumentException();
 
@@ -291,13 +307,11 @@ final class StripeApi implements IPaymentGatewayAPI
             }
 
             throw new ValidationException(sprintf("event type %s not handled!", $event->type));
-        } catch (\UnexpectedValueException $e) {
-            Log::warning($e);
-            // Invalid payload
-            throw $e;
-        } catch (SignatureVerificationException $e) {
-            Log::warning($e);
-            // Invalid signature
+        } catch (\UnexpectedValueException|SignatureVerificationException $e) {
+            // Invalid payload or signature. Log the message only: the trace of an exception
+            // thrown by WebhookSignature::verifyHeader() carries its arguments, the webhook
+            // signing secret among them.
+            Log::warning(sprintf("StripeApi::processCallback %s: %s", get_class($e), $e->getMessage()));
             throw $e;
         } catch (\Exception $e) {
             Log::warning($e);
@@ -475,7 +489,7 @@ final class StripeApi implements IPaymentGatewayAPI
             if (is_null($intent))
                 throw new \InvalidArgumentException();
 
-            Log::debug(sprintf("StripeApi::getCartStatus calling cart_id %s intent %s", $cart_id, json_encode($intent)));
+            Log::debug(sprintf("StripeApi::getCartStatus cart_id %s intent %s status %s", $cart_id, $intent->id, $intent->status));
             return $intent->status;
         }
         catch(Exception $ex){
@@ -506,7 +520,8 @@ final class StripeApi implements IPaymentGatewayAPI
             ],
         ]);
 
-        Log::debug(sprintf("StripeApi::createWebHook webhook_endpoint_url %s res %s", $webhook_endpoint_url, $res->toJSON()));
+        // the response carries the endpoint signing secret: log only what identifies the endpoint
+        Log::debug(sprintf("StripeApi::createWebHook webhook_endpoint_url %s id %s livemode %s", $webhook_endpoint_url, $res->id, json_encode($res->livemode)));
 
         return [
             'id' => $res->id,
@@ -532,7 +547,7 @@ final class StripeApi implements IPaymentGatewayAPI
 
             $res =  WebhookEndpoint::retrieve($id);
             if(!is_null($res))
-                Log::debug(sprintf("StripeApi::getWebHookById id %s res %s", $id, $res->toJSON()));
+                Log::debug(sprintf("StripeApi::getWebHookById id %s url %s status %s", $id, $res->url, $res->status));
 
             return $res;
         }
@@ -629,7 +644,7 @@ final class StripeApi implements IPaymentGatewayAPI
             if (is_null($intent))
                 throw new \InvalidArgumentException();
 
-            Log::debug(sprintf("StripeApi::getPaymentDetailsInfo pi %s ", json_encode($intent)));
+            Log::debug(sprintf("StripeApi::getPaymentDetailsInfo pi %s status %s", $intent->id, $intent->status));
 
             return $this->extractPaymentMethodInfo($intent->toArray());
         }

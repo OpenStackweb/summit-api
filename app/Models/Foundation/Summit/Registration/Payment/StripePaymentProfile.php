@@ -116,7 +116,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
      */
     public function setLiveWebHookData(array $webhook_data): void
     {
-        Log::debug(sprintf("StripePaymentProfile::setLiveWebHookData payload %s", json_encode($webhook_data)));
+        Log::debug(sprintf("StripePaymentProfile::setLiveWebHookData id %s", $webhook_data['id'] ?? ''));
 
         $this->live_webhook_id = $webhook_data['id'];
         $this->live_webhook_secret_key = $webhook_data['secret_key'];
@@ -127,7 +127,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
      */
     public function setTestWebHookData(array $webhook_data): void
     {
-        Log::debug(sprintf("StripePaymentProfile::setTestWebHookData payload %s", json_encode($webhook_data)));
+        Log::debug(sprintf("StripePaymentProfile::setTestWebHookData id %s", $webhook_data['id'] ?? ''));
         $this->test_webhook_id = $webhook_data['id'];
         $this->test_webhook_secret_key = $webhook_data['secret_key'];
     }

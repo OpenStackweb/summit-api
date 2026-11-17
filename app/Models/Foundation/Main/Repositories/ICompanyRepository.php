@@ -19,4 +19,9 @@ use models\utils\IBaseRepository;
 interface ICompanyRepository extends IBaseRepository
 {
     public function getByName(string $name):?Company;
+
+    /**
+     * @return array<int, array{id:int,name:?string}>
+     */
+    public function getAllIdAndName(): array;
 }

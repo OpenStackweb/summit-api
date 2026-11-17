@@ -35,6 +35,7 @@ use App\Services\Apis\IPaymentGatewayAPI;
 use Cocur\Slugify\Slugify;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
@@ -4331,6 +4332,14 @@ SQL;
         $criteria->where(Criteria::expr()->eq('id', intval($id)));
         $sponsorship = $this->sponsorship_types->matching($criteria)->first();
         return $sponsorship === false ? null : $sponsorship;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getSummitSponsorshipTypes(): Collection
+    {
+        return $this->sponsorship_types;
     }
 
     /**

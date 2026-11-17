@@ -23,6 +23,8 @@ use App\ModelSerializers\SerializerUtils;
 use App\Security\SummitScopes;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Validator;
+use models\exceptions\ValidationException;
 use models\oauth2\IResourceServerContext;
 use models\summit\ISummitRepository;
 use models\summit\Sponsor;
@@ -610,6 +612,90 @@ final class OAuth2SummitSponsorApiController extends OAuth2ProtectedController
         $this->serializer_version = 2;
         $this->add_validation_rules_version = 2;
         return $this->add($summit_id);
+    }
+
+    #[OA\Post(
+        path: "/api/v1/summits/{id}/sponsors/csv",
+        description: "Import sponsors from a CSV file with company and tier columns (tiers separated by '|'). Missing companies are created. With dry_run, returns the per-row plan and writes nothing.",
+        summary: 'Import Sponsors from CSV',
+        operationId: 'importSponsors',
+        tags: ['Sponsors'],
+        security: [
+            [
+                'summit_sponsor_oauth2' => [
+                    SummitScopes::WriteSummitData,
+                ]
+            ]
+        ],
+        x: [
+            'required-groups' => [
+                IGroup::SuperAdmins,
+                IGroup::Administrators,
+                IGroup::SummitAdministrators,
+            ]
+        ],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'The summit id'
+            ),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(ref: '#/components/schemas/SponsorImportRequest')
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: Response::HTTP_OK,
+                description: 'Per-row import report',
+                content: new OA\JsonContent(ref: '#/components/schemas/SponsorImportReport')
+            ),
+            new OA\Response(response: Response::HTTP_BAD_REQUEST, description: "Bad Request"),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, description: "Unauthorized"),
+            new OA\Response(response: Response::HTTP_FORBIDDEN, description: "Forbidden"),
+            new OA\Response(response: Response::HTTP_NOT_FOUND, description: "Not Found"),
+            new OA\Response(response: Response::HTTP_PRECONDITION_FAILED, description: "Validation Error, or another import is already running for this summit"),
+            new OA\Response(response: Response::HTTP_INTERNAL_SERVER_ERROR, description: "Server Error")
+        ]
+    )]
+    /**
+     * @param LaravelRequest $request
+     * @param $summit_id
+     * @return \Illuminate\Http\JsonResponse|mixed
+     */
+    public function import(LaravelRequest $request, $summit_id)
+    {
+        return $this->processRequest(function () use ($request, $summit_id) {
+            $summit = SummitFinderStrategyFactory::build($this->getSummitRepository(), $this->resource_server_context)->find($summit_id);
+            if (is_null($summit)) return $this->error404();
+
+            // same authz as addChild ( SERVICE or authz member )
+            $application_type = $this->resource_server_context->getApplicationType();
+            $current_member = $this->resource_server_context->getCurrentUser();
+            $is_authz = $application_type == IResourceServerContext::ApplicationType_Service ||
+                (!is_null($current_member) && $current_member->isAuthzFor($summit));
+
+            if (!$is_authz)
+                throw new HTTP403ForbiddenException("You are not allowed to perform this action.");
+
+            $validation = Validator::make($request->all(), [
+                'file' => 'required|file|max:' . ISummitSponsorService::ImportMaxFileSizeKB,
+                'dry_run' => 'sometimes|boolean',
+            ]);
+            if ($validation->fails()) {
+                throw new ValidationException($validation->messages()->toArray());
+            }
+
+            $report = $this->service->importSponsors($summit, $request->file('file'), $request->boolean('dry_run'));
+
+            return $this->ok($report);
+        });
     }
 
     /**

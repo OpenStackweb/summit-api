@@ -35,6 +35,20 @@ use models\summit\SummitLeadReportSetting;
 interface ISummitSponsorService
 {
     /**
+     * Separates tier names within the tier cell of a sponsors CSV import.
+     */
+    const ImportTierSeparator = '|';
+
+    // a synchronous real run of 500 new companies measured ~24 s CPU against FPM's 30 s limit; 200 took ~7 s
+    const ImportMaxRows = 200;
+
+    // rejected before parsing; 200 rows of company,tier is far below this
+    const ImportMaxFileSizeKB = 1024;
+
+    // seconds; matches php-fpm's request_terminate_timeout, so a killed request does not hold the lock for long
+    const ImportLockLifetime = 300;
+
+    /**
      * @param Summit $summit
      * @param array $payload
      * @return Sponsor
@@ -42,6 +56,16 @@ interface ISummitSponsorService
      * @throws ValidationException
      */
     public function addSponsor(Summit $summit, array $payload):Sponsor;
+
+    /**
+     * Creates sponsors (and missing companies) from a CSV with company and tier columns.
+     * @param Summit $summit
+     * @param UploadedFile $file
+     * @param bool $dry_run plan only, write nothing
+     * @return array{dry_run:bool,summary:array<string,int>,rows:list<array>}
+     * @throws ValidationException
+     */
+    public function importSponsors(Summit $summit, UploadedFile $file, bool $dry_run):array;
 
     /**
      * @param Summit $summit

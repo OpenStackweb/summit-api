@@ -270,3 +270,64 @@ class PaginatedSponsorV2ResponseSchema {}
     ]
 )]
 class SponsorServicesStatisticsUpsertRequestSchema {}
+
+#[OA\Schema(
+    schema: 'SponsorImportRequest',
+    type: 'object',
+    description: 'Request to import sponsors from a UTF-8 CSV file with company and tier columns (tiers separated by |)',
+    required: ['file'],
+    properties: [
+        new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'CSV file with company and tier columns, at most 1 MB and 200 rows'),
+        new OA\Property(property: 'dry_run', type: 'integer', enum: [0, 1], description: 'Send 1 to plan only and write nothing, 0 (default) to import. true/false strings are rejected.'),
+    ]
+)]
+class SponsorImportRequestSchema {}
+
+#[OA\Schema(
+    schema: 'SponsorImportReportRow',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'row', type: 'integer', example: 2),
+        new OA\Property(property: 'company_input', type: 'string', example: 'Acme Robotics'),
+        new OA\Property(property: 'tier_input', type: 'string', example: 'Gold|Silver'),
+        new OA\Property(property: 'action', type: 'string', enum: ['create', 'skip_existing_sponsor', 'skip_duplicate', 'error', 'not_attempted']),
+        new OA\Property(
+            property: 'company',
+            type: 'object',
+            nullable: true,
+            properties: [
+                new OA\Property(property: 'id', type: 'integer', nullable: true),
+                new OA\Property(property: 'name', type: 'string'),
+                new OA\Property(property: 'match', type: 'string', enum: ['exact', 'normalized', 'new']),
+            ]
+        ),
+        new OA\Property(property: 'tiers', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'sponsor_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'duplicate_of_row', type: 'integer', nullable: true),
+        new OA\Property(property: 'candidates', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'error', type: 'string', nullable: true),
+    ]
+)]
+class SponsorImportReportRowSchema {}
+
+#[OA\Schema(
+    schema: 'SponsorImportReport',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'dry_run', type: 'boolean'),
+        new OA\Property(
+            property: 'summary',
+            type: 'object',
+            properties: [
+                new OA\Property(property: 'total', type: 'integer'),
+                new OA\Property(property: 'sponsors_created', type: 'integer'),
+                new OA\Property(property: 'companies_created', type: 'integer'),
+                new OA\Property(property: 'skipped', type: 'integer'),
+                new OA\Property(property: 'errors', type: 'integer'),
+                new OA\Property(property: 'not_attempted', type: 'integer'),
+            ]
+        ),
+        new OA\Property(property: 'rows', type: 'array', items: new OA\Items(ref: '#/components/schemas/SponsorImportReportRow')),
+    ]
+)]
+class SponsorImportReportSchema {}

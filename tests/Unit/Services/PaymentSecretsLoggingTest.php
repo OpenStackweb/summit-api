@@ -31,6 +31,7 @@ use libs\utils\ITransactionService;
 use Mockery;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitRepository;
+use models\summit\PaymentGatewayProfile;
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\StripePaymentProfile;
 use models\summit\Summit;
@@ -347,5 +348,23 @@ class PaymentSecretsLoggingTest extends TestCase
         (new UpdatePaymentProfileMQJob($summit_repository, $profile_repository, $service, $this->paymentsApi()))->handle($this->mqJob());
 
         $this->assertLogsDoNotContain(self::ProfileLiveSecretKey, self::ProfileTestSecretKey, self::StripeWebhookSecret);
+    }
+
+    public function testProfileSyncJobsStillDeleteTheEventWhenPurchasesApiReturnsNoProfile(): void
+    {
+        // PaymentsApi::getPaymentProfile() returns null on 404 (AbstractOAuth2Api::invokeWithRetry),
+        // e.g. for an event whose profile was deleted in purchases-api before it was consumed
+        $payments_api = Mockery::mock(IPaymentsApi::class);
+        $payments_api->shouldReceive('getPaymentProfile')->andReturn(null);
+        $summit_repository = Mockery::mock(ISummitRepository::class);
+        $summit_repository->shouldReceive('getById')->with(70)->andReturn(null);
+        $profile_repository = Mockery::mock(IPaymentGatewayProfileRepository::class);
+        $profile_repository->shouldReceive('getByExternalId')->andReturn(null);
+        $service = new PaymentGatewayProfileService(Mockery::mock(ITransactionService::class));
+
+        (new CreatePaymentProfileMQJob($summit_repository, $service, $payments_api))->handle($this->mqJob());
+        (new UpdatePaymentProfileMQJob($summit_repository, $profile_repository, $service, $payments_api))->handle($this->mqJob());
+
+        $this->assertSame([], PaymentGatewayProfile::toLogContext(null));
     }
 }

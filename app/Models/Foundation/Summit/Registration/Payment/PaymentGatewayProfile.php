@@ -346,12 +346,15 @@ abstract class PaymentGatewayProfile extends SilverstripeBaseModel
 
     /**
      * Returns only the loggable fields of a payment profile payload (as sent by the admin API or
-     * returned by purchases-api), so the payload can be logged without its keys.
-     * @param array $payload
+     * returned by purchases-api), so the payload can be logged without its keys. Anything that
+     * is not an array, such as the null PaymentsApi::getPaymentProfile() returns on a 404, gives
+     * an empty context: logging must never be what makes a caller fail.
+     * @param mixed $payload
      * @return array
      */
-    public static function toLogContext(array $payload): array
+    public static function toLogContext(mixed $payload): array
     {
+        if (!is_array($payload)) return [];
         return array_intersect_key($payload, array_flip(self::LoggableFields));
     }
 

@@ -17,6 +17,7 @@ use App\Services\Model\IPaymentGatewayProfileService;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\summit\IPaymentConstants;
 use models\summit\PaymentGatewayProfile;
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\Summit;
@@ -35,24 +36,50 @@ final class PaymentGatewayProfileService
      */
     public function addPaymentProfile(Summit $summit, array $payload): ?PaymentGatewayProfile
     {
-        return $this->tx_service->transaction(function () use ($summit, $payload) {
-            Log::debug("PaymentGatewayProfileService::addPaymentProfilee", ["summit" => $summit->getId(), 'payload' => $payload]);
-            $payload['summit'] = $summit;
-            $profile = PaymentGatewayProfileFactory::build($payload['provider'], $payload);
-            $formerProfile = $summit->getPaymentGateWayProfilePerApp($profile->getApplicationType());
-            if ($profile->isActive() && !is_null($formerProfile) && $formerProfile->isActive()) {
-                throw new ValidationException
-                (
-                    sprintf("There is already an active Payment Profile for application type %s,", $formerProfile->getApplicationType())
-                );
-            }
-            $summit->addPaymentProfile($profile);
-            if (isset($payload['active']) && boolval($payload['active']) == true) {
-                // force activation ( rebuild web hook )
-                $profile->activate();
-            }
-            return $profile;
-        });
+        // Populating a profile can already create its webhook at the payment gateway, and a DB
+        // rollback cannot undo that. Every profile built here is tracked so that its webhooks can
+        // be deleted again when it does not end up stored, including the ones built by an
+        // attempt that the root transaction re-ran after a transient DB error.
+        $built_profiles = [];
+        try {
+            $profile = $this->tx_service->transaction(function () use ($summit, $payload, &$built_profiles) {
+                Log::debug("PaymentGatewayProfileService::addPaymentProfilee", ["summit" => $summit->getId(), 'payload' => $payload]);
+                $is_active = isset($payload['active']) && boolval($payload['active']) == true;
+                // check before building the profile, so that a rejected one never reaches the gateway
+                if ($is_active) {
+                    $formerProfile = $summit->getPaymentGateWayProfilePerApp
+                    (
+                        $payload['application_type'] ?? IPaymentConstants::ApplicationTypeRegistration
+                    );
+                    if (!is_null($formerProfile) && $formerProfile->isActive()) {
+                        throw new ValidationException
+                        (
+                            sprintf("There is already an active Payment Profile for application type %s,", $formerProfile->getApplicationType())
+                        );
+                    }
+                }
+                $payload['summit'] = $summit;
+                $profile = PaymentGatewayProfileFactory::create($payload['provider']);
+                $built_profiles[] = $profile;
+                PaymentGatewayProfileFactory::populate($profile, $payload);
+                $summit->addPaymentProfile($profile);
+                if ($is_active) {
+                    // force activation ( rebuild web hook )
+                    $profile->activate();
+                }
+                return $profile;
+            });
+        } catch (\Exception $ex) {
+            foreach ($built_profiles as $built_profile)
+                $built_profile->discardCreatedWebHooks();
+            throw $ex;
+        }
+
+        foreach ($built_profiles as $built_profile) {
+            if ($built_profile !== $profile)
+                $built_profile->discardCreatedWebHooks();
+        }
+        return $profile;
     }
 
     /**

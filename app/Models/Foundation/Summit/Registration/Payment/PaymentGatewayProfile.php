@@ -328,6 +328,16 @@ abstract class PaymentGatewayProfile extends SilverstripeBaseModel
 
     abstract public function buildWebHook(): void;
 
+    /**
+     * Deletes at the payment gateway every webhook that this in-memory instance created itself.
+     * Called when the transaction meant to persist the profile fails: the DB rollback cannot
+     * undo a call to the gateway, and a webhook nobody stored would be left behind.
+     * Providers whose webhooks cannot be told apart per profile keep this no-op.
+     */
+    public function discardCreatedWebHooks(): void
+    {
+    }
+
     abstract protected function clearWebHooks():void;
 
     public function setExternalId(string $external_id): void{

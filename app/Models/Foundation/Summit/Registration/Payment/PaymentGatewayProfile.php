@@ -329,6 +329,33 @@ abstract class PaymentGatewayProfile extends SilverstripeBaseModel
     abstract public function buildWebHook(): void;
 
     /**
+     * Fields of a payment profile payload that can be logged. API keys and webhook secrets
+     * are never among them.
+     */
+    const LoggableFields = [
+        'id',
+        'external_id',
+        'provider',
+        'application_type',
+        'active',
+        'is_active',
+        'test_mode_enabled',
+        'send_email_receipt',
+        'set_webhooks',
+    ];
+
+    /**
+     * Returns only the loggable fields of a payment profile payload (as sent by the admin API or
+     * returned by purchases-api), so the payload can be logged without its keys.
+     * @param array $payload
+     * @return array
+     */
+    public static function toLogContext(array $payload): array
+    {
+        return array_intersect_key($payload, array_flip(self::LoggableFields));
+    }
+
+    /**
      * Deletes at the payment gateway every webhook that this in-memory instance created itself.
      * Called when the transaction meant to persist the profile fails: the DB rollback cannot
      * undo a call to the gateway, and a webhook nobody stored would be left behind.

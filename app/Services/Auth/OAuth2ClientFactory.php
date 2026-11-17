@@ -34,7 +34,7 @@ final class OAuth2ClientFactory
             sprintf(
                 "OAuth2ClientFactory::build client_id %s client_secret %s scopes %s",
                 $client_id,
-                $client_secret,
+                empty($client_secret) ? 'not set' : 'set',
                 $scopes
             )
         );

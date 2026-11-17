@@ -75,7 +75,7 @@ class UpdatePaymentProfileMQJob implements ShouldQueue
                 return;
             }
             $response = $this->payments_api->getPaymentProfile($summit_id, $id);
-            Log::debug("UpdatePaymentProfileMQJob::handle", ['response' => $response]);
+            Log::debug("UpdatePaymentProfileMQJob::handle", ['response' => PaymentGatewayProfile::toLogContext($response)]);
             $summit = $this->summit_repository->getById($summit_id);
             $local_payment_profile =$this->payment_gateway_profile_repository->getByExternalId($id);
             if($summit instanceof Summit) {
@@ -90,11 +90,11 @@ class UpdatePaymentProfileMQJob implements ShouldQueue
                 else{
                     Log::warning("UpdatePaymentProfileMQJob::handle local profile does not exists ...");
                     $response = $this->payments_api->getPaymentProfile($summit_id, $id);
-                    Log::debug("UpdatePaymentProfileMQJob::handle get from payment api", ['response' => $response]);
+                    Log::debug("UpdatePaymentProfileMQJob::handle get from payment api", ['response' => PaymentGatewayProfile::toLogContext($response)]);
                     // mappings
                     $response['external_id'] = $id;
                     $response['active'] = $response['is_active'] ?? false;
-                    Log::debug("UpdatePaymentProfileMQJob::handle creating payment profile", ['response' => $response ]);
+                    Log::debug("UpdatePaymentProfileMQJob::handle creating payment profile", ['response' => PaymentGatewayProfile::toLogContext($response)]);
                     $this->service->addPaymentProfile($summit, $response);
                 }
             }

@@ -138,7 +138,7 @@ abstract class AbstractOAuth2Api
                 $accessToken = $client->getAccessToken('client_credentials', ['scope' => $scopes]);
                 $token = $accessToken->getToken();
                 $expires_in = $accessToken->getExpires() - time();
-                Log::debug(sprintf("AbstractOAuth2Api::getAccessToken  - setting new access token %s expires in %s", $token, $expires_in));
+                Log::debug(sprintf("AbstractOAuth2Api::getAccessToken  - setting new access token expires in %s", $expires_in));
                 $ttl = $expires_in - self::SkewTime;
                 if($ttl < 0)
                     $ttl = $expires_in;
@@ -156,7 +156,7 @@ abstract class AbstractOAuth2Api
                 throw $ex;
             }
         }
-        Log::debug(sprintf("AbstractOAuth2Api::getAccessToken - returning access token %s", $token));
+        Log::debug(sprintf("AbstractOAuth2Api::getAccessToken - returning access token (%s)", empty($token) ? 'empty' : 'set'));
         return $token;
     }
 

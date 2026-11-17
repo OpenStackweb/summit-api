@@ -69,8 +69,11 @@ final class LawPayApi implements IPaymentGatewayAPI
         (
             sprintf
             (
-                "LawPayApi::__construct config %s",
-                json_encode($config)
+                "LawPayApi::__construct account_id %s test_mode_enabled %s secret_key %s public_key %s",
+                $this->account_id,
+                json_encode($this->test_mode_enabled),
+                empty($this->secret_key) ? 'not set' : 'set',
+                empty($this->public_key) ? 'not set' : 'set'
             )
         );
     }

@@ -82,7 +82,7 @@ class OAuth2SummitSelectedPresentationListApiController
         operationId: 'getTeamSelectionList',
         summary: "Get team selection list for a track",
         security: [["selected_presentation_list_oauth2" => [SummitScopes::ReadSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
         tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
@@ -152,7 +152,7 @@ class OAuth2SummitSelectedPresentationListApiController
         operationId: 'createTeamSelectionList',
         summary: "Create team selection list for a track",
         security: [["selected_presentation_list_oauth2" => [SummitScopes::WriteSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
         tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(
@@ -358,7 +358,7 @@ class OAuth2SummitSelectedPresentationListApiController
         operationId: 'reorderSelectionList',
         summary: "Reorder presentations in a selection list",
         security: [["selected_presentation_list_oauth2" => [SummitScopes::WriteSummitData]]],
-        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
+        x: ["authz_groups" => [IGroup::SuperAdmins, IGroup::Administrators, IGroup::SummitAdministrators, IGroup::TrackChairs, IGroup::TrackChairsAdmins]],
         tags: ["Summit Selected Presentation Lists"],
         parameters: [
             new OA\Parameter(

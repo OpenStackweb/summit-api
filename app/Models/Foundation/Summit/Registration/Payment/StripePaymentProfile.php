@@ -59,6 +59,13 @@ class StripePaymentProfile extends PaymentGatewayProfile
     protected $send_email_receipt;
 
     /**
+     * Webhooks this in-memory instance created at Stripe, so that discardCreatedWebHooks() can
+     * delete them again. Not mapped: it never outlives the request that created them.
+     * @var array<int, array{id: string, test_mode: bool}>
+     */
+    private array $created_webhooks = [];
+
+    /**
      * StripePaymentProfile constructor.
      */
     public function __construct()
@@ -235,6 +242,7 @@ class StripePaymentProfile extends PaymentGatewayProfile
                 ]));
                 // and set web hook info
                 $this->setWebHookInfo($info);
+                $this->created_webhooks[] = ['id' => $info['id'], 'test_mode' => (bool)$this->test_mode_enabled];
             }
         } catch (\Exception $ex) {
             Log::error($ex);
@@ -287,6 +295,27 @@ class StripePaymentProfile extends PaymentGatewayProfile
         } catch (\Exception $ex) {
             Log::error($ex);
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function discardCreatedWebHooks(): void
+    {
+        foreach ($this->created_webhooks as $webhook) {
+            $id = $webhook['id'];
+            try {
+                Log::warning(sprintf("StripePaymentProfile::discardCreatedWebHooks deleting webhook %s", $id));
+                $config = $webhook['test_mode'] ? $this->createTestConfiguration() : $this->createLiveConfiguration();
+                (new StripeApi($config))->deleteWebHookById($id);
+                if ($this->live_webhook_id === $id) $this->live_webhook_id = $this->live_webhook_secret_key = '';
+                if ($this->test_webhook_id === $id) $this->test_webhook_id = $this->test_webhook_secret_key = '';
+            } catch (\Exception $ex) {
+                // the profile is not stored, so nothing else will ever delete this webhook
+                Log::error(sprintf("StripePaymentProfile::discardCreatedWebHooks could not delete webhook %s: %s", $id, $ex->getMessage()));
+            }
+        }
+        $this->created_webhooks = [];
     }
 
     protected function clearWebHooks(): void

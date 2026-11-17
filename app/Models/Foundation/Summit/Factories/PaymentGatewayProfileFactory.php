@@ -29,19 +29,26 @@ final class PaymentGatewayProfileFactory
     public static function build(string $provider, array $params): ?PaymentGatewayProfile
     {
         Log::debug("PaymentGatewayProfileFactory::build()", ['provider' => $provider, 'params' => $params]);
-        $profile = null;
-        if ($provider == IPaymentConstants::ProviderStripe) {
-            $profile = static::populate(new StripePaymentProfile, $params);
-        }
+        return static::populate(static::create($provider), $params);
+    }
 
-        if ($provider == IPaymentConstants::ProviderLawPay) {
-            $profile = static::populate(new LawPayPaymentProfile, $params);
-        }
+    /**
+     * Returns an empty profile for the provider. Unlike build(), it never calls the payment
+     * gateway, so the caller can keep a reference to the profile before populate() creates
+     * any webhook.
+     * @param string $provider
+     * @return PaymentGatewayProfile
+     * @throws \models\exceptions\ValidationException
+     */
+    public static function create(string $provider): PaymentGatewayProfile
+    {
+        if ($provider == IPaymentConstants::ProviderStripe)
+            return new StripePaymentProfile;
 
-        if(is_null($profile))
-            throw new ValidationException("Profile type does not exists.");
+        if ($provider == IPaymentConstants::ProviderLawPay)
+            return new LawPayPaymentProfile;
 
-        return $profile;
+        throw new ValidationException("Profile type does not exists.");
     }
 
     /**

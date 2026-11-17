@@ -17,9 +17,11 @@ use App\Services\Model\IPaymentGatewayProfileService;
 use Illuminate\Support\Facades\Log;
 use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
+use models\summit\IPaymentConstants;
 use models\summit\PaymentGatewayProfile;
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\Summit;
+use services\utils\AmbiguousCommitException;
 
 /**
  * Class PaymentGatewayProfileService
@@ -35,24 +37,74 @@ final class PaymentGatewayProfileService
      */
     public function addPaymentProfile(Summit $summit, array $payload): ?PaymentGatewayProfile
     {
-        return $this->tx_service->transaction(function () use ($summit, $payload) {
-            Log::debug("PaymentGatewayProfileService::addPaymentProfilee", ["summit" => $summit->getId(), 'payload' => $payload]);
-            $payload['summit'] = $summit;
-            $profile = PaymentGatewayProfileFactory::build($payload['provider'], $payload);
-            $formerProfile = $summit->getPaymentGateWayProfilePerApp($profile->getApplicationType());
-            if ($profile->isActive() && !is_null($formerProfile) && $formerProfile->isActive()) {
-                throw new ValidationException
-                (
-                    sprintf("There is already an active Payment Profile for application type %s,", $formerProfile->getApplicationType())
-                );
+        // Populating a profile can already create its webhook at the payment gateway, and a DB
+        // rollback cannot undo that. Every profile built here is tracked so that its webhooks can
+        // be deleted again when it does not end up stored: a failed transaction, an attempt that
+        // the root transaction re-ran after a transient DB error, or a returned profile that the
+        // transaction never inserted.
+        $built_profiles = [];
+        try {
+            $profile = $this->tx_service->transaction(function () use ($summit, $payload, &$built_profiles) {
+                Log::debug("PaymentGatewayProfileService::addPaymentProfilee", ["summit" => $summit->getId(), 'payload' => $payload]);
+                $is_active = isset($payload['active']) && boolval($payload['active']) == true;
+                // check before building the profile, so that a rejected one never reaches the gateway
+                if ($is_active) {
+                    $formerProfile = $summit->getPaymentGateWayProfilePerApp
+                    (
+                        $payload['application_type'] ?? IPaymentConstants::ApplicationTypeRegistration
+                    );
+                    if (!is_null($formerProfile) && $formerProfile->isActive()) {
+                        throw new ValidationException
+                        (
+                            sprintf("There is already an active Payment Profile for application type %s,", $formerProfile->getApplicationType())
+                        );
+                    }
+                }
+                $payload['summit'] = $summit;
+                $profile = PaymentGatewayProfileFactory::create($payload['provider']);
+                $built_profiles[] = $profile;
+                PaymentGatewayProfileFactory::populate($profile, $payload);
+                $summit->addPaymentProfile($profile);
+                if ($is_active) {
+                    // force activation ( rebuild web hook )
+                    $profile->activate();
+                }
+                return $profile;
+            });
+        } catch (AmbiguousCommitException $ex) {
+            // The COMMIT of the last attempt was sent but never acknowledged, so its profile may
+            // be stored, and its webhook has to stay. The root transaction re-runs the closure
+            // only before COMMIT, so every earlier attempt was rolled back.
+            $last_profile = array_pop($built_profiles);
+            foreach ($built_profiles as $built_profile)
+                $built_profile->discardCreatedWebHooks();
+            if (!is_null($last_profile)) {
+                Log::warning(sprintf(
+                    "PaymentGatewayProfileService::addPaymentProfile summit %s commit outcome unknown, kept the webhooks of the %s profile; reconcile them with the stored payment profiles.",
+                    $summit->getId(),
+                    $last_profile->getApplicationType()
+                ));
             }
-            $summit->addPaymentProfile($profile);
-            if (isset($payload['active']) && boolval($payload['active']) == true) {
-                // force activation ( rebuild web hook )
-                $profile->activate();
-            }
-            return $profile;
-        });
+            throw $ex;
+        } catch (\Throwable $ex) {
+            foreach ($built_profiles as $built_profile)
+                $built_profile->discardCreatedWebHooks();
+            throw $ex;
+        }
+
+        if ($profile->isNew()) {
+            Log::warning(sprintf(
+                "PaymentGatewayProfileService::addPaymentProfile summit %s the transaction returned a %s profile that was not stored.",
+                $summit->getId(),
+                $profile->getApplicationType()
+            ));
+        }
+        foreach ($built_profiles as $built_profile) {
+            // the returned profile keeps its webhooks only when the transaction inserted it
+            if ($built_profile !== $profile || $profile->isNew())
+                $built_profile->discardCreatedWebHooks();
+        }
+        return $profile;
     }
 
     /**

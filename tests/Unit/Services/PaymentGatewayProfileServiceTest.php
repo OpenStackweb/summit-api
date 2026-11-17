@@ -12,6 +12,7 @@
  * limitations under the License.
  **/
 
+use App\Models\Utils\BaseEntity;
 use App\Services\Model\Imp\PaymentGatewayProfileService;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -25,6 +26,7 @@ use models\summit\StripePaymentProfile;
 use models\summit\Summit;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use services\utils\AmbiguousCommitException;
 use Stripe\ApiRequestor;
 use Stripe\HttpClient\ClientInterface;
 
@@ -40,9 +42,18 @@ use Stripe\HttpClient\ClientInterface;
  * behind that nothing stored the signing secret for, and every delivery to it failed signature
  * verification. So:
  *  - a second active profile is rejected before anything reaches Stripe;
- *  - when the transaction fails after a webhook was created, that webhook is deleted again;
- *  - when the root transaction re-runs the closure, the webhook of the discarded attempt is
- *    deleted and the stored profile keeps its own.
+ *  - a stored profile keeps its webhook;
+ *  - when the transaction fails after a webhook was created, that webhook is deleted again,
+ *    unless the COMMIT outcome is unknown (AmbiguousCommitException): then the profile may be
+ *    stored, so its webhook stays;
+ *  - when the root transaction re-runs the closure, the webhooks of the discarded attempts are
+ *    deleted. A retried active profile is rejected as a duplicate, because the summit keeps the
+ *    first attempt's profile in memory; a retried profile without the active flag goes through
+ *    and keeps its own webhook;
+ *  - a returned profile the transaction did not insert gets its webhook deleted.
+ *
+ * The summit double keeps its profile collection like a real Summit, and stored() simulates
+ * the id Doctrine assigns on INSERT.
  *
  * No Laravel app is booted: a bare container provides the Log facade, and its logger spy is
  * the assertion surface for "the gateway was never reached". In the duplicate test the 'url'
@@ -150,15 +161,49 @@ class PaymentGatewayProfileServiceTest extends TestCase
     }
 
     /**
-     * A summit with no payment profile yet; it expects $added_times addPaymentProfile() calls.
+     * A summit with no payment profile yet whose profile collection behaves like the real one:
+     * addPaymentProfile() keeps the profile, and getPaymentGateWayProfilePerApp() returns the
+     * first active profile of that type, including one added by an earlier attempt. A real
+     * Summit keeps that in-memory state when the root transaction re-runs the closure.
+     * The profiles it holds are exposed through $profiles.
      */
-    private function summitWithoutProfile(int $added_times): Summit
+    private function statefulSummit(?array &$profiles): Summit
     {
+        $profiles = [];
         $summit = Mockery::mock(Summit::class);
         $summit->shouldReceive('getId')->andReturn(78);
-        $summit->shouldReceive('getPaymentGateWayProfilePerApp')->andReturn(null);
-        $summit->shouldReceive('addPaymentProfile')->times($added_times);
+        $summit->shouldReceive('addPaymentProfile')->andReturnUsing(function (PaymentGatewayProfile $profile) use (&$profiles) {
+            $profiles[] = $profile;
+        });
+        $summit->shouldReceive('getPaymentGateWayProfilePerApp')->andReturnUsing(function (string $application_type) use (&$profiles) {
+            foreach ($profiles as $profile) {
+                if ($profile->isActive() && $profile->getApplicationType() === $application_type)
+                    return $profile;
+            }
+            return null;
+        });
         return $summit;
+    }
+
+    /**
+     * Simulates the INSERT done by the transaction's flush(): Doctrine assigns the generated id.
+     */
+    private function stored(PaymentGatewayProfile $profile): PaymentGatewayProfile
+    {
+        $id = new \ReflectionProperty(BaseEntity::class, 'id');
+        $id->setValue($profile, 24);
+        return $profile;
+    }
+
+    /**
+     * A live Stripe profile payload with no 'active' key, as the admin API can send it: it is
+     * populated (and gets its webhook) without going through the duplicate check.
+     */
+    private function liveStripePayloadWithoutActiveFlag(): array
+    {
+        $payload = $this->activeLiveStripePayload();
+        unset($payload['active']);
+        return $payload;
     }
 
     private function activeRegistrationProfile(): PaymentGatewayProfile
@@ -240,6 +285,19 @@ class PaymentGatewayProfileServiceTest extends TestCase
         $this->assertFalse($profile->isActive());
     }
 
+    public function testKeepsTheWebhookOfAStoredProfile(): void
+    {
+        $stripe = $this->fakeStripe();
+
+        $profile = $this->makeService(fn (\Closure $attempt) => $this->stored($attempt()))
+            ->addPaymentProfile($this->statefulSummit($profiles), $this->activeLiveStripePayload());
+
+        $this->assertSame(1, $this->tx_invocations);
+        $this->assertSame([$profile], $profiles);
+        $this->assertSame('we_test_1', $profile->getLiveWebhookId());
+        $this->assertSame(['POST /v1/webhook_endpoints'], $stripe->requests);
+    }
+
     public function testDeletesTheCreatedWebhookWhenTheTransactionFailsAfterCreatingIt(): void
     {
         $stripe = $this->fakeStripe();
@@ -250,7 +308,7 @@ class PaymentGatewayProfileServiceTest extends TestCase
             $this->makeService(function (\Closure $attempt) use ($commit_failure) {
                 $attempt();
                 throw $commit_failure;
-            })->addPaymentProfile($this->summitWithoutProfile(1), $this->activeLiveStripePayload());
+            })->addPaymentProfile($this->statefulSummit($profiles), $this->activeLiveStripePayload());
         } catch (\RuntimeException $ex) {
             $error = $ex;
         }
@@ -264,22 +322,87 @@ class PaymentGatewayProfileServiceTest extends TestCase
         ], $stripe->requests);
     }
 
+    public function testKeepsTheWebhookWhenTheCommitOutcomeIsUnknown(): void
+    {
+        $stripe = $this->fakeStripe();
+        $ambiguous = new AmbiguousCommitException('commit outcome unknown');
+
+        $error = null;
+        try {
+            // the COMMIT was sent but its acknowledgment was lost: the profile may be stored
+            $this->makeService(function (\Closure $attempt) use ($ambiguous) {
+                $this->stored($attempt());
+                throw $ambiguous;
+            })->addPaymentProfile($this->statefulSummit($profiles), $this->activeLiveStripePayload());
+        } catch (AmbiguousCommitException $ex) {
+            $error = $ex;
+        }
+
+        $this->assertSame($ambiguous, $error, 'the ambiguous outcome must reach the caller');
+        $this->assertSame(['POST /v1/webhook_endpoints'], $stripe->requests);
+    }
+
+    public function testRetriedAttemptOfAnActiveProfileFailsAsDuplicateAndDeletesTheFirstWebhook(): void
+    {
+        $stripe = $this->fakeStripe();
+
+        // The root transaction re-runs the closure after a transient DB error. The summit still
+        // holds the first attempt's active profile, so the retry is rejected as a duplicate
+        // before it reaches Stripe.
+        $error = null;
+        try {
+            $this->makeService(function (\Closure $attempt) {
+                $attempt();
+                return $this->stored($attempt());
+            })->addPaymentProfile($this->statefulSummit($profiles), $this->activeLiveStripePayload());
+        } catch (ValidationException $ex) {
+            $error = $ex;
+        }
+
+        $this->assertSame(2, $this->tx_invocations);
+        $this->assertNotNull($error);
+        $this->assertSame('There is already an active Payment Profile for application type Registration,', $error->getMessage());
+        $this->assertSame([
+            'POST /v1/webhook_endpoints',
+            'GET /v1/webhook_endpoints/we_test_1',
+            'DELETE /v1/webhook_endpoints/we_test_1',
+        ], $stripe->requests);
+    }
+
     public function testDeletesOnlyTheWebhookOfAnAttemptThatWasRetried(): void
     {
         $stripe = $this->fakeStripe();
 
-        // the first attempt is rolled back and re-run, as the root transaction does after a
-        // transient DB error; only the second attempt's profile gets stored
+        // without the active flag there is no duplicate check, so the retried attempt goes
+        // through; only its profile gets stored
         $profile = $this->makeService(function (\Closure $attempt) {
             $attempt();
-            return $attempt();
-        })->addPaymentProfile($this->summitWithoutProfile(2), $this->activeLiveStripePayload());
+            return $this->stored($attempt());
+        })->addPaymentProfile($this->statefulSummit($profiles), $this->liveStripePayloadWithoutActiveFlag());
 
         $this->assertSame(2, $this->tx_invocations);
-        $this->assertInstanceOf(StripePaymentProfile::class, $profile);
+        $this->assertCount(2, $profiles);
+        $this->assertSame($profiles[1], $profile);
         $this->assertSame('we_test_2', $profile->getLiveWebhookId());
         $this->assertSame([
             'POST /v1/webhook_endpoints',
+            'POST /v1/webhook_endpoints',
+            'GET /v1/webhook_endpoints/we_test_1',
+            'DELETE /v1/webhook_endpoints/we_test_1',
+        ], $stripe->requests);
+    }
+
+    public function testDeletesTheWebhookOfAReturnedProfileThatWasNotStored(): void
+    {
+        $stripe = $this->fakeStripe();
+
+        // the transaction returns, but nothing inserted the profile (it never got an id)
+        $profile = $this->makeService(fn (\Closure $attempt) => $attempt())
+            ->addPaymentProfile($this->statefulSummit($profiles), $this->activeLiveStripePayload());
+
+        $this->assertTrue($profile->isNew());
+        $this->assertSame('', $profile->getLiveWebhookId());
+        $this->assertSame([
             'POST /v1/webhook_endpoints',
             'GET /v1/webhook_endpoints/we_test_1',
             'DELETE /v1/webhook_endpoints/we_test_1',

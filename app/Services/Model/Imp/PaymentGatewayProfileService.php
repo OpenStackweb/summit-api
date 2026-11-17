@@ -21,6 +21,7 @@ use models\summit\IPaymentConstants;
 use models\summit\PaymentGatewayProfile;
 use models\summit\PaymentGatewayProfileFactory;
 use models\summit\Summit;
+use services\utils\AmbiguousCommitException;
 
 /**
  * Class PaymentGatewayProfileService
@@ -38,8 +39,9 @@ final class PaymentGatewayProfileService
     {
         // Populating a profile can already create its webhook at the payment gateway, and a DB
         // rollback cannot undo that. Every profile built here is tracked so that its webhooks can
-        // be deleted again when it does not end up stored, including the ones built by an
-        // attempt that the root transaction re-ran after a transient DB error.
+        // be deleted again when it does not end up stored: a failed transaction, an attempt that
+        // the root transaction re-ran after a transient DB error, or a returned profile that the
+        // transaction never inserted.
         $built_profiles = [];
         try {
             $profile = $this->tx_service->transaction(function () use ($summit, $payload, &$built_profiles) {
@@ -69,14 +71,37 @@ final class PaymentGatewayProfileService
                 }
                 return $profile;
             });
-        } catch (\Exception $ex) {
+        } catch (AmbiguousCommitException $ex) {
+            // The COMMIT of the last attempt was sent but never acknowledged, so its profile may
+            // be stored, and its webhook has to stay. The root transaction re-runs the closure
+            // only before COMMIT, so every earlier attempt was rolled back.
+            $last_profile = array_pop($built_profiles);
+            foreach ($built_profiles as $built_profile)
+                $built_profile->discardCreatedWebHooks();
+            if (!is_null($last_profile)) {
+                Log::warning(sprintf(
+                    "PaymentGatewayProfileService::addPaymentProfile summit %s commit outcome unknown, kept the webhooks of the %s profile; reconcile them with the stored payment profiles.",
+                    $summit->getId(),
+                    $last_profile->getApplicationType()
+                ));
+            }
+            throw $ex;
+        } catch (\Throwable $ex) {
             foreach ($built_profiles as $built_profile)
                 $built_profile->discardCreatedWebHooks();
             throw $ex;
         }
 
+        if ($profile->isNew()) {
+            Log::warning(sprintf(
+                "PaymentGatewayProfileService::addPaymentProfile summit %s the transaction returned a %s profile that was not stored.",
+                $summit->getId(),
+                $profile->getApplicationType()
+            ));
+        }
         foreach ($built_profiles as $built_profile) {
-            if ($built_profile !== $profile)
+            // the returned profile keeps its webhooks only when the transaction inserted it
+            if ($built_profile !== $profile || $profile->isNew())
                 $built_profile->discardCreatedWebHooks();
         }
         return $profile;

@@ -109,37 +109,44 @@ final class AttendeeServiceTest extends TestCase
     }
 
     /**
-     * @see https://github.com/OpenStackweb/summit-api/pull/588#discussion_r3897380061
-     * member2 is already linked to a different attendee in this summit, whose stored email
-     * has drifted away from member2's current account email - so the sibling
-     * getBySummitAndEmail check (keyed on email) can't catch the collision. Resolving member2
-     * via the email fallback branch must still raise the same clean ValidationException the
-     * member_id branch raises, instead of letting the flush fail on the unique
-     * (MemberID, SummitID) index.
+     * member2 is already linked to another attendee in this summit and its account email has an
+     * internationalized domain. IMemberRepository::getByEmail punycode-encodes its argument and
+     * resolves member2; ISummitAttendeeRepository::getBySummitAndEmail does not, so the email
+     * check finds nothing. The getBySummitAndMember guard is then the only check before the
+     * unique (MemberID, SummitID) index.
+     *
+     * @return string the unicode (non punycode) email of member2
      */
-    private function linkOtherAttendeeToMember2WithDriftedEmail(): void
+    private function linkOtherAttendeeToMember2WithIdnEmail(): string
     {
+        $idn_email = 'member2-' . uniqid() . '@bücher.example';
+
+        self::$member2->setEmail($idn_email);
+        self::$em->persist(self::$member2);
+
         $other_attendee = new SummitAttendee();
         $other_attendee->setMember(self::$member2);
-        $other_attendee->setEmail('drifted-' . self::$member2->getEmail());
+        $other_attendee->setEmail($idn_email);
         $other_attendee->setFirstName(self::$member2->getFirstName());
         $other_attendee->setSurname(self::$member2->getLastName());
 
         self::$summit->addAttendee($other_attendee);
         self::$em->persist($other_attendee);
         self::$em->flush();
+
+        return $idn_email;
     }
 
     public function testUpdateAttendeeEmailResolvingToAlreadyLinkedMemberThrowsValidationException()
     {
-        $this->linkOtherAttendeeToMember2WithDriftedEmail();
+        $idn_email = $this->linkOtherAttendeeToMember2WithIdnEmail();
 
         $service = App::make(IAttendeeService::class);
         $attendee = self::$summit->getAttendeeByMember(self::$defaultMember);
         $this->assertNotNull($attendee);
 
         $payload = [
-            'email' => self::$member2->getEmail(),
+            'email' => $idn_email,
         ];
 
         $this->expectException(ValidationException::class);
@@ -148,12 +155,12 @@ final class AttendeeServiceTest extends TestCase
 
     public function testAddAttendeeEmailResolvingToAlreadyLinkedMemberThrowsValidationException()
     {
-        $this->linkOtherAttendeeToMember2WithDriftedEmail();
+        $idn_email = $this->linkOtherAttendeeToMember2WithIdnEmail();
 
         $service = App::make(IAttendeeService::class);
 
         $payload = [
-            'email' => self::$member2->getEmail(),
+            'email' => $idn_email,
         ];
 
         $this->expectException(ValidationException::class);

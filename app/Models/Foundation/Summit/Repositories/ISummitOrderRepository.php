@@ -36,6 +36,15 @@ interface ISummitOrderRepository extends IBaseRepository
     public function getByPaymentGatewayCartIdExclusiveLock(string $payment_gateway_cart_id): ?SummitOrder;
 
     /**
+     * Locks the order and reads again the refund requests of all its tickets,
+     * so refunds of the same order are approved one at a time and each one
+     * sees the refunds approved before it.
+     * @param int $order_id
+     * @return SummitOrder|null
+     */
+    public function getByIdExclusiveLockRefreshingRefunds(int $order_id): ?SummitOrder;
+
+    /**
      * @param string $externalId
      * @return SummitOrder|null
      */

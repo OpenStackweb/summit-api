@@ -90,6 +90,33 @@ final class DoctrineSummitOrderRepository
     }
 
     /**
+     * @param int $order_id
+     * @return SummitOrder|null
+     */
+    public function getByIdExclusiveLockRefreshingRefunds(int $order_id): ?SummitOrder
+    {
+        $order = $this->getByIdExclusiveLock($order_id);
+        if (!$order instanceof SummitOrder) return null;
+
+        // A queue worker keeps its entity manager from one job to the next, so
+        // it can hold the order's tickets and their refund requests as they
+        // were before the lock was granted. Read them again, in one query.
+        $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("t, r, tr")
+            ->from(SummitAttendeeTicket::class, "t")
+            ->leftJoin("t.refund_requests", "r")
+            ->leftJoin("r.refunded_taxes", "tr")
+            ->where("t.order = :order")
+            ->setParameter("order", $order)
+            ->getQuery()
+            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)
+            ->getResult();
+
+        return $order;
+    }
+
+    /**
      * @param string $email
      * @return mixed
      */

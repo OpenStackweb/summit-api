@@ -77,17 +77,55 @@ class SummitAttendeeTicketRefundRequest extends SummitRefundRequest
      */
     protected function calculateTaxesRefundedAmountFrom(float $amount_2_refund):Collection{
         $this->refunded_taxes->clear();
-        // create a collection of all applied taxes and their refunds components
+        if ($this->ticket->getAppliedTaxes()->isEmpty()) return $this->refunded_taxes;
+        // The order is charged each tax rounded to cents once, over all its
+        // tickets (SummitOrder::getFinalAmount). A refund follows that same
+        // running total: the tax on everything refunded so far, rounded the
+        // same way, less the tax already given back. Refunding the whole
+        // order then gives back the tax that was charged, to the cent.
+        $so_far = $this->getOrderTaxRefundsSoFar();
         foreach ($this->ticket->getAppliedTaxes() as $applied_tax) {
+             $tax = $applied_tax->getTax();
+             list($tax_so_far, $refunded_so_far) = $so_far[$tax->getId()] ?? [0.0, 0.0];
+             $tax_so_far += $applied_tax->applyTo($amount_2_refund, false);
              $tax_refund = new SummitTaxRefund
              (
                  $this,
-                 $applied_tax->getTax(),
-                 $applied_tax->applyTo($amount_2_refund, false)
+                 $tax,
+                 max(0.0, $tax->round($tax->round($tax_so_far) - $refunded_so_far))
              );
              $this->refunded_taxes->add($tax_refund);
         }
         return $this->refunded_taxes;
+    }
+
+    /**
+     * What the order's other approved refunds add up to, by tax id: the tax on
+     * the refunded ticket price before rounding, and the tax given back.
+     * The tax is worked out again from the refunded ticket price because the
+     * tax refunds stored before refunds followed the charge are not rounded.
+     * @return float[][]
+     */
+    private function getOrderTaxRefundsSoFar():array{
+        $so_far = [];
+        foreach ($this->ticket->getOrder()->getTickets() as $ticket) {
+            foreach ($ticket->getRefundedRequests() as $request) {
+                // approve() marks this request as approved before its taxes are calculated
+                if ($request === $this) continue;
+                if ($request->getStatus() !== ISummitRefundRequestConstants::ApprovedStatus) continue;
+                foreach ($ticket->getAppliedTaxes() as $applied_tax) {
+                    $tax_id = $applied_tax->getTax()->getId();
+                    $so_far[$tax_id] ??= [0.0, 0.0];
+                    $so_far[$tax_id][0] += $applied_tax->applyTo($request->getRefundedAmount(), false);
+                }
+                foreach ($request->getRefundedTaxes() as $tax_refund) {
+                    $tax_id = $tax_refund->getTax()->getId();
+                    $so_far[$tax_id] ??= [0.0, 0.0];
+                    $so_far[$tax_id][1] += $tax_refund->getRefundedAmount();
+                }
+            }
+        }
+        return $so_far;
     }
 
 }

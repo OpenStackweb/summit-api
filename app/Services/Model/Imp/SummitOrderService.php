@@ -3339,7 +3339,7 @@ final class SummitOrderService
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
             if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
             if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('Ticket not found.');
@@ -3378,7 +3378,7 @@ final class SummitOrderService
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
             if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
             if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('Ticket not found.');
@@ -3418,7 +3418,7 @@ final class SummitOrderService
 
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
             if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
             if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('Ticket not found.');
@@ -3636,13 +3636,12 @@ final class SummitOrderService
         $this->tx_service->transaction(function () use ($summit, $ticket_id) {
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
             if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
             if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('ticket not found');
 
             $order = $ticket->getOrder();
-            $summit = $order->getSummit();
 
             if ($order->getSummitId() != $summit->getId())
                 throw new EntityNotFoundException('ticket not found');
@@ -3669,13 +3668,12 @@ final class SummitOrderService
         return $this->tx_service->transaction(function () use ($summit, $ticket_id, $payload) {
             $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
             if (is_null($ticket))
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                $ticket = $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
 
             if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('ticket not found');
 
             $order = $ticket->getOrder();
-            $summit = $order->getSummit();
 
             if ($order->getSummitId() != $summit->getId())
                 throw new EntityNotFoundException('ticket not found');

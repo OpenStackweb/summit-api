@@ -938,6 +938,227 @@ CSV;
         $this->assertResponseStatus(204);
     }
 
+    /**
+     * @return array
+     */
+    private function badgeApiHeaders(): array
+    {
+        return [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+    }
+
+    public function testCreateAttendeeBadgeByTicketNumber()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $headers = $this->badgeApiHeaders();
+
+        // remove the badge of the fixture first, by id
+        $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@deleteAttendeeBadge",
+            ['id' => self::$summit->getId(), 'ticket_id' => $ticket->getId()],
+            [], [], [], $headers
+        );
+
+        $response = $this->action(
+            "POST",
+            "OAuth2SummitTicketApiController@createAttendeeBadge",
+            ['id' => self::$summit->getId(), 'ticket_id' => $ticket->getNumber()],
+            [], [], [], $headers,
+            json_encode([
+                'badge_type_id' => self::$badge_type_2->getId(),
+                'features' => [self::$badge_features[0]->getId(), self::$badge_features[1]->getId()]
+            ])
+        );
+
+        $this->assertResponseStatus(201);
+        $badge = json_decode($response->getContent());
+        $this->assertTrue(!is_null($badge));
+        $this->assertTrue(count($badge->features) == 2);
+    }
+
+    public function testDeleteAttendeeBadgeByTicketNumber()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@deleteAttendeeBadge",
+            ['id' => self::$summit->getId(), 'ticket_id' => $ticket->getNumber()],
+            [], [], [], $this->badgeApiHeaders()
+        );
+
+        $this->assertResponseStatus(204);
+    }
+
+    public function testUpdateAttendeeBadgeTypeByTicketNumber()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitTicketApiController@updateAttendeeBadgeType",
+            [
+                'id' => self::$summit->getId(),
+                'ticket_id' => $ticket->getNumber(),
+                'type_id' => self::$badge_type_2->getId(),
+            ],
+            [], [], [], $this->badgeApiHeaders()
+        );
+
+        $this->assertResponseStatus(201);
+        $badge = json_decode($response->getContent());
+        $this->assertTrue(!is_null($badge));
+    }
+
+    public function testAddAttendeeBadgeFeatureByTicketNumber()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitTicketApiController@addAttendeeBadgeFeature",
+            [
+                'id' => self::$summit->getId(),
+                'ticket_id' => $ticket->getNumber(),
+                'feature_id' => self::$badge_features[0]->getId(),
+            ],
+            [], [], [], $this->badgeApiHeaders()
+        );
+
+        $this->assertResponseStatus(201);
+        $badge = json_decode($response->getContent());
+        $this->assertTrue(!is_null($badge));
+        $this->assertTrue(count($badge->features) == 1);
+    }
+
+    public function testRemoveAttendeeBadgeFeatureByTicketNumber()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $headers = $this->badgeApiHeaders();
+
+        // recreate the badge of the fixture with two features, by id
+        $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@deleteAttendeeBadge",
+            ['id' => self::$summit->getId(), 'ticket_id' => $ticket->getId()],
+            [], [], [], $headers
+        );
+
+        $this->action(
+            "POST",
+            "OAuth2SummitTicketApiController@createAttendeeBadge",
+            ['id' => self::$summit->getId(), 'ticket_id' => $ticket->getId()],
+            [], [], [], $headers,
+            json_encode([
+                'badge_type_id' => self::$badge_type_2->getId(),
+                'features' => [self::$badge_features[0]->getId(), self::$badge_features[1]->getId()]
+            ])
+        );
+        $this->assertResponseStatus(201);
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@removeAttendeeBadgeFeature",
+            [
+                'id' => self::$summit->getId(),
+                'ticket_id' => $ticket->getNumber(),
+                'feature_id' => self::$badge_features[0]->getId(),
+            ],
+            [], [], [], $headers
+        );
+
+        $this->assertResponseStatus(201);
+        $badge = json_decode($response->getContent());
+        $this->assertTrue(!is_null($badge));
+        $this->assertTrue(count($badge->features) == 1);
+    }
+
+    public function testBadgeEndpointsWithUnknownTicketNumber()
+    {
+        $headers = $this->badgeApiHeaders();
+        $summit_id = self::$summit->getId();
+        $unknown = 'TICKET_DOES_NOT_EXIST';
+
+        $calls = [
+            ["POST", "createAttendeeBadge", ['id' => $summit_id, 'ticket_id' => $unknown], json_encode([])],
+            ["DELETE", "deleteAttendeeBadge", ['id' => $summit_id, 'ticket_id' => $unknown], null],
+            ["PUT", "updateAttendeeBadgeType", [
+                'id' => $summit_id, 'ticket_id' => $unknown, 'type_id' => self::$badge_type_2->getId()
+            ], null],
+            ["PUT", "addAttendeeBadgeFeature", [
+                'id' => $summit_id, 'ticket_id' => $unknown, 'feature_id' => self::$badge_features[0]->getId()
+            ], null],
+            ["DELETE", "removeAttendeeBadgeFeature", [
+                'id' => $summit_id, 'ticket_id' => $unknown, 'feature_id' => self::$badge_features[0]->getId()
+            ], null],
+        ];
+
+        foreach ($calls as [$method, $action, $params, $body]) {
+            $this->action(
+                $method,
+                "OAuth2SummitTicketApiController@" . $action,
+                $params,
+                [], [], [], $headers,
+                $body
+            );
+            $this->assertResponseStatus(404, $action);
+        }
+    }
+
+    public function testCreateAttendeeBadgeThroughAnotherSummit()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $headers = $this->badgeApiHeaders();
+
+        // remove the badge of the fixture so the only reason to fail is the summit
+        $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@deleteAttendeeBadge",
+            ['id' => self::$summit->getId(), 'ticket_id' => $ticket->getId()],
+            [], [], [], $headers
+        );
+        $this->assertResponseStatus(204);
+
+        foreach ([$ticket->getId(), $ticket->getNumber()] as $ticket_id) {
+            $this->action(
+                "POST",
+                "OAuth2SummitTicketApiController@createAttendeeBadge",
+                ['id' => self::$summit2->getId(), 'ticket_id' => $ticket_id],
+                [], [], [], $headers,
+                json_encode(['badge_type_id' => self::$badge_type_2->getId()])
+            );
+            $this->assertResponseStatus(404);
+        }
+
+        self::$em->clear();
+        $ticket = self::$em->find(get_class($ticket), $ticket->getId());
+        $this->assertFalse($ticket->hasBadge());
+    }
+
+    public function testDeleteAttendeeBadgeThroughAnotherSummit()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $ticket_id = $ticket->getId();
+        $ticket_number = $ticket->getNumber();
+        $this->assertTrue($ticket->hasBadge());
+
+        foreach ([$ticket_id, $ticket_number] as $id) {
+            $this->action(
+                "DELETE",
+                "OAuth2SummitTicketApiController@deleteAttendeeBadge",
+                ['id' => self::$summit2->getId(), 'ticket_id' => $id],
+                [], [], [], $this->badgeApiHeaders()
+            );
+            $this->assertResponseStatus(404);
+        }
+
+        self::$em->clear();
+        $ticket = self::$em->find(get_class($ticket), $ticket_id);
+        $this->assertTrue($ticket->hasBadge());
+    }
 
     public function testPrintAttendeeBadge()
     {

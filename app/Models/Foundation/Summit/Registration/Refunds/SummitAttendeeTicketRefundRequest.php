@@ -83,77 +83,71 @@ class SummitAttendeeTicketRefundRequest extends SummitRefundRequest
         // running total: the tax on everything refunded so far, rounded the
         // same way, less the tax already given back. Refunding the whole
         // order then gives back the tax that was charged, to the cent.
-        $so_far = $this->getOrderTaxRefundsSoFar();
+        list($so_far, $sent_so_far) = $this->getOrderTaxRefundsSoFar();
+        $cents = [];
         foreach ($this->ticket->getAppliedTaxes() as $applied_tax) {
-             $tax = $applied_tax->getTax();
-             list($tax_so_far, $refunded_so_far) = $so_far[$tax->getId()] ?? [0.0, 0.0];
-             $tax_so_far += $applied_tax->applyTo($amount_2_refund, false);
-             $tax_refund = new SummitTaxRefund
-             (
-                 $this,
-                 $tax,
-                 max(0.0, $tax->round($tax->round($tax_so_far) - $refunded_so_far))
-             );
-             $this->refunded_taxes->add($tax_refund);
+            $tax = $applied_tax->getTax();
+            $so_far[$tax->getId()] ??= [$tax, 0.0, 0];
+            $so_far[$tax->getId()][1] += $applied_tax->applyTo($amount_2_refund, false);
+            $cents[$tax->getId()] = 0;
+        }
+        $owed = 0;
+        foreach ($so_far as $tax_id => list($tax, $tax_so_far, $refunded_so_far)) {
+            $tax_owed = self::convertToCents($tax->round($tax_so_far));
+            $owed += $tax_owed;
+            if (isset($cents[$tax_id])) $cents[$tax_id] = max(0, $tax_owed - $refunded_so_far);
+        }
+        // A refund approved before refunds followed the charge sent the gateway
+        // its total rounded once, which can be a cent more or less than its tax
+        // refunds add up to, also on a tax this ticket does not carry. This
+        // refund makes up for it, so that the order as a whole gives back the
+        // tax it was charged.
+        $off = max(0, $owed - $sent_so_far) - array_sum($cents);
+        arsort($cents);
+        foreach ($cents as $tax_id => $tax_cents) {
+            $cents[$tax_id] = max(0, $tax_cents + $off);
+            $off -= $cents[$tax_id] - $tax_cents;
+        }
+        foreach ($this->ticket->getAppliedTaxes() as $applied_tax) {
+            $tax = $applied_tax->getTax();
+            $this->refunded_taxes->add(new SummitTaxRefund($this, $tax, $cents[$tax->getId()] / 100));
         }
         return $this->refunded_taxes;
     }
 
     /**
-     * What the order's other approved refunds add up to, by tax id: the tax on
-     * the refunded ticket price before rounding, and the tax given back.
+     * What the order's other approved refunds add up to. By tax id: the tax,
+     * the tax on the refunded ticket price before rounding, and the cents of
+     * it given back. And the cents of tax they sent to the payment gateway.
      * The tax is worked out again from the refunded ticket price because the
      * tax refunds stored before refunds followed the charge are not rounded.
-     * @return float[][]
+     * @return array
      */
     private function getOrderTaxRefundsSoFar():array{
         $so_far = [];
+        $sent_so_far = 0;
         foreach ($this->ticket->getOrder()->getTickets() as $ticket) {
             foreach ($ticket->getRefundedRequests() as $request) {
                 // approve() marks this request as approved before its taxes are calculated
                 if ($request === $this) continue;
                 if ($request->getStatus() !== ISummitRefundRequestConstants::ApprovedStatus) continue;
+                // a refund approved before tax refunds were recorded has none: no tax to follow
+                if ($request->getRefundedTaxes()->isEmpty()) continue;
                 foreach ($ticket->getAppliedTaxes() as $applied_tax) {
-                    $tax_id = $applied_tax->getTax()->getId();
-                    $so_far[$tax_id] ??= [0.0, 0.0];
-                    $so_far[$tax_id][0] += $applied_tax->applyTo($request->getRefundedAmount(), false);
+                    $tax = $applied_tax->getTax();
+                    $so_far[$tax->getId()] ??= [$tax, 0.0, 0];
+                    $so_far[$tax->getId()][1] += $applied_tax->applyTo($request->getRefundedAmount(), false);
                 }
-                foreach (self::getTaxesSentToGatewayInCents($request) as $tax_id => $cents) {
-                    $so_far[$tax_id] ??= [0.0, 0.0];
-                    $so_far[$tax_id][1] += $cents / 100;
+                foreach ($request->getRefundedTaxes() as $tax_refund) {
+                    $tax = $tax_refund->getTax();
+                    $so_far[$tax->getId()] ??= [$tax, 0.0, 0];
+                    $so_far[$tax->getId()][2] += $tax_refund->getRefundedAmountInCents();
                 }
+                // the gateway is sent the total of the request rounded once
+                $sent_so_far += $request->getTotalRefundedAmountInCents() - $request->getRefundedAmountInCents();
             }
         }
-        return $so_far;
-    }
-
-    /**
-     * What an approved refund gave back of each tax, by tax id, in cents that
-     * add up to the tax it sent to the payment gateway. The gateway is sent
-     * the total of the request rounded once (getTotalRefundedAmountInCents),
-     * and the tax refunds stored before refunds followed the charge are not
-     * rounded: rounded one by one they can add up to a cent more or less than
-     * what was sent. That cent goes to the tax that was furthest from its
-     * rounded amount.
-     * @return int[]
-     */
-    private static function getTaxesSentToGatewayInCents(SummitRefundRequest $request):array{
-        $cents = [];
-        $left_over = [];
-        foreach ($request->getRefundedTaxes() as $tax_refund) {
-            $tax_id = $tax_refund->getTax()->getId();
-            $exact = $tax_refund->getRefundedAmount() * 100;
-            $cents[$tax_id] = intval(round($exact));
-            $left_over[$tax_id] = $exact - $cents[$tax_id];
-        }
-        $diff = $request->getTotalRefundedAmountInCents() - $request->getRefundedAmountInCents() - array_sum($cents);
-        if ($diff > 0) arsort($left_over); else asort($left_over);
-        foreach (array_keys($left_over) as $tax_id) {
-            if ($diff === 0) break;
-            $cents[$tax_id] += $diff <=> 0;
-            $diff -= $diff <=> 0;
-        }
-        return $cents;
+        return [$so_far, $sent_so_far];
     }
 
 }

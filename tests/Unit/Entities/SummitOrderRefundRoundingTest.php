@@ -65,8 +65,11 @@ final class SummitOrderRefundRoundingTest extends TestCase
      * @param float $price ticket price
      * @param int $qty tickets on the order
      * @param float[] $rates one tax per rate, in percent
+     * @param float[][] $rates_of_ticket by ticket position, the rates of the
+     * taxes a ticket carries when it does not carry all of them: a tax can be
+     * limited to some ticket types (SummitTaxType::mustApplyTo)
      */
-    private static function buildOrder(float $price, int $qty, array $rates): SummitOrder
+    private static function buildOrder(float $price, int $qty, array $rates, array $rates_of_ticket = []): SummitOrder
     {
         // a ticket type asks its summit for the default badge type, and a
         // ticket takes its summit from the order
@@ -90,7 +93,9 @@ final class SummitOrderRefundRoundingTest extends TestCase
         for ($i = 0; $i < $qty; $i++) {
             $ticket = self::withId(new SummitAttendeeTicket());
             $ticket->setTicketType($ticket_type);
-            $ticket->applyTaxes($taxes);
+            $ticket->applyTaxes(array_filter(
+                $taxes, fn(SummitTaxType $tax) => in_array($tax->getRate(), $rates_of_ticket[$i] ?? $rates)
+            ));
             $order->addTicket($ticket);
         }
         return $order;
@@ -131,15 +136,18 @@ final class SummitOrderRefundRoundingTest extends TestCase
             'one ticket, two taxes, refunded in parts' => [10.20, 1, [19.0, 2.5], [4.0, 4.0, 2.2], 1240],
             // whole cents all the way: nothing to round
             'one ticket, one tax, no fractions' => [1.00, 1, [19.0], [1.00], 119],
+            // 1.938 of the first tax per ticket and 0.255 of the second on the
+            // first ticket only: charged 3.88 + 0.26
+            'two tickets, the second without the second tax' => [10.20, 2, [19.0, 2.5], [10.20], 2454, [1 => [19.0]]],
         ];
     }
 
     #[DataProvider('fullyRefundedOrders')]
     public function testFullRefundSendsBackExactlyWhatWasCharged(
-        float $price, int $qty, array $rates, array $parts, int $charged_cents
+        float $price, int $qty, array $rates, array $parts, int $charged_cents, array $rates_of_ticket = []
     ): void
     {
-        $order = self::buildOrder($price, $qty, $rates);
+        $order = self::buildOrder($price, $qty, $rates, $rates_of_ticket);
         // what StripeApi::generatePayment charges
         $this->assertSame($charged_cents, $order->getFinalAmountInCents(), 'charged amount');
 
@@ -150,10 +158,10 @@ final class SummitOrderRefundRoundingTest extends TestCase
 
     #[DataProvider('fullyRefundedOrders')]
     public function testRefundsNeverGoOverTheCharge(
-        float $price, int $qty, array $rates, array $parts, int $charged_cents
+        float $price, int $qty, array $rates, array $parts, int $charged_cents, array $rates_of_ticket = []
     ): void
     {
-        $order = self::buildOrder($price, $qty, $rates);
+        $order = self::buildOrder($price, $qty, $rates, $rates_of_ticket);
         $running = 0;
         foreach ($order->getTickets() as $ticket) {
             foreach ($parts as $part) {
@@ -165,10 +173,10 @@ final class SummitOrderRefundRoundingTest extends TestCase
 
     #[DataProvider('fullyRefundedOrders')]
     public function testRefundedTaxReadsTheSameEitherWayAClientAddsItUp(
-        float $price, int $qty, array $rates, array $parts, int $charged_cents
+        float $price, int $qty, array $rates, array $parts, int $charged_cents, array $rates_of_ticket = []
     ): void
     {
-        $order = self::buildOrder($price, $qty, $rates);
+        $order = self::buildOrder($price, $qty, $rates, $rates_of_ticket);
         self::refundEveryTicket($order, $parts);
 
         // the order's own totals, as the API serializes them (json_money)
@@ -208,15 +216,20 @@ final class SummitOrderRefundRoundingTest extends TestCase
             // 1.938 + 0.255 of tax per ticket: charged 3.88 + 0.51. The old
             // code sent 10.20 + 2.193 as 12.39
             'two tickets, two taxes, the old refund a cent short' => [10.20, 2, [19.0, 2.5], 1, 2479],
+            // 1.9228 of the first tax per ticket and 0.253 of the second on the
+            // first ticket only: charged 3.85 + 0.25. The old code sent
+            // 10.12 + 2.1758 as 12.30, and the ticket left to refund has no
+            // second tax to take that cent from
+            'two tickets, the second without the second tax, the old refund a cent over its taxes' => [10.12, 2, [19.0, 2.5], 1, 2434, [1 => [19.0]]],
         ];
     }
 
     #[DataProvider('ordersPartlyRefundedBeforeThisChange')]
     public function testOrderPartlyRefundedBeforeThisChangeEndsOnTheCharge(
-        float $price, int $qty, array $rates, int $refunded_before, int $charged_cents
+        float $price, int $qty, array $rates, int $refunded_before, int $charged_cents, array $rates_of_ticket = []
     ): void
     {
-        $order = self::buildOrder($price, $qty, $rates);
+        $order = self::buildOrder($price, $qty, $rates, $rates_of_ticket);
         $this->assertSame($charged_cents, $order->getFinalAmountInCents(), 'charged amount');
 
         $sent = [];
@@ -245,6 +258,23 @@ final class SummitOrderRefundRoundingTest extends TestCase
                     $amount->setValue($tax_refund, $applied_tax->applyTo($request->getRefundedAmount(), false));
             }
         }
+    }
+
+    /**
+     * Tax refunds are on record since the SummitTaxRefund table was added
+     * (migration Version20240226193210). A refund approved before has none, so
+     * it is not part of the running total: a later refund on its order gives
+     * back the tax on its own ticket price and nothing for the earlier one.
+     */
+    public function testRefundWithoutTaxRefundsOnRecordIsLeftOutOfTheRunningTotal(): void
+    {
+        $order = self::buildOrder(10.00, 2, [19.0]);
+        [$first, $second] = $order->getTickets()->toArray();
+        $first->refund(null, 10.00, null, null, false)->getRefundedTaxes()->clear();
+
+        $request = $second->refund(null, 10.00, null, null, false);
+
+        $this->assertSame(1190, $request->getTotalRefundedAmountInCents());
     }
 
     private static function cents(float $amount): int

@@ -1084,7 +1084,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
             required: true,

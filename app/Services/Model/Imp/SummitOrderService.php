@@ -2641,8 +2641,9 @@ final class SummitOrderService
 
             $ticket = $this->ticket_repository->getById(intval($ticket_id));
 
+            // by ticket number; not locked here, the order is locked before the ticket
             if (!$ticket instanceof SummitAttendeeTicket)
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                $ticket = $this->ticket_repository->getByNumber(strval($ticket_id));
 
             if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('Ticket not found.');

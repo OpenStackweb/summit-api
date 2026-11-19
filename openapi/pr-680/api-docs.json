@@ -62524,10 +62524,10 @@
                     {
                         "name": "ticket_id",
                         "in": "path",
-                        "description": "Ticket ID",
+                        "description": "Ticket ID or number",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     }
                 ],

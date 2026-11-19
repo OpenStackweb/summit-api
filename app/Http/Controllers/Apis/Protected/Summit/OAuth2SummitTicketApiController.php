@@ -1210,7 +1210,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
         ],
         requestBody: new OA\RequestBody(
             required: false,
@@ -1264,7 +1264,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
         ],
         responses: [
             new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Badge deleted successfully'),
@@ -1300,7 +1300,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'type_id', in: 'path', required: true, description: 'Badge Type ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -1346,7 +1346,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'feature_id', in: 'path', required: true, description: 'Feature ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
@@ -1392,7 +1392,7 @@ final class OAuth2SummitTicketApiController extends OAuth2ProtectedController
         tags: ['Tickets'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, description: 'Summit ID', schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID', schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ticket_id', in: 'path', required: true, description: 'Ticket ID or number', schema: new OA\Schema(type: 'string')),
             new OA\Parameter(name: 'feature_id', in: 'path', required: true, description: 'Feature ID', schema: new OA\Schema(type: 'integer')),
         ],
         responses: [

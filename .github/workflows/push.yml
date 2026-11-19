@@ -83,6 +83,7 @@ jobs:
                     - { name: "SpeakerBulkEmailChunkResume", filter: "tests/SpeakerServiceBulkSendChunkingTest.php tests/SpeakerServiceResumeSendEmailsTest.php tests/ProcessSpeakersEmailRequestJobResumeTest.php tests/ProcessSpeakersEmailRequestJobFailedHookTest.php" }
                     - { name: "AttendeeBulkEmailChunkResume", filter: "tests/AttendeeServiceBulkSendChunkingTest.php tests/AttendeeServiceResumeSendEmailsTest.php tests/ProcessAttendeesEmailRequestJobResumeTest.php tests/ProcessAttendeesEmailRequestJobFailedHookTest.php tests/SummitAttendeeAnnouncementEmailTest.php tests/DoctrineSummitAttendeeRepositoryTest.php tests/SummitExtraQuestionsMemoizationTest.php" }
                     - { name: "SummitJsonGenerator", filter: "tests/SummitJsonGeneratorCommandTest.php" }
+                    - { name: "SummitOrderRefundSerialization", filter: "tests/SummitOrderRefundSerializationTest.php" }
                     - { name: "Repositories", filter: "tests/Repositories/" }
                     - { name: "Services", filter: "tests/Unit/Services/" }
                     - { name: "Integration", filter: "tests/Integration/" }

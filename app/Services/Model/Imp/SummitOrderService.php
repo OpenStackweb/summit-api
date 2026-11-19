@@ -2639,10 +2639,11 @@ final class SummitOrderService
                 )
             );
 
-            $ticket = $this->ticket_repository->getByIdExclusiveLock(intval($ticket_id));
+            $ticket = $this->ticket_repository->getById(intval($ticket_id));
 
+            // by ticket number; not locked here, the order is locked before the ticket
             if (!$ticket instanceof SummitAttendeeTicket)
-                $this->ticket_repository->getByNumberExclusiveLock(strval($ticket_id));
+                $ticket = $this->ticket_repository->getByNumber(strval($ticket_id));
 
             if (!$ticket instanceof SummitAttendeeTicket)
                 throw new EntityNotFoundException('Ticket not found.');
@@ -2650,6 +2651,19 @@ final class SummitOrderService
             if ($amount_2_refund <= 0.0) {
                 throw new ValidationException("Can not refund an amount lower than zero.");
             }
+
+            // A refund works out its taxes from what the order has refunded so
+            // far, so refunds of the same order are approved one at a time:
+            // lock the order first, then the ticket.
+            $order = $this->order_repository->getByIdExclusiveLockRefreshingRefunds($ticket->getOrderId());
+
+            if (!$order instanceof SummitOrder || $order->getSummitId() != $summit->getId())
+                throw new EntityNotFoundException('Ticket not found.');
+
+            $ticket = $this->ticket_repository->getByIdExclusiveLock($ticket->getId());
+
+            if (!$ticket instanceof SummitAttendeeTicket)
+                throw new EntityNotFoundException('Ticket not found.');
 
             if (!$ticket->canRefund($amount_2_refund)) {
                 throw new ValidationException
@@ -2661,11 +2675,6 @@ final class SummitOrderService
                     )
                 );
             }
-
-            $order = $ticket->getOrder();
-
-            if ($order->getSummitId() != $summit->getId())
-                throw new EntityNotFoundException('Ticket not found.');
 
             $request = $ticket->refund($currentUser, $amount_2_refund, null, $notes);
 

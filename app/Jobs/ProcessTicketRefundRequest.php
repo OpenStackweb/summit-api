@@ -13,6 +13,7 @@
  **/
 
 use App\Models\Foundation\Summit\Registration\IBuildDefaultPaymentGatewayProfileStrategy;
+use App\Models\Foundation\Summit\Repositories\ISummitOrderRepository;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -24,6 +25,7 @@ use models\exceptions\ValidationException;
 use models\summit\IPaymentConstants;
 use models\summit\ISummitAttendeeTicketRepository;
 use models\summit\SummitAttendeeTicket;
+use models\summit\SummitOrder;
 
 /**
  * Class ProcessTicketRefundRequest
@@ -60,25 +62,38 @@ class ProcessTicketRefundRequest implements ShouldQueue
      * @param IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy
      * @param ISummitAttendeeTicketRepository $repository
      * @param ITransactionService $tx_service
+     * @param ISummitOrderRepository $order_repository
      * @throws \Exception
      */
     public function handle
     (
         IBuildDefaultPaymentGatewayProfileStrategy $default_payment_gateway_strategy,
         ISummitAttendeeTicketRepository $repository,
-        ITransactionService $tx_service
+        ITransactionService $tx_service,
+        ISummitOrderRepository $order_repository
     )
     {
         // todo : move to service layer
         try {
-            $tx_service->transaction(function () use ($default_payment_gateway_strategy, $repository) {
+            $tx_service->transaction(function () use ($default_payment_gateway_strategy, $repository, $order_repository) {
 
                 Log::debug(sprintf("ProcessTicketRefundRequest::handle processing ticket %s", $this->ticket_id));
+                $ticket = $repository->getById($this->ticket_id);
+
+                if (!$ticket instanceof SummitAttendeeTicket) return;
+
+                // A refund works out its taxes from what the order has refunded so
+                // far, and refunding a whole order queues one of these jobs per
+                // ticket: lock the order first, then the ticket, so they are
+                // approved one at a time.
+                $order = $order_repository->getByIdExclusiveLockRefreshingRefunds($ticket->getOrderId());
+
+                if (!$order instanceof SummitOrder) return;
+
                 $ticket = $repository->getByIdExclusiveLock($this->ticket_id);
 
                 if (!$ticket instanceof SummitAttendeeTicket || !$ticket->isRefundRequested()) return;
 
-                $order = $ticket->getOrder();
                 $summit = $order->getSummit();
                 Log::debug(sprintf("ProcessTicketRefundRequest::handle got ticket %s", $ticket->getNumber()));
 

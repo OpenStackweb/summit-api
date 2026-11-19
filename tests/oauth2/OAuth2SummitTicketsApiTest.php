@@ -295,6 +295,43 @@ final class OAuth2SummitTicketsApiTest extends ProtectedApiTestCase
         $this->assertTrue($refund_requests->total == 1);
     }
 
+    /**
+     * The endpoint takes the ticket id or the ticket number (TICKET_...).
+     */
+    public function testRefundTicketByNumber()
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+
+        $params = [
+            'id' => self::$summit->getId(),
+            'ticket_id' => $ticket->getNumber(),
+            'expand' => 'refund_requests'
+        ];
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        $response = $this->action(
+            "DELETE",
+            "OAuth2SummitTicketApiController@refundTicket",
+            $params,
+            [],
+            [],
+            [],
+            $headers,
+            json_encode(['amount' => 1.5])
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $refunded = json_decode($content);
+        $this->assertSame($ticket->getNumber(), $refunded->number);
+        $this->assertCount(1, $refunded->refund_requests);
+        $this->assertEquals(1.5, $refunded->refund_requests[0]->refunded_amount);
+    }
+
     public function testRejectRefund(){
         $ticket = self::$summit_orders[0]->getFirstTicket();
         $order = $ticket->getOrder();

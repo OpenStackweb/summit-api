@@ -118,14 +118,42 @@ class SummitAttendeeTicketRefundRequest extends SummitRefundRequest
                     $so_far[$tax_id] ??= [0.0, 0.0];
                     $so_far[$tax_id][0] += $applied_tax->applyTo($request->getRefundedAmount(), false);
                 }
-                foreach ($request->getRefundedTaxes() as $tax_refund) {
-                    $tax_id = $tax_refund->getTax()->getId();
+                foreach (self::getTaxesSentToGatewayInCents($request) as $tax_id => $cents) {
                     $so_far[$tax_id] ??= [0.0, 0.0];
-                    $so_far[$tax_id][1] += $tax_refund->getRefundedAmount();
+                    $so_far[$tax_id][1] += $cents / 100;
                 }
             }
         }
         return $so_far;
+    }
+
+    /**
+     * What an approved refund gave back of each tax, by tax id, in cents that
+     * add up to the tax it sent to the payment gateway. The gateway is sent
+     * the total of the request rounded once (getTotalRefundedAmountInCents),
+     * and the tax refunds stored before refunds followed the charge are not
+     * rounded: rounded one by one they can add up to a cent more or less than
+     * what was sent. That cent goes to the tax that was furthest from its
+     * rounded amount.
+     * @return int[]
+     */
+    private static function getTaxesSentToGatewayInCents(SummitRefundRequest $request):array{
+        $cents = [];
+        $left_over = [];
+        foreach ($request->getRefundedTaxes() as $tax_refund) {
+            $tax_id = $tax_refund->getTax()->getId();
+            $exact = $tax_refund->getRefundedAmount() * 100;
+            $cents[$tax_id] = intval(round($exact));
+            $left_over[$tax_id] = $exact - $cents[$tax_id];
+        }
+        $diff = $request->getTotalRefundedAmountInCents() - $request->getRefundedAmountInCents() - array_sum($cents);
+        if ($diff > 0) arsort($left_over); else asort($left_over);
+        foreach (array_keys($left_over) as $tax_id) {
+            if ($diff === 0) break;
+            $cents[$tax_id] += $diff <=> 0;
+            $diff -= $diff <=> 0;
+        }
+        return $cents;
     }
 
 }

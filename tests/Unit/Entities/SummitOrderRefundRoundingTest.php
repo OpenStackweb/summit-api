@@ -18,6 +18,8 @@ use libs\utils\JsonUtils;
 use models\summit\Summit;
 use models\summit\SummitAttendeeTicket;
 use models\summit\SummitOrder;
+use models\summit\SummitRefundRequest;
+use models\summit\SummitTaxRefund;
 use models\summit\SummitTaxType;
 use models\summit\SummitTicketType;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -192,6 +194,57 @@ final class SummitOrderRefundRoundingTest extends TestCase
         $this->assertSame($from_refund_requests, $from_order_totals);
         // and it is the tax the order was charged
         $this->assertSame($order->getTaxesAmountInCents(), $from_order_totals);
+    }
+
+    public static function ordersPartlyRefundedBeforeThisChange(): array
+    {
+        return [
+            // 1.9228 + 0.253 of tax per ticket: charged 3.85 + 0.51. The old
+            // code sent 10.12 + 2.1758 as 12.30, a cent more than its two
+            // taxes rounded one by one
+            'two tickets, two taxes, the old refund a cent over its taxes' => [10.12, 2, [19.0, 2.5], 1, 2460],
+            // 9.025 of tax per ticket, sent as 9.03 by the old code: charged round(36.10)
+            'four tickets, one tax, half a cent of tax per ticket' => [47.50, 4, [19.0], 1, 22610],
+            // 1.938 + 0.255 of tax per ticket: charged 3.88 + 0.51. The old
+            // code sent 10.20 + 2.193 as 12.39
+            'two tickets, two taxes, the old refund a cent short' => [10.20, 2, [19.0, 2.5], 1, 2479],
+        ];
+    }
+
+    #[DataProvider('ordersPartlyRefundedBeforeThisChange')]
+    public function testOrderPartlyRefundedBeforeThisChangeEndsOnTheCharge(
+        float $price, int $qty, array $rates, int $refunded_before, int $charged_cents
+    ): void
+    {
+        $order = self::buildOrder($price, $qty, $rates);
+        $this->assertSame($charged_cents, $order->getFinalAmountInCents(), 'charged amount');
+
+        $sent = [];
+        foreach ($order->getTickets()->toArray() as $i => $ticket) {
+            $request = $ticket->refund(null, $price, null, null, false);
+            if ($i < $refunded_before) self::storeTaxRefundsAsBeforeThisChange($ticket, $request);
+            $sent[] = $request->getTotalRefundedAmountInCents();
+        }
+
+        $this->assertSame($charged_cents, array_sum($sent), 'sent to the gateway: ' . implode(' + ', $sent));
+    }
+
+    /**
+     * Before this change a refund stored each tax on the refunded ticket price
+     * as it came out, not rounded to cents, and the gateway was sent the total
+     * of the request rounded once.
+     */
+    private static function storeTaxRefundsAsBeforeThisChange(
+        SummitAttendeeTicket $ticket, SummitRefundRequest $request
+    ): void
+    {
+        $amount = new \ReflectionProperty(SummitTaxRefund::class, 'refunded_amount');
+        foreach ($request->getRefundedTaxes() as $tax_refund) {
+            foreach ($ticket->getAppliedTaxes() as $applied_tax) {
+                if ($applied_tax->getTax() === $tax_refund->getTax())
+                    $amount->setValue($tax_refund, $applied_tax->applyTo($request->getRefundedAmount(), false));
+            }
+        }
     }
 
     private static function cents(float $amount): int

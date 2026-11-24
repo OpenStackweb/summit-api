@@ -552,10 +552,13 @@ interface ISummitService
      * Process pending media uploads from the PendingMediaUpload table.
      * 429 rate-limit handling is now transparently handled by RetryAfterDropboxClient.
      *
-     * @param int $max_retries Maximum retry attempts per upload across cron runs (default 3)
+     * Attempts are spaced with exponential backoff (5, 10, 20, 40 ... minutes since the last
+     * failed attempt); when the budget is exhausted the row is marked Error and logged at error level.
+     *
+     * @param int $max_retries Maximum retry attempts per upload across cron runs (default 5)
      * @return array Stats array: ['processed' => int, 'errors' => int]
      */
-    public function processPendingMediaUploads(int $max_retries = 3): array;
+    public function processPendingMediaUploads(int $max_retries = 5): array;
 
     /**
      * @param Summit $summit

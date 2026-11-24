@@ -773,6 +773,17 @@ final class ApplyPromoCodeTask extends AbstractTask
     private $owner;
 
     /**
+     * Usages applied (and committed) by this task instance, one entry per promo code.
+     * Filled by applyUsages() right after each code's transaction commits and consumed
+     * by undo(), which releases each entry exactly once. Tracking it on the instance
+     * (formerState is only updated when run() completes) lets run() compensate the
+     * codes it already applied when a later one is rejected.
+     *
+     * @var array<int, array{code: string, qty: int}>
+     */
+    private $applied = [];
+
+    /**
      * ApplyPromoCodeTask constructor.
      * @param Summit $summit
      * @param array $payload
@@ -815,6 +826,37 @@ final class ApplyPromoCodeTask extends AbstractTask
         $this->summit = $summit_repository->getById($this->summit->getId());
         $owner_company_name = TaskUtils::getOwnerCompanyName($this->summit, $this->payload);
 
+        // Saga::run() only marks a task as "ran" AFTER run() returns. If code A is applied
+        // (its own transaction already committed) and code B is then rejected, the exception
+        // propagates before markAsRan(), so Saga::abort() never calls this task's undo() and
+        // code A's usage would leak. Release what this run applied before rethrowing.
+        try {
+            $this->applyUsages($promo_codes_usage, $owner_email, $owner_company_name);
+        } catch (\Exception $ex) {
+            try {
+                $this->undo();
+            } catch (\Throwable $undo_ex) {
+                // never mask the exception that rejected the reservation
+                Log::error(sprintf("ApplyPromoCodeTask::run undo failed: %s", $undo_ex->getMessage()));
+                Log::error($undo_ex);
+            }
+            throw $ex;
+        }
+
+        return $this->formerState;
+    }
+
+    /**
+     * Applies each promo code usage on its own transaction, recording it in $this->applied
+     * as soon as it commits.
+     *
+     * @param array $promo_codes_usage
+     * @param string $owner_email
+     * @param string|null $owner_company_name
+     * @throws \Exception
+     */
+    private function applyUsages(array $promo_codes_usage, string $owner_email, ?string $owner_company_name): void
+    {
         foreach ($promo_codes_usage as $promo_code_value => $info) {
 
             $this->tx_service->transaction(function () use ($owner_email, $owner_company_name, $promo_code_value, $info) {
@@ -859,45 +901,62 @@ final class ApplyPromoCodeTask extends AbstractTask
                 }, 30);
 
             });
-            // mark a done
-            $promo_codes_usage[$promo_code_value]['redeem'] = true;
+            // mark as done: visible to undo() from now on
+            $this->applied[] = ['code' => $promo_code_value, 'qty' => intval($info['qty'])];
         }
-        // update state
-        $this->formerState['promo_codes_usage'] = $promo_codes_usage;
-
-        return $this->formerState;
     }
 
+    /**
+     * Releases the usages applied by this task instance. Idempotent: each entry is dropped
+     * from $applied once released, so the local release done by run() on failure plus a later
+     * Saga::abort() can not release the same usage twice. A release that fails is logged and
+     * kept in $applied, so it does not block the remaining codes and a later undo() retries
+     * only the entries that did not go through.
+     */
     public function undo()
     {
         Log::debug
         (
             sprintf
             (
-                "ApplyPromoCodeTask::undo: compensating transaction former state %s payload %s",
-                json_encode($this->formerState),
+                "ApplyPromoCodeTask::undo: compensating transaction applied %s payload %s",
+                json_encode($this->applied),
                 json_encode($this->payload)
             )
         );
 
-        $promo_codes_usage = $this->formerState['promo_codes_usage'];
         $owner_email = $this->payload['owner_email'];
 
-        foreach ($promo_codes_usage as $code => $info) {
-            Log::debug(sprintf("ApplyPromoCodeTask::undo undoing promo code %s info %s owner_email %s", $code, json_encode($info), $owner_email));
+        // a failing release must not block the release of the remaining codes:
+        // failed entries are kept so a later undo() can retry them
+        $remaining = [];
 
-            $this->tx_service->transaction(function () use ($code, $info, $owner_email) {
-                $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $code);
-                if (is_null($promo_code)) return;
+        foreach ($this->applied as $entry) {
+            $code = $entry['code'];
+            Log::debug(sprintf("ApplyPromoCodeTask::undo undoing promo code %s qty %s owner_email %s", $code, $entry['qty'], $owner_email));
 
-                if (!isset($info['redeem'])) return;
+            try {
+                // reload the code: instances from the failed transaction are detached
+                // once its rollback cleared the EntityManager
+                $this->tx_service->transaction(function () use ($code, $entry, $owner_email) {
+                    $promo_code = $this->promo_code_repository->getByValueExclusiveLock($this->summit, $code);
+                    if (is_null($promo_code)) return;
 
-                $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $info, $owner_email) {
-                    $promo_code->removeUsage(intval($info['qty']), $owner_email);
-                }, 30);
+                    $this->lock_service->lock('promocode.' . $promo_code->getId() . '.usage.lock', function () use ($promo_code, $entry, $owner_email) {
+                        $promo_code->removeUsage($entry['qty'], $owner_email);
+                    }, 30);
 
-            });
+                });
+            } catch (\Throwable $ex) {
+                Log::warning(sprintf(
+                    "ApplyPromoCodeTask::undo failed to release %s × %s: %s",
+                    $code, $entry['qty'], $ex->getMessage()
+                ));
+                $remaining[] = $entry;
+            }
         }
+
+        $this->applied = $remaining;
     }
 }
 

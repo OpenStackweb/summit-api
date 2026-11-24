@@ -14,6 +14,8 @@
 
 use App\Models\Foundation\Summit\Repositories\IPresentationMediaUploadRepository;
 use App\Repositories\SilverStripeDoctrineRepository;
+use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use models\summit\PresentationMediaUpload;
 use utils\Filter;
@@ -61,5 +63,19 @@ extends SilverStripeDoctrineRepository
     protected function applyExtraJoins(QueryBuilder $query, ?Filter $filter = null, ?Order $order = null){
         $query = $query->innerJoin("e.media_upload_type", "t");
         return $query;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getByIdFresh(int $id, bool $exclusive_lock = false): ?PresentationMediaUpload
+    {
+        // find() answers from the identity map without a query; a refreshing DQL read does not
+        $query = $this->getEntityManager()
+            ->createQuery(sprintf('SELECT e FROM %s e WHERE e.id = :id', PresentationMediaUpload::class))
+            ->setParameter('id', $id)
+            ->setHint(Query::HINT_REFRESH, true);
+        if ($exclusive_lock) $query->setLockMode(LockMode::PESSIMISTIC_WRITE);
+        return $query->getOneOrNullResult();
     }
 }

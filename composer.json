@@ -36,7 +36,7 @@
         "laravel-doctrine/extensions": "2.0.1",
         "laravel-doctrine/migrations": "3.4.0",
         "laravel-doctrine/orm": "3.1.1",
-        "laravel/framework": "12.70.2",
+        "laravel/framework": "12.71.0",
         "laravel/helpers": "^1.7.0",
         "laravel/tinker": "2.10.1",
         "league/csv": "^9.6",

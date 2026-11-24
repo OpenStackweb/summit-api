@@ -164,6 +164,7 @@ final class SerializerRegistry
 
     const SerializerType_Public = 'PUBLIC';
     const SerializerType_PublicV2 = 'PUBLIC_V2';
+    const SerializerType_PublicAttendance = 'PUBLIC_ATTENDANCE';
     const SerializerType_Private = 'PRIVATE';
     const SerializerType_Admin = 'ADMIN';
     const SerializerType_Admin_Voteable = 'ADMIN_VOTEABLE';
@@ -224,7 +225,11 @@ final class SerializerRegistry
 
         $this->registry['SummitMetric'] = SummitMetricSerializer::class;
         $this->registry['SummitSponsorMetric'] = SummitSponsorMetricSerializer::class;
-        $this->registry['SummitEventAttendanceMetric'] = SummitEventAttendanceMetricSerializer::class;
+        $this->registry['SummitEventAttendanceMetric'] = [
+            self::SerializerType_Public => SummitEventAttendanceMetricSerializer::class,
+            self::SerializerType_Private => SummitEventAttendanceMetricSerializer::class,
+            self::SerializerType_PublicAttendance => PublicSummitEventAttendanceMetricSerializer::class,
+        ];
 
         // stripe
         $this->registry['StripePaymentProfile'] = [
@@ -320,8 +325,8 @@ final class SerializerRegistry
 
         $this->registry['SummitGroupEvent'] = [
             self::SerializerType_Public => SummitGroupEventSerializer::class,
-            self::SerializerType_Private => SummitGroupEventSerializer::class,
-            self::SerializerType_CSV => SummitGroupEventSerializer::class,
+            self::SerializerType_Private => AdminSummitGroupEventSerializer::class,
+            self::SerializerType_CSV => AdminSummitGroupEventSerializer::class,
             IPresentationSerializerTypes::SecureStream => SummitEventSecureStreamSerializer::class,
             IPresentationSerializerTypes::OverflowStream => SummitEventOverflowStreamingSerializer::class,
             IPresentationSerializerTypes::StreamingInfo => SummitEventStreamingInfoSerializer::class,

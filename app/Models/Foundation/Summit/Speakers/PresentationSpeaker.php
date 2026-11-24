@@ -743,7 +743,8 @@ class PresentationSpeaker extends SilverstripeBaseModel
         string  $role = PresentationSpeaker::RoleSpeaker,
         bool    $exclude_privates_tracks = true,
         array   $excluded_tracks = [],
-        ?Filter $filter = null
+        ?Filter $filter = null,
+        bool    $published_only = false
     )
     {
         $private_tracks = [];
@@ -771,6 +772,10 @@ class PresentationSpeaker extends SilverstripeBaseModel
             $exclude_category_dql = ' AND p.category NOT IN (:exclude_tracks)';
         }
         $extraWhere = '';
+        if ($published_only) {
+            // accepted but not yet published presentations are not public data
+            $extraWhere .= " AND p.published = 1";
+        }
         if(!is_null($filter)){
             if($filter->hasFilter("presentations_selection_plan_id"))
             {
@@ -939,11 +944,12 @@ class PresentationSpeaker extends SilverstripeBaseModel
         string  $role = PresentationSpeaker::RoleSpeaker,
         bool    $include_sub_roles = false,
         array   $excluded_tracks = [],
-        ?Filter $filter = null
+        ?Filter $filter = null,
+        bool    $published_only = false
     )
     {
         $ids = [];
-        $acceptedPresentations = $this->getAcceptedPresentations($summit, $role, $include_sub_roles, $excluded_tracks, $filter);
+        $acceptedPresentations = $this->getAcceptedPresentations($summit, $role, $include_sub_roles, $excluded_tracks, $filter, $published_only);
         foreach ($acceptedPresentations as $p) {
             $ids[] = intval($p->getId());
         }

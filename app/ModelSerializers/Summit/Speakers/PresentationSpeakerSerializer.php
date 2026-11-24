@@ -40,6 +40,34 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         'badge_features',
     ];
 
+    /**
+     * Rejected submissions are not public data. Only the private/admin serializers
+     * (AdminPresentationSpeakerSerializer) override this to expose them.
+     * @return bool
+     */
+    protected function canExposeRejectedPresentations(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Alternate presentations are never published, so they are not public data.
+     * @return bool
+     */
+    protected function canExposeAlternatePresentations(): bool
+    {
+        return false;
+    }
+
+    /**
+     * When false, only published accepted presentations are returned.
+     * @return bool
+     */
+    protected function canExposeUnpublishedAcceptedPresentations(): bool
+    {
+        return false;
+    }
+
     protected function getMemberSerializerType():string {
         return SerializerRegistry::SerializerType_Public;
     }
@@ -119,18 +147,18 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
         }
 
         if (in_array('accepted_presentations', $relations) && !is_null($summit)) {
-            $accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null);
-            $moderated_accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit, PresentationSpeaker::RoleModerator, false, [], $params['filter'] ?? null);
+            $accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null, !$this->canExposeUnpublishedAcceptedPresentations());
+            $moderated_accepted_presentation_ids = $speaker->getAcceptedPresentationIds($summit, PresentationSpeaker::RoleModerator, false, [], $params['filter'] ?? null, !$this->canExposeUnpublishedAcceptedPresentations());
             $values['accepted_presentations'] = array_merge($accepted_presentation_ids, $moderated_accepted_presentation_ids);
         }
 
-        if (in_array('alternate_presentations', $relations) && !is_null($summit)) {
+        if ($this->canExposeAlternatePresentations() && in_array('alternate_presentations', $relations) && !is_null($summit)) {
             $alternate_presentation_ids = $speaker->getAlternatePresentationIds($summit, PresentationSpeaker::RoleSpeaker, false, [], false, $params['filter'] ?? null);
             $moderated_alternate_presentation_ids = $speaker->getAlternatePresentationIds($summit, PresentationSpeaker::RoleModerator,false, [], false, $params['filter'] ?? null);
             $values['alternate_presentations'] = array_merge($alternate_presentation_ids, $moderated_alternate_presentation_ids);
         }
 
-        if (in_array('rejected_presentations', $relations) && !is_null($summit)) {
+        if ($this->canExposeRejectedPresentations() && in_array('rejected_presentations', $relations) && !is_null($summit)) {
             $rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null);
             $moderated_rejected_presentation_ids = $speaker->getRejectedPresentationIds($summit, PresentationSpeaker::RoleModerator, false, [], $params['filter'] ?? null);
             $values['rejected_presentations'] = array_merge($rejected_presentation_ids, $moderated_rejected_presentation_ids);
@@ -271,7 +299,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
                         break;
                     case 'accepted_presentations': {
                         $accepted_presentations = [];
-                        foreach ($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, [], $params['filter'] ?? null) as $p) {
+                        foreach ($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleSpeaker, true, [], $params['filter'] ?? null, !$this->canExposeUnpublishedAcceptedPresentations()) as $p) {
                             $accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize
                             (
                                 AbstractSerializer::filterExpandByPrefix($expand, $relation),
@@ -280,7 +308,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
                             );
                         }
                         $moderated_accepted_presentations = [];
-                        foreach ($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, [], $params['filter'] ?? null) as $p) {
+                        foreach ($speaker->getAcceptedPresentations($summit, PresentationSpeaker::RoleModerator, true, [], $params['filter'] ?? null, !$this->canExposeUnpublishedAcceptedPresentations()) as $p) {
                             $moderated_accepted_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize
                             (
                                 AbstractSerializer::filterExpandByPrefix($expand, $relation),
@@ -292,6 +320,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
                     }
                         break;
                     case 'alternate_presentations': {
+                        if (!$this->canExposeAlternatePresentations()) break;
                         $alternate_presentations = [];
                         foreach ($speaker->getAlternatePresentations($summit, PresentationSpeaker::RoleSpeaker, false, [], false, $params['filter'] ?? null) as $p) {
                             $alternate_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize
@@ -314,6 +343,7 @@ class PresentationSpeakerSerializer extends PresentationSpeakerBaseSerializer
                     }
                         break;
                     case 'rejected_presentations': {
+                        if (!$this->canExposeRejectedPresentations()) break;
                         $rejected_presentations = [];
                         foreach ($speaker->getRejectedPresentations($summit, PresentationSpeaker::RoleSpeaker, false, [], $params['filter'] ?? null) as $p) {
                             $rejected_presentations[] = SerializerRegistry::getInstance()->getSerializer($p)->serialize

@@ -29,6 +29,7 @@ interface IGroup
     const FoundationMembers        = 'foundation-members';
     const SummitAdministrators     = 'summit-front-end-administrators';
     const SummitRoomAdministrators = 'summit-room-administrators';
+    const Stream                   = 'stream';
     const SummitRegistrationAdmins = 'summit-registration-administrators';
     const Testers                  = 'tester-groups';
     const Sponsors                 = 'sponsors';

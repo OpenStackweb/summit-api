@@ -2262,6 +2262,32 @@ final class SummitOrderService
                 $attendee = $summit->getAttendeeByMember($member);
             }
 
+            if (!is_null($member) && !is_null($attendee)) {
+                // the member can have only one attendee per summit
+                $member_attendee = $summit->getAttendeeByMember($member);
+                if (!is_null($member_attendee) && $member_attendee->getId() != $attendee->getId()) {
+                    Log::warning
+                    (
+                        sprintf
+                        (
+                            "SummitOrderService::ownerAssignTicket the email belongs to member %s that already has attendee %s in summit %s, attendee found by email is %s.",
+                            $member->getId(),
+                            $member_attendee->getId(),
+                            $summit->getId(),
+                            $attendee->getId()
+                        )
+                    );
+                    throw new ValidationException
+                    (
+                        sprintf
+                        (
+                            "Email %s belongs to a member that already has an attendee in this summit.",
+                            $email
+                        )
+                    );
+                }
+            }
+
             if (is_null($attendee)) {
                 // if attendee did not exists... create a new one
                 Log::debug

@@ -74,6 +74,15 @@ interface ISummitAttendeeRepository extends IBaseRepository
     public function getByEmailAndMemberNotSet(string $email);
 
     /**
+     * Member-less attendees with the member's email that can be linked to the member, that is, the
+     * ones in summits where the member has no attendee yet (SummitAttendee_Member_Summit allows one).
+     * Logs a warning for each skipped summit.
+     * @param Member $member
+     * @return SummitAttendee[]
+     */
+    public function getLinkableByMember(Member $member): array;
+
+    /**
      * @param Summit $summit
      * @param null|string $external_id
      * @return SummitAttendee|null

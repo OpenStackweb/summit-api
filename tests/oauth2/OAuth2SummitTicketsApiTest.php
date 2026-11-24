@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 use Mockery;
 use models\summit\IPaymentConstants;
 use models\summit\PaymentGatewayProfileFactory;
+use models\summit\SummitAttendee;
 
 /**
  * Class OAuth2SummitTicketsApiTest
@@ -1540,6 +1541,112 @@ CSV;
         $ticket = json_decode($content);
         $this->assertNotNull($ticket);
         return $ticket;
+    }
+
+    /**
+     * member2 has its own attendee in the summit and its email changes to the email of the
+     * member-less attendee, so assigning a ticket to that email would link two attendees
+     * of the same summit to member2.
+     */
+    private function assignTicketToEmailOfMemberOwningAnotherAttendee(bool $member_email_verified): void
+    {
+        $memberless_email = 'memberless@test.com';
+
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $order = $ticket->getOrder();
+        $order->setOwner(self::$member);
+        self::$member->addSummitRegistrationOrder($order);
+
+        $member2_attendee = new SummitAttendee();
+        $member2_attendee->setMember(self::$member2);
+        $member2_attendee->setEmail(self::$member2->getEmail());
+        $member2_attendee->setFirstName(self::$member2->getFirstName());
+        $member2_attendee->setSurname(self::$member2->getLastName());
+        self::$summit->addAttendee($member2_attendee);
+
+        $member2_original_email = self::$member2->getEmail();
+        $member2_original_verified = self::$member2->isEmailVerified();
+        self::$member2->setEmail($memberless_email);
+        self::$member2->setEmailVerified($member_email_verified);
+        self::$em->persist($order);
+        self::$em->flush();
+
+        try {
+            $this->assertAssignAttendeeRejected($order, $ticket, $member2_attendee, $memberless_email);
+        } finally {
+            // Member.Email is unique and this class does not clear the members between tests;
+            // plain SQL because the entity manager is closed after a failed request
+            self::$em->getConnection()->executeStatement(
+                'UPDATE Member SET Email = ?, EmailVerified = ? WHERE ID = ?',
+                [$member2_original_email, (int)$member2_original_verified, self::$member2->getId()]
+            );
+        }
+    }
+
+    private function assertAssignAttendeeRejected($order, $ticket, SummitAttendee $member2_attendee, string $memberless_email): void
+    {
+
+        $memberless_attendee = self::$summit->getAttendeeByEmailAndMemberNotSet($memberless_email);
+        $this->assertNotNull($memberless_attendee);
+        $memberless_attendee_id = $memberless_attendee->getId();
+        $db = self::$em->getConnection();
+        $member2_attendee_email = $db->fetchOne('SELECT Email FROM SummitAttendee WHERE ID = ?', [$member2_attendee->getId()]);
+        $attendees_count = $db->fetchOne('SELECT COUNT(ID) FROM SummitAttendee WHERE SummitID = ?', [self::$summit->getId()]);
+        $tickets_count = $db->fetchOne('SELECT COUNT(ID) FROM SummitAttendeeTicket WHERE OwnerID = ?', [$memberless_attendee_id]);
+
+        $response = $this->action(
+            "PUT",
+            "OAuth2SummitOrdersApiController@assignAttendee",
+            [
+                'order_id' => $order->getId(),
+                'ticket_id' => $ticket->getId(),
+            ],
+            [],
+            [],
+            [],
+            [
+                "HTTP_Authorization" => " Bearer " . $this->access_token,
+                "CONTENT_TYPE" => "application/json"
+            ],
+            json_encode([
+                'attendee_email' => $memberless_email,
+                'attendee_first_name' => 'Assigned',
+                'attendee_last_name' => 'Attendee',
+            ])
+        );
+
+        $this->assertResponseStatus(412);
+
+        // nothing changed
+        $row = $db->fetchAssociative(
+            'SELECT Email, MemberID, FirstName FROM SummitAttendee WHERE ID = ?',
+            [$memberless_attendee_id]
+        );
+        $this->assertEquals($memberless_email, $row['Email']);
+        $this->assertNull($row['MemberID']);
+        $this->assertNotEquals('Assigned', $row['FirstName']);
+        $this->assertEquals(
+            $tickets_count,
+            $db->fetchOne('SELECT COUNT(ID) FROM SummitAttendeeTicket WHERE OwnerID = ?', [$memberless_attendee_id])
+        );
+        $this->assertEquals(
+            $attendees_count,
+            $db->fetchOne('SELECT COUNT(ID) FROM SummitAttendee WHERE SummitID = ?', [self::$summit->getId()])
+        );
+        $this->assertEquals(
+            $member2_attendee_email,
+            $db->fetchOne('SELECT Email FROM SummitAttendee WHERE ID = ?', [$member2_attendee->getId()])
+        );
+    }
+
+    public function testAssignAttendeeEmailOfMemberWithAnotherAttendeeVerified()
+    {
+        $this->assignTicketToEmailOfMemberOwningAnotherAttendee(true);
+    }
+
+    public function testAssignAttendeeEmailOfMemberWithAnotherAttendeeNotVerified()
+    {
+        $this->assignTicketToEmailOfMemberOwningAnotherAttendee(false);
     }
 
     public function testRemoveAttendee()

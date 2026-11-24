@@ -431,6 +431,36 @@ SQL,
     }
 
     /**
+     * @param Member $member
+     * @return SummitAttendee[]
+     */
+    public function getLinkableByMember(Member $member): array
+    {
+        $res = [];
+        foreach ($this->getByEmailAndMemberNotSet($member->getEmail()) as $attendee) {
+            if (!$attendee instanceof SummitAttendee) continue;
+            $summit = $attendee->getSummit();
+            $member_attendee = $summit->getAttendeeByMember($member);
+            if (!is_null($member_attendee)) {
+                Log::warning
+                (
+                    sprintf
+                    (
+                        "DoctrineSummitAttendeeRepository::getLinkableByMember member %s already has attendee %s in summit %s, skipping member-less attendee %s.",
+                        $member->getId(),
+                        $member_attendee->getId(),
+                        $summit->getId(),
+                        $attendee->getId()
+                    )
+                );
+                continue;
+            }
+            $res[] = $attendee;
+        }
+        return $res;
+    }
+
+    /**
      * @param Summit $summit
      * @param string $email
      * @param null|string $first_name

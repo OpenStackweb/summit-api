@@ -168,4 +168,66 @@ class OAuth2SummitAdministratorPermissionGroupApiControllerTest
         $group = json_decode($content);
         $this->assertTrue(!is_null($group));
     }
+
+    /**
+     * Calls one of the endpoints that add or remove a single member or summit, and returns the group it answers.
+     */
+    private function changeGroup(string $http_method, string $action, array $params){
+        $response = $this->action(
+            $http_method,
+            "OAuth2SummitAdministratorPermissionGroupApiController@".$action,
+            $params,
+            [],
+            [],
+            [],
+            $this->getAuthHeaders()
+        );
+
+        $content = $response->getContent();
+        $this->assertResponseStatus(201);
+        $group = json_decode($content);
+        $this->assertTrue(!is_null($group));
+
+        return $group;
+    }
+
+    public function testAddMemberOK(){
+        $group = $this->changeGroup("PUT", "addMember", [
+            'group_id' => self::$summit_permission_group->getId(),
+            'member_id' => self::$member2->getId(),
+        ]);
+
+        $this->assertEquals([self::$member2->getId()], $group->members);
+    }
+
+    public function testRemoveMemberOK(){
+        self::$summit_permission_group->addMember(self::$member2);
+        self::$em->persist(self::$summit_permission_group);
+        self::$em->flush();
+
+        $group = $this->changeGroup("DELETE", "removeMember", [
+            'group_id' => self::$summit_permission_group->getId(),
+            'member_id' => self::$member2->getId(),
+        ]);
+
+        $this->assertEquals([], $group->members);
+    }
+
+    public function testAddSummitOK(){
+        $group = $this->changeGroup("PUT", "addSummit", [
+            'group_id' => self::$summit_permission_group->getId(),
+            'summit_id' => self::$summit2->getId(),
+        ]);
+
+        $this->assertEqualsCanonicalizing([self::$summit->getId(), self::$summit2->getId()], $group->summits);
+    }
+
+    public function testRemoveSummitOK(){
+        $group = $this->changeGroup("DELETE", "removeSummit", [
+            'group_id' => self::$summit_permission_group->getId(),
+            'summit_id' => self::$summit->getId(),
+        ]);
+
+        $this->assertEquals([], $group->summits);
+    }
 }

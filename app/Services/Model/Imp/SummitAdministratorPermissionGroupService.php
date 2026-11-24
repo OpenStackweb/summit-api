@@ -173,6 +173,8 @@ final class SummitAdministratorPermissionGroupService
                 throw new EntityNotFoundException();
 
             $group->addMember($member);
+
+            return $group;
         });
     }
 
@@ -188,6 +190,8 @@ final class SummitAdministratorPermissionGroupService
                 throw new EntityNotFoundException();
 
             $group->removeMember($member);
+
+            return $group;
         });
     }
 
@@ -202,6 +206,8 @@ final class SummitAdministratorPermissionGroupService
                 throw new EntityNotFoundException();
 
             $group->addSummit($summit);
+
+            return $group;
         });
     }
 
@@ -216,6 +222,8 @@ final class SummitAdministratorPermissionGroupService
                 throw new EntityNotFoundException();
 
             $group->removeSummit($summit);
+
+            return $group;
         });
     }
 }

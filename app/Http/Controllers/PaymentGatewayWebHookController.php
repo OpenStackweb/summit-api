@@ -27,6 +27,7 @@ use models\exceptions\EntityNotFoundException;
 use models\exceptions\ValidationException;
 use Exception;
 use OpenApi\Attributes as OA;
+use Stripe\Exception\SignatureVerificationException;
 
 /**
  * Class PaymentGatewayWebHookController
@@ -179,6 +180,11 @@ final class PaymentGatewayWebHookController extends JsonController
             Log::warning($ex);
             return $this->error412(["error" => 'payload error']);
         }
+        catch (SignatureVerificationException $ex){
+            // message only: the trace carries the webhook signing secret (verifyHeader() argument)
+            Log::warning(sprintf("PaymentGatewayWebHookController::genericConfirm application_type %s invalid signature: %s", $application_type, $ex->getMessage()));
+            return $this->error400(["error" => 'payload error']);
+        }
         catch (Exception $ex){
             Log::error($ex);
             return $this->error400(["error" => 'payload error']);
@@ -288,6 +294,11 @@ final class PaymentGatewayWebHookController extends JsonController
         catch(ValidationException $ex){
             Log::warning($ex);
             return $this->error412(["error" => 'payload error']);
+        }
+        catch (SignatureVerificationException $ex){
+            // message only: the trace carries the webhook signing secret (verifyHeader() argument)
+            Log::warning(sprintf("PaymentGatewayWebHookController::confirm summit %s application_type %s invalid signature: %s", $summit_id, $application_type, $ex->getMessage()));
+            return $this->error400(["error" => 'payload error']);
         }
         catch (Exception $ex){
             Log::error($ex);

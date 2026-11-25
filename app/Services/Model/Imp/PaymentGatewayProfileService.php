@@ -45,7 +45,7 @@ final class PaymentGatewayProfileService
         $built_profiles = [];
         try {
             $profile = $this->tx_service->transaction(function () use ($summit, $payload, &$built_profiles) {
-                Log::debug("PaymentGatewayProfileService::addPaymentProfilee", ["summit" => $summit->getId(), 'payload' => $payload]);
+                Log::debug("PaymentGatewayProfileService::addPaymentProfilee", ["summit" => $summit->getId(), 'payload' => PaymentGatewayProfile::toLogContext($payload)]);
                 $is_active = isset($payload['active']) && boolval($payload['active']) == true;
                 // check before building the profile, so that a rejected one never reaches the gateway
                 if ($is_active) {
@@ -128,7 +128,7 @@ final class PaymentGatewayProfileService
     public function updatePaymentProfile(Summit $summit, int $child_id, array $payload): ?PaymentGatewayProfile
     {
         return $this->tx_service->transaction(function () use ($summit, $child_id, $payload) {
-            Log::debug("PaymentGatewayProfileService::updatePaymentProfile", ["summit" => $summit->getId(), "profile_id" => $child_id, "payload" => $payload]);
+            Log::debug("PaymentGatewayProfileService::updatePaymentProfile", ["summit" => $summit->getId(), "profile_id" => $child_id, "payload" => PaymentGatewayProfile::toLogContext($payload)]);
             $profile = $summit->getPaymentProfileById($child_id);
             if (is_null($profile))
                 throw new EntityNotFoundException();

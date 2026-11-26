@@ -414,26 +414,14 @@ case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
 
 To add M2M audit support for a new entity:
 
-1. Add a combined `EVENT_COLLECTION_MANYTOMANY_UPDATE`/`DELETE` case to the entity's formatter's `switch`:
+1. Add a combined `EVENT_COLLECTION_MANYTOMANY_UPDATE`/`DELETE` case to the entity's formatter's `switch`, routing both events to the shared base method with the entity wording as the label:
    ```php
    case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
    case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
-       return $this->handleEntityManyToManyCollection($change_set, $id, $name);
+       return $this->formatManyToManyCollectionChange($change_set, sprintf("Entity '%s' (%s)", $name, $id));
    ```
-2. Implement the private handler following the two-step pattern:
-   ```php
-   private function handleEntityManyToManyCollection(array $change_set, $id, $name): ?string
-   {
-       $metadata = $this->handleManyToManyCollection($change_set);
-       if (!$metadata) return null;
-       $collectionData = $this->processCollection($metadata);
-       if (!$collectionData) return null;
-       return $this->event_type === IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE
-           ? $this->formatManyToManyDelete($collectionData, $id, $name)
-           : $this->formatManyToManyUpdate($collectionData, $id, $name);
-   }
-   ```
-3. Implement private `formatManyToManyUpdate()` and `formatManyToManyDelete()` with entity-specific message formatting.
+2. Nothing else is needed in the formatter. `AbstractAuditLogFormatter::formatManyToManyCollectionChange(array $change_set, string $label): ?string` runs the two-step pipeline (`handleManyToManyCollection()` then `processCollection()`), picks update or delete from `$this->event_type`, and builds the message `<label> <field> (<TargetEntity>) updated: Added IDs: [..], Removed IDs: [..] by user X` or `<label> <field> (<TargetEntity>) deleted: Removed IDs: [..] by user X`. It returns `null` when there is nothing to report. Do not copy private `formatManyToManyUpdate()` / `formatManyToManyDelete()` methods into a new formatter.
+3. If an entity needs a message that does not fit the shared shape, build it from `handleManyToManyCollection()` + `processCollection()` directly instead of overriding the base method.
 4. Register the entity in `config/audit_log.php` if not already present.
 
 When one entity is formatted by several classes — `Presentation` has a default strategy plus route-scoped strategies in `config/audit_log.php` — keep the handler in a single per-entity trait (`FormatsPresentationManyToManyCollections`) so every formatter of that entity shares it. An update without diff, or a delete with nothing to remove, returns `null` so no empty entry is emitted.
@@ -443,8 +431,25 @@ Current entities with M2M audit support:
 - `PresentationCategoryGroup` — `$categories` collection (`PresentationCategoryGroup_Categories`)
 - `Presentation` — `$sponsors`, `$tags`, `$allowed_ticket_types` (`BasePresentationAuditLogFormatter` subclasses and `PresentationUserSubmissionAuditLogFormatter`, via the `FormatsPresentationManyToManyCollections` trait)
 - `SummitEvent` — `$sponsors`, `$tags`, `$allowed_ticket_types` (`SummitEventAuditLogFormatter`)
+- `Summit` — `$excluded_categories_for_accepted_presentations`, `$excluded_categories_for_alternate_presentations`, `$excluded_categories_for_rejected_presentations`, `$excluded_categories_for_upload_slide_decks`, `$registration_companies` (`SummitAuditLogFormatter`)
+- `SelectionPlan` — `$category_groups`, `$event_types` (`SelectionPlanAuditLogFormatter`)
+- `SummitTrackChair` — `$categories` (`SummitTrackChairAuditLogFormatter`)
+- `SummitSubmissionInvitation` — `$tags` (`SubmissionInvitationAuditLogFormatter`)
+- `PresentationSpeaker` — `$languages`, `$organizational_roles`, `$active_involvements` (`PresentationSpeakerAuditLogFormatter`)
+- `PresentationCategory` — `$allowed_access_levels`, `$allowed_tags`, `$extra_questions` (`PresentationCategoryAuditLogFormatter`)
+- `PresentationType` — `$allowed_ticket_types` (`PresentationTypeAuditLogFormatter`)
+- `SummitEventType` — `$allowed_ticket_types` (`SummitEventTypeAuditLogFormatter`)
+- `SummitMediaUploadType` — `$presentation_types` (`SummitMediaUploadTypeAuditLogFormatter`)
+- `SummitDocument` — `$event_types` (`SummitDocumentAuditLogFormatter`)
+- `SummitBadgeType` — `$access_levels`, `$badge_features`, `$allowed_view_types` (`SummitBadgeTypeAuditLogFormatter`)
+- `SummitAttendeeBadge` — `$features` (`SummitAttendeeBadgeAuditLogFormatter`)
+- `SummitOrderExtraQuestionType` — `$allowed_ticket_types`, `$allowed_badge_features_types` (`SummitOrderExtraQuestionTypeAuditLogFormatter`)
+- `SummitTaxType` — `$ticket_types` (`SummitTaxTypeAuditLogFormatter`)
+- `PrePaidSummitRegistrationDiscountCode`, `SponsorSummitRegistrationDiscountCode`, `SponsorSummitRegistrationPromoCode` — `$badge_features`, `$allowed_ticket_types`, `$tags`, inherited from `SummitRegistrationPromoCode` (their three formatters)
+- `Sponsor` — `$members` (`SponsorAuditLogFormatter`)
+- `SummitBookableVenueRoom` — `$attributes` (`SummitBookableVenueRoomAuditLogFormatter`)
 
-Every other entity registered in `config/audit_log.php` that owns a many-to-many collection still drops these events, because the factory resolves the configured formatter and only falls back to the `Default*` formatters when an entity has no configuration. Extending them follows the steps above, one entity at a time.
+The factory resolves the configured formatter and only falls back to the `Default*` formatters when an entity has no configuration, so a configured entity whose formatter has no M2M case would drop these events. `tests/Unit/Audit/ManyToManyAuditCoverageTest.php` prevents that: for every entity in `config/audit_log.php` that owns a many-to-many collection (Doctrine metadata, owning side) it asserts that each configured formatter, including route-scoped `strategies[]` entries, handles `EVENT_COLLECTION_MANYTOMANY_UPDATE` and `DELETE`. There is no allowlist; configuring a new entity with an unhandled collection fails the test and names the entity, its collections and the formatter to fix.
 
 ### Test infrastructure
 

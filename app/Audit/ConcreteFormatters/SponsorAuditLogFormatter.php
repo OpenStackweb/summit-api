@@ -65,6 +65,10 @@ class SponsorAuditLogFormatter extends AbstractAuditLogFormatter
                         $summit_name,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Sponsor (%s) for Company '%s' in Summit '%s'", $id, $company_name, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("SponsorAuditLogFormatter error: " . $ex->getMessage());

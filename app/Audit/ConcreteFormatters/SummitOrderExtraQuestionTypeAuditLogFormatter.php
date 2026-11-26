@@ -42,6 +42,10 @@ class SummitOrderExtraQuestionTypeAuditLogFormatter extends AbstractAuditLogForm
                     return $this->formatUpdateMessage($change_set, fn($details) => sprintf("Order Extra Question '%s' (%s) in Summit '%s' updated: %s by user %s", $label, $id, $summit_name, $details, $this->getUserInfo()));
                 case IAuditStrategy::EVENT_ENTITY_DELETION:
                     return sprintf("Order Extra Question '%s' (%s) in Summit '%s' deleted by user %s", $label, $id, $summit_name, $this->getUserInfo());
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Order Extra Question '%s' (%s) in Summit '%s'", $label, $id, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("SummitOrderExtraQuestionTypeAuditLogFormatter error: " . $ex->getMessage());

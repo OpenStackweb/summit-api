@@ -62,6 +62,10 @@ class PresentationSpeakerAuditLogFormatter extends AbstractAuditLogFormatter
                         $email,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Speaker '%s' (%s)", $full_name, $speaker_id));
             }
         } catch (\Exception $ex) {
             Log::warning("PresentationSpeakerAuditLogFormatter error: " . $ex->getMessage());

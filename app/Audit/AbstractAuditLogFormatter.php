@@ -74,6 +74,70 @@ abstract class AbstractAuditLogFormatter implements IAuditLogFormatter
         ];
     }
 
+    /**
+     * Shared handler for EVENT_COLLECTION_MANYTOMANY_UPDATE / DELETE (ADR-004).
+     *
+     * Runs the two-step pipeline (handleManyToManyCollection -> processCollection) and builds
+     * "<label> <field> (<TargetEntity>) updated: Added IDs: [..], Removed IDs: [..] by user X"
+     * or "<label> <field> (<TargetEntity>) deleted: Removed IDs: [..] by user X".
+     * Returns null when there is nothing to report, so the entry is not logged.
+     *
+     * A concrete formatter only has to route both event types here from its own
+     * EVENT_COLLECTION_MANYTOMANY_* case and provide the entity wording as $label.
+     */
+    protected function formatManyToManyCollectionChange(array $change_set, string $label): ?string
+    {
+        $metadata = $this->handleManyToManyCollection($change_set);
+        if ($metadata === null) {
+            return null;
+        }
+
+        $collectionData = $this->processCollection($metadata);
+        if (!$collectionData) {
+            return null;
+        }
+
+        $field = $collectionData['field'] ?? 'unknown';
+        $target = $collectionData['target_entity'] ?? 'unknown';
+        $added_ids = $collectionData['added_ids'] ?? [];
+        $removed_ids = $collectionData['removed_ids'] ?? [];
+
+        if ($this->event_type === Interfaces\IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE) {
+            if (empty($removed_ids)) {
+                return null;
+            }
+
+            return sprintf(
+                "%s %s (%s) deleted: Removed IDs: %s by user %s",
+                $label,
+                $field,
+                $target,
+                json_encode($removed_ids),
+                $this->getUserInfo()
+            );
+        }
+
+        $parts = [];
+        if (!empty($added_ids)) {
+            $parts[] = 'Added IDs: ' . json_encode($added_ids);
+        }
+        if (!empty($removed_ids)) {
+            $parts[] = 'Removed IDs: ' . json_encode($removed_ids);
+        }
+        if (empty($parts)) {
+            return null;
+        }
+
+        return sprintf(
+            "%s %s (%s) updated: %s by user %s",
+            $label,
+            $field,
+            $target,
+            implode(', ', $parts),
+            $this->getUserInfo()
+        );
+    }
+
 
     /**
      * Extract IDs from entity objects in collection

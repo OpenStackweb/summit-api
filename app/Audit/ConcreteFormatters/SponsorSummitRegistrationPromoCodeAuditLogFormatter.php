@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 
 class SponsorSummitRegistrationPromoCodeAuditLogFormatter extends AbstractAuditLogFormatter
 {
+
     public function format($subject, array $change_set): ?string
     {
         if (!$subject instanceof SponsorSummitRegistrationPromoCode) {
@@ -64,6 +65,10 @@ class SponsorSummitRegistrationPromoCodeAuditLogFormatter extends AbstractAuditL
                         $summit_name,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Sponsor Registration Promo Code '%s' (ID: %s) in Summit '%s'", $code, $id, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("SponsorSummitRegistrationPromoCodeAuditLogFormatter error: " . $ex->getMessage());

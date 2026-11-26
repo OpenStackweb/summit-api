@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAuditLogFormatter
 {
 
+
     private function buildDiscountDetails(PrePaidSummitRegistrationDiscountCode $subject): string
     {
         $details = [];
@@ -90,6 +91,10 @@ class PrePaidSummitRegistrationDiscountCodeAuditLogFormatter extends AbstractAud
                         $discount_details,
                         $this->getUserInfo()
                     );
+
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_UPDATE:
+                case IAuditStrategy::EVENT_COLLECTION_MANYTOMANY_DELETE:
+                    return $this->formatManyToManyCollectionChange($change_set, sprintf("Pre-Paid Discount Code '%s' (%s) for Summit '%s'", $code, $id, $summit_name));
             }
         } catch (\Exception $ex) {
             Log::warning("PrePaidSummitRegistrationDiscountCodeAuditLogFormatter error: " . $ex->getMessage());

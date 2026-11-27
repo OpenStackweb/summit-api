@@ -1159,6 +1159,203 @@ CSV;
         $this->assertTrue(in_array($response->getStatusCode(), [201, 412]));
     }
 
+    /**
+     * Builds a ticket of the main summit that satisfies every badge printing rule
+     * (active, owned by an attendee, with a badge whose type is in person and allows the default view type),
+     * and makes the same view type resolvable on the second summit, so a call through the URL
+     * of the second summit can only fail because of the ticket / summit mismatch.
+     * @return \models\summit\SummitAttendeeTicket
+     */
+    private function buildPrintableTicket(): \models\summit\SummitAttendeeTicket
+    {
+        $ticket = self::$summit_orders[0]->getFirstTicket();
+        $ticket->activate();
+
+        $in_person = new \models\summit\SummitAccessLevelType();
+        $in_person->setName(\models\summit\SummitAccessLevelType::IN_PERSON);
+        self::$summit->addBadgeAccessLevelType($in_person);
+        self::$default_badge_type->addAccessLevel($in_person);
+        self::$default_badge_type->addAllowedViewType(self::$default_badge_view_type);
+
+        $attendee = new \models\summit\SummitAttendee();
+        $attendee->setEmail("badge.print.test@test.com");
+        $attendee->setFirstName("Badge");
+        $attendee->setSurname("Print");
+        self::$summit->addAttendee($attendee);
+        $attendee->addTicket($ticket);
+
+        $badge = new \models\summit\SummitAttendeeBadge();
+        $badge->setType(self::$default_badge_type);
+        $ticket->setBadge($badge);
+
+        // same view type name on the other summit: it resolves there, the ticket does not belong to it
+        $other_summit_view_type = new \models\summit\SummitBadgeViewType();
+        $other_summit_view_type->setName(self::$default_badge_view_type->getName());
+        $other_summit_view_type->setDescription(self::$default_badge_view_type->getName());
+        $other_summit_view_type->setDefault(true);
+        self::$summit2->addBadgeViewType($other_summit_view_type);
+        // worst case: the badge type also allows the view type of the other summit, so the printing rules
+        // alone would not stop the call and only the ticket / summit check can
+        self::$default_badge_type->addAllowedViewType($other_summit_view_type);
+
+        self::$em->persist(self::$summit);
+        self::$em->persist(self::$summit2);
+        self::$em->flush();
+
+        return $ticket;
+    }
+
+    private function getBadgePrintsCount(int $badge_id): int
+    {
+        return \Illuminate\Support\Facades\DB::connection('model')
+            ->table('SummitAttendeeBadgePrint')
+            ->where('BadgeID', $badge_id)
+            ->count();
+    }
+
+    /**
+     * @param string $method
+     * @param string $action
+     * @param \models\summit\SummitAttendeeTicket $ticket
+     * @param string $ticket_id_kind id|number
+     * @param \models\summit\Summit $summit the summit used in the URL
+     * @param bool $by_view_type
+     * @return \Illuminate\Http\Response
+     */
+    private function callBadgePrintEndpoint(
+        string $method,
+        string $action,
+        \models\summit\SummitAttendeeTicket $ticket,
+        string $ticket_id_kind,
+        \models\summit\Summit $summit,
+        bool $by_view_type
+    )
+    {
+        $params = [
+            'id' => $summit->getId(),
+            'ticket_id' => $ticket_id_kind === 'number' ? $ticket->getNumber() : $ticket->getId(),
+        ];
+
+        if ($by_view_type) {
+            $params['view_type'] = self::$default_badge_view_type->getName();
+        }
+
+        $headers = [
+            "HTTP_Authorization" => " Bearer " . $this->access_token,
+            "CONTENT_TYPE" => "application/json"
+        ];
+
+        return $this->action($method, $action, $params, [], [], [], $headers);
+    }
+
+    public static function ticketIdKindProvider(): array
+    {
+        return [
+            'by ticket id' => ['id'],
+            'by ticket number' => ['number'],
+        ];
+    }
+
+    /**
+     * @dataProvider ticketIdKindProvider
+     */
+    public function testPrintAttendeeBadgeDefaultOfAnotherSummit(string $kind)
+    {
+        $ticket = $this->buildPrintableTicket();
+        $badge_id = $ticket->getBadgeId();
+
+        $response = $this->callBadgePrintEndpoint
+        (
+            "PUT", "OAuth2SummitTicketApiController@printAttendeeBadgeDefault",
+            $ticket, $kind, self::$summit2, false
+        );
+
+        $this->assertResponseStatus(404);
+        $this->assertEquals(0, $this->getBadgePrintsCount($badge_id));
+    }
+
+    /**
+     * @dataProvider ticketIdKindProvider
+     */
+    public function testPrintAttendeeBadgeByViewTypeOfAnotherSummit(string $kind)
+    {
+        $ticket = $this->buildPrintableTicket();
+        $badge_id = $ticket->getBadgeId();
+
+        $response = $this->callBadgePrintEndpoint
+        (
+            "PUT", "OAuth2SummitTicketApiController@printAttendeeBadge",
+            $ticket, $kind, self::$summit2, true
+        );
+
+        $this->assertResponseStatus(404);
+        $this->assertEquals(0, $this->getBadgePrintsCount($badge_id));
+    }
+
+    /**
+     * @dataProvider ticketIdKindProvider
+     */
+    public function testCanPrintAttendeeBadgeDefaultOfAnotherSummit(string $kind)
+    {
+        $ticket = $this->buildPrintableTicket();
+
+        $response = $this->callBadgePrintEndpoint
+        (
+            "GET", "OAuth2SummitTicketApiController@canPrintAttendeeBadgeDefault",
+            $ticket, $kind, self::$summit2, false
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    /**
+     * @dataProvider ticketIdKindProvider
+     */
+    public function testCanPrintAttendeeBadgeByViewTypeOfAnotherSummit(string $kind)
+    {
+        $ticket = $this->buildPrintableTicket();
+
+        $response = $this->callBadgePrintEndpoint
+        (
+            "GET", "OAuth2SummitTicketApiController@canPrintAttendeeBadge",
+            $ticket, $kind, self::$summit2, true
+        );
+
+        $this->assertResponseStatus(404);
+    }
+
+    /**
+     * Control: the very same ticket, called through the URL of its own summit, still works.
+     * @dataProvider ticketIdKindProvider
+     */
+    public function testPrintAndCanPrintAttendeeBadgeOfOwnSummit(string $kind)
+    {
+        $ticket = $this->buildPrintableTicket();
+        $badge_id = $ticket->getBadgeId();
+
+        $this->callBadgePrintEndpoint
+        (
+            "GET", "OAuth2SummitTicketApiController@canPrintAttendeeBadge",
+            $ticket, $kind, self::$summit, true
+        );
+        $this->assertResponseStatus(200);
+
+        $this->callBadgePrintEndpoint
+        (
+            "GET", "OAuth2SummitTicketApiController@canPrintAttendeeBadgeDefault",
+            $ticket, $kind, self::$summit, false
+        );
+        $this->assertResponseStatus(200);
+
+        $this->callBadgePrintEndpoint
+        (
+            "PUT", "OAuth2SummitTicketApiController@printAttendeeBadge",
+            $ticket, $kind, self::$summit, true
+        );
+        $this->assertResponseStatus(201);
+        $this->assertEquals(1, $this->getBadgePrintsCount($badge_id));
+    }
+
     public function testGetAllTicketsExternal412()
     {
         // summit has no external feed type set, should return 412

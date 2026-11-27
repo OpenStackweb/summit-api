@@ -3537,7 +3537,6 @@ final class SummitOrderService
             throw new EntityNotFoundException('Ticket not found.');
 
         $order = $ticket->getOrder();
-        $summit = $order->getSummit();
 
         if ($order->getSummitId() != $summit->getId())
             throw new EntityNotFoundException('Ticket not found.');
